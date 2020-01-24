@@ -1,4 +1,4 @@
-<p>The node module can be used to start and stop MockServer and the MockServer proxy as a node module or as a Grunt plugin.</p>
+<p>The node module can be used to start and stop MockServer as a node module or as a Grunt plugin.</p>
 
 <p>You may install this plugin / node module with the following command:</p>
 
@@ -24,7 +24,7 @@ mockserver.stop_mockserver({
                 serverPort: <span class="numeric_literal">1080</span>
             });</code></pre>
 
-<p>The MockServer uses port unification to support HTTP, HTTPS, SOCKS, HTTP CONNECT, Port Forwarding Proxying on the same port. A client can then connect to the single port with both HTTP and HTTPS as the socket will automatically detected SSL traffic and decrypt it when required.</p>
+<p>MockServer uses port unification to support HTTP, HTTPS, SOCKS, HTTP CONNECT, Port Forwarding Proxying on the same port. A client can then connect to the single port with both HTTP and HTTPS as the socket will automatically detected SSL traffic and decrypt it when required.</p>
 
 <p><strong>Grunt Plugin</strong></p>
 
@@ -32,7 +32,7 @@ mockserver.stop_mockserver({
 
 <p>In your project's Gruntfile, add a section named <span class="inline_code">start_mockserver</span> and <span class="inline_code">stop_mockserver</span> to the data object passed into <span class="inline_code">grunt.initConfig()</span>.</p>
 
-<p>The following example will result in a both a MockServer and a MockServer proxy being started on ports <strong>1080</strong> and <strong>1080</strong>.</p>
+<p>The following example will result in a both a MockServer being started on ports <strong>1080</strong> and <strong>1080</strong>.</p>
 
 <pre><code class="code">grunt.initConfig({
     start_mockserver: {

@@ -1,6 +1,7 @@
-<p>The MockServer allows the verification of requests by specifying:</p>
+<p>MockServer supports verification of requests is has received, including both proxied requests and requests that have matched an expectation.</p>
+<p>Verification can be specified as follows:</p>
 <ul>
-    <li>a <a href="/mock_server/getting_started.html#request_matchers"><strong>request matcher</strong></a> and a count indicating the number of times the request should be matched</li>
+    <li>a <a href="/mock_server/getting_started.html#request_matchers"><strong>request matcher</strong></a> and a condition indicating the number of times the request should be matched</li>
 	<li>a sequence of <a href="/mock_server/getting_started.html#request_matchers"><strong>request matchers</strong></a> that is matched in order</li>
 </ul>
 
@@ -28,7 +29,7 @@ mockServerClient("localhost", 1080)
   .verify(
     {
       'path': '/some/path'
-    }, 2, false)
+    }, 2)
   .then(
     function () {
       console.log("request found exactly 2 times");
@@ -52,7 +53,49 @@ mockServerClient("localhost", 1080)
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
-<button id="button_verify_req_exact_once" class="accordion">verify requests received exact once</button>
+<button id="button_verify_req_at_most_twice" class="accordion">verify requests received at most twice</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+    <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+.verify(
+    request()
+        .withPath("/some/path"),
+    VerificationTimes.atMost(2)
+);</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+.verify(
+{
+  'path': '/some/path'
+}, 0, 2)
+.then(
+function () {
+  console.log("request found exactly 2 times");
+},
+function (error) {
+  console.log(error);
+}
+);</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verify" -d '{
+"httpRequest": {
+    "path": "/simple"
+},
+"times": {
+    "atMost": 2
+}
+}'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+<button id="button_verify_req_exact_twice" class="accordion">verify requests received exact twice</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
@@ -60,7 +103,7 @@ mockServerClient("localhost", 1080)
     .verify(
         request()
             .withPath("/some/path"),
-        VerificationTimes.once()
+        VerificationTimes.exactly(2)
     );</code></pre>
     </div>
     <button class="accordion inner">JavaScript</button>
@@ -70,7 +113,7 @@ mockServerClient("localhost", 1080)
   .verify(
     {
       'path': '/some/path'
-    }, 1, true)
+    }, 2, 2)
   .then(
     function () {
       console.log("request found exactly 1 times");
@@ -88,8 +131,8 @@ mockServerClient("localhost", 1080)
         "path": "/simple"
     },
     "times": {
-        "atLeast": 1,
-        "atMost": 1
+        "atLeast": 2,
+        "atMost": 2
     }
 }'</code></pre>
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>

@@ -2,7 +2,7 @@ exclude: ["vendor", "*.rb", "Gemfile*", "*.gemspec", "*.md", "*.pptx", "*.psd", 
 include: [".well-known"]
 
 # Site settings
-title: Mock Server
+title: MockServer
 email: jamesdbloom@gmail.com
 description: An API to easily mock any system or service you integrate with via HTTP or HTTPS from either Java or JavaScript.
 keywords: mockserver, mock server, mock http server, http mock server, mock-server, mock rest service, mock server java, mock api, java mock http server, server mock, java mock server, mock rest server, java mock web service, api mock, mock web service java, mock web server, mock service, mock rest api, mock http response, mock http server java, mock api server, json mock service, api mocking

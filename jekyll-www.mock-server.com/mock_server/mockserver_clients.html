@@ -1,9 +1,9 @@
 ---
-title: Mock Server Clients
-shortTitle: Mock Server Clients
+title: MockServer Clients
+shortTitle: MockServer Clients
 layout: page
-pageOrder: 6
-section: 'Mock Server'
+pageOrder: 2
+section: 'General'
 subsection: true
 sitemap:
   priority: 0.8
@@ -39,15 +39,15 @@ sitemap:
 
 <a id="rest-api" class="anchor" href="#rest-api">&nbsp;</a>
 
-<h2>MockServer REST API</h2>
+<h2>REST API</h2>
 
 <p>The REST API is documented using <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi" target="_blank">Open API 3</a></p>
 
 <a id="java-mockserver-client" class="anchor" href="#java-mockserver-client">&nbsp;</a>
 
-<h2>MockServer Java Client</h2>
+<h2>Java Client</h2>
 
-<p>The Java client has the following version:</p>
+<p>The Java client has the following versions:</p>
 <ul>
     <li><a href="#button_client_create_expectation"><strong>org.mockserver.client.MockServerClient</strong></a> - makes HTTP requests to a remote MockServer instance</li>
     <li><a href="#button_client_create_expectation"><strong>org.mockserver.integration.ClientAndServer</strong></a> - starts a local MockServer instance and makes HTTP requests to it</li>
@@ -55,7 +55,7 @@ sitemap:
 
 <a id="javascript-mockserver-client" class="anchor" href="#javascript-mockserver-client">&nbsp;</a>
 
-<h2>MockServer JavaScript Client</h2>
+<h2>JavaScript Client</h2>
 
 <p>The JavaScript client has the following version:</p>
 
@@ -289,6 +289,15 @@ mockServerClient("localhost", 1080, undefined, true)
         VerificationTimes.atLeast(2)
     );</code></pre>
         </div>
+        <button class="accordion inner">Java: ClientAndServer</button>
+        <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new ClientAndServer(1080)
+    .verify(
+        request()
+            .withPath("/some/path"),
+        VerificationTimes.atLeast(2)
+    );</code></pre>
+        </div>
         <button class="accordion inner">JavaScript: Node.js mockserver-client</button>
         <div class="panel">
             <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
@@ -343,6 +352,18 @@ mockServerClient("localhost", 1080)
         <button class="accordion inner">Java: MockServerClient</button>
         <div class="panel">
             <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .verify(
+        request()
+            .withPath("/some/path/one"),
+        request()
+            .withPath("/some/path/two"),
+        request()
+            .withPath("/some/path/three")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">Java: ClientAndServer</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">new ClientAndServer(1080)
     .verify(
         request()
             .withPath("/some/path/one"),
@@ -430,7 +451,80 @@ mockServerClient("localhost", 1080)
             .withMethod("POST")
     );</code></pre>
         </div>
+        <button class="accordion inner">Java: ClientAndServer</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">HttpRequest[] recordedRequests = new ClientAndServer(1080)
+    .retrieveRecordedRequests(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST")
+    );</code></pre>
+        </div>
         <button class="accordion inner">JavaScript: Node.js mockserver-client</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+  .retrieveRecordedRequests({
+    "path": "/some/path",
+    "method": "POST"
+  })
+  .then(
+    function (recordedRequests) {
+      console.log(JSON.stringify(recordedRequests));
+    },
+    function (error) {
+      console.log(error);
+    }
+  );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
+        <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/mock-server/mockserver-client-node/mockserver-5.8.1/mockServerClient.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  mockServerClient("localhost", 1080)
+    .retrieveRecordedRequests({
+      "path": "/some/path",
+      "method": "POST"
+    })
+    .then(
+      function (recordedRequests) {
+        console.log(JSON.stringify(recordedRequests));
+      },
+      function (error) {
+        console.log(error);
+      }
+    );
+&lt;/script&gt;</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS" -d '{
+    "path": "/some/path",
+    "method": "POST"
+}'</code></pre>
+        </div>
+    </div>
+    <button id="button_client_retrieve_expectations" class="accordion">retrieve recorded expectations</button>
+    <div class="panel">
+        <button class="accordion inner">Java: MockServerClient</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">Expectation[] recordedExpectations = new MockServerClient("localhost", 1080)
+    .retrieveRecordedExpectations(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">Java: ClientAndServer</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">Expectation[] recordedExpectations = new ClientAndServer(1080)
+    .retrieveRecordedExpectations(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript: Node.JS mockserver-client</button>
         <div class="panel">
             <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
@@ -479,6 +573,15 @@ mockServerClient("localhost", 1080)
         <button class="accordion inner">Java: MockServerClient</button>
         <div class="panel">
             <pre class="prettyprint lang-java code"><code class="code">HttpRequest[] recordedRequests = new MockServerClient("localhost", 1080)
+    .retrieveRecordedRequests(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">Java: ClientAndServer</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">HttpRequest[] recordedRequests = new ClientAndServer(1080)
     .retrieveRecordedRequests(
         request()
             .withPath("/some/path")
@@ -541,6 +644,14 @@ mockServerClient("localhost", 1080)
         .withMethod("POST")
 );</code></pre>
         </div>
+        <button class="accordion inner">Java: ClientAndServer</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">new ClientAndServer(1080).clear(
+    request()
+        .withPath("/some/path")
+        .withMethod("POST")
+);</code></pre>
+        </div>
         <button class="accordion inner">JavaScript: Node.js mockserver-client</button>
         <div class="panel">
             <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
@@ -587,6 +698,15 @@ mockServerClient("localhost", 1080)
         <button class="accordion inner">Java: MockServerClient</button>
         <div class="panel">
             <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080).clear(
+    request()
+        .withPath("/some/path")
+        .withMethod("POST"),
+    ClearType.LOG
+);</code></pre>
+        </div>
+        <button class="accordion inner">Java: ClientAndServer</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">new ClientAndServer(1080).clear(
     request()
         .withPath("/some/path")
         .withMethod("POST"),
@@ -640,6 +760,10 @@ mockServerClient("localhost", 1080)
         <div class="panel">
             <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080).reset();</code></pre>
         </div>
+        <button class="accordion inner">Java: ClientAndServer</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">new ClientAndServer(1080).reset();</code></pre>
+        </div>
         <button class="accordion inner">JavaScript: Node.js mockserver-client</button>
         <div class="panel">
             <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
@@ -683,6 +807,12 @@ mockServerClient("localhost", 1080)
             0
         );</code></pre>
         </div>
+        <button class="accordion inner">Java: ClientAndServer</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">List&lt;Integer&gt; boundPorts = new ClientAndServer(1080).bind(
+            0
+        );</code></pre>
+        </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
             <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/bind -d '{
@@ -698,6 +828,12 @@ mockServerClient("localhost", 1080)
         <button class="accordion inner">Java: MockServerClient</button>
         <div class="panel">
             <pre class="prettyprint lang-java code"><code class="code">List&lt;Integer&gt; boundPorts = new MockServerClient("localhost", 1080).bind(
+            1081, 1082
+        );</code></pre>
+        </div>
+        <button class="accordion inner">Java: ClientAndServer</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">List&lt;Integer&gt; boundPorts = new ClientAndServer(1080).bind(
             1081, 1082
         );</code></pre>
         </div>

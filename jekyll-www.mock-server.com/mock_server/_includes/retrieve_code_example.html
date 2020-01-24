@@ -1,0 +1,351 @@
+<a id="retrieving_recorded_expectations" class="anchor" href="#retrieving_recorded_expectations">&nbsp;</a>
+
+<h2>Retrieving Recorded Expectations</h2>
+
+<p>All proxied requests including those proxied using a <a href="/mock_server/getting_started.html#forward_action">forward actions</a> are recorded containing the request received and response returned.</p>
+
+<p>It is possible to retrieve the recorded requests and responses as expectations so that they can be easily used as expectations to simulation a system.</p>
+
+<p>Expectations are returned in the order they have been recorded.  The expectations are returned can be filter using a <a href="/mock_server/getting_started.html#request_matchers">request matcher</a>.</p>
+
+<button id="button_recorded_expectations" class="accordion title"><strong>Retrieving Recorded Expectations Code Examples</strong></button>
+<div class="panel title">
+    <button id="button_retrieve_all_recorded_expectations" class="accordion">retrieve all recorded expectations</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">Expectation[] recordedExpectations = new MockServerClient("localhost", 1080)
+    .retrieveRecordedExpectations(
+        request()
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+    .retrieveRecordedExpectations({})
+    .then(
+        function (recordedExpectations) {
+            console.log(JSON.stringify(recordedExpectations));
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS"</code></pre>
+            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
+        </div>
+    </div>
+    <button id="button_retrieve_recorded_expectations_using_request_matcher" class="accordion">retrieve recorded expectations using request matcher</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">Expectation[] recordedExpectations = new MockServerClient("localhost", 1080)
+    .retrieveRecordedExpectations(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).retrieveRecordedExpectations({
+    "path": "/some/path",
+    "method": "POST"
+}).then(
+    function (recordedExpectations) {
+        console.log(JSON.stringify(recordedExpectations));
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS" -d '{
+    "path": "/some/path",
+    "method": "POST"
+}'</code></pre>
+            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
+        </div>
+    </div>
+    <button id="button_retrieve_recorded_expectations_as_java" class="accordion">retrieve recorded expectations as java</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">String recordedExpectations = new MockServerClient("localhost", 1080)
+    .retrieveRecordedExpectations(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST"),
+        Format.JAVA
+    );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS&format=JAVA" -d '{
+    "path": "/some/path"
+}'</code></pre>
+            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
+        </div>
+    </div>
+    <button id="button_retrieve_recorded_expectations_as_json" class="accordion">retrieve recorded expectations as json</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">String recordedExpectations = new MockServerClient("localhost", 1080)
+    .retrieveRecordedExpectations(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST"),
+        Format.JSON
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).retrieveRecordedExpectations({
+    "path": "/some/path",
+    "method": "POST"
+}).then(
+    function (recordedExpectations) {
+        console.log(JSON.stringify(recordedExpectations));
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS&format=JSON" -d '{
+    "path": "/some/path"
+}'</code></pre>
+            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
+        </div>
+    </div>
+</div>
+
+<a id="retrieving_recorded_requests" class="anchor" href="#retrieving_recorded_requests">&nbsp;</a>
+
+<h2>Retrieving Recorded Requests</h2>
+
+<p>All requests the MockServer receives are recorded, including both proxied requests and requests that have matched an expectation.</p>
+
+<p>It is possible to retrieve the recorded requests, as show below in the code examples.</p>
+
+<p>Requests are returned in the order they have been recorded.  Which requests are returned can be filter using a <a href="/mock_server/getting_started.html#request_matchers">request matcher</a>.</p>
+
+<button id="button_recorded_reqs" class="accordion title"><strong>Retrieving Recorded Requests Code Examples</strong></button>
+<div class="panel title">
+    <button id="button_retrieve_all_recorded_reqs" class="accordion">retrieve all recorded requests</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">HttpRequest[] recordedRequests = new MockServerClient("localhost", 1080)
+    .retrieveRecordedRequests(
+        request()
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+    .retrieveRecordedRequests({})
+    .then(
+        function (recordedRequests) {
+            console.log(JSON.stringify(recordedRequests));
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS"</code></pre>
+            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
+        </div>
+    </div>
+    <button id="button_retrieve_recorded_reqs_using_request_matcher" class="accordion">retrieve recorded requests using request matcher</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">HttpRequest[] recordedRequests = new MockServerClient("localhost", 1080)
+    .retrieveRecordedRequests(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).retrieveRecordedRequests({
+    "path": "/some/path",
+    "method": "POST"
+}).then(
+    function (recordedRequests) {
+        console.log(JSON.stringify(recordedRequests));
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS" -d '{
+    "path": "/some/path",
+    "method": "POST"
+}'</code></pre>
+            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
+        </div>
+    </div>
+    <button id="button_retrieve_recorded_reqs_as_java" class="accordion">retrieve recorded requests as java</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">String recordedRequests = new MockServerClient("localhost", 1080)
+    .retrieveRecordedRequests(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST"),
+        Format.JAVA
+    );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS&format=JAVA" -d '{
+    "path": "/some/path"
+}'</code></pre>
+            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
+        </div>
+    </div>
+    <button id="button_retrieve_recorded_reqs_as_json" class="accordion">retrieve recorded requests as json</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">String recordedRequests = new MockServerClient("localhost", 1080)
+    .retrieveRecordedRequests(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST"),
+        Format.JSON
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).retrieveRecordedRequests({
+    "path": "/some/path",
+    "method": "POST"
+}).then(
+    function (recordedRequests) {
+        console.log(JSON.stringify(recordedRequests));
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS&format=JSON" -d '{
+    "path": "/some/path"
+}'</code></pre>
+            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
+        </div>
+    </div>
+</div>
+
+<a id="retrieving_recorded_request_responses" class="anchor" href="#retrieving_recorded_requests">&nbsp;</a>
+
+<h2>Retrieve Recorded Requests &amp; Responses</h2>
+
+<p>All requests the MockServer receives are recorded, including both proxied requests and requests that have matched an expectation.</p>
+
+<p>It is possible to retrieve the recorded requests and their responses, as show below in the code examples.</p>
+
+<p>Requests and responses are returned in the order they have been recorded.  Which requests are returned can be filter using a <a href="/mock_server/getting_started.html#request_matchers">request matcher</a>.</p>
+
+<button id="button_recorded_req_res" class="accordion title"><strong>Retrieving Recorded Requests and Responses Code Examples</strong></button>
+<div class="panel title">
+    <button id="button_retrieve_all_recorded_req_res" class="accordion">retrieve all recorded requests and responses</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">HttpRequestAndHttpResponse[] httpRequestAndHttpResponse = new MockServerClient("localhost", 1080)
+    .retrieveRecordedRequestsAndResponses(
+        request()
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+    .retrieveRecordedRequestsAndResponses({})
+    .then(
+        function (recordedRequestsAndResponses) {
+            console.log(JSON.stringify(recordedRequestsAndResponses));
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUEST_RESPONSES"</code></pre>
+            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
+        </div>
+    </div>
+    <button id="button_retrieve_recorded_req_res_using_request_matcher" class="accordion">retrieve recorded requests and responses using request matcher</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">HttpRequestAndHttpResponse[] httpRequestAndHttpResponse = new MockServerClient("localhost", 1080)
+    .retrieveRecordedRequestsAndResponses(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).retrieveRecordedRequestsAndResponses({
+    "path": "/some/path",
+    "method": "POST"
+}).then(
+    function (recordedRequestsAndResponses) {
+        console.log(JSON.stringify(recordedRequestsAndResponses));
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUEST_RESPONSES" -d '{
+    "path": "/some/path",
+    "method": "POST"
+}'</code></pre>
+            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
+        </div>
+    </div>
+</div>

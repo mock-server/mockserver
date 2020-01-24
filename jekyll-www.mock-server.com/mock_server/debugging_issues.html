@@ -1,8 +1,8 @@
 ---
 title: Logging & Debugging
 layout: page
-pageOrder: 8
-section: 'Mock Server'
+pageOrder: 4
+section: 'General'
 subsection: true
 sitemap:
   priority: 0.7
@@ -16,10 +16,10 @@ sitemap:
     <li>
         <p>Retrieve the following items:</p>
         <ul>
-            <li><strong><a href="#retrieving_recorded_requests">recorded requests</a></strong></li>
-            <li><strong><a href="#retrieving_recorded_request_responses">recorded requests and responses</a></strong></li>
             <li><strong><a href="#retrieving_active_expectations">active expectations</a></strong></li>
             <li><strong><a href="#retrieving_recorded_expectations">recorded expectations</a></strong></li>
+            <li><strong><a href="#retrieving_recorded_requests">recorded requests</a></strong></li>
+            <li><strong><a href="#retrieving_recorded_request_responses">recorded requests and responses</a></strong></li>
             <li><strong><a href="#retrieving_recorded_logs">logs</a></strong></li>
         </ul>
     </li>
@@ -29,229 +29,13 @@ sitemap:
     <li>Clear failure messages when verifying requests (that support "show difference" in IntelliJ)</li>
 </ul>
 
-<a id="retrieving_recorded_requests" class="anchor" href="#retrieving_recorded_requests">&nbsp;</a>
-
-<h2>Retrieving Recorded Requests</h2>
-
-<p>All requests the MockServer or the proxy receives are recorded.</p>
-
-<p>It is possible to retrieve the recorded requests, as show below in the code examples.</p>
-
-<p>Requests are returned in the order they are received, and which requests are returned can be filter using a <a href="/mock_server/getting_started.html#request_matchers">request matcher</a>.</p>
-
-<button id="button_recorded_reqs" class="accordion title"><strong>Retrieving Recorded Requests Code Examples</strong></button>
-<div class="panel title">
-    <button id="button_retrieve_all_recorded_reqs" class="accordion">retrieve all recorded requests</button>
-    <div class="panel">
-        <button class="accordion inner">Java</button>
-        <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">HttpRequest[] recordedRequests = new MockServerClient("localhost", 1080)
-    .retrieveRecordedRequests(
-        request()
-    );</code></pre>
-        </div>
-        <button class="accordion inner">JavaScript</button>
-        <div class="panel">
-            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
-mockServerClient("localhost", 1080)
-    .retrieveRecordedRequests({})
-    .then(
-        function (recordedRequests) {
-            console.log(JSON.stringify(recordedRequests));
-        },
-        function (error) {
-            console.log(error);
-        }
-    );</code></pre>
-            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
-        </div>
-        <button class="accordion inner">REST API</button>
-        <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS"</code></pre>
-            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
-        </div>
-    </div>
-    <button id="button_retrieve_recorded_reqs_using_request_matcher" class="accordion">retrieve recorded requests using request matcher</button>
-    <div class="panel">
-        <button class="accordion inner">Java</button>
-        <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">HttpRequest[] recordedRequests = new MockServerClient("localhost", 1080)
-    .retrieveRecordedRequests(
-        request()
-            .withPath("/some/path")
-            .withMethod("POST")
-    );</code></pre>
-        </div>
-        <button class="accordion inner">JavaScript</button>
-        <div class="panel">
-            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
-mockServerClient("localhost", 1080).retrieveRecordedRequests({
-    "path": "/some/path",
-    "method": "POST"
-}).then(
-    function (recordedRequests) {
-        console.log(JSON.stringify(recordedRequests));
-    },
-    function (error) {
-        console.log(error);
-    }
-);</code></pre>
-            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
-        </div>
-        <button class="accordion inner">REST API</button>
-        <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS" -d '{
-    "path": "/some/path",
-    "method": "POST"
-}'</code></pre>
-            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
-        </div>
-    </div>
-    <button id="button_retrieve_recorded_reqs_as_java" class="accordion">retrieve recorded requests as java</button>
-    <div class="panel">
-        <button class="accordion inner">Java</button>
-        <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">String recordedRequests = new MockServerClient("localhost", 1080)
-    .retrieveRecordedRequests(
-        request()
-            .withPath("/some/path")
-            .withMethod("POST"),
-        Format.JAVA
-    );</code></pre>
-        </div>
-        <button class="accordion inner">REST API</button>
-        <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS&format=JAVA" -d '{
-    "path": "/some/path"
-}'</code></pre>
-            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
-        </div>
-    </div>
-    <button id="button_retrieve_recorded_reqs_as_json" class="accordion">retrieve recorded requests as json</button>
-    <div class="panel">
-        <button class="accordion inner">Java</button>
-        <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">String recordedRequests = new MockServerClient("localhost", 1080)
-    .retrieveRecordedRequests(
-        request()
-            .withPath("/some/path")
-            .withMethod("POST"),
-        Format.JSON
-    );</code></pre>
-        </div>
-        <button class="accordion inner">JavaScript</button>
-        <div class="panel">
-            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
-mockServerClient("localhost", 1080).retrieveRecordedRequests({
-    "path": "/some/path",
-    "method": "POST"
-}).then(
-    function (recordedRequests) {
-        console.log(JSON.stringify(recordedRequests));
-    },
-    function (error) {
-        console.log(error);
-    }
-);</code></pre>
-            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
-        </div>
-        <button class="accordion inner">REST API</button>
-        <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS&format=JSON" -d '{
-    "path": "/some/path"
-}'</code></pre>
-            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
-        </div>
-    </div>
-</div>
-
-<a id="retrieving_recorded_request_responses" class="anchor" href="#retrieving_recorded_requests">&nbsp;</a>
-
-<h3>Retrieve Recorded Requests &amp; Responses</h3>
-
-<p>All requests the MockServer or the proxy receives are recorded.</p>
-
-<p>It is possible to retrieve the recorded requests and their responses, as show below in the code examples.</p>
-
-<p>Requests and responses are returned in the order they occur, and what is returned can be filter using a <a href="/mock_server/getting_started.html#request_matchers">request matcher</a>.</p>
-
-<button id="button_recorded_req_res" class="accordion title"><strong>Retrieving Recorded Requests and Responses Code Examples</strong></button>
-<div class="panel title">
-    <button id="button_retrieve_all_recorded_req_res" class="accordion">retrieve all recorded requests and responses</button>
-    <div class="panel">
-        <button class="accordion inner">Java</button>
-        <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">HttpRequestAndHttpResponse[] httpRequestAndHttpResponse = new MockServerClient("localhost", 1080)
-    .retrieveRecordedRequestsAndResponses(
-        request()
-    );</code></pre>
-        </div>
-        <button class="accordion inner">JavaScript</button>
-        <div class="panel">
-            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
-mockServerClient("localhost", 1080)
-    .retrieveRecordedRequestsAndResponses({})
-    .then(
-        function (recordedRequestsAndResponses) {
-            console.log(JSON.stringify(recordedRequestsAndResponses));
-        },
-        function (error) {
-            console.log(error);
-        }
-    );</code></pre>
-            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
-        </div>
-        <button class="accordion inner">REST API</button>
-        <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUEST_RESPONSES"</code></pre>
-            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
-        </div>
-    </div>
-    <button id="button_retrieve_recorded_req_res_using_request_matcher" class="accordion">retrieve recorded requests and responses using request matcher</button>
-    <div class="panel">
-        <button class="accordion inner">Java</button>
-        <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">HttpRequestAndHttpResponse[] httpRequestAndHttpResponse = new MockServerClient("localhost", 1080)
-    .retrieveRecordedRequestsAndResponses(
-        request()
-            .withPath("/some/path")
-            .withMethod("POST")
-    );</code></pre>
-        </div>
-        <button class="accordion inner">JavaScript</button>
-        <div class="panel">
-            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
-mockServerClient("localhost", 1080).retrieveRecordedRequestsAndResponses({
-    "path": "/some/path",
-    "method": "POST"
-}).then(
-    function (recordedRequestsAndResponses) {
-        console.log(JSON.stringify(recordedRequestsAndResponses));
-    },
-    function (error) {
-        console.log(error);
-    }
-);</code></pre>
-            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
-        </div>
-        <button class="accordion inner">REST API</button>
-        <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUEST_RESPONSES" -d '{
-    "path": "/some/path",
-    "method": "POST"
-}'</code></pre>
-            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
-        </div>
-    </div>
-</div>
-
 <a id="retrieving_active_expectations" class="anchor" href="#retrieving_active_expectations">&nbsp;</a>
 
 <h2>Retrieving Active Expectations</h2>
 
 <p>It is possible to retrieve the active expectations, as show below in the code examples.</p>
 
-<p>Expectations are returned in the order they have been added, and which expectations are returned can be filter using a <a href="/mock_server/getting_started.html#request_matchers">request matcher</a>.</p>
+<p>Expectations are returned in the order they have been added.  The expectations are returned can be filter using a <a href="/mock_server/getting_started.html#request_matchers">request matcher</a>.</p>
 
 <button id="button_active_expectations" class="accordion title"><strong>Retrieving Active Expectations Code Examples</strong></button>
 <div class="panel title">
@@ -379,141 +163,7 @@ mockServerClient("localhost", 1080).retrieveActiveExpectations({
     </div>
 </div>
 
-<a id="retrieving_recorded_expectations" class="anchor" href="#retrieving_recorded_expectations">&nbsp;</a>
-
-<h2>Retrieving Recorded Expectations</h2>
-
-<p>For MockServer <a href="/mock_server/getting_started.html#forward_action">forward actions</a> or all proxy requests expectations are recorded containing the request received and response returned.</p>
-
-<p>It is possible to retrieve the recorded expectations, as show below in the code examples.</p>
-
-<p>Expectations are returned in the order they have been recorded, and which expectations are returned can be filter using a <a href="/mock_server/getting_started.html#request_matchers">request matcher</a>.</p>
-
-<button id="button_recorded_expectations" class="accordion title"><strong>Retrieving Recorded Expectations Code Examples</strong></button>
-<div class="panel title">
-    <button id="button_retrieve_all_recorded_expectations" class="accordion">retrieve all recorded expectations</button>
-    <div class="panel">
-        <button class="accordion inner">Java</button>
-        <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">Expectation[] recordedExpectations = new MockServerClient("localhost", 1080)
-    .retrieveRecordedExpectations(
-        request()
-    );</code></pre>
-        </div>
-        <button class="accordion inner">JavaScript</button>
-        <div class="panel">
-            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
-mockServerClient("localhost", 1080)
-    .retrieveRecordedExpectations({})
-    .then(
-        function (recordedExpectations) {
-            console.log(JSON.stringify(recordedExpectations));
-        },
-        function (error) {
-            console.log(error);
-        }
-    );</code></pre>
-            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
-        </div>
-        <button class="accordion inner">REST API</button>
-        <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS"</code></pre>
-            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
-        </div>
-    </div>
-    <button id="button_retrieve_recorded_expectations_using_request_matcher" class="accordion">retrieve recorded expectations using request matcher</button>
-    <div class="panel">
-        <button class="accordion inner">Java</button>
-        <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">Expectation[] recordedExpectations = new MockServerClient("localhost", 1080)
-    .retrieveRecordedExpectations(
-        request()
-            .withPath("/some/path")
-            .withMethod("POST")
-    );</code></pre>
-        </div>
-        <button class="accordion inner">JavaScript</button>
-        <div class="panel">
-            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
-mockServerClient("localhost", 1080).retrieveRecordedExpectations({
-    "path": "/some/path",
-    "method": "POST"
-}).then(
-    function (recordedExpectations) {
-        console.log(JSON.stringify(recordedExpectations));
-    },
-    function (error) {
-        console.log(error);
-    }
-);</code></pre>
-            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
-        </div>
-        <button class="accordion inner">REST API</button>
-        <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS" -d '{
-    "path": "/some/path",
-    "method": "POST"
-}'</code></pre>
-            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
-        </div>
-    </div>
-    <button id="button_retrieve_recorded_expectations_as_java" class="accordion">retrieve recorded expectations as java</button>
-    <div class="panel">
-        <button class="accordion inner">Java</button>
-        <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">String recordedExpectations = new MockServerClient("localhost", 1080)
-    .retrieveRecordedExpectations(
-        request()
-            .withPath("/some/path")
-            .withMethod("POST"),
-        Format.JAVA
-    );</code></pre>
-        </div>
-        <button class="accordion inner">REST API</button>
-        <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS&format=JAVA" -d '{
-    "path": "/some/path"
-}'</code></pre>
-            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
-        </div>
-    </div>
-    <button id="button_retrieve_recorded_expectations_as_json" class="accordion">retrieve recorded expectations as json</button>
-    <div class="panel">
-        <button class="accordion inner">Java</button>
-        <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">String recordedExpectations = new MockServerClient("localhost", 1080)
-    .retrieveRecordedExpectations(
-        request()
-            .withPath("/some/path")
-            .withMethod("POST"),
-        Format.JSON
-    );</code></pre>
-        </div>
-        <button class="accordion inner">JavaScript</button>
-        <div class="panel">
-            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
-mockServerClient("localhost", 1080).retrieveRecordedExpectations({
-    "path": "/some/path",
-    "method": "POST"
-}).then(
-    function (recordedExpectations) {
-        console.log(JSON.stringify(recordedExpectations));
-    },
-    function (error) {
-        console.log(error);
-    }
-);</code></pre>
-            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
-        </div>
-        <button class="accordion inner">REST API</button>
-        <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS&format=JSON" -d '{
-    "path": "/some/path"
-}'</code></pre>
-            <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/control/put_retrieve" target="_blank">REST API</a> for full JSON specification</p>
-        </div>
-    </div>
-</div>
+{% include_subpage _includes/retrieve_code_example.html %}
 
 <a id="retrieving_recorded_logs" class="anchor" href="#retrieving_recorded_logs">&nbsp;</a>
 
@@ -653,40 +303,28 @@ mockServerClient("localhost", 1080)
 
 <p>The <strong>TRACE</strong> level logging results in a lot of verbose logging but can be very helpful to debug why a complex matcher (such as the JSON Schema matcher) is not matching.</p>
 
+<p>To disable logging the following options can be used:</p>
+
+<ul>
+    <li><code class="code inline">-Dmockserver.logLevel=OFF</code> - to disable logging from the MockServer and Proxy classes</li>
+    <li><code class="code inline">-Droot.logLevel=OFF</code> - to disable all logging from all other classes</li>
+</ul>
+
+<p>The following sections explain how to configure logging when running MockServer via:</p>
+<ul>
+    <li><a href="#logging_with_api">JUnit 4 @Rule, JUnit 5 Test Extension or Java API (i.e. maven or gradle project)</a></li>
+    <li><a href="#logging_with_command_line">Command Line</a></li>
+    <li><a href="#logging_with_maven_plugin">Maven Plugin</a></li>
+    <li><a href="#logging_with_node">npm module or Grunt plugin</a></li>
+</ul>
+
 <a id="logging_with_api" class="anchor" href="#logging_with_api">&nbsp;</a>
 
-<h3>Logging with JUnit 4 @Rule, JUnit 5 Test Extension or Java API</h3>
+<h3>Configuring logging for JUnit 4 @Rule, JUnit 5 Test Extension or Java API (i.e. maven or gradle project)</h3>
 
-<p>MockServer uses SL4J for logging so if MockSever is being launched using the <a href="/mock_server/running_mock_server.html#junit_rule">JUnit 4 @Rule</a>, the <a href="/mock_server/running_mock_server.html#junit_test_extension">JUnit 5 Test Extension</a>, <a href="/mock_server/running_mock_server.html#client_api">ClientAndServer</a> or directly using the <strong>org.mockserver.netty.MockServer</strong> the project launching MockServer needs to configure the logging output by configuring <a href="http://www.slf4j.org/faq.html">SLF4J</a></p>
+<p>MockServer uses SL4J for logging so if MockSever is being launched using the <a href="/mock_server/running_mock_server.html#junit_rule">JUnit 4 @Rule</a>, the <a href="/mock_server/running_mock_server.html#junit_test_extension">JUnit 5 Test Extension</a>, <a href="/mock_server/running_mock_server.html#client_api">ClientAndServer</a> or directly using the <strong>org.mockserver.netty.MockServer</strong> the project launching MockServer needs to configure the logging output by configuring <a href="http://www.slf4j.org/faq.html">SLF4J</a>.  MockServer relies on a SLF4J binding being on the classpath for logs to be output. The simplest approach is to use the Java Logger SLF4J binding.</p>
 
-<a id="logging_with_command_line" class="anchor" href="#logging_with_command_line">&nbsp;</a>
-
-<h3>Logging with Command Line</h3>
-
-<p>When running MockServer directly from <a href="/mock_server/running_mock_server.html#running_from_command_line">the command line</a> the command line argument <span class="inline_code">-logLevel</span> can be used to set the log level, as follows:</p>
-
-<pre><code class="code">java -jar ~/Downloads/mockserver-netty-5.8.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel DEBUG</code></pre>
-
-<p>Alternatively a system property <span class="inline_code">mockserver.logLevel</span> can be used to set the log level, as follows:</p>
-
-<pre><code class="code">java -Dmockserver.logLevel=INFO -jar ~/Downloads/mockserver-netty-5.8.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span></code></pre>
-
-<a id="configure_java_logger" class="anchor" href="#configure_java_logger">&nbsp;</a>
-
-<h3>Configuring Java Logger</h3>
-
-<h4>Running from command line (i.e. docker, npm or jar-with-dependencies)</h4>
-
-<p>When running MockServer from the command line it relies on the Java Logger <span class="inline_code">java.util.logging.Logger</span> in addition to controlling the log level of MockServer using <span class="inline_code">-logLevel</span> the underlying logging framework can be configured (overriding the default configuration) by specifying the System Property <span class="inline_code">java.util.logging.config.file</span> or <span class="inline_code">java.util.logging.config.class</span> as detailed in the <a href="https://docs.oracle.com/javase/7/docs/api/java/util/logging/LogManager.html">LogManager JavaDoc</a>.</p>
-
-<p>The MockServer github repository contains an example <a href="https://github.com/mock-server/mockserver/blob/master/mockserver-netty/src/main/resources/example_logging_configuration.properties">Java Logger configuration file</a> (which would be configured using <span class="inline_code">java.util.logging.config.file</span>).</p>
-
-<p>The default logging configuration can be overridden as follows:</p>
-<pre><code class="code">java -Djava.util.logging.config.file=/path/to/example_logging_configuration.properties -jar ~/Downloads/mockserver-netty-5.8.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel DEBUG</code></pre>
-
-<h4>Running from Java (i.e. maven or gradle project)</h4>
-
-<p>MockServer relies on the Java Logger SLF4J binding using an optional dependency.  Therefore, when MockServer is added as a dependency to a Maven or Gradle project it does not pull in the Java Logger binding transitively.</p>
+<p>In MockServer the Java Logger SLF4J binding is only an optional dependency.  Therefore, when MockServer is added as a dependency to a Maven or Gradle project it does not pull in the Java Logger binding transitively.</p>
 
 <p>If no existing SLF4J logger binding exists no logs will be output and the following error will be displayed by SLF4J:</p>
 
@@ -696,19 +334,56 @@ SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further detail
 
 <p>If this happens the simplest way to output logs for MockServer is to add the Java Logger SLF4J binding as a dependency.  For example, in Maven this would be as follows:</p>
 
-<pre><code class="code">&lt;<span class="element">dependency</span>&gt;
+<pre><code class="code xml">&lt;<span class="element">dependency</span>&gt;
     &lt;<span class="element">groupId</span>&gt;org.slf4j&lt;/<span class="element">groupId</span>&gt;
     &lt;<span class="element">artifactId</span>&gt;slf4j-jdk14&lt;/<span class="element">artifactId</span>&gt;
     &lt;<span class="element">version</span>&gt;1.7.29&lt;/<span class="element">version</span>&gt;
 &lt;/<span class="element">dependency</span>&gt;</code></pre>
 
+<p>It is possible to configure the logger using a configuration file by specifying the <span class="string_literal">java.util.logging.config.file</span> system property, as follows.</p>
+
+<pre><code class="code">-Djava.util.logging.config.file=/path/to/example_logging_configuration.properties</code></pre>
+
+<p>It is possible to configure the logger programmatically, for example, as follows.</p>
+
+<pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.logLevel("DEBUG");
+String loggingConfiguration = "" +
+    "handlers=org.mockserver.logging.StandardOutConsoleHandler\n" +
+    "org.mockserver.logging.StandardOutConsoleHandler.level=ALL\n" +
+    "org.mockserver.logging.StandardOutConsoleHandler.formatter=java.util.logging.SimpleFormatter\n" +
+    "java.util.logging.SimpleFormatter.format=%1$tF %1$tT  %3$s  %4$s  %5$s %6$s%n\n" +
+    ".level=" + javaLoggerLogLevel() + "\n" +
+    "io.netty.handler.ssl.SslHandler.level=WARNING";
+LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(loggingConfiguration.getBytes(UTF_8)));</code></pre>
+
+<a id="logging_with_command_line" class="anchor" href="#logging_with_command_line">&nbsp;</a>
+
+<h3>Configuring logging via the Command Line</h3>
+
+<p>When running MockServer directly from <a href="/mock_server/running_mock_server.html#running_from_command_line">the command line</a> the command line argument <span class="inline_code">-logLevel</span> can be used to set the log level, as follows:</p>
+
+<pre><code class="code">java -jar ~/Downloads/mockserver-netty-5.8.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel DEBUG</code></pre>
+
+<p>Alternatively a system property <span class="inline_code">mockserver.logLevel</span> can be used to set the log level, as follows:</p>
+
+<pre><code class="code">java -Dmockserver.logLevel=INFO -jar ~/Downloads/mockserver-netty-5.8.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span></code></pre>
+
+<h4>Configuring Java Logger</h4>
+
+<p>When running MockServer from the command line it relies on the Java Logger <span class="inline_code">java.util.logging.Logger</span> in addition to controlling the log level of MockServer using <span class="inline_code">-logLevel</span> the underlying logging framework can be configured (overriding the default configuration) by specifying the System Property <span class="inline_code">java.util.logging.config.file</span> or <span class="inline_code">java.util.logging.config.class</span> as detailed in the <a href="https://docs.oracle.com/javase/7/docs/api/java/util/logging/LogManager.html">LogManager JavaDoc</a>.</p>
+
+<p>The MockServer github repository contains an example <a href="https://github.com/mock-server/mockserver/blob/master/mockserver-netty/src/main/resources/example_logging_configuration.properties">Java Logger configuration file</a> (which would be configured using <span class="inline_code">java.util.logging.config.file</span>).</p>
+
+<p>The default logging configuration can be overridden as follows:</p>
+<pre><code class="code">java -Djava.util.logging.config.file=/path/to/example_logging_configuration.properties -jar ~/Downloads/mockserver-netty-5.8.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel DEBUG</code></pre>
+
 <a id="logging_with_maven_plugin" class="anchor" href="#logging_with_maven_plugin">&nbsp;</a>
 
-<h3>Logging with Maven Plugin</h3>
+<h3>Configuring logging via the Maven Plugin</h3>
 
 <p>The mockserver-maven-plugin provides a logLevel settings that can be used to define the log level for all MockServer classes, as follows:</p>
 
-<pre><code class="code xml"> &lt;<span class="element">plugin</span>&gt;
+<pre><code class="code xml">&lt;<span class="element">plugin</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
      &lt;<span class="element">version</span>&gt;<span class="element_value">5.8.1</span>&lt;/<span class="element">version</span>&gt;
@@ -734,9 +409,9 @@ SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further detail
      &lt;/<span class="element">executions</span>&gt;
  &lt;/<span class="element">plugin</span>&gt;</code></pre>
 
-<a id="logging-with-node" class="anchor" href="#logging-with-node">&nbsp;</a>
+<a id="logging_with_node" class="anchor" href="#logging_with_node">&nbsp;</a>
 
-<h3>Logging with npm module</h3>
+<h3>Configuring logging via the npm module</h3>
 
 <p>When running MockServer using the <a href="/mock_server/running_mock_server.html#mockserver_node"><strong>mockserver-node</strong></a> Grunt plugin and Node.js (npm) module the <span class="inline_code">verbose</span> option can be used to enable <strong>INFO</strong> level logging and the <span class="inline_code">trace</span> option can be used to enable <strong>TRACE</strong> level logging.</p>
 
@@ -759,7 +434,7 @@ mockserver
         }
     );</code></pre>
 
-<h3>Logging with Grunt plugin</h3>
+<h3>Configuring logging via the Grunt plugin</h3>
 
 <p>When running MockServer using the <a href="/mock_server/running_mock_server.html#mockserver_node"><strong>mockserver-node</strong></a> as a Grunt plugin module the <span class="inline_code">verbose</span> option can be used to enable <strong>INFO</strong> level logging and the <span class="inline_code">trace</span> option can be used to enable <strong>TRACE</strong> level logging.  The <span class="inline_code">--verbose</span> command line flag can also be used to enable the <strong>mockserver-node</strong> verbose option from the command line.</p>
 
@@ -781,14 +456,3 @@ mockserver
 });
 
 grunt.loadNpmTasks('mockserver-node');</code></pre>
-
-<a id="disabling-logging" class="anchor" href="#disabling-logging">&nbsp;</a>
-
-<h3>Disabling Logging</h3>
-
-<p>To disable logging the following options can be used:</p>
-
-<ul>
-<li><code class="code inline">-Dmockserver.logLevel=OFF</code> - to disable logging from the MockServer and Proxy classes</li>
-<li><code class="code inline">-Droot.logLevel=OFF</code> - to disable all logging from all other classes</li>
-</ul>

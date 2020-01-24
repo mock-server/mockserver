@@ -1,6 +1,6 @@
 ---
-title: Configuring System Under Test
-shortTitle: Configuring SUT
+title: Configuring Clients<br/>(i.e. System Under Test)
+shortTitle: Configuring Clients
 layout: page
 pageOrder: 2
 section: 'Proxy'
@@ -11,26 +11,26 @@ sitemap:
   lastmod: 2019-11-10T08:00:00+01:00
 ---
 
-<p>The MockServer Proxy provides the following types of proxy:</p>
+<p>MockServer provides the following types of proxy:</p>
 
 <ul>
-    <li><a href="#port-forwarding"><strong>Port Forwarding</strong></a>
+    <li><a href="#port_forwarding"><strong>Port Forwarding</strong></a>
         <ul>
             <li>all requests for a specific local port are forwarded to a different (local or remote) port and hostname for the system being proxied</li>
         </ul>
     </li>
-    <li><a href="#web-secure-web-proxy"><strong>Web Proxy</strong></a> (i.e. HTTP proxy)
+    <li><a href="#web_secure_web_proxy"><strong>Web Proxy</strong></a> (i.e. HTTP proxy)
         <ul>
             <li>each request is forwarded dynamically using its Host header</li>
         </ul>
     </li>
-    <li><a href="#web-secure-web-proxy"><strong>Secure Web Proxy</strong></a> (i.e. HTTPS tunneling proxying)
+    <li><a href="#web_secure_web_proxy"><strong>Secure Web Proxy</strong></a> (i.e. HTTPS tunneling proxying)
         <ul>
             <li>requests are forwarded using a CONNECT request that setups an HTTP tunnel</li>
             <li>an SSL certificate is auto-generated allowing encrypted HTTPS traffic to be recorded transparently</li>
         </ul>
     </li>
-    <li><a href="#socks-proxy"><strong>SOCKS Proxy</strong></a> (i.e. dynamic port forwarding)
+    <li><a href="#socks_proxy"><strong>SOCKS Proxy</strong></a> (i.e. dynamic port forwarding)
         <ul>
             <li>requests are forwarded using a SOCK CONNECT CMD request that established a socket tunnel</li>
             <li>if the traffic is encrypted an SSL certificate is auto-generated allowing SSL traffic to be recorded transparently</li>
@@ -40,7 +40,7 @@ sitemap:
 
 <p>The port forwarding and the SOCKS proxy are the most transparent and typically don't require any code changes.  However the Web Proxy and Secure Web Proxy ensure only configured clients are proxied and that multiple services can be simultaneously proxies.</p>
 
-<a id="port-forwarding" class="anchor" href="#port-forwarding">&nbsp;</a>
+<a id="port_forwarding" class="anchor" href="#port_forwarding">&nbsp;</a>
 
 <h3>Port Forwarding</h3>
 
@@ -55,13 +55,13 @@ sitemap:
 <ol>
 	<li>Update the remote service host and port used by the client, typically this is either hard coded or in a configuration file. Change the remote service host and port to the host and port where the proxy is running.</li>
 	<li>Add entry to the
-		<strong>/etc/hosts</strong> file to map one or more remote domain names to the machine where the proxy is running. This approach will not require any configuration file changes as the operating system will resolve the remote domain name to maching where the proxy is running. However, this approach will only work if it is possible to start the MockServer Proxy locally on the same port the client is connecting to on the remote machine.
+		<strong>/etc/hosts</strong> file to map one or more remote domain names to the machine where the proxy is running. This approach will not require any configuration file changes as the operating system will resolve the remote domain name to maching where the proxy is running. However, this approach will only work if it is possible to start MockServer locally on the same port the client is connecting to on the remote machine.
 	</li>
 </ol>
 
 <h4>Proxy</h4>
 
-<p>To run the Port Forwarding Proxy the following values need to be provided to the MockServer Proxy:</p>
+<p>To run the Port Forwarding Proxy the following values need to be provided to MockServer:</p>
 
 <ul>
 	<li><strong>serverPort</strong> - specifies the HTTP and HTTPS port for the MockServer.</li>
@@ -69,9 +69,9 @@ sitemap:
 	<li><strong>proxyRemoteHost</strong> - specified the host to forward all proxy requests to as a domain name or ip address. If no value is provided when <strong>proxyRemotePort</strong> has been specified, the default <span class="string_literal">"localhost"</span> is used.</li>
 </ul>
 
-<p>For details of how to run MockServer Proxy with the above values configured see <a href="/proxy/running_mock_server_proxy.html">Running The Proxy</a></p>
+<p>For details of how to run MockServer with the above values configured see <a href="/mock_server/running_mock_server.html">Running MockServer</a></p>
 
-<a id="web-secure-web-proxy" class="anchor" href="#web-secure-web-proxy">&nbsp;</a>
+<a id="web_secure_web_proxy" class="anchor" href="#web_secure_web_proxy">&nbsp;</a>
 
 <h3>Web Proxy & Secure Web Proxy</h3>
 
@@ -94,13 +94,13 @@ sitemap:
 
 <h4>Proxy</h4>
 
-<p>To run the Web Proxy or Secure Web Proxy the following values need to be provided to the MockServer Proxy:</p>
+<p>To run the Web Proxy or Secure Web Proxy the following values need to be provided to MockServer:</p>
 
 <ul>
 	<li><strong>serverPort</strong> - specifies the HTTP and HTTPS port for the MockServer.</li>
 </ul>
 
-<p>For details of how to run MockServer Proxy with the above values configured see <a href="/proxy/running_mock_server_proxy.html">Running The Proxy</a></p>
+<p>For details of how to run MockServer with the above values configured see <a href="/proxy/running_mock_server_proxy.html">Running MockServer</a></p>
 
 <a id="java_jdk_http_url_connection" class="anchor" href="#java_jdk_http_url_connection">&nbsp;</a>
 
@@ -252,7 +252,7 @@ AsyncHttpClient asyncHttpClient = <span class="keyword">new</span> AsyncHttpClie
 
 <p><a href="/images/mac_proxy_configuration/network_secure_web_proxy.png" target="_blank"><img src="/images/mac_proxy_configuration/network_secure_web_proxy.png" alt="Secure Web Proxy Configuration" style="max-width:80%;"></a></p>
 
-<a id="socks-proxy" class="anchor" href="#socks-proxy">&nbsp;</a>
+<a id="socks_proxy" class="anchor" href="#socks_proxy">&nbsp;</a>
 
 <h3>SOCKS Proxy</h3>
 
@@ -272,13 +272,13 @@ AsyncHttpClient asyncHttpClient = <span class="keyword">new</span> AsyncHttpClie
 
 <h4>Proxy</h4>
 
-<p>To run the SOCKS Proxy the following values need to be provided to the MockServer Proxy:</p>
+<p>To run the SOCKS Proxy the following values need to be provided to MockServer:</p>
 
 <ul>
 	<li><strong>serverPort</strong> - specifies the SOCKS port for the MockServer.</li>
 </ul>
 
-<p>For details of how to run MockServer Proxy with the above values configured see <a href="/proxy/running_mock_server_proxy.html">Running The Proxy</a></p>
+<p>For details of how to run MockServer with the above values configured see <a href="/proxy/running_mock_server_proxy.html">Running MockServer</a></p>
 
 <a id="socks_apache_http_client" class="anchor" href="#socks_apache_http_client">&nbsp;</a>
 

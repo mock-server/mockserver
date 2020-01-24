@@ -111,19 +111,25 @@ mockServerClient("localhost", 1080).mockAnyResponse({
             <li>a <strong><a href="#button_response_literal_body_only">literal</a></strong></li>
             <li>a <strong><a href="#button_javascript_templated_response">javascript template</a></strong></li>
             <li>a <strong><a href="#button_javascript_velocity_templated_response">velocity template</a></strong></li>
-            <li>a <strong><a href="#button_response_class_callback">server side callback</a></strong> (via classpath)</li>
-            <li>a <strong><a href="#button_response_method_or_closure_callback">client side callback</a></strong> (via WebSocket)</li>
+            <li>a <strong><a href="#button_response_class_callback">class callback</a></strong> (must be present in classpath)</li>
+            <li>a <strong><a href="#button_response_method_or_closure_callback">object or closure callback</a></strong> (via WebSocket)</li>
         </ul></li>
-    <li><strong><a href="#forward_action">forward</a></strong> - forwards requests defined by using
+    <li><strong><a href="#forward_action">forward</a></strong> - forwards modified requests and returns modified response by using
         <ul>
-            <li>the <strong><a href="#button_forward_exactly">exact request received</a></strong></li>
-            <li>an <strong><a href="#button_forward_overridden">overridden request</a></strong> (or overridden response)</li>
-            <li>a <strong><a href="#button_javascript_templated_forward">javascript template</a></strong></li>
-            <li>a <strong><a href="#button_javascript_velocity_templated_forward">velocity template</a></strong></li>
-            <li>a <strong><a href="#button_forward_class_callback">server side callback</a></strong> (via classpath)</li>
-            <li>a <strong><a href="#button_forward_method_or_closure_callback">client side callback</a></strong> (via WebSocket)</li>
+            <li>the <strong><a href="#button_forward_exactly">exact request and response received</a></strong></li>
+            <li>an <strong><a href="#button_forward_overridden">static overridden for request and / or response</a></strong></li>
+            <li>a <strong><a href="#button_javascript_templated_forward">javascript template (request only)</a></strong></li>
+            <li>a <strong><a href="#button_javascript_velocity_templated_forward">velocity template (request only)</a></strong></li>
+            <li>a <strong><a href="#button_forward_class_callback">class callback for request and / or response</a></strong> (must be present in classpath)</li>
+            <li>a <strong><a href="#button_forward_method_or_closure_callback">object or closure callback for request and / or response</a></strong> (via WebSocket)</li>
         </ul></li>
     <li><strong><a href="#error_action">error</a></strong> - returns an invalid response as a sequence of bytes or closes the connection</li>
+</ul>
+
+<p>If no action is present for a request because no <a href="#request_matchers">request matcher</a> was matched then:</p>
+<ul>
+    <li>if MockServer is being used as a proxy the request is proxied to its destination un-modified</li>
+    <li>if the request host header does not match the hostname or IP the request automatically proxied to the host header</li>
 </ul>
 
 <a id="response_action" class="anchor" href="#response_action">&nbsp;</a>

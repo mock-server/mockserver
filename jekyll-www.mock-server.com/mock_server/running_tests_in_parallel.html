@@ -1,7 +1,7 @@
 ---
 title: Running Tests In Parallel
 layout: page
-pageOrder: 9
+pageOrder: 6
 section: 'Mock Server'
 subsection: true
 sitemap:
@@ -10,11 +10,11 @@ sitemap:
   lastmod: 2019-11-10T08:00:00+01:00
 ---
 
-<p>To ensure all tests can run in parallel with completely isolated independent data it is important to include a value unique to each test for the request matcher. </p>
+<p>To ensure all tests can run in parallel with completely isolated independent data use a unique value for each test. The unique value for a test should be specified in each request matcher for all expectations for that test.  This ensures that expectations created by one test are not visible by other tests and therefore keeps test isolated without needing multiple separate instances of MockServer.</p>
 
-<p>If each test generates a unique value (i.e. a UUID) for the sessionId cookie or a correlationId header then each test can receive completely independent response.</p>
+<p>For example, if each test generates a unique value (i.e. a UUID) for the sessionId cookie or a correlationId header then this header or cookie can be specified in each expectation's request matcher ensuring only requests with that unique value could be matched against expectations with that unique value.</p>
 
-
+<p><strong>Note:</strong> the drawback with this approach is that the logs will be more complex to understand because there will be a large number of expectation match failures, therefore it is recommended to either use a unique instance of MockServer per test or to run tests in series and clear all expectations prior to each test.</p>
 
 <p><strong>Java</strong></p>
 

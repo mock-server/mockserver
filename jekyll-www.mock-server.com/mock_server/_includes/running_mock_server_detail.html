@@ -130,10 +130,10 @@
 		<strong>serverPort</strong> - The port the MockServer listens for incoming request.  Port unification is used to support both HTTP and HTTPS on the same port (required: true)
 	</li>
 	<li>
-		<strong>proxyRemotePort</strong> - The port the proxy forwards to incoming requests to (required: false)
+		<strong>proxyRemotePort</strong> - The port proxied requests are forwarded to (required: false)
 	</li>
 	<li>
-		<strong>proxyRemoteHost</strong> - The port the proxy forwards to incoming requests to (required: false)
+		<strong>proxyRemoteHost</strong> - The host proxied requests are forwarded to (required: false)
 	</li>
 	<li>
 		<strong>timeout</strong> - How long to block waiting for MockServer, after the timeout the plugin will shutdown MockServer, used by <strong>run</strong> goal, 0 means wait indefinitely (required: false, default: 0)
@@ -512,6 +512,10 @@ i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span cl
 <h2>Docker Container</h2>
 
 {% include_subpage ../mock_server/_includes/running_docker_container.html %}
+
+<a id="helm_chart" class="anchor" href="#helm_chart">&nbsp;</a>
+
+{% include_subpage ../mock_server/_includes/helm_chart.html %}
 
 <a id="build-and-run-from-source" class="anchor" href="#build-and-run-from-source">&nbsp;</a>
 

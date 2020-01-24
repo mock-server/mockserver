@@ -1,8 +1,8 @@
 ---
 title: Scalability & Latency
 layout: page
-pageOrder: 14
-section: 'Mock Server'
+pageOrder: 5
+section: 'General'
 subsection: true
 sitemap:
 priority: 0.8
@@ -10,7 +10,7 @@ changefreq: 'monthly'
 lastmod: 2019-11-10T08:00:00+01:00
 ---
 
-<p>The MockServer is build to support massive scale from a single instance:</p>
+<p>MockServer is build to support massive scale from a single instance:</p>
 <ul>
     <li><a href="#apache_bench">Apache Bench</a> tested <strong>73,307 requests per second with a p99 of less then 1 ms</strong></li>
     <li><a href="#locust">Locust</a> tested <strong>987 requests per second with a p99 of 19 ms</strong></li>
@@ -27,7 +27,7 @@ lastmod: 2019-11-10T08:00:00+01:00
 
 <h2>Performance Tests</h2>
 
-<p>The MockServer has been performance tested using <a href="#apache_bench">Apache Bench</a> and <a href="#locust">Locust</a> with the following scenario:</p>
+<p>MockServer has been performance tested using <a href="#apache_bench">Apache Bench</a> and <a href="#locust">Locust</a> with the following scenario:</p>
 <ul>
     <li>four basic expectations, including method, path and headers</li>
     <li>basic GET request matching third expectation (i.e. three matches are attempted for each request)</li>

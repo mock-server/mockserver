@@ -12,10 +12,10 @@ sitemap:
 
 <p style="width: 35%; float: right; margin-right: 5%"><a href="../images/more_detail_available_message.png" target="_blank"><img src="../images/more_detail_available_message.png" alt="Note: this page is a high level overview of each topic, more detail is available for each topic on a linked page." style="float: right; max-width: 100%;"></a></p>
 
-<p>To use MockServer Proxy to analysis an existing system:</p>
+<p>To use MockServer to analysis an existing system:</p>
 
 <ol start="0">
-    <li><a href="#start_mockserver">Start MockServer Proxy</a></li>
+    <li><a href="#start_mockserver">Start MockServer</a></li>
     <li><a href="#configure_clients">Configure Clients</a></li>
     <li>Run Scenarios</li>
     <li><a href="#analysing_behaviour">Analyse Behaviour</a></li>
@@ -23,10 +23,10 @@ sitemap:
 
 <p style="width: 59%; margin-top: 0; padding-top: 0;"><a href="../images/recording_requests_with_mockserver_proxy.png" target="_blank"><img src="../images/recording_requests_with_mockserver_proxy.png" alt="Mocking service dependencies with MockServer" style="max-width:100%;"></a></p>
 
-<p>To use MockServer Proxy to verify requests:</p>
+<p>To use MockServer to verify requests:</p>
 
 <ol start="0">
-    <li><a href="/proxy/running_mock_server_proxy.html">Start MockServer Proxy</a></li>
+    <li><a href="#start_mockserver">Start MockServer</a></li>
     <li><a href="#configure_clients">Configure Clients</a></li>
     <li>Run Your Test Scenarios</li>
     <li><a href="/proxy/verification.html">Verify Requests</a></li>
@@ -44,7 +44,21 @@ sitemap:
 
 <h2>1. Configure Clients</h2>
 
-<p>The page on <a href="/proxy/configuring_sut.html">configuring clients</a> gives full details and example code on how to configure the system being analysed.</p>
+<p>The page on <a href="/proxy/configuring_sut.html">configuring clients</a> gives full details on how to configure clients to proxy requests via MockServer and includes code examples for the following clients:</p>
+
+<ul>
+    <li><a href="/proxy/configuring_sut.html#java_jdk_http_url_connection">Java JDK HttpURLConnection</a></li>
+    <li><a href="/proxy/configuring_sut.html#apache_http_client">Apache HttpClient</a></li>
+    <li><a href="/proxy/configuring_sut.html#spring_rest_template">Spring RestTemplate</a></li>
+    <li><a href="/proxy/configuring_sut.html#google_http_client">Google HTTP Client</a></li>
+    <li><a href="/proxy/configuring_sut.html#jetty_http_client">Jetty HttpClient</a></li>
+    <li><a href="/proxy/configuring_sut.html#jersey_client">Jersey Client</a></li>
+    <li><a href="/proxy/configuring_sut.html#grizzly_async_http_client">Grizzly AsyncHttpClient</a></li>
+    <li><a href="/proxy/configuring_sut.html#socks_jvm_configuration">Java Virtual Machine Network Stack</a></li>
+    <li><a href="/proxy/configuring_sut.html#apple_mac_http_https">Apple Mac HTTP & HTTPS (i.e. Chrome, Safari, Firefox, etc)</a></li>
+    <li><a href="/proxy/configuring_sut.html#socks_mac_os">Apple Mac Network Stack (i.e. SOCKS)</a></li>
+</ul>
+
 
 <a id="analysing_behaviour" class="anchor" href="#analysing_behaviour">&nbsp;</a>
 
