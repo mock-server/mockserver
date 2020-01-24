@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - caught Jackson configuration exception to improve resilience with other Jackson versions in classpath
 - moved Junit4 to separate module to reduce size of jar-with-dependencies, simplify code and increase build speed
 - enabled case insensitive matching for regex matches
+- improved documentation (i.e. on website)
+- switched from Bouncy Castle to JDK for certificate and private key generation
 
 ### Fixed
 - fixed error where ClientAndServer does fully wait for client to stop
