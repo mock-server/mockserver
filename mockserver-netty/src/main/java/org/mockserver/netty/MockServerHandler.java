@@ -33,8 +33,8 @@ import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.addSubjectAlternativeName;
-import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
-import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
+import static org.mockserver.exception.ExceptionHandling.closeOnFlush;
+import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
 import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
@@ -132,7 +132,9 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                         // assume SSL for CONNECT request
                         enableSslUpstreamAndDownstream(ctx.channel());
                         // add Subject Alternative Name for SSL certificate
-                        server.getScheduler().submit(() -> addSubjectAlternativeName(request.getPath().getValue()));
+                        if (isNotBlank(request.getPath().getValue())) {
+                            server.getScheduler().submit(() -> addSubjectAlternativeName(request.getPath().getValue()));
+                        }
                         ctx.pipeline().addLast(new HttpConnectHandler(server, mockServerLogger, request.getPath().getValue(), -1));
                         ctx.pipeline().remove(this);
                         ctx.fireChannelRead(request);
@@ -187,7 +189,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        if (shouldNotIgnoreException(cause)) {
+        if (connectionClosedException(cause)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)

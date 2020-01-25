@@ -27,7 +27,7 @@ public class NettyHttpProxySecureIntegrationTest extends AbstractClientSecurePro
         System.setProperty("http.proxyHost", "127.0.0.1");
         System.setProperty("http.proxyPort", String.valueOf(mockServerPort));
 
-        echoServer = new EchoServer(true);
+        echoServer = new EchoServer(true, false);
     }
 
     @AfterClass

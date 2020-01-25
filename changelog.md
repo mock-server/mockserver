@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - addition configuration for action handler thread pool size
 - exposed request raw bytes to object callbacks (allows forwarded requests body parsing that is inconsistent with Content-Type header)
 - added support to delay socket closure using connection options
+- added support to control trusted certificate authorities (trust store) for proxied & forwarded requests
+- added support for two-way TLS (mTLS), also called client authentication
+- now sends TLS X509 certificate from proxy (i.e. support forward client authentication / mTLS)
 
 ### Changed
 - performance improvements for header and cookie handling

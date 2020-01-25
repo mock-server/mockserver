@@ -24,7 +24,7 @@ public class NettyPortForwardingProxyIntegrationTest {
 
     @BeforeClass
     public static void setupFixture() {
-        echoServer = new EchoServer(false);
+        echoServer = new EchoServer(false, false);
 
         mockServer = new MockServer(echoServer.getPort(), "127.0.0.1", 0);
     }

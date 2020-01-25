@@ -69,11 +69,21 @@ public abstract class AbstractMockingIntegrationTestBase {
     @BeforeClass
     public static void startEchoServer() {
         if (insecureEchoServer == null) {
-            insecureEchoServer = new EchoServer(false);
+            insecureEchoServer = new EchoServer(false, false);
         }
         if (secureEchoServer == null) {
-            secureEchoServer = new EchoServer(true);
+            secureEchoServer = new EchoServer(true, false);
         }
+    }
+
+    @AfterClass
+    public static void stopEchoServer() {
+//        if (insecureEchoServer != null) {
+//            insecureEchoServer.stop();
+//        }
+//        if (secureEchoServer != null) {
+//            secureEchoServer.stop();
+//        }
     }
 
     @BeforeClass
@@ -97,7 +107,7 @@ public abstract class AbstractMockingIntegrationTestBase {
                     .setType(LogEntry.LogMessageType.WARN)
                     .setLogLevel(WARN)
                     .setMessageFormat("exception while resetting - " + throwable.getMessage())
-                    .setArguments(throwable)
+                    .setThrowable(throwable)
             );
         }
     }
@@ -112,7 +122,7 @@ public abstract class AbstractMockingIntegrationTestBase {
     @BeforeClass
     public static void createClientAndEventLoopGroup() {
         clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(AbstractMockingIntegrationTestBase.class.getSimpleName() + "-eventLoop"));
-        httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null);
+        httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false);
     }
 
     @AfterClass
@@ -149,7 +159,9 @@ public abstract class AbstractMockingIntegrationTestBase {
             boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();
             int port = (isSsl ? getServerSecurePort() : getServerPort());
             httpRequest.withPath(addContextToPath(httpRequest.getPath().getValue()));
-            httpRequest.withHeader(HOST.toString(), "localhost:" + port);
+            if (!httpRequest.containsHeader(HOST.toString())) {
+                httpRequest.withHeader(HOST.toString(), "localhost:" + port);
+            }
             boolean isDebug = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
             HttpResponse httpResponse = httpClient.sendRequest(httpRequest, new InetSocketAddress("localhost", port))
                 .get(30, (isDebug ? TimeUnit.MINUTES : TimeUnit.SECONDS));

@@ -41,7 +41,7 @@ public class NettyHttpProxyIntegrationTest extends AbstractClientProxyIntegratio
         mockServerPort = new MockServer().getLocalPort();
         mockServerClient = new MockServerClient("localhost", mockServerPort);
 
-        echoServer = new EchoServer(false);
+        echoServer = new EchoServer(false, false);
     }
 
     @AfterClass

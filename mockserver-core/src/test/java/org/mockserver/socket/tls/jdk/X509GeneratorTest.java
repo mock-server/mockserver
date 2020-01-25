@@ -9,19 +9,22 @@ import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static junit.framework.TestCase.fail;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.Matchers.contains;
 import static org.junit.Assert.*;
-import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.DEFAULT_VALIDITY;
-import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.ROOT_COMMON_NAME;
+import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.*;
 import static org.mockserver.socket.tls.jdk.X509Generator.x509FromPEM;
 import static sun.security.x509.BasicConstraintsExtension.IS_CA;
 
@@ -41,7 +44,7 @@ public class X509GeneratorTest {
         int keySize = KEY_SIZE;
 
         // when - a key pair is generated
-        X509AndPrivateKey keyPair = x509Generator.generateRootKeyPair(csr);
+        X509AndPrivateKey keyPair = x509Generator.generateRootX509AndPrivateKey(csr);
         X509Certificate x509Certificate = x509FromPEM(keyPair.getCert());
 
         // then - algorithm is RSA
@@ -57,7 +60,7 @@ public class X509GeneratorTest {
         X509Generator x509Generator = new X509Generator(new MockServerLogger());
 
         // and - a key pair
-        X509AndPrivateKey keyPair = x509Generator.generateRootKeyPair(csr);
+        X509AndPrivateKey keyPair = x509Generator.generateRootX509AndPrivateKey(csr);
         X509Certificate x509Certificate = x509FromPEM(keyPair.getCert());
 
         // when - expiration is verified
@@ -71,11 +74,11 @@ public class X509GeneratorTest {
         X509Generator x509Generator = new X509Generator(new MockServerLogger());
 
         // and - a key pair
-        X509AndPrivateKey keyPair = x509Generator.generateRootKeyPair(csr);
+        X509AndPrivateKey keyPair = x509Generator.generateRootX509AndPrivateKey(csr);
         X509Certificate x509Certificate = x509FromPEM(keyPair.getCert());
 
         // when - expiration is verified
-        LocalDateTime instantBeforeIssueTime = LocalDateTime.now().minusMonths(1).minusHours(1);
+        Instant instantBeforeIssueTime = NOT_BEFORE.toInstant().minus(1, ChronoUnit.DAYS);
         try {
             x509Certificate.checkValidity(Date.from(instantBeforeIssueTime.atZone(ZoneId.systemDefault()).toInstant()));
             fail("expected exception to be thrown");
@@ -90,11 +93,11 @@ public class X509GeneratorTest {
         X509Generator x509Generator = new X509Generator(new MockServerLogger());
 
         // and - a key pair
-        X509AndPrivateKey keyPair = x509Generator.generateRootKeyPair(csr);
+        X509AndPrivateKey keyPair = x509Generator.generateRootX509AndPrivateKey(csr);
         X509Certificate x509Certificate = x509FromPEM(keyPair.getCert());
 
         // when - expiration is verified
-        LocalDateTime instantAfterIssueTime = LocalDateTime.now().plusDays(DEFAULT_VALIDITY).plusHours(1);
+        Instant instantAfterIssueTime = NOT_AFTER.toInstant().plus(1, ChronoUnit.DAYS);
         try {
             x509Certificate.checkValidity(Date.from(instantAfterIssueTime.atZone(ZoneId.systemDefault()).toInstant()));
             fail("expected exception to be thrown");
@@ -109,7 +112,7 @@ public class X509GeneratorTest {
         X509Generator x509Generator = new X509Generator(new MockServerLogger());
 
         // when - a key pair is generated
-        X509AndPrivateKey keyPair = x509Generator.generateRootKeyPair(csr);
+        X509AndPrivateKey keyPair = x509Generator.generateRootX509AndPrivateKey(csr);
 
         // then - validate pem decoding/encoding of the private key
         assertEquals(keyPair.getPrivateKey(), x509Generator.privateKeyToPEM(x509Generator.privateKeyBytesFromPEM(keyPair.getPrivateKey())));
@@ -127,14 +130,13 @@ public class X509GeneratorTest {
         CertificateSigningRequest csr = new CertificateSigningRequest()
             .setCommonName(ROOT_COMMON_NAME)
             .setKeyPairSize(KEY_SIZE);
-        String[] providedSubjectAlternativeNames = new String[]{"bob.com", "localhost.com", "127.0.0.1"};
-        csr.setSubjectAlternativeNames(providedSubjectAlternativeNames);
+        csr.addSubjectAlternativeNames("bob.com", "localhost.com", "127.0.0.1");
 
         // and - and a root keypair
-        X509AndPrivateKey pemRootKeyPair = x509Generator.generateRootKeyPair(csr);
+        X509AndPrivateKey pemRootKeyPair = x509Generator.generateRootX509AndPrivateKey(csr);
 
         // when - a certificate has been successfully generated
-        X509AndPrivateKey keyPair = x509Generator.generateSignedEphemeralCertificate(csr, pemRootKeyPair.getPrivateKey());
+        X509AndPrivateKey keyPair = x509Generator.generateLeafX509AndPrivateKey(csr, buildDistinguishedName(ROOT_COMMON_NAME), pemRootKeyPair.getPrivateKey());
         X509Certificate x509Certificate = x509FromPEM(keyPair.getCert());
 
         // then - the correct number of SANs should be present
@@ -142,9 +144,11 @@ public class X509GeneratorTest {
         assertEquals(3, subjectAlternativeNames.size());
 
         // and - the correct values are contained in the correct order
-        assertArrayEquals(subjectAlternativeNames
+        List<?> collect = subjectAlternativeNames
             .stream()
-            .map(subjectAlternativeName -> subjectAlternativeName.get(1)).toArray(), providedSubjectAlternativeNames);
+            .map(subjectAlternativeName -> subjectAlternativeName.get(1))
+            .collect(Collectors.toList());
+        assertThat(collect, contains("bob.com", "localhost.com", "127.0.0.1"));
     }
 
     @Test
@@ -156,13 +160,13 @@ public class X509GeneratorTest {
         CertificateSigningRequest csr = new CertificateSigningRequest()
             .setCommonName(ROOT_COMMON_NAME)
             .setKeyPairSize(KEY_SIZE);
-        csr.setSubjectAlternativeNames(new String[0]);
+        csr.addSubjectAlternativeNames();
 
         // and - and a root keypair
-        X509AndPrivateKey pemRootKeyPair = x509Generator.generateRootKeyPair(csr);
+        X509AndPrivateKey pemRootKeyPair = x509Generator.generateRootX509AndPrivateKey(csr);
 
         // when - a certificate has been successfully generated
-        X509AndPrivateKey keyPair = x509Generator.generateSignedEphemeralCertificate(csr, pemRootKeyPair.getPrivateKey());
+        X509AndPrivateKey keyPair = x509Generator.generateLeafX509AndPrivateKey(csr, buildDistinguishedName(ROOT_COMMON_NAME), pemRootKeyPair.getPrivateKey());
         X509Certificate x509Certificate = x509FromPEM(keyPair.getCert());
 
         // then - the no SANs should be present
@@ -179,14 +183,14 @@ public class X509GeneratorTest {
         CertificateSigningRequest csr = new CertificateSigningRequest()
             .setCommonName(ROOT_COMMON_NAME)
             .setKeyPairSize(KEY_SIZE);
-        String[] providedSubjectAlternativeNames = new String[]{"bob@bob.com", "localhost.com", "127.0.0.1"};
-        csr.setSubjectAlternativeNames(providedSubjectAlternativeNames);
+
+        csr.addSubjectAlternativeNames("bob@bob.com", "localhost.com", "127.0.0.1");
 
         // and - and a root keypair
-        X509AndPrivateKey pemRootKeyPair = x509Generator.generateRootKeyPair(csr);
+        X509AndPrivateKey pemRootKeyPair = x509Generator.generateRootX509AndPrivateKey(csr);
 
         // when - a certificate has been successfully generated
-        X509AndPrivateKey keyPair = x509Generator.generateSignedEphemeralCertificate(csr, pemRootKeyPair.getPrivateKey());
+        X509AndPrivateKey keyPair = x509Generator.generateLeafX509AndPrivateKey(csr, buildDistinguishedName(ROOT_COMMON_NAME), pemRootKeyPair.getPrivateKey());
         X509Certificate x509Certificate = x509FromPEM(keyPair.getCert());
 
         // then - the correct number of SANs should be present
@@ -194,9 +198,10 @@ public class X509GeneratorTest {
         assertEquals(2, subjectAlternativeNames.size());
 
         // and - the correct values are contained in the correct order
-        assertArrayEquals(new String[]{"localhost.com", "127.0.0.1"}, subjectAlternativeNames
+        assertThat(subjectAlternativeNames
             .stream()
-            .map(subjectAlternativeName -> subjectAlternativeName.get(1)).toArray());
+            .map(subjectAlternativeName -> subjectAlternativeName.get(1))
+            .collect(Collectors.toList()), contains("localhost.com", "127.0.0.1"));
 
     }
 
@@ -211,7 +216,7 @@ public class X509GeneratorTest {
             .setKeyPairSize(KEY_SIZE);
 
         // and - a root keypair
-        X509AndPrivateKey pemRootKeyPair = x509Generator.generateRootKeyPair(csr);
+        X509AndPrivateKey pemRootKeyPair = x509Generator.generateRootX509AndPrivateKey(csr);
 
         // when - a x509 certificate has been successfully generated
         X509Certificate x509Certificate = x509FromPEM(pemRootKeyPair.getCert());
@@ -230,7 +235,7 @@ public class X509GeneratorTest {
         X509Generator x509Generator = new X509Generator(new MockServerLogger());
 
         // when - a key pair is generated
-        X509AndPrivateKey keyPair = x509Generator.generateRootKeyPair(csr);
+        X509AndPrivateKey keyPair = x509Generator.generateRootX509AndPrivateKey(csr);
         X509Certificate x509Certificate = x509FromPEM(keyPair.getCert());
 
         assertTrue("The ca cert serial number is non-negative", x509Certificate.getSerialNumber().compareTo(BigInteger.ZERO) > 0);
@@ -245,14 +250,14 @@ public class X509GeneratorTest {
         CertificateSigningRequest csr = new CertificateSigningRequest()
             .setCommonName(ROOT_COMMON_NAME)
             .setKeyPairSize(KEY_SIZE);
-        String[] providedSubjectAlternativeNames = new String[]{"bob.com", "localhost.com", "127.0.0.1"};
-        csr.setSubjectAlternativeNames(providedSubjectAlternativeNames);
+
+        csr.addSubjectAlternativeNames("bob.com", "localhost.com", "127.0.0.1");
 
         // and - and a root keypair
-        X509AndPrivateKey pemRootKeyPair = x509Generator.generateRootKeyPair(csr);
+        X509AndPrivateKey pemRootKeyPair = x509Generator.generateRootX509AndPrivateKey(csr);
 
         // when - a certificate has been successfully generated
-        X509AndPrivateKey keyPair = x509Generator.generateSignedEphemeralCertificate(csr, pemRootKeyPair.getPrivateKey());
+        X509AndPrivateKey keyPair = x509Generator.generateLeafX509AndPrivateKey(csr, buildDistinguishedName(ROOT_COMMON_NAME), pemRootKeyPair.getPrivateKey());
         X509Certificate x509Certificate = x509FromPEM(keyPair.getCert());
 
         assertTrue("The client cert serial number is non-negative", x509Certificate.getSerialNumber().compareTo(BigInteger.ZERO) > 0);

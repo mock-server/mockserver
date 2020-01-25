@@ -42,7 +42,7 @@ public class ExpectationFileWatcherIntegrationTest {
     @BeforeClass
     public static void createClientAndEventLoopGroup() {
         clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(ExpectationFileSystemPersistenceIntegrationTest.class.getSimpleName() + "-eventLoop"));
-        httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null);
+        httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false);
     }
 
     @AfterClass

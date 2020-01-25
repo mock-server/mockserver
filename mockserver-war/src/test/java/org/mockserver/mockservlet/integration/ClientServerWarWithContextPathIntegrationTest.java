@@ -7,7 +7,6 @@ import org.apache.catalina.startup.Tomcat;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.testing.integration.mock.AbstractBasicMockingIntegrationTest;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mockservlet.MockServerServlet;
@@ -15,6 +14,7 @@ import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.tls.KeyStoreFactory;
 
 import java.io.File;
+import java.security.KeyStore;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.stop.Stop.stopQuietly;
@@ -27,7 +27,6 @@ public class ClientServerWarWithContextPathIntegrationTest extends AbstractBasic
     private static final int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private static final int SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private static Tomcat tomcat;
-    private static String originalKeyStoreType;
 
     @BeforeClass
     public static void startServer() throws Exception {
@@ -42,15 +41,13 @@ public class ClientServerWarWithContextPathIntegrationTest extends AbstractBasic
         defaultConnector.setRedirectPort(SERVER_HTTPS_PORT);
 
         // add https connector
-        originalKeyStoreType = ConfigurationProperties.javaKeyStoreType();
-        ConfigurationProperties.javaKeyStoreType("jks");
-        new KeyStoreFactory(new MockServerLogger()).loadOrCreateKeyStore();
+        new KeyStoreFactory(new MockServerLogger()).loadOrCreateKeyStore("jks");
         Connector httpsConnector = new Connector();
         httpsConnector.setPort(SERVER_HTTPS_PORT);
         httpsConnector.setSecure(true);
         httpsConnector.setAttribute("keyAlias", KeyStoreFactory.KEY_STORE_CERT_ALIAS);
-        httpsConnector.setAttribute("keystorePass", ConfigurationProperties.javaKeyStorePassword());
-        httpsConnector.setAttribute("keystoreFile", new File(ConfigurationProperties.javaKeyStoreFilePath()).getAbsoluteFile());
+        httpsConnector.setAttribute("keystorePass", KeyStoreFactory.KEY_STORE_PASSWORD);
+        httpsConnector.setAttribute("keystoreFile", new File(KeyStoreFactory.KEY_STORE_FILE_NAME).getAbsoluteFile());
         httpsConnector.setAttribute("sslProtocol", "TLS");
         httpsConnector.setAttribute("clientAuth", false);
         httpsConnector.setAttribute("SSLEnabled", true);
@@ -73,8 +70,6 @@ public class ClientServerWarWithContextPathIntegrationTest extends AbstractBasic
 
     @AfterClass
     public static void stopServer() throws Exception {
-        ConfigurationProperties.javaKeyStoreType(originalKeyStoreType);
-
         // stop client
         stopQuietly(mockServerClient);
 

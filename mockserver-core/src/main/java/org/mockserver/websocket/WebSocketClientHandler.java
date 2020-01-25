@@ -11,7 +11,6 @@ import org.mockserver.model.MediaType;
 import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.CompletableFuture;
@@ -106,7 +105,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
                         .setMessageFormat(message)
                 );
             } else {
-                registrationFuture.completeExceptionally(new WebSocketException("handshake failure unsupported message received " + new FullHttpResponseToMockServerResponse(mockServerLogger).mapMockServerResponseToFullHttpResponse(httpResponse)));
+                registrationFuture.completeExceptionally(new WebSocketException("handshake failure unsupported message received " + new FullHttpResponseToMockServerResponse(mockServerLogger).mapFullHttpResponseToMockServerResponse(httpResponse)));
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.WARN)

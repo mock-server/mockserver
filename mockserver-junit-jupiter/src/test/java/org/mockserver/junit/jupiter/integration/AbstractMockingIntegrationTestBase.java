@@ -69,10 +69,10 @@ public abstract class AbstractMockingIntegrationTestBase {
     @BeforeAll
     public static void startEchoServer() {
         if (insecureEchoServer == null) {
-            insecureEchoServer = new EchoServer(false);
+            insecureEchoServer = new EchoServer(false, false);
         }
         if (secureEchoServer == null) {
-            secureEchoServer = new EchoServer(true);
+            secureEchoServer = new EchoServer(true, false);
         }
     }
 
@@ -112,7 +112,7 @@ public abstract class AbstractMockingIntegrationTestBase {
     @BeforeAll
     public static void createClientAndEventLoopGroup() {
         clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(AbstractMockingIntegrationTestBase.class.getSimpleName() + "-eventLoop"));
-        httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null);
+        httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false);
     }
 
     @AfterAll

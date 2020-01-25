@@ -74,7 +74,7 @@ public class HttpProxyChainedIntegrationTest {
             ConfigurationProperties.forwardProxyAuthenticationPassword(password);
             proxyClientAndServer = startClientAndServer();
 
-            HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null)
+            HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false)
                 .sendRequest(
                     request()
                         .withPath("/target")
@@ -114,7 +114,7 @@ public class HttpProxyChainedIntegrationTest {
             ConfigurationProperties.forwardHttpsProxy("localhost:" + targetClientAndServer.getLocalPort());
             proxyClientAndServer = startClientAndServer();
 
-            HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null)
+            HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false)
                 .sendRequest(
                     request()
                         .withPath("/target")
@@ -150,7 +150,7 @@ public class HttpProxyChainedIntegrationTest {
             ConfigurationProperties.forwardHttpsProxy("localhost:" + targetClientAndServer.getLocalPort());
             proxyClientAndServer = startClientAndServer();
 
-            HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null)
+            HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false)
                 .sendRequest(
                     request()
                         .withPath("/target")

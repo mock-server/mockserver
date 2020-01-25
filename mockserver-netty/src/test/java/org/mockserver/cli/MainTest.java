@@ -77,7 +77,7 @@ public class MainTest {
         final int freePort = PortFactory.findFreePort();
         MockServerClient mockServerClient = new MockServerClient("127.0.0.1", freePort);
         try {
-            EchoServer echoServer = new EchoServer(false);
+            EchoServer echoServer = new EchoServer(false, false);
             echoServer.withNextResponse(response("port_forwarded_response"));
 
             // when
@@ -86,7 +86,7 @@ public class MainTest {
                 "-proxyRemotePort", String.valueOf(echoServer.getPort()),
                 "-proxyRemoteHost", "127.0.0.1"
             );
-            final HttpResponse response = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null)
+            final HttpResponse response = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false)
                 .sendRequest(
                     request()
                         .withHeader(HOST.toString(), "127.0.0.1:" + freePort),
@@ -108,7 +108,7 @@ public class MainTest {
         final int freePort = PortFactory.findFreePort();
         MockServerClient mockServerClient = new MockServerClient("127.0.0.1", freePort);
         try {
-            EchoServer echoServer = new EchoServer(false);
+            EchoServer echoServer = new EchoServer(false, false);
             echoServer.withNextResponse(response("port_forwarded_response"));
 
             // when
@@ -116,7 +116,7 @@ public class MainTest {
                 "-serverPort", String.valueOf(freePort),
                 "-proxyRemotePort", String.valueOf(echoServer.getPort())
             );
-            final HttpResponse response = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null)
+            final HttpResponse response = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false)
                 .sendRequest(
                     request()
                         .withHeader(HOST.toString(), "127.0.0.1:" + freePort),

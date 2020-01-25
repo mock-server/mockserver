@@ -366,7 +366,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                     proxyConfiguration(
                         ProxyConfiguration.Type.HTTPS,
                         "127.0.0.1:" + getProxyPort()
-                    ))
+                    ), false)
                     .sendRequest(
                         request()
                             .withPath("/target")
@@ -404,7 +404,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                     "127.0.0.1:" + getProxyPort(),
                     username,
                     password
-                ))
+                ), false)
                 .sendRequest(
                     request()
                         .withPath("/target")

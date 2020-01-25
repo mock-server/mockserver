@@ -43,11 +43,11 @@ public class EchoServer implements Stoppable {
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
 
-    public EchoServer(final boolean secure) {
-        this(secure, null);
+    public EchoServer(final boolean secure, boolean trustNoneTLS) {
+        this(secure, trustNoneTLS, null);
     }
 
-    public EchoServer(final boolean secure, final Error error) {
+    public EchoServer(final boolean secure, boolean trustNoneTLS, final Error error) {
         registeredClients = new ArrayList<>();
         websocketChannels = new ArrayList<>();
         textWebSocketFrames = new ArrayList<>();
@@ -58,7 +58,7 @@ public class EchoServer implements Stoppable {
                 .channel(NioServerSocketChannel.class)
                 .option(ChannelOption.SO_BACKLOG, 100)
                 .handler(new LoggingHandler(EchoServer.class))
-                .childHandler(new EchoServerInitializer(mockServerLogger, secure, error, registeredClients, websocketChannels, textWebSocketFrames))
+                .childHandler(new EchoServerInitializer(mockServerLogger, secure, trustNoneTLS, error, registeredClients, websocketChannels, textWebSocketFrames))
                 .childAttr(LOG_FILTER, mockServerEventLog)
                 .childAttr(NEXT_RESPONSE, nextResponse)
                 .bind(0)

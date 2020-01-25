@@ -25,7 +25,7 @@ public class FullHttpResponseToMockServerResponse {
         this.bodyDecoderEncoder = new BodyDecoderEncoder(mockServerLogger);
     }
 
-    public HttpResponse mapMockServerResponseToFullHttpResponse(FullHttpResponse fullHttpResponse) {
+    public HttpResponse mapFullHttpResponseToMockServerResponse(FullHttpResponse fullHttpResponse) {
         HttpResponse httpResponse = new HttpResponse();
         try {
             if (fullHttpResponse != null) {

@@ -27,7 +27,7 @@ public class MockServerClientServerValidationErrorsTest {
 
     @Before
     public void setupTestFixture() {
-        echoServer = new EchoServer(false);
+        echoServer = new EchoServer(false, false);
         mockServerClient = new MockServerClient("localhost", echoServer.getPort());
     }
 

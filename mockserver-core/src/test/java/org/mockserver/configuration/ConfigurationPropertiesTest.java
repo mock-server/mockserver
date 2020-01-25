@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.server.initialize.ExpectationInitializerExample;
 import org.mockserver.socket.tls.KeyStoreFactory;
+import org.mockserver.socket.tls.jdk.CertificateSigningRequest;
 import org.slf4j.event.Level;
 
 import java.io.File;
@@ -316,71 +317,12 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldSetAndReadJavaKeyStoreFilePath() {
-        // given
-        System.clearProperty("mockserver.javaKeyStoreFilePath");
-
-        // when
-        assertEquals(KeyStoreFactory.defaultKeyStoreFileName(), javaKeyStoreFilePath());
-        javaKeyStoreFilePath("newKeyStoreFile.jks");
-
-        // then
-        assertEquals("newKeyStoreFile.jks", javaKeyStoreFilePath());
-        assertEquals("newKeyStoreFile.jks", System.getProperty("mockserver.javaKeyStoreFilePath"));
-        assertTrue(rebuildKeyStore());
-    }
-
-    @Test
-    public void shouldSetAndReadJavaKeyStorePassword() {
-        // given
-        System.clearProperty("mockserver.javaKeyStorePassword");
-
-        // when
-        assertEquals(KeyStoreFactory.KEY_STORE_PASSWORD, javaKeyStorePassword());
-        javaKeyStorePassword("newPassword");
-
-        // then
-        assertEquals("newPassword", javaKeyStorePassword());
-        assertEquals("newPassword", System.getProperty("mockserver.javaKeyStorePassword"));
-        assertTrue(rebuildKeyStore());
-    }
-
-    @Test
-    public void shouldSetAndReadJavaKeyStoreType() {
-        // given
-        System.clearProperty("mockserver.javaKeyStoreType");
-
-        // when
-        assertEquals(KeyStore.getDefaultType(), javaKeyStoreType());
-        javaKeyStoreType("PKCS11");
-
-        // then
-        assertEquals("PKCS11", javaKeyStoreType());
-        assertEquals("PKCS11", System.getProperty("mockserver.javaKeyStoreType"));
-        assertTrue(rebuildKeyStore());
-    }
-
-    @Test
-    public void shouldSetAndReadDeleteGeneratedKeyStoreOnExit() {
-        // given
-        System.clearProperty("mockserver.deleteGeneratedKeyStoreOnExit");
-
-        // when
-        assertTrue(deleteGeneratedKeyStoreOnExit());
-        deleteGeneratedKeyStoreOnExit(false);
-
-        // then
-        assertFalse(deleteGeneratedKeyStoreOnExit());
-        assertEquals("false", System.getProperty("mockserver.deleteGeneratedKeyStoreOnExit"));
-    }
-
-    @Test
     public void shouldSetAndReadSslCertificateDomainName() {
         // given
         System.clearProperty("mockserver.sslCertificateDomainName");
 
         // when
-        assertEquals(KeyStoreFactory.CERTIFICATE_DOMAIN, sslCertificateDomainName());
+        assertEquals(CertificateSigningRequest.CERTIFICATE_DOMAIN, sslCertificateDomainName());
         sslCertificateDomainName("newDomain");
 
         // then
@@ -573,6 +515,29 @@ public class ConfigurationPropertiesTest {
         // then
         assertThat(directoryToSaveDynamicSSLCertificate(), is(tempFile.getAbsolutePath()));
         assertThat(System.getProperty("mockserver.directoryToSaveDynamicSSLCertificate"), is(tempFile.getAbsolutePath()));
+    }
+
+    @Test
+    public void shouldSetAndReadTLSMutualAuthenticationRequired() {
+        // given
+        System.clearProperty("mockserver.tlsMutualAuthenticationRequired");
+
+        // then
+        assertFalse(tlsMutualAuthenticationRequired());
+
+        // when
+        tlsMutualAuthenticationRequired(true);
+
+        // then
+        assertTrue(tlsMutualAuthenticationRequired());
+        assertEquals("true", System.getProperty("mockserver.tlsMutualAuthenticationRequired"));
+
+        // when
+        tlsMutualAuthenticationRequired(false);
+
+        // then
+        assertFalse(tlsMutualAuthenticationRequired());
+        assertEquals("false", System.getProperty("mockserver.tlsMutualAuthenticationRequired"));
     }
 
     @Test

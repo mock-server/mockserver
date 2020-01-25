@@ -64,8 +64,8 @@ public class MockServerClientIntegrationTest {
 
     @BeforeClass
     public static void startEchoServer() {
-        echoServerOne = new EchoServer(false);
-        echoServerTwo = new EchoServer(false);
+        echoServerOne = new EchoServer(false, false);
+        echoServerTwo = new EchoServer(false, false);
     }
 
     @AfterClass

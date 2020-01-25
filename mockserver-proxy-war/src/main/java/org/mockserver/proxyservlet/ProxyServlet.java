@@ -29,6 +29,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.rtsp.RtspResponseStatuses.NOT_IMPLEMENTED;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.addSubjectAlternativeName;
 import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
 import static org.mockserver.model.HttpResponse.response;
@@ -94,7 +95,9 @@ public class ProxyServlet extends HttpServlet implements ServletContextListener 
 
             request = httpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest);
             final String hostHeader = request.getFirstHeader(HOST.toString());
-            scheduler.submit(() -> addSubjectAlternativeName(hostHeader));
+            if (isNotBlank(hostHeader)) {
+                scheduler.submit(() -> addSubjectAlternativeName(hostHeader));
+            }
 
             if (!httpStateHandler.handle(request, responseWriter, true)) {
 

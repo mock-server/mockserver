@@ -10,8 +10,8 @@ import org.slf4j.event.Level;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ClosedSelectorException;
 
-import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
-import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
+import static org.mockserver.exception.ExceptionHandling.closeOnFlush;
+import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
 
 public class DownstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullHttpResponse> {
 
@@ -64,7 +64,7 @@ public class DownstreamProxyRelayHandler extends SimpleChannelInboundHandler<Ful
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        if (shouldNotIgnoreException(cause)) {
+        if (connectionClosedException(cause)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)

@@ -20,7 +20,7 @@ import org.slf4j.event.Level;
 import java.util.UUID;
 
 import static com.google.common.net.HttpHeaders.HOST;
-import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
+import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
 import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabledUpstream;
 import static org.mockserver.websocket.WebSocketClient.CLIENT_REGISTRATION_ID_HEADER;
 
@@ -124,7 +124,7 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        if (shouldNotIgnoreException(cause)) {
+        if (connectionClosedException(cause)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)

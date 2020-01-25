@@ -21,7 +21,7 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.Future;
 
-import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
+import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
 import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
 import static org.mockserver.netty.MockServerHandler.PROXYING;
 import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabledDownstream;
@@ -64,7 +64,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                 ChannelPipeline downstreamPipeline = clientCtx.channel().pipeline();
 
                                 if (isSslEnabledDownstream(serverCtx.channel())) {
-                                    downstreamPipeline.addLast(new NettySslContextFactory(mockServerLogger).createClientSslContext().newHandler(clientCtx.alloc(), host, port));
+                                    downstreamPipeline.addLast(new NettySslContextFactory(mockServerLogger).createClientSslContext(false).newHandler(clientCtx.alloc(), host, port));
                                 }
 
                                 if (MockServerLogger.isEnabled(Level.TRACE)) {
@@ -133,7 +133,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
     }
 
     private void failure(String message, Throwable cause, ChannelHandlerContext ctx, Object response) {
-        if (shouldNotIgnoreException(cause)) {
+        if (connectionClosedException(cause)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)

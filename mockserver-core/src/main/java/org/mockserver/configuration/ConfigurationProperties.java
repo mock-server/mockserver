@@ -9,17 +9,18 @@ import io.netty.util.NettyRuntime;
 import io.netty.util.internal.SystemPropertyUtil;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.socket.tls.KeyStoreFactory;
+import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
+import org.mockserver.socket.tls.jdk.CertificateSigningRequest;
 import org.slf4j.event.Level;
 
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.KeyStore;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.*;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -53,6 +54,9 @@ public class ConfigurationProperties {
     private static final int DEFAULT_WEB_SOCKET_CLIENT_EVENT_LOOP_THREAD_COUNT = 5;
     private static final String DEFAULT_CERTIFICATE_AUTHORITY_PRIVATE_KEY = "org/mockserver/socket/PKCS8CertificateAuthorityPrivateKey.pem";
     private static final String DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE = "org/mockserver/socket/CertificateAuthorityCertificate.pem";
+    private static final String DEFAULT_TLS_MUTUAL_AUTHENTICATION_REQUIRED = "false";
+    private static final String DEFAULT_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER = "ANY";
+    private static final String DEFAULT_FORWARD_PROXY_TLS_CUSTOM_TRUST_X509_CERTIFICATES = "";
     private static final String DEFAULT_CORS_ALLOW_HEADERS = "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization";
     private static final String DEFAULT_CORS_ALLOW_METHODS = "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE";
     private static final String DEFAULT_CORS_ALLOW_CREDENTIALS = "true";
@@ -85,6 +89,9 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_CERTIFICATE_AUTHORITY_PRIVATE_KEY = "mockserver.certificateAuthorityPrivateKey";
     private static final String MOCKSERVER_CERTIFICATE_AUTHORITY_X509_CERTIFICATE = "mockserver.certificateAuthorityCertificate";
     private static final String MOCKSERVER_CERTIFICATE_DIRECTORY_TO_SAVE_DYNAMIC_SSL_CERTIFICATE = "mockserver.directoryToSaveDynamicSSLCertificate";
+    private static final String MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_REQUIRED = "mockserver.tlsMutualAuthenticationRequired";
+    private static final String MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER = "mockserver.forwardProxyTLSX509CertificatesTrustManager";
+    private static final String MOCKSERVER_FORWARD_PROXY_TLS_CUSTOM_TRUST_X509_CERTIFICATES = "mockserver.forwardProxyTLSCustomTrustX509Certificates";
     private static final String MOCKSERVER_LOG_LEVEL = "mockserver.logLevel";
     private static final String MOCKSERVER_METRICS_ENABLED = "mockserver.metricsEnabled";
     private static final String MOCKSERVER_DISABLE_SYSTEM_OUT = "mockserver.disableSystemOut";
@@ -167,13 +174,26 @@ public class ConfigurationProperties {
         return slf4jOrJavaLoggerToSLF4JLevelMapping;
     }
 
+    private static final List<String> forwardProxyTLSX509CertificatesTrustManagerValues = Arrays.stream(ForwardProxyTLSX509CertificatesTrustManager.values()).map(Enum::name).collect(Collectors.toList());
+
+    private static ForwardProxyTLSX509CertificatesTrustManager validateTrustManagerType(String trustManagerType) {
+        if (!forwardProxyTLSX509CertificatesTrustManagerValues.contains(trustManagerType)) {
+            new IllegalArgumentException("Invalid value for ForwardProxyTLSX509CertificatesTrustManager \"" + trustManagerType + "\" the only supported values are: " + forwardProxyTLSX509CertificatesTrustManagerValues).printStackTrace();
+            return null;
+        } else {
+            return ForwardProxyTLSX509CertificatesTrustManager.valueOf(trustManagerType);
+        }
+    }
+
     private static Level logLevel = Level.valueOf(getSLF4JOrJavaLoggerToSLF4JLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, "MOCKSERVER_LOG_LEVEL", DEFAULT_LOG_LEVEL).toUpperCase()));
     private static String javaLoggerLogLevel = getSLF4JOrJavaLoggerToJavaLoggerLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, "MOCKSERVER_LOG_LEVEL", DEFAULT_LOG_LEVEL).toUpperCase());
     private static boolean metricsEnabled = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_METRICS_ENABLED, "MOCKSERVER_METRICS_ENABLED", "" + false));
     private static boolean disableSystemOut = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DISABLE_SYSTEM_OUT, "MOCKSERVER_DISABLE_SYSTEM_OUT", "" + false));
+    private static boolean enableMTLS = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_REQUIRED, "MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_REQUIRED", DEFAULT_TLS_MUTUAL_AUTHENTICATION_REQUIRED));
+    private static ForwardProxyTLSX509CertificatesTrustManager forwardProxyTLSX509CertificatesTrustManager = validateTrustManagerType(readPropertyHierarchically(MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER, "MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER", DEFAULT_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER));
+    private static String forwardProxyTLSCustomTrustX509Certificates = readPropertyHierarchically(MOCKSERVER_FORWARD_PROXY_TLS_CUSTOM_TRUST_X509_CERTIFICATES, "MOCKSERVER_FORWARD_PROXY_TLS_CUSTOM_TRUST_X509_CERTIFICATES", DEFAULT_FORWARD_PROXY_TLS_CUSTOM_TRUST_X509_CERTIFICATES);
     private static boolean enableCORSForAPI = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_ENABLE_CORS_FOR_API, "MOCKSERVER_ENABLE_CORS_FOR_API", DEFAULT_ENABLE_CORS_FOR_API));
-    private static boolean enableCORSForAPIHasBeenSetExplicitly = System.getProperty(MOCKSERVER_ENABLE_CORS_FOR_API) != null ||
-        PROPERTIES.getProperty(MOCKSERVER_ENABLE_CORS_FOR_API) != null;
+    private static boolean enableCORSForAPIHasBeenSetExplicitly = System.getProperty(MOCKSERVER_ENABLE_CORS_FOR_API) != null || PROPERTIES.getProperty(MOCKSERVER_ENABLE_CORS_FOR_API) != null;
     private static boolean enableCORSForAllResponses = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES, "MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES", DEFAULT_ENABLE_CORS_FOR_ALL_RESPONSES));
     private static int maxInitialLineLength = readIntegerProperty(MOCKSERVER_MAX_INITIAL_LINE_LENGTH, "MOCKSERVER_MAX_INITIAL_LINE_LENGTH", DEFAULT_MAX_INITIAL_LINE_LENGTH);
     private static int maxHeaderSize = readIntegerProperty(MOCKSERVER_MAX_HEADER_SIZE, "MOCKSERVER_MAX_HEADER_SIZE", DEFAULT_MAX_HEADER_SIZE);
@@ -327,44 +347,8 @@ public class ConfigurationProperties {
         return alwaysCloseConnections;
     }
 
-    public static String javaKeyStoreFilePath() {
-        return readPropertyHierarchically(MOCKSERVER_JAVA_KEY_STORE_FILE_PATH, "MOCKSERVER_JAVA_KEY_STORE_FILE_PATH", KeyStoreFactory.defaultKeyStoreFileName());
-    }
-
-    public static void javaKeyStoreFilePath(String keyStoreFilePath) {
-        System.setProperty(MOCKSERVER_JAVA_KEY_STORE_FILE_PATH, keyStoreFilePath);
-        rebuildKeyStore(true);
-    }
-
-    public static String javaKeyStorePassword() {
-        return readPropertyHierarchically(MOCKSERVER_JAVA_KEY_STORE_PASSWORD, "MOCKSERVER_JAVA_KEY_STORE_PASSWORD", KeyStoreFactory.KEY_STORE_PASSWORD);
-    }
-
-    public static void javaKeyStorePassword(String keyStorePassword) {
-        System.setProperty(MOCKSERVER_JAVA_KEY_STORE_PASSWORD, keyStorePassword);
-        rebuildKeyStore(true);
-    }
-
-    public static String javaKeyStoreType() {
-        return readPropertyHierarchically(MOCKSERVER_JAVA_KEY_STORE_TYPE, "MOCKSERVER_JAVA_KEY_STORE_TYPE", KeyStore.getDefaultType());
-    }
-
-    public static void javaKeyStoreType(String keyStoreType) {
-        System.setProperty(MOCKSERVER_JAVA_KEY_STORE_TYPE, keyStoreType);
-        rebuildKeyStore(true);
-    }
-
-    public static boolean deleteGeneratedKeyStoreOnExit() {
-        return Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DELETE_GENERATED_KEY_STORE_ON_EXIT, "MOCKSERVER_DELETE_GENERATED_KEY_STORE_ON_EXIT", "" + true));
-    }
-
-    public static void deleteGeneratedKeyStoreOnExit(boolean deleteGeneratedKeyStoreOnExit) {
-        System.setProperty(MOCKSERVER_DELETE_GENERATED_KEY_STORE_ON_EXIT, "" + deleteGeneratedKeyStoreOnExit);
-        rebuildKeyStore(true);
-    }
-
     public static String sslCertificateDomainName() {
-        return readPropertyHierarchically(MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME, "MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME", KeyStoreFactory.CERTIFICATE_DOMAIN);
+        return readPropertyHierarchically(MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME, "MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME", CertificateSigningRequest.CERTIFICATE_DOMAIN);
     }
 
     public static void sslCertificateDomainName(String domainName) {
@@ -374,12 +358,14 @@ public class ConfigurationProperties {
 
     @SuppressWarnings("UnstableApiUsage")
     public static void addSubjectAlternativeName(String host) {
-        if (host != null) {
+        if (isNotBlank(host)) {
             String hostWithoutPort = substringBefore(host, ":");
-            if (InetAddresses.isInetAddress(hostWithoutPort)) {
-                addSslSubjectAlternativeNameIps(hostWithoutPort);
-            } else {
-                addSslSubjectAlternativeNameDomains(hostWithoutPort);
+            if (isNotBlank(hostWithoutPort)) {
+                if (InetAddresses.isInetAddress(hostWithoutPort)) {
+                    addSslSubjectAlternativeNameIps(hostWithoutPort);
+                } else {
+                    addSslSubjectAlternativeNameDomains(hostWithoutPort);
+                }
             }
         }
     }
@@ -467,7 +453,7 @@ public class ConfigurationProperties {
     }
 
     /**
-     * Override the default certificate authority private key, key must be in PKCS#8 format PEM file
+     * Location of custom file for Certificate Authority for TLS, the private key must be a PKCS#8 PEM file and must match the certificateAuthorityCertificate
      * To convert a PKCS#1 (i.e. default for Bouncy Castle) to a PKCS#8 the following command can be used: openssl pkcs8 -topk8 -inform PEM -in private_key_PKCS_1.pem -out private_key_PKCS_8.pem -nocrypt
      *
      * @param certificateAuthorityPrivateKey location of the PEM file containing the certificate authority private key
@@ -481,7 +467,7 @@ public class ConfigurationProperties {
     }
 
     /**
-     * Override the default certificate authority X509 certificate
+     * Location of custom file for Certificate Authority for TLS, the certificate must be a X509 PEM file and must match the certificateAuthorityPrivateKey
      *
      * @param certificateAuthorityCertificate location of the PEM file containing the certificate authority X509 certificate
      */
@@ -504,6 +490,57 @@ public class ConfigurationProperties {
             throw new RuntimeException(directoryToSaveDynamicSSLCertificate + " does not exist or is not accessible");
         }
         System.setProperty(MOCKSERVER_CERTIFICATE_DIRECTORY_TO_SAVE_DYNAMIC_SSL_CERTIFICATE, directoryToSaveDynamicSSLCertificate);
+    }
+
+    public static boolean tlsMutualAuthenticationRequired() {
+        return enableMTLS;
+    }
+
+    /**
+     * Enable TLS mutual authentication for all connections / requests to MockServer
+     *
+     * @param enable TLS mutual authentication
+     */
+    public static void tlsMutualAuthenticationRequired(boolean enable) {
+        System.setProperty(MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_REQUIRED, "" + enable);
+        enableMTLS = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_REQUIRED, "MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_REQUIRED", DEFAULT_TLS_MUTUAL_AUTHENTICATION_REQUIRED));
+    }
+
+    public static ForwardProxyTLSX509CertificatesTrustManager forwardProxyTLSX509CertificatesTrustManager() {
+        return forwardProxyTLSX509CertificatesTrustManager;
+    }
+
+    /**
+     * Configure trusted set of certificates for forwarded or proxied requests.
+     * <p>
+     * MockServer will only be able to establish a TLS connection to endpoints that have a trusted X509 certificate according to the trust manager type, as follows:
+     * <p>
+     * ALL - Insecure will trust all X509 certificates and not perform host name verification.
+     * JVM - Will trust all X509 certificates trust by the JVM.
+     * CUSTOM - Will trust all X509 certificates specified in forwardProxyTLSCustomTrustX509Certificates configuration value.
+     *
+     * @param trustManagerType trusted set of certificates for forwarded or proxied requests, allowed values: ALL, JVM, CUSTOM.
+     */
+    public static void forwardProxyTLSX509CertificatesTrustManager(String trustManagerType) {
+        System.setProperty(MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER, trustManagerType);
+        forwardProxyTLSX509CertificatesTrustManager = validateTrustManagerType(readPropertyHierarchically(MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER, "MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER", DEFAULT_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER));
+    }
+
+    public static String forwardProxyTLSCustomTrustX509Certificates() {
+        return forwardProxyTLSCustomTrustX509Certificates;
+    }
+
+    /**
+     * Location of custom file for trusted X509 certificate authority roots for forwarded or proxied requests, the certificate chain must be a X509 PEM file.
+     * <p>
+     * MockServer will only be able to establish a TLS connection to endpoints that have an X509 certificate chain that is signed by one of the provided custom
+     * certificates, i.e. where a path can be established from the endpoints X509 certificate to one or more of the custom X509 certificates provided.
+     *
+     * @param customX509Certificates custom set of trusted X509 certificate authority roots for forwarded or proxied requests in PEM format.
+     */
+    public static void forwardProxyTLSCustomTrustX509Certificates(String customX509Certificates) {
+        System.setProperty(MOCKSERVER_FORWARD_PROXY_TLS_CUSTOM_TRUST_X509_CERTIFICATES, customX509Certificates);
+        forwardProxyTLSCustomTrustX509Certificates = readPropertyHierarchically(MOCKSERVER_FORWARD_PROXY_TLS_CUSTOM_TRUST_X509_CERTIFICATES, "MOCKSERVER_FORWARD_PROXY_TLS_CUSTOM_TRUST_X509_CERTIFICATES", DEFAULT_FORWARD_PROXY_TLS_CUSTOM_TRUST_X509_CERTIFICATES);
     }
 
     public static Level logLevel() {

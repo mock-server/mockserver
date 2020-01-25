@@ -15,8 +15,8 @@ import java.security.cert.X509Certificate;
 import java.util.UUID;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.configuration.ConfigurationProperties.directoryToSaveDynamicSSLCertificate;
-import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.ROOT_COMMON_NAME;
+import static org.mockserver.configuration.ConfigurationProperties.*;
+import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.*;
 import static org.mockserver.socket.tls.jdk.X509Generator.*;
 import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.WARN;
@@ -40,12 +40,12 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
     @Override
     public void buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate() {
         try {
-            X509AndPrivateKey x509AndPrivateKey = x509Generator.generateRootKeyPair(
+            X509AndPrivateKey x509AndPrivateKey = x509Generator.generateRootX509AndPrivateKey(
                 new CertificateSigningRequest()
                     .setKeyPairAlgorithm(KEY_GENERATION_ALGORITHM)
                     .setSigningAlgorithm(SIGNING_ALGORITHM)
                     .setCommonName(ROOT_COMMON_NAME)
-                    .setKeyPairSize(ROOT_KEYSIZE)
+                    .setKeyPairSize(ROOT_KEY_SIZE)
             );
 
             savePEMToFile(x509AndPrivateKey.getCert(), "CertificateAuthorityCertificate.pem", false, "X509 key");
@@ -65,15 +65,17 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
     public void buildAndSavePrivateKeyAndX509Certificate() {
         try {
             String caPrivateKey = FileReader.readFileFromClassPathOrPath(ConfigurationProperties.certificateAuthorityPrivateKey());
-            X509AndPrivateKey x509AndPrivateKey = x509Generator.generateSignedEphemeralCertificate(
+            X509Certificate certificateAuthorityX509Certificate = certificateAuthorityX509Certificate();
+            X509AndPrivateKey x509AndPrivateKey = x509Generator.generateLeafX509AndPrivateKey(
                 new CertificateSigningRequest()
                     .setKeyPairAlgorithm(KEY_GENERATION_ALGORITHM)
                     .setSigningAlgorithm(SIGNING_ALGORITHM)
                     .setCommonName(ROOT_COMMON_NAME)
-                    .setCommonName(ConfigurationProperties.sslCertificateDomainName())
-                    .setSubjectAlternativeNames(ConfigurationProperties.sslSubjectAlternativeNameDomains())
-                    .setSubjectAlternativeNames(ConfigurationProperties.sslSubjectAlternativeNameIps())
-                    .setKeyPairSize(ROOT_KEYSIZE),
+                    .setCommonName(sslCertificateDomainName())
+                    .addSubjectAlternativeNames(sslSubjectAlternativeNameDomains())
+                    .addSubjectAlternativeNames(sslSubjectAlternativeNameIps())
+                    .setKeyPairSize(MOCK_KEY_SIZE),
+                certificateAuthorityX509Certificate.getIssuerDN().getName(),
                 caPrivateKey
             );
 
@@ -145,8 +147,8 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
         return x509FromPEMFile(mockServerCertificatePEMFile);
     }
 
-    public boolean certificateCreated() {
-        return validX509PEMFileExists(mockServerCertificatePEMFile);
+    public boolean certificateNotYetCreated() {
+        return !validX509PEMFileExists(mockServerCertificatePEMFile);
     }
 
     public X509Certificate certificateAuthorityX509Certificate() {

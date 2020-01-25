@@ -13,15 +13,15 @@ import java.util.List;
  */
 public class MockServerToNettyRequestEncoder extends MessageToMessageEncoder<HttpRequest> {
 
-    private final MockServerLogger mockServerLogger;
+    private final MockServerHttpRequestToFullHttpRequest mockServerHttpRequestToFullHttpRequest;
 
     MockServerToNettyRequestEncoder(MockServerLogger mockServerLogger) {
-        this.mockServerLogger = mockServerLogger;
+        mockServerHttpRequestToFullHttpRequest = new MockServerHttpRequestToFullHttpRequest(mockServerLogger);
     }
 
     @Override
     protected void encode(ChannelHandlerContext ctx, HttpRequest httpRequest, List<Object> out) {
-        out.add(new MockServerHttpRequestToFullHttpRequest(mockServerLogger).mapMockServerResquestToNettyRequest(httpRequest));
+        out.add(mockServerHttpRequestToFullHttpRequest.mapMockServerRequestToNettyRequest(httpRequest));
     }
 
 }

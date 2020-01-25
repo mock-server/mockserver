@@ -13,15 +13,15 @@ import java.util.List;
  */
 public class NettyToMockServerResponseDecoder extends MessageToMessageDecoder<FullHttpResponse> {
 
-    private final MockServerLogger mockServerLogger;
+    private final FullHttpResponseToMockServerResponse fullHttpResponseToMockServerResponse;
 
     NettyToMockServerResponseDecoder(MockServerLogger mockServerLogger) {
-        this.mockServerLogger = mockServerLogger;
+        fullHttpResponseToMockServerResponse = new FullHttpResponseToMockServerResponse(mockServerLogger);
     }
 
     @Override
     protected void decode(ChannelHandlerContext ctx, FullHttpResponse fullHttpResponse, List<Object> out) {
-        out.add(new FullHttpResponseToMockServerResponse(mockServerLogger).mapMockServerResponseToFullHttpResponse(fullHttpResponse));
+        out.add(fullHttpResponseToMockServerResponse.mapFullHttpResponseToMockServerResponse(fullHttpResponse));
     }
 
 }

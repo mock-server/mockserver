@@ -7,7 +7,6 @@ import org.apache.catalina.startup.Tomcat;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mockservlet.MockServerServlet;
 import org.mockserver.socket.PortFactory;
@@ -26,7 +25,6 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
     private static final int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private static final int SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private static Tomcat tomcat;
-    private static String originalKeyStoreType;
 
     @BeforeClass
     public static void startServer() throws Exception {
@@ -41,15 +39,13 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
         defaultConnector.setRedirectPort(SERVER_HTTPS_PORT);
 
         // add https connector
-        originalKeyStoreType = ConfigurationProperties.javaKeyStoreType();
-        ConfigurationProperties.javaKeyStoreType("jks");
-        new KeyStoreFactory(new MockServerLogger()).loadOrCreateKeyStore();
+        new KeyStoreFactory(new MockServerLogger()).loadOrCreateKeyStore("jks");
         Connector httpsConnector = new Connector();
         httpsConnector.setPort(SERVER_HTTPS_PORT);
         httpsConnector.setSecure(true);
         httpsConnector.setAttribute("keyAlias", KeyStoreFactory.KEY_STORE_CERT_ALIAS);
-        httpsConnector.setAttribute("keystorePass", ConfigurationProperties.javaKeyStorePassword());
-        httpsConnector.setAttribute("keystoreFile", new File(ConfigurationProperties.javaKeyStoreFilePath()).getAbsoluteFile());
+        httpsConnector.setAttribute("keystorePass", KeyStoreFactory.KEY_STORE_PASSWORD);
+        httpsConnector.setAttribute("keystoreFile", new File(KeyStoreFactory.KEY_STORE_FILE_NAME).getAbsoluteFile());
         httpsConnector.setAttribute("sslProtocol", "TLS");
         httpsConnector.setAttribute("clientAuth", false);
         httpsConnector.setAttribute("SSLEnabled", true);
@@ -72,8 +68,6 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
 
     @AfterClass
     public static void stopServer() throws Exception {
-        ConfigurationProperties.javaKeyStoreType(originalKeyStoreType);
-
         // stop client
         stopQuietly(mockServerClient);
 

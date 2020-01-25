@@ -1,6 +1,7 @@
 package org.mockserver.socket.tls.jdk;
 
 import com.google.common.net.InetAddresses;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -12,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.*;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -19,19 +21,16 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.sql.Date;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.ROOT_COMMON_NAME;
-import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.buildDistinguishedName;
+import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.*;
 
 /**
  * @author jamesdbloom
@@ -52,7 +51,7 @@ public class X509Generator {
         this.mockServerLogger = mockServerLogger;
     }
 
-    public X509AndPrivateKey generateRootKeyPair(final CertificateSigningRequest csr) throws IOException, NoSuchAlgorithmException, CertificateException, InvalidKeyException, NoSuchProviderException, SignatureException {
+    public X509AndPrivateKey generateRootX509AndPrivateKey(final CertificateSigningRequest csr) throws IOException, NoSuchAlgorithmException, CertificateException, InvalidKeyException, NoSuchProviderException, SignatureException {
         final KeyPair keyPair = generateKeyPair(csr.getKeyPairAlgorithm(), csr.getKeyPairSize());
         final X500Name subjectAndIssuer = new X500Name(buildDistinguishedName(csr.getCommonName()));
         X509CertInfo x509CertInfo = buildX509CertInfo(subjectAndIssuer, subjectAndIssuer, keyPair.getPublic(), csr);
@@ -60,13 +59,13 @@ public class X509Generator {
         return signX509KeyPair(keyPair.getPrivate(), keyPair, x509CertInfo, csr.getSigningAlgorithm());
     }
 
-    public X509AndPrivateKey generateSignedEphemeralCertificate(final CertificateSigningRequest csr, final String caPrivateKey) throws IOException, NoSuchAlgorithmException, CertificateException, InvalidKeyException, NoSuchProviderException, SignatureException, InvalidKeySpecException {
+    public X509AndPrivateKey generateLeafX509AndPrivateKey(final CertificateSigningRequest csr, String issuerDistinguishingName, final String caPrivateKey) throws IOException, NoSuchAlgorithmException, CertificateException, InvalidKeyException, NoSuchProviderException, SignatureException, InvalidKeySpecException {
         final PrivateKey privateKey = KeyFactory
             .getInstance(csr.getKeyPairAlgorithm())
             .generatePrivate(keySpecFromPEM(caPrivateKey));
         final KeyPair keyPair = generateKeyPair(csr.getKeyPairAlgorithm(), csr.getKeyPairSize());
         final X500Name subject = new X500Name(buildDistinguishedName(csr.getCommonName()));
-        final X500Name issuer = new X500Name(buildDistinguishedName(ROOT_COMMON_NAME));
+        final X500Name issuer = new X500Name(issuerDistinguishingName);
         X509CertInfo x509CertInfo = buildX509CertInfo(subject, issuer, keyPair.getPublic(), csr);
         updateWithCertificateExtensions(x509CertInfo, csr.getSubjectAlternativeNames());
         return signX509KeyPair(privateKey, keyPair, x509CertInfo, csr.getSigningAlgorithm());
@@ -82,12 +81,9 @@ public class X509Generator {
     private X509CertInfo buildX509CertInfo(final X500Name subject, final X500Name issuer, final PublicKey publicKey, final CertificateSigningRequest csr) throws IOException, NoSuchAlgorithmException, CertificateException {
         X509CertInfo x509CertInfo = new X509CertInfo();
 
-        LocalDateTime since = LocalDateTime.now().minusMonths(1);
-        LocalDateTime until = since.plus(Duration.ofMillis(csr.getValidityInMillis()));
-
         CertificateValidity interval = new CertificateValidity(
-            Date.from(since.atZone(ZoneId.systemDefault()).toInstant()),
-            Date.from(until.atZone(ZoneId.systemDefault()).toInstant())
+            NOT_BEFORE,
+            NOT_AFTER
         );
         // replaced secure random with random in order to prevent entropy depletion
         BigInteger sn = new BigInteger(64, new Random());
@@ -105,19 +101,19 @@ public class X509Generator {
         return x509CertInfo;
     }
 
-    private void updateWithCertificateExtensions(final X509CertInfo x509CertInfo, final String[] subjectAlternativeNames) throws IOException, CertificateException {
+    private void updateWithCertificateExtensions(final X509CertInfo x509CertInfo, final List<String> subjectAlternativeNames) throws IOException, CertificateException {
         CertificateExtensions certificateExtensions = new CertificateExtensions();
 
-        GeneralNames generalNames = Arrays
-            .stream(subjectAlternativeNames)
+        GeneralNames generalNames = subjectAlternativeNames
+            .stream()
+            .filter(StringUtils::isNotBlank)
             .map(this::buildGeneralName)
             .filter(Objects::nonNull)
             .collect(
                 Collector.of(
                     GeneralNames::new,
                     GeneralNames::add,
-                    ((generalNames1, generalNames2) -> null //do nothing
-                    )
+                    (generalNames1, generalNames2) -> null //do nothing)
                 )
             );
 
@@ -154,8 +150,7 @@ public class X509Generator {
     private GeneralName buildGeneralName(final String subjectAlternativeName) {
         GeneralName gn = null;
         try {
-            GeneralNameInterface gni = InetAddresses.isUriInetAddress(subjectAlternativeName) ? new IPAddressName(subjectAlternativeName) : new DNSName(subjectAlternativeName);
-            gn = new GeneralName(gni);
+            gn = new GeneralName(InetAddresses.isUriInetAddress(subjectAlternativeName) ? new IPAddressName(subjectAlternativeName) : new DNSName(subjectAlternativeName));
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -181,8 +176,20 @@ public class X509Generator {
         return toPEM(privateKey, BEGIN_PRIVATE_KEY, END_PRIVATE_KEY);
     }
 
-    static String certToPEM(final byte[] key) {
-        return toPEM(key, BEGIN_CERTIFICATE, END_CERTIFICATE);
+    public static String certToPEM(final X509Certificate... x509Certificates) throws CertificateEncodingException {
+        StringBuilder pem = new StringBuilder();
+        for (X509Certificate x509Certificate : x509Certificates) {
+            pem.append(toPEM(x509Certificate.getEncoded(), BEGIN_CERTIFICATE, END_CERTIFICATE)).append(NEW_LINE);
+        }
+        return pem.toString();
+    }
+
+    public static String certToPEM(final byte[]... x509Certificates) {
+        StringBuilder pem = new StringBuilder();
+        for (byte[] x509Certificate : x509Certificates) {
+            pem.append(toPEM(x509Certificate, BEGIN_CERTIFICATE, END_CERTIFICATE)).append(NEW_LINE);
+        }
+        return pem.toString();
     }
 
     private static String toPEM(final byte[] key, final String begin, final String end) {
@@ -198,8 +205,8 @@ public class X509Generator {
         if (pem.contains(BEGIN_RSA_PRIVATE_KEY) || pem.contains(END_RSA_PRIVATE_KEY)) {
             new MockServerLogger().logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.WARN)
-                    .setLogLevel(Level.WARN)
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
                     .setMessageFormat("Private key provided in unsupported PKCS#1 only PKCS#8 format is support, to convert use openssl, for example{}")
                     .setArguments("openssl pkcs8 -topk8 -inform PEM -in private_key_PKCS_1.pem -out private_key_PKCS_8.pem -nocrypt")
             );
@@ -221,7 +228,15 @@ public class X509Generator {
 
     public static RSAPrivateKey privateKeyFromPEMFile(String filename) {
         try {
-            return (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(keySpecFromPEM(FileReader.readFileFromClassPathOrPath(filename)));
+            return privateKeyFromPEM(FileReader.readFileFromClassPathOrPath(filename));
+        } catch (Exception e) {
+            throw new RuntimeException("Exception reading private key from PEM file", e);
+        }
+    }
+
+    public static RSAPrivateKey privateKeyFromPEM(String pem) {
+        try {
+            return (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(keySpecFromPEM(pem));
         } catch (Exception e) {
             throw new RuntimeException("Exception reading private key from PEM file", e);
         }
@@ -246,6 +261,36 @@ public class X509Generator {
     private static X509Certificate x509FromPEM(InputStream inputStream) {
         try {
             return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(inputStream);
+        } catch (Exception e) {
+            throw new RuntimeException("Exception creating X509 from PEM", e);
+        }
+    }
+
+    public static List<X509Certificate> x509ChainFromPEMFile(String filename) {
+        try {
+            return x509ChainFromPEM(FileReader.openStreamToFileFromClassPathOrPath(filename));
+        } catch (Exception e) {
+            throw new RuntimeException("Exception reading X509 from PEM file " + filename, e);
+        }
+    }
+
+    public static List<X509Certificate> x509ChainFromPEM(String pem) {
+        try {
+            return x509ChainFromPEM(new ByteArrayInputStream(pem.getBytes()));
+        } catch (Exception e) {
+            throw new RuntimeException("Exception reading X509 from PEM \n" + pem, e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<X509Certificate> x509ChainFromPEM(InputStream inputStream) {
+        try {
+            return (List<X509Certificate>) CertificateFactory
+                .getInstance("X.509")
+                .generateCertificates(inputStream)
+                .stream()
+                .filter(certificate -> certificate instanceof X509Certificate)
+                .collect(Collectors.toList());
         } catch (Exception e) {
             throw new RuntimeException("Exception creating X509 from PEM", e);
         }

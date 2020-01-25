@@ -35,7 +35,7 @@ public class OverridePreFlightRequestIntegrationTest {
 
     private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(OverridePreFlightRequestIntegrationTest.class.getSimpleName() + "-eventLoop"));
 
-    private static final NettyHttpClient httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null);
+    private static final NettyHttpClient httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false);
 
     @BeforeClass
     public static void startServer() {

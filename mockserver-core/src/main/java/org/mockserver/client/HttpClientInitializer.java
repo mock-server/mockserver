@@ -25,13 +25,15 @@ import static org.slf4j.event.Level.TRACE;
 public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
 
     private final MockServerLogger mockServerLogger;
+    private final boolean forwardProxyClient;
     private final HttpClientConnectionHandler httpClientConnectionHandler;
     private final HttpClientHandler httpClientHandler;
     private final ProxyConfiguration proxyConfiguration;
 
-    HttpClientInitializer(ProxyConfiguration proxyConfiguration, MockServerLogger mockServerLogger) {
+    HttpClientInitializer(ProxyConfiguration proxyConfiguration, MockServerLogger mockServerLogger, boolean forwardProxyClient) {
         this.proxyConfiguration = proxyConfiguration;
         this.mockServerLogger = mockServerLogger;
+        this.forwardProxyClient = forwardProxyClient;
         this.httpClientHandler = new HttpClientHandler();
         this.httpClientConnectionHandler = new HttpClientConnectionHandler();
     }
@@ -60,7 +62,7 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
 
         if (secure) {
             InetSocketAddress remoteAddress = channel.attr(REMOTE_SOCKET).get();
-            pipeline.addLast(new NettySslContextFactory(mockServerLogger).createClientSslContext().newHandler(channel.alloc(), remoteAddress.getHostName(), remoteAddress.getPort()));
+            pipeline.addLast(new NettySslContextFactory(mockServerLogger).createClientSslContext(forwardProxyClient).newHandler(channel.alloc(), remoteAddress.getHostName(), remoteAddress.getPort()));
         }
 
         // add logging

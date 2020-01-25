@@ -32,11 +32,13 @@ public class NettyHttpClient {
     private final MockServerLogger mockServerLogger;
     private final EventLoopGroup eventLoopGroup;
     private final ProxyConfiguration proxyConfiguration;
+    private final boolean forwardProxyClient;
 
-    public NettyHttpClient(MockServerLogger mockServerLogger, EventLoopGroup eventLoopGroup, ProxyConfiguration proxyConfiguration) {
+    public NettyHttpClient(MockServerLogger mockServerLogger, EventLoopGroup eventLoopGroup, ProxyConfiguration proxyConfiguration, boolean forwardProxyClient) {
         this.mockServerLogger = mockServerLogger;
         this.eventLoopGroup = eventLoopGroup;
         this.proxyConfiguration = proxyConfiguration;
+        this.forwardProxyClient = forwardProxyClient;
     }
 
     public CompletableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest) throws SocketConnectionException {
@@ -66,7 +68,7 @@ public class NettyHttpClient {
                 .attr(SECURE, httpRequest.isSecure() != null && httpRequest.isSecure())
                 .attr(REMOTE_SOCKET, remoteAddress)
                 .attr(RESPONSE_FUTURE, httpResponseFuture)
-                .handler(new HttpClientInitializer(proxyConfiguration, mockServerLogger))
+                .handler(new HttpClientInitializer(proxyConfiguration, mockServerLogger, forwardProxyClient))
                 .connect(remoteAddress)
                 .addListener((ChannelFutureListener) future -> {
                     if (future.isSuccess()) {

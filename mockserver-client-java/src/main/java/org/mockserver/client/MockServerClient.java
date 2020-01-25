@@ -53,7 +53,7 @@ public class MockServerClient implements Stoppable {
     protected CompletableFuture<Integer> portFuture;
     private Boolean secure;
     private Integer port;
-    private NettyHttpClient nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, null);
+    private NettyHttpClient nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, null, false);
     private HttpRequest requestOverride;
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(MOCK_SERVER_LOGGER);
     private LogEventRequestAndResponseSerializer httpRequestResponseSerializer = new LogEventRequestAndResponseSerializer(MOCK_SERVER_LOGGER);

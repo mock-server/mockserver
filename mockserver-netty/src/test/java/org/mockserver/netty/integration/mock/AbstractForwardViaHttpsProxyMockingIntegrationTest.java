@@ -3,14 +3,12 @@ package org.mockserver.netty.integration.mock;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockserver.client.MockServerClient;
-import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequest;
-import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
-import org.mockserver.netty.MockServer;
+import org.mockserver.echo.http.EchoServer;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.HttpTemplate;
-import org.mockserver.proxyconfiguration.ProxyConfiguration;
+import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequest;
+import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
@@ -24,35 +22,27 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.model.HttpTemplate.template;
-import static org.mockserver.proxyconfiguration.ProxyConfiguration.proxyConfiguration;
-import static org.mockserver.stop.Stop.stopQuietly;
+import static org.mockserver.verify.Verification.verification;
 
 /**
  * @author jamesdbloom
  */
-public class ForwardViaHttpsProxyMockingIntegrationTest extends AbstractMockingIntegrationTestBase {
+public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends AbstractMockingIntegrationTestBase {
 
-    private static MockServer mockServer;
-    private static MockServer proxy;
+    protected static EchoServer trustNoneTLSEchoServer;
 
     @BeforeClass
-    public static void startServer() {
-        proxy = new MockServer();
-        mockServer = new MockServer(proxyConfiguration(ProxyConfiguration.Type.HTTPS, "127.0.0.1:" + proxy.getLocalPort()));
-
-        mockServerClient = new MockServerClient("localhost", mockServer.getLocalPort(), servletContext);
+    public static void startTrustNoneTLSEchoServer() {
+        if (trustNoneTLSEchoServer == null) {
+            trustNoneTLSEchoServer = new EchoServer(true, true);
+        }
     }
 
     @AfterClass
-    public static void stopServer() {
-        stopQuietly(proxy);
-        stopQuietly(mockServer);
-        stopQuietly(mockServerClient);
-    }
-
-    @Override
-    public int getServerPort() {
-        return mockServer.getLocalPort();
+    public static void stopTrustNoneTLSEchoServer() {
+        if (trustNoneTLSEchoServer != null) {
+            trustNoneTLSEchoServer.stop();
+        }
     }
 
     @Test
@@ -71,6 +61,184 @@ public class ForwardViaHttpsProxyMockingIntegrationTest extends AbstractMockingI
             );
 
         // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("an_example_body_http"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("Host", "127.0.0.1:" + secureEchoServer.getPort()),
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReceiveRequestInHTTPSForwardRequestInHTTP() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                forward()
+                    .withHost("127.0.0.1")
+                    .withPort(insecureEchoServer.getPort())
+                    .withScheme(HttpForward.Scheme.HTTP)
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("an_example_body_http"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("Host", "127.0.0.1:" + insecureEchoServer.getPort()),
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore)
+        );
+
+        insecureEchoServer
+            .mockServerEventLog()
+            .verify(
+                verification()
+                    .withRequest(
+                        request()
+                            .withSecure(false)
+                            .withPath(calculatePath("echo"))
+                            .withMethod("POST")
+                            .withHeaders(
+                                header("Host", "127.0.0.1:" + insecureEchoServer.getPort()),
+                                header("x-test", "test_headers_and_body")
+                            )
+                            .withBody("an_example_body_http")
+                    )
+            );
+    }
+
+    @Test
+    public void shouldReceiveRequestInHTTPForwardRequestInHTTPS() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                forward()
+                    .withHost("127.0.0.1")
+                    .withPort(secureEchoServer.getPort())
+                    .withScheme(HttpForward.Scheme.HTTPS)
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("an_example_body_http"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("Host", "127.0.0.1:" + secureEchoServer.getPort()),
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore)
+        );
+
+
+        insecureEchoServer
+            .mockServerEventLog()
+            .verify(
+                verification()
+                    .withRequest(
+                        request()
+                            .withSecure(false)
+                            .withPath(calculatePath("echo"))
+                            .withMethod("POST")
+                            .withHeaders(
+                                header("Host", "127.0.0.1:" + insecureEchoServer.getPort()),
+                                header("x-test", "test_headers_and_body")
+                            )
+                            .withBody("an_example_body_http")
+                    )
+            );
+    }
+
+    @Test
+    public void shouldFailToForwardUntrustedHTTPS() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("trustNone"))
+            )
+            .forward(
+                forward()
+                    .withHost("127.0.0.1")
+                    .withPort(trustNoneTLSEchoServer.getPort())
+                    .withScheme(HttpForward.Scheme.HTTPS)
+            );
+
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                forward()
+                    .withHost("127.0.0.1")
+                    .withPort(secureEchoServer.getPort())
+                    .withScheme(HttpForward.Scheme.HTTPS)
+            );
+
+        // then - invalid certificate returns 404
+        assertEquals(
+            response()
+                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
+                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("trustNone"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("Host", "127.0.0.1:" + trustNoneTLSEchoServer.getPort()),
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore)
+        );
+
+        // then - valid certificate returns response
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())

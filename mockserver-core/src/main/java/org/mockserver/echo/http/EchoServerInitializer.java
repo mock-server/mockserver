@@ -16,6 +16,7 @@ import org.mockserver.socket.tls.NettySslContextFactory;
 import java.util.List;
 
 import static org.mockserver.echo.http.EchoServer.*;
+import static org.mockserver.echo.tls.NonMatchingX509KeyManager.invalidServerSslContext;
 import static org.slf4j.event.Level.TRACE;
 
 /**
@@ -29,13 +30,15 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
     private final List<TextWebSocketFrame> textWebSocketFrames;
     private final List<Channel> websocketChannels;
     private final List<String> registeredClients;
+    private final boolean trustNoneTLS;
 
-    EchoServerInitializer(MockServerLogger mockServerLogger, boolean secure, EchoServer.Error error, List<String> registeredClients, List<Channel> websocketChannels, List<TextWebSocketFrame> textWebSocketFrames) {
+    EchoServerInitializer(MockServerLogger mockServerLogger, boolean secure, boolean trustNoneTLS, EchoServer.Error error, List<String> registeredClients, List<Channel> websocketChannels, List<TextWebSocketFrame> textWebSocketFrames) {
         if (!secure && error == EchoServer.Error.CLOSE_CONNECTION) {
             throw new IllegalArgumentException("Error type CLOSE_CONNECTION is not supported in non-secure mode");
         }
         this.mockServerLogger = mockServerLogger;
         this.secure = secure;
+        this.trustNoneTLS = trustNoneTLS;
         this.error = error;
         this.registeredClients = registeredClients;
         this.websocketChannels = websocketChannels;
@@ -50,7 +53,11 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
         }
 
         if (secure) {
-            pipeline.addLast(new NettySslContextFactory(mockServerLogger).createServerSslContext().newHandler(channel.alloc()));
+            if (trustNoneTLS) {
+                pipeline.addLast(invalidServerSslContext().newHandler(channel.alloc()));
+            } else {
+                pipeline.addLast(new NettySslContextFactory(mockServerLogger).createServerSslContext().newHandler(channel.alloc()));
+            }
         }
 
         if (MockServerLogger.isEnabled(TRACE)) {

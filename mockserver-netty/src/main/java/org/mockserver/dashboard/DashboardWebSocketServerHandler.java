@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.net.HttpHeaders.HOST;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
+import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.model.HttpRequest.request;
 
@@ -245,7 +245,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        if (shouldNotIgnoreException(cause)) {
+        if (connectionClosedException(cause)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)

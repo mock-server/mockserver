@@ -12,8 +12,8 @@ import org.slf4j.event.Level;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ClosedSelectorException;
 
-import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
-import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
+import static org.mockserver.exception.ExceptionHandling.closeOnFlush;
+import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
 import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabledDownstream;
 
 public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
@@ -38,7 +38,7 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, final FullHttpRequest request) {
         if (isSslEnabledDownstream(upstreamChannel) && downstreamChannel.pipeline().get(SslHandler.class) == null) {
-            downstreamChannel.pipeline().addFirst(new NettySslContextFactory(mockServerLogger).createClientSslContext().newHandler(ctx.alloc()));
+            downstreamChannel.pipeline().addFirst(new NettySslContextFactory(mockServerLogger).createClientSslContext(false).newHandler(ctx.alloc()));
         }
         downstreamChannel.writeAndFlush(request).addListener(new ChannelFutureListener() {
             @Override
@@ -72,7 +72,7 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        if (shouldNotIgnoreException(cause)) {
+        if (connectionClosedException(cause)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
