@@ -30,7 +30,7 @@ In addition it is possible to <a href="#docker_container_customization">customis
 
 <p>Then to run MockServer as a Docker container run the following command:</p>
 
-<pre><code class="code">docker run -d --rm -p mockserver/mockserver</code></pre>
+<pre><code class="code">docker run -d --rm -P mockserver/mockserver</code></pre>
 
 <p>The <strong>-P</strong> switch in this command tells Docker to map all ports exported by the MockServer container to dynamically allocated ports on the host machine.</p><p>To view information about the MockServer container, including which dynamic ports have been used run the following command:</p>
 
