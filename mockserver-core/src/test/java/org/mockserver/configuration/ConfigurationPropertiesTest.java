@@ -494,6 +494,20 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldSetAndReadDynamicallyCreateCertificateAuthorityCertificate() {
+        // given
+        System.clearProperty("mockserver.dynamicallyCreateCertificateAuthorityCertificate");
+
+        // when
+        assertFalse(dynamicallyCreateCertificateAuthorityCertificate());
+        dynamicallyCreateCertificateAuthorityCertificate(true);
+
+        // then
+        assertTrue(dynamicallyCreateCertificateAuthorityCertificate());
+        assertEquals("true", System.getProperty("mockserver.dynamicallyCreateCertificateAuthorityCertificate"));
+    }
+
+    @Test
     public void shouldSetAndReadDirectoryToSaveDynamicSSLCertificate() throws IOException {
         // given
         System.clearProperty("mockserver.directoryToSaveDynamicSSLCertificate");

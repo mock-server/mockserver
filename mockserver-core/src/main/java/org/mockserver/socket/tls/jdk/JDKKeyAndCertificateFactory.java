@@ -14,6 +14,7 @@ import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.UUID;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.*;
@@ -29,8 +30,10 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
     private final MockServerLogger mockServerLogger;
     private final X509Generator x509Generator;
 
-    private String mockServerCertificatePEMFile;
-    private String mockServerPrivateKeyPEMFile;
+    private String mockCertificatePEMFile;
+    private String mockPrivateKeyPEMFile;
+    private String certificateAuthorityCertificatePEMFile;
+    private String certificateAuthorityPrivateKeyPEMFile;
 
     public JDKKeyAndCertificateFactory(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
@@ -39,32 +42,38 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
 
     @Override
     public void buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate() {
-        try {
-            X509AndPrivateKey x509AndPrivateKey = x509Generator.generateRootX509AndPrivateKey(
-                new CertificateSigningRequest()
-                    .setKeyPairAlgorithm(KEY_GENERATION_ALGORITHM)
-                    .setSigningAlgorithm(SIGNING_ALGORITHM)
-                    .setCommonName(ROOT_COMMON_NAME)
-                    .setKeyPairSize(ROOT_KEY_SIZE)
-            );
+        if (isNotBlank(directoryToSaveDynamicSSLCertificate())
+            && isBlank(certificateAuthorityCertificatePEMFile)) {
+            certificateAuthorityCertificatePEMFile = new File(directoryToSaveDynamicSSLCertificate(), "CertificateAuthorityCertificate.pem").getAbsolutePath();
+        }
+        if (!new File(certificateAuthorityCertificatePEMFile).exists()) {
+            try {
+                X509AndPrivateKey x509AndPrivateKey = x509Generator.generateRootX509AndPrivateKey(
+                    new CertificateSigningRequest()
+                        .setKeyPairAlgorithm(KEY_GENERATION_ALGORITHM)
+                        .setSigningAlgorithm(SIGNING_ALGORITHM)
+                        .setCommonName(ROOT_COMMON_NAME)
+                        .setKeyPairSize(ROOT_KEY_SIZE)
+                );
 
-            savePEMToFile(x509AndPrivateKey.getCert(), "CertificateAuthorityCertificate.pem", false, "X509 key");
-            savePEMToFile(x509AndPrivateKey.getPrivateKey(), "PKCS8CertificateAuthorityPrivateKey.pem", false, "private key");
-        } catch (Exception e) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
-                    .setLogLevel(Level.ERROR)
-                    .setMessageFormat("exception while generating certificate authority private key and X509 certificate")
-                    .setThrowable(e)
-            );
+                certificateAuthorityCertificatePEMFile = savePEMToFile(x509AndPrivateKey.getCert(), "CertificateAuthorityCertificate.pem", false, "X509 key");
+                certificateAuthorityPrivateKeyPEMFile = savePEMToFile(x509AndPrivateKey.getPrivateKey(), "PKCS8CertificateAuthorityPrivateKey.pem", false, "private key");
+            } catch (Exception e) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.EXCEPTION)
+                        .setLogLevel(Level.ERROR)
+                        .setMessageFormat("exception while generating certificate authority private key and X509 certificate")
+                        .setThrowable(e)
+                );
+            }
         }
     }
 
     @Override
     public void buildAndSavePrivateKeyAndX509Certificate() {
         try {
-            String caPrivateKey = FileReader.readFileFromClassPathOrPath(ConfigurationProperties.certificateAuthorityPrivateKey());
+            String caPrivateKey = certificateAuthorityPrivateKey();
             X509Certificate certificateAuthorityX509Certificate = certificateAuthorityX509Certificate();
             X509AndPrivateKey x509AndPrivateKey = x509Generator.generateLeafX509AndPrivateKey(
                 new CertificateSigningRequest()
@@ -80,8 +89,8 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
             );
 
             String randomUUID = UUID.randomUUID().toString();
-            mockServerCertificatePEMFile = savePEMToFile(x509AndPrivateKey.getCert(), "MockServerCertificate" + randomUUID + ".pem", true, "X509 key");
-            mockServerPrivateKeyPEMFile = savePEMToFile(x509AndPrivateKey.getPrivateKey(), "MockServerPrivateKey" + randomUUID + ".pem", true, "private key");
+            mockCertificatePEMFile = savePEMToFile(x509AndPrivateKey.getCert(), "MockServerCertificate" + randomUUID + ".pem", true, "X509 key");
+            mockPrivateKeyPEMFile = savePEMToFile(x509AndPrivateKey.getPrivateKey(), "MockServerPrivateKey" + randomUUID + ".pem", true, "private key");
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -140,18 +149,32 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
     }
 
     public PrivateKey privateKey() {
-        return privateKeyFromPEMFile(mockServerPrivateKeyPEMFile);
+        return privateKeyFromPEMFile(mockPrivateKeyPEMFile);
     }
 
     public X509Certificate x509Certificate() {
-        return x509FromPEMFile(mockServerCertificatePEMFile);
+        return x509FromPEMFile(mockCertificatePEMFile);
     }
 
     public boolean certificateNotYetCreated() {
-        return !validX509PEMFileExists(mockServerCertificatePEMFile);
+        return !validX509PEMFileExists(mockCertificatePEMFile);
+    }
+
+    private String certificateAuthorityPrivateKey() {
+        if (ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate()) {
+            buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
+            return FileReader.readFileFromClassPathOrPath(certificateAuthorityPrivateKeyPEMFile);
+        } else {
+            return FileReader.readFileFromClassPathOrPath(ConfigurationProperties.certificateAuthorityPrivateKey());
+        }
     }
 
     public X509Certificate certificateAuthorityX509Certificate() {
-        return x509FromPEMFile(ConfigurationProperties.certificateAuthorityCertificate());
+        if (ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate()) {
+            buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
+            return x509FromPEMFile(certificateAuthorityCertificatePEMFile);
+        } else {
+            return x509FromPEMFile(ConfigurationProperties.certificateAuthorityCertificate());
+        }
     }
 }

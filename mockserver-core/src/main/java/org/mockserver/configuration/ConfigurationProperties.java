@@ -54,6 +54,7 @@ public class ConfigurationProperties {
     private static final int DEFAULT_WEB_SOCKET_CLIENT_EVENT_LOOP_THREAD_COUNT = 5;
     private static final String DEFAULT_CERTIFICATE_AUTHORITY_PRIVATE_KEY = "org/mockserver/socket/PKCS8CertificateAuthorityPrivateKey.pem";
     private static final String DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE = "org/mockserver/socket/CertificateAuthorityCertificate.pem";
+    private static final String DEFAULT_MOCKSERVER_DYNAMICALLY_CREATE_CERTIFICATE_AUTHORITY_CERTIFICATE = "false";
     private static final String DEFAULT_TLS_MUTUAL_AUTHENTICATION_REQUIRED = "false";
     private static final String DEFAULT_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER = "ANY";
     private static final String DEFAULT_FORWARD_PROXY_TLS_CUSTOM_TRUST_X509_CERTIFICATES = "";
@@ -84,6 +85,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_PREVENT_CERTIFICATE_DYNAMIC_UPDATE = "mockserver.preventCertificateDynamicUpdate";
     private static final String MOCKSERVER_CERTIFICATE_AUTHORITY_PRIVATE_KEY = "mockserver.certificateAuthorityPrivateKey";
     private static final String MOCKSERVER_CERTIFICATE_AUTHORITY_X509_CERTIFICATE = "mockserver.certificateAuthorityCertificate";
+    private static final String MOCKSERVER_DYNAMICALLY_CREATE_CERTIFICATE_AUTHORITY_CERTIFICATE = "mockserver.dynamicallyCreateCertificateAuthorityCertificate";
     private static final String MOCKSERVER_CERTIFICATE_DIRECTORY_TO_SAVE_DYNAMIC_SSL_CERTIFICATE = "mockserver.directoryToSaveDynamicSSLCertificate";
     private static final String MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_REQUIRED = "mockserver.tlsMutualAuthenticationRequired";
     private static final String MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER = "mockserver.forwardProxyTLSX509CertificatesTrustManager";
@@ -469,6 +471,23 @@ public class ConfigurationProperties {
      */
     public static void certificateAuthorityCertificate(String certificateAuthorityCertificate) {
         System.setProperty(MOCKSERVER_CERTIFICATE_AUTHORITY_X509_CERTIFICATE, certificateAuthorityCertificate);
+    }
+
+    public static boolean dynamicallyCreateCertificateAuthorityCertificate() {
+        return Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DYNAMICALLY_CREATE_CERTIFICATE_AUTHORITY_CERTIFICATE, "MOCKSERVER_DYNAMICALLY_CREATE_CERTIFICATE_AUTHORITY_CERTIFICATE", DEFAULT_MOCKSERVER_DYNAMICALLY_CREATE_CERTIFICATE_AUTHORITY_CERTIFICATE));
+    }
+
+    /**
+     * Enable dynamic creation of Certificate Authority X509 certificate and private key.
+     *
+     * Enable this property to increase the security of trusting the MockServer Certificate Authority X509 by ensuring a local dynamic value is used instead of the public value in the MockServer git repo.
+     *
+     * These PEM files will be created and saved in the directory specified with configuration property directoryToSaveDynamicSSLCertificate.
+     *
+     * @param enable dynamic creation of Certificate Authority X509 certificate and private key.
+     */
+    public static void dynamicallyCreateCertificateAuthorityCertificate(boolean enable) {
+        System.setProperty(MOCKSERVER_DYNAMICALLY_CREATE_CERTIFICATE_AUTHORITY_CERTIFICATE, "" + enable);
     }
 
     public static String directoryToSaveDynamicSSLCertificate() {
