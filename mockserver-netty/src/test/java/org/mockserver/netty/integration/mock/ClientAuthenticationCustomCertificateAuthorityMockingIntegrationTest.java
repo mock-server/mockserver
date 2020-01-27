@@ -136,6 +136,7 @@ public class ClientAuthenticationCustomCertificateAuthorityMockingIntegrationTes
     }
 
     @Test
+    // @Ignore("TODO (jamesdbloom) determine why this test fails in build server but not else where?")
     public void shouldReturnResponseInHttpsApacheClient() throws Exception {
         StatusLine statusLine = null;
         String responseBody = null;
@@ -207,9 +208,8 @@ public class ClientAuthenticationCustomCertificateAuthorityMockingIntegrationTes
         } catch (Throwable throwable) {
             assertThat(throwable.getMessage(),
                 anyOf(
-                    containsString("Received fatal alert: certificate_unknown"),
-                    containsString("readHandshakeRecord"),
-                    containsString("Broken pipe")
+                    is("Received fatal alert: certificate_unknown"),
+                    is("readHandshakeRecord")
                 )
             );
         }
