@@ -38,8 +38,7 @@ public class Scheduler {
         @Override
         @SuppressWarnings("NullableProblems")
         public Thread newThread(Runnable runnable) {
-            Thread thread = new Thread(runnable);
-            thread.setName("MockServer-" + name + threadInitNumber++);
+            Thread thread = new Thread(runnable, "MockServer-" + name + threadInitNumber++);
             thread.setDaemon(true);
             return thread;
         }
