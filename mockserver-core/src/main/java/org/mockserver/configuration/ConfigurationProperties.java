@@ -78,10 +78,6 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_MAX_FUTURE_TIMEOUT = "mockserver.maxFutureTimeout";
     private static final String MOCKSERVER_SOCKET_CONNECTION_TIMEOUT = "mockserver.socketConnectionTimeout";
     private static final String MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS = "mockserver.alwaysCloseSocketConnections";
-    private static final String MOCKSERVER_JAVA_KEY_STORE_FILE_PATH = "mockserver.javaKeyStoreFilePath";
-    private static final String MOCKSERVER_JAVA_KEY_STORE_PASSWORD = "mockserver.javaKeyStorePassword";
-    private static final String MOCKSERVER_JAVA_KEY_STORE_TYPE = "mockserver.javaKeyStoreType";
-    private static final String MOCKSERVER_DELETE_GENERATED_KEY_STORE_ON_EXIT = "mockserver.deleteGeneratedKeyStoreOnExit";
     private static final String MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME = "mockserver.sslCertificateDomainName";
     private static final String MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS = "mockserver.sslSubjectAlternativeNameDomains";
     private static final String MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS = "mockserver.sslSubjectAlternativeNameIps";
