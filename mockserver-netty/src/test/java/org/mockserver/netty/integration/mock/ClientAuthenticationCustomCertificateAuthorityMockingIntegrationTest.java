@@ -141,6 +141,7 @@ public class ClientAuthenticationCustomCertificateAuthorityMockingIntegrationTes
         String responseBody = null;
         Level originalLevel = ConfigurationProperties.logLevel();
         try {
+            ConfigurationProperties.logLevel("TRACE");
             // given
             mockServerClient
                 .when(
