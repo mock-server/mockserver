@@ -1,6 +1,7 @@
 package org.mockserver.netty.integration.mock;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
@@ -12,10 +13,12 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.cli.Main;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.tls.KeyStoreFactory;
 import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
+import org.slf4j.event.Level;
 
 import java.nio.charset.StandardCharsets;
 
@@ -25,7 +28,6 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockserver.configuration.ConfigurationProperties.*;
-import static org.mockserver.configuration.ConfigurationProperties.certificateAuthorityPrivateKey;
 import static org.mockserver.echo.tls.NonMatchingX509KeyManager.invalidClientSSLContext;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -135,6 +137,11 @@ public class ClientAuthenticationCustomCertificateAuthorityMockingIntegrationTes
     @Test
     @Ignore("TODO (jamesdbloom) determine why this test fails in build server but not else where?")
     public void shouldReturnResponseInHttpsApacheClient() throws Exception {
+        StatusLine statusLine = null;
+        String responseBody = null;
+        Level originalLevel = ConfigurationProperties.logLevel();
+        try {
+            ConfigurationProperties.logLevel("TRACE");
         // given
         mockServerClient
             .when(
@@ -156,10 +163,17 @@ public class ClientAuthenticationCustomCertificateAuthorityMockingIntegrationTes
             .setPort(getServerPort())
             .setPath(calculatePath("some_path"))
             .build()));
-        String responseBody = new String(EntityUtils.toByteArray(response.getEntity()), StandardCharsets.UTF_8);
+            statusLine = response.getStatusLine();
+            responseBody = new String(EntityUtils.toByteArray(response.getEntity()), StandardCharsets.UTF_8);
+        } catch (Throwable throwable) {
+            System.err.println("throwable = " + throwable);
+            throwable.printStackTrace();
+        } finally {
+            ConfigurationProperties.logLevel(originalLevel.name());
+        }
 
         // then
-        assertThat(response.getStatusLine().getStatusCode(), is(OK_200.code()));
+        assertThat(statusLine, is(OK_200.code()));
         assertThat(responseBody, is("some_body_response"));
     }
 
@@ -194,7 +208,8 @@ public class ClientAuthenticationCustomCertificateAuthorityMockingIntegrationTes
             assertThat(throwable.getMessage(),
                 anyOf(
                     is("Received fatal alert: certificate_unknown"),
-                    is("readHandshakeRecord")
+                    is("readHandshakeRecord"),
+                    is("Broken pipe")
                 )
             );
         }
