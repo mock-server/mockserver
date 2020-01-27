@@ -23,6 +23,7 @@ import org.slf4j.event.Level;
 import java.nio.charset.StandardCharsets;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
@@ -135,7 +136,6 @@ public class ClientAuthenticationCustomCertificateAuthorityMockingIntegrationTes
     }
 
     @Test
-    @Ignore("TODO (jamesdbloom) determine why this test fails in build server but not else where?")
     public void shouldReturnResponseInHttpsApacheClient() throws Exception {
         StatusLine statusLine = null;
         String responseBody = null;
@@ -207,9 +207,9 @@ public class ClientAuthenticationCustomCertificateAuthorityMockingIntegrationTes
         } catch (Throwable throwable) {
             assertThat(throwable.getMessage(),
                 anyOf(
-                    is("Received fatal alert: certificate_unknown"),
-                    is("readHandshakeRecord"),
-                    is("Broken pipe")
+                    containsString("Received fatal alert: certificate_unknown"),
+                    containsString("readHandshakeRecord"),
+                    containsString("Broken pipe")
                 )
             );
         }
