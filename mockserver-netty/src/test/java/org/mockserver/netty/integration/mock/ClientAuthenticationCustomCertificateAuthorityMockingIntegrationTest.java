@@ -142,27 +142,27 @@ public class ClientAuthenticationCustomCertificateAuthorityMockingIntegrationTes
         Level originalLevel = ConfigurationProperties.logLevel();
         try {
             ConfigurationProperties.logLevel("TRACE");
-        // given
-        mockServerClient
-            .when(
-                request()
-                    .withMethod("POST")
-                    .withPath(calculatePath("some_path"))
-            )
-            .respond(
-                response()
-                    .withStatusCode(200)
-                    .withBody("some_body_response")
-            );
+            // given
+            mockServerClient
+                .when(
+                    request()
+                        .withMethod("POST")
+                        .withPath(calculatePath("some_path"))
+                )
+                .respond(
+                    response()
+                        .withStatusCode(200)
+                        .withBody("some_body_response")
+                );
 
-        // when
-        HttpClient httpClient = HttpClients.custom().setSSLContext(new KeyStoreFactory(new MockServerLogger()).sslContext()).build();
-        HttpResponse response = httpClient.execute(new HttpPost(new URIBuilder()
-            .setScheme("https")
-            .setHost("localhost")
-            .setPort(getServerPort())
-            .setPath(calculatePath("some_path"))
-            .build()));
+            // when
+            HttpClient httpClient = HttpClients.custom().setSSLContext(new KeyStoreFactory(new MockServerLogger()).sslContext()).build();
+            HttpResponse response = httpClient.execute(new HttpPost(new URIBuilder()
+                .setScheme("https")
+                .setHost("localhost")
+                .setPort(getServerPort())
+                .setPath(calculatePath("some_path"))
+                .build()));
             statusLine = response.getStatusLine();
             responseBody = new String(EntityUtils.toByteArray(response.getEntity()), StandardCharsets.UTF_8);
         } catch (Throwable throwable) {
