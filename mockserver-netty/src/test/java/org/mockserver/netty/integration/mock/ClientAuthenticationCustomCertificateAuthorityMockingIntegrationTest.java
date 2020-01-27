@@ -208,9 +208,9 @@ public class ClientAuthenticationCustomCertificateAuthorityMockingIntegrationTes
         } catch (Throwable throwable) {
             assertThat(throwable.getMessage(),
                 anyOf(
-                    is("Received fatal alert: certificate_unknown"),
-                    is("readHandshakeRecord"),
-                    is("Broken pipe")
+                    containsString("Received fatal alert: certificate_unknown"),
+                    containsString("readHandshakeRecord"),
+                    containsString("Broken pipe")
                 )
             );
         }
