@@ -179,7 +179,8 @@ public class ClientAuthenticationMockingIntegrationTest extends AbstractMockingI
             assertThat(throwable.getMessage(),
                 anyOf(
                     is("Received fatal alert: certificate_unknown"),
-                    is("readHandshakeRecord")
+                    is("readHandshakeRecord"),
+                    is("Broken pipe")
                 )
             );
         }
