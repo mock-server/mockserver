@@ -21,7 +21,9 @@ public class ForwardWithAnyTrustManagerMockingIntegrationTest extends AbstractFo
 
     @BeforeClass
     public static void startServer() {
+        // save original value
         originalForwardProxyTLSX509CertificatesTrustManager = forwardProxyTLSX509CertificatesTrustManager();
+
         forwardProxyTLSX509CertificatesTrustManager(ForwardProxyTLSX509CertificatesTrustManager.ANY.name());
 
         mockServer = new MockServer();
@@ -34,6 +36,7 @@ public class ForwardWithAnyTrustManagerMockingIntegrationTest extends AbstractFo
         stopQuietly(mockServer);
         stopQuietly(mockServerClient);
 
+        // set back to original value
         forwardProxyTLSX509CertificatesTrustManager(originalForwardProxyTLSX509CertificatesTrustManager.name());
     }
 

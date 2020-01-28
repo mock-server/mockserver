@@ -46,10 +46,14 @@ public class ForwardViaHttpsProxyWithCustomTrustManagerWithMockServerCAMockingIn
     private static MockServer mockServer;
     private static MockServer proxy;
     private static ForwardProxyTLSX509CertificatesTrustManager originalForwardProxyTLSX509CertificatesTrustManager;
+    private static String originalForwardProxyTLSCustomTrustX509Certificates;
 
     @BeforeClass
     public static void startServer() {
+        // save original value
         originalForwardProxyTLSX509CertificatesTrustManager = forwardProxyTLSX509CertificatesTrustManager();
+        originalForwardProxyTLSCustomTrustX509Certificates = forwardProxyTLSCustomTrustX509Certificates();
+
         forwardProxyTLSX509CertificatesTrustManager(ForwardProxyTLSX509CertificatesTrustManager.CUSTOM.name());
         forwardProxyTLSCustomTrustX509Certificates(certificateAuthorityCertificate());
 
@@ -65,7 +69,9 @@ public class ForwardViaHttpsProxyWithCustomTrustManagerWithMockServerCAMockingIn
         stopQuietly(mockServer);
         stopQuietly(mockServerClient);
 
+        // set back to original value
         forwardProxyTLSX509CertificatesTrustManager(originalForwardProxyTLSX509CertificatesTrustManager.name());
+        forwardProxyTLSCustomTrustX509Certificates(originalForwardProxyTLSCustomTrustX509Certificates);
     }
 
     @Override

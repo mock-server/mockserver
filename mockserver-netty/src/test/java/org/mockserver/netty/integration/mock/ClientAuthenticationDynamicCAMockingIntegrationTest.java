@@ -16,7 +16,10 @@ import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.tls.KeyStoreFactory;
 import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -34,23 +37,18 @@ import static org.mockserver.stop.Stop.stopQuietly;
 /**
  * @author jamesdbloom
  */
-public class ClientAuthenticationCustomCertificateAuthorityMockingIntegrationTest extends AbstractClientAuthenticationMockingIntegrationTest {
+public class ClientAuthenticationDynamicCAMockingIntegrationTest extends AbstractClientAuthenticationMockingIntegrationTest {
 
     private static final int severHttpPort = PortFactory.findFreePort();
-    private static String originalCertificateAuthorityCertificate;
-    private static String originalCertificateAuthorityPrivateKey;
 
     @BeforeClass
-    public static void startServer() {
-        // save original value
-        originalCertificateAuthorityCertificate = certificateAuthorityCertificate();
-        originalCertificateAuthorityPrivateKey = certificateAuthorityPrivateKey();
-
-        // set new certificate authority values
-        certificateAuthorityCertificate("org/mockserver/netty/integration/tls/ca.pem");
-        certificateAuthorityPrivateKey("org/mockserver/netty/integration/tls/ca-key-pkcs8.pem");
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public static void startServer() throws IOException {
         tlsMutualAuthenticationRequired(true);
-
+        dynamicallyCreateCertificateAuthorityCertificate(true);
+        File temporaryDirectory = new File(File.createTempFile("random", "temp").getParent() + UUID.randomUUID().toString());
+        temporaryDirectory.mkdirs();
+        directoryToSaveDynamicSSLCertificate(temporaryDirectory.getAbsolutePath());
         Main.main("-serverPort", "" + severHttpPort);
 
         mockServerClient = new MockServerClient("localhost", severHttpPort).withSecure(true);
@@ -59,11 +57,9 @@ public class ClientAuthenticationCustomCertificateAuthorityMockingIntegrationTes
     @AfterClass
     public static void stopServer() {
         stopQuietly(mockServerClient);
-
-        // set back to original value
-        certificateAuthorityCertificate(originalCertificateAuthorityCertificate);
-        certificateAuthorityPrivateKey(originalCertificateAuthorityPrivateKey);
         tlsMutualAuthenticationRequired(false);
+        dynamicallyCreateCertificateAuthorityCertificate(false);
+        directoryToSaveDynamicSSLCertificate("");
     }
 
     @Override

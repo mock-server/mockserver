@@ -44,7 +44,7 @@ public class KeyStoreFactory {
      */
     private static final String SSL_CONTEXT_FALLBACK_PROTOCOL = "TLSv1";
 
-    private static SSLContext sslContext;
+    private SSLContext sslContext;
     private final MockServerLogger mockServerLogger;
     private final KeyAndCertificateFactory keyAndCertificateFactory;
 

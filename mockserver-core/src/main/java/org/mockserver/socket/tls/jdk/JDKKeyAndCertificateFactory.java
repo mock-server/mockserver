@@ -15,9 +15,7 @@ import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.UUID;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.*;
 import static org.mockserver.socket.tls.jdk.X509Generator.*;
 import static org.slf4j.event.Level.*;
@@ -32,8 +30,6 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
 
     private String mockCertificatePEMFile;
     private String mockPrivateKeyPEMFile;
-    private String certificateAuthorityCertificatePEMFile;
-    private String certificateAuthorityPrivateKeyPEMFile;
 
     public JDKKeyAndCertificateFactory(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
@@ -42,11 +38,7 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
 
     @Override
     public void buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate() {
-        if (isNotBlank(directoryToSaveDynamicSSLCertificate())
-            && isBlank(certificateAuthorityCertificatePEMFile)) {
-            certificateAuthorityCertificatePEMFile = new File(directoryToSaveDynamicSSLCertificate(), "CertificateAuthorityCertificate.pem").getAbsolutePath();
-        }
-        if (!new File(certificateAuthorityCertificatePEMFile).exists()) {
+        if (dynamicCertificateAuthorityUpdate() && certificateAuthorityCertificateNotYetCreated()) {
             try {
                 X509AndPrivateKey x509AndPrivateKey = x509Generator.generateRootX509AndPrivateKey(
                     new CertificateSigningRequest()
@@ -56,8 +48,8 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
                         .setKeyPairSize(ROOT_KEY_SIZE)
                 );
 
-                certificateAuthorityCertificatePEMFile = savePEMToFile(x509AndPrivateKey.getCert(), "CertificateAuthorityCertificate.pem", false, "X509 key");
-                certificateAuthorityPrivateKeyPEMFile = savePEMToFile(x509AndPrivateKey.getPrivateKey(), "PKCS8CertificateAuthorityPrivateKey.pem", false, "private key");
+                saveCertificateAuthorityPEMToFile(x509AndPrivateKey.getCert(), certificateAuthorityX509CertificatePath(), "X509 Certificate");
+                saveCertificateAuthorityPEMToFile(x509AndPrivateKey.getPrivateKey(), certificateAuthorityPrivateKeyPath(), "Private Key");
             } catch (Exception e) {
                 mockServerLogger.logEvent(
                     new LogEntry()
@@ -70,9 +62,131 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
         }
     }
 
+    private void saveCertificateAuthorityPEMToFile(String pem, String absolutePath, String type) throws IOException {
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(LogEntry.LogMessageType.DEBUG)
+                .setLogLevel(DEBUG)
+                .setMessageFormat("created dynamic Certificate Authority " + type + " PEM file at{}")
+                .setArguments(absolutePath)
+        );
+        try (FileWriter fileWriter = new FileWriter(createFileIfNotExists(type, new File(absolutePath)))) {
+            fileWriter.write(pem);
+        }
+    }
+
+    private File createFileIfNotExists(String type, File file) {
+        if (!file.exists()) {
+            try {
+                createParentDirs(file);
+                if (!file.createNewFile()) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.WARN)
+                            .setLogLevel(ERROR)
+                            .setMessageFormat("failed to create the file{}while attempting to save Certificate Authority " + type + " PEM file")
+                            .setArguments(file.getAbsolutePath())
+                    );
+                }
+            } catch (Throwable throwable) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.WARN)
+                        .setLogLevel(ERROR)
+                        .setMessageFormat("failed to create the file{}while attempting to save Certificate Authority " + type + " PEM file")
+                        .setArguments(file.getAbsolutePath())
+                        .setThrowable(throwable)
+                );
+            }
+        }
+        return file;
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public static void createParentDirs(File file) throws IOException {
+        File parent = file.getCanonicalFile().getParentFile();
+        if (parent == null) {
+            /*
+             * The given directory is a filesystem root. All zero of its ancestors exist. This doesn't
+             * mean that the root itself exists -- consider x:\ on a Windows machine without such a drive
+             * -- or even that the caller can create it, but this method makes no such guarantees even for
+             * non-root files.
+             */
+            return;
+        }
+        createParentDirs(parent);
+        if (!parent.exists()) {
+            parent.mkdirs();
+        }
+        if (!parent.isDirectory()) {
+            throw new IOException("Unable to create parent directories of " + file);
+        }
+    }
+
+    private boolean dynamicCertificateAuthorityUpdate() {
+        return ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate() && isNotBlank(ConfigurationProperties.directoryToSaveDynamicSSLCertificate());
+    }
+
+    public boolean certificateAuthorityCertificateNotYetCreated() {
+        return !validX509PEMFileExists(certificateAuthorityX509CertificatePath());
+    }
+
+    private String certificateAuthorityX509CertificatePath() {
+        if (dynamicCertificateAuthorityUpdate()) {
+            return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "CertificateAuthorityCertificate.pem").getAbsolutePath();
+        } else {
+            return ConfigurationProperties.certificateAuthorityCertificate();
+        }
+    }
+
+    private String certificateAuthorityPrivateKeyPath() {
+        if (dynamicCertificateAuthorityUpdate()) {
+            return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "PKCS8CertificateAuthorityPrivateKey.pem").getAbsolutePath();
+        } else {
+            return ConfigurationProperties.certificateAuthorityPrivateKey();
+        }
+    }
+
+    private String certificateAuthorityPrivateKey() {
+        if (dynamicCertificateAuthorityUpdate()) {
+            buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
+        }
+        String privateKey = FileReader.readFileFromClassPathOrPath(certificateAuthorityPrivateKeyPath());
+        if (MockServerLogger.isEnabled(TRACE)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.DEBUG)
+                    .setLogLevel(TRACE)
+                    .setMessageFormat("loaded dynamic CA private key from path{}PEM{}")
+                    .setArguments(certificateAuthorityPrivateKeyPath(), privateKey)
+            );
+        }
+        return privateKey;
+    }
+
+    public X509Certificate certificateAuthorityX509Certificate() {
+        if (dynamicCertificateAuthorityUpdate()) {
+            buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
+        }
+        X509Certificate x509Certificate = x509FromPEMFile(certificateAuthorityX509CertificatePath());
+        if (MockServerLogger.isEnabled(TRACE)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.DEBUG)
+                    .setLogLevel(TRACE)
+                    .setMessageFormat("loaded dynamic CA X509{}from path{}from PEM{}")
+                    .setArguments(x509Certificate, certificateAuthorityX509CertificatePath(), FileReader.readFileFromClassPathOrPath(certificateAuthorityX509CertificatePath()))
+            );
+        }
+        return x509Certificate;
+    }
+
     @Override
     public void buildAndSavePrivateKeyAndX509Certificate() {
         try {
+            if (dynamicCertificateAuthorityUpdate()) {
+                buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
+            }
             String caPrivateKey = certificateAuthorityPrivateKey();
             X509Certificate certificateAuthorityX509Certificate = certificateAuthorityX509Certificate();
             X509AndPrivateKey x509AndPrivateKey = x509Generator.generateLeafX509AndPrivateKey(
@@ -80,17 +194,17 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
                     .setKeyPairAlgorithm(KEY_GENERATION_ALGORITHM)
                     .setSigningAlgorithm(SIGNING_ALGORITHM)
                     .setCommonName(ROOT_COMMON_NAME)
-                    .setCommonName(sslCertificateDomainName())
-                    .addSubjectAlternativeNames(sslSubjectAlternativeNameDomains())
-                    .addSubjectAlternativeNames(sslSubjectAlternativeNameIps())
+                    .setCommonName(ConfigurationProperties.sslCertificateDomainName())
+                    .addSubjectAlternativeNames(ConfigurationProperties.sslSubjectAlternativeNameDomains())
+                    .addSubjectAlternativeNames(ConfigurationProperties.sslSubjectAlternativeNameIps())
                     .setKeyPairSize(MOCK_KEY_SIZE),
                 certificateAuthorityX509Certificate.getIssuerDN().getName(),
                 caPrivateKey
             );
 
             String randomUUID = UUID.randomUUID().toString();
-            mockCertificatePEMFile = savePEMToFile(x509AndPrivateKey.getCert(), "MockServerCertificate" + randomUUID + ".pem", true, "X509 key");
-            mockPrivateKeyPEMFile = savePEMToFile(x509AndPrivateKey.getPrivateKey(), "MockServerPrivateKey" + randomUUID + ".pem", true, "private key");
+            mockCertificatePEMFile = savePEMToFile(x509AndPrivateKey.getCert(), "MockServerCertificate" + randomUUID + ".pem", "X509 key");
+            mockPrivateKeyPEMFile = savePEMToFile(x509AndPrivateKey.getPrivateKey(), "MockServerPrivateKey" + randomUUID + ".pem", "private key");
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -102,11 +216,10 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
         }
     }
 
-    @SuppressWarnings("DuplicatedCode")
-    private String savePEMToFile(String pem, String filename, boolean deleteOnExit, String type) throws IOException {
+    private String savePEMToFile(String pem, String filename, String type) throws IOException {
         File pemFile;
-        if (isNotBlank(directoryToSaveDynamicSSLCertificate()) && new File(directoryToSaveDynamicSSLCertificate()).exists()) {
-            pemFile = new File(new File(directoryToSaveDynamicSSLCertificate()), filename);
+        if (isNotBlank(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()) && new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()).exists()) {
+            pemFile = new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), filename);
             if (pemFile.exists()) {
                 boolean deletedFile = pemFile.delete();
                 if (!deletedFile) {
@@ -142,10 +255,12 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
         try (FileWriter fileWriter = new FileWriter(pemFile)) {
             fileWriter.write(pem);
         }
-        if (deleteOnExit) {
-            pemFile.deleteOnExit();
-        }
+        pemFile.deleteOnExit();
         return pemFile.getAbsolutePath();
+    }
+
+    public boolean certificateNotYetCreated() {
+        return !validX509PEMFileExists(mockCertificatePEMFile);
     }
 
     public PrivateKey privateKey() {
@@ -174,67 +289,5 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
             );
         }
         return x509Certificate;
-    }
-
-    public boolean certificateNotYetCreated() {
-        return !validX509PEMFileExists(mockCertificatePEMFile);
-    }
-
-    private String certificateAuthorityPrivateKey() {
-        if (ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate()) {
-            buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
-            String privateKey = FileReader.readFileFromClassPathOrPath(certificateAuthorityPrivateKeyPEMFile);
-            if (MockServerLogger.isEnabled(TRACE)) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setType(LogEntry.LogMessageType.DEBUG)
-                        .setLogLevel(TRACE)
-                        .setMessageFormat("loaded dynamic CA private key from PEM{}")
-                        .setArguments(privateKey)
-                );
-            }
-            return privateKey;
-        } else {
-            String privateKey = FileReader.readFileFromClassPathOrPath(ConfigurationProperties.certificateAuthorityPrivateKey());
-            if (MockServerLogger.isEnabled(TRACE)) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setType(LogEntry.LogMessageType.DEBUG)
-                        .setLogLevel(TRACE)
-                        .setMessageFormat("loaded CA private key from PEM{}")
-                        .setArguments(privateKey)
-                );
-            }
-            return privateKey;
-        }
-    }
-
-    public X509Certificate certificateAuthorityX509Certificate() {
-        if (ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate()) {
-            buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
-            X509Certificate x509Certificate = x509FromPEMFile(certificateAuthorityCertificatePEMFile);
-            if (MockServerLogger.isEnabled(TRACE)) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setType(LogEntry.LogMessageType.DEBUG)
-                        .setLogLevel(TRACE)
-                        .setMessageFormat("loaded dynamic CA X509{}from PEM{}")
-                        .setArguments(x509Certificate, FileReader.readFileFromClassPathOrPath(certificateAuthorityCertificatePEMFile))
-                );
-            }
-            return x509Certificate;
-        } else {
-            X509Certificate x509Certificate = x509FromPEMFile(certificateAuthorityCertificate());
-            if (MockServerLogger.isEnabled(TRACE)) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setType(LogEntry.LogMessageType.DEBUG)
-                        .setLogLevel(TRACE)
-                        .setMessageFormat("loaded CA X509{}from PEM{}")
-                        .setArguments(x509Certificate, FileReader.readFileFromClassPathOrPath(certificateAuthorityCertificate()))
-                );
-            }
-            return x509Certificate;
-        }
     }
 }

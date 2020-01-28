@@ -501,7 +501,7 @@ public class ConfigurationProperties {
      * @param directoryToSaveDynamicSSLCertificate location to save private key and X509 certificate
      */
     public static void directoryToSaveDynamicSSLCertificate(String directoryToSaveDynamicSSLCertificate) {
-        if (!new File(directoryToSaveDynamicSSLCertificate).exists()) {
+        if (isNotBlank(directoryToSaveDynamicSSLCertificate) && !new File(directoryToSaveDynamicSSLCertificate).exists()) {
             throw new RuntimeException(directoryToSaveDynamicSSLCertificate + " does not exist or is not accessible");
         }
         System.setProperty(MOCKSERVER_CERTIFICATE_DIRECTORY_TO_SAVE_DYNAMIC_SSL_CERTIFICATE, directoryToSaveDynamicSSLCertificate);

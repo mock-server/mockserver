@@ -20,6 +20,7 @@ public class ForwardWithCustomTrustManagerWithCustomCAMockingIntegrationTest ext
     private static ForwardProxyTLSX509CertificatesTrustManager originalForwardProxyTLSX509CertificatesTrustManager;
     private static String originalCertificateAuthorityCertificate;
     private static String originalCertificateAuthorityPrivateKey;
+    private static String originalForwardProxyTLSCustomTrustX509Certificates;
 
     @BeforeClass
     public static void startServer() {
@@ -27,6 +28,7 @@ public class ForwardWithCustomTrustManagerWithCustomCAMockingIntegrationTest ext
         originalCertificateAuthorityCertificate = certificateAuthorityCertificate();
         originalCertificateAuthorityPrivateKey = certificateAuthorityPrivateKey();
         originalForwardProxyTLSX509CertificatesTrustManager = forwardProxyTLSX509CertificatesTrustManager();
+        originalForwardProxyTLSCustomTrustX509Certificates = forwardProxyTLSCustomTrustX509Certificates();
 
         // set new certificate authority values
         certificateAuthorityCertificate("org/mockserver/netty/integration/tls/ca.pem");
@@ -48,6 +50,7 @@ public class ForwardWithCustomTrustManagerWithCustomCAMockingIntegrationTest ext
         certificateAuthorityCertificate(originalCertificateAuthorityCertificate);
         certificateAuthorityPrivateKey(originalCertificateAuthorityPrivateKey);
         forwardProxyTLSX509CertificatesTrustManager(originalForwardProxyTLSX509CertificatesTrustManager.name());
+        forwardProxyTLSCustomTrustX509Certificates(originalForwardProxyTLSCustomTrustX509Certificates);
     }
 
     @Override

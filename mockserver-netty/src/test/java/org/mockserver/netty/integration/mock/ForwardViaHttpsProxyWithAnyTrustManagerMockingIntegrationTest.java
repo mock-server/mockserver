@@ -41,7 +41,9 @@ public class ForwardViaHttpsProxyWithAnyTrustManagerMockingIntegrationTest exten
 
     @BeforeClass
     public static void startServer() {
+        // save original value
         originalForwardProxyTLSX509CertificatesTrustManager = forwardProxyTLSX509CertificatesTrustManager();
+
         forwardProxyTLSX509CertificatesTrustManager(ForwardProxyTLSX509CertificatesTrustManager.ANY.name());
 
         proxy = new MockServer();
@@ -56,6 +58,7 @@ public class ForwardViaHttpsProxyWithAnyTrustManagerMockingIntegrationTest exten
         stopQuietly(mockServer);
         stopQuietly(mockServerClient);
 
+        // set back to original value
         forwardProxyTLSX509CertificatesTrustManager(originalForwardProxyTLSX509CertificatesTrustManager.name());
     }
 
