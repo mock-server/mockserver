@@ -76,16 +76,6 @@ public abstract class AbstractMockingIntegrationTestBase {
         }
     }
 
-    @AfterClass
-    public static void stopEchoServer() {
-//        if (insecureEchoServer != null) {
-//            insecureEchoServer.stop();
-//        }
-//        if (secureEchoServer != null) {
-//            secureEchoServer.stop();
-//        }
-    }
-
     @BeforeClass
     public static void resetServletContext() {
         servletContext = "";
