@@ -86,7 +86,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     public LogEntry setLogLevel(Level logLevel) {
         this.logLevel = logLevel;
         if (type == null) {
-            LogMessageType.valueOf(logLevel.name());
+            type = LogMessageType.valueOf(logLevel.name());
         }
         return this;
     }
@@ -350,9 +350,9 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     @SuppressWarnings("MethodDoesntCallSuperMethod")
     public LogEntry clone() {
         return new LogEntry()
+            .setType(getType())
             .setLogLevel(getLogLevel())
             .setEpochTime(getEpochTime())
-            .setType(getType())
             .setHttpRequests(getHttpRequests())
             .setHttpResponse(getHttpResponse())
             .setHttpError(getHttpError())
@@ -366,9 +366,9 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     @Override
     public void translateTo(LogEntry event, long sequence) {
         event
+            .setType(getType())
             .setLogLevel(getLogLevel())
             .setEpochTime(getEpochTime())
-            .setType(getType())
             .setHttpRequests(getHttpRequests())
             .setHttpResponse(getHttpResponse())
             .setHttpError(getHttpError())

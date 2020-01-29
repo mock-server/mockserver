@@ -31,9 +31,8 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
     private final List<Channel> websocketChannels;
     private final List<String> registeredClients;
     private final boolean trustNoneTLS;
-    private final NettySslContextFactory nettySslContextFactory;
 
-    EchoServerInitializer(MockServerLogger mockServerLogger, boolean secure, boolean trustNoneTLS, EchoServer.Error error, List<String> registeredClients, List<Channel> websocketChannels, List<TextWebSocketFrame> textWebSocketFrames, NettySslContextFactory nettySslContextFactory) {
+    EchoServerInitializer(MockServerLogger mockServerLogger, boolean secure, boolean trustNoneTLS, EchoServer.Error error, List<String> registeredClients, List<Channel> websocketChannels, List<TextWebSocketFrame> textWebSocketFrames) {
         if (!secure && error == EchoServer.Error.CLOSE_CONNECTION) {
             throw new IllegalArgumentException("Error type CLOSE_CONNECTION is not supported in non-secure mode");
         }
@@ -44,7 +43,6 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
         this.registeredClients = registeredClients;
         this.websocketChannels = websocketChannels;
         this.textWebSocketFrames = textWebSocketFrames;
-        this.nettySslContextFactory = nettySslContextFactory;
     }
 
     public void initChannel(SocketChannel channel) {
@@ -58,7 +56,7 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
             if (trustNoneTLS) {
                 pipeline.addLast(invalidServerSslContext().newHandler(channel.alloc()));
             } else {
-                pipeline.addLast(nettySslContextFactory.createServerSslContext().newHandler(channel.alloc()));
+                pipeline.addLast(new NettySslContextFactory(mockServerLogger).createServerSslContext().newHandler(channel.alloc()));
             }
         }
 

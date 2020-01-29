@@ -79,7 +79,7 @@ public class ExpectationFileWatcherIntegrationTest {
                 },
                 persistedExpectationsContents::completeExceptionally
             );
-            MILLISECONDS.sleep(1000);
+            MILLISECONDS.sleep(2000);
 
             // when
             String watchedFileContents = "[ {" + NEW_LINE +
@@ -252,7 +252,7 @@ public class ExpectationFileWatcherIntegrationTest {
                 },
                 persistedExpectationsContents::completeExceptionally
             );
-            MILLISECONDS.sleep(1000);
+            MILLISECONDS.sleep(2000);
 
             // when
             watchedFileContents = "[]";
@@ -383,7 +383,7 @@ public class ExpectationFileWatcherIntegrationTest {
                 },
                 persistedExpectationsContents::completeExceptionally
             );
-            MILLISECONDS.sleep(1000);
+            MILLISECONDS.sleep(2000);
 
             // when
             watchedFileContents = "[ {" + NEW_LINE +

@@ -100,7 +100,7 @@ public class ExpectationFileSystemPersistenceIntegrationTest {
                 )
                 .get(10, TimeUnit.SECONDS);
 
-            MILLISECONDS.sleep(1500);
+            MILLISECONDS.sleep(2500);
 
             // then
             String expectedFileContents = "[ {" + NEW_LINE +
@@ -215,7 +215,7 @@ public class ExpectationFileSystemPersistenceIntegrationTest {
                 )
                 .get(10, TimeUnit.SECONDS);
 
-            MILLISECONDS.sleep(1500);
+            MILLISECONDS.sleep(2500);
 
             // then
             String expectedFileContents = "[ {" + NEW_LINE +
@@ -323,7 +323,8 @@ public class ExpectationFileSystemPersistenceIntegrationTest {
                             )))
                 )
                 .get(10, TimeUnit.SECONDS);
-            MILLISECONDS.sleep(1500);
+
+            MILLISECONDS.sleep(2500);
 
             // then
             String expectedFileContents = "[ {" + NEW_LINE +

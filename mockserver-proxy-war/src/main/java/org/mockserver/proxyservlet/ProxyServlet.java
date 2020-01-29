@@ -16,6 +16,7 @@ import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.servlet.responsewriter.ServletResponseWriter;
+import org.mockserver.socket.tls.NettySslContextFactory;
 import org.slf4j.event.Level;
 
 import javax.servlet.ServletContextEvent;
@@ -60,7 +61,7 @@ public class ProxyServlet extends HttpServlet implements ServletContextListener 
         this.httpStateHandler = new HttpStateHandler(this.mockServerLogger, this.scheduler);
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
-        this.actionHandler = new ActionHandler(workerGroup, httpStateHandler, null, null);
+        this.actionHandler = new ActionHandler(workerGroup, httpStateHandler, null, new NettySslContextFactory(mockServerLogger));
     }
 
     @Override
