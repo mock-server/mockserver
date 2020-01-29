@@ -14,7 +14,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.testing.integration.proxy.AbstractClientProxyIntegrationTest;
+import org.mockserver.testing.integration.proxy.AbstractProxyIntegrationTest;
 import org.mockserver.netty.MockServer;
 import org.mockserver.model.HttpStatusCode;
 
@@ -28,7 +28,7 @@ import static org.mockserver.verify.VerificationTimes.exactly;
 /**
  * @author jamesdbloom
  */
-public class NettyHttpProxyIntegrationTest extends AbstractClientProxyIntegrationTest {
+public class NettyHttpProxyIntegrationTest extends AbstractProxyIntegrationTest {
 
     private static int mockServerPort;
     private static EchoServer echoServer;

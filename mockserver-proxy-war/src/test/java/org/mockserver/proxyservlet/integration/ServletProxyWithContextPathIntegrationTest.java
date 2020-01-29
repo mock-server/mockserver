@@ -13,7 +13,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.proxyservlet.ProxyServlet;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.tls.KeyStoreFactory;
-import org.mockserver.testing.integration.proxy.AbstractClientProxyIntegrationTest;
+import org.mockserver.testing.integration.proxy.AbstractProxyIntegrationTest;
 
 import java.io.File;
 import java.util.concurrent.TimeUnit;
@@ -23,7 +23,7 @@ import static org.mockserver.stop.Stop.stopQuietly;
 /**
  * @author jamesdbloom
  */
-public class ProxyClientWarPathIntegrationTest extends AbstractClientProxyIntegrationTest {
+public class ServletProxyWithContextPathIntegrationTest extends AbstractProxyIntegrationTest {
 
     private static final int PROXY_PORT = PortFactory.findFreePort();
     private static final int PROXY_HTTPS_PORT = PortFactory.findFreePort();
@@ -33,7 +33,7 @@ public class ProxyClientWarPathIntegrationTest extends AbstractClientProxyIntegr
 
     @BeforeClass
     public static void startServer() throws Exception {
-        servletContext = "";
+        servletContext = "proxy";
 
         // start server
         echoServer = new EchoServer(false, false);

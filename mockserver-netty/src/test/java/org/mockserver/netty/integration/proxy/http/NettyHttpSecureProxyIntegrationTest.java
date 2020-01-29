@@ -5,7 +5,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.testing.integration.proxy.AbstractClientSecureProxyIntegrationTest;
+import org.mockserver.testing.integration.proxy.AbstractSecureProxyIntegrationTest;
 import org.mockserver.netty.MockServer;
 
 import static org.mockserver.stop.Stop.stopQuietly;
@@ -13,7 +13,7 @@ import static org.mockserver.stop.Stop.stopQuietly;
 /**
  * @author jamesdbloom
  */
-public class NettyHttpProxySecureIntegrationTest extends AbstractClientSecureProxyIntegrationTest {
+public class NettyHttpSecureProxyIntegrationTest extends AbstractSecureProxyIntegrationTest {
 
     private static int mockServerPort;
     private static EchoServer echoServer;
@@ -52,7 +52,7 @@ public class NettyHttpProxySecureIntegrationTest extends AbstractClientSecurePro
     }
 
     @Override
-    public MockServerClient getProxyClient() {
+    public MockServerClient getMockServerClient() {
         return mockServerClient;
     }
 

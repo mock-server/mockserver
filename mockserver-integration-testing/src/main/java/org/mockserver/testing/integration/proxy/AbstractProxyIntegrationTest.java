@@ -62,14 +62,14 @@ import static org.mockserver.verify.VerificationTimes.exactly;
 /**
  * @author jamesdbloom
  */
-public abstract class AbstractClientProxyIntegrationTest {
+public abstract class AbstractProxyIntegrationTest {
 
     protected static String servletContext = "";
     private static EventLoopGroup clientEventLoopGroup;
 
     @BeforeClass
     public static void createClientAndEventLoopGroup() {
-        clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(AbstractClientProxyIntegrationTest.class.getSimpleName() + "-eventLoop"));
+        clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(AbstractProxyIntegrationTest.class.getSimpleName() + "-eventLoop"));
     }
 
     @AfterClass

@@ -49,15 +49,15 @@ import static org.slf4j.event.Level.ERROR;
 /**
  * @author jamesdbloom
  */
-public abstract class AbstractClientSecureProxyIntegrationTest {
+public abstract class AbstractSecureProxyIntegrationTest {
 
     public abstract int getProxyPort();
 
     public abstract int getServerSecurePort();
 
-    public abstract MockServerClient getProxyClient();
+    public abstract MockServerClient getMockServerClient();
 
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(AbstractClientSecureProxyIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(AbstractSecureProxyIntegrationTest.class.getSimpleName() + "-eventLoop"));
 
     @AfterClass
     public static void stopEventLoopGroup() {
@@ -254,7 +254,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                 assertContains(response, "an_example_body");
 
                 // and
-                getProxyClient().verify(
+                getMockServerClient().verify(
                     request()
                         .withMethod("GET")
                         .withPath("/test_headers_and_body")
@@ -297,7 +297,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
         assertEquals("an_example_body", new String(EntityUtils.toByteArray(response.getEntity()), UTF_8));
 
         // and
-        getProxyClient().verify(
+        getMockServerClient().verify(
             request()
                 .withPath("/test_headers_and_body")
                 .withBody("an_example_body"),
@@ -339,7 +339,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                 assertContains(IOStreamUtils.readInputStreamToString(sslSocket), "HTTP/1.1 404 Not Found");
 
                 // and
-                getProxyClient().verify(
+                getMockServerClient().verify(
                     request()
                         .withMethod("GET")
                         .withPath("/not_found"),
