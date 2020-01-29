@@ -54,6 +54,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
 
     private static final AttributeKey<Boolean> SSL_ENABLED_UPSTREAM = AttributeKey.valueOf("PROXY_SSL_ENABLED_UPSTREAM");
     private static final AttributeKey<Boolean> SSL_ENABLED_DOWNSTREAM = AttributeKey.valueOf("SSL_ENABLED_DOWNSTREAM");
+    private static final AttributeKey<NettySslContextFactory> NETTY_SSL_CONTEXT_FACTORY = AttributeKey.valueOf("NETTY_SSL_CONTEXT_FACTORY");
     private static final Map<PortBinding, Set<String>> localAddressesCache = new ConcurrentHashMap<>();
 
     protected final MockServerLogger mockServerLogger;
@@ -72,7 +73,15 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         this.httpStateHandler = httpStateHandler;
         this.actionHandler = actionHandler;
         this.nettySslContextFactory = nettySslContextFactory;
-        mockServerHttpResponseToFullHttpResponse = new MockServerHttpResponseToFullHttpResponse(mockServerLogger);
+        this.mockServerHttpResponseToFullHttpResponse = new MockServerHttpResponseToFullHttpResponse(mockServerLogger);
+    }
+
+    public static NettySslContextFactory nettySslContextFactory(Channel channel) {
+        if (channel.attr(NETTY_SSL_CONTEXT_FACTORY).get() != null) {
+            return channel.attr(NETTY_SSL_CONTEXT_FACTORY).get();
+        } else {
+            throw new RuntimeException("NettySslContextFactory not yet initialised for channel " + channel);
+        }
     }
 
     public static void enableSslUpstreamAndDownstream(Channel channel) {
@@ -106,6 +115,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) {
+        ctx.channel().attr(NETTY_SSL_CONTEXT_FACTORY).set(nettySslContextFactory);
         if (SocksDetector.isSocks4(msg, actualReadableBytes())) {
             enableSocks4(ctx, msg);
         } else if (SocksDetector.isSocks5(msg, actualReadableBytes())) {
@@ -287,7 +297,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                         .setMessageFormat("TSL handshake failure:\n\n Client does not trust MockServer Certificate Authority for:{}See http://mock-server.com/mock_server/HTTPS_TLS.html to enable the client to trust MocksServer Certificate Authority.\n")
                         .setArguments(ctx.channel())
                 );
-            } else {
+            } else if (!throwable.getMessage().contains("close_notify during handshake")) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.EXCEPTION)

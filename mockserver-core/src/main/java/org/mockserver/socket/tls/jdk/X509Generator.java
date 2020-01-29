@@ -1,6 +1,7 @@
 package org.mockserver.socket.tls.jdk;
 
 import com.google.common.net.InetAddresses;
+import com.google.common.net.InternetDomainName;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
@@ -148,19 +149,30 @@ public class X509Generator {
 
     @SuppressWarnings("UnstableApiUsage")
     private GeneralName buildGeneralName(final String subjectAlternativeName) {
-        GeneralName gn = null;
-        try {
-            gn = new GeneralName(InetAddresses.isUriInetAddress(subjectAlternativeName) ? new IPAddressName(subjectAlternativeName) : new DNSName(subjectAlternativeName));
-        } catch (Exception e) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
-                    .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Unable to create a subject alternative name with the value " + subjectAlternativeName + " it doesn't appear to be either a valid dns name or an IP address")
-                    .setThrowable(e)
-            );
+        if (InetAddresses.isUriInetAddress(subjectAlternativeName)) {
+            try {
+                return new GeneralName(new IPAddressName(subjectAlternativeName));
+            } catch (Throwable throwable) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.WARN)
+                        .setLogLevel(Level.WARN)
+                        .setMessageFormat("Unable to use ip address with the value \"" + subjectAlternativeName + "\" as Subject Alternative Name (SAN) for X509 as JDK does not support SANs with that format")
+                );
+            }
+        } else if (InternetDomainName.isValid(subjectAlternativeName)) {
+            try {
+                return new GeneralName(new DNSName(subjectAlternativeName));
+            } catch (Throwable throwable) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.WARN)
+                        .setLogLevel(Level.WARN)
+                        .setMessageFormat("Unable to use domain name with the value \"" + subjectAlternativeName + "\" as Subject Alternative Name (SAN) for X509 as JDK does not support SANs with that format")
+                );
+            }
         }
-        return gn;
+        return null;
     }
 
     private X509AndPrivateKey signX509KeyPair(final PrivateKey privateKey, final KeyPair keyPair, X509CertInfo x509CertInfo, final String signatureAlgorithm) throws CertificateException, NoSuchAlgorithmException, IOException, InvalidKeyException, NoSuchProviderException, SignatureException {

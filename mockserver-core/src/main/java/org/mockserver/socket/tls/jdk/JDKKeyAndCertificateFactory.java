@@ -28,8 +28,7 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
     private final MockServerLogger mockServerLogger;
     private final X509Generator x509Generator;
 
-    private String mockCertificatePEMFile;
-    private String mockPrivateKeyPEMFile;
+    private X509AndPrivateKey x509AndPrivateKey;
 
     public JDKKeyAndCertificateFactory(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
@@ -189,7 +188,7 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
             }
             String caPrivateKey = certificateAuthorityPrivateKey();
             X509Certificate certificateAuthorityX509Certificate = certificateAuthorityX509Certificate();
-            X509AndPrivateKey x509AndPrivateKey = x509Generator.generateLeafX509AndPrivateKey(
+            x509AndPrivateKey = x509Generator.generateLeafX509AndPrivateKey(
                 new CertificateSigningRequest()
                     .setKeyPairAlgorithm(KEY_GENERATION_ALGORITHM)
                     .setSigningAlgorithm(SIGNING_ALGORITHM)
@@ -201,10 +200,6 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
                 certificateAuthorityX509Certificate.getIssuerDN().getName(),
                 caPrivateKey
             );
-
-            String randomUUID = UUID.randomUUID().toString();
-            mockCertificatePEMFile = savePEMToFile(x509AndPrivateKey.getCert(), "MockServerCertificate" + randomUUID + ".pem", "X509 key");
-            mockPrivateKeyPEMFile = savePEMToFile(x509AndPrivateKey.getPrivateKey(), "MockServerPrivateKey" + randomUUID + ".pem", "private key");
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -260,34 +255,14 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
     }
 
     public boolean certificateNotYetCreated() {
-        return !validX509PEMFileExists(mockCertificatePEMFile);
+        return x509AndPrivateKey == null;
     }
 
     public PrivateKey privateKey() {
-        RSAPrivateKey privateKey = privateKeyFromPEMFile(mockPrivateKeyPEMFile);
-        if (MockServerLogger.isEnabled(TRACE)) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(LogEntry.LogMessageType.DEBUG)
-                    .setLogLevel(TRACE)
-                    .setMessageFormat("loaded CA private key{}from PEM{}")
-                    .setArguments(privateKey, FileReader.readFileFromClassPathOrPath(mockPrivateKeyPEMFile))
-            );
-        }
-        return privateKey;
+        return privateKeyFromPEM(x509AndPrivateKey.getPrivateKey());
     }
 
     public X509Certificate x509Certificate() {
-        X509Certificate x509Certificate = x509FromPEMFile(mockCertificatePEMFile);
-        if (MockServerLogger.isEnabled(TRACE)) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(LogEntry.LogMessageType.DEBUG)
-                    .setLogLevel(TRACE)
-                    .setMessageFormat("loaded X509{}from PEM{}")
-                    .setArguments(x509Certificate, FileReader.readFileFromClassPathOrPath(mockCertificatePEMFile))
-            );
-        }
-        return x509Certificate;
+        return x509FromPEM(x509AndPrivateKey.getCert());
     }
 }

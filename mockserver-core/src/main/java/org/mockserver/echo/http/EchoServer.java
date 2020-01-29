@@ -15,6 +15,7 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.socket.tls.NettySslContextFactory;
 import org.mockserver.stop.Stoppable;
 import org.slf4j.event.Level;
 
@@ -40,6 +41,7 @@ public class EchoServer implements Stoppable {
     private final List<String> registeredClients;
     private final List<Channel> websocketChannels;
     private final List<TextWebSocketFrame> textWebSocketFrames;
+    private final NettySslContextFactory nettySslContextFactory;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
 
@@ -51,6 +53,7 @@ public class EchoServer implements Stoppable {
         registeredClients = new ArrayList<>();
         websocketChannels = new ArrayList<>();
         textWebSocketFrames = new ArrayList<>();
+        nettySslContextFactory = new NettySslContextFactory(mockServerLogger);
         new Thread(() -> {
             bossGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-bossEventLoop"));
             workerGroup = new NioEventLoopGroup(5, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-workerEventLoop"));
@@ -58,7 +61,7 @@ public class EchoServer implements Stoppable {
                 .channel(NioServerSocketChannel.class)
                 .option(ChannelOption.SO_BACKLOG, 100)
                 .handler(new LoggingHandler(EchoServer.class))
-                .childHandler(new EchoServerInitializer(mockServerLogger, secure, trustNoneTLS, error, registeredClients, websocketChannels, textWebSocketFrames))
+                .childHandler(new EchoServerInitializer(mockServerLogger, secure, trustNoneTLS, error, registeredClients, websocketChannels, textWebSocketFrames, nettySslContextFactory))
                 .childAttr(LOG_FILTER, mockServerEventLog)
                 .childAttr(NEXT_RESPONSE, nextResponse)
                 .bind(0)

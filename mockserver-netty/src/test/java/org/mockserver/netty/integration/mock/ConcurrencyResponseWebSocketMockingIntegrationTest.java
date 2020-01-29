@@ -53,7 +53,7 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
                     .withHeader(CONTENT_LENGTH.toString(), String.valueOf(request.getBodyAsString().length()))
                     .withBody(request.getBodyAsString())
             );
-        httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false, null);
+        httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false);
     }
 
     @AfterClass

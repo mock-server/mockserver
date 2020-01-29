@@ -1,12 +1,14 @@
 package org.mockserver.netty.proxy.relay;
 
 import io.netty.buffer.Unpooled;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.ssl.SslHandler;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.socket.tls.NettySslContextFactory;
 import org.slf4j.event.Level;
 
 import java.nio.channels.ClosedChannelException;
@@ -15,6 +17,7 @@ import java.nio.channels.ClosedSelectorException;
 import static org.mockserver.exception.ExceptionHandling.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
 import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabledDownstream;
+import static org.mockserver.netty.unification.PortUnificationHandler.nettySslContextFactory;
 
 public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
@@ -38,25 +41,22 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, final FullHttpRequest request) {
         if (isSslEnabledDownstream(upstreamChannel) && downstreamChannel.pipeline().get(SslHandler.class) == null) {
-            downstreamChannel.pipeline().addFirst(new NettySslContextFactory(mockServerLogger).createClientSslContext(false).newHandler(ctx.alloc()));
+            downstreamChannel.pipeline().addFirst(nettySslContextFactory(ctx.channel()).createClientSslContext(true).newHandler(ctx.alloc()));
         }
-        downstreamChannel.writeAndFlush(request).addListener(new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture future) {
-                if (future.isSuccess()) {
-                    ctx.channel().read();
-                } else {
-                    if (isNotSocketClosedException(future.cause())) {
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setType(LogEntry.LogMessageType.EXCEPTION)
-                                .setLogLevel(Level.ERROR)
-                                .setMessageFormat("exception while returning response for request \"" + request.method() + " " + request.uri() + "\"")
-                                .setThrowable(future.cause())
-                        );
-                    }
-                    future.channel().close();
+        downstreamChannel.writeAndFlush(request).addListener((ChannelFutureListener) future -> {
+            if (future.isSuccess()) {
+                ctx.channel().read();
+            } else {
+                if (isNotSocketClosedException(future.cause())) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.EXCEPTION)
+                            .setLogLevel(Level.ERROR)
+                            .setMessageFormat("exception while returning response for request \"" + request.method() + " " + request.uri() + "\"")
+                            .setThrowable(future.cause())
+                    );
                 }
+                future.channel().close();
             }
         });
     }

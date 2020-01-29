@@ -37,10 +37,12 @@ public class BookServer {
     private final ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private final int httpPort;
     private final boolean secure;
+    private final NettySslContextFactory nettySslContextFactory;
 
     BookServer(int httpPort, boolean secure) {
         this.httpPort = httpPort;
         this.secure = secure;
+        this.nettySslContextFactory = new NettySslContextFactory(new MockServerLogger());
     }
 
     @PostConstruct
@@ -57,7 +59,7 @@ public class BookServer {
 
                             // add HTTPS support
                             if (secure) {
-                                pipeline.addLast(new NettySslContextFactory(new MockServerLogger()).createServerSslContext().newHandler(ch.alloc()));
+                                pipeline.addLast(nettySslContextFactory.createServerSslContext().newHandler(ch.alloc()));
                             }
 
                             pipeline.addLast(new HttpServerCodec());

@@ -56,7 +56,7 @@ public class NettyHttpClientErrorHandlingTest {
         ));
 
         // when
-        new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null, false, null).sendRequest(request().withHeader(HOST.toString(), "127.0.0.1:" + freePort))
+        new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null, false).sendRequest(request().withHeader(HOST.toString(), "127.0.0.1:" + freePort))
             .get(10, TimeUnit.SECONDS);
     }
 
@@ -75,7 +75,7 @@ public class NettyHttpClientErrorHandlingTest {
             ));
 
             // when
-            new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null, false, null).sendRequest(request().withSecure(true).withHeader(HOST.toString(), "127.0.0.1:" + echoServer.getPort()))
+            new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null, false).sendRequest(request().withSecure(true).withHeader(HOST.toString(), "127.0.0.1:" + echoServer.getPort()))
                 .get(10, TimeUnit.SECONDS);
         } finally {
             stopQuietly(echoServer);
@@ -90,7 +90,7 @@ public class NettyHttpClientErrorHandlingTest {
         try {
             // when
             InetSocketAddress socket = new InetSocketAddress("127.0.0.1", echoServer.getPort());
-            HttpResponse httpResponse = new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null, false, null)
+            HttpResponse httpResponse = new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null, false)
                 .sendRequest(
                     request()
                         .withHeader(CONTENT_TYPE.toString(), MediaType.TEXT_PLAIN.toString())

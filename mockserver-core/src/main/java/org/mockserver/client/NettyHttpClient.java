@@ -36,12 +36,16 @@ public class NettyHttpClient {
     private final boolean forwardProxyClient;
     private final NettySslContextFactory nettySslContextFactory;
 
+    public NettyHttpClient(MockServerLogger mockServerLogger, EventLoopGroup eventLoopGroup, ProxyConfiguration proxyConfiguration, boolean forwardProxyClient) {
+        this(mockServerLogger, eventLoopGroup, proxyConfiguration, forwardProxyClient, new NettySslContextFactory(mockServerLogger));
+    }
+
     public NettyHttpClient(MockServerLogger mockServerLogger, EventLoopGroup eventLoopGroup, ProxyConfiguration proxyConfiguration, boolean forwardProxyClient, NettySslContextFactory nettySslContextFactory) {
         this.mockServerLogger = mockServerLogger;
         this.eventLoopGroup = eventLoopGroup;
         this.proxyConfiguration = proxyConfiguration;
         this.forwardProxyClient = forwardProxyClient;
-        this.nettySslContextFactory = nettySslContextFactory == null ? new NettySslContextFactory(mockServerLogger) : nettySslContextFactory;
+        this.nettySslContextFactory = nettySslContextFactory;
     }
 
     public CompletableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest) throws SocketConnectionException {

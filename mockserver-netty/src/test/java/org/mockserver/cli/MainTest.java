@@ -86,7 +86,7 @@ public class MainTest {
                 "-proxyRemotePort", String.valueOf(echoServer.getPort()),
                 "-proxyRemoteHost", "127.0.0.1"
             );
-            final HttpResponse response = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false, null)
+            final HttpResponse response = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false)
                 .sendRequest(
                     request()
                         .withHeader(HOST.toString(), "127.0.0.1:" + freePort),
@@ -116,7 +116,7 @@ public class MainTest {
                 "-serverPort", String.valueOf(freePort),
                 "-proxyRemotePort", String.valueOf(echoServer.getPort())
             );
-            final HttpResponse response = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false, null)
+            final HttpResponse response = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false)
                 .sendRequest(
                     request()
                         .withHeader(HOST.toString(), "127.0.0.1:" + freePort),

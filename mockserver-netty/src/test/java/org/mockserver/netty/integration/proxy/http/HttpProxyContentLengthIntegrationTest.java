@@ -92,7 +92,7 @@ public class HttpProxyContentLengthIntegrationTest {
             proxyConfiguration(
                 ProxyConfiguration.Type.HTTPS,
                 "localhost:" + proxyClientAndServer.getLocalPort()
-            ), false, null)
+            ), false)
             .sendRequest(
                 request()
                     .withPath("/noContentLengthHeader")
