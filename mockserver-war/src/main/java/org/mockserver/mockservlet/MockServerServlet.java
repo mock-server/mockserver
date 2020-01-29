@@ -60,7 +60,7 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
         this.httpStateHandler = new HttpStateHandler(this.mockServerLogger, this.scheduler);
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
-        this.actionHandler = new ActionHandler(workerGroup, httpStateHandler, null);
+        this.actionHandler = new ActionHandler(workerGroup, httpStateHandler, null, null);
     }
 
     @Override

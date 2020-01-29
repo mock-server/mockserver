@@ -9,6 +9,7 @@ import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
+import org.mockserver.socket.tls.NettySslContextFactory;
 import org.slf4j.event.Level;
 
 import javax.annotation.Nullable;
@@ -101,6 +102,7 @@ public class MockServer extends LifeCycle {
             portBindings = Arrays.asList(localPorts);
         }
 
+        NettySslContextFactory nettySslContextFactory = new NettySslContextFactory(mockServerLogger);
         serverServerBootstrap = new ServerBootstrap()
             .group(bossGroup, workerGroup)
             .option(ChannelOption.SO_BACKLOG, 1024)
@@ -108,7 +110,7 @@ public class MockServer extends LifeCycle {
             .childOption(ChannelOption.AUTO_READ, true)
             .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
             .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
-            .childHandler(new MockServerUnificationInitializer(MockServer.this, httpStateHandler, new ActionHandler(getEventLoopGroup(), httpStateHandler, proxyConfiguration)))
+            .childHandler(new MockServerUnificationInitializer(MockServer.this, httpStateHandler, new ActionHandler(getEventLoopGroup(), httpStateHandler, proxyConfiguration, nettySslContextFactory), nettySslContextFactory))
             .childAttr(REMOTE_SOCKET, remoteSocket)
             .childAttr(PROXYING, remoteSocket != null);
 

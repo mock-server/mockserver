@@ -16,11 +16,11 @@ public class MockServerUnificationInitializer extends ChannelHandlerAdapter {
     private final ActionHandler actionHandler;
     private final NettySslContextFactory nettySslContextFactory;
 
-    public MockServerUnificationInitializer(LifeCycle server, HttpStateHandler httpStateHandler, ActionHandler actionHandler) {
+    public MockServerUnificationInitializer(LifeCycle server, HttpStateHandler httpStateHandler, ActionHandler actionHandler, NettySslContextFactory nettySslContextFactory) {
         this.server = server;
         this.httpStateHandler = httpStateHandler;
         this.actionHandler = actionHandler;
-        this.nettySslContextFactory = new NettySslContextFactory(httpStateHandler.getMockServerLogger());
+        this.nettySslContextFactory = nettySslContextFactory;
     }
 
     @Override

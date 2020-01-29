@@ -13,6 +13,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
+import org.mockserver.socket.tls.NettySslContextFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -33,12 +34,14 @@ public class NettyHttpClient {
     private final EventLoopGroup eventLoopGroup;
     private final ProxyConfiguration proxyConfiguration;
     private final boolean forwardProxyClient;
+    private final NettySslContextFactory nettySslContextFactory;
 
-    public NettyHttpClient(MockServerLogger mockServerLogger, EventLoopGroup eventLoopGroup, ProxyConfiguration proxyConfiguration, boolean forwardProxyClient) {
+    public NettyHttpClient(MockServerLogger mockServerLogger, EventLoopGroup eventLoopGroup, ProxyConfiguration proxyConfiguration, boolean forwardProxyClient, NettySslContextFactory nettySslContextFactory) {
         this.mockServerLogger = mockServerLogger;
         this.eventLoopGroup = eventLoopGroup;
         this.proxyConfiguration = proxyConfiguration;
         this.forwardProxyClient = forwardProxyClient;
+        this.nettySslContextFactory = nettySslContextFactory == null ? new NettySslContextFactory(mockServerLogger) : nettySslContextFactory;
     }
 
     public CompletableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest) throws SocketConnectionException {
@@ -68,7 +71,7 @@ public class NettyHttpClient {
                 .attr(SECURE, httpRequest.isSecure() != null && httpRequest.isSecure())
                 .attr(REMOTE_SOCKET, remoteAddress)
                 .attr(RESPONSE_FUTURE, httpResponseFuture)
-                .handler(new HttpClientInitializer(proxyConfiguration, mockServerLogger, forwardProxyClient))
+                .handler(new HttpClientInitializer(proxyConfiguration, mockServerLogger, forwardProxyClient, nettySslContextFactory))
                 .connect(remoteAddress)
                 .addListener((ChannelFutureListener) future -> {
                     if (future.isSuccess()) {

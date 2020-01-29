@@ -38,7 +38,7 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
 
     private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(HttpProxyViaLoadBalanceIntegrationTest.class.getSimpleName() + "-eventLoop"));
 
-    private static final NettyHttpClient httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false);
+    private static final NettyHttpClient httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false, null);
 
     @BeforeClass
     public static void startServer() {

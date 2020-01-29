@@ -38,7 +38,7 @@ public class DirectProxyViaLoadBalanceIntegrationTest {
 
     private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(DirectProxyViaLoadBalanceIntegrationTest.class.getSimpleName() + "-eventLoop"));
 
-    private static final NettyHttpClient httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false);
+    private static final NettyHttpClient httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false, null);
 
     @BeforeClass
     public static void startServer() {

@@ -5,9 +5,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.util.AttributeKey;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.client.SocketCommunicationException;
-import org.mockserver.client.SocketConnectionException;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.exception.ExceptionHandling;
 import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -18,9 +16,9 @@ import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.curl.HttpRequestToCurlSerializer;
+import org.mockserver.socket.tls.NettySslContextFactory;
 import org.slf4j.event.Level;
 
-import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -65,12 +63,12 @@ public class ActionHandler {
     private HopByHopHeaderFilter hopByHopHeaderFilter = new HopByHopHeaderFilter();
     private HttpRequestToCurlSerializer httpRequestToCurlSerializer;
 
-    public ActionHandler(EventLoopGroup eventLoopGroup, HttpStateHandler httpStateHandler, ProxyConfiguration proxyConfiguration) {
+    public ActionHandler(EventLoopGroup eventLoopGroup, HttpStateHandler httpStateHandler, ProxyConfiguration proxyConfiguration, NettySslContextFactory nettySslContextFactory) {
         this.httpStateHandler = httpStateHandler;
         this.scheduler = httpStateHandler.getScheduler();
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.httpRequestToCurlSerializer = new HttpRequestToCurlSerializer(mockServerLogger);
-        this.httpClient = new NettyHttpClient(mockServerLogger, eventLoopGroup, proxyConfiguration, true);
+        this.httpClient = new NettyHttpClient(mockServerLogger, eventLoopGroup, proxyConfiguration, true, nettySslContextFactory);
     }
 
     public void processAction(final HttpRequest request, final ResponseWriter responseWriter, final ChannelHandlerContext ctx, Set<String> localAddresses, boolean proxyingRequest, final boolean synchronous) {

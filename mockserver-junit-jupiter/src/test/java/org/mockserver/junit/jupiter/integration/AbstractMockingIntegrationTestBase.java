@@ -112,7 +112,7 @@ public abstract class AbstractMockingIntegrationTestBase {
     @BeforeAll
     public static void createClientAndEventLoopGroup() {
         clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(AbstractMockingIntegrationTestBase.class.getSimpleName() + "-eventLoop"));
-        httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false);
+        httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false, null);
     }
 
     @AfterAll

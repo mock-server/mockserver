@@ -32,7 +32,7 @@ public class ExpectationInitializerIntegrationTest {
     @BeforeClass
     public static void createClientAndEventLoopGroup() {
         clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(ExpectationInitializerIntegrationTest.class.getSimpleName() + "-eventLoop"));
-        httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false);
+        httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false, null);
     }
 
     @AfterClass

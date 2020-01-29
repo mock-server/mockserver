@@ -105,7 +105,7 @@ public class ActionHandlerTest {
         scheduler = spy(new Scheduler(mockServerLogger));
         when(mockHttpStateHandler.getScheduler()).thenReturn(scheduler);
         when(mockHttpStateHandler.getUniqueLoopPreventionHeaderValue()).thenReturn("MockServer_" + UUID.randomUUID().toString());
-        actionHandler = new ActionHandler(null, mockHttpStateHandler, null);
+        actionHandler = new ActionHandler(null, mockHttpStateHandler, null, null);
 
         initMocks(this);
         request = request("some_path");

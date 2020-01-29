@@ -29,13 +29,15 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
     private final HttpClientConnectionHandler httpClientConnectionHandler;
     private final HttpClientHandler httpClientHandler;
     private final ProxyConfiguration proxyConfiguration;
+    private final NettySslContextFactory nettySslContextFactory;
 
-    HttpClientInitializer(ProxyConfiguration proxyConfiguration, MockServerLogger mockServerLogger, boolean forwardProxyClient) {
+    HttpClientInitializer(ProxyConfiguration proxyConfiguration, MockServerLogger mockServerLogger, boolean forwardProxyClient, NettySslContextFactory nettySslContextFactory) {
         this.proxyConfiguration = proxyConfiguration;
         this.mockServerLogger = mockServerLogger;
         this.forwardProxyClient = forwardProxyClient;
         this.httpClientHandler = new HttpClientHandler();
         this.httpClientConnectionHandler = new HttpClientConnectionHandler();
+        this.nettySslContextFactory = nettySslContextFactory;
     }
 
     @Override
@@ -62,7 +64,7 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
 
         if (secure) {
             InetSocketAddress remoteAddress = channel.attr(REMOTE_SOCKET).get();
-            pipeline.addLast(new NettySslContextFactory(mockServerLogger).createClientSslContext(forwardProxyClient).newHandler(channel.alloc(), remoteAddress.getHostName(), remoteAddress.getPort()));
+            pipeline.addLast(nettySslContextFactory.createClientSslContext(forwardProxyClient).newHandler(channel.alloc(), remoteAddress.getHostName(), remoteAddress.getPort()));
         }
 
         // add logging

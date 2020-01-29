@@ -13,6 +13,7 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.*;
+import org.mockserver.socket.tls.NettySslContextFactory;
 import org.mockserver.stop.Stoppable;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
@@ -53,7 +54,7 @@ public class MockServerClient implements Stoppable {
     protected CompletableFuture<Integer> portFuture;
     private Boolean secure;
     private Integer port;
-    private NettyHttpClient nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, null, false);
+    private NettyHttpClient nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, null, false, new NettySslContextFactory(MOCK_SERVER_LOGGER));
     private HttpRequest requestOverride;
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(MOCK_SERVER_LOGGER);
     private LogEventRequestAndResponseSerializer httpRequestResponseSerializer = new LogEventRequestAndResponseSerializer(MOCK_SERVER_LOGGER);
