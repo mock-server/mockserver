@@ -39,7 +39,6 @@ public class XmlSchemaMatcher extends BodyMatcher<String> {
             if (!result) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.DEBUG)
                         .setLogLevel(DEBUG)
                         .setHttpRequest(context)
                         .setMessageFormat("failed to perform xml schema match of{}with{}because{}")
@@ -49,7 +48,6 @@ public class XmlSchemaMatcher extends BodyMatcher<String> {
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
                     .setMessageFormat("failed to perform xml schema match of{}with{}because{}")

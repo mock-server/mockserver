@@ -192,7 +192,6 @@ public class ActionHandler {
 
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
                         .setMessageFormat("received \"x-forwarded-by\" header caused by exploratory HTTP proxy or proxy loop - falling back to no proxy:{}")
                         .setArguments(request)
@@ -240,7 +239,6 @@ public class ActionHandler {
                         if (potentiallyHttpProxy && connectionException(throwable)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
-                                    .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
                                     .setMessageFormat("failed to connect to proxied socket due to exploratory HTTP proxy for:{}due to:{}falling back to no proxy")
                                     .setArguments(request, throwable.getCause())
@@ -333,7 +331,6 @@ public class ActionHandler {
                 if (connectionException(throwable)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(TRACE)
                             .setMessageFormat("failed to connect to remote socket forwarding request{}for action{}")
                             .setArguments(request, action)
@@ -371,7 +368,6 @@ public class ActionHandler {
             response.withHeader(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue());
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
                     .setHttpRequest(request)
                     .setMessageFormat("no expectation for:{}returning response:{}")

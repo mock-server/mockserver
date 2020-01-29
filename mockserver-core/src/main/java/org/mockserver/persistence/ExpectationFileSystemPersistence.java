@@ -58,7 +58,6 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
             mockServerMatcher.registerListener(this);
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.INFO)
                     .setLogLevel(INFO)
                     .setMessageFormat("created expectation file system persistence for{}")
                     .setArguments(ConfigurationProperties.persistedExpectationsPath())
@@ -89,7 +88,6 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
                             if (MockServerLogger.isEnabled(TRACE)) {
                                 mockServerLogger.logEvent(
                                     new LogEntry()
-                                        .setType(LogEntry.LogMessageType.TRACE)
                                         .setLogLevel(TRACE)
                                         .setMessageFormat("persisting expectations{}to{}")
                                         .setArguments(expectations, ConfigurationProperties.initializationJsonPath())
@@ -97,7 +95,6 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
                             } else if (MockServerLogger.isEnabled(DEBUG)) {
                                 mockServerLogger.logEvent(
                                     new LogEntry()
-                                        .setType(LogEntry.LogMessageType.DEBUG)
                                         .setLogLevel(DEBUG)
                                         .setMessageFormat("persisting expectations to{}")
                                         .setArguments(ConfigurationProperties.initializationJsonPath())

@@ -32,7 +32,6 @@ public class BinaryMatcher extends BodyMatcher<byte[]> {
         if (!result) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
                     .setMessageFormat("failed to perform binary match of{}with{}")

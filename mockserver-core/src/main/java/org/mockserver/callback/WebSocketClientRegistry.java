@@ -48,7 +48,6 @@ public class WebSocketClientRegistry {
             if (MockServerLogger.isEnabled(TRACE)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
                         .setMessageFormat("received message over websocket{}")
                         .setArguments(deserializedMessage)
@@ -106,7 +105,6 @@ public class WebSocketClientRegistry {
         if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
                     .setMessageFormat("registering client " + clientId + "")
             );
@@ -122,7 +120,6 @@ public class WebSocketClientRegistry {
         if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
                     .setMessageFormat("unregistering client " + clientId + "")
             );
@@ -135,7 +132,6 @@ public class WebSocketClientRegistry {
         if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
                     .setMessageFormat("registering response callback " + webSocketCorrelationId)
             );
@@ -148,7 +144,6 @@ public class WebSocketClientRegistry {
         if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
                     .setMessageFormat("unregistering response callback " + webSocketCorrelationId + "")
             );
@@ -161,7 +156,6 @@ public class WebSocketClientRegistry {
         if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
                     .setMessageFormat("registering forward callback " + webSocketCorrelationId)
             );
@@ -174,7 +168,6 @@ public class WebSocketClientRegistry {
         if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
                     .setMessageFormat("unregistering forward callback " + webSocketCorrelationId + "")
             );
@@ -188,7 +181,6 @@ public class WebSocketClientRegistry {
                     if (MockServerLogger.isEnabled(TRACE)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
-                                .setType(LogEntry.LogMessageType.TRACE)
                                 .setLogLevel(TRACE)
                                 .setHttpRequest(httpRequest)
                                 .setMessageFormat("sending message{}to client " + clientId)
@@ -203,7 +195,6 @@ public class WebSocketClientRegistry {
                     if (MockServerLogger.isEnabled(TRACE)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
-                                .setType(LogEntry.LogMessageType.TRACE)
                                 .setLogLevel(TRACE)
                                 .setHttpRequest(httpRequest)
                                 .setMessageFormat("sending message{}to client " + clientId + "")
@@ -216,7 +207,6 @@ public class WebSocketClientRegistry {
             } else {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.WARN)
                         .setLogLevel(WARN)
                         .setHttpRequest(httpRequest)
                         .setMessageFormat("client " + clientId + " not found for request{}client registry only contains{}")

@@ -435,7 +435,6 @@ public class HttpStateHandler {
 
         mockServerLogger.logEvent(
             new LogEntry()
-                .setType(LogEntry.LogMessageType.TRACE)
                 .setLogLevel(TRACE)
                 .setHttpRequest(request)
                 .setMessageFormat("received request:{}")

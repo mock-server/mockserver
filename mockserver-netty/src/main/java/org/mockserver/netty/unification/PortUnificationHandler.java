@@ -292,7 +292,6 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
             if (throwable.getMessage().contains("certificate_unknown")) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.WARN)
                         .setLogLevel(Level.WARN)
                         .setMessageFormat("TSL handshake failure:\n\n Client does not trust MockServer Certificate Authority for:{}See http://mock-server.com/mock_server/HTTPS_TLS.html to enable the client to trust MocksServer Certificate Authority.\n")
                         .setArguments(ctx.channel())

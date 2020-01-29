@@ -247,7 +247,6 @@ public class MockServerClient implements Stoppable {
         } catch (SocketConnectionException | IllegalStateException sce) {
             MOCK_SERVER_LOGGER.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
                     .setMessageFormat("exception while checking if MockServer is running - " + sce.getMessage() + " if MockServer was stopped this exception is expected")
                     .setThrowable(sce)
@@ -322,7 +321,6 @@ public class MockServerClient implements Stoppable {
             if (attempts <= 0) {
                 MOCK_SERVER_LOGGER.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(DEBUG)
                         .setMessageFormat("exception while checking if MockServer has started - " + sce.getMessage())
                         .setThrowable(sce)
@@ -363,7 +361,6 @@ public class MockServerClient implements Stoppable {
         } catch (Throwable throwable) {
             MOCK_SERVER_LOGGER.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(DEBUG)
                     .setMessageFormat("exception while stopping - " + throwable.getMessage())
                     .setThrowable(throwable)
@@ -389,7 +386,6 @@ public class MockServerClient implements Stoppable {
             } catch (RejectedExecutionException ree) {
                 MOCK_SERVER_LOGGER.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
                         .setMessageFormat("request rejected while closing down, logging in case due other error " + ree)
                 );
@@ -397,7 +393,6 @@ public class MockServerClient implements Stoppable {
                 if (!ignoreFailure) {
                     MOCK_SERVER_LOGGER.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.WARN)
                             .setLogLevel(WARN)
                             .setMessageFormat("failed to send stop request to MockServer " + e.getMessage())
                     );

@@ -13,6 +13,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
@@ -155,7 +156,6 @@ public class X509Generator {
             } catch (Throwable throwable) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.WARN)
                         .setLogLevel(Level.WARN)
                         .setMessageFormat("Unable to use ip address with the value \"" + subjectAlternativeName + "\" as Subject Alternative Name (SAN) for X509 as JDK does not support SANs with that format")
                 );
@@ -166,7 +166,6 @@ public class X509Generator {
             } catch (Throwable throwable) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.WARN)
                         .setLogLevel(Level.WARN)
                         .setMessageFormat("Unable to use domain name with the value \"" + subjectAlternativeName + "\" as Subject Alternative Name (SAN) for X509 as JDK does not support SANs with that format")
                 );

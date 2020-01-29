@@ -49,7 +49,6 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
         if (!result) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
                     .setMessageFormat("failed to perform regex match{}with{}")
@@ -87,7 +86,6 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
             } catch (PatternSyntaxException pse) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
                         .setMessageFormat("error while matching regex [" + matcher + "] for string [" + matched + "] " + pse.getMessage())
                 );
@@ -100,7 +98,6 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
             } catch (PatternSyntaxException pse) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
                         .setMessageFormat("error while matching regex [" + matched + "] for string [" + matcher + "] " + pse.getMessage())
                 );
@@ -119,7 +116,6 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                 } catch (PatternSyntaxException pse) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(TRACE)
                             .setMessageFormat("error while matching regex [" + matcher + "] for string [" + matched + "] and ignoring case " + pse.getMessage())
                     );
@@ -132,7 +128,6 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                 } catch (PatternSyntaxException pse) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(TRACE)
                             .setMessageFormat("error while matching regex [" + matched + "] for string [" + matcher + "] and ignoring case " + pse.getMessage())
                     );
@@ -160,7 +155,6 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
             } catch (PatternSyntaxException pse) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
                         .setMessageFormat("error while matching regex [" + matcher + "] for string [" + matched + "] " + pse.getMessage())
                 );
@@ -173,7 +167,6 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
             } catch (PatternSyntaxException pse) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
                         .setMessageFormat("error while matching regex [" + matched + "] for string [" + matcher + "] " + pse.getMessage())
                 );
@@ -192,7 +185,6 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                 } catch (PatternSyntaxException pse) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(TRACE)
                             .setMessageFormat("error while matching regex [" + matcher.toLowerCase() + "] for string [" + matched.toLowerCase() + "] " + pse.getMessage())
                     );
@@ -205,7 +197,6 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                 } catch (PatternSyntaxException pse) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(TRACE)
                             .setMessageFormat("error while matching regex [" + matched.toLowerCase() + "] for string [" + matcher.toLowerCase() + "] " + pse.getMessage())
                     );

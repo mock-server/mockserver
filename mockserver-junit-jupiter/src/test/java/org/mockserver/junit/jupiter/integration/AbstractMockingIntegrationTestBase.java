@@ -94,7 +94,6 @@ public abstract class AbstractMockingIntegrationTestBase {
         } catch (Throwable throwable) {
             MOCK_SERVER_LOGGER.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.WARN)
                     .setLogLevel(WARN)
                     .setMessageFormat("exception while resetting - " + throwable.getMessage())
                     .setArguments(throwable)

@@ -149,7 +149,6 @@ public class MediaType extends ObjectWithJsonToString {
             } catch (Throwable throwable) {
                 MOCK_SERVER_LOGGER.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
                         .setMessageFormat("ignoring unsupported charset with value \"" + charset + "\"")
                         .setThrowable(throwable)
@@ -163,7 +162,6 @@ public class MediaType extends ObjectWithJsonToString {
             } catch (Throwable throwable) {
                 MOCK_SERVER_LOGGER.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
                         .setMessageFormat("ignoring unsupported charset with value \"" + charset + "\"")
                         .setThrowable(throwable)

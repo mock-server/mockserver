@@ -32,7 +32,6 @@ public class XPathMatcher extends BodyMatcher<String> {
             } catch (XPathExpressionException e) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
                         .setMessageFormat("error while creating xpath expression for [" + matcher + "] assuming matcher not xpath - " + e.getMessage())
                         .setArguments(e)
@@ -47,7 +46,6 @@ public class XPathMatcher extends BodyMatcher<String> {
         if (xpathExpression == null) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
                     .setHttpRequest(context)
                     .setMessageFormat("attempting match against null XPath Expression for [" + matched + "]")
@@ -62,7 +60,6 @@ public class XPathMatcher extends BodyMatcher<String> {
                     public void logError(final String matched, final Exception exception) {
                         mockServerLogger.logEvent(
                             new LogEntry()
-                                .setType(LogEntry.LogMessageType.WARN)
                                 .setLogLevel(WARN)
                                 .setHttpRequest(context)
                                 .setMessageFormat("SAXParseException while performing match between [" + matcher + "] and [" + matched + "]")
@@ -73,7 +70,6 @@ public class XPathMatcher extends BodyMatcher<String> {
             } catch (Exception e) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
                         .setHttpRequest(context)
                         .setMessageFormat("error while matching xpath [" + matcher + "] against string [" + matched + "] assuming no match - " + e.getMessage())
@@ -84,7 +80,6 @@ public class XPathMatcher extends BodyMatcher<String> {
         if (!result) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setMessageFormat("failed to perform xpath match{}with{}")
                     .setArguments(matched, this.matcher)

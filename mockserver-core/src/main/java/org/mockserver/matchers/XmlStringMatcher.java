@@ -86,7 +86,6 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
                 if (!result) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.DEBUG)
                             .setLogLevel(DEBUG)
                             .setMessageFormat("failed to perform xml schema match of{}with{}because{}")
                             .setArguments(matched, this.matcher, diff.toString())
@@ -96,7 +95,6 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
             } catch (Exception e) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.DEBUG)
                         .setLogLevel(DEBUG)
                         .setHttpRequest(context)
                         .setMessageFormat("failed to perform xml schema match of{}with{}because{}")

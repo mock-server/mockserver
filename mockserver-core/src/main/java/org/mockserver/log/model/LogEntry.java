@@ -85,6 +85,9 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
 
     public LogEntry setLogLevel(Level logLevel) {
         this.logLevel = logLevel;
+        if (type == null) {
+            LogMessageType.valueOf(logLevel.name());
+        }
         return this;
     }
 

@@ -75,7 +75,6 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         } catch (IllegalArgumentException iae) {
                             MOCK_SERVER_LOGGER.logEvent(
                                 new LogEntry()
-                                    .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
                                     .setMessageFormat("ignoring invalid value for \"type\" field of \"" + entry.getValue() + "\"")
                             );
@@ -102,7 +101,6 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                             } catch (Throwable throwable) {
                                 MOCK_SERVER_LOGGER.logEvent(
                                     new LogEntry()
-                                        .setType(LogEntry.LogMessageType.TRACE)
                                         .setLogLevel(TRACE)
                                         .setMessageFormat("invalid base64 encoded rawBytes with value \"" + entry.getValue() + "\"")
                                 );
@@ -118,7 +116,6 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         } catch (IllegalArgumentException iae) {
                             MOCK_SERVER_LOGGER.logEvent(
                                 new LogEntry()
-                                    .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
                                     .setMessageFormat("ignoring incorrect JsonBodyMatchType with value \"" + entry.getValue() + "\"")
                             );
@@ -130,7 +127,6 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         } catch (IllegalArgumentException uce) {
                             MOCK_SERVER_LOGGER.logEvent(
                                 new LogEntry()
-                                    .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
                                     .setMessageFormat("ignoring unsupported boolean with value \"" + entry.getValue() + "\"")
                             );
@@ -145,7 +141,6 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         } catch (IllegalArgumentException uce) {
                             MOCK_SERVER_LOGGER.logEvent(
                                 new LogEntry()
-                                    .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
                                     .setMessageFormat("ignoring unsupported MediaType with value \"" + entry.getValue() + "\"")
                             );
@@ -157,14 +152,12 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         } catch (UnsupportedCharsetException uce) {
                             MOCK_SERVER_LOGGER.logEvent(
                                 new LogEntry()
-                                    .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
                                     .setMessageFormat("ignoring unsupported Charset with value \"" + entry.getValue() + "\"")
                             );
                         } catch (IllegalCharsetNameException icne) {
                             MOCK_SERVER_LOGGER.logEvent(
                                 new LogEntry()
-                                    .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
                                     .setMessageFormat("ignoring invalid Charset with value \"" + entry.getValue() + "\"")
                             );

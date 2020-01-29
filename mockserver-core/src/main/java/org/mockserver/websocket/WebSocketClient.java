@@ -121,7 +121,6 @@ public class WebSocketClient<T extends HttpObject> {
                 if (MockServerLogger.isEnabled(TRACE)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(TRACE)
                             .setHttpRequest(request)
                             .setMessageFormat("received request{}over websocket for client " + clientId + " for correlationId " + webSocketCorrelationId)
@@ -134,7 +133,6 @@ public class WebSocketClient<T extends HttpObject> {
                         if (MockServerLogger.isEnabled(TRACE)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
-                                    .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
                                     .setHttpRequest(request)
                                     .setMessageFormat("returning{}for request{}over websocket for client " + clientId + " for correlationId " + webSocketCorrelationId)
@@ -167,7 +165,6 @@ public class WebSocketClient<T extends HttpObject> {
                 if (MockServerLogger.isEnabled(TRACE)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(TRACE)
                             .setHttpRequest(httpRequestAndHttpResponse.getHttpRequest())
                             .setMessageFormat("received request and response{}over websocket for client " + clientId + " for correlationId " + webSocketCorrelationId)
@@ -180,7 +177,6 @@ public class WebSocketClient<T extends HttpObject> {
                         if (MockServerLogger.isEnabled(TRACE)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
-                                    .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
                                     .setHttpRequest(httpRequestAndHttpResponse.getHttpRequest())
                                     .setMessageFormat("returning response{}for request and response{}over websocket for client " + clientId + " for correlationId " + webSocketCorrelationId)
@@ -208,7 +204,6 @@ public class WebSocketClient<T extends HttpObject> {
             } else if (deserializedMessage instanceof WebSocketClientIdDTO) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
                         .setMessageFormat("received client id{}")
                         .setArguments(deserializedMessage)
@@ -216,7 +211,6 @@ public class WebSocketClient<T extends HttpObject> {
             } else {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.WARN)
                         .setLogLevel(WARN)
                         .setMessageFormat("web socket client received a message that isn't HttpRequest or HttpRequestAndHttpResponse{} which has been deserialized as{}")
                         .setArguments(textWebSocketFrame.text(), deserializedMessage)

@@ -48,7 +48,6 @@ public class MockServerLoggerTest {
             // when
             logFormatter.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(Level.INFO)
                     .setHttpRequest(request)
                     .setMessageFormat("some random message with{}and{}")

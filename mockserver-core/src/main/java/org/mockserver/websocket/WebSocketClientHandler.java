@@ -63,7 +63,6 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
     public void channelInactive(ChannelHandlerContext ctx) {
         mockServerLogger.logEvent(
             new LogEntry()
-                .setType(LogEntry.LogMessageType.TRACE)
                 .setLogLevel(TRACE)
                 .setMessageFormat("web socket client disconnected")
         );
@@ -74,7 +73,6 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
         Channel ch = ctx.channel();
         mockServerLogger.logEvent(
             new LogEntry()
-                .setType(LogEntry.LogMessageType.TRACE)
                 .setLogLevel(TRACE)
                 .setMessageFormat("web socket client handshake handler received{}")
                 .setArguments(msg)
@@ -87,7 +85,6 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
                 registrationFuture.complete(clientId);
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
                         .setMessageFormat("web socket client " + clientId + " connected")
                 );
@@ -100,7 +97,6 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
                 registrationFuture.completeExceptionally(new WebSocketException(message));
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.WARN)
                         .setLogLevel(WARN)
                         .setMessageFormat(message)
                 );
@@ -108,7 +104,6 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
                 registrationFuture.completeExceptionally(new WebSocketException("handshake failure unsupported message received " + new FullHttpResponseToMockServerResponse(mockServerLogger).mapFullHttpResponseToMockServerResponse(httpResponse)));
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.WARN)
                         .setLogLevel(WARN)
                         .setMessageFormat("web socket client handshake handler received an unsupported FullHttpResponse message{}")
                         .setArguments(msg)
@@ -123,7 +118,6 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
             } else if (frame instanceof CloseWebSocketFrame) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
                         .setMessageFormat("web socket client received request to close")
                 );
@@ -131,7 +125,6 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
             } else {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.WARN)
                         .setLogLevel(WARN)
                         .setMessageFormat("web socket client received an unsupported WebSocketFrame message{}")
                         .setArguments(msg)
@@ -140,7 +133,6 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
         } else {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.WARN)
                     .setLogLevel(WARN)
                     .setMessageFormat("web socket client received a message of unknown type{}")
                     .setArguments(msg)

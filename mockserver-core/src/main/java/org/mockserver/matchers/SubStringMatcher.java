@@ -52,7 +52,6 @@ public class SubStringMatcher extends BodyMatcher<NottableString> {
         if (!result) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
                     .setMessageFormat("failed to perform substring match{}with{}")

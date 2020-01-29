@@ -41,7 +41,6 @@ public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues> {
         } else {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
                     .setMessageFormat("multimap{}is not a subset of{}")

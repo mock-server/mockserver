@@ -54,7 +54,6 @@ public class ExactStringMatcher extends BodyMatcher<NottableString> {
         if (!result) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
                     .setMessageFormat("failed to perform exact string match of{}with{}")

@@ -66,7 +66,6 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                         } catch (IllegalArgumentException iae) {
                             MOCK_SERVER_LOGGER.logEvent(
                                 new LogEntry()
-                                    .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
                                     .setMessageFormat("ignoring invalid value for \"type\" field of \"" + entry.getValue() + "\"")
                             );
@@ -93,7 +92,6 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                             } catch (Throwable throwable) {
                                 MOCK_SERVER_LOGGER.logEvent(
                                     new LogEntry()
-                                        .setType(LogEntry.LogMessageType.TRACE)
                                         .setLogLevel(TRACE)
                                         .setMessageFormat("invalid base64 encoded rawBytes with value \"" + entry.getValue() + "\"")
                                 );
@@ -112,7 +110,6 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                         } catch (IllegalArgumentException uce) {
                             MOCK_SERVER_LOGGER.logEvent(
                                 new LogEntry()
-                                    .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
                                     .setMessageFormat("ignoring unsupported MediaType with value \"" + entry.getValue() + "\"")
                             );
@@ -124,14 +121,12 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                         } catch (UnsupportedCharsetException uce) {
                             MOCK_SERVER_LOGGER.logEvent(
                                 new LogEntry()
-                                    .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
                                     .setMessageFormat("ignoring unsupported Charset with value \"" + entry.getValue() + "\"")
                             );
                         } catch (IllegalCharsetNameException icne) {
                             MOCK_SERVER_LOGGER.logEvent(
                                 new LogEntry()
-                                    .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
                                     .setMessageFormat("ignoring invalid Charset with value \"" + entry.getValue() + "\"")
                             );

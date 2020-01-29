@@ -32,7 +32,6 @@ public class ParameterStringMatcher extends BodyMatcher<String> {
         if (!result) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
                     .setMessageFormat("failed to perform parameter match{}with{}")

@@ -78,7 +78,6 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
             mockServerEventLog.add(
                 new LogEntry()
                     .setLogLevel(INFO)
-                    .setType(LogEntry.LogMessageType.INFO)
                     .setHttpRequest(request)
                     .setHttpResponse(httpResponse)
                     .setMessageFormat("EchoServer returning response{}for request{}")

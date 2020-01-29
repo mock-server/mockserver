@@ -40,7 +40,6 @@ public class HashMapMatcher extends NotMatcher<KeysAndValues> {
         } else {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
                     .setMessageFormat("map{}is not a subset of{}")

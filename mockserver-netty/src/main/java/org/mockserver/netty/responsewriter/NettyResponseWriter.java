@@ -115,14 +115,12 @@ public class NettyResponseWriter extends ResponseWriter {
                                 if (disconnectFuture.isSuccess()) {
                                     mockServerLogger
                                         .logEvent(new LogEntry()
-                                            .setType(LogEntry.LogMessageType.DEBUG)
                                             .setLogLevel(DEBUG)
                                             .setMessageFormat("disconnected and closed socket " + future.channel().localAddress())
                                         );
                                 } else {
                                     mockServerLogger
                                         .logEvent(new LogEntry()
-                                            .setType(LogEntry.LogMessageType.WARN)
                                             .setLogLevel(WARN)
                                             .setMessageFormat("exception closing socket " + future.channel().localAddress())
                                             .setThrowable(disconnectFuture.cause()));
@@ -131,7 +129,6 @@ public class NettyResponseWriter extends ResponseWriter {
                     } else {
                         mockServerLogger
                             .logEvent(new LogEntry()
-                                .setType(LogEntry.LogMessageType.WARN)
                                 .setLogLevel(WARN)
                                 .setMessageFormat("exception disconnecting socket " + future.channel().localAddress())
                                 .setThrowable(disconnectFuture.cause()));

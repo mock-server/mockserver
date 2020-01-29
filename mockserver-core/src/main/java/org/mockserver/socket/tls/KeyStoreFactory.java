@@ -110,7 +110,6 @@ public class KeyStoreFactory {
         } catch (NoSuchAlgorithmException e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.WARN)
                     .setLogLevel(WARN)
                     .setMessageFormat("protocol{}not available, falling back to{}")
                     .setArguments(SSL_CONTEXT_PROTOCOL, SSL_CONTEXT_FALLBACK_PROTOCOL)
@@ -150,7 +149,6 @@ public class KeyStoreFactory {
                 keyStore.store(fileOutputStream, keyStorePassword);
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
                         .setMessageFormat("saving key store to file [" + keyStoreFileAbsolutePath + "]")
                 );

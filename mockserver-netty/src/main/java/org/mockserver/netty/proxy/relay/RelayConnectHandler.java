@@ -101,7 +101,6 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
             } else {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.DEBUG)
                         .setLogLevel(DEBUG)
                         .setMessageFormat("connected to{}")
                         .setArguments(remoteSocket)

@@ -33,7 +33,6 @@ public class ExpectationFileWatcher {
                     if (MockServerLogger.isEnabled(DEBUG)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
-                                .setType(LogEntry.LogMessageType.DEBUG)
                                 .setLogLevel(DEBUG)
                                 .setMessageFormat("expectation file watcher updating expectations as modification detected on file{}")
                                 .setArguments(ConfigurationProperties.initializationJsonPath())
@@ -43,7 +42,6 @@ public class ExpectationFileWatcher {
                 }, throwable -> {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.WARN)
                             .setLogLevel(WARN)
                             .setMessageFormat("exception while processing expectation file update " + throwable.getMessage())
                             .setThrowable(throwable)
@@ -61,7 +59,6 @@ public class ExpectationFileWatcher {
             }
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.INFO)
                     .setLogLevel(INFO)
                     .setMessageFormat("created expectation file watcher for{}")
                     .setArguments(ConfigurationProperties.initializationJsonPath())
@@ -78,7 +75,6 @@ public class ExpectationFileWatcher {
         if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
                     .setMessageFormat("updating expectations{}from{}")
                     .setArguments(ConfigurationProperties.initializationJsonPath(), Arrays.asList(expectations))

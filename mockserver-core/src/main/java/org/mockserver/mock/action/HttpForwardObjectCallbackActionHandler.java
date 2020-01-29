@@ -41,7 +41,6 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                 if (MockServerLogger.isEnabled(TRACE)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(TRACE)
                             .setHttpRequest(request)
                             .setMessageFormat("received request over websocket{}from client " + clientId + " for correlationId " + webSocketCorrelationId)
@@ -56,7 +55,6 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                 if (MockServerLogger.isEnabled(TRACE)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(TRACE)
                             .setHttpRequest(request)
                             .setMessageFormat("received response for request{}from client " + clientId)
@@ -75,7 +73,6 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                             if (MockServerLogger.isEnabled(TRACE)) {
                                 mockServerLogger.logEvent(
                                     new LogEntry()
-                                        .setType(LogEntry.LogMessageType.TRACE)
                                         .setLogLevel(TRACE)
                                         .setHttpRequest(request)
                                         .setMessageFormat("received response over websocket{}for request and response{}from client " + clientId + " for correlationId " + webSocketCorrelationId)
@@ -97,7 +94,6 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                         if (!webSocketClientRegistry.sendClientMessage(clientId, request.clone().withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId), response)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
-                                    .setType(LogEntry.LogMessageType.WARN)
                                     .setLogLevel(WARN)
                                     .setHttpRequest(request)
                                     .setMessageFormat("returning{}because client " + clientId + " has closed web socket connection")
@@ -107,7 +103,6 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                         } else if (MockServerLogger.isEnabled(TRACE)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
-                                    .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
                                     .setHttpRequest(request)
                                     .setMessageFormat("sending response over websocket{}to client " + clientId + " for correlationId " + webSocketCorrelationId)
@@ -127,7 +122,6 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                 if (MockServerLogger.isEnabled(DEBUG)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.DEBUG)
                             .setLogLevel(DEBUG)
                             .setHttpRequest(request)
                             .setMessageFormat("error sending request over websocket for client " + clientId + " for correlationId " + webSocketCorrelationId)
@@ -140,7 +134,6 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
         if (!webSocketClientRegistry.sendClientMessage(clientId, request.clone().withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId), null)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.WARN)
                     .setLogLevel(WARN)
                     .setHttpRequest(request)
                     .setMessageFormat("returning{}because client " + clientId + " has closed web socket connection")
@@ -150,7 +143,6 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
         } else if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
                     .setHttpRequest(request)
                     .setMessageFormat("sending request over websocket{}to client " + clientId + " for correlationId " + webSocketCorrelationId)

@@ -34,7 +34,6 @@ public class BooleanMatcher extends ObjectWithReflectiveEqualsHashCodeToString i
         if (!result) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
                     .setMessageFormat("failed to perform boolean match of{}with{}")

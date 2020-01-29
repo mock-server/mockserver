@@ -47,7 +47,6 @@ public class JsonStringMatcher extends BodyMatcher<String> {
                 if (!result) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.DEBUG)
                             .setLogLevel(DEBUG)
                             .setHttpRequest(context)
                             .setMessageFormat("failed to perform json match of{}with{}because{}")
@@ -58,7 +57,6 @@ public class JsonStringMatcher extends BodyMatcher<String> {
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
                     .setMessageFormat("failed to perform json match{}with{}because{}")

@@ -34,7 +34,6 @@ public class HttpResponseObjectCallbackActionHandler {
             if (MockServerLogger.isEnabled(TRACE)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
                         .setHttpRequest(request)
                         .setMessageFormat("received response over websocket{}for request{}from client " + clientId + " for correlationId " + webSocketCorrelationId)
@@ -50,7 +49,6 @@ public class HttpResponseObjectCallbackActionHandler {
         if (!webSocketClientRegistry.sendClientMessage(clientId, request.clone().withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId), null)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.WARN)
                     .setLogLevel(WARN)
                     .setHttpRequest(request)
                     .setMessageFormat("returning{}because client " + clientId + " has closed web socket connection")
@@ -60,7 +58,6 @@ public class HttpResponseObjectCallbackActionHandler {
         } else if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
                     .setHttpRequest(request)
                     .setMessageFormat("sending request over websocket{}to client " + clientId + " for correlationId " + webSocketCorrelationId)

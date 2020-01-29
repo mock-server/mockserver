@@ -31,7 +31,6 @@ public class JsonPathMatcher extends BodyMatcher<String> {
             } catch (Throwable throwable) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.DEBUG)
                         .setLogLevel(DEBUG)
                         .setMessageFormat("error while creating xpath expression for [" + matcher + "] assuming matcher not xpath - " + throwable.getMessage())
                         .setArguments(throwable)
@@ -47,7 +46,6 @@ public class JsonPathMatcher extends BodyMatcher<String> {
         if (jsonPath == null) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
                     .setMessageFormat("attempting match against null json path expression for [" + matched + "]")
@@ -61,7 +59,6 @@ public class JsonPathMatcher extends BodyMatcher<String> {
             } catch (Exception e) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.DEBUG)
                         .setLogLevel(DEBUG)
                         .setHttpRequest(context)
                         .setMessageFormat("failed to perform json path match of{}with{}because{}")
@@ -75,7 +72,6 @@ public class JsonPathMatcher extends BodyMatcher<String> {
         if (!result && !alreadyLoggedMatchFailure) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
                     .setMessageFormat("failed to perform json path match of{}with{}")
                     .setArguments(matched, this.matcher)

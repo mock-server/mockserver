@@ -91,7 +91,6 @@ public class WebSocketServerHandler extends ChannelInboundHandlerAdapter {
                     ctx.pipeline().remove(MockServerServerCodec.class);
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(Level.TRACE)
                             .setMessageFormat("registering client " + clientId)
                     );
@@ -100,7 +99,6 @@ public class WebSocketServerHandler extends ChannelInboundHandlerAdapter {
                     future.channel().closeFuture().addListener((ChannelFutureListener) future1 -> {
                         mockServerLogger.logEvent(
                             new LogEntry()
-                                .setType(LogEntry.LogMessageType.TRACE)
                                 .setLogLevel(Level.TRACE)
                                 .setMessageFormat("unregistering callback for client " + clientId)
                         );

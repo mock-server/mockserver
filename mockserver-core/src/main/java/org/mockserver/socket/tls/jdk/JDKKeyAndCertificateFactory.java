@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
+import java.util.Arrays;
 import java.util.UUID;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -64,7 +65,6 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
     private void saveCertificateAuthorityPEMToFile(String pem, String absolutePath, String type) throws IOException {
         mockServerLogger.logEvent(
             new LogEntry()
-                .setType(LogEntry.LogMessageType.DEBUG)
                 .setLogLevel(DEBUG)
                 .setMessageFormat("created dynamic Certificate Authority " + type + " PEM file at{}")
                 .setArguments(absolutePath)
@@ -81,7 +81,6 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
                 if (!file.createNewFile()) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.WARN)
                             .setLogLevel(ERROR)
                             .setMessageFormat("failed to create the file{}while attempting to save Certificate Authority " + type + " PEM file")
                             .setArguments(file.getAbsolutePath())
@@ -90,7 +89,6 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
             } catch (Throwable throwable) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.WARN)
                         .setLogLevel(ERROR)
                         .setMessageFormat("failed to create the file{}while attempting to save Certificate Authority " + type + " PEM file")
                         .setArguments(file.getAbsolutePath())
@@ -154,7 +152,6 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
         if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(TRACE)
                     .setMessageFormat("loaded dynamic CA private key from path{}PEM{}")
                     .setArguments(certificateAuthorityPrivateKeyPath(), privateKey)
@@ -171,7 +168,6 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
         if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(TRACE)
                     .setMessageFormat("loaded dynamic CA X509{}from path{}from PEM{}")
                     .setArguments(x509Certificate, certificateAuthorityX509CertificatePath(), FileReader.readFileFromClassPathOrPath(certificateAuthorityX509CertificatePath()))
@@ -200,6 +196,14 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
                 certificateAuthorityX509Certificate.getIssuerDN().getName(),
                 caPrivateKey
             );
+            if (MockServerLogger.isEnabled(DEBUG)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(DEBUG)
+                        .setMessageFormat("created new X509{}with SAN Domain Names{}and IPs{}")
+                        .setArguments(x509Certificate(), Arrays.toString(ConfigurationProperties.sslSubjectAlternativeNameDomains()), Arrays.toString(ConfigurationProperties.sslSubjectAlternativeNameIps()))
+                );
+            }
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -209,49 +213,6 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
                     .setThrowable(e)
             );
         }
-    }
-
-    private String savePEMToFile(String pem, String filename, String type) throws IOException {
-        File pemFile;
-        if (isNotBlank(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()) && new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()).exists()) {
-            pemFile = new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), filename);
-            if (pemFile.exists()) {
-                boolean deletedFile = pemFile.delete();
-                if (!deletedFile) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setType(LogEntry.LogMessageType.WARN)
-                            .setLogLevel(WARN)
-                            .setMessageFormat("failed to delete dynamic TLS certificate " + type + "  prior to creating new version for PEM file at{}")
-                            .setArguments(pemFile.getAbsolutePath())
-                    );
-                }
-            }
-            boolean createFile = pemFile.createNewFile();
-            if (!createFile) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setType(LogEntry.LogMessageType.WARN)
-                        .setLogLevel(WARN)
-                        .setMessageFormat("failed to created dynamic TLS certificate " + type + " PEM file at{}")
-                        .setArguments(pemFile.getAbsolutePath())
-                );
-            }
-        } else {
-            pemFile = File.createTempFile(filename, null);
-        }
-        mockServerLogger.logEvent(
-            new LogEntry()
-                .setType(LogEntry.LogMessageType.DEBUG)
-                .setLogLevel(DEBUG)
-                .setMessageFormat("created dynamic TLS certificate " + type + " PEM file at{}")
-                .setArguments(pemFile.getAbsolutePath())
-        );
-        try (FileWriter fileWriter = new FileWriter(pemFile)) {
-            fileWriter.write(pem);
-        }
-        pemFile.deleteOnExit();
-        return pemFile.getAbsolutePath();
     }
 
     public boolean certificateNotYetCreated() {
