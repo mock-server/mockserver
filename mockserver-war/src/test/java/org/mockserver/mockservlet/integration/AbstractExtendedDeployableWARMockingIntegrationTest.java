@@ -4,9 +4,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.client.ClientException;
+import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.testing.integration.mock.AbstractExtendedSameJVMMockingIntegrationTest;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.MediaType;
+import org.springframework.mock.web.MockHttpServletRequest;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.hamcrest.Matchers.containsString;
@@ -24,6 +28,7 @@ import static org.mockserver.model.HttpStatusCode.ACCEPTED_202;
 import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.PortBinding.portBinding;
 
 /**
  * @author jamesdbloom
@@ -410,6 +415,9 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
 
     @Test
     public void shouldReturnStatus() {
+        // given
+        PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
+
         // then
         // - in http
         assertEquals(
@@ -417,9 +425,9 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                .withBody(json("{" + NEW_LINE +
-                    "  \"ports\" : [ " + getServerPort() + " ]" + NEW_LINE +
-                    "}", MediaType.JSON_UTF_8)),
+                .withBody(json(portBindingSerializer.serialize(
+                    portBinding(getServerPort())
+                ), MediaType.JSON_UTF_8)),
             makeRequest(
                 request()
                     .withPath(calculatePath("mockserver/status"))
@@ -432,9 +440,9 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                .withBody(json("{" + NEW_LINE +
-                    "  \"ports\" : [ " + getServerSecurePort() + " ]" + NEW_LINE +
-                    "}", MediaType.JSON_UTF_8)),
+                .withBody(json(portBindingSerializer.serialize(
+                    portBinding(getServerSecurePort())
+                ), MediaType.JSON_UTF_8)),
             makeRequest(
                 request()
                     .withSecure(true)
@@ -442,5 +450,50 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                     .withMethod("PUT"),
                 headersToIgnore)
         );
+    }
+
+
+    @Test
+    public void shouldReturnStatusOnCustomPath() {
+        String originalStatusPath = ConfigurationProperties.livenessHttpGetPath();
+        try {
+            // given
+            ConfigurationProperties.livenessHttpGetPath("/livenessProbe");
+            PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
+            // then
+            // - in http
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
+                    .withBody(json(portBindingSerializer.serialize(
+                        portBinding(getServerPort())
+                    ), MediaType.JSON_UTF_8)),
+                makeRequest(
+                    request()
+                        .withPath(calculatePath("livenessProbe"))
+                        .withMethod("GET"),
+                    headersToIgnore)
+            );
+            // - in https
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
+                    .withBody(json(portBindingSerializer.serialize(
+                        portBinding(getServerSecurePort())
+                    ), MediaType.JSON_UTF_8)),
+                makeRequest(
+                    request()
+                        .withSecure(true)
+                        .withPath(calculatePath("livenessProbe"))
+                        .withMethod("GET"),
+                    headersToIgnore)
+            );
+        } finally {
+            ConfigurationProperties.livenessHttpGetPath(originalStatusPath);
+        }
     }
 }

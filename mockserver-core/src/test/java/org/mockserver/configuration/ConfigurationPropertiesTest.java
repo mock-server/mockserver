@@ -1034,4 +1034,18 @@ public class ConfigurationPropertiesTest {
         assertEquals("100", System.getProperty("mockserver.corsMaxAgeInSeconds"));
         assertEquals(100, corsMaxAgeInSeconds());
     }
+
+    @Test
+    public void shouldSetAndReadLivenessHttpGetPath() {
+        // given
+        System.clearProperty("mockserver.livenessHttpGetPath");
+
+        // when
+        assertEquals("", livenessHttpGetPath());
+        livenessHttpGetPath("/livenessHttpGetPath");
+
+        // then
+        assertEquals("/livenessHttpGetPath", livenessHttpGetPath());
+        assertEquals("/livenessHttpGetPath", System.getProperty("mockserver.livenessHttpGetPath"));
+    }
 }

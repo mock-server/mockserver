@@ -5,6 +5,7 @@ import io.netty.channel.ChannelHandlerContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
@@ -164,6 +165,30 @@ public class MockServerServletTest {
         assertResponse(response, 200, portBindingSerializer.serialize(
             portBinding(80)
         ));
+    }
+
+    @Test
+    public void shouldReturnStatusOnCustomPath() {
+        String originalStatusPath = ConfigurationProperties.livenessHttpGetPath();
+        try {
+            // given
+            ConfigurationProperties.livenessHttpGetPath("/livenessProbe");
+            MockHttpServletRequest statusRequest = buildHttpServletRequest(
+                "GET",
+                "/livenessProbe",
+                ""
+            );
+
+            // when
+            mockServerServlet.service(statusRequest, response);
+
+            // then
+            assertResponse(response, 200, portBindingSerializer.serialize(
+                portBinding(80)
+            ));
+        } finally {
+            ConfigurationProperties.livenessHttpGetPath(originalStatusPath);
+        }
     }
 
     @Test

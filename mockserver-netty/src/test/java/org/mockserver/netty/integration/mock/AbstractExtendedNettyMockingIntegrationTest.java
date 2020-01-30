@@ -7,6 +7,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.model.*;
+import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.streams.IOStreamUtils;
 import org.mockserver.testing.integration.mock.AbstractExtendedSameJVMMockingIntegrationTest;
@@ -54,6 +55,7 @@ import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.*;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.PortBinding.portBinding;
 import static org.mockserver.socket.tls.SSLSocketFactory.sslSocketFactory;
 
 /**
@@ -520,14 +522,15 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
         // given
         int firstNewPort = PortFactory.findFreePort();
         int secondNewPort = PortFactory.findFreePort();
+        PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                .withBody(json("{" + NEW_LINE +
-                    "  \"ports\" : [ " + getServerPort() + " ]" + NEW_LINE +
-                    "}", MediaType.JSON_UTF_8)),
+                .withBody(json(portBindingSerializer.serialize(
+                    portBinding(getServerPort())
+                ), MediaType.JSON_UTF_8)),
             makeRequest(
                 request()
                     .withPath(calculatePath("mockserver/status"))
@@ -542,9 +545,9 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                .withBody(json("{" + NEW_LINE +
-                    "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
-                    "}", MediaType.JSON_UTF_8)),
+                .withBody(json(portBindingSerializer.serialize(
+                    portBinding(firstNewPort)
+                ), MediaType.JSON_UTF_8)),
             makeRequest(
                 request()
                     .withPath(calculatePath("mockserver/bind"))
@@ -559,9 +562,9 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                .withBody(json("{" + NEW_LINE +
-                    "  \"ports\" : [ " + this.getServerPort() + ", " + firstNewPort + " ]" + NEW_LINE +
-                    "}", MediaType.JSON_UTF_8)),
+                .withBody(json(portBindingSerializer.serialize(
+                    portBinding(this.getServerPort(), firstNewPort)
+                ), MediaType.JSON_UTF_8)),
             makeRequest(
                 request()
                     .withPath(calculatePath("mockserver/status"))
@@ -574,9 +577,9 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                .withBody(json("{" + NEW_LINE +
-                    "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
-                    "}", MediaType.JSON_UTF_8)),
+                .withBody(json(portBindingSerializer.serialize(
+                    portBinding(secondNewPort)
+                ), MediaType.JSON_UTF_8)),
             makeRequest(
                 request()
                     .withSecure(true)
@@ -592,9 +595,9 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                .withBody(json("{" + NEW_LINE +
-                    "  \"ports\" : [ " + getServerSecurePort() + ", " + firstNewPort + ", " + secondNewPort + " ]" + NEW_LINE +
-                    "}", MediaType.JSON_UTF_8)),
+                .withBody(json(portBindingSerializer.serialize(
+                    portBinding(getServerSecurePort(), firstNewPort, secondNewPort)
+                ), MediaType.JSON_UTF_8)),
             makeRequest(
                 request()
                     .withSecure(true)

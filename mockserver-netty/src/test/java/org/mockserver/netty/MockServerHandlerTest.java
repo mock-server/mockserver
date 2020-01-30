@@ -9,6 +9,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.TimeService;
 import org.mockserver.log.model.LogEntry;
@@ -156,6 +157,29 @@ public class MockServerHandlerTest {
         assertThat(httpResponse.getBodyAsString(), is(portBindingSerializer.serialize(
             portBinding(1080, 1090)
         )));
+    }
+
+    @Test
+    public void shouldReturnStatusOnCustomPath() {
+        String originalStatusPath = ConfigurationProperties.livenessHttpGetPath();
+        try {
+            // given
+            ConfigurationProperties.livenessHttpGetPath("/livenessProbe");
+            when(server.getLocalPorts()).thenReturn(Arrays.asList(1080, 1090));
+            HttpRequest statusRequest = request("/livenessProbe").withMethod("GET");
+
+            // when
+            embeddedChannel.writeInbound(statusRequest);
+
+            // then
+            HttpResponse httpResponse = embeddedChannel.readOutbound();
+            assertThat(httpResponse.getStatusCode(), is(200));
+            assertThat(httpResponse.getBodyAsString(), is(portBindingSerializer.serialize(
+                portBinding(1080, 1090)
+            )));
+        } finally {
+            ConfigurationProperties.livenessHttpGetPath(originalStatusPath);
+        }
     }
 
     @Test

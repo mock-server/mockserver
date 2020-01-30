@@ -1,6 +1,7 @@
 package org.mockserver.servlet.responsewriter;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.cors.CORSHeaders;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
@@ -11,6 +12,7 @@ import org.mockserver.responsewriter.ResponseWriter;
 import javax.servlet.http.HttpServletResponse;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
 import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
@@ -61,7 +63,7 @@ public class ServletResponseWriter extends ResponseWriter {
         if (apiResponse) {
             response.withHeader("version", org.mockserver.Version.getVersion());
             final String path = request.getPath().getValue();
-            if (!path.startsWith(PATH_PREFIX)) {
+            if (!path.startsWith(PATH_PREFIX) && !path.equals(ConfigurationProperties.livenessHttpGetPath())) {
                 response.withHeader("deprecated",
                     "\"" + path + "\" is deprecated use \"" + PATH_PREFIX + path + "\" instead");
             }

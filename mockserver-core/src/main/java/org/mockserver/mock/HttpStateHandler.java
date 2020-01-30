@@ -431,7 +431,6 @@ public class HttpStateHandler {
     }
 
     public boolean handle(HttpRequest request, ResponseWriter responseWriter, boolean warDeployment) {
-        CompletableFuture<Boolean> canHandle = new CompletableFuture<>();
 
         mockServerLogger.logEvent(
             new LogEntry()
@@ -441,83 +440,94 @@ public class HttpStateHandler {
                 .setArguments(request)
         );
 
-        if (request.matches("PUT", PATH_PREFIX + "/expectation", "/expectation")) {
+        if (request.matches("PUT")) {
 
-            for (Expectation expectation : expectationSerializer.deserializeArray(request.getBodyAsString(), false)) {
-                if (!warDeployment || validateSupportedFeatures(expectation, request, responseWriter)) {
-                    add(expectation);
+            CompletableFuture<Boolean> canHandle = new CompletableFuture<>();
+
+            if (request.matches("PUT", PATH_PREFIX + "/expectation", "/expectation")) {
+
+                for (Expectation expectation : expectationSerializer.deserializeArray(request.getBodyAsString(), false)) {
+                    if (!warDeployment || validateSupportedFeatures(expectation, request, responseWriter)) {
+                        add(expectation);
+                    }
                 }
+                responseWriter.writeResponse(request, CREATED);
+                canHandle.complete(true);
+
+            } else if (request.matches("PUT", PATH_PREFIX + "/clear", "/clear")) {
+
+                clear(request);
+                responseWriter.writeResponse(request, OK);
+                canHandle.complete(true);
+
+            } else if (request.matches("PUT", PATH_PREFIX + "/reset", "/reset")) {
+
+                reset();
+                responseWriter.writeResponse(request, OK);
+                canHandle.complete(true);
+
+            } else if (request.matches("PUT", PATH_PREFIX + "/retrieve", "/retrieve")) {
+
+                responseWriter.writeResponse(request, retrieve(request), true);
+                canHandle.complete(true);
+
+            } else if (request.matches("PUT", PATH_PREFIX + "/verify", "/verify")) {
+
+                Verification verification = verificationSerializer.deserialize(request.getBodyAsString());
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(VERIFICATION)
+                        .setLogLevel(Level.INFO)
+                        .setHttpRequest(verification.getHttpRequest())
+                        .setMessageFormat("verifying requests that match:{}")
+                        .setArguments(verification)
+                );
+                verify(verification, result -> {
+                    if (isEmpty(result)) {
+                        responseWriter.writeResponse(request, ACCEPTED);
+
+                    } else {
+                        responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
+                    }
+                    canHandle.complete(true);
+                });
+
+            } else if (request.matches("PUT", PATH_PREFIX + "/verifySequence", "/verifySequence")) {
+
+                VerificationSequence verificationSequence = verificationSequenceSerializer.deserialize(request.getBodyAsString());
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(VERIFICATION)
+                        .setLogLevel(Level.INFO)
+                        .setHttpRequests(verificationSequence.getHttpRequests().toArray(new HttpRequest[0]))
+                        .setMessageFormat("verifying sequence that match:{}")
+                        .setArguments(verificationSequence)
+                );
+                verify(verificationSequence, result -> {
+                    if (isEmpty(result)) {
+                        responseWriter.writeResponse(request, ACCEPTED);
+                    } else {
+                        responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
+                    }
+                    canHandle.complete(true);
+                });
+
+            } else {
+                canHandle.complete(false);
             }
-            responseWriter.writeResponse(request, CREATED);
-            canHandle.complete(true);
 
-        } else if (request.matches("PUT", PATH_PREFIX + "/clear", "/clear")) {
-
-            clear(request);
-            responseWriter.writeResponse(request, OK);
-            canHandle.complete(true);
-
-        } else if (request.matches("PUT", PATH_PREFIX + "/reset", "/reset")) {
-
-            reset();
-            responseWriter.writeResponse(request, OK);
-            canHandle.complete(true);
-
-        } else if (request.matches("PUT", PATH_PREFIX + "/retrieve", "/retrieve")) {
-
-            responseWriter.writeResponse(request, retrieve(request), true);
-            canHandle.complete(true);
-
-        } else if (request.matches("PUT", PATH_PREFIX + "/verify", "/verify")) {
-
-            Verification verification = verificationSerializer.deserialize(request.getBodyAsString());
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(VERIFICATION)
-                    .setLogLevel(Level.INFO)
-                    .setHttpRequest(verification.getHttpRequest())
-                    .setMessageFormat("verifying requests that match:{}")
-                    .setArguments(verification)
-            );
-            verify(verification, result -> {
-                if (isEmpty(result)) {
-                    responseWriter.writeResponse(request, ACCEPTED);
-
-                } else {
-                    responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
-                }
-                canHandle.complete(true);
-            });
-
-        } else if (request.matches("PUT", PATH_PREFIX + "/verifySequence", "/verifySequence")) {
-
-            VerificationSequence verificationSequence = verificationSequenceSerializer.deserialize(request.getBodyAsString());
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(VERIFICATION)
-                    .setLogLevel(Level.INFO)
-                    .setHttpRequests(verificationSequence.getHttpRequests().toArray(new HttpRequest[0]))
-                    .setMessageFormat("verifying sequence that match:{}")
-                    .setArguments(verificationSequence)
-            );
-            verify(verificationSequence, result -> {
-                if (isEmpty(result)) {
-                    responseWriter.writeResponse(request, ACCEPTED);
-                } else {
-                    responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
-                }
-                canHandle.complete(true);
-            });
+            try {
+                return canHandle.get(maxFutureTimeout(), MILLISECONDS);
+            } catch (InterruptedException | ExecutionException | TimeoutException ignore) {
+                return false;
+            }
 
         } else {
-            canHandle.complete(false);
+
+            return false;
+
         }
 
-        try {
-            return canHandle.get(maxFutureTimeout(), MILLISECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException ignore) {
-            return false;
-        }
     }
 
     @SuppressWarnings("rawtypes")

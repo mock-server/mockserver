@@ -4,11 +4,16 @@ import com.google.common.base.Joiner;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.integration.ClientAndServer;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.testing.integration.mock.AbstractBasicMockingIntegrationTest;
 import org.mockserver.model.MediaType;
 import org.mockserver.socket.PortFactory;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -20,6 +25,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.model.JsonBody.json;
+import static org.mockserver.model.PortBinding.portBinding;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
@@ -49,6 +55,9 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
 
     @Test
     public void shouldReturnStatus() {
+        // given
+        PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
+
         // then
         // - in http
         assertEquals(
@@ -56,9 +65,9 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                .withBody(json("{" + NEW_LINE +
-                    "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + " ]" + NEW_LINE +
-                    "}", MediaType.JSON_UTF_8)),
+                .withBody(json(portBindingSerializer.serialize(
+                    portBinding(severHttpPort)
+                ), MediaType.JSON_UTF_8)),
             makeRequest(
                 request()
                     .withPath(calculatePath("mockserver/status"))
@@ -71,9 +80,9 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                .withBody(json("{" + NEW_LINE +
-                    "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + " ]" + NEW_LINE +
-                    "}", MediaType.JSON_UTF_8)),
+                .withBody(json(portBindingSerializer.serialize(
+                    portBinding(severHttpPort)
+                ), MediaType.JSON_UTF_8)),
             makeRequest(
                 request()
                     .withSecure(true)
@@ -84,10 +93,55 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
     }
 
     @Test
+    public void shouldReturnStatusOnCustomPath() {
+        String originalStatusPath = ConfigurationProperties.livenessHttpGetPath();
+        try {
+            // given
+            ConfigurationProperties.livenessHttpGetPath("/livenessProbe");
+            PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
+
+            // - in http
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
+                    .withBody(json(portBindingSerializer.serialize(
+                        portBinding(severHttpPort)
+                    ), MediaType.JSON_UTF_8)),
+                makeRequest(
+                    request()
+                        .withPath(calculatePath("livenessProbe"))
+                        .withMethod("GET"),
+                    headersToIgnore)
+            );
+            // - in https
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
+                    .withBody(json(portBindingSerializer.serialize(
+                        portBinding(severHttpPort)
+                    ), MediaType.JSON_UTF_8)),
+                makeRequest(
+                    request()
+                        .withSecure(true)
+                        .withPath(calculatePath("livenessProbe"))
+                        .withMethod("GET"),
+                    headersToIgnore)
+            );
+        } finally {
+            ConfigurationProperties.livenessHttpGetPath(originalStatusPath);
+        }
+    }
+
+    @Test
     public void shouldBindToNewSocket() {
         // given
         int firstNewPort = PortFactory.findFreePort();
         int secondNewPort = PortFactory.findFreePort();
+        PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
 
         // then
         // - in http
@@ -96,9 +150,9 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                .withBody(json("{" + NEW_LINE +
-                    "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
-                    "}", MediaType.JSON_UTF_8)),
+                .withBody(json(portBindingSerializer.serialize(
+                    portBinding(firstNewPort)
+                ), MediaType.JSON_UTF_8)),
             makeRequest(
                 request()
                     .withPath(calculatePath("mockserver/bind"))
@@ -108,14 +162,16 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                         "}"),
                 headersToIgnore)
         );
+        ArrayList<Integer> ports = new ArrayList<>(Arrays.asList(severHttpPort));
+        ports.add(firstNewPort);
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                .withBody(json("{" + NEW_LINE +
-                    "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + ", " + firstNewPort + " ]" + NEW_LINE +
-                    "}", MediaType.JSON_UTF_8)),
+                .withBody(json(portBindingSerializer.serialize(
+                    portBinding(ports)
+                ), MediaType.JSON_UTF_8)),
             makeRequest(
                 request()
                     .withPath(calculatePath("mockserver/status"))
@@ -128,9 +184,9 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                .withBody(json("{" + NEW_LINE +
-                    "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
-                    "}", MediaType.JSON_UTF_8)),
+                .withBody(json(portBindingSerializer.serialize(
+                    portBinding(secondNewPort)
+                ), MediaType.JSON_UTF_8)),
             makeRequest(
                 request()
                     .withSecure(true)
@@ -141,14 +197,15 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                         "}"),
                 headersToIgnore)
         );
+        ports.add(secondNewPort);
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                .withBody(json("{" + NEW_LINE +
-                    "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + ", " + firstNewPort + ", " + secondNewPort + " ]" + NEW_LINE +
-                    "}", MediaType.JSON_UTF_8)),
+                .withBody(json(portBindingSerializer.serialize(
+                    portBinding(ports)
+                ), MediaType.JSON_UTF_8)),
             makeRequest(
                 request()
                     .withSecure(true)

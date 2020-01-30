@@ -89,7 +89,8 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             if (!httpStateHandler.handle(request, responseWriter, false)) {
 
-                if (request.matches("PUT", PATH_PREFIX + "/status", "/status")) {
+                if (request.matches("PUT", PATH_PREFIX + "/status", "/status") ||
+                    isNotBlank(ConfigurationProperties.livenessHttpGetPath()) && request.matches("GET", ConfigurationProperties.livenessHttpGetPath())) {
 
                     responseWriter.writeResponse(request, OK, portBindingSerializer.serialize(portBinding(server.getLocalPorts())), "application/json");
 
@@ -109,14 +110,14 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                         }
                     }
 
-                } else if (request.getMethod().getValue().equals("GET") && request.getPath().getValue().startsWith(PATH_PREFIX + "/dashboard")) {
-
-                    dashboardHandler.renderDashboard(ctx, request);
-
                 } else if (request.matches("PUT", PATH_PREFIX + "/stop", "/stop")) {
 
                     ctx.writeAndFlush(response().withStatusCode(OK.code()));
                     new Thread(() -> server.stop()).start();
+
+                } else if (request.getMethod().getValue().equals("GET") && request.getPath().getValue().startsWith(PATH_PREFIX + "/dashboard")) {
+
+                    dashboardHandler.renderDashboard(ctx, request);
 
                 } else if (request.getMethod().getValue().equals("CONNECT")) {
 

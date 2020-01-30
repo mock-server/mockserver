@@ -70,7 +70,7 @@ public class NettyResponseWriter extends ResponseWriter {
         if (apiResponse) {
             response.withHeader("version", org.mockserver.Version.getVersion());
             final String path = request.getPath().getValue();
-            if (!path.startsWith(PATH_PREFIX)) {
+            if (!path.startsWith(PATH_PREFIX) && !path.equals(ConfigurationProperties.livenessHttpGetPath())) {
                 response.withHeader("deprecated",
                     "\"" + path + "\" is deprecated use \"" + PATH_PREFIX + path + "\" instead");
             }

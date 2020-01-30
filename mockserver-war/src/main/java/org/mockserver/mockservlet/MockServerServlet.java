@@ -106,7 +106,8 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
 
                     responseWriter.writeResponse(request, NOT_IMPLEMENTED, "ExpectationResponseCallback, ExpectationForwardCallback or ExpectationForwardAndResponseCallback is not supported by MockServer deployed as a WAR", "text/plain");
 
-                } else if (request.matches("PUT", PATH_PREFIX + "/status", "/status")) {
+                } else if (request.matches("PUT", PATH_PREFIX + "/status", "/status") ||
+                    isNotBlank(ConfigurationProperties.livenessHttpGetPath()) && request.matches("GET", ConfigurationProperties.livenessHttpGetPath())) {
 
                     responseWriter.writeResponse(request, OK, portBindingSerializer.serialize(portBinding(httpServletRequest.getLocalPort())), "application/json");
 

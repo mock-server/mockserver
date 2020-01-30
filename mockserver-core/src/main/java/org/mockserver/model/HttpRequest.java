@@ -86,8 +86,8 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
      * Specify remote address if the remote address can't be derived from the host header,
      * if no value is specified the host header will be used to determine remote address
      *
-     * @param host the remote host or ip to send request to
-     * @param port the remote port to send request to
+     * @param host   the remote host or ip to send request to
+     * @param port   the remote port to send request to
      * @param scheme the scheme to use for remote socket
      */
     public HttpRequest withSocketAddress(String host, Integer port, SocketAddress.Scheme scheme) {
@@ -160,7 +160,11 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
         return path;
     }
 
-    public boolean matches(String method, String... paths) {
+    public boolean matches(final String method) {
+        return this.method.getValue().equals(method);
+    }
+
+    public boolean matches(final String method, final String... paths) {
         boolean matches = false;
         for (String path : paths) {
             matches = this.method.getValue().equals(method) && this.path.getValue().equals(path);
@@ -560,7 +564,7 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
     /**
      * Returns true if a header with the specified name and value has been added
      *
-     * @param name the header name
+     * @param name  the header name
      * @param value the header value
      * @return true if a header has been added with that name otherwise false
      */

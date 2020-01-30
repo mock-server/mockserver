@@ -7,6 +7,8 @@ import org.mockserver.model.*;
 import java.io.IOException;
 import java.util.Arrays;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.PortBinding.portBinding;
@@ -74,8 +76,10 @@ public class PortBindingSerializerIntegrationTest {
         );
 
         // then
-        assertEquals("{" + NEW_LINE +
-                "  \"ports\" : [ 0, 1080, 0 ]" + NEW_LINE +
-                "}", jsonPortBinding);
+        assertThat(jsonPortBinding, containsString("{" + NEW_LINE +
+                "  \"ports\" : [ 0, 1080, 0 ]," + NEW_LINE));
+        assertThat(jsonPortBinding, containsString("\"version\" : "));
+        assertThat(jsonPortBinding, containsString("\"artifactId\" : "));
+        assertThat(jsonPortBinding, containsString("\"groupId\" : "));
     }
 }

@@ -62,6 +62,7 @@ public class ConfigurationProperties {
     private static final String DEFAULT_CORS_ALLOW_METHODS = "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE";
     private static final String DEFAULT_CORS_ALLOW_CREDENTIALS = "true";
     private static final int DEFAULT_CORS_MAX_AGE_IN_SECONDS = 300;
+    private static final String DEFAULT_LIVENESS_HTTP_GET_PATH = "";
 
     private static final String MOCKSERVER_PROPERTY_FILE = "mockserver.propertyFile";
     private static final String MOCKSERVER_ENABLE_CORS_FOR_API = "mockserver.enableCORSForAPI";
@@ -117,6 +118,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_CORS_ALLOW_METHODS = "mockserver.corsAllowMethods";
     private static final String MOCKSERVER_CORS_ALLOW_CREDENTIALS = "mockserver.corsAllowCredentials";
     private static final String MOCKSERVER_CORS_MAX_AGE_IN_SECONDS = "mockserver.corsMaxAgeInSeconds";
+    private static final String MOCKSERVER_LIVENESS_HTTP_GET_PATH = "mockserver.livenessHttpGetPath";
 
     private static final Properties PROPERTIES = readPropertyFile();
     private static final Set<String> ALL_SUBJECT_ALTERNATIVE_DOMAINS = Sets.newConcurrentHashSet();
@@ -198,6 +200,7 @@ public class ConfigurationProperties {
     private static int maxChunkSize = readIntegerProperty(MOCKSERVER_MAX_CHUNK_SIZE, "MOCKSERVER_MAX_CHUNK_SIZE", DEFAULT_MAX_CHUNK_SIZE);
     private static boolean preventCertificateDynamicUpdate = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_PREVENT_CERTIFICATE_DYNAMIC_UPDATE, "MOCKSERVER_PREVENT_CERTIFICATE_DYNAMIC_UPDATE", DEFAULT_PREVENT_CERTIFICATE_DYNAMIC_UPDATE));
     private static boolean alwaysCloseConnections = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS, "MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS", DEFAULT_MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS));
+    private static String livenessHttpGetPath = readPropertyHierarchically(MOCKSERVER_LIVENESS_HTTP_GET_PATH, "MOCKSERVER_LIVENESS_HTTP_GET_PATH", DEFAULT_LIVENESS_HTTP_GET_PATH);
 
     @VisibleForTesting
     static void reset() {
@@ -209,14 +212,18 @@ public class ConfigurationProperties {
         javaLoggerLogLevel = DEFAULT_LOG_LEVEL;
         metricsEnabled = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_METRICS_ENABLED, "MOCKSERVER_METRICS_ENABLED", "" + false));
         disableSystemOut = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DISABLE_SYSTEM_OUT, "MOCKSERVER_DISABLE_SYSTEM_OUT", "" + false));
+        enableMTLS = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_REQUIRED, "MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_REQUIRED", DEFAULT_TLS_MUTUAL_AUTHENTICATION_REQUIRED));
+        forwardProxyTLSX509CertificatesTrustManager = validateTrustManagerType(readPropertyHierarchically(MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER, "MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER", DEFAULT_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER));
+        forwardProxyTLSCustomTrustX509Certificates = readPropertyHierarchically(MOCKSERVER_FORWARD_PROXY_TLS_CUSTOM_TRUST_X509_CERTIFICATES, "MOCKSERVER_FORWARD_PROXY_TLS_CUSTOM_TRUST_X509_CERTIFICATES", DEFAULT_FORWARD_PROXY_TLS_CUSTOM_TRUST_X509_CERTIFICATES);
         enableCORSForAPI = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_ENABLE_CORS_FOR_API, "MOCKSERVER_ENABLE_CORS_FOR_API", DEFAULT_ENABLE_CORS_FOR_API));
-        enableCORSForAPIHasBeenSetExplicitly = System.getProperty(MOCKSERVER_ENABLE_CORS_FOR_API) != null ||
-            PROPERTIES.getProperty(MOCKSERVER_ENABLE_CORS_FOR_API) != null;
+        enableCORSForAPIHasBeenSetExplicitly = System.getProperty(MOCKSERVER_ENABLE_CORS_FOR_API) != null || PROPERTIES.getProperty(MOCKSERVER_ENABLE_CORS_FOR_API) != null;
         enableCORSForAllResponses = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES, "MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES", DEFAULT_ENABLE_CORS_FOR_ALL_RESPONSES));
         maxInitialLineLength = readIntegerProperty(MOCKSERVER_MAX_INITIAL_LINE_LENGTH, "MOCKSERVER_MAX_INITIAL_LINE_LENGTH", DEFAULT_MAX_INITIAL_LINE_LENGTH);
         maxHeaderSize = readIntegerProperty(MOCKSERVER_MAX_HEADER_SIZE, "MOCKSERVER_MAX_HEADER_SIZE", DEFAULT_MAX_HEADER_SIZE);
         maxChunkSize = readIntegerProperty(MOCKSERVER_MAX_CHUNK_SIZE, "MOCKSERVER_MAX_CHUNK_SIZE", DEFAULT_MAX_CHUNK_SIZE);
         preventCertificateDynamicUpdate = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_PREVENT_CERTIFICATE_DYNAMIC_UPDATE, "MOCKSERVER_PREVENT_CERTIFICATE_DYNAMIC_UPDATE", DEFAULT_PREVENT_CERTIFICATE_DYNAMIC_UPDATE));
+        alwaysCloseConnections = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS, "MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS", DEFAULT_MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS));
+        livenessHttpGetPath = readPropertyHierarchically(MOCKSERVER_LIVENESS_HTTP_GET_PATH, "MOCKSERVER_LIVENESS_HTTP_GET_PATH", DEFAULT_LIVENESS_HTTP_GET_PATH);
     }
 
     private static String propertyFile() {
@@ -828,6 +835,15 @@ public class ConfigurationProperties {
 
     public static void corsMaxAgeInSeconds(int ageInSeconds) {
         System.setProperty(MOCKSERVER_CORS_MAX_AGE_IN_SECONDS, "" + ageInSeconds);
+    }
+
+    public static String livenessHttpGetPath() {
+        return livenessHttpGetPath;
+    }
+
+    public static void livenessHttpGetPath(String livenessPath) {
+        System.setProperty(MOCKSERVER_LIVENESS_HTTP_GET_PATH, livenessPath);
+        livenessHttpGetPath = readPropertyHierarchically(MOCKSERVER_LIVENESS_HTTP_GET_PATH, "MOCKSERVER_LIVENESS_HTTP_GET_PATH", DEFAULT_LIVENESS_HTTP_GET_PATH);
     }
 
     private static void validateHostAndPort(String hostAndPort, String propertyName, String mockserverSocksProxy) {
