@@ -910,6 +910,26 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
+    public void shouldParseJsonWithJsonBodyWithEmptyArray() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\" : {\"emptyArray\":\"[]\"}" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new JsonBodyDTO(new JsonBody("{\"emptyArray\":\"[]\"}")))
+            ), expectationDTO);
+    }
+
+    @Test
     public void shouldParseJsonWithJsonBodyAsObjectField() throws IOException {
         // given
         String json = ("{" + NEW_LINE +

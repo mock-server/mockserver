@@ -32,6 +32,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
     private static final Map<String, Body.Type> fieldNameToType = new HashMap<>();
     private static final Base64.Decoder BASE64_DECODER = Base64.getDecoder();
     private static ObjectMapper objectMapper;
+    private static ObjectMapper jsonBodyObjectMapper;
 
     static {
         fieldNameToType.put("base64Bytes".toLowerCase(), Body.Type.BINARY);
@@ -217,16 +218,16 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         return new XPathBodyDTO(new XPathBody(valueJsonValue), not);
                 }
             } else if (body.size() > 0) {
-                if (objectMapper == null) {
-                    objectMapper = ObjectMapperFactory.createObjectMapper();
+                if (jsonBodyObjectMapper == null) {
+                    jsonBodyObjectMapper = new ObjectMapper();
                 }
-                return new JsonBodyDTO(new JsonBody(objectMapper.writeValueAsString(body), JsonBody.DEFAULT_MATCH_TYPE), false);
+                return new JsonBodyDTO(new JsonBody(jsonBodyObjectMapper.writeValueAsString(body), JsonBody.DEFAULT_MATCH_TYPE), false);
             }
         } else if (currentToken == JsonToken.START_ARRAY) {
-            if (objectMapper == null) {
-                objectMapper = ObjectMapperFactory.createObjectMapper();
+            if (jsonBodyObjectMapper == null) {
+                jsonBodyObjectMapper = new ObjectMapper();
             }
-            return new JsonBodyDTO(new JsonBody(objectMapper.writeValueAsString(ctxt.readValue(jsonParser, List.class)), JsonBody.DEFAULT_MATCH_TYPE), false);
+            return new JsonBodyDTO(new JsonBody(jsonBodyObjectMapper.writeValueAsString(ctxt.readValue(jsonParser, List.class)), JsonBody.DEFAULT_MATCH_TYPE), false);
         } else if (currentToken == JsonToken.VALUE_STRING) {
             return new StringBodyDTO(new StringBody(jsonParser.getText()));
         }
