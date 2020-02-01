@@ -75,6 +75,28 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 
 <h2>Configuration Properties</h2>
 
+<a id="liveness_configuration" class="anchor" href="#liveness_configuration">&nbsp;</a>
+
+<h2>Liveness Configuration:</h2>
+
+<button id="button_configuration_liveness_get_path" class="accordion title"><strong>Path for HTTP GET liveness / healthcheck probes</strong></button>
+<div class="panel title">
+    <p>Path to support HTTP GET requests for status response (also available on PUT /mockserver/status).</p>
+    <p>If this value is not modified then only PUT /mockserver/status but is a none blank value is provided for this value then GET requests to this path will return the 200 Ok status response showing the MockServer version and bound ports.</p>
+    <p>A GET request to this path will be matched before any expectation matching or proxying of requests.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.livenessHttpGetPath(String livenessPath)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.livenessHttpGetPath=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_LIVENESS_HTTP_GET_PATH=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.livenessHttpGetPath=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.livenessHttpGetPath="/liveness/probe"</code></pre>
+</div>
+
 <a id="memory_configuration" class="anchor" href="#memory_configuration">&nbsp;</a>
 
 <h2>Memory Usage Configuration:</h2>
@@ -204,7 +226,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 <button id="button_configuration_socket_connection_timeout" class="accordion title"><strong>Maximum Socket Connection Timeout</strong></button>
 <div class="panel title">
     <p>Maximum time allowed to connect to a socket</p>
-    <p>Type: <span class="keyword">long</span> Default: <span class="this_value">20000</span></p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">20000</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.socketConnectionTimeout(int milliseconds)</code></pre>
     <p>System Property:</p>

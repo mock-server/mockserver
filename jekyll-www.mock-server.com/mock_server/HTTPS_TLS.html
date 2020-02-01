@@ -12,15 +12,36 @@ sitemap:
 
 <p>MockServer uses port unification to simplify the configuration so all protocols (i.e. HTTP, HTTPS / SSL, SOCKS, etc) are supported on the same port.  This means when a request is sent over TLS (i.e. an HTTPS request) MockServer dynamically detects that the request is encrypted.</p>
 
+<p>MockServer has support for TLS (i.e. HTTPS) in three areas:</p>
+
+<ul>
+    <li><strong>TLS for inbound connections</strong> to support HTTPS for mocking, proxying and control-plane interactions (creating expectations, retrieving logs, etc)</li>
+    <li><strong>mTLS for inbound connections</strong> (also called client authentication or two-way TLS) to authenticate any client sending HTTPS requests</li>
+    <li><strong>TLS for outbound connections</strong> (also called forward proxy TLS) to authenticate any client sending HTTPS requests</li>
+</ul>
+
+<p style="width: 100%; padding-top: 25px; padding-bottom: 25px;"><a href="../images/https_tls.png" target="_blank"><img src="../images/https_tls.png" alt="MockServer HTTPS & TLS" style="max-width:100%;"></a></p>
+
 <p>The majority of HTTP clients perform the following steps when making an HTTPS request: </p>
 
 <ol>
   <li>establish TCP connection to remote server</li>
-    <li>perform TLS handshake with remote server and <a href="#verify_trust_chain"><strong>verify trust chain</strong></a> by receiving remote server X.509 Certificate and verifying it is signed by a know Certificate Authority</li>
+    <li>perform TLS handshake with remote server and <a href="#verify_trust_chain"><strong>verify trust chain</strong></a> by receiving remote server X.509 Certificate and verifying it is signed by a known Certificate Authority</li>
   <li>perform <a href="#hostname_validation"><strong>hostname validation</strong></a> by comparing hostname (or IP address) of remote server with Subject Alternative Name (SAN) or Common Name (CN) on X.509</li>
 </ol>
 
-<p>MockServer provides multiple ways its TLS can be <a href="#configuration">configured</a>.</p>
+<p>MockServer is able to mock the behaviour of multiple hostnames (i.e. servers) and present a valid X.509 Certificates for them.  MockServer achieves this by dynamically generating its X.509 Certificate using an in-memory list of hostnames and ip addresses, this is <a href="#hostname_validation">described in more detail below</a>.</p>
+<p>It is important to ensure that any client calling MockServer over TLS trust MockServer as a Certificate Authority (CA) (i.e. trust the MockServer CA X.509) the different approaches to establishing this trust is <a href="#verify_trust_chain">described below</a>.</p>
+
+<p>MockServer provides multiple ways its TLS can be <a href="#configuration">configured</a>.  The following things can be configured:</p>
+
+<ul>
+    <li>How dynamic certificate are created including, hostname (i.e. <a href="#button_configuration_ssl_certificate_domain_name">CN</a> & <a href="#button_configuration_ssl_subject_alternative_name_domains">SAN</a>) and ip address (i.e. <a href="#button_configuration_ssl_subject_alternative_name_ips">SAN</a>)</li>
+    <li>The Certificate Authority <a href="button_configuration_tls_certificate_authority_certificate">X.509 Certificate</a> and <a href="#button_configuration_tls_certificate_authority_private_key">Private Key</a> used to sign all generated X.509</li>
+    <li>Dynamic creation of a <a href="#button_configuration_dynamically_create_ca_certificate">unique (i.e. local) Certificate Authority X509 Certificate and Private Key</a> instead of using the fixed Certificate Authority X509 Certificate and Private Key in the <a href="https://github.com/mock-server/mockserver/blob/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem">git repo</a>.</li>
+    <li>Require <a href="#button_configuration_require_mtls_for_all_tls_connections">mTLS (also called client authentication or two-way TLS)</a> for all TLS connections / HTTPS requests to MockServer</li>
+    <li>Configure <a href="#button_configuration_trusted_tls_certs_group_for_proxied_reqs">trust store</a> and <a href="#button_configuration_forward_proxy_certificate_chain">client X.509</a> used during forwarded and proxied requests to endpoints requiring mTLS</li>
+</ul>
 
 <a id="verify_trust_chain" class="anchor" href="#verify_trust_chain">&nbsp;</a>
 
@@ -32,9 +53,9 @@ sitemap:
 
 <h3>Operating System</h3>
 
-<p>It is technically possible to add the MockServer CA X.509 as a trusted root CA to your operating system, this will make most clients applications running on your OS (such as browsers) trust dynamically generated certificates from MockServer.</p>
-<p>This is generally not a good idea or if it is done it should be done for a very short period to record expectations or perform a quick test.  During this period do not navigate to any sensitive sites like banks or email servers.</p>
-<p>This is not completely safe to do this because the private key for the MockServer Root CA is in the MockServer repository and therefore anyone could potentially use this to generate certificates that appear to have comes from MockServer.</p>
+<p>It is possible to add the MockServer CA X.509 as a trusted root CA to your operating system, this will make most clients applications running on your OS (such as browsers) trust dynamically generated certificates from MockServer.</p>
+<p>This is only an acceptable risk if it is done for a short period and the configuration setting <a href="#button_configuration_dynamically_create_ca_certificate">dynamicallyCreateCertificateAuthorityCertificate</a> is enabled to generate a local unique CA X.509 and Private Key that is saved to your local disk in the folder configured using <a href="#button_configuration_directory_to_save_dynamic_ssl_certificates">directoryToSaveDynamicSSLCertificate</a>.</p>
+<p>If the configuration setting <a href="#button_configuration_dynamically_create_ca_certificate">dynamicallyCreateCertificateAuthorityCertificate</a> is not enabled, and your OS trusts the MockServer CA X.509, then this would leave your machine open to man-in-the-middle attacks because the corresponding Private Key is in the <a href="https://github.com/mock-server/mockserver/blob/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityPrivateKey.pem">MockServer github repository</a>.  This would allow hackers to compromise all sensitive communicates such as to your bank or other sensitive sites.</p>
 
 <h5>Web Browsers</h5>
 
@@ -144,7 +165,7 @@ public class ExampleTestClass {
 
 <h2>Hostname Validation</h2>
 
-<p>MockServer is able to mock the behaviour of multiple hostnames (i.e. servers) and present a valid X.509 Certificates for them.  MockServer achieves this by dynamically generating its X.509 Certificate using an in-memory list of hostnames.  When the list of hostnames changes a new certificate is generated.  The list of hostnames is updated, when:</p>
+<p>MockServer is able to mock the behaviour of multiple hostnames (i.e. servers) and present a valid X.509 Certificates for them.  MockServer achieves this by dynamically generating its X.509 Certificate using an in-memory list of hostnames and ip addresses.  When the list of hostnames or ips addresses changes a new certificate is generated.  The list of hostnames is updated, when:</p>
 
 <ul>
   <li>configuration for SAN hostnames or SAN IP addresses is specified</li>
