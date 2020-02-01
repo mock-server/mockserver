@@ -175,7 +175,7 @@
 
 <button id="button_configuration_trusted_tls_certs_group_for_proxied_reqs" class="accordion title"><strong>Trusted TLS Certificates Group for Forwarded or Proxied Requests</strong></button>
 <div class="panel title">
-    <p>Configure trusted set of certificates for forwarded or proxied requests.</p>
+    <p>Configure trusted set of certificates for forwarded or proxied requests (i.e. TLS connections out of MockServer).</p>
     <p>MockServer will only be able to establish a TLS connection to endpoints that have a trusted X509 certificate according to the trust manager type, as follows:</p>
     <ul>
         <li>ALL - Insecure will trust all X509 certificates and not perform host name verification.</li>
@@ -197,7 +197,7 @@
 
 <button id="button_configuration_custom_trusted_tls_certs_for_proxied_reqs" class="accordion title"><strong>Custom Trusted TLS Certificates for Forwarded or Proxied Requests</strong></button>
 <div class="panel title">
-    <p>File location of custom file for trusted X509 Certificate Authority roots for forwarded or proxied requests, the certificate chain must be a X509 PEM file.</p>
+    <p>File location of custom file for trusted X509 Certificate Authority roots for forwarded or proxied requests (i.e. TLS connections out of MockServer), the certificate chain must be a X509 PEM file.</p>
     <p>MockServer will only be able to establish a TLS connection to endpoints that have an X509 certificate chain that is signed by one of the provided custom certificates, i.e. where a path can be established from the endpoints X509 certificate to one or more of the custom X509 certificates provided.</p>
     <p>This configuration only take effect if <a href="#button_configuration_trusted_tls_certs_group_for_proxied_reqs">forwardProxyTLSX509CertificatesTrustManagerType</a> is configured as <strong>CUSTOM</strong> otherwise this value is ignored.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
@@ -215,7 +215,7 @@
 
 <button id="button_configuration_forward_proxy_private_key" class="accordion title"><strong>Custom Private Key for Forwarded or Proxied Requests</strong></button>
 <div class="panel title">
-    <p>File location of custom Private Key for proxied TLS connections out of MockServer, the private key must be a PKCS#8 PEM file and must match the <a href="#button_configuration_forward_proxy_certificate_chain">forwardProxyCertificateChain</a></p>
+    <p>File location of custom Private Key for forwarded or proxied requests (i.e. TLS connections out of MockServer), the private key must be a PKCS#8 PEM file and must match the <a href="#button_configuration_forward_proxy_certificate_chain">forwardProxyCertificateChain</a></p>
     <p>To convert a PKCS#1 (i.e. default for Bouncy Castle) to a PKCS#8 the following command can be used: openssl pkcs8 -topk8 -inform PEM -in private_key_PKCS_1.pem -out private_key_PKCS_8.pem -nocrypt</p>
     <p>This private key will be used if MockServer needs to perform mTLS (client authentication) for outbound TLS connections.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
@@ -231,9 +231,9 @@
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardProxyPrivateKey="/some/existing/path"</code></pre>
 </div>
 
-<button id="button_configuration_forward_proxy_certificate_chain" class="accordion title"><strong>Custom X.509 Certificate Chain for proxied TLS connections out of MockServer</strong></button>
+<button id="button_configuration_forward_proxy_certificate_chain" class="accordion title"><strong>Custom X.509 Certificate Chain for Forwarded or Proxied Requests</strong></button>
 <div class="panel title">
-    <p>File location of custom X.509 Certificate Chain for proxied TLS connections out of MockServer, the certificates must be a X509 PEM file and must match the <a href="#button_configuration_forward_proxy_private_key">forwardProxyPrivateKey</a></p>
+    <p>File location of custom X.509 Certificate Chain for forwarded or proxied requests (i.e. TLS connections out of MockServer), the certificates must be a X509 PEM file and must match the <a href="#button_configuration_forward_proxy_private_key">forwardProxyPrivateKey</a></p>
     <p>This certificate chain will be used if MockServer needs to perform mTLS (client authentication) for outbound TLS connections.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
     <p>Java Code:</p>
