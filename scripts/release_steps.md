@@ -57,6 +57,7 @@ Release Steps
    1. commit to github
 1. add javaDoc
    1. git checkout mockserver-x.x.x
+   1. export JAVA_HOME=`/usr/libexec/java_home -v 1.8`
    1. ./mvnw javadoc:aggregate -P release -DreportOutputDirectory='/Users/jamesbloom/git/mockserver/javadoc/x.x.x'
    1. open /Users/jamesbloom/git/mockserver/javadoc
    1. upload as public to S3 https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq/versions/?region=us-east-1
@@ -84,7 +85,7 @@ Release Steps
       1. rm -rf _site
       1. `rbenv which bundle` exec jekyll build
       1. cd _site
-      1. copy to https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq/?region=us-east-1
+      1. copy to new bucket
    1. create cloud front distribution copying existing settings
    1. create Route53 A record as alias to cloud front distribution
    1. ensure links in README are correct
