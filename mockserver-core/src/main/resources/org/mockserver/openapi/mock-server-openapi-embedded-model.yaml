@@ -682,7 +682,7 @@ components:
         closeSocket:
           type: boolean
         closeSocketDelay:
-          $ref: "#/definitions/delay"
+          $ref: "#/components/schemas/Delay"
         contentLengthHeaderOverride:
           type: integer
         suppressContentLengthHeader:
