@@ -7,9 +7,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.netty.integration.mock.initializer.ExpectationInitializerIntegrationExample;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.netty.MockServer;
+import org.mockserver.netty.integration.mock.initializer.ExpectationInitializerIntegrationExample;
 import org.mockserver.scheduler.Scheduler;
 
 import java.util.concurrent.TimeUnit;

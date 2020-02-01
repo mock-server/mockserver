@@ -4,11 +4,11 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.testing.integration.mock.AbstractBasicMockingIntegrationTest;
 import org.mockserver.mock.Expectation;
-import org.mockserver.netty.MockServer;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.Not;
+import org.mockserver.netty.MockServer;
+import org.mockserver.testing.integration.mock.AbstractBasicMockingIntegrationTest;
 import org.mockserver.uuid.UUIDService;
 
 import java.util.Arrays;

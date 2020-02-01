@@ -4,13 +4,13 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequest;
-import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
-import org.mockserver.netty.MockServer;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.HttpTemplate;
+import org.mockserver.netty.MockServer;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
+import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequest;
+import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;

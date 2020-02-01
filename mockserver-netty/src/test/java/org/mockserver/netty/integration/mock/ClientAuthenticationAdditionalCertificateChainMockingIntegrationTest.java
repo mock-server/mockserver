@@ -6,17 +6,21 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.cli.Main;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.tls.KeyStoreFactory;
 import org.mockserver.socket.tls.jdk.JDKKeyAndCertificateFactory;
+import org.mockserver.socket.tls.jdk.X509Generator;
 import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
 
-import java.io.IOException;
+import javax.net.ssl.SSLContext;
 import java.nio.charset.StandardCharsets;
+import java.security.cert.X509Certificate;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -25,16 +29,50 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockserver.configuration.ConfigurationProperties.*;
-import static org.mockserver.configuration.ConfigurationProperties.tlsMutualAuthenticationRequired;
 import static org.mockserver.echo.tls.NonMatchingX509KeyManager.invalidClientSSLContext;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.OK_200;
+import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * @author jamesdbloom
  */
-public abstract class AbstractClientAuthenticationMockingIntegrationTest extends AbstractMockingIntegrationTestBase {
+public class ClientAuthenticationAdditionalCertificateChainMockingIntegrationTest extends AbstractMockingIntegrationTestBase {
+
+    private static final int severHttpPort = PortFactory.findFreePort();
+    private static String originalCertificateAuthorityCertificate;
+    private static String originalCertificateAuthorityPrivateKey;
+
+    @BeforeClass
+    public static void startServer() {
+        // save original value
+        originalCertificateAuthorityCertificate = certificateAuthorityCertificate();
+        originalCertificateAuthorityPrivateKey = certificateAuthorityPrivateKey();
+
+        // set new certificate authority values
+        tlsMutualAuthenticationCertificateChain("org/mockserver/netty/integration/tls/ca.pem");
+        tlsMutualAuthenticationRequired(true);
+
+        Main.main("-serverPort", "" + severHttpPort);
+
+        mockServerClient = new MockServerClient("localhost", severHttpPort).withSecure(true);
+    }
+
+    @AfterClass
+    public static void stopServer() {
+        stopQuietly(mockServerClient);
+
+        // set back to original value
+        certificateAuthorityCertificate(originalCertificateAuthorityCertificate);
+        certificateAuthorityPrivateKey(originalCertificateAuthorityPrivateKey);
+        tlsMutualAuthenticationRequired(false);
+    }
+
+    @Override
+    public int getServerPort() {
+        return severHttpPort;
+    }
 
     @Test
     public void shouldReturnUpdateInHttp() {
@@ -66,36 +104,6 @@ public abstract class AbstractClientAuthenticationMockingIntegrationTest extends
     }
 
     @Test
-    public void shouldReturnResponseInHttpsNettyClient() {
-        // when
-        mockServerClient
-            .when(
-                request()
-                    .withMethod("POST")
-                    .withPath(calculatePath("some_path"))
-            )
-            .respond(
-                response()
-                    .withStatusCode(200)
-                    .withBody("some_body_response")
-            );
-
-        // then
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body_response"),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("some_path"))
-                    .withMethod("POST"),
-                headersToIgnore)
-        );
-    }
-
-    @Test
     public void shouldReturnResponseInHttpsApacheClient() throws Exception {
         // given
         mockServerClient
@@ -111,7 +119,7 @@ public abstract class AbstractClientAuthenticationMockingIntegrationTest extends
             );
 
         // when
-        HttpClient httpClient = HttpClients.custom().setSSLContext(new KeyStoreFactory(new MockServerLogger()).sslContext()).build();
+        HttpClient httpClient = HttpClients.custom().setSSLContext(getSslContext()).build();
         HttpResponse response = httpClient.execute(new HttpPost(new URIBuilder()
             .setScheme("https")
             .setHost("localhost")
@@ -123,6 +131,21 @@ public abstract class AbstractClientAuthenticationMockingIntegrationTest extends
         // then
         assertThat(response.getStatusLine().getStatusCode(), is(OK_200.code()));
         assertThat(responseBody, is("some_body_response"));
+    }
+
+    private SSLContext getSslContext() {
+        JDKKeyAndCertificateFactory keyAndCertificateFactory = new JDKKeyAndCertificateFactory(new MockServerLogger());
+        keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
+        return new KeyStoreFactory(new MockServerLogger())
+            .sslContext(
+                X509Generator.privateKeyFromPEMFile("org/mockserver/netty/integration/tls/leaf-key-pkcs8.pem"),
+                X509Generator.x509FromPEMFile("org/mockserver/netty/integration/tls/leaf-cert.pem"),
+                X509Generator.x509FromPEMFile("org/mockserver/netty/integration/tls/ca.pem"),
+                new X509Certificate[]{
+                    X509Generator.x509FromPEMFile("org/mockserver/netty/integration/tls/ca.pem"),
+                    keyAndCertificateFactory.certificateAuthorityX509Certificate()
+                }
+            );
     }
 
     @Test
@@ -179,7 +202,7 @@ public abstract class AbstractClientAuthenticationMockingIntegrationTest extends
             );
 
         // when
-        HttpClient httpClient = HttpClients.custom().setSSLContext(new KeyStoreFactory(new MockServerLogger()).sslContext()).build();
+        HttpClient httpClient = HttpClients.custom().setSSLContext(getSslContext()).build();
         HttpResponse response = httpClient.execute(new HttpPost(new URIBuilder()
             .setScheme("http")
             .setHost("localhost")

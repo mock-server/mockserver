@@ -1,7 +1,7 @@
 package org.mockserver.netty.integration.mock.initializer;
 
-import org.mockserver.server.initialize.ExpectationInitializer;
 import org.mockserver.mock.Expectation;
+import org.mockserver.server.initialize.ExpectationInitializer;
 
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;

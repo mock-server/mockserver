@@ -4,8 +4,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.cli.Main;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.testing.integration.mock.AbstractBasicMockingIntegrationTest;
 import org.mockserver.socket.PortFactory;
+import org.mockserver.testing.integration.mock.AbstractBasicMockingIntegrationTest;
 
 import static org.mockserver.stop.Stop.stopQuietly;
 

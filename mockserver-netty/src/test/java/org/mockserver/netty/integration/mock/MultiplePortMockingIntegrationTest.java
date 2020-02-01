@@ -1,16 +1,15 @@
 package org.mockserver.netty.integration.mock;
 
-import com.google.common.base.Joiner;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.serialization.PortBindingSerializer;
-import org.mockserver.testing.integration.mock.AbstractBasicMockingIntegrationTest;
 import org.mockserver.model.MediaType;
+import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.socket.PortFactory;
+import org.mockserver.testing.integration.mock.AbstractBasicMockingIntegrationTest;
 
 import java.util.ArrayList;
 import java.util.Arrays;

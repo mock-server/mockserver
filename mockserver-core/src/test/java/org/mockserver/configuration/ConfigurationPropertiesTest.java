@@ -8,7 +8,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.server.initialize.ExpectationInitializerExample;
-import org.mockserver.socket.tls.KeyStoreFactory;
+import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
 import org.mockserver.socket.tls.jdk.CertificateSigningRequest;
 import org.slf4j.event.Level;
 
@@ -16,7 +16,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.security.KeyStore;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
@@ -328,7 +327,7 @@ public class ConfigurationPropertiesTest {
         // then
         assertEquals("newDomain", sslCertificateDomainName());
         assertEquals("newDomain", System.getProperty("mockserver.sslCertificateDomainName"));
-        assertTrue(rebuildServerKeyStore());
+        assertTrue(rebuildServerTLSContext());
     }
 
     @Test
@@ -343,18 +342,19 @@ public class ConfigurationPropertiesTest {
         // then
         assertThat(Arrays.asList(sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d"));
         assertEquals("a,b,c,d", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
-        assertTrue(rebuildServerKeyStore());
+        assertTrue(rebuildServerTLSContext());
     }
 
     @Test
     public void shouldAddSslSubjectAlternativeNameDomains() {
         // given
         ConfigurationProperties.clearSslSubjectAlternativeNameDomains();
-        rebuildServerKeyStore(false);
+        rebuildServerTLSContext(false);
 
         // when
         assertThat(Arrays.asList(sslSubjectAlternativeNameDomains()), empty());
-        addSslSubjectAlternativeNameDomains("a", "b", "c", "d");
+        addSslSubjectAlternativeNameDomains("a", "b", "c");
+        addSubjectAlternativeName("d:1080");
 
         // then
         assertThat(Arrays.asList(sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d"));
@@ -366,10 +366,10 @@ public class ConfigurationPropertiesTest {
         // then - add subject alternative domain names
         assertThat(Arrays.asList(sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d", "e", "f", "g"));
         assertEquals("a,b,c,d,e,f,g", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
-        assertTrue(rebuildServerKeyStore());
+        assertTrue(rebuildServerTLSContext());
 
         // given
-        rebuildServerKeyStore(false);
+        rebuildServerTLSContext(false);
 
         // when
         addSslSubjectAlternativeNameDomains("e", "f", "g");
@@ -377,7 +377,7 @@ public class ConfigurationPropertiesTest {
         // then - do not add duplicate subject alternative domain names
         assertThat(Arrays.asList(sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d", "e", "f", "g"));
         assertEquals("a,b,c,d,e,f,g", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
-        assertFalse(rebuildServerKeyStore());
+        assertFalse(rebuildServerTLSContext());
     }
 
     @Test
@@ -392,14 +392,14 @@ public class ConfigurationPropertiesTest {
         // then
         assertThat(Arrays.asList(sslSubjectAlternativeNameIps()), containsInAnyOrder("0.0.0.0", "1", "127.0.0.1", "2", "3", "4"));
         assertEquals("0.0.0.0,1,127.0.0.1,2,3,4", System.getProperty("mockserver.sslSubjectAlternativeNameIps"));
-        assertTrue(rebuildServerKeyStore());
+        assertTrue(rebuildServerTLSContext());
     }
 
     @Test
     public void shouldAddSslSubjectAlternativeNameIps() {
         // given
         clearSslSubjectAlternativeNameIps();
-        rebuildServerKeyStore(false);
+        rebuildServerTLSContext(false);
 
         // when
         assertThat(Arrays.asList(sslSubjectAlternativeNameIps()), containsInAnyOrder("127.0.0.1", "0.0.0.0"));
@@ -415,10 +415,10 @@ public class ConfigurationPropertiesTest {
         // then - add subject alternative domain names
         assertThat(Arrays.asList(sslSubjectAlternativeNameIps()), containsInAnyOrder("0.0.0.0", "1", "127.0.0.1", "2", "3", "4", "5", "6", "7"));
         assertEquals("0.0.0.0,1,127.0.0.1,2,3,4,5,6,7", System.getProperty("mockserver.sslSubjectAlternativeNameIps"));
-        assertTrue(rebuildServerKeyStore());
+        assertTrue(rebuildServerTLSContext());
 
         // given
-        rebuildServerKeyStore(false);
+        rebuildServerTLSContext(false);
 
         // when
         addSslSubjectAlternativeNameIps("5", "6", "7");
@@ -426,20 +426,20 @@ public class ConfigurationPropertiesTest {
         // then - do not add duplicate subject alternative domain names
         assertThat(Arrays.asList(sslSubjectAlternativeNameIps()), containsInAnyOrder("0.0.0.0", "1", "127.0.0.1", "2", "3", "4", "5", "6", "7"));
         assertEquals("0.0.0.0,1,127.0.0.1,2,3,4,5,6,7", System.getProperty("mockserver.sslSubjectAlternativeNameIps"));
-        assertFalse(rebuildServerKeyStore());
+        assertFalse(rebuildServerTLSContext());
     }
 
     @Test
     public void shouldSetAndReadRebuildKeyStore() {
         // given
-        rebuildServerKeyStore(false);
+        rebuildServerTLSContext(false);
 
         // when
-        assertFalse(rebuildKeyStore());
-        rebuildServerKeyStore(true);
+        assertFalse(rebuildTLSContext());
+        rebuildServerTLSContext(true);
 
         // then
-        assertTrue(rebuildServerKeyStore());
+        assertTrue(rebuildServerTLSContext());
     }
 
     @Test
@@ -552,6 +552,90 @@ public class ConfigurationPropertiesTest {
         // then
         assertFalse(tlsMutualAuthenticationRequired());
         assertEquals("false", System.getProperty("mockserver.tlsMutualAuthenticationRequired"));
+    }
+
+    @Test
+    public void shouldSetAndReadTLSMutualAuthenticationCertificateChain() throws IOException {
+        // given
+        System.clearProperty("mockserver.tlsMutualAuthenticationCertificateChain");
+
+        // then
+        assertThat(tlsMutualAuthenticationCertificateChain(), is(""));
+
+        // when
+        File tempFile = File.createTempFile("some", "temp");
+        tlsMutualAuthenticationCertificateChain(tempFile.getAbsolutePath());
+
+        // then
+        assertThat(tlsMutualAuthenticationCertificateChain(), is(tempFile.getAbsolutePath()));
+        assertEquals(tempFile.getAbsolutePath(), System.getProperty("mockserver.tlsMutualAuthenticationCertificateChain"));
+    }
+
+    @Test
+    public void shouldSetAndReadForwardProxyTLSX509CertificatesTrustManager() {
+        // given
+        System.clearProperty("mockserver.forwardProxyTLSX509CertificatesTrustManagerType");
+
+        // then
+        assertThat(forwardProxyTLSX509CertificatesTrustManagerType(), is(ForwardProxyTLSX509CertificatesTrustManager.ANY));
+
+        // when
+        forwardProxyTLSX509CertificatesTrustManagerType(ForwardProxyTLSX509CertificatesTrustManager.CUSTOM.name());
+
+        // then
+        assertThat(forwardProxyTLSX509CertificatesTrustManagerType(), is(ForwardProxyTLSX509CertificatesTrustManager.CUSTOM));
+        assertEquals(ForwardProxyTLSX509CertificatesTrustManager.CUSTOM.name(), System.getProperty("mockserver.forwardProxyTLSX509CertificatesTrustManagerType"));
+    }
+
+    @Test
+    public void shouldSetAndReadForwardProxyTLSCustomTrustX509Certificates() throws IOException {
+        // given
+        System.clearProperty("mockserver.forwardProxyTLSCustomTrustX509Certificates");
+
+        // then
+        assertThat(forwardProxyTLSCustomTrustX509Certificates(), is(""));
+
+        // when
+        File tempFile = File.createTempFile("some", "temp");
+        forwardProxyTLSCustomTrustX509Certificates(tempFile.getAbsolutePath());
+
+        // then
+        assertThat(forwardProxyTLSCustomTrustX509Certificates(), is(tempFile.getAbsolutePath()));
+        assertEquals(tempFile.getAbsolutePath(), System.getProperty("mockserver.forwardProxyTLSCustomTrustX509Certificates"));
+    }
+
+    @Test
+    public void shouldSetAndReadForwardProxyPrivateKey() throws IOException {
+        // given
+        System.clearProperty("mockserver.forwardProxyPrivateKey");
+
+        // then
+        assertThat(forwardProxyPrivateKey(), is(""));
+
+        // when
+        File tempFile = File.createTempFile("some", "temp");
+        forwardProxyPrivateKey(tempFile.getAbsolutePath());
+
+        // then
+        assertThat(forwardProxyPrivateKey(), is(tempFile.getAbsolutePath()));
+        assertEquals(tempFile.getAbsolutePath(), System.getProperty("mockserver.forwardProxyPrivateKey"));
+    }
+
+    @Test
+    public void shouldSetAndReadForwardProxyCertificateChain() throws IOException {
+        // given
+        System.clearProperty("mockserver.forwardProxyCertificateChain");
+
+        // then
+        assertThat(forwardProxyCertificateChain(), is(""));
+
+        // when
+        File tempFile = File.createTempFile("some", "temp");
+        forwardProxyCertificateChain(tempFile.getAbsolutePath());
+
+        // then
+        assertThat(forwardProxyCertificateChain(), is(tempFile.getAbsolutePath()));
+        assertEquals(tempFile.getAbsolutePath(), System.getProperty("mockserver.forwardProxyCertificateChain"));
     }
 
     @Test

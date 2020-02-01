@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added file locking and jvm locking for expectation persistence file to avoid file corruption
 - fixed verification incorrectly matching verifier non-empty bodies against empty request bodies
 - stopped response callbacks for proxied requests blocking threads
+- fixed bug that caused JSON bodies in specified expectations as raw JSON to ignore empty arrays and empty strings
 
 ### Security
 - updated tomcat (used in integration tests) to version without vulnerabilities
@@ -48,7 +49,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added support for forward proxy authentication (via configuration)
 - added support for overriding forward responses by class or closure
 - requests sent to MockServerClient can be updated / enhanced i.e. to support proxies
-- added TLS documentation
+- dynamic creation of a unique (i.e. local) Certificate Authority X509 Certificate and Private Key instead of using the fixed Certificate Authority X509 Certificate and Private Key in the git repo.
+- configuration to require mTLS (also called client authentication or two-way TLS) for all TLS connections / HTTPS requests to MockServer
+- configuration of trust store and client X.509 used during forwarded and proxied requests to endpoints requiring mTLS
+- extended TLS documentation significantly
 
 ### Changed
 - reduced default number of fail handles used by nio event loop

@@ -3,12 +3,11 @@ package org.mockserver.netty.integration.mock;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.netty.MockServer;
-import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
 
-import static org.mockserver.configuration.ConfigurationProperties.forwardProxyTLSX509CertificatesTrustManager;
-import static org.mockserver.proxyconfiguration.ProxyConfiguration.proxyConfiguration;
+import static org.mockserver.configuration.ConfigurationProperties.forwardProxyTLSX509CertificatesTrustManagerType;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
@@ -22,9 +21,9 @@ public class ForwardWithAnyTrustManagerMockingIntegrationTest extends AbstractFo
     @BeforeClass
     public static void startServer() {
         // save original value
-        originalForwardProxyTLSX509CertificatesTrustManager = forwardProxyTLSX509CertificatesTrustManager();
+        originalForwardProxyTLSX509CertificatesTrustManager = ConfigurationProperties.forwardProxyTLSX509CertificatesTrustManagerType();
 
-        forwardProxyTLSX509CertificatesTrustManager(ForwardProxyTLSX509CertificatesTrustManager.ANY.name());
+        forwardProxyTLSX509CertificatesTrustManagerType(ForwardProxyTLSX509CertificatesTrustManager.ANY.name());
 
         mockServer = new MockServer();
 
@@ -37,7 +36,7 @@ public class ForwardWithAnyTrustManagerMockingIntegrationTest extends AbstractFo
         stopQuietly(mockServerClient);
 
         // set back to original value
-        forwardProxyTLSX509CertificatesTrustManager(originalForwardProxyTLSX509CertificatesTrustManager.name());
+        forwardProxyTLSX509CertificatesTrustManagerType(originalForwardProxyTLSX509CertificatesTrustManager.name());
     }
 
     @Override

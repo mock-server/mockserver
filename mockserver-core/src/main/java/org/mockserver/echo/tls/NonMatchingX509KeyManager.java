@@ -41,7 +41,7 @@ public class NonMatchingX509KeyManager {
                 .trustManager(new FakeTrustManagerFactory())
                 .clientAuth(ClientAuth.REQUIRE)
                 .build();
-            rebuildServerKeyStore(false);
+            rebuildServerTLSContext(false);
             return serverSslContext;
         } catch (Exception e) {
             throw new RuntimeException("Exception creating SSL context for server", e);

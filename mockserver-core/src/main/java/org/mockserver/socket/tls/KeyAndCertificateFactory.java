@@ -30,11 +30,4 @@ public interface KeyAndCertificateFactory {
 
     X509Certificate certificateAuthorityX509Certificate();
 
-    static void main(String[] args) {
-        String workingDirectory = new File(".").getAbsolutePath();
-        ConfigurationProperties.directoryToSaveDynamicSSLCertificate(workingDirectory);
-        new JDKKeyAndCertificateFactory(new MockServerLogger()).buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
-        System.out.println("saved files to:" + workingDirectory);
-    }
-
 }

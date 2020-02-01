@@ -4,11 +4,9 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.netty.MockServer;
-import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
 
 import static org.mockserver.configuration.ConfigurationProperties.*;
-import static org.mockserver.proxyconfiguration.ProxyConfiguration.proxyConfiguration;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
@@ -27,13 +25,13 @@ public class ForwardWithCustomTrustManagerWithCustomCAMockingIntegrationTest ext
         // save original value
         originalCertificateAuthorityCertificate = certificateAuthorityCertificate();
         originalCertificateAuthorityPrivateKey = certificateAuthorityPrivateKey();
-        originalForwardProxyTLSX509CertificatesTrustManager = forwardProxyTLSX509CertificatesTrustManager();
+        originalForwardProxyTLSX509CertificatesTrustManager = forwardProxyTLSX509CertificatesTrustManagerType();
         originalForwardProxyTLSCustomTrustX509Certificates = forwardProxyTLSCustomTrustX509Certificates();
 
         // set new certificate authority values
         certificateAuthorityCertificate("org/mockserver/netty/integration/tls/ca.pem");
         certificateAuthorityPrivateKey("org/mockserver/netty/integration/tls/ca-key-pkcs8.pem");
-        forwardProxyTLSX509CertificatesTrustManager(ForwardProxyTLSX509CertificatesTrustManager.CUSTOM.name());
+        forwardProxyTLSX509CertificatesTrustManagerType(ForwardProxyTLSX509CertificatesTrustManager.CUSTOM.name());
         forwardProxyTLSCustomTrustX509Certificates("org/mockserver/netty/integration/tls/ca.pem");
 
         mockServer = new MockServer();
@@ -49,7 +47,7 @@ public class ForwardWithCustomTrustManagerWithCustomCAMockingIntegrationTest ext
         // set back to original value
         certificateAuthorityCertificate(originalCertificateAuthorityCertificate);
         certificateAuthorityPrivateKey(originalCertificateAuthorityPrivateKey);
-        forwardProxyTLSX509CertificatesTrustManager(originalForwardProxyTLSX509CertificatesTrustManager.name());
+        forwardProxyTLSX509CertificatesTrustManagerType(originalForwardProxyTLSX509CertificatesTrustManager.name());
         forwardProxyTLSCustomTrustX509Certificates(originalForwardProxyTLSCustomTrustX509Certificates);
     }
 

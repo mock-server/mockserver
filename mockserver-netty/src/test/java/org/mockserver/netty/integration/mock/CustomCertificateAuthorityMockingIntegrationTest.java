@@ -2,7 +2,6 @@ package org.mockserver.netty.integration.mock;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.testing.integration.mock.AbstractBasicMockingIntegrationTest;
 

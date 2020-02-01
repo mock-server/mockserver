@@ -53,12 +53,29 @@ public class KeyStoreFactory {
         keyAndCertificateFactory = new JDKKeyAndCertificateFactory(mockServerLogger);
     }
 
+    @SuppressWarnings("InfiniteRecursion")
     public synchronized SSLContext sslContext() {
-        if (sslContext == null || ConfigurationProperties.rebuildKeyStore()) {
+        keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
+        return sslContext(
+            keyAndCertificateFactory.privateKey(),
+            keyAndCertificateFactory.x509Certificate(),
+            keyAndCertificateFactory.certificateAuthorityX509Certificate(),
+            new X509Certificate[]{keyAndCertificateFactory.certificateAuthorityX509Certificate()}
+        );
+    }
+
+    public synchronized SSLContext sslContext(PrivateKey privateKey, X509Certificate x509Certificate, X509Certificate certificateAuthorityX509Certificate, X509Certificate[] trustX509CertificateChain) {
+        if (sslContext == null || ConfigurationProperties.rebuildTLSContext()) {
             try {
                 // key manager
                 KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-                keyManagerFactory.init(loadOrCreateKeyStore(KeyStore.getDefaultType()), KEY_STORE_PASSWORD.toCharArray());
+                keyManagerFactory.init(loadOrCreateKeyStore(
+                    KeyStore.getDefaultType(),
+                    privateKey,
+                    x509Certificate,
+                    certificateAuthorityX509Certificate,
+                    trustX509CertificateChain
+                ), KEY_STORE_PASSWORD.toCharArray());
 
                 // ssl context
                 sslContext = getSSLContextInstance();
@@ -70,7 +87,19 @@ public class KeyStoreFactory {
         return sslContext;
     }
 
+    @SuppressWarnings("InfiniteRecursion")
     public KeyStore loadOrCreateKeyStore(String keyStoreType) {
+        keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
+        return loadOrCreateKeyStore(
+            keyStoreType,
+            keyAndCertificateFactory.privateKey(),
+            keyAndCertificateFactory.x509Certificate(),
+            keyAndCertificateFactory.certificateAuthorityX509Certificate(),
+            new X509Certificate[]{keyAndCertificateFactory.certificateAuthorityX509Certificate()}
+        );
+    }
+
+    public KeyStore loadOrCreateKeyStore(String keyStoreType, PrivateKey privateKey, X509Certificate x509Certificate, X509Certificate certificateAuthorityX509Certificate, X509Certificate[] trustX509CertificateChain) {
         KeyStore keystore = null;
         File keyStoreFile = new File(KEY_STORE_FILE_NAME);
         if (keyStoreFile.exists()) {
@@ -83,17 +112,16 @@ public class KeyStoreFactory {
         }
         System.setProperty("javax.net.ssl.trustStore", keyStoreFile.getAbsolutePath());
 
-        keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
         return savePrivateKeyAndX509InKeyStore(
             keystore,
             keyStoreType,
-            keyAndCertificateFactory.privateKey(),
+            privateKey,
             KEY_STORE_PASSWORD.toCharArray(),
             new X509Certificate[]{
-                keyAndCertificateFactory.x509Certificate(),
-                keyAndCertificateFactory.certificateAuthorityX509Certificate()
+                x509Certificate,
+                certificateAuthorityX509Certificate
             },
-            keyAndCertificateFactory.certificateAuthorityX509Certificate()
+            trustX509CertificateChain
         );
     }
 
@@ -118,7 +146,7 @@ public class KeyStoreFactory {
         }
     }
 
-    private KeyStore savePrivateKeyAndX509InKeyStore(KeyStore existingKeyStore, String keyStoreType, Key privateKey, char[] keyStorePassword, Certificate[] chain, X509Certificate caCert) {
+    private KeyStore savePrivateKeyAndX509InKeyStore(KeyStore existingKeyStore, String keyStoreType, Key privateKey, char[] keyStorePassword, Certificate[] chain, X509Certificate... caCerts) {
         try {
             KeyStore keyStore = existingKeyStore;
             if (keyStore == null) {
@@ -135,13 +163,15 @@ public class KeyStoreFactory {
             }
             keyStore.setKeyEntry(KeyStoreFactory.KEY_STORE_CERT_ALIAS, privateKey, keyStorePassword, chain);
 
-            // add CA certificate
-            try {
-                keyStore.deleteEntry(KEY_STORE_CA_ALIAS);
-            } catch (KeyStoreException kse) {
-                // ignore as may not exist in keystore yet
+            for (X509Certificate caCert : caCerts) {
+                // add CA certificate
+                try {
+                    keyStore.deleteEntry(KEY_STORE_CA_ALIAS);
+                } catch (KeyStoreException kse) {
+                    // ignore as may not exist in keystore yet
+                }
+                keyStore.setCertificateEntry(KEY_STORE_CA_ALIAS, caCert);
             }
-            keyStore.setCertificateEntry(KEY_STORE_CA_ALIAS, caCert);
 
             // save as JKS file
             String keyStoreFileAbsolutePath = new File(KeyStoreFactory.KEY_STORE_FILE_NAME).getAbsolutePath();

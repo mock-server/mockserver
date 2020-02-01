@@ -4,6 +4,7 @@ import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.jdk.JDKKeyAndCertificateFactory;
 import org.mockserver.socket.tls.jdk.X509Generator;
@@ -13,12 +14,14 @@ import javax.net.ssl.X509TrustManager;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.*;
 
 /**
@@ -36,7 +39,7 @@ public class NettySslContextFactory {
     }
 
     public synchronized SslContext createClientSslContext(boolean forwardProxyClient) {
-        if (clientSslContext == null || rebuildKeyStore()) {
+        if (clientSslContext == null || rebuildTLSContext()) {
             try {
                 // create x509 and private key if none exist yet
                 if (keyAndCertificateFactory.certificateNotYetCreated()) {
@@ -46,12 +49,11 @@ public class NettySslContextFactory {
                     SslContextBuilder
                         .forClient()
                         .keyManager(
-                            keyAndCertificateFactory.privateKey(),
-                            keyAndCertificateFactory.x509Certificate(),
-                            keyAndCertificateFactory.certificateAuthorityX509Certificate()
+                            forwardProxyPrivateKey(),
+                            forwardProxyCertificateChain()
                         );
                 if (forwardProxyClient) {
-                    switch (forwardProxyTLSX509CertificatesTrustManager()) {
+                    switch (forwardProxyTLSX509CertificatesTrustManagerType()) {
                         case ANY:
                             sslContextBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE);
                             break;
@@ -63,18 +65,34 @@ public class NettySslContextFactory {
                             break;
                     }
                 } else {
-                    sslContextBuilder.trustManager(Arrays.asList(
-                        keyAndCertificateFactory.x509Certificate(),
-                        keyAndCertificateFactory.certificateAuthorityX509Certificate()
-                    ));
+                    sslContextBuilder.trustManager(trustCertificateChain());
                 }
                 clientSslContext = sslContextBuilder.build();
-                rebuildKeyStore(false);
+                rebuildTLSContext(false);
             } catch (Throwable throwable) {
                 throw new RuntimeException("Exception creating SSL context for client", throwable);
             }
         }
         return clientSslContext;
+    }
+
+    private PrivateKey forwardProxyPrivateKey() {
+        if (isNotBlank(ConfigurationProperties.forwardProxyPrivateKey()) || isNotBlank(ConfigurationProperties.forwardProxyCertificateChain())) {
+            return X509Generator.privateKeyFromPEMFile(ConfigurationProperties.forwardProxyPrivateKey());
+        } else {
+            return keyAndCertificateFactory.privateKey();
+        }
+    }
+
+    private X509Certificate[] forwardProxyCertificateChain() {
+        if (isNotBlank(ConfigurationProperties.forwardProxyPrivateKey()) || isNotBlank(ConfigurationProperties.forwardProxyCertificateChain())) {
+            return X509Generator.x509ChainFromPEMFile(ConfigurationProperties.forwardProxyCertificateChain()).toArray(new X509Certificate[0]);
+        } else {
+            return new X509Certificate[]{
+                keyAndCertificateFactory.x509Certificate(),
+                keyAndCertificateFactory.certificateAuthorityX509Certificate()
+            };
+        }
     }
 
     private List<X509Certificate> jvmCAX509TrustCertificates() throws NoSuchAlgorithmException, KeyStoreException {
@@ -103,7 +121,7 @@ public class NettySslContextFactory {
             // create x509 and private key if none exist yet
             || keyAndCertificateFactory.certificateNotYetCreated()
             // re-create x509 and private key if SAN list has been updated and dynamic update has not been disabled
-            || rebuildServerKeyStore() && !preventCertificateDynamicUpdate()) {
+            || rebuildServerTLSContext() && !preventCertificateDynamicUpdate()) {
             try {
                 keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
                 serverSslContext = SslContextBuilder
@@ -112,18 +130,29 @@ public class NettySslContextFactory {
                         keyAndCertificateFactory.x509Certificate(),
                         keyAndCertificateFactory.certificateAuthorityX509Certificate()
                     )
-                    .trustManager(
-                        keyAndCertificateFactory.x509Certificate(),
-                        keyAndCertificateFactory.certificateAuthorityX509Certificate()
-                    )
+                    .trustManager(trustCertificateChain())
                     .clientAuth(tlsMutualAuthenticationRequired() ? ClientAuth.REQUIRE : ClientAuth.NONE)
                     .build();
-                rebuildServerKeyStore(false);
+                rebuildServerTLSContext(false);
             } catch (Exception e) {
                 throw new RuntimeException("Exception creating SSL context for server", e);
             }
         }
         return serverSslContext;
+    }
+
+    private List<X509Certificate> trustCertificateChain() {
+        if (isNotBlank(ConfigurationProperties.tlsMutualAuthenticationCertificateChain())) {
+            List<X509Certificate> x509Certificates = X509Generator.x509ChainFromPEMFile(tlsMutualAuthenticationCertificateChain());
+            x509Certificates.add(keyAndCertificateFactory.x509Certificate());
+            x509Certificates.add(keyAndCertificateFactory.certificateAuthorityX509Certificate());
+            return x509Certificates;
+        } else {
+            return Arrays.asList(
+                keyAndCertificateFactory.x509Certificate(),
+                keyAndCertificateFactory.certificateAuthorityX509Certificate()
+            );
+        }
     }
 
 }
