@@ -127,7 +127,7 @@ public class WebSocketServerHandler extends ChannelInboundHandlerAdapter {
             new LogEntry()
                 .setType(LogEntry.LogMessageType.EXCEPTION)
                 .setLogLevel(Level.ERROR)
-                .setMessageFormat("web socket server caught exception")
+                .setMessageFormat("echo server server caught exception")
                 .setThrowable(cause)
         );
         ctx.close();

@@ -63,8 +63,8 @@ public class NettyHttpProxySOCKSIntegrationTest {
 
     @BeforeClass
     public static void setupFixture() {
-        insecureEchoServer = new EchoServer(false, false);
-        secureEchoServer = new EchoServer(true, false);
+        insecureEchoServer = new EchoServer(false);
+        secureEchoServer = new EchoServer(true);
 
         mockServerPort = new MockServer().getLocalPort();
 

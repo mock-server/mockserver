@@ -1,0 +1,14 @@
+{
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "UK",
+      "L": "London",
+      "O": "MockServer",
+      "CN": "www.mockserver.com"
+    }
+  ]
+}

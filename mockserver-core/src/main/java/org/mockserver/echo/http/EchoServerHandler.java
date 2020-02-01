@@ -12,6 +12,7 @@ import org.mockserver.mappers.MockServerHttpResponseToFullHttpResponse;
 import org.mockserver.model.BodyWithContentType;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.slf4j.event.Level;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
@@ -93,8 +94,15 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         }
     }
 
+    @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        cause.printStackTrace();
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(LogEntry.LogMessageType.EXCEPTION)
+                .setLogLevel(Level.ERROR)
+                .setMessageFormat("echo server server caught exception")
+                .setThrowable(cause)
+        );
         ctx.close();
     }
 }

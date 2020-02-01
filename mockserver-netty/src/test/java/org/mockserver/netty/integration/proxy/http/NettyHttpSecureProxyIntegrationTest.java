@@ -5,6 +5,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.socket.tls.NettySslContextFactory;
 import org.mockserver.testing.integration.proxy.AbstractSecureProxyIntegrationTest;
 import org.mockserver.netty.MockServer;
 
@@ -27,7 +29,7 @@ public class NettyHttpSecureProxyIntegrationTest extends AbstractSecureProxyInte
         System.setProperty("http.proxyHost", "127.0.0.1");
         System.setProperty("http.proxyPort", String.valueOf(mockServerPort));
 
-        echoServer = new EchoServer(true, false);
+        echoServer = new EchoServer(true);
     }
 
     @AfterClass

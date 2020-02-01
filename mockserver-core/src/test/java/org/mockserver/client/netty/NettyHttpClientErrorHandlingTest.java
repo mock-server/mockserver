@@ -63,7 +63,7 @@ public class NettyHttpClientErrorHandlingTest {
     @Test
     public void shouldHandleConnectionClosure() throws Exception {
         // given
-        EchoServer echoServer = new EchoServer(true, false, EchoServer.Error.CLOSE_CONNECTION);
+        EchoServer echoServer = new EchoServer(true, EchoServer.Error.CLOSE_CONNECTION);
 
         try {
             // then
@@ -85,7 +85,7 @@ public class NettyHttpClientErrorHandlingTest {
     @Test
     public void shouldHandleSmallerContentLengthHeader() throws Exception {
         // given
-        EchoServer echoServer = new EchoServer(true, false, EchoServer.Error.SMALLER_CONTENT_LENGTH);
+        EchoServer echoServer = new EchoServer(true, EchoServer.Error.SMALLER_CONTENT_LENGTH);
 
         try {
             // when

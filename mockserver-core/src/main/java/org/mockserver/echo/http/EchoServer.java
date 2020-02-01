@@ -9,13 +9,13 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.ssl.SslContext;
 import io.netty.util.AttributeKey;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.socket.tls.NettySslContextFactory;
 import org.mockserver.stop.Stoppable;
 import org.slf4j.event.Level;
 
@@ -44,11 +44,19 @@ public class EchoServer implements Stoppable {
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
 
-    public EchoServer(final boolean secure, boolean trustNoneTLS) {
-        this(secure, trustNoneTLS, null);
+    public EchoServer(final boolean secure) {
+        this(secure, null, null);
     }
 
-    public EchoServer(final boolean secure, boolean trustNoneTLS, final Error error) {
+    public EchoServer(final SslContext sslContext) {
+        this(true, sslContext, null);
+    }
+
+    public EchoServer(final boolean secure, final Error error) {
+        this(secure, null, error);
+    }
+
+    public EchoServer(final boolean secure, final SslContext sslContext, final Error error) {
         registeredClients = new ArrayList<>();
         websocketChannels = new ArrayList<>();
         textWebSocketFrames = new ArrayList<>();
@@ -59,7 +67,7 @@ public class EchoServer implements Stoppable {
                 .channel(NioServerSocketChannel.class)
                 .option(ChannelOption.SO_BACKLOG, 100)
                 .handler(new LoggingHandler(EchoServer.class))
-                .childHandler(new EchoServerInitializer(mockServerLogger, secure, trustNoneTLS, error, registeredClients, websocketChannels, textWebSocketFrames))
+                .childHandler(new EchoServerInitializer(mockServerLogger, secure, sslContext, error, registeredClients, websocketChannels, textWebSocketFrames))
                 .childAttr(LOG_FILTER, mockServerEventLog)
                 .childAttr(NEXT_RESPONSE, nextResponse)
                 .bind(0)

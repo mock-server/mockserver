@@ -26,7 +26,7 @@ import java.util.function.Consumer;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.cors.CORSHeaders.isPreflightRequest;
@@ -196,7 +196,7 @@ public class ActionHandler {
                         .setMessageFormat("received \"x-forwarded-by\" header caused by exploratory HTTP proxy or proxy loop - falling back to no proxy:{}")
                         .setArguments(request)
                 );
-                returnNotFound(responseWriter, request);
+                returnNotFound(responseWriter, request, null);
 
             } else {
 
@@ -234,7 +234,7 @@ public class ActionHandler {
                         }
                         responseWriter.writeResponse(request, response, false);
                     } catch (SocketCommunicationException sce) {
-                        returnNotFound(responseWriter, request);
+                        returnNotFound(responseWriter, request, sce.getMessage());
                     } catch (Throwable throwable) {
                         if (potentiallyHttpProxy && connectionException(throwable)) {
                             mockServerLogger.logEvent(
@@ -243,7 +243,7 @@ public class ActionHandler {
                                     .setMessageFormat("failed to connect to proxied socket due to exploratory HTTP proxy for:{}due to:{}falling back to no proxy")
                                     .setArguments(request, throwable.getCause())
                             );
-                            returnNotFound(responseWriter, request);
+                            returnNotFound(responseWriter, request, null);
                         } else if (sslHandshakeException(throwable)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
@@ -254,7 +254,7 @@ public class ActionHandler {
                                     .setArguments(request, remoteAddress)
                                     .setThrowable(throwable)
                             );
-                            returnNotFound(responseWriter, request);
+                            returnNotFound(responseWriter, request, "TLS handshake exception while proxying request to remote address" + remoteAddress);
                         } else {
                             mockServerLogger.logEvent(
                                 new LogEntry()
@@ -264,6 +264,7 @@ public class ActionHandler {
                                     .setMessageFormat(throwable.getMessage())
                                     .setThrowable(throwable)
                             );
+                            returnNotFound(responseWriter, request, throwable.getMessage());
                         }
                     }
                 }, synchronous);
@@ -272,7 +273,7 @@ public class ActionHandler {
 
         } else {
 
-            returnNotFound(responseWriter, request);
+            returnNotFound(responseWriter, request, null);
 
         }
     }
@@ -332,11 +333,11 @@ public class ActionHandler {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(TRACE)
-                            .setMessageFormat("failed to connect to remote socket forwarding request{}for action{}")
+                            .setMessageFormat("failed to connect to remote socket while forwarding request{}for action{}")
                             .setArguments(request, action)
                             .setThrowable(throwable)
                     );
-                    returnNotFound(responseWriter, request);
+                    returnNotFound(responseWriter, request, "failed to connect to remote socket while forwarding request");
                 } else if (sslHandshakeException(throwable)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
@@ -347,7 +348,7 @@ public class ActionHandler {
                             .setArguments(request, action)
                             .setThrowable(throwable)
                     );
-                    returnNotFound(responseWriter, request);
+                    returnNotFound(responseWriter, request, "TLS handshake exception while forwarding request");
                 } else {
                     mockServerLogger.logEvent(
                         new LogEntry()
@@ -362,7 +363,7 @@ public class ActionHandler {
         }, synchronous);
     }
 
-    private void returnNotFound(ResponseWriter responseWriter, HttpRequest request) {
+    private void returnNotFound(ResponseWriter responseWriter, HttpRequest request, String error) {
         HttpResponse response = notFoundResponse();
         if (request.getHeaders().containsEntry(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue())) {
             response.withHeader(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue());
@@ -372,6 +373,16 @@ public class ActionHandler {
                     .setHttpRequest(request)
                     .setMessageFormat("no expectation for:{}returning response:{}")
                     .setArguments(request, notFoundResponse())
+            );
+        } else if (isNotBlank(error)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                    .setLogLevel(Level.INFO)
+                    .setHttpRequest(request)
+                    .setHttpResponse(notFoundResponse())
+                    .setMessageFormat("error:{}handling request:{}returning response:{}")
+                    .setArguments(error, request, notFoundResponse())
             );
         } else {
             mockServerLogger.logEvent(

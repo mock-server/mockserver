@@ -36,7 +36,7 @@ public class ServletProxyWithContextPathIntegrationTest extends AbstractProxyInt
         servletContext = "proxy";
 
         // start server
-        echoServer = new EchoServer(false, false);
+        echoServer = new EchoServer(false);
 
         // wait for server to start up
         TimeUnit.MILLISECONDS.sleep(500);

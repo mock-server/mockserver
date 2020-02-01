@@ -29,7 +29,7 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockserver.configuration.ConfigurationProperties.*;
-import static org.mockserver.echo.tls.NonMatchingX509KeyManager.invalidClientSSLContext;
+import static org.mockserver.echo.tls.UniqueCertificateChainSSLContextBuilder.uniqueCertificateChainSSLContext;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.OK_200;
@@ -165,7 +165,7 @@ public class ClientAuthenticationAdditionalCertificateChainMockingIntegrationTes
 
         // when
         try {
-            HttpClient httpClient = HttpClients.custom().setSSLContext(invalidClientSSLContext()).build();
+            HttpClient httpClient = HttpClients.custom().setSSLContext(uniqueCertificateChainSSLContext()).build();
             httpClient.execute(new HttpPost(new URIBuilder()
                 .setScheme("https")
                 .setHost("localhost")

@@ -1,6 +1,7 @@
 package org.mockserver.echo.http;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -8,15 +9,18 @@ import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import io.netty.handler.ssl.SslContext;
+import org.mockserver.codec.MockServerServerCodec;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.codec.MockServerServerCodec;
 import org.mockserver.socket.tls.NettySslContextFactory;
+import org.slf4j.event.Level;
 
 import java.util.List;
 
-import static org.mockserver.echo.http.EchoServer.*;
-import static org.mockserver.echo.tls.NonMatchingX509KeyManager.invalidServerSslContext;
+import static org.mockserver.echo.http.EchoServer.LOG_FILTER;
+import static org.mockserver.echo.http.EchoServer.NEXT_RESPONSE;
 import static org.slf4j.event.Level.TRACE;
 
 /**
@@ -30,15 +34,15 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
     private final List<TextWebSocketFrame> textWebSocketFrames;
     private final List<Channel> websocketChannels;
     private final List<String> registeredClients;
-    private final boolean trustNoneTLS;
+    private final SslContext sslContext;
 
-    EchoServerInitializer(MockServerLogger mockServerLogger, boolean secure, boolean trustNoneTLS, EchoServer.Error error, List<String> registeredClients, List<Channel> websocketChannels, List<TextWebSocketFrame> textWebSocketFrames) {
+    EchoServerInitializer(MockServerLogger mockServerLogger, boolean secure, SslContext sslContext, EchoServer.Error error, List<String> registeredClients, List<Channel> websocketChannels, List<TextWebSocketFrame> textWebSocketFrames) {
+        this.mockServerLogger = mockServerLogger;
+        this.secure = secure;
+        this.sslContext = sslContext;
         if (!secure && error == EchoServer.Error.CLOSE_CONNECTION) {
             throw new IllegalArgumentException("Error type CLOSE_CONNECTION is not supported in non-secure mode");
         }
-        this.mockServerLogger = mockServerLogger;
-        this.secure = secure;
-        this.trustNoneTLS = trustNoneTLS;
         this.error = error;
         this.registeredClients = registeredClients;
         this.websocketChannels = websocketChannels;
@@ -53,11 +57,7 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
         }
 
         if (secure) {
-            if (trustNoneTLS) {
-                pipeline.addLast(invalidServerSslContext().newHandler(channel.alloc()));
-            } else {
-                pipeline.addLast(new NettySslContextFactory(mockServerLogger).createServerSslContext().newHandler(channel.alloc()));
-            }
+            pipeline.addLast((sslContext != null ? sslContext : new NettySslContextFactory(mockServerLogger).createServerSslContext()).newHandler(channel.alloc()));
         }
 
         if (MockServerLogger.isEnabled(TRACE)) {
@@ -84,5 +84,17 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
             channel.attr(LOG_FILTER).get(),
             channel.attr(NEXT_RESPONSE).get()
         ));
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(LogEntry.LogMessageType.EXCEPTION)
+                .setLogLevel(Level.ERROR)
+                .setMessageFormat("echo server server caught exception")
+                .setThrowable(cause)
+        );
+        ctx.close();
     }
 }

@@ -69,10 +69,10 @@ public abstract class AbstractMockingIntegrationTestBase {
     @BeforeAll
     public static void startEchoServer() {
         if (insecureEchoServer == null) {
-            insecureEchoServer = new EchoServer(false, false);
+            insecureEchoServer = new EchoServer(false);
         }
         if (secureEchoServer == null) {
-            secureEchoServer = new EchoServer(true, false);
+            secureEchoServer = new EchoServer(true);
         }
     }
 

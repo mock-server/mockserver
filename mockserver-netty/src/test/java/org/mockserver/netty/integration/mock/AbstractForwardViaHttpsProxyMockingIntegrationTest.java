@@ -1,5 +1,7 @@
 package org.mockserver.netty.integration.mock;
 
+import io.netty.handler.ssl.ClientAuth;
+import io.netty.handler.ssl.SslContextBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -7,8 +9,11 @@ import org.mockserver.echo.http.EchoServer;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.HttpTemplate;
+import org.mockserver.socket.tls.jdk.X509Generator;
 import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequest;
 import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
+
+import javax.net.ssl.SSLException;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
@@ -32,9 +37,20 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
     protected static EchoServer trustNoneTLSEchoServer;
 
     @BeforeClass
-    public static void startTrustNoneTLSEchoServer() {
+    public static void startTrustNoneTLSEchoServer() throws SSLException {
         if (trustNoneTLSEchoServer == null) {
-            trustNoneTLSEchoServer = new EchoServer(true, true);
+            trustNoneTLSEchoServer = new EchoServer(SslContextBuilder
+                .forServer(
+                    X509Generator.privateKeyFromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/leaf-key-pkcs8.pem"),
+                    X509Generator.x509FromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/leaf-cert.pem"),
+                    X509Generator.x509FromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/ca.pem")
+                )
+                .trustManager(
+                    X509Generator.x509FromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/leaf-cert.pem"),
+                    X509Generator.x509FromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/ca.pem")
+                )
+                .clientAuth(ClientAuth.REQUIRE)
+                .build());
         }
     }
 

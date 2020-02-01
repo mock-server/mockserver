@@ -480,17 +480,18 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldSetAndReadCertificateAuthorityCertificate() {
+    public void shouldSetAndReadCertificateAuthorityCertificate() throws IOException {
         // given
         System.clearProperty("mockserver.certificateAuthorityCertificate");
 
         // when
         assertEquals("org/mockserver/socket/CertificateAuthorityCertificate.pem", certificateAuthorityCertificate());
-        certificateAuthorityCertificate("some/certificate.pem");
+        File tempFile = File.createTempFile("prefix", "suffix");
+        certificateAuthorityCertificate(tempFile.getAbsolutePath());
 
         // then
-        assertEquals("some/certificate.pem", certificateAuthorityCertificate());
-        assertEquals("some/certificate.pem", System.getProperty("mockserver.certificateAuthorityCertificate"));
+        assertEquals(tempFile.getAbsolutePath(), certificateAuthorityCertificate());
+        assertEquals(tempFile.getAbsolutePath(), System.getProperty("mockserver.certificateAuthorityCertificate"));
     }
 
     @Test

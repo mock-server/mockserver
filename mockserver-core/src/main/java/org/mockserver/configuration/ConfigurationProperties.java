@@ -594,17 +594,6 @@ public class ConfigurationProperties {
         forwardProxyTLSCustomTrustX509Certificates = readPropertyHierarchically(MOCKSERVER_FORWARD_PROXY_TLS_CUSTOM_TRUST_X509_CERTIFICATES, "MOCKSERVER_FORWARD_PROXY_TLS_CUSTOM_TRUST_X509_CERTIFICATES", DEFAULT_FORWARD_PROXY_TLS_CUSTOM_TRUST_X509_CERTIFICATES);
     }
 
-    @SuppressWarnings("ConstantConditions")
-    private static void fileExists(String file) {
-        try {
-            if (isNotBlank(file) && FileReader.openStreamToFileFromClassPathOrPath(file) == null) {
-                throw new RuntimeException(file + " does not exist or is not accessible");
-            }
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(file + " does not exist or is not accessible");
-        }
-    }
-
     public static String forwardProxyPrivateKey() {
         return forwardProxyPrivateKey;
     }
@@ -929,6 +918,20 @@ public class ConfigurationProperties {
         System.setProperty(MOCKSERVER_LIVENESS_HTTP_GET_PATH, livenessPath);
         livenessHttpGetPath = readPropertyHierarchically(MOCKSERVER_LIVENESS_HTTP_GET_PATH, "MOCKSERVER_LIVENESS_HTTP_GET_PATH", DEFAULT_LIVENESS_HTTP_GET_PATH);
     }
+
+    @SuppressWarnings("ConstantConditions")
+    private static void fileExists(String file) {
+        try {
+            if (isNotBlank(file) && FileReader.openStreamToFileFromClassPathOrPath(file) == null) {
+                throw new RuntimeException(file + " does not exist or is not accessible");
+            }
+        } catch (FileNotFoundException e) {
+            if (!new File(file).exists()) {
+                throw new RuntimeException(file + " does not exist or is not accessible");
+            }
+        }
+    }
+
 
     private static void validateHostAndPort(String hostAndPort, String propertyName, String mockserverSocksProxy) {
         String errorMessage = "Invalid " + propertyName + " property must include <host>:<port> for example \"127.0.0.1:1090\" or \"localhost:1090\"";

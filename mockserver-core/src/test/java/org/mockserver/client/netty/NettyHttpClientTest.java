@@ -42,7 +42,7 @@ public class NettyHttpClientTest {
 
     @BeforeClass
     public static void startEchoServer() {
-        echoServer = new EchoServer(false, false);
+        echoServer = new EchoServer(false);
     }
 
     @AfterClass

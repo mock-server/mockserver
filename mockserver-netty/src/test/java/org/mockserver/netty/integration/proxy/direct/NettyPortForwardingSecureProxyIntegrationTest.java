@@ -5,7 +5,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.netty.MockServer;
+import org.mockserver.socket.tls.NettySslContextFactory;
 import org.mockserver.streams.IOStreamUtils;
 
 import java.io.OutputStream;
@@ -29,7 +31,7 @@ public class NettyPortForwardingSecureProxyIntegrationTest {
 
     @BeforeClass
     public static void setupFixture() {
-        echoServer = new EchoServer(true, false);
+        echoServer = new EchoServer(true);
 
         mockServer = new MockServer(echoServer.getPort(), "127.0.0.1");
 

@@ -6,16 +6,11 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockserver.cli.Main;
-import org.mockserver.client.MockServerClient;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.KeyStoreFactory;
-import org.mockserver.socket.tls.jdk.JDKKeyAndCertificateFactory;
 import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -24,9 +19,8 @@ import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.configuration.ConfigurationProperties.tlsMutualAuthenticationRequired;
-import static org.mockserver.echo.tls.NonMatchingX509KeyManager.invalidClientSSLContext;
+import static org.mockserver.echo.tls.UniqueCertificateChainSSLContextBuilder.uniqueCertificateChainSSLContext;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.OK_200;
@@ -142,7 +136,7 @@ public abstract class AbstractClientAuthenticationMockingIntegrationTest extends
 
         // when
         try {
-            HttpClient httpClient = HttpClients.custom().setSSLContext(invalidClientSSLContext()).build();
+            HttpClient httpClient = HttpClients.custom().setSSLContext(uniqueCertificateChainSSLContext()).build();
             httpClient.execute(new HttpPost(new URIBuilder()
                 .setScheme("https")
                 .setHost("localhost")
