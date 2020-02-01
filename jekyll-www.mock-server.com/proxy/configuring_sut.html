@@ -106,7 +106,7 @@ sitemap:
 
 <h4>Java JDK HttpURLConnection (HTTP)</h4>
 
-<p>Configure the Web or Secure Web Proxy with an <a href="http://docs.oracle.com/javase/8/docs/api/java/net/HttpURLConnection.html">HttpURLConnection</a> from the Java JDK, as follows:</p>
+<p>Configure the Web or Secure Web Proxy with an <a href="https://docs.oracle.com/javase/8/docs/api/java/net/HttpURLConnection.html">HttpURLConnection</a> from the Java JDK, as follows:</p>
 
 <pre><code class="code"><span class="keyword">private</span> HttpURLConnection sendRequestViaProxy(URL url) throws IOException {
     Proxy proxy = <span class="keyword">new</span> Proxy(Proxy.Type.<span class="constant">HTTP</span>, <span class="keyword">new</span> InetSocketAddress(System.getProperty(<span class="string_literal">"http.proxyHost"</span>), Integer.parseInt(System.getProperty(<span class="string_literal">"http.proxyPort"</span>))));
@@ -117,7 +117,7 @@ sitemap:
 
 <h4>Apache HttpClient (HTTP)</h4>
 
-<p>Configure the Web or Secure Web Proxy with an <a href="http://hc.apache.org/httpcomponents-client-ga/">Apache HttpClient</a>, as follows:</p>
+<p>Configure the Web or Secure Web Proxy with an <a href="https://hc.apache.org/httpcomponents-client-ga/">Apache HttpClient</a>, as follows:</p>
 
 <pre><code class="code">HttpHost httpHost = <span class="keyword">new</span> HttpHost(System.getProperty(<span class="string_literal">"http.proxyHost"</span>), Integer.parseInt(System.getProperty(<span class="string_literal">"http.proxyPort"</span>)));
 DefaultProxyRoutePlanner defaultProxyRoutePlanner = <span class="keyword">new</span> DefaultProxyRoutePlanner(httpHost);
@@ -130,7 +130,7 @@ HttpClient httpClient = HttpClients.custom().setRoutePlanner(defaultProxyRoutePl
 
 <h4>Spring RestTemplate</h4>
 
-<p>Configure the Web or Secure Web Proxy with a <a href="http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/client/RestTemplate.html">Spring RestTemplate</a>, as follows:</p>
+<p>Configure the Web or Secure Web Proxy with a <a href="https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/client/RestTemplate.html">Spring RestTemplate</a>, as follows:</p>
 
 <pre><code class="code">RestTemplate restTemplate = <span class="keyword">new</span> RestTemplate();
 HttpHost httpHost = <span class="keyword">new</span> HttpHost(
@@ -176,7 +176,7 @@ restTemplate.setRequestFactory(<span class="keyword">new</span> HttpComponentsCl
 
 <h4>Jetty HttpClient</h4>
 
-<p>Configure the Web or Secure Web Proxy with a <a href="http://www.eclipse.org/jetty/documentation/current/http-client.html">Jetty HttpClient</a>, as follows:</p>
+<p>Configure the Web or Secure Web Proxy with a <a href="https://www.eclipse.org/jetty/documentation/current/http-client.html">Jetty HttpClient</a>, as follows:</p>
 
 <p><strong>Jetty HttpClient 9.x</strong></p>
 
@@ -284,7 +284,7 @@ AsyncHttpClient asyncHttpClient = <span class="keyword">new</span> AsyncHttpClie
 
 <h4>Apache HttpClient (SOCKS)</h4>
 
-<p>Configure the SOCKS Proxy with an <a href="http://hc.apache.org/httpcomponents-client-ga/">Apache HttpClient</a>, as follows:</p>
+<p>Configure the SOCKS Proxy with an <a href="https://hc.apache.org/httpcomponents-client-ga/">Apache HttpClient</a>, as follows:</p>
 
 <pre><code class="code">Registry&lt;ConnectionSocketFactory&gt; socketFactoryRegistry = RegistryBuilder.&lt;ConnectionSocketFactory&gt;create()
         .register(<span class="string_literal">"http"</span>, <span class="keyword">new</span> ConnectionSocketFactory() {
@@ -334,7 +334,7 @@ HttpClient httpClient = HttpClients.custom()
 
 <h4>Java JDK HttpURLConnection (SOCKS)</h4>
 
-<p>Configure the SOCKS Proxy with an <a href="http://docs.oracle.com/javase/8/docs/api/java/net/HttpURLConnection.html">HttpURLConnection</a> from the Java JDK, as follows:</p>
+<p>Configure the SOCKS Proxy with an <a href="https://docs.oracle.com/javase/8/docs/api/java/net/HttpURLConnection.html">HttpURLConnection</a> from the Java JDK, as follows:</p>
 
 <pre><code class="code"><span class="keyword">private</span> HttpURLConnection sendRequestViaProxy(URL url) throws IOException {
     Proxy proxy = <span class="keyword">new</span> Proxy(Proxy.Type.<span class="constant">SOCKS</span>, <span class="keyword">new</span> InetSocketAddress(System.getProperty(<span class="string_literal">"http.proxyHost"</span>), Integer.parseInt(System.getProperty(<span class="string_literal">"http.proxyPort"</span>))));

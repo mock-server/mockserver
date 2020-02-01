@@ -1697,7 +1697,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 </div>
 <button id="button_match_request_by_body_with_json_schema" class="accordion">match request by body with json schema</button>
 <div class="panel">
-    <p>For details of the full json schema supported please see <a href="http://json-schema.org/">json-schema.org</a>.</p>
+    <p>For details of the full json schema supported please see <a href="https://json-schema.org/">json-schema.org</a>.</p>
     <button class="accordion inner">Java</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
@@ -1705,7 +1705,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         request()
             .withBody(
                 jsonSchema("{" + System.lineSeparator() +
-                    "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.lineSeparator() +
+                    "    \"$schema\": \"https://json-schema.org/draft-04/schema#\"," + System.lineSeparator() +
                     "    \"title\": \"Product\"," + System.lineSeparator() +
                     "    \"description\": \"A product from Acme catalog\"," + System.lineSeparator() +
                     "    \"type\": \"object\"," + System.lineSeparator() +
@@ -1748,7 +1748,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "body": {
             "type": "JSON_SCHEMA",
             "jsonSchema": {
-                "$schema": "http://json-schema.org/draft-04/schema#",
+                "$schema": "https://json-schema.org/draft-04/schema#",
                 "title": "Product",
                 "description": "A product from Acme catalog",
                 "type": "object",
@@ -1803,7 +1803,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "body": {
             "type": "JSON_SCHEMA",
             "jsonSchema": {
-                "$schema": "http://json-schema.org/draft-04/schema#",
+                "$schema": "https://json-schema.org/draft-04/schema#",
                 "title": "Product",
                 "description": "A product from Acme catalog",
                 "type": "object",

@@ -322,7 +322,7 @@ mockServerClient("localhost", 1080)
 
 <h3>Configuring logging for JUnit 4 @Rule, JUnit 5 Test Extension or Java API (i.e. maven or gradle project)</h3>
 
-<p>MockServer uses SL4J for logging so if MockSever is being launched using the <a href="/mock_server/running_mock_server.html#junit_rule">JUnit 4 @Rule</a>, the <a href="/mock_server/running_mock_server.html#junit_test_extension">JUnit 5 Test Extension</a>, <a href="/mock_server/running_mock_server.html#client_api">ClientAndServer</a> or directly using the <strong>org.mockserver.netty.MockServer</strong> the project launching MockServer needs to configure the logging output by configuring <a href="http://www.slf4j.org/faq.html">SLF4J</a>.  MockServer relies on a SLF4J binding being on the classpath for logs to be output. The simplest approach is to use the Java Logger SLF4J binding.</p>
+<p>MockServer uses SL4J for logging so if MockSever is being launched using the <a href="/mock_server/running_mock_server.html#junit_rule">JUnit 4 @Rule</a>, the <a href="/mock_server/running_mock_server.html#junit_test_extension">JUnit 5 Test Extension</a>, <a href="/mock_server/running_mock_server.html#client_api">ClientAndServer</a> or directly using the <strong>org.mockserver.netty.MockServer</strong> the project launching MockServer needs to configure the logging output by configuring <a href="https://www.slf4j.org/faq.html">SLF4J</a>.  MockServer relies on a SLF4J binding being on the classpath for logs to be output. The simplest approach is to use the Java Logger SLF4J binding.</p>
 
 <p>In MockServer the Java Logger SLF4J binding is only an optional dependency.  Therefore, when MockServer is added as a dependency to a Maven or Gradle project it does not pull in the Java Logger binding transitively.</p>
 
