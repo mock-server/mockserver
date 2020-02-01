@@ -35,6 +35,7 @@ Release Steps
    1. update parent pom RELEASE version to new SNAPSHOT version
    1. update jar-with-dependencies RELEASE version to new SNAPSHOT version
    1. ./scripts/local_deploy_snapshot.sh
+   1. release on Maven https://oss.sonatype.org/index.html#stagingRepositories
 1. update docker image
    1. update Dockerfile
    1. docker build -t mockserver/mockserver:mockserver-x.x.x ./docker
@@ -96,5 +97,5 @@ Release Steps
    1. git -C "$(brew --repo homebrew/core)" branch -D mockserver-5.9.0
    1. git -C "$(brew --repo homebrew/core)" reset --hard HEAD
    1. brew update
-   1. brew bump-formula-pr --strict mockserver --url=https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/x.x.x/mockserver-netty-x.x.x-brew-tar.tar --sha256=...
+   1. brew bump-formula-pr --strict mockserver --url=https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/x.x.x/mockserver-netty-x.x.x-brew-tar.tar
    1. **Note:** use personal access token as password (due to lack of 2FA)
