@@ -58,7 +58,8 @@ public class UniqueCertificateChainSSLContextBuilder {
                         .addSubjectAlternativeNames(sslSubjectAlternativeNameIps())
                         .setKeyPairSize(MOCK_KEY_SIZE),
                     buildDistinguishedName(ROOT_COMMON_NAME),
-                    certificateAuthorityX509AndPrivateKey.getPrivateKey()
+                    certificateAuthorityX509AndPrivateKey.getPrivateKey(),
+                    X509Generator.x509FromPEM(certificateAuthorityX509AndPrivateKey.getCert())
                 );
             } catch (Throwable throwable) {
                 mockServerLogger.logEvent(

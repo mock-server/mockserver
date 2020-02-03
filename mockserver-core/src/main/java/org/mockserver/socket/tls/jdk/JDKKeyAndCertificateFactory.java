@@ -194,7 +194,8 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
                     .addSubjectAlternativeNames(ConfigurationProperties.sslSubjectAlternativeNameIps())
                     .setKeyPairSize(MOCK_KEY_SIZE),
                 certificateAuthorityX509Certificate.getIssuerDN().getName(),
-                caPrivateKey
+                caPrivateKey,
+                certificateAuthorityX509Certificate
             );
             if (MockServerLogger.isEnabled(DEBUG)) {
                 mockServerLogger.logEvent(

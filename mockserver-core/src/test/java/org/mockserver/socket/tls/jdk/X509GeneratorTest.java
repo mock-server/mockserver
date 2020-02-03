@@ -136,7 +136,7 @@ public class X509GeneratorTest {
         X509AndPrivateKey pemRootKeyPair = x509Generator.generateRootX509AndPrivateKey(csr);
 
         // when - a certificate has been successfully generated
-        X509AndPrivateKey keyPair = x509Generator.generateLeafX509AndPrivateKey(csr, buildDistinguishedName(ROOT_COMMON_NAME), pemRootKeyPair.getPrivateKey());
+        X509AndPrivateKey keyPair = x509Generator.generateLeafX509AndPrivateKey(csr, buildDistinguishedName(ROOT_COMMON_NAME), pemRootKeyPair.getPrivateKey(), X509Generator.x509FromPEM(pemRootKeyPair.getCert()));
         X509Certificate x509Certificate = x509FromPEM(keyPair.getCert());
 
         // then - the correct number of SANs should be present
@@ -166,7 +166,7 @@ public class X509GeneratorTest {
         X509AndPrivateKey pemRootKeyPair = x509Generator.generateRootX509AndPrivateKey(csr);
 
         // when - a certificate has been successfully generated
-        X509AndPrivateKey keyPair = x509Generator.generateLeafX509AndPrivateKey(csr, buildDistinguishedName(ROOT_COMMON_NAME), pemRootKeyPair.getPrivateKey());
+        X509AndPrivateKey keyPair = x509Generator.generateLeafX509AndPrivateKey(csr, buildDistinguishedName(ROOT_COMMON_NAME), pemRootKeyPair.getPrivateKey(), X509Generator.x509FromPEM(pemRootKeyPair.getCert()));
         X509Certificate x509Certificate = x509FromPEM(keyPair.getCert());
 
         // then - the no SANs should be present
@@ -190,7 +190,7 @@ public class X509GeneratorTest {
         X509AndPrivateKey pemRootKeyPair = x509Generator.generateRootX509AndPrivateKey(csr);
 
         // when - a certificate has been successfully generated
-        X509AndPrivateKey keyPair = x509Generator.generateLeafX509AndPrivateKey(csr, buildDistinguishedName(ROOT_COMMON_NAME), pemRootKeyPair.getPrivateKey());
+        X509AndPrivateKey keyPair = x509Generator.generateLeafX509AndPrivateKey(csr, buildDistinguishedName(ROOT_COMMON_NAME), pemRootKeyPair.getPrivateKey(), X509Generator.x509FromPEM(pemRootKeyPair.getCert()));
         X509Certificate x509Certificate = x509FromPEM(keyPair.getCert());
 
         // then - the correct number of SANs should be present
@@ -257,7 +257,7 @@ public class X509GeneratorTest {
         X509AndPrivateKey pemRootKeyPair = x509Generator.generateRootX509AndPrivateKey(csr);
 
         // when - a certificate has been successfully generated
-        X509AndPrivateKey keyPair = x509Generator.generateLeafX509AndPrivateKey(csr, buildDistinguishedName(ROOT_COMMON_NAME), pemRootKeyPair.getPrivateKey());
+        X509AndPrivateKey keyPair = x509Generator.generateLeafX509AndPrivateKey(csr, buildDistinguishedName(ROOT_COMMON_NAME), pemRootKeyPair.getPrivateKey(), X509Generator.x509FromPEM(pemRootKeyPair.getCert()));
         X509Certificate x509Certificate = x509FromPEM(keyPair.getCert());
 
         assertTrue("The client cert serial number is non-negative", x509Certificate.getSerialNumber().compareTo(BigInteger.ZERO) > 0);

@@ -57,11 +57,11 @@ public class X509Generator {
         final KeyPair keyPair = generateKeyPair(csr.getKeyPairAlgorithm(), csr.getKeyPairSize());
         final X500Name subjectAndIssuer = new X500Name(buildDistinguishedName(csr.getCommonName()));
         X509CertInfo x509CertInfo = buildX509CertInfo(subjectAndIssuer, subjectAndIssuer, keyPair.getPublic(), csr);
-        updateWithRootCertificateExtensions(x509CertInfo);
+        updateWithRootCertificateExtensions(x509CertInfo, keyPair.getPublic());
         return signX509KeyPair(keyPair.getPrivate(), keyPair, x509CertInfo, csr.getSigningAlgorithm());
     }
 
-    public X509AndPrivateKey generateLeafX509AndPrivateKey(final CertificateSigningRequest csr, String issuerDistinguishingName, final String caPrivateKey) throws IOException, NoSuchAlgorithmException, CertificateException, InvalidKeyException, NoSuchProviderException, SignatureException, InvalidKeySpecException {
+    public X509AndPrivateKey generateLeafX509AndPrivateKey(final CertificateSigningRequest csr, String issuerDistinguishingName, final String caPrivateKey, final X509Certificate caCertificate) throws IOException, NoSuchAlgorithmException, CertificateException, InvalidKeyException, NoSuchProviderException, SignatureException, InvalidKeySpecException {
         final PrivateKey privateKey = KeyFactory
             .getInstance(csr.getKeyPairAlgorithm())
             .generatePrivate(keySpecFromPEM(caPrivateKey));
@@ -69,7 +69,7 @@ public class X509Generator {
         final X500Name subject = new X500Name(buildDistinguishedName(csr.getCommonName()));
         final X500Name issuer = new X500Name(issuerDistinguishingName);
         X509CertInfo x509CertInfo = buildX509CertInfo(subject, issuer, keyPair.getPublic(), csr);
-        updateWithCertificateExtensions(x509CertInfo, csr.getSubjectAlternativeNames());
+        updateWithCertificateExtensions(x509CertInfo, keyPair.getPublic(), caCertificate.getPublicKey(), csr.getSubjectAlternativeNames());
         return signX509KeyPair(privateKey, keyPair, x509CertInfo, csr.getSigningAlgorithm());
     }
 
@@ -103,7 +103,7 @@ public class X509Generator {
         return x509CertInfo;
     }
 
-    private void updateWithCertificateExtensions(final X509CertInfo x509CertInfo, final List<String> subjectAlternativeNames) throws IOException, CertificateException {
+    private void updateWithCertificateExtensions(final X509CertInfo x509CertInfo, final PublicKey publicKey, final PublicKey caPublicKey, final List<String> subjectAlternativeNames) throws IOException, CertificateException {
         CertificateExtensions certificateExtensions = new CertificateExtensions();
 
         GeneralNames generalNames = subjectAlternativeNames
@@ -123,10 +123,17 @@ public class X509Generator {
             certificateExtensions.set(SubjectAlternativeNameExtension.NAME, new SubjectAlternativeNameExtension(Boolean.FALSE, generalNames));
         }
 
+        // See: https://tools.ietf.org/html/rfc5280#section-4.2.1.2
+        certificateExtensions.set(SubjectKeyIdentifierExtension.NAME, new SubjectKeyIdentifierExtension(new KeyIdentifier(publicKey).getIdentifier()));
+
+        // See: https://tools.ietf.org/html/rfc5280#section-4.2.1.2
+        certificateExtensions.set(AuthorityKeyIdentifierExtension.NAME, new AuthorityKeyIdentifierExtension(new KeyIdentifier(caPublicKey), null, null));
+
+        // See: https://tools.ietf.org/html/rfc5280#section-4.2.1.1
         x509CertInfo.set(X509CertInfo.EXTENSIONS, certificateExtensions);
     }
 
-    private void updateWithRootCertificateExtensions(final X509CertInfo x509CertInfo) throws IOException, CertificateException {
+    private void updateWithRootCertificateExtensions(final X509CertInfo x509CertInfo, final PublicKey publicKey) throws IOException, CertificateException {
         CertificateExtensions certificateExtensions = new CertificateExtensions();
 
         // See: https://tools.ietf.org/html/rfc5280#section-4.2.1.9
@@ -144,6 +151,9 @@ public class X509Generator {
         keyUsage[5] = true; // keyCertSign
 
         certificateExtensions.set(KeyUsageExtension.NAME, new KeyUsageExtension(keyUsage));
+
+        // See: https://tools.ietf.org/html/rfc5280#section-4.2.1.2
+        certificateExtensions.set(SubjectKeyIdentifierExtension.NAME, new SubjectKeyIdentifierExtension(new KeyIdentifier(publicKey).getIdentifier()));
 
         x509CertInfo.set(X509CertInfo.EXTENSIONS, certificateExtensions);
     }
