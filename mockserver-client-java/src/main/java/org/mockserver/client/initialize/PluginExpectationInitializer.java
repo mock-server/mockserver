@@ -13,7 +13,7 @@ import org.mockserver.client.MockServerClient;
  *
  * @author jamesdbloom
  */
-public interface PluginExpectationInitializer {
+public interface PluginExpectationInitializer extends ExpectationInitializer {
 
     void initializeExpectations(MockServerClient mockServerClient);
 
