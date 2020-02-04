@@ -1,13 +1,7 @@
 package org.mockserver.socket.tls;
 
-import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.logging.MockServerLogger;
-import org.mockserver.socket.tls.jdk.JDKKeyAndCertificateFactory;
-
-import java.io.File;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
-import java.util.Date;
 
 /**
  * @author jamesdbloom

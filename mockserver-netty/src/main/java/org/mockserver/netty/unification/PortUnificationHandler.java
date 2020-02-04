@@ -12,7 +12,7 @@ import io.netty.handler.codec.socksx.v5.Socks5InitialRequestDecoder;
 import io.netty.handler.codec.socksx.v5.Socks5ServerEncoder;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
-import org.mockserver.callback.CallbackWebSocketServerHandler;
+import org.mockserver.closurecallback.websocketregistry.CallbackWebSocketServerHandler;
 import org.mockserver.codec.MockServerServerCodec;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.dashboard.DashboardWebSocketServerHandler;

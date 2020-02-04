@@ -1,4 +1,4 @@
-package org.mockserver.websocket;
+package org.mockserver.closurecallback.websocketclient;
 
 import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
@@ -19,10 +19,9 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.UPGRADE;
 import static io.netty.handler.codec.http.HttpHeaderValues.WEBSOCKET;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.websocket.WebSocketClient.CLIENT_REGISTRATION_ID_HEADER;
-import static org.mockserver.websocket.WebSocketClient.REGISTRATION_FUTURE;
-import static org.slf4j.event.Level.TRACE;
-import static org.slf4j.event.Level.WARN;
+import static org.mockserver.closurecallback.websocketclient.WebSocketClient.CLIENT_REGISTRATION_ID_HEADER;
+import static org.mockserver.closurecallback.websocketclient.WebSocketClient.REGISTRATION_FUTURE;
+import static org.slf4j.event.Level.*;
 
 @SuppressWarnings("rawtypes")
 public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> {
@@ -100,6 +99,13 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
                         .setLogLevel(WARN)
                         .setMessageFormat(message)
                 );
+            } else if (httpResponse.status().equals(HttpResponseStatus.RESET_CONTENT)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(TRACE)
+                        .setMessageFormat("web socket client not required MockServer in same JVM as client")
+                );
+                registrationFuture.complete(clientId);
             } else {
                 registrationFuture.completeExceptionally(new WebSocketException("handshake failure unsupported message received " + new FullHttpResponseToMockServerResponse(mockServerLogger).mapFullHttpResponseToMockServerResponse(httpResponse)));
                 mockServerLogger.logEvent(

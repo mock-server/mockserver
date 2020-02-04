@@ -1,4 +1,4 @@
-package org.mockserver.callback;
+package org.mockserver.closurecallback.websocketregistry;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -13,7 +13,7 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.serialization.WebSocketMessageSerializer;
 import org.mockserver.serialization.model.WebSocketClientIdDTO;
 import org.mockserver.serialization.model.WebSocketErrorDTO;
-import org.mockserver.websocket.WebSocketException;
+import org.mockserver.closurecallback.websocketclient.WebSocketException;
 
 import java.util.Collections;
 import java.util.Map;
@@ -112,6 +112,7 @@ public class WebSocketClientRegistry {
     }
 
     public void unregisterClient(String clientId) {
+        LocalCallbackRegistry.unregisterCallback(clientId);
         Channel removeChannel = clientRegistry.remove(clientId);
         if (removeChannel != null && removeChannel.isOpen()) {
             removeChannel.close();
@@ -222,7 +223,10 @@ public class WebSocketClientRegistry {
     public synchronized void reset() {
         forwardCallbackRegistry.clear();
         responseCallbackRegistry.clear();
-        clientRegistry.forEach((key, value) -> value.close());
+        clientRegistry.forEach((clientId, channel) -> {
+            LocalCallbackRegistry.unregisterCallback(clientId);
+            channel.close();
+        });
         clientRegistry.clear();
         clearWebSocketMetrics();
     }

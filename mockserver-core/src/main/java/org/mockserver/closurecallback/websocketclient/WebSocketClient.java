@@ -1,4 +1,4 @@
-package org.mockserver.websocket;
+package org.mockserver.closurecallback.websocketclient;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -35,7 +35,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
-import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
+import static org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
 import static org.slf4j.event.Level.TRACE;
 import static org.slf4j.event.Level.WARN;
 
@@ -53,11 +53,12 @@ public class WebSocketClient<T extends HttpObject> {
     private ExpectationForwardAndResponseCallback expectationForwardResponseCallback;
     private boolean isStopped = false;
     private EventLoopGroup eventLoopGroup;
-    private final String clientId = UUID.randomUUID().toString();
+    private final String clientId;
     public static final String CLIENT_REGISTRATION_ID_HEADER = "X-CLIENT-REGISTRATION-ID";
 
-    public WebSocketClient(final EventLoopGroup eventLoopGroup, final MockServerLogger mockServerLogger) {
+    public WebSocketClient(final EventLoopGroup eventLoopGroup, final String clientId, final MockServerLogger mockServerLogger) {
         this.eventLoopGroup = eventLoopGroup;
+        this.clientId = clientId;
         this.mockServerLogger = mockServerLogger;
         this.webSocketMessageSerializer = new WebSocketMessageSerializer(mockServerLogger);
     }
@@ -106,6 +107,9 @@ public class WebSocketClient<T extends HttpObject> {
                         }
                     });
                 });
+
+            // handle HttpResponseStatus.RESET_CONTENT
+
         } catch (Exception e) {
             registrationFuture.completeExceptionally(new WebSocketException("Exception while starting web socket client", e));
         }

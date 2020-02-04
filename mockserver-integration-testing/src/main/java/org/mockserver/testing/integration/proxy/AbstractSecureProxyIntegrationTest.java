@@ -41,7 +41,7 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.proxyconfiguration.ProxyConfiguration.proxyConfiguration;
-import static org.mockserver.socket.tls.SSLSocketFactory.sslSocketFactory;
+import static org.mockserver.testing.tls.SSLSocketFactory.sslSocketFactory;
 import static org.mockserver.test.Assert.assertContains;
 import static org.mockserver.verify.VerificationTimes.exactly;
 import static org.slf4j.event.Level.ERROR;

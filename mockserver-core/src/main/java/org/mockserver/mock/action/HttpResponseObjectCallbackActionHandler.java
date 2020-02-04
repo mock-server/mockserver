@@ -1,16 +1,18 @@
 package org.mockserver.mock.action;
 
-import org.mockserver.callback.WebSocketClientRegistry;
+import org.mockserver.closurecallback.websocketregistry.LocalCallbackRegistry;
+import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.HttpObjectCallback;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
 
 import java.util.UUID;
 
-import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
+import static org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.slf4j.event.Level.TRACE;
 import static org.slf4j.event.Level.WARN;
@@ -29,6 +31,38 @@ public class HttpResponseObjectCallbackActionHandler {
 
     public void handle(final ActionHandler actionHandler, final HttpObjectCallback httpObjectCallback, final HttpRequest request, final ResponseWriter responseWriter, final boolean synchronous, Runnable expectationPostProcessor) {
         final String clientId = httpObjectCallback.getClientId();
+        if (LocalCallbackRegistry.responseClientExists(clientId)) {
+            handleLocally(actionHandler, httpObjectCallback, request, responseWriter, synchronous, clientId);
+        } else {
+            handleViaWebSocket(actionHandler, httpObjectCallback, request, responseWriter, synchronous, expectationPostProcessor, clientId);
+        }
+    }
+
+    private void handleLocally(ActionHandler actionHandler, HttpObjectCallback httpObjectCallback, HttpRequest request, ResponseWriter responseWriter, boolean synchronous, String clientId) {
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setLogLevel(TRACE)
+                .setHttpRequest(request)
+                .setMessageFormat("locally sending request{}to client " + clientId)
+                .setArguments(request)
+        );
+        try {
+            HttpResponse callbackResponse = LocalCallbackRegistry.retrieveResponseCallback(clientId).handle(request);
+            actionHandler.writeResponseActionResponse(callbackResponse, responseWriter, request, httpObjectCallback, synchronous);
+        } catch (Throwable throwable) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(WARN)
+                    .setHttpRequest(request)
+                    .setMessageFormat("returning{}because client " + clientId + " response callback throw an exception")
+                    .setArguments(notFoundResponse())
+                    .setThrowable(throwable)
+            );
+            actionHandler.writeResponseActionResponse(notFoundResponse(), responseWriter, request, httpObjectCallback, synchronous);
+        }
+    }
+
+    private void handleViaWebSocket(ActionHandler actionHandler, HttpObjectCallback httpObjectCallback, HttpRequest request, ResponseWriter responseWriter, boolean synchronous, Runnable expectationPostProcessor, String clientId) {
         final String webSocketCorrelationId = UUID.randomUUID().toString();
         webSocketClientRegistry.registerResponseCallbackHandler(webSocketCorrelationId, response -> {
             if (MockServerLogger.isEnabled(TRACE)) {

@@ -1,6 +1,6 @@
 package org.mockserver.mock;
 
-import org.mockserver.callback.WebSocketClientRegistry;
+import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.collections.CircularLinkedList;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;

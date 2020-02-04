@@ -14,7 +14,6 @@ import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.tls.KeyStoreFactory;
 
 import java.io.File;
-import java.security.KeyStore;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.stop.Stop.stopQuietly;

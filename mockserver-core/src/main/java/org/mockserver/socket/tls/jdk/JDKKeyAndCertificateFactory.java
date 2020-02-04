@@ -12,9 +12,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
 import java.util.Arrays;
-import java.util.UUID;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.*;

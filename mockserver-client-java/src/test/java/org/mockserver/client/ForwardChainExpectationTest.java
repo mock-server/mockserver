@@ -7,7 +7,7 @@ import org.mockito.Mock;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
-import org.mockserver.websocket.WebSocketClient;
+import org.mockserver.closurecallback.websocketclient.WebSocketClient;
 
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;

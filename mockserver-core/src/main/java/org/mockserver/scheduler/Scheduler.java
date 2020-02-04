@@ -10,10 +10,13 @@ import org.mockserver.model.HttpResponse;
 import org.slf4j.event.Level;
 
 import java.util.concurrent.*;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.log.model.LogEntry.LogMessageType.WARN;
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.notFoundResponse;
 
 /**
  * @author jamesdbloom
@@ -152,18 +155,31 @@ public class Scheduler {
         }
     }
 
-    public void submit(HttpForwardActionResult future, Consumer<HttpResponse> consumer, boolean synchronous) {
+    public void submit(HttpForwardActionResult future, BiConsumer<HttpResponse, Throwable> consumer, boolean synchronous) {
         if (future != null) {
             if (synchronous) {
+                HttpResponse httpResponse = null;
+                Throwable exception = null;
                 try {
-                    run(future.getHttpResponse().get(ConfigurationProperties.maxSocketTimeout(), MILLISECONDS), consumer);
+                    httpResponse = future.getHttpResponse().get(ConfigurationProperties.maxSocketTimeout(), MILLISECONDS);
                 } catch (TimeoutException e) {
-                    future.getHttpResponse().completeExceptionally(new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause()));
+                    exception = new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause());
                 } catch (InterruptedException | ExecutionException ex) {
-                    future.getHttpResponse().completeExceptionally(ex);
+                    exception = ex;
+                }
+                try {
+                    consumer.accept(httpResponse, exception);
+                } catch (Throwable throwable) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(WARN)
+                            .setLogLevel(Level.INFO)
+                            .setMessageFormat(throwable.getMessage())
+                            .setThrowable(throwable)
+                    );
                 }
             } else {
-                future.getHttpResponse().whenCompleteAsync((httpResponse, throwable) -> consumer.accept(httpResponse), scheduler);
+                future.getHttpResponse().whenCompleteAsync(consumer, scheduler);
             }
         }
     }

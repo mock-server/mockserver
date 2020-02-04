@@ -2,7 +2,7 @@ package org.mockserver.mock;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.callback.WebSocketClientRegistry;
+import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
@@ -12,7 +12,6 @@ import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.Parameter;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.ui.MockServerMatcherNotifier;
 
 import java.util.ArrayList;
 import java.util.List;

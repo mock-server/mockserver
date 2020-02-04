@@ -14,10 +14,9 @@ import org.mockserver.uuid.UUIDService;
 import org.slf4j.event.Level;
 
 import java.util.List;
-import java.util.UUID;
 
 import static com.google.common.net.HttpHeaders.HOST;
-import static org.mockserver.websocket.WebSocketClient.CLIENT_REGISTRATION_ID_HEADER;
+import static org.mockserver.closurecallback.websocketclient.WebSocketClient.CLIENT_REGISTRATION_ID_HEADER;
 
 /**
  * @author jamesdbloom

@@ -3,6 +3,7 @@ package org.mockserver.client;
 import com.google.common.annotations.VisibleForTesting;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.mockserver.client.MockServerEventBus.EventType;
+import org.mockserver.closurecallback.websocketregistry.LocalCallbackRegistry;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
@@ -12,9 +13,10 @@ import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.*;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.websocket.WebSocketClient;
-import org.mockserver.websocket.WebSocketException;
+import org.mockserver.closurecallback.websocketclient.WebSocketClient;
+import org.mockserver.closurecallback.websocketclient.WebSocketException;
 
+import java.util.UUID;
 import java.util.concurrent.Future;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -227,8 +229,11 @@ public class ForwardChainExpectation {
     @SuppressWarnings("rawtypes")
     private <T extends HttpObject> String registerWebSocketClient(ExpectationCallback<T> expectationCallback, ExpectationForwardAndResponseCallback expectationForwardResponseCallback) {
         try {
+            String clientId = UUID.randomUUID().toString();
+            LocalCallbackRegistry.registerCallback(clientId, expectationCallback);
             final WebSocketClient<T> webSocketClient = new WebSocketClient<>(
                 new NioEventLoopGroup(ConfigurationProperties.webSocketClientEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(WebSocketClient.class.getSimpleName() + "-eventLoop")),
+                clientId,
                 mockServerLogger
             );
             final Future<String> register = webSocketClient.registerExpectationCallback(

@@ -21,12 +21,13 @@ import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
 import java.util.Set;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.apache.commons.lang3.StringUtils.*;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.cors.CORSHeaders.isPreflightRequest;
@@ -309,7 +310,7 @@ public class ActionHandler {
         }, synchronous, response.getDelay());
     }
 
-    void executeAfterForwardActionResponse(final HttpForwardActionResult responseFuture, final Consumer<HttpResponse> command, final boolean synchronous) {
+    void executeAfterForwardActionResponse(final HttpForwardActionResult responseFuture, final BiConsumer<HttpResponse, Throwable> command, final boolean synchronous) {
         scheduler.submit(responseFuture, command, synchronous);
     }
 
@@ -329,38 +330,68 @@ public class ActionHandler {
                         .setArguments(response, responseFuture.getHttpRequest(), httpRequestToCurlSerializer.toCurl(responseFuture.getHttpRequest(), responseFuture.getRemoteAddress()), action)
                 );
             } catch (Throwable throwable) {
-                if (connectionException(throwable)) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setLogLevel(TRACE)
-                            .setMessageFormat("failed to connect to remote socket while forwarding request{}for action{}")
-                            .setArguments(request, action)
-                            .setThrowable(throwable)
-                    );
-                    returnNotFound(responseWriter, request, "failed to connect to remote socket while forwarding request");
-                } else if (sslHandshakeException(throwable)) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setType(LogEntry.LogMessageType.EXCEPTION)
-                            .setLogLevel(Level.ERROR)
-                            .setHttpRequest(request)
-                            .setMessageFormat("TLS handshake exception while forwarding request{}for action{}")
-                            .setArguments(request, action)
-                            .setThrowable(throwable)
-                    );
-                    returnNotFound(responseWriter, request, "TLS handshake exception while forwarding request");
-                } else {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setType(EXCEPTION)
-                            .setLogLevel(Level.ERROR)
-                            .setHttpRequest(request)
-                            .setMessageFormat(throwable.getMessage())
-                            .setThrowable(throwable)
-                    );
-                }
+                handleExceptionDuringForwardingRequest(action, request, responseWriter, throwable);
             }
         }, synchronous);
+    }
+
+    void handleExceptionDuringForwardingRequest(Action action, HttpRequest request, ResponseWriter responseWriter, Throwable exception) {
+        if (connectionException(exception)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(TRACE)
+                    .setMessageFormat("failed to connect to remote socket while forwarding request{}for action{}")
+                    .setArguments(request, action)
+                    .setThrowable(exception)
+            );
+            returnNotFound(responseWriter, request, "failed to connect to remote socket while forwarding request");
+        } else if (sslHandshakeException(exception)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setHttpRequest(request)
+                    .setMessageFormat("TLS handshake exception while forwarding request{}for action{}")
+                    .setArguments(request, action)
+                    .setThrowable(exception)
+            );
+            returnNotFound(responseWriter, request, "TLS handshake exception while forwarding request");
+        } else {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setHttpRequest(request)
+                    .setMessageFormat(exception.getMessage())
+                    .setThrowable(exception)
+            );
+            returnNotFound(responseWriter, request, null);
+        }
+    }
+
+    void writeForwardActionResponse(final HttpResponse response, final ResponseWriter responseWriter, final HttpRequest request, final Action action, boolean synchronous) {
+        try {
+            responseWriter.writeResponse(request, response, false);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(FORWARDED_REQUEST)
+                    .setLogLevel(Level.INFO)
+                    .setHttpRequest(request)
+                    .setHttpResponse(response)
+                    .setExpectation(request, response)
+                    .setMessageFormat("returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}for action:{}")
+                    .setArguments(response, response, httpRequestToCurlSerializer.toCurl(request), action)
+            );
+        } catch (Throwable throwable) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setHttpRequest(request)
+                    .setMessageFormat(throwable.getMessage())
+                    .setThrowable(throwable)
+            );
+        }
     }
 
     private void returnNotFound(ResponseWriter responseWriter, HttpRequest request, String error) {

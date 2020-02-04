@@ -1,4 +1,4 @@
-package org.mockserver.websocket;
+package org.mockserver.closurecallback.websocketclient;
 
 /**
  * @author jamesdbloom

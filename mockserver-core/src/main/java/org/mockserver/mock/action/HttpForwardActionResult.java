@@ -15,7 +15,7 @@ public class HttpForwardActionResult {
     private final Function<HttpResponse, HttpResponse> overrideHttpResponse;
     private final AtomicBoolean overrideHttpResponseApplied = new AtomicBoolean(false);
 
-    HttpForwardActionResult(HttpRequest httpRequest, CompletableFuture<HttpResponse> httpResponse, Function<HttpResponse, HttpResponse> overrideHttpResponse) {
+    public HttpForwardActionResult(HttpRequest httpRequest, CompletableFuture<HttpResponse> httpResponse, Function<HttpResponse, HttpResponse> overrideHttpResponse) {
         this(httpRequest, httpResponse, overrideHttpResponse, null);
     }
 

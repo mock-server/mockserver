@@ -1,11 +1,10 @@
-package org.mockserver.callback;
+package org.mockserver.closurecallback.websocketregistry;
 
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.handler.codec.http.DefaultHttpHeaders;
-import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
@@ -22,7 +21,7 @@ import java.util.UUID;
 import static com.google.common.net.HttpHeaders.HOST;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
 import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabledUpstream;
-import static org.mockserver.websocket.WebSocketClient.CLIENT_REGISTRATION_ID_HEADER;
+import static org.mockserver.closurecallback.websocketclient.WebSocketClient.CLIENT_REGISTRATION_ID_HEADER;
 
 /**
  * @author jamesdbloom
@@ -79,32 +78,39 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
             WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
         } else {
             final String clientId = httpRequest.headers().contains(CLIENT_REGISTRATION_ID_HEADER) ? httpRequest.headers().get(CLIENT_REGISTRATION_ID_HEADER) : UUID.randomUUID().toString();
-            handshaker
-                .handshake(
-                    ctx.channel(),
-                    httpRequest,
-                    new DefaultHttpHeaders().add(CLIENT_REGISTRATION_ID_HEADER, clientId),
-                    ctx.channel().newPromise()
-                )
-                .addListener((ChannelFutureListener) future -> {
-                    ctx.pipeline().remove(DashboardWebSocketServerHandler.class);
-                    ctx.pipeline().remove(MockServerServerCodec.class);
-                    ctx.pipeline().remove(MockServerHandler.class);
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setLogLevel(Level.TRACE)
-                            .setMessageFormat("registering client " + clientId)
-                    );
-                    webSocketClientRegistry.registerClient(clientId, ctx);
-                    future.channel().closeFuture().addListener((ChannelFutureListener) closeFuture -> {
+            if (LocalCallbackRegistry.responseClientExists(clientId)) {
+                // found locally to indicate to client
+                HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.RESET_CONTENT, ctx.channel().alloc().buffer(0));
+                HttpUtil.setContentLength(res, 0);
+                ctx.channel().writeAndFlush(res, ctx.channel().newPromise());
+            } else {
+                handshaker
+                    .handshake(
+                        ctx.channel(),
+                        httpRequest,
+                        new DefaultHttpHeaders().add(CLIENT_REGISTRATION_ID_HEADER, clientId),
+                        ctx.channel().newPromise()
+                    )
+                    .addListener((ChannelFutureListener) future -> {
+                        ctx.pipeline().remove(DashboardWebSocketServerHandler.class);
+                        ctx.pipeline().remove(MockServerServerCodec.class);
+                        ctx.pipeline().remove(MockServerHandler.class);
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(Level.TRACE)
-                                .setMessageFormat("unregistering callback for client " + clientId)
+                                .setMessageFormat("registering client " + clientId)
                         );
-                        webSocketClientRegistry.unregisterClient(clientId);
+                        webSocketClientRegistry.registerClient(clientId, ctx);
+                        future.channel().closeFuture().addListener((ChannelFutureListener) closeFuture -> {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setLogLevel(Level.TRACE)
+                                    .setMessageFormat("unregistering callback for client " + clientId)
+                            );
+                            webSocketClientRegistry.unregisterClient(clientId);
+                        });
                     });
-                });
+            }
         }
     }
 

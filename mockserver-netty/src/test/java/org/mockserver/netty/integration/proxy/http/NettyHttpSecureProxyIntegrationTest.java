@@ -5,8 +5,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.logging.MockServerLogger;
-import org.mockserver.socket.tls.NettySslContextFactory;
 import org.mockserver.testing.integration.proxy.AbstractSecureProxyIntegrationTest;
 import org.mockserver.netty.MockServer;
 

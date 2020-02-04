@@ -7,6 +7,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.client.NettyHttpClient;
+import org.mockserver.closurecallback.websocketregistry.LocalCallbackRegistry;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -31,6 +32,7 @@ import static org.mockserver.matchers.Times.unlimited;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.stop.Stop.stopQuietly;
+import static org.mockserver.testing.closurecallback.ViaWebSocket.viaWebSocket;
 
 public class ConcurrencyResponseWebSocketMockingIntegrationTest {
 
@@ -67,17 +69,27 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
     }
 
     @Test
-    public void sendMultipleRequestsSingleThreaded() throws Exception {
+    public void sendMultipleRequestsSingleThreadedViaWebSocket() throws Exception {
+        viaWebSocket(() -> scheduleTasksAndWaitForResponses(1));
+    }
+
+    @Test
+    public void sendMultipleRequestsMultiThreadedViaWebSocket() throws Exception {
+        viaWebSocket(() -> scheduleTasksAndWaitForResponses(25));
+    }
+
+    @Test
+    public void sendMultipleRequestsSingleThreadedViaLocalJVM() {
         scheduleTasksAndWaitForResponses(1);
     }
 
     @Test
-    public void sendMultipleRequestsMultiThreaded() throws Exception {
+    public void sendMultipleRequestsMultiThreadedViaLocalJVM() {
         scheduleTasksAndWaitForResponses(25);
     }
 
     @SuppressWarnings("rawtypes")
-    private void scheduleTasksAndWaitForResponses(int parallelThreads) throws Exception {
+    private void scheduleTasksAndWaitForResponses(int parallelThreads) {
         ExecutorService executor = Executors.newFixedThreadPool(parallelThreads * 3, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName()));
 
         List<CompletableFuture> completableFutures = new ArrayList<>();

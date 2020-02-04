@@ -1,13 +1,11 @@
 package org.mockserver.mock;
 
 import org.junit.*;
-import org.mockserver.callback.WebSocketClientRegistry;
+import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.metrics.Metrics;
-import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpObjectCallback;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.ui.MockServerMatcherNotifier;
 

@@ -1,8 +1,8 @@
 package org.mockserver.mock.action;
 
 import org.junit.Test;
-import org.mockserver.callback.WebSocketClientRegistry;
-import org.mockserver.callback.WebSocketResponseCallback;
+import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
+import org.mockserver.closurecallback.websocketregistry.WebSocketResponseCallback;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.HttpObjectCallback;
@@ -11,7 +11,7 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
 
 import static org.mockito.Mockito.*;
-import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
+import static org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 

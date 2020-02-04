@@ -2,7 +2,7 @@ package org.mockserver.mock;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.callback.WebSocketClientRegistry;
+import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.scheduler.Scheduler;

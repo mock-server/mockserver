@@ -14,15 +14,16 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.testing.integration.proxy.AbstractProxyIntegrationTest;
-import org.mockserver.netty.MockServer;
 import org.mockserver.model.HttpStatusCode;
+import org.mockserver.netty.MockServer;
+import org.mockserver.testing.integration.proxy.AbstractProxyIntegrationTest;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.stop.Stop.stopQuietly;
+import static org.mockserver.testing.closurecallback.ViaWebSocket.viaWebSocket;
 import static org.mockserver.verify.VerificationTimes.exactly;
 
 /**
@@ -76,7 +77,56 @@ public class NettyHttpProxyIntegrationTest extends AbstractProxyIntegrationTest 
     }
 
     @Test
-    public void shouldForwardRequestsAndFixContentType() throws Exception {
+    public void shouldForwardRequestsAndFixContentTypeViaWebSocket() throws Exception {
+        viaWebSocket(() -> {
+            // given
+            getMockServerClient()
+                .when(
+                    request()
+                        .withHeader("Content-Type", "application/encrypted;charset=UTF-8")
+                )
+                .forward(
+                    httpRequest ->
+                        httpRequest
+                            .replaceHeader(header("Content-Type", "application/encrypted"))
+                            .withBody(binary(httpRequest.getBodyAsRawBytes()))
+                );
+
+            // and
+            HttpClient httpClient = createHttpClient();
+            byte[] hexBytes = RandomUtils.nextBytes(150);
+            String hexString = Hex.encodeHexString(hexBytes).toUpperCase();
+
+            // when
+            HttpPost request = new HttpPost(
+                new URIBuilder()
+                    .setScheme("http")
+                    .setHost("127.0.0.1")
+                    .setPort(getServerPort())
+                    .setPath(addContextToPath("test_headers_and_body"))
+                    .build()
+            );
+            request.setEntity(new ByteArrayEntity(hexBytes));
+            request.setHeader("Content-Type", "application/encrypted;charset=utf-8");
+            HttpResponse response = httpClient.execute(request);
+
+            // then
+            assertEquals(HttpStatusCode.OK_200.code(), response.getStatusLine().getStatusCode());
+            assertEquals(hexString.toUpperCase(), Hex.encodeHexString(EntityUtils.toByteArray(response.getEntity())).toUpperCase());
+
+            // and
+            getMockServerClient().verify(
+                request()
+                    .withMethod("POST")
+                    .withPath("/test_headers_and_body")
+                    .withBody(hexBytes),
+                exactly(1)
+            );
+        });
+    }
+
+    @Test
+    public void shouldForwardRequestsAndFixContentTypeViaLocalJVM() throws Exception {
         // given
         getMockServerClient()
             .when(

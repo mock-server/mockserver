@@ -2,8 +2,8 @@ package org.mockserver.mock.action;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockserver.callback.WebSocketClientRegistry;
-import org.mockserver.callback.WebSocketRequestCallback;
+import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
+import org.mockserver.closurecallback.websocketregistry.WebSocketRequestCallback;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.HttpObjectCallback;

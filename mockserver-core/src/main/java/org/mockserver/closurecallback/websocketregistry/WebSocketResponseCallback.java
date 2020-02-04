@@ -1,4 +1,4 @@
-package org.mockserver.callback;
+package org.mockserver.closurecallback.websocketregistry;
 
 import org.mockserver.model.HttpResponse;
 

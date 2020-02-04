@@ -1,7 +1,8 @@
-package org.mockserver.socket.tls;
+package org.mockserver.testing.tls;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.socket.tls.KeyStoreFactory;
 
 import javax.net.ssl.SSLSocket;
 import java.io.IOException;

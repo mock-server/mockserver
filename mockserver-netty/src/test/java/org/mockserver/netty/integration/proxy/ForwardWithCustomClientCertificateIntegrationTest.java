@@ -11,7 +11,6 @@ import org.mockserver.echo.http.EchoServer;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.netty.MockServer;
-import org.mockserver.netty.integration.mock.AbstractForwardViaHttpsProxyMockingIntegrationTest;
 import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
 import org.mockserver.socket.tls.jdk.X509Generator;
 import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;

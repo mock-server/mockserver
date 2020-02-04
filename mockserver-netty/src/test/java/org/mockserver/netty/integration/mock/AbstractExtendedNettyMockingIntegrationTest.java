@@ -55,7 +55,8 @@ import static org.mockserver.model.HttpStatusCode.*;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.PortBinding.portBinding;
-import static org.mockserver.socket.tls.SSLSocketFactory.sslSocketFactory;
+import static org.mockserver.testing.closurecallback.ViaWebSocket.viaWebSocket;
+import static org.mockserver.testing.tls.SSLSocketFactory.sslSocketFactory;
 
 /**
  * @author jamesdbloom
@@ -118,7 +119,86 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     }
 
     @Test
-    public void shouldRespondByObjectCallback() {
+    public void shouldRespondByObjectCallbackViaWebSocket() throws Exception {
+        viaWebSocket(() -> {
+            // when
+            mockServerClient
+                .when(
+                    request()
+                        .withPath(calculatePath("object_callback")),
+                    exactly(2)
+                )
+                .respond(
+                    httpRequest -> {
+                        HttpRequest expectation = request()
+                            .withPath(calculatePath("object_callback"))
+                            .withMethod("POST")
+                            .withHeaders(
+                                header("x-test", "test_headers_and_body")
+                            )
+                            .withBody("an_example_body_http");
+                        if (new MatcherBuilder(mock(MockServerLogger.class)).transformsToMatcher(expectation).matches(null, httpRequest)) {
+                            return response()
+                                .withStatusCode(ACCEPTED_202.code())
+                                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                                .withHeaders(
+                                    header("x-object-callback", "test_object_callback_header")
+                                )
+                                .withBody("an_object_callback_response");
+                        } else {
+                            return notFoundResponse();
+                        }
+                    }
+                );
+
+            // then
+            // - in http
+            assertEquals(
+                response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                    .withHeaders(
+                        header("x-object-callback", "test_object_callback_header")
+                    )
+                    .withBody("an_object_callback_response"),
+                makeRequest(
+                    request()
+                        .withPath(calculatePath("object_callback"))
+                        .withMethod("POST")
+                        .withHeaders(
+                            header("x-test", "test_headers_and_body")
+                        )
+                        .withBody("an_example_body_http"),
+                    headersToIgnore
+                )
+            );
+
+            // - in https
+            assertEquals(
+                response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                    .withHeaders(
+                        header("x-object-callback", "test_object_callback_header")
+                    )
+                    .withBody("an_object_callback_response"),
+                makeRequest(
+                    request()
+                        .withSecure(true)
+                        .withPath(calculatePath("object_callback"))
+                        .withMethod("POST")
+                        .withHeaders(
+                            header("x-test", "test_headers_and_body")
+                        )
+                        .withBody("an_example_body_http"),
+                    headersToIgnore
+                )
+            );
+        });
+    }
+
+    @Test
+    public void shouldRespondByObjectCallbackViaLocalJVM() {
         // when
         mockServerClient
             .when(
@@ -197,8 +277,62 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     private int objectCallbackCounter = 0;
 
     @Test
-    public void shouldRespondByMultipleParallelObjectCallbacks() {
+    public void shouldRespondByMultipleParallelObjectCallbacksViaWebSocket() throws Exception {
+        viaWebSocket(() -> {
+            // when
+            objectCallbackCounter = 0;
+            for (int i = 0; i < 25; i++) {
+                mockServerClient
+                    .when(
+                        request()
+                            .withPath(calculatePath("object_callback_" + objectCallbackCounter)),
+                        once()
+                    )
+                    .respond(httpRequest -> {
+                        MILLISECONDS.sleep(10);
+                        return response()
+                            .withStatusCode(ACCEPTED_202.code())
+                            .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                            .withHeaders(
+                                header("x-object-callback", "test_object_callback_header_" + objectCallbackCounter)
+                            )
+                            .withBody("an_object_callback_response_" + objectCallbackCounter);
+                    });
+                objectCallbackCounter++;
+            }
+
+            objectCallbackCounter = 0;
+
+            // then
+            for (int i = 0; i < 25; i++) {
+                assertEquals(
+                    response()
+                        .withStatusCode(ACCEPTED_202.code())
+                        .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                        .withHeaders(
+                            header("x-object-callback", "test_object_callback_header_" + objectCallbackCounter)
+                        )
+                        .withBody("an_object_callback_response_" + objectCallbackCounter),
+                    makeRequest(
+                        request()
+                            .withPath(calculatePath("object_callback_" + objectCallbackCounter))
+                            .withMethod("POST")
+                            .withHeaders(
+                                header("x-test", "test_headers_and_body")
+                            )
+                            .withBody("an_example_body_http"),
+                        headersToIgnore
+                    )
+                );
+                objectCallbackCounter++;
+            }
+        });
+    }
+
+    @Test
+    public void shouldRespondByMultipleParallelObjectCallbacksViaLocalJVM() {
         // when
+        objectCallbackCounter = 0;
         for (int i = 0; i < 25; i++) {
             mockServerClient
                 .when(
@@ -247,7 +381,54 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     }
 
     @Test
-    public void shouldRespondByObjectCallbackAndVerifyRequests() {
+    public void shouldRespondByObjectCallbackAndVerifyRequestsViaWebSocket() throws Exception {
+        viaWebSocket(() -> {
+            // when
+            mockServerClient
+                .when(
+                    request()
+                        .withPath(calculatePath("object_callback")),
+                    once()
+                )
+                .respond(
+                    httpRequest -> response()
+                        .withStatusCode(ACCEPTED_202.code())
+                        .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                        .withBody("an_object_callback_response")
+                );
+
+            // then - return response
+            assertEquals(
+                response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                    .withBody("an_object_callback_response"),
+                makeRequest(
+                    request()
+                        .withPath(calculatePath("object_callback")),
+                    headersToIgnore
+                )
+            );
+
+            // then - verify request
+            mockServerClient
+                .verify(
+                    request()
+                        .withPath(calculatePath("object_callback")),
+                    VerificationTimes.once()
+                );
+            // then - verify no request
+            mockServerClient
+                .verify(
+                    request()
+                        .withPath(calculatePath("some_other_path")),
+                    VerificationTimes.exactly(0)
+                );
+        });
+    }
+
+    @Test
+    public void shouldRespondByObjectCallbackAndVerifyRequestsViaLocalJVM() {
         // when
         mockServerClient
             .when(
@@ -292,7 +473,44 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     }
 
     @Test
-    public void shouldRespondByObjectCallbackForVeryLargeRequestAndResponses() {
+    public void shouldRespondByObjectCallbackForVeryLargeRequestAndResponsesViaWebSocket() throws Exception {
+        viaWebSocket(() -> {
+            int bytes = 65536 * 10;
+            char[] chars = new char[bytes];
+            Arrays.fill(chars, 'a');
+            final String veryLargeString = new String(chars);
+
+            // when
+            mockServerClient
+                .when(
+                    request()
+                        .withPath(calculatePath("object_callback")),
+                    once()
+                )
+                .respond(
+                    httpRequest -> response()
+                        .withBody(veryLargeString)
+                );
+
+            // then
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withBody(veryLargeString),
+                makeRequest(
+                    request()
+                        .withPath(calculatePath("object_callback"))
+                        .withMethod("POST")
+                        .withBody(veryLargeString),
+                    headersToIgnore
+                )
+            );
+        });
+    }
+
+    @Test
+    public void shouldRespondByObjectCallbackForVeryLargeRequestAndResponsesViaLocalJVM() {
         int bytes = 65536 * 10;
         char[] chars = new char[bytes];
         Arrays.fill(chars, 'a');
@@ -327,7 +545,68 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     }
 
     @Test
-    public void shouldForwardByObjectCallback() {
+    public void shouldForwardByObjectCallbackViaWebSocket() throws Exception {
+        viaWebSocket(() -> {
+            // when
+            mockServerClient
+                .when(
+                    request()
+                        .withPath(calculatePath("echo"))
+                )
+                .forward(
+                    httpRequest -> request()
+                        .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
+                        .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
+                        .withBody("some_overridden_body")
+                        .withSecure(httpRequest.isSecure())
+                );
+
+            // then
+            // - in http
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("some_overridden_body"),
+                makeRequest(
+                    request()
+                        .withPath(calculatePath("echo"))
+                        .withMethod("POST")
+                        .withHeaders(
+                            header("x-test", "test_headers_and_body")
+                        )
+                        .withBody("an_example_body_http"),
+                    headersToIgnore
+                )
+            );
+            // - in https
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body_https")
+                    )
+                    .withBody("some_overridden_body"),
+                makeRequest(
+                    request()
+                        .withSecure(true)
+                        .withPath(calculatePath("echo"))
+                        .withMethod("POST")
+                        .withHeaders(
+                            header("x-test", "test_headers_and_body_https")
+                        )
+                        .withBody("an_example_body_https"),
+                    headersToIgnore)
+            );
+        });
+    }
+
+    @Test
+    public void shouldForwardByObjectCallbackViaLocalJVM() {
         // when
         mockServerClient
             .when(
@@ -386,7 +665,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     }
 
     @Test
-    public void shouldForwardAndResponseByObjectCallbackOverride() {
+    public void shouldForwardRequestAndResponseByObjectCallbackOverride() {
         // when
         mockServerClient
             .when(
@@ -453,7 +732,73 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     }
 
     @Test
-    public void shouldForwardByObjectCallbackWithSocketAddress() {
+    public void shouldForwardByObjectCallbackWithSocketAddressViaWebSocket() throws Exception {
+        viaWebSocket(() -> {
+            // when
+            mockServerClient
+                .when(
+                    request()
+                        .withPath(calculatePath("echo"))
+                )
+                .forward(
+                    httpRequest -> request()
+                        .withHeader("Host", "incorrect_host:1234")
+                        .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
+                        .withBody("some_overridden_body")
+                        .withSecure(httpRequest.isSecure())
+                        .withSocketAddress(
+                            "localhost",
+                            httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort(),
+                            httpRequest.isSecure() ? SocketAddress.Scheme.HTTPS : SocketAddress.Scheme.HTTP
+                        )
+                );
+
+            // then
+            // - in http
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("some_overridden_body"),
+                makeRequest(
+                    request()
+                        .withPath(calculatePath("echo"))
+                        .withMethod("POST")
+                        .withHeaders(
+                            header("x-test", "test_headers_and_body")
+                        )
+                        .withBody("an_example_body_http"),
+                    headersToIgnore
+                )
+            );
+            // - in https
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body_https")
+                    )
+                    .withBody("some_overridden_body"),
+                makeRequest(
+                    request()
+                        .withSecure(true)
+                        .withPath(calculatePath("echo"))
+                        .withMethod("POST")
+                        .withHeaders(
+                            header("x-test", "test_headers_and_body_https")
+                        )
+                        .withBody("an_example_body_https"),
+                    headersToIgnore)
+            );
+        });
+    }
+
+    @Test
+    public void shouldForwardByObjectCallbackWithSocketAddressViaLocalJVM() {
         // when
         mockServerClient
             .when(
@@ -1136,7 +1481,70 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     }
 
     @Test
-    public void shouldRespondByObjectCallbackWithDelay() {
+    public void shouldRespondByObjectCallbackWithDelayViaWebSocket() throws Exception {
+        viaWebSocket(() -> {
+            // when
+            mockServerClient
+                .when(
+                    request()
+                        .withPath(calculatePath("object_callback"))
+                )
+                .respond(
+                    httpRequest -> {
+                        HttpRequest expectation = request()
+                            .withPath(calculatePath("object_callback"))
+                            .withMethod("POST")
+                            .withHeaders(
+                                header("x-test", "test_headers_and_body")
+                            )
+                            .withBody("an_example_body_http");
+                        if (new MatcherBuilder(mock(MockServerLogger.class)).transformsToMatcher(expectation).matches(null, httpRequest)) {
+                            return response()
+                                .withStatusCode(ACCEPTED_202.code())
+                                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                                .withHeaders(
+                                    header("x-object-callback", "test_object_callback_header")
+                                )
+                                .withBody("an_object_callback_response");
+                        } else {
+                            return notFoundResponse();
+                        }
+                    },
+                    new Delay(SECONDS, 3)
+                );
+
+            // then
+            long timeBeforeRequest = System.currentTimeMillis();
+            HttpResponse httpResponse = makeRequest(
+                request()
+                    .withPath(calculatePath("object_callback"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore
+            );
+            long timeAfterRequest = System.currentTimeMillis();
+
+            // and
+            assertEquals(
+                response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                    .withHeaders(
+                        header("x-object-callback", "test_object_callback_header")
+                    )
+                    .withBody("an_object_callback_response"),
+                httpResponse
+            );
+            assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
+            assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(5)));
+        });
+    }
+
+    @Test
+    public void shouldRespondByObjectCallbackWithDelayViaLocalJVM() {
         // when
         mockServerClient
             .when(
@@ -1197,7 +1605,55 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     }
 
     @Test
-    public void shouldForwardByObjectCallbackWithDelay() {
+    public void shouldForwardByObjectCallbackWithDelayViaWebSocket() throws Exception {
+        viaWebSocket(() -> {
+            // when
+            mockServerClient
+                .when(
+                    request()
+                        .withPath(calculatePath("echo"))
+                )
+                .forward(
+                    httpRequest -> request()
+                        .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
+                        .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
+                        .withBody("some_overridden_body")
+                        .withSecure(httpRequest.isSecure()),
+                    new Delay(SECONDS, 3)
+                );
+
+            // then
+            long timeBeforeRequest = System.currentTimeMillis();
+            HttpResponse httpResponse = makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore
+            );
+            long timeAfterRequest = System.currentTimeMillis();
+
+            // and
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("some_overridden_body"),
+                httpResponse
+            );
+            assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
+            assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(5)));
+        });
+    }
+
+    @Test
+    public void shouldForwardByObjectCallbackWithDelayViaLocalJVM() {
         // when
         mockServerClient
             .when(

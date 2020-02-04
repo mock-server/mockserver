@@ -3,7 +3,7 @@ package org.mockserver.mock;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.callback.WebSocketClientRegistry;
+import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;

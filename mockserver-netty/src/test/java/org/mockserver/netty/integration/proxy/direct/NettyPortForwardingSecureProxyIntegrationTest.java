@@ -5,9 +5,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.logging.MockServerLogger;
 import org.mockserver.netty.MockServer;
-import org.mockserver.socket.tls.NettySslContextFactory;
 import org.mockserver.streams.IOStreamUtils;
 
 import java.io.OutputStream;
@@ -15,7 +13,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
 import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.socket.tls.SSLSocketFactory.sslSocketFactory;
+import static org.mockserver.testing.tls.SSLSocketFactory.sslSocketFactory;
 import static org.mockserver.stop.Stop.stopQuietly;
 import static org.mockserver.test.Assert.assertContains;
 import static org.mockserver.verify.VerificationTimes.exactly;

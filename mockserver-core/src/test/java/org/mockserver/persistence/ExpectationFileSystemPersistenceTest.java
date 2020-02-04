@@ -2,7 +2,7 @@ package org.mockserver.persistence;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.callback.WebSocketClientRegistry;
+import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;

@@ -1,7 +1,6 @@
 package org.mockserver.echo.tls;
 
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import io.netty.handler.ssl.util.SimpleTrustManagerFactory;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.jdk.CertificateSigningRequest;
@@ -10,10 +9,8 @@ import org.mockserver.socket.tls.jdk.X509Generator;
 
 import javax.net.ssl.*;
 import java.net.Socket;
-import java.security.KeyStore;
 import java.security.Principal;
 import java.security.PrivateKey;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 import static org.mockserver.configuration.ConfigurationProperties.*;
