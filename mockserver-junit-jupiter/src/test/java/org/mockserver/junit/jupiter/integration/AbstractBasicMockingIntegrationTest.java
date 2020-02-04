@@ -1876,6 +1876,127 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
+    public void shouldReturnResponseForExpectationWithDelay() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path1"))
+            )
+            .respond(
+                response()
+                    .withBody("some_body1")
+                    .withDelay(new Delay(SECONDS, 3))
+            );
+
+        // then
+        long timeBeforeRequest = System.currentTimeMillis();
+        HttpResponse httpResponse = makeRequest(
+            request()
+                .withPath(calculatePath("some_path1")),
+            headersToIgnore
+        );
+        long timeAfterRequest = System.currentTimeMillis();
+
+        // and
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body1"),
+            httpResponse
+        );
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
+        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(5)));
+    }
+
+    @Test
+    public void shouldCallbackClassForResponseForExpectationWithDelay() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("callback"))
+            )
+            .respond(
+                callback()
+                    .withCallbackClass("org.mockserver.testing.integration.callback.PrecannedTestExpectationResponseCallback")
+                    .withDelay(new Delay(SECONDS, 3))
+            );
+
+        // then
+        long timeBeforeRequest = System.currentTimeMillis();
+        HttpResponse httpResponse = makeRequest(
+            request()
+                .withPath(calculatePath("callback"))
+                .withMethod("POST")
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("an_example_body_http"),
+            headersToIgnore
+        );
+        long timeAfterRequest = System.currentTimeMillis();
+
+        // and
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withHeaders(
+                    header("x-callback", "test_callback_header")
+                )
+                .withBody("a_callback_response"),
+            httpResponse
+        );
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
+        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(5)));
+    }
+
+    @Test
+    public void shouldReturnResponseFromVelocityTemplateWithDelay() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path"))
+            )
+            .respond(
+                template(HttpTemplate.TemplateType.VELOCITY)
+                    .withTemplate(
+                        "{" + NEW_LINE +
+                            "     \"statusCode\": 200," + NEW_LINE +
+                            "     \"headers\": [ { \"name\": \"name\", \"values\": [ \"$!request.headers['name'][0]\" ] } ]," + NEW_LINE +
+                            "     \"body\": \"$!request.body\"" + NEW_LINE +
+                            "}" + NEW_LINE
+                    )
+                    .withDelay(new Delay(SECONDS, 3))
+            );
+
+        // then
+        long timeBeforeRequest = System.currentTimeMillis();
+        HttpResponse response = makeRequest(
+            request()
+                .withPath(calculatePath("some_path"))
+                .withHeader("name", "value")
+                .withBody("some_request_body"),
+            headersToIgnore);
+        long timeAfterRequest = System.currentTimeMillis();
+
+        // and
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader("name", "value")
+                .withBody("some_request_body"),
+            response
+        );
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
+        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(5)));
+    }
+
+    @Test
     public void shouldForwardRequestInHTTPWithDelay() {
         // when
         mockServerClient
@@ -1914,7 +2035,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withBody("an_example_body_http"),
             httpResponse
         );
-        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(2)));
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
+        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(5)));
     }
 
     @Test
@@ -1961,7 +2083,58 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withBody("some_overridden_body"),
             httpResponse
         );
-        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(2)));
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
+        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(5)));
+    }
+
+    @Test
+    public void shouldForwardOverriddenRequestWithOverriddenResponseWithDelay() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                forwardOverriddenRequest(
+                    request()
+                        .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
+                        .withBody("some_overridden_body"),
+                    response()
+                        .withHeader("extra_header", "some_value")
+                        .withHeader("content-length", "29")
+                        .withBody("some_overridden_response_body")
+                ).withDelay(new Delay(SECONDS, 3))
+            );
+
+        // then
+        long timeBeforeRequest = System.currentTimeMillis();
+        HttpResponse response = makeRequest(
+            request()
+                .withPath(calculatePath("echo"))
+                .withMethod("POST")
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("an_example_body_http"),
+            headersToIgnore
+        );
+        long timeAfterRequest = System.currentTimeMillis();
+
+        // and
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body"),
+                    header("extra_header", "some_value")
+                )
+                .withBody("some_overridden_response_body"),
+            response
+        );
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
+        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(5)));
     }
 
     @Test
@@ -2004,82 +2177,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withBody("some_overridden_body"),
             httpResponse
         );
-        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(2)));
-    }
-
-    @Test
-    public void shouldReturnResponseForExpectationWithDelay() {
-        // when
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("some_path1"))
-            )
-            .respond(
-                response()
-                    .withBody("some_body1")
-                    .withDelay(new Delay(SECONDS, 3))
-            );
-
-        // then
-        long timeBeforeRequest = System.currentTimeMillis();
-        HttpResponse httpResponse = makeRequest(
-            request()
-                .withPath(calculatePath("some_path1")),
-            headersToIgnore
-        );
-        long timeAfterRequest = System.currentTimeMillis();
-
-        // and
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body1"),
-            httpResponse
-        );
-        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(2)));
-    }
-
-    @Test
-    public void shouldCallbackClassForResponseForExpectationWithDelay() {
-        // when
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("callback"))
-            )
-            .respond(
-                callback()
-                    .withCallbackClass("org.mockserver.testing.integration.callback.PrecannedTestExpectationResponseCallback")
-                    .withDelay(new Delay(SECONDS, 3))
-            );
-
-        // then
-        long timeBeforeRequest = System.currentTimeMillis();
-        HttpResponse httpResponse = makeRequest(
-            request()
-                .withPath(calculatePath("callback"))
-                .withMethod("POST")
-                .withHeaders(
-                    header("x-test", "test_headers_and_body")
-                )
-                .withBody("an_example_body_http"),
-            headersToIgnore
-        );
-        long timeAfterRequest = System.currentTimeMillis();
-
-        // and
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withHeaders(
-                    header("x-callback", "test_callback_header")
-                )
-                .withBody("a_callback_response"),
-            httpResponse
-        );
-        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(2)));
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
+        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(5)));
     }
 }

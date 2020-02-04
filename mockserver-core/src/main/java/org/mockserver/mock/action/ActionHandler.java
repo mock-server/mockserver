@@ -95,7 +95,7 @@ public class ActionHandler {
                         final HttpResponse response = getHttpResponseActionHandler().handle((HttpResponse) action);
                         writeResponseActionResponse(response, responseWriter, request, action, synchronous);
                         expectationPostProcessor.run();
-                    }), synchronous, action.getDelay());
+                    }), synchronous);
                     break;
                 }
                 case RESPONSE_TEMPLATE: {

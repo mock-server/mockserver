@@ -129,7 +129,7 @@ public class ActionHandlerTest {
     @Test
     public void shouldProcessResponseAction() {
         // given
-        HttpResponse response = response("some_template").withDelay(milliseconds(1));
+        HttpResponse response = response("some_body").withDelay(milliseconds(1));
         expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenRespond(response);
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
@@ -156,7 +156,7 @@ public class ActionHandlerTest {
                 .setMessageFormat("returning response:{}for request:{}for action:{}")
                 .setArguments(this.response, request, response)
         );
-        verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(1)));
+        verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(0)));
         verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(0)));
     }
 
