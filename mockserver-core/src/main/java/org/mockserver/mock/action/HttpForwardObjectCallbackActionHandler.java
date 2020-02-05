@@ -35,7 +35,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
 
     public void handle(final ActionHandler actionHandler, final HttpObjectCallback httpObjectCallback, final HttpRequest request, final ResponseWriter responseWriter, final boolean synchronous, Runnable expectationPostProcessor) {
         final String clientId = httpObjectCallback.getClientId();
-        if (LocalCallbackRegistry.responseClientExists(clientId)) {
+        if (LocalCallbackRegistry.forwardClientExists(clientId)) {
             handleLocally(actionHandler, httpObjectCallback, request, responseWriter, synchronous, clientId);
         } else {
             handleViaWebSocket(actionHandler, httpObjectCallback, request, responseWriter, synchronous, expectationPostProcessor, clientId);
