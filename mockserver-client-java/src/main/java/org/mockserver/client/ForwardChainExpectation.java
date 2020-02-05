@@ -231,6 +231,7 @@ public class ForwardChainExpectation {
         try {
             String clientId = UUID.randomUUID().toString();
             LocalCallbackRegistry.registerCallback(clientId, expectationCallback);
+            LocalCallbackRegistry.registerCallback(clientId, expectationForwardResponseCallback);
             final WebSocketClient<T> webSocketClient = new WebSocketClient<>(
                 new NioEventLoopGroup(ConfigurationProperties.webSocketClientEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(WebSocketClient.class.getSimpleName() + "-eventLoop")),
                 clientId,

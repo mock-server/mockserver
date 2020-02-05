@@ -58,11 +58,12 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                 null,
                 null
             );
-            if (expectationForwardCallback instanceof ExpectationForwardAndResponseCallback) {
+            ExpectationForwardAndResponseCallback expectationForwardAndResponseCallback = LocalCallbackRegistry.retrieveForwardAndResponseCallback(clientId);
+            if (expectationForwardAndResponseCallback != null) {
                 actionHandler.executeAfterForwardActionResponse(responseFuture, (httpResponse, exception) -> {
                     if (httpResponse != null) {
                         try {
-                            HttpResponse callbackResponse = ((ExpectationForwardAndResponseCallback) expectationForwardCallback).handle(request, httpResponse);
+                            HttpResponse callbackResponse = expectationForwardAndResponseCallback.handle(request, httpResponse);
                             actionHandler.writeForwardActionResponse(callbackResponse, responseWriter, request, httpObjectCallback, synchronous);
                         } catch (Throwable throwable) {
                             mockServerLogger.logEvent(
