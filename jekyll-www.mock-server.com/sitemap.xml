@@ -1,70 +1,166 @@
----
-layout: null
----
-
-<?xml version='1.0' encoding='UTF-8'?>
-<urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd http://www.google.com/schemas/sitemap-image/1.1"
-		xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-		xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
-	<url>
-		<loc>http://www.mock-server.com/sitemap.html</loc>
-		<lastmod>2015-04-16T06:35:56+01:00</lastmod>
-	</url>
-	<!-- mock server -->
-	<url>
-		<loc>http://www.mock-server.com/index.html</loc>
-		<lastmod>2015-04-17</lastmod>
-		<changefreq>weekly</changefreq>
-		<priority>1.0</priority>
-		<image:image>
-			<image:loc>http://www.mock-server.com/images/system_in_production.png</image:loc>
-		</image:image>
-		<image:image>
-			<image:loc>http://www.mock-server.com/images/system_under_test_with_mockserver.png</image:loc>
-		</image:image>
-		<image:image>
-			<image:loc>http://www.mock-server.com/images/single_page_application.png</image:loc>
-		</image:image>
-		<image:image>
-			<image:loc>http://www.mock-server.com/images/isolate_single_service_with_mockserver.png</image:loc>
-		</image:image>
-		<image:image>
-			<image:loc>http://www.mock-server.com/images/system_under_test_with_mockserver_proxy.png</image:loc>
-		</image:image>
-		<image:image>
-			<image:loc>http://www.mock-server.com/images/recording_requests_with_mockserver_proxy.png</image:loc>
-		</image:image>
-	</url>
-	{% assign url = page.url|remove:'index.html' %} {% assign sorted_pages = site.pages | sort:"pageOrder" %}
-	{% for page in sorted_pages %} {% if page.section == 'Mock Server'%}
-	{% if page.sitemap != null and page.sitemap != empty %}
-	<url>
-		<loc>{{ site.url }}{{ page.url }}</loc>
-		<lastmod>{{ page.sitemap.lastmod | date_to_xmlschema }}</lastmod>
-		<changefreq>{{ page.sitemap.changefreq }}</changefreq>
-		<priority>{{ page.sitemap.priority }}</priority>
-	</url>
-	{% endif %}
-	{% endif %} {% endfor %}
-	{% for page in sorted_pages %} {% if page.section == 'Proxy'%}
-	{% if page.sitemap != null and page.sitemap != empty %}
-	<url>
-		<loc>{{ site.url }}{{ page.url }}</loc>
-		<lastmod>{{ page.sitemap.lastmod | date_to_xmlschema }}</lastmod>
-		<changefreq>{{ page.sitemap.changefreq }}</changefreq>
-		<priority>{{ page.sitemap.priority }}</priority>
-	</url>
-	{% endif %}
-	{% endif %} {% endfor %}
-	{% for page in sorted_pages %} {% if page.section == 'Where'%}
-	{% if page.sitemap != null and page.sitemap != empty %}
-	<url>
-		<loc>{{ site.url }}{{ page.url }}</loc>
-		<lastmod>{{ page.sitemap.lastmod | date_to_xmlschema }}</lastmod>
-		<changefreq>{{ page.sitemap.changefreq }}</changefreq>
-		<priority>{{ page.sitemap.priority }}</priority>
-	</url>
-	{% endif %}
-	{% endif %} {% endfor %}
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset
+        xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+    <url>
+        <loc>https://mock-server.com/</loc>
+        <lastmod>2020-02-04T19:28:05+00:00</lastmod>
+        <priority>1.00</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/mock_server/running_mock_server.html</loc>
+        <lastmod>2020-02-04T19:28:12+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/mock_server/mockserver_clients.html</loc>
+        <lastmod>2020-02-04T19:28:11+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/mock_server/clearing_and_resetting.html</loc>
+        <lastmod>2020-02-04T19:28:12+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/mock_server/debugging_issues.html</loc>
+        <lastmod>2020-02-04T19:28:12+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/mock_server/performance.html</loc>
+        <lastmod>2020-02-04T19:28:11+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/mock_server/HTTPS_TLS.html</loc>
+        <lastmod>2020-02-04T19:28:13+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/mock_server/CORS_support.html</loc>
+        <lastmod>2020-02-04T19:28:12+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/mock_server/configuration_properties.html</loc>
+        <lastmod>2020-02-04T19:28:12+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/mock_server/getting_started.html</loc>
+        <lastmod>2020-02-04T19:28:11+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/mock_server/creating_expectations.html</loc>
+        <lastmod>2020-02-04T19:28:13+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/mock_server/verification.html</loc>
+        <lastmod>2020-02-04T19:28:11+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/mock_server/initializing_expectations.html</loc>
+        <lastmod>2020-02-04T19:28:13+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/mock_server/persisting_expectations.html</loc>
+        <lastmod>2020-02-04T19:28:12+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/mock_server/running_tests_in_parallel.html</loc>
+        <lastmod>2020-02-04T19:28:13+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/proxy/getting_started.html</loc>
+        <lastmod>2020-02-04T19:28:14+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/proxy/configuring_sut.html</loc>
+        <lastmod>2020-02-04T19:28:14+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/proxy/record_and_replay.html</loc>
+        <lastmod>2020-02-04T19:28:14+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/proxy/verification.html</loc>
+        <lastmod>2020-02-04T19:28:14+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/mock_server/isolating_single_service.html</loc>
+        <lastmod>2020-02-04T19:28:13+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/where/downloads.html</loc>
+        <lastmod>2020-02-04T19:28:15+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/where/slack.html</loc>
+        <lastmod>2020-02-04T19:28:15+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/where/github.html</loc>
+        <lastmod>2020-02-04T19:28:15+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/where/trello.html</loc>
+        <lastmod>2020-02-04T19:28:15+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/where/npm.html</loc>
+        <lastmod>2020-02-04T19:28:15+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/where/maven_central.html</loc>
+        <lastmod>2020-02-04T19:28:15+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/where/docker.html</loc>
+        <lastmod>2020-02-04T19:28:15+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/where/kubernetes.html</loc>
+        <lastmod>2020-02-04T19:28:15+00:00</lastmod>
+        <priority>0.80</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/mock_server/button_configuration_tls_certificate_authority_certificate</loc>
+        <lastmod>2020-02-04T19:28:04+00:00</lastmod>
+        <priority>0.64</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/proxy/running_mock_server_proxy.html</loc>
+        <lastmod>2020-01-03T17:37:15+00:00</lastmod>
+        <priority>0.64</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/proxy/proxy_clients.html</loc>
+        <lastmod>2020-01-03T17:37:16+00:00</lastmod>
+        <priority>0.51</priority>
+    </url>
+    <url>
+        <loc>https://mock-server.com/where/swagger_hub.html</loc>
+        <lastmod>2020-02-01T21:19:34+00:00</lastmod>
+        <priority>0.51</priority>
+    </url>
 </urlset>
