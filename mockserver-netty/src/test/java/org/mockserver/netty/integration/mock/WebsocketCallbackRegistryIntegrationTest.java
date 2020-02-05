@@ -291,7 +291,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
             );
 
         // then
-        Assert.assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENT_COUNT), CoreMatchers.is(1));
+        Assert.assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENT_COUNT), CoreMatchers.is(0));
 
         // when
         assertEquals(
