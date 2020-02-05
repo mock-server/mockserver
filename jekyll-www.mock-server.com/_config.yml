@@ -7,7 +7,7 @@ email: jamesdbloom@gmail.com
 description: MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS. It also proxies, allowing introspection and modification of proxied traffic, with all proxy protocols (i.e. port forwarding, HTTP, HTTPS, SOCKS4, SOCKS5, etc).
 keywords: mockserver, mock server, mock http server, http mock server, mock-server, mock rest service, mock server java, mock api, java mock http server, server mock, java mock server, mock rest server, java mock web service, api mock, mock web service java, mock web server, mock service, mock rest api, mock http response, mock http server java, mock api server, json mock service, api mocking, api proxying, proxy, introspect http, proxy http, proxy https, proxy rest api
 baseurl: "" # the subpath of your site, e.g. /blog/
-url: "http://www.mock-server.com"
+url: "https://www.mock-server.com"
 sitemap:
     exclude:
         - "/css/main.scss"
