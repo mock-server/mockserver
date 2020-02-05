@@ -665,7 +665,76 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     }
 
     @Test
-    public void shouldForwardRequestAndResponseByObjectCallbackOverride() {
+    public void shouldForwardRequestAndResponseByObjectCallbackOverrideViaWebSocket() throws Exception {
+        viaWebSocket(() -> {
+            // when
+            mockServerClient
+                .when(
+                    request()
+                        .withPath(calculatePath("echo"))
+                )
+                .forward(
+                    httpRequest ->
+                        request()
+                            .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
+                            .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
+                            .withBody("some_overridden_body")
+                            .withSecure(httpRequest.isSecure()),
+                    (httpRequest, httpResponse) ->
+                        httpResponse
+                            .withHeader("x-response-test", "x-response-test")
+                            .removeHeader(CONTENT_LENGTH.toString())
+                            .withBody("some_overidden_response_body")
+                );
+
+            // then
+            // - in http
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withHeaders(
+                        header("x-response-test", "x-response-test"),
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("some_overidden_response_body"),
+                makeRequest(
+                    request()
+                        .withPath(calculatePath("echo"))
+                        .withMethod("POST")
+                        .withHeaders(
+                            header("x-test", "test_headers_and_body")
+                        )
+                        .withBody("an_example_body_http"),
+                    headersToIgnore
+                )
+            );
+            // - in https
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withHeaders(
+                        header("x-response-test", "x-response-test"),
+                        header("x-test", "test_headers_and_body_https")
+                    )
+                    .withBody("some_overidden_response_body"),
+                makeRequest(
+                    request()
+                        .withSecure(true)
+                        .withPath(calculatePath("echo"))
+                        .withMethod("POST")
+                        .withHeaders(
+                            header("x-test", "test_headers_and_body_https")
+                        )
+                        .withBody("an_example_body_https"),
+                    headersToIgnore)
+            );
+        });
+    }
+
+    @Test
+    public void shouldForwardRequestAndResponseByObjectCallbackOverrideViaLocalJVM() {
         // when
         mockServerClient
             .when(
