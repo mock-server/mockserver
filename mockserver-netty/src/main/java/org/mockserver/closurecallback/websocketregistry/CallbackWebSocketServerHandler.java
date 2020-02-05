@@ -78,7 +78,8 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
             WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
         } else {
             final String clientId = httpRequest.headers().contains(CLIENT_REGISTRATION_ID_HEADER) ? httpRequest.headers().get(CLIENT_REGISTRATION_ID_HEADER) : UUID.randomUUID().toString();
-            if (LocalCallbackRegistry.responseClientExists(clientId)) {
+            if (LocalCallbackRegistry.responseClientExists(clientId)
+                || LocalCallbackRegistry.forwardClientExists(clientId)) {
                 // found locally to indicate to client
                 HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.RESET_CONTENT, ctx.channel().alloc().buffer(0));
                 HttpUtil.setContentLength(res, 0);
