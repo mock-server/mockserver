@@ -127,7 +127,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         } else {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setLogLevel(Level.WARN)
+                    .setLogLevel(Level.DEBUG)
                     .setMessageFormat("unknown message{}")
                     .setArguments(msg)
             );
