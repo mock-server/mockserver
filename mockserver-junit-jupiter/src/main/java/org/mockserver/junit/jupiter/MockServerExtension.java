@@ -45,9 +45,6 @@ public class MockServerExtension implements ParameterResolver, BeforeAllCallback
                 ports.add(port);
             }
         }
-        if (ports.isEmpty()) {
-            ports.add(PortFactory.findFreePort());
-        }
         client = instantiateClient(ports);
     }
 
