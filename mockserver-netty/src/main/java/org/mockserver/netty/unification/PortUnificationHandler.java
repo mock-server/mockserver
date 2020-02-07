@@ -125,6 +125,12 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         } else if (isHttp(msg)) {
             switchToHttp(ctx, msg);
         } else {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(Level.WARN)
+                    .setMessageFormat("unknown message{}")
+                    .setArguments(msg)
+            );
             // Unknown protocol; discard everything and close the connection.
             msg.clear();
             ctx.flush();
