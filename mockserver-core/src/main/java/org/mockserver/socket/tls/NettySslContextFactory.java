@@ -141,17 +141,17 @@ public class NettySslContextFactory {
         return serverSslContext;
     }
 
-    private List<X509Certificate> trustCertificateChain() {
+    private X509Certificate[] trustCertificateChain() {
         if (isNotBlank(ConfigurationProperties.tlsMutualAuthenticationCertificateChain())) {
             List<X509Certificate> x509Certificates = X509Generator.x509ChainFromPEMFile(tlsMutualAuthenticationCertificateChain());
             x509Certificates.add(keyAndCertificateFactory.x509Certificate());
             x509Certificates.add(keyAndCertificateFactory.certificateAuthorityX509Certificate());
-            return x509Certificates;
+            return x509Certificates.toArray(new X509Certificate[0]);
         } else {
             return Arrays.asList(
                 keyAndCertificateFactory.x509Certificate(),
                 keyAndCertificateFactory.certificateAuthorityX509Certificate()
-            );
+            ).toArray(new X509Certificate[0]);
         }
     }
 
