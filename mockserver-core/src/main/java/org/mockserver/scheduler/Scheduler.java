@@ -15,8 +15,6 @@ import java.util.function.Consumer;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.log.model.LogEntry.LogMessageType.WARN;
-import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.HttpResponse.notFoundResponse;
 
 /**
  * @author jamesdbloom
