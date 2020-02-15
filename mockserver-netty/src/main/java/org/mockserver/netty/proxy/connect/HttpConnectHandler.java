@@ -25,7 +25,6 @@ public final class HttpConnectHandler extends RelayConnectHandler<HttpRequest> {
 
     protected void removeCodecSupport(ChannelHandlerContext ctx) {
         ChannelPipeline pipeline = ctx.pipeline();
-        removeHandler(pipeline, SslHandler.class);
         removeHandler(pipeline, HttpServerCodec.class);
         removeHandler(pipeline, HttpContentDecompressor.class);
         removeHandler(pipeline, HttpObjectAggregator.class);

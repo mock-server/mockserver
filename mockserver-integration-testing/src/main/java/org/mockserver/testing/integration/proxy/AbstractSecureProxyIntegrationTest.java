@@ -41,8 +41,8 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.proxyconfiguration.ProxyConfiguration.proxyConfiguration;
-import static org.mockserver.testing.tls.SSLSocketFactory.sslSocketFactory;
 import static org.mockserver.test.Assert.assertContains;
+import static org.mockserver.testing.tls.SSLSocketFactory.sslSocketFactory;
 import static org.mockserver.verify.VerificationTimes.exactly;
 import static org.slf4j.event.Level.ERROR;
 
@@ -95,7 +95,40 @@ public abstract class AbstractSecureProxyIntegrationTest {
     }
 
     @Test
-    public void shouldNotConnectToSecurePortRequiringAuthenticationWithDefaultRelm() throws Exception {
+    public void shouldConnectToSecurePortWithSecureConnectRequest() throws Exception {
+        try {
+            try (Socket socket = new Socket("127.0.0.1", getProxyPort())) {
+                // Upgrade the socket to SSL
+                try (SSLSocket sslSocket = sslSocketFactory().wrapSocket(socket)) {
+                    // given
+                    OutputStream output = sslSocket.getOutputStream();
+
+                    // when
+                    output.write(("" +
+                        "CONNECT 127.0.0.1:443 HTTP/1.1\r\n" +
+                        "Host: 127.0.0.1:" + getServerSecurePort() + "\r\n" +
+                        "\r\n"
+                    ).getBytes(UTF_8));
+                    output.flush();
+
+                    // then
+                    assertContains(IOStreamUtils.readInputStreamToString(sslSocket), "HTTP/1.1 200 OK");
+                }
+            }
+        } catch (java.net.SocketException se) {
+            new MockServerLogger().logEvent(
+                new LogEntry()
+                    .setLogLevel(ERROR)
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setMessageFormat("Port port " + getProxyPort())
+                    .setThrowable(se)
+            );
+            throw se;
+        }
+    }
+
+    @Test
+    public void shouldNotConnectToSecurePortRequiringAuthenticationWithDefaultRealm() throws Exception {
         String existingUsername = ConfigurationProperties.proxyAuthenticationUsername();
         String existingPassword = ConfigurationProperties.proxyAuthenticationPassword();
         try {
@@ -128,7 +161,7 @@ public abstract class AbstractSecureProxyIntegrationTest {
     }
 
     @Test
-    public void shouldNotConnectToSecurePortRequiringAuthenticationWithCustomRelm() throws Exception {
+    public void shouldNotConnectToSecurePortRequiringAuthenticationWithCustomRealm() throws Exception {
         String existingUsername = ConfigurationProperties.proxyAuthenticationUsername();
         String existingPassword = ConfigurationProperties.proxyAuthenticationPassword();
         String existingRealm = ConfigurationProperties.proxyAuthenticationRealm();
@@ -185,7 +218,7 @@ public abstract class AbstractSecureProxyIntegrationTest {
                 output.write(("" +
                     "CONNECT 127.0.0.1:443 HTTP/1.1\r\n" +
                     "Host: 127.0.0.1:" + getServerSecurePort() + "\r\n" +
-                        "Proxy-Authorization: Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes(UTF_8)) + "\r\n" +
+                    "Proxy-Authorization: Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes(UTF_8)) + "\r\n" +
                     "\r\n"
                 ).getBytes(UTF_8));
                 output.flush();
@@ -223,6 +256,69 @@ public abstract class AbstractSecureProxyIntegrationTest {
             try (SSLSocket sslSocket = sslSocketFactory().wrapSocket(socket)) {
 
                 output = sslSocket.getOutputStream();
+
+                // - send GET request for headers only
+                output.write(("" +
+                    "GET /test_headers_only HTTP/1.1\r\n" +
+                    "Host: 127.0.0.1:" + getServerSecurePort() + "\r\n" +
+                    "X-Test: test_headers_only\r\n" +
+                    "Connection: keep-alive\r\n" +
+                    "\r\n"
+                ).getBytes(UTF_8));
+                output.flush();
+
+                // then
+                assertContains(IOStreamUtils.readInputStreamToString(sslSocket), "X-Test: test_headers_only");
+
+                // - send GET request for headers and body
+                output.write(("" +
+                    "GET /test_headers_and_body HTTP/1.1\r\n" +
+                    "Host: 127.0.0.1:" + getServerSecurePort() + "\r\n" +
+                    "Content-Length: " + "an_example_body".getBytes(UTF_8).length + "\r\n" +
+                    "X-Test: test_headers_and_body\r\n" +
+                    "\r\n" +
+                    "an_example_body"
+                ).getBytes(UTF_8));
+                output.flush();
+
+                // then
+                String response = IOStreamUtils.readInputStreamToString(sslSocket);
+                assertContains(response, "X-Test: test_headers_and_body");
+                assertContains(response, "an_example_body");
+
+                // and
+                getMockServerClient().verify(
+                    request()
+                        .withMethod("GET")
+                        .withPath("/test_headers_and_body")
+                        .withBody("an_example_body"),
+                    exactly(1)
+                );
+            }
+        }
+    }
+
+    @Test
+    public void shouldForwardRequestsToSecurePortUsingSocketDirectlyWithSecureConnectRequest() throws Exception {
+        try (Socket socket = new Socket("127.0.0.1", getProxyPort())) {
+
+            // Upgrade the socket to SSL
+            try (SSLSocket sslSocket = sslSocketFactory().wrapSocket(socket)) {
+
+                // given
+                OutputStream output = sslSocket.getOutputStream();
+
+                // when
+                // - send CONNECT request
+                output.write(("" +
+                    "CONNECT 127.0.0.1:443 HTTP/1.1\r\n" +
+                    "Host: 127.0.0.1:" + getServerSecurePort() + "\r\n" +
+                    "\r\n"
+                ).getBytes(UTF_8));
+                output.flush();
+
+                // - flush CONNECT response
+                assertContains(IOStreamUtils.readInputStreamToString(sslSocket), "HTTP/1.1 200 OK");
 
                 // - send GET request for headers only
                 output.write(("" +

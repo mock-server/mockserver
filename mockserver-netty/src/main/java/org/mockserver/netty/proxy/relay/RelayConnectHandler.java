@@ -8,6 +8,7 @@ import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.handler.ssl.SslHandler;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.model.LogEntry;
@@ -71,11 +72,10 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
 
                             downstreamPipeline.addLast(new DownstreamProxyRelayHandler(mockServerLogger, serverCtx.channel()));
 
-
                             // upstream
                             ChannelPipeline upstreamPipeline = serverCtx.channel().pipeline();
 
-                            if (isSslEnabledUpstream(serverCtx.channel())) {
+                            if (isSslEnabledUpstream(serverCtx.channel()) && upstreamPipeline.get(SslHandler.class) == null) {
                                 upstreamPipeline.addLast(nettySslContextFactory(serverCtx.channel()).createServerSslContext().newHandler(serverCtx.alloc()));
                             }
 
