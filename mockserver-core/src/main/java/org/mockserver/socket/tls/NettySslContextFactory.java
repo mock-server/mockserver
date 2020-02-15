@@ -95,7 +95,7 @@ public class NettySslContextFactory {
         }
     }
 
-    private List<X509Certificate> jvmCAX509TrustCertificates() throws NoSuchAlgorithmException, KeyStoreException {
+    private X509Certificate[] jvmCAX509TrustCertificates() throws NoSuchAlgorithmException, KeyStoreException {
         ArrayList<X509Certificate> x509Certificates = new ArrayList<>();
         x509Certificates.add(keyAndCertificateFactory.x509Certificate());
         x509Certificates.add(keyAndCertificateFactory.certificateAuthorityX509Certificate());
@@ -105,15 +105,16 @@ public class NettySslContextFactory {
             .stream(trustManagerFactory.getTrustManagers())
             .filter(trustManager -> trustManager instanceof X509TrustManager)
             .flatMap(trustManager -> Arrays.stream(((X509TrustManager) trustManager).getAcceptedIssuers()))
-            .collect((Supplier<List<X509Certificate>>) () -> x509Certificates, List::add, List::addAll);
+            .collect((Supplier<List<X509Certificate>>) () -> x509Certificates, List::add, List::addAll)
+            .toArray(new X509Certificate[0]);
     }
 
-    private List<X509Certificate> customCAX509TrustCertificates() {
+    private X509Certificate[] customCAX509TrustCertificates() {
         ArrayList<X509Certificate> x509Certificates = new ArrayList<>();
         x509Certificates.add(keyAndCertificateFactory.x509Certificate());
         x509Certificates.add(keyAndCertificateFactory.certificateAuthorityX509Certificate());
         x509Certificates.addAll(X509Generator.x509ChainFromPEMFile(forwardProxyTLSCustomTrustX509Certificates()));
-        return x509Certificates;
+        return x509Certificates.toArray(new X509Certificate[0]);
     }
 
     public synchronized SslContext createServerSslContext() {
