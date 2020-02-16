@@ -28,6 +28,8 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
     private final X509Generator x509Generator;
 
     private X509AndPrivateKey x509AndPrivateKey;
+    private String certificateAuthorityPrivateKey;
+    private X509Certificate certificateAuthorityX509Certificate;
 
     public JDKKeyAndCertificateFactory(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
@@ -38,7 +40,7 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
     public void buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate() {
         if (dynamicCertificateAuthorityUpdate() && certificateAuthorityCertificateNotYetCreated()) {
             try {
-                X509AndPrivateKey x509AndPrivateKey = x509Generator.generateRootX509AndPrivateKey(
+                X509AndPrivateKey certificateAuthorityX509AndPrivateKey = x509Generator.generateRootX509AndPrivateKey(
                     new CertificateSigningRequest()
                         .setKeyPairAlgorithm(KEY_GENERATION_ALGORITHM)
                         .setSigningAlgorithm(SIGNING_ALGORITHM)
@@ -46,8 +48,8 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
                         .setKeyPairSize(ROOT_KEY_SIZE)
                 );
 
-                saveCertificateAuthorityPEMToFile(x509AndPrivateKey.getCert(), certificateAuthorityX509CertificatePath(), "X509 Certificate");
-                saveCertificateAuthorityPEMToFile(x509AndPrivateKey.getPrivateKey(), certificateAuthorityPrivateKeyPath(), "Private Key");
+                saveCertificateAuthorityPEMToFile(certificateAuthorityX509AndPrivateKey.getCert(), certificateAuthorityX509CertificatePath(), "X509 Certificate");
+                saveCertificateAuthorityPEMToFile(certificateAuthorityX509AndPrivateKey.getPrivateKey(), certificateAuthorityPrivateKeyPath(), "Private Key");
             } catch (Exception e) {
                 mockServerLogger.logEvent(
                     new LogEntry()
@@ -143,35 +145,39 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
     }
 
     private String certificateAuthorityPrivateKey() {
-        if (dynamicCertificateAuthorityUpdate()) {
-            buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
+        if (certificateAuthorityPrivateKey == null) {
+            if (dynamicCertificateAuthorityUpdate()) {
+                buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
+            }
+            certificateAuthorityPrivateKey = FileReader.readFileFromClassPathOrPath(certificateAuthorityPrivateKeyPath());
+            if (MockServerLogger.isEnabled(TRACE)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(TRACE)
+                        .setMessageFormat("loaded dynamic CA private key from path{}PEM{}")
+                        .setArguments(certificateAuthorityPrivateKeyPath(), certificateAuthorityPrivateKey)
+                );
+            }
         }
-        String privateKey = FileReader.readFileFromClassPathOrPath(certificateAuthorityPrivateKeyPath());
-        if (MockServerLogger.isEnabled(TRACE)) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(TRACE)
-                    .setMessageFormat("loaded dynamic CA private key from path{}PEM{}")
-                    .setArguments(certificateAuthorityPrivateKeyPath(), privateKey)
-            );
-        }
-        return privateKey;
+        return certificateAuthorityPrivateKey;
     }
 
     public X509Certificate certificateAuthorityX509Certificate() {
-        if (dynamicCertificateAuthorityUpdate()) {
-            buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
+        if (certificateAuthorityX509Certificate == null) {
+            if (dynamicCertificateAuthorityUpdate()) {
+                buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
+            }
+            certificateAuthorityX509Certificate = x509FromPEMFile(certificateAuthorityX509CertificatePath());
+            if (MockServerLogger.isEnabled(TRACE)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(TRACE)
+                        .setMessageFormat("loaded dynamic CA X509{}from path{}from PEM{}")
+                        .setArguments(certificateAuthorityX509Certificate, certificateAuthorityX509CertificatePath(), FileReader.readFileFromClassPathOrPath(certificateAuthorityX509CertificatePath()))
+                );
+            }
         }
-        X509Certificate x509Certificate = x509FromPEMFile(certificateAuthorityX509CertificatePath());
-        if (MockServerLogger.isEnabled(TRACE)) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(TRACE)
-                    .setMessageFormat("loaded dynamic CA X509{}from path{}from PEM{}")
-                    .setArguments(x509Certificate, certificateAuthorityX509CertificatePath(), FileReader.readFileFromClassPathOrPath(certificateAuthorityX509CertificatePath()))
-            );
-        }
-        return x509Certificate;
+        return certificateAuthorityX509Certificate;
     }
 
     @Override
