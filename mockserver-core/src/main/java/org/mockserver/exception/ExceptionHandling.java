@@ -95,7 +95,7 @@ public class ExceptionHandling {
             }
 
             try {
-                // No match by now.. Try to load the class via classloader and inspect it.
+                // No match by now. Try to load the class via classloader and inspect it.
                 // This is mainly done as other JDK implementations may differ in name of
                 // the impl.
                 Class<?> clazz = PlatformDependent.getClassLoader(ExceptionHandling.class).loadClass(classname);
