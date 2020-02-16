@@ -14,6 +14,7 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -34,6 +35,117 @@ public class ExpectationFileWatcherTest {
     public void createMockServerMatcher() {
         mockServerLogger = new MockServerLogger();
         mockServerMatcher = new MockServerMatcher(mockServerLogger, new Scheduler(mockServerLogger), new WebSocketClientRegistry(mockServerLogger));
+    }
+
+    @Test
+    public void shouldDetectModifiedInitialiserJsonInWorkingDirectory() throws Exception {
+        String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
+        ConfigurationProperties.watchInitializationJson(true);
+        ExpectationFileWatcher expectationFileWatcher = null;
+        try {
+            // given - configuration
+            File mockserverInitialization = new File("mockserverInitialization" + UUID.randomUUID().toString() + ".json");
+            mockserverInitialization.deleteOnExit();
+            ConfigurationProperties.initializationJsonPath(mockserverInitialization.getPath());
+            // and - expectation update notification
+            CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
+            mockServerMatcher.registerListener((mockServerMatcher, cause) -> expectationsUpdated.complete("updated"));
+            // and - file watcher
+            expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, mockServerMatcher);
+            MILLISECONDS.sleep(1500);
+
+            // when
+            String watchedFileContents = "[ {" + NEW_LINE +
+                "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some first response\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"id\" : \"two\"," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleSecond\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some second response\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"id\" : \"three\"," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleThird\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some third response\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "} ]";
+            Files.write(mockserverInitialization.toPath(), watchedFileContents.getBytes(StandardCharsets.UTF_8));
+            long updatedFileTime = System.currentTimeMillis();
+
+            expectationsUpdated.get(30, SECONDS);
+            System.out.println("update processed in: " + (System.currentTimeMillis() - updatedFileTime) + "ms");
+
+            // then
+            List<Expectation> expectations = mockServerMatcher.retrieveActiveExpectations(null);
+            assertThat(
+                expectations,
+                contains(
+                    new Expectation(
+                        request()
+                            .withPath("/simpleFirst")
+                    )
+                        .withId("one")
+                        .thenRespond(
+                            response()
+                                .withBody("some first response")
+                        )
+                    ,
+                    new Expectation(
+                        request()
+                            .withPath("/simpleSecond")
+                    )
+                        .withId("two")
+                        .thenRespond(
+                            response()
+                                .withBody("some second response")
+                        ),
+                    new Expectation(
+                        request()
+                            .withPath("/simpleThird")
+                    )
+                        .withId("three")
+                        .thenRespond(
+                            response()
+                                .withBody("some third response")
+                        )
+                )
+            );
+        } finally {
+            ConfigurationProperties.initializationJsonPath(initializationJsonPath);
+            ConfigurationProperties.watchInitializationJson(false);
+            if (expectationFileWatcher != null) {
+                expectationFileWatcher.stop();
+            }
+        }
     }
 
     @Test

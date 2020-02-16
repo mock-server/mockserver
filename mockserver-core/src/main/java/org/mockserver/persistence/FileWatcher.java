@@ -2,6 +2,7 @@ package org.mockserver.persistence;
 
 import org.mockserver.scheduler.Scheduler;
 
+import java.io.File;
 import java.nio.file.*;
 import java.util.function.Consumer;
 
@@ -16,7 +17,8 @@ public class FileWatcher {
         Path directoryPath = Paths.get(filePath);
         Path fileName = directoryPath.getFileName();
         watchService = FileSystems.getDefault().newWatchService();
-        directoryPath.getParent()
+        Path parent = directoryPath.getParent() != null ? directoryPath.getParent() : new File(".").toPath();
+        parent
             .register(
                 watchService,
                 StandardWatchEventKinds.OVERFLOW,

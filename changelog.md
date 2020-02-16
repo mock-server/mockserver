@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - improve support for clients making initial SOCKS or HTTP CONNECT requests over TLS
 
 ### Fixed
+- fixed null point for expectation initialiser with file watcher in working directory specified with relative path
 
 ## [5.9.0] - 2020-02-01
 
