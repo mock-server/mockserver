@@ -31,8 +31,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.cors.CORSHeaders.isPreflightRequest;
-import static org.mockserver.exception.ExceptionHandling.connectionException;
-import static org.mockserver.exception.ExceptionHandling.sslHandshakeException;
+import static org.mockserver.exception.ExceptionHandling.*;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.slf4j.event.Level.TRACE;
@@ -256,7 +255,7 @@ public class ActionHandler {
                                     .setThrowable(throwable)
                             );
                             returnNotFound(responseWriter, request, "TLS handshake exception while proxying request to remote address" + remoteAddress);
-                        } else {
+                        } else if (!connectionClosedException(throwable)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setType(EXCEPTION)
@@ -265,6 +264,8 @@ public class ActionHandler {
                                     .setMessageFormat(throwable.getMessage())
                                     .setThrowable(throwable)
                             );
+                            returnNotFound(responseWriter, request, "connection closed while proxying request to remote address" + remoteAddress);
+                        } else {
                             returnNotFound(responseWriter, request, throwable.getMessage());
                         }
                     }
