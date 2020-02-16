@@ -16,8 +16,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.javaLoggerLogLevel;
 import static org.mockserver.configuration.ConfigurationProperties.logLevel;
-import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
-import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
+import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.slf4j.event.Level.ERROR;
 
 /**
@@ -82,7 +81,9 @@ public class MockServerLogger {
     }
 
     public void logEvent(LogEntry logEntry) {
-        if (logEntry.getType() == RECEIVED_REQUEST || isEnabled(logEntry.getLogLevel())) {
+        if (logEntry.getType() == RECEIVED_REQUEST
+            || logEntry.getType() == FORWARDED_REQUEST
+            || isEnabled(logEntry.getLogLevel())) {
             if (httpStateHandler != null) {
                 httpStateHandler.log(logEntry);
             } else {
