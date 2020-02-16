@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - improved X509 certificates by adding Subject Key Identifier and Authority Key Identifier
 - stopped delay being applied twice on response actions (#721)
+- improve support for clients making initial SOCKS or HTTP CONNECT requests over TLS
 
 ### Fixed
 
