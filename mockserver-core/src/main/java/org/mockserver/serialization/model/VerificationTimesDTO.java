@@ -1,12 +1,12 @@
 package org.mockserver.serialization.model;
 
-import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
+import org.mockserver.model.ObjectWithJsonToString;
 import org.mockserver.verify.VerificationTimes;
 
 /**
  * @author jamesdbloom
  */
-public class VerificationTimesDTO extends ObjectWithReflectiveEqualsHashCodeToString implements DTO<VerificationTimes> {
+public class VerificationTimesDTO extends ObjectWithJsonToString implements DTO<VerificationTimes> {
 
     private int atLeast;
     private int atMost;
