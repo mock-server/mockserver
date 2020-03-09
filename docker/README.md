@@ -22,13 +22,13 @@ docker pull mockserver/mockserver
 * **EITHER** run the container with no log output (i.e. in daemon mode)
  
 ```bash
-docker run -d --name mockserver -p <serverPort>:1080 mockserver/mockserver
+docker run -d --rm --name mockserver -p <serverPort>:1080 mockserver/mockserver
 ```
 
 * **OR** run the container with log output to console (i.e. in the foreground)
  
 ```bash
-docker run --name mockserver -p <serverPort>:1080 mockserver/mockserver
+docker run --rm --name mockserver -p <serverPort>:1080 mockserver/mockserver
 ```
 
 * **THEN** when your finished stop the container
@@ -40,7 +40,7 @@ docker stop mockserver && docker rm mockserver
 * **DEBUG** any issues or change the command line options you can run the container with a shell prompt
 
 ```bash
-docker run -i -t --name mockserver -p 1080:1080 mockserver/mockserver /bin/bash
+docker run -i -t --rm --name mockserver -p 1080:1080 mockserver/mockserver /bin/bash
 ```
 
 The default command executed when the container runs is:
