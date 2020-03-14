@@ -930,7 +930,31 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJsonWithJsonBodyAsObjectField() throws IOException {
+    public void shouldParseJsonWithJsonBodyAsObjectFieldAsString() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\": {" + NEW_LINE +
+            "            \"type\": \"JSON\"," + NEW_LINE +
+            "            \"json\": \"{\\\"context\\\":[{\\\"source\\\":\\\"DECISION_REQUEST\\\"},{\\\"source\\\":\\\"DECISION_REQUEST\\\"},{\\\"source\\\":\\\"DECISION_REQUEST\\\"}]}\"," + NEW_LINE +
+            "            \"matchType\" : \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new JsonBodyDTO(new JsonBody("{\"context\":[{\"source\":\"DECISION_REQUEST\"},{\"source\":\"DECISION_REQUEST\"},{\"source\":\"DECISION_REQUEST\"}]}")))
+            ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJsonWithJsonBodyAsObjectFieldAsObject() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
             "    \"httpRequest\": {" + NEW_LINE +
@@ -950,6 +974,30 @@ public class BodyDTODeserializerTest {
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setBody(new JsonBodyDTO(new JsonBody("{\"context\":[{\"source\":\"DECISION_REQUEST\"},{\"source\":\"DECISION_REQUEST\"},{\"source\":\"DECISION_REQUEST\"}]}")))
+            ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJsonWithJsonBodyAsObjectFieldAsArray() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\": {" + NEW_LINE +
+            "            \"type\": \"JSON\"," + NEW_LINE +
+            "            \"json\": [{\"context\": [{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"}]}]," + NEW_LINE +
+            "            \"matchType\" : \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new JsonBodyDTO(new JsonBody("[{\"context\":[{\"source\":\"DECISION_REQUEST\"},{\"source\":\"DECISION_REQUEST\"},{\"source\":\"DECISION_REQUEST\"}]}]")))
             ), expectationDTO);
     }
 

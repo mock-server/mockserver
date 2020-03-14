@@ -77,7 +77,8 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                         if (fieldNameToType.containsKey(fieldName)) {
                             type = fieldNameToType.get(fieldName);
                         }
-                        if (Map.class.isAssignableFrom(entry.getValue().getClass())) {
+                        if (Map.class.isAssignableFrom(entry.getValue().getClass()) ||
+                            containsIgnoreCase(key, "json", "jsonSchema") && !String.class.isAssignableFrom(entry.getValue().getClass())) {
                             if (objectMapper == null) {
                                 objectMapper = ObjectMapperFactory.createObjectMapper();
                             }

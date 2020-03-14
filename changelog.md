@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - fixed null point for expectation initialiser with file watcher in working directory specified with relative path
+- fixed error resulting in enum not found exception for log events
+- fixed error with parsing of json arrays for expectation responses with json body as json object not escaped string
 
 ## [5.9.0] - 2020-02-01
 
