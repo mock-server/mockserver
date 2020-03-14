@@ -25,7 +25,8 @@ sitemap:
 <h2>Expectation Initializer Class</h2>
 
 <p>MockServer expectations can be initialized when the MockServer starts, using a class, by specified the <strong>initializationClass</strong> configuration property as described in the <a href="/mock_server/configuration_properties.html#button_configuration_initialization_class">Configuration Properties</a> page, for example:</p>
-<pre><code class="code">java -Dmockserver.initializationClass=<span class="string_literal">"org.mockserver.server.initialize.ExpectationInitializerExample"</span> -jar ~/Downloads/mockserver-netty-5.9.0-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel INFO</code></pre>
+<pre class="prettyprint lang-java code"><code class="code">System.setProperty("mockserver.initializationClass", ExpectationInitializerExample.class.getName());
+int mockServerPort = new ClientAndServer().getLocalPort();</code></pre>
 
 <p>The class must implement the <strong>org.mockserver.server.initialize.ExpectationInitializer</strong> interface and have a default constructor with zero arguments, for example:</p>
 

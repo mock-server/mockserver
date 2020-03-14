@@ -51,12 +51,12 @@ public class MockServerExtension implements ParameterResolver, BeforeAllCallback
     private ClientAndServer instantiateClient(List<Integer> ports) {
         if (perTestSuite) {
             if (perTestSuiteClient == null) {
-                perTestSuiteClient = clientAndServer.startClientAndServer(ports);
+                perTestSuiteClient = ClientAndServer.startClientAndServer(ports);
                 Runtime.getRuntime().addShutdownHook(new Thread(() -> perTestSuiteClient.stop()));
             }
             return perTestSuiteClient;
         }
-        return clientAndServer.startClientAndServer(ports);
+        return ClientAndServer.startClientAndServer(ports);
     }
 
     @Override

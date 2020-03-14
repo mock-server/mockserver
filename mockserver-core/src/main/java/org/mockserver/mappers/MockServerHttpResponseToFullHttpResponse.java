@@ -1,26 +1,23 @@
 package org.mockserver.mappers;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import org.mockserver.codec.BodyDecoderEncoder;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.*;
-import org.mockserver.model.HttpRequest;
+import org.mockserver.model.ConnectionOptions;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.NottableString;
 import org.slf4j.event.Level;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
-import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
-import static io.netty.handler.codec.http.HttpHeaderValues.*;
-import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
-import static org.apache.commons.lang3.StringUtils.*;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 
 /**

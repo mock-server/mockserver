@@ -27,7 +27,7 @@ public class ClientAndServer extends MockServerClient {
         portFuture.complete(mockServer.getLocalPort());
     }
 
-    public ClientAndServer startClientAndServer(List<Integer> ports) {
+    public static ClientAndServer startClientAndServer(List<Integer> ports) {
         return startClientAndServer(ports.toArray(new Integer[0]));
     }
 

@@ -42,20 +42,12 @@ lastmod: 2019-11-10T08:00:00+01:00
 # socket timeout in milliseconds (default 120000)
 mockserver.maxSocketTimeout=120000
 
-# Java KeyStore
-
-# keystore file path if keystore does not already exist a new keystore with this file name will be created
-# (default depends on javaKeyStoreType value: keystore.jks or keystore.p12 or keystore.jceks)
-mockserver.javaKeyStoreFilePath=keystore.jks
-# keystore password (default "changeit")
-mockserver.javaKeyStorePassword=changeit
-# keystore type options are "jks", "pkcs12" or "jceks" (default "jks")
-mockserver.javaKeyStoreType=jks
-
 # Certificate Generation
 
-# delete KeyStore file on JVM shutdown (default true)
-mockserver.deleteGeneratedKeyStoreOnExit=true
+# dynamically generated CA key pair (if they don't already exist in specified directory)
+mockserver.dynamicallyCreateCertificateAuthorityCertificate=true
+# save dynamically generated CA key pair in working directory
+mockserver.directoryToSaveDynamicSSLCertificate=.
 # certificate domain name (default "localhost")
 mockserver.sslCertificateDomainName=localhost
 # comma separated list of ip addresses for Subject Alternative Name domain names (default empty list)
