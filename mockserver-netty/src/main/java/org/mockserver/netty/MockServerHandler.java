@@ -173,8 +173,8 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         } catch (Exception ex) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setLogLevel(Level.ERROR)
                     .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
                     .setHttpRequest(request)
                     .setMessageFormat("exception processing " + request)
                     .setThrowable(ex)

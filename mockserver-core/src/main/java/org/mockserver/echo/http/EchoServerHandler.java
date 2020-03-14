@@ -43,8 +43,8 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
         mockServerEventLog.add(
             new LogEntry()
-                .setLogLevel(INFO)
                 .setType(RECEIVED_REQUEST)
+                .setLogLevel(INFO)
                 .setHttpRequest(request)
                 .setMessageFormat("EchoServer received request{}")
                 .setArguments(request)
