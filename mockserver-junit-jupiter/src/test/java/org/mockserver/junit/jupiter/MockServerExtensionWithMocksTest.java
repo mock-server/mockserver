@@ -1,6 +1,7 @@
 package org.mockserver.junit.jupiter;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -22,6 +23,7 @@ import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+@Disabled
 @ExtendWith({
     MockServerExtension.class,
     TestLoggerExtension.class,
