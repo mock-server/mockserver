@@ -1,4 +1,4 @@
-package org.mockserver.netty.integration.mock;
+package org.mockserver.netty.integration.mock.tls.inbound;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -19,7 +19,6 @@ import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.mockserver.configuration.ConfigurationProperties.tlsMutualAuthenticationRequired;
 import static org.mockserver.echo.tls.UniqueCertificateChainSSLContextBuilder.uniqueCertificateChainSSLContext;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -31,7 +30,7 @@ import static org.mockserver.model.HttpStatusCode.OK_200;
 public abstract class AbstractClientAuthenticationMockingIntegrationTest extends AbstractMockingIntegrationTestBase {
 
     @Test
-    public void shouldReturnUpdateInHttp() {
+    public void shouldReturnUpgradeForHttp() {
         // when
         mockServerClient
             .when(

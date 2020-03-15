@@ -77,7 +77,7 @@ public class NettySslContextFactory {
     }
 
     private PrivateKey forwardProxyPrivateKey() {
-        if (isNotBlank(ConfigurationProperties.forwardProxyPrivateKey()) || isNotBlank(ConfigurationProperties.forwardProxyCertificateChain())) {
+        if (isNotBlank(ConfigurationProperties.forwardProxyPrivateKey())) {
             return X509Generator.privateKeyFromPEMFile(ConfigurationProperties.forwardProxyPrivateKey());
         } else {
             return keyAndCertificateFactory.privateKey();
@@ -85,7 +85,7 @@ public class NettySslContextFactory {
     }
 
     private X509Certificate[] forwardProxyCertificateChain() {
-        if (isNotBlank(ConfigurationProperties.forwardProxyPrivateKey()) || isNotBlank(ConfigurationProperties.forwardProxyCertificateChain())) {
+        if (isNotBlank(ConfigurationProperties.forwardProxyCertificateChain())) {
             return X509Generator.x509ChainFromPEMFile(ConfigurationProperties.forwardProxyCertificateChain()).toArray(new X509Certificate[0]);
         } else {
             return new X509Certificate[]{

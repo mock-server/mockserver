@@ -1,4 +1,4 @@
-package org.mockserver.netty.integration.mock;
+package org.mockserver.netty.integration.mock.tls.outbound;
 
 import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.SslContextBuilder;

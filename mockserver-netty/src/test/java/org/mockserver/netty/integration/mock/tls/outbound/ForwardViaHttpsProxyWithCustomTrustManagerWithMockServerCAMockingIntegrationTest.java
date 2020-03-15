@@ -1,4 +1,4 @@
-package org.mockserver.netty.integration.mock;
+package org.mockserver.netty.integration.mock.tls.outbound;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -14,28 +14,21 @@ import static org.mockserver.stop.Stop.stopQuietly;
 /**
  * @author jamesdbloom
  */
-public class ForwardViaHttpsProxyWithCustomTrustManagerWithCustomCAMockingIntegrationTest extends AbstractForwardViaHttpsProxyMockingIntegrationTest {
+public class ForwardViaHttpsProxyWithCustomTrustManagerWithMockServerCAMockingIntegrationTest extends AbstractForwardViaHttpsProxyMockingIntegrationTest {
 
     private static MockServer mockServer;
     private static MockServer proxy;
     private static ForwardProxyTLSX509CertificatesTrustManager originalForwardProxyTLSX509CertificatesTrustManager;
-    private static String originalCertificateAuthorityCertificate;
-    private static String originalCertificateAuthorityPrivateKey;
     private static String originalForwardProxyTLSCustomTrustX509Certificates;
 
     @BeforeClass
     public static void startServer() {
         // save original value
-        originalCertificateAuthorityCertificate = certificateAuthorityCertificate();
-        originalCertificateAuthorityPrivateKey = certificateAuthorityPrivateKey();
         originalForwardProxyTLSX509CertificatesTrustManager = forwardProxyTLSX509CertificatesTrustManagerType();
         originalForwardProxyTLSCustomTrustX509Certificates = forwardProxyTLSCustomTrustX509Certificates();
 
-        // set new certificate authority values
-        certificateAuthorityCertificate("org/mockserver/netty/integration/tls/ca.pem");
-        certificateAuthorityPrivateKey("org/mockserver/netty/integration/tls/ca-key-pkcs8.pem");
         forwardProxyTLSX509CertificatesTrustManagerType(ForwardProxyTLSX509CertificatesTrustManager.CUSTOM.name());
-        forwardProxyTLSCustomTrustX509Certificates("org/mockserver/netty/integration/tls/ca.pem");
+        forwardProxyTLSCustomTrustX509Certificates(certificateAuthorityCertificate());
 
         proxy = new MockServer();
         mockServer = new MockServer(proxyConfiguration(ProxyConfiguration.Type.HTTPS, "127.0.0.1:" + proxy.getLocalPort()));
@@ -50,8 +43,6 @@ public class ForwardViaHttpsProxyWithCustomTrustManagerWithCustomCAMockingIntegr
         stopQuietly(mockServerClient);
 
         // set back to original value
-        certificateAuthorityCertificate(originalCertificateAuthorityCertificate);
-        certificateAuthorityPrivateKey(originalCertificateAuthorityPrivateKey);
         forwardProxyTLSX509CertificatesTrustManagerType(originalForwardProxyTLSX509CertificatesTrustManager.name());
         forwardProxyTLSCustomTrustX509Certificates(originalForwardProxyTLSCustomTrustX509Certificates);
     }

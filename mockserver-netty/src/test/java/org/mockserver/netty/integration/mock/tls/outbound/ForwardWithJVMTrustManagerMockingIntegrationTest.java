@@ -1,4 +1,4 @@
-package org.mockserver.netty.integration.mock;
+package org.mockserver.netty.integration.mock.tls.outbound;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -13,7 +13,7 @@ import static org.mockserver.stop.Stop.stopQuietly;
 /**
  * @author jamesdbloom
  */
-public class ForwardWithAnyTrustManagerMockingIntegrationTest extends AbstractForwardViaHttpsProxyMockingIntegrationTest {
+public class ForwardWithJVMTrustManagerMockingIntegrationTest extends AbstractForwardViaHttpsProxyMockingIntegrationTest {
 
     private static MockServer mockServer;
     private static ForwardProxyTLSX509CertificatesTrustManager originalForwardProxyTLSX509CertificatesTrustManager;
@@ -23,7 +23,7 @@ public class ForwardWithAnyTrustManagerMockingIntegrationTest extends AbstractFo
         // save original value
         originalForwardProxyTLSX509CertificatesTrustManager = ConfigurationProperties.forwardProxyTLSX509CertificatesTrustManagerType();
 
-        forwardProxyTLSX509CertificatesTrustManagerType(ForwardProxyTLSX509CertificatesTrustManager.ANY.name());
+        forwardProxyTLSX509CertificatesTrustManagerType(ForwardProxyTLSX509CertificatesTrustManager.JVM.name());
 
         mockServer = new MockServer();
 

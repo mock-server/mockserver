@@ -140,6 +140,45 @@
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.directoryToSaveDynamicSSLCertificate="/some/existing/path"</code></pre>
 </div>
 
+<button id="button_configuration_tls_private_key" class="accordion title"><strong>Custom Private Key for TLS (inbound)</strong></button>
+<div class="panel title">
+    <p>File location of a fixed custom private key for TLS connections into MockServer.</p>
+    <p>The private key must be a PKCS#8 PEM file and must be the private key corresponding to the <a href="#button_configuration_tls_X509_certificate">x509CertificatePath</a> X509 (public key) configuration.</p>
+    <p>The <a href="#button_configuration_tls_certificate_authority_certificate">certificateAuthorityCertificate</a> configuration must be the Certificate Authority for the corresponding X509 certificate (i.e. able to valid its signature), see: <a href="#button_configuration_tls_X509_certificate">x509CertificatePath</a>.</p>
+    <p>To convert a PKCS#1 (i.e. default for Bouncy Castle) to a PKCS#8 the following command can be used: openssl pkcs8 -topk8 -inform PEM -in private_key_PKCS_1.pem -out private_key_PKCS_8.pem -nocrypt</p>
+    <p>This configuration will be ignored unless x509CertificatePath is also set.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.privateKeyPath(String privateKeyPath)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.privateKeyPath=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_TLS_PRIVATE_KEY_PATH=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.privateKeyPath=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.privateKeyPath="/some/existing/path"</code></pre>
+</div>
+
+<button id="button_configuration_tls_X509_certificate" class="accordion title"><strong>Custom X.509 Certificate Chain for TLS (inbound)</strong></button>
+<div class="panel title">
+    <p>File location of a fixed custom X.509 Certificate for TLS connections into MockServer</p>
+    <p>The certificate must be a X509 PEM file and must be the public key corresponding to the <a href="#button_configuration_tls_private_key">privateKeyPath</a> private key configuration.</p>
+    <p>The <a href="#button_configuration_tls_certificate_authority_certificate">certificateAuthorityCertificate</a> configuration must be the Certificate Authority for this certificate (i.e. able to valid its signature).</p>
+    <p>This configuration will be ignored unless privateKeyPath is also set.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.x509CertificatePath(String x509CertificatePath)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.x509CertificatePath=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_TLS_X509_CERTIFICATE_PATH=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.x509CertificatePath=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.x509CertificatePath="/some/existing/path"</code></pre>
+</div>
+
 <button id="button_configuration_require_mtls_for_all_tls_connections" class="accordion title"><strong>Require mTLS (TLS client authentication) for all TLS connections / HTTPS requests</strong></button>
 <div class="panel title">
     <p>Require mTLS (also called client authentication and two-way TLS) for all TLS connections / HTTPS requests to MockServer</p>
@@ -215,7 +254,7 @@
 
 <button id="button_configuration_forward_proxy_private_key" class="accordion title"><strong>Custom Private Key for Forwarded or Proxied Requests</strong></button>
 <div class="panel title">
-    <p>File location of custom Private Key for forwarded or proxied requests (i.e. TLS connections out of MockServer), the private key must be a PKCS#8 PEM file and must match the <a href="#button_configuration_forward_proxy_certificate_chain">forwardProxyCertificateChain</a></p>
+    <p>File location of custom Private Key for forwarded or proxied requests (i.e. TLS connections out of MockServer), the private key must be a PKCS#8 PEM file</p>
     <p>To convert a PKCS#1 (i.e. default for Bouncy Castle) to a PKCS#8 the following command can be used: openssl pkcs8 -topk8 -inform PEM -in private_key_PKCS_1.pem -out private_key_PKCS_8.pem -nocrypt</p>
     <p>This private key will be used if MockServer needs to perform mTLS (client authentication) for outbound TLS connections.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
@@ -233,7 +272,7 @@
 
 <button id="button_configuration_forward_proxy_certificate_chain" class="accordion title"><strong>Custom X.509 Certificate Chain for Forwarded or Proxied Requests</strong></button>
 <div class="panel title">
-    <p>File location of custom X.509 Certificate Chain for forwarded or proxied requests (i.e. TLS connections out of MockServer), the certificates must be a X509 PEM file and must match the <a href="#button_configuration_forward_proxy_private_key">forwardProxyPrivateKey</a></p>
+    <p>File location of custom X.509 Certificate Chain for forwarded or proxied requests (i.e. TLS connections out of MockServer), the certificates must be a X509 PEM file</p>
     <p>This certificate chain will be used if MockServer needs to perform mTLS (client authentication) for outbound TLS connections.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
     <p>Java Code:</p>

@@ -90,6 +90,8 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_PREVENT_CERTIFICATE_DYNAMIC_UPDATE = "mockserver.preventCertificateDynamicUpdate";
     private static final String MOCKSERVER_CERTIFICATE_AUTHORITY_PRIVATE_KEY = "mockserver.certificateAuthorityPrivateKey";
     private static final String MOCKSERVER_CERTIFICATE_AUTHORITY_X509_CERTIFICATE = "mockserver.certificateAuthorityCertificate";
+    private static final String MOCKSERVER_TLS_PRIVATE_KEY_PATH = "mockserver.privateKeyPath";
+    private static final String MOCKSERVER_TLS_X509_CERTIFICATE_PATH = "mockserver.x509CertificatePath";
     private static final String MOCKSERVER_DYNAMICALLY_CREATE_CERTIFICATE_AUTHORITY_CERTIFICATE = "mockserver.dynamicallyCreateCertificateAuthorityCertificate";
     private static final String MOCKSERVER_CERTIFICATE_DIRECTORY_TO_SAVE_DYNAMIC_SSL_CERTIFICATE = "mockserver.directoryToSaveDynamicSSLCertificate";
     private static final String MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_REQUIRED = "mockserver.tlsMutualAuthenticationRequired";
@@ -525,6 +527,47 @@ public class ConfigurationProperties {
         System.setProperty(MOCKSERVER_CERTIFICATE_DIRECTORY_TO_SAVE_DYNAMIC_SSL_CERTIFICATE, directoryToSaveDynamicSSLCertificate);
     }
 
+    public static String privateKeyPath() {
+        return readPropertyHierarchically(MOCKSERVER_TLS_PRIVATE_KEY_PATH, "MOCKSERVER_TLS_PRIVATE_KEY_PATH", "");
+    }
+
+    /**
+     * File location of a fixed custom private key for TLS connections into MockServer.
+     * <p>
+     * The private key must be a PKCS#8 PEM file and must be the private key corresponding to the x509CertificatePath X509 (public key) configuration.
+     * The certificateAuthorityCertificate configuration must be the Certificate Authority for the corresponding X509 certificate (i.e. able to valid its signature), see: x509CertificatePath.
+     * <p>
+     * To convert a PKCS#1 (i.e. default for Bouncy Castle) to a PKCS#8 the following command can be used: openssl pkcs8 -topk8 -inform PEM -in private_key_PKCS_1.pem -out private_key_PKCS_8.pem -nocrypt
+     * <p>
+     * This configuration will be ignored unless x509CertificatePath is also set.
+     *
+     * @param privateKeyPath location of the PKCS#8 PEM file containing the private key
+     */
+    public static void privateKeyPath(String privateKeyPath) {
+        fileExists(privateKeyPath);
+        System.setProperty(MOCKSERVER_TLS_PRIVATE_KEY_PATH, privateKeyPath);
+    }
+
+
+    public static String x509CertificatePath() {
+        return readPropertyHierarchically(MOCKSERVER_TLS_X509_CERTIFICATE_PATH, "MOCKSERVER_TLS_X509_CERTIFICATE_PATH", "");
+    }
+
+    /**
+     * File location of a fixed custom X.509 Certificate for TLS connections into MockServer.
+     * <p>
+     * The certificate must be a X509 PEM file and must be the public key corresponding to the privateKeyPath private key configuration.
+     * The certificateAuthorityCertificate configuration must be the Certificate Authority for this certificate (i.e. able to valid its signature).
+     * <p>
+     * This configuration will be ignored unless privateKeyPath is also set.
+     *
+     * @param x509CertificatePath location of the PEM file containing the X509 certificate
+     */
+    public static void x509CertificatePath(String x509CertificatePath) {
+        fileExists(x509CertificatePath);
+        System.setProperty(MOCKSERVER_TLS_X509_CERTIFICATE_PATH, x509CertificatePath);
+    }
+
     public static boolean tlsMutualAuthenticationRequired() {
         return enableMTLS;
     }
@@ -545,7 +588,7 @@ public class ConfigurationProperties {
 
     /**
      * File location of custom mTLS (TLS client authentication) X.509 Certificate Chain for Trusting (i.e. signature verification of) Client X.509 Certificates, the certificate chain must be a X509 PEM file.
-     *
+     * <p>
      * This certificate chain will be used if MockServer performs mTLS (client authentication) for inbound TLS connections because tlsMutualAuthenticationRequired is enabled
      *
      * @param trustCertificateChain file location of custom mTLS (TLS client authentication) X.509 Certificate Chain for Trusting (i.e. signature verification of) Client X.509 Certificates
@@ -599,7 +642,8 @@ public class ConfigurationProperties {
     }
 
     /**
-     * File location of custom Private Key for proxied TLS connections out of MockServer, the private key must be a PKCS#8 PEM file and must match the forwardProxyCertificateChain
+     * File location of custom Private Key for proxied TLS connections out of MockServer, the private key must be a PKCS#8 PEM file
+     * <p>
      * To convert a PKCS#1 (i.e. default for Bouncy Castle) to a PKCS#8 the following command can be used: openssl pkcs8 -topk8 -inform PEM -in private_key_PKCS_1.pem -out private_key_PKCS_8.pem -nocrypt
      * <p>
      * This private key will be used if MockServer needs to perform mTLS (client authentication) for outbound TLS connections.
@@ -617,7 +661,7 @@ public class ConfigurationProperties {
     }
 
     /**
-     * File location of custom X.509 Certificate Chain for proxied TLS connections out of MockServer, the certificates must be a X509 PEM file and must match the forwardProxyPrivateKey
+     * File location of custom mTLS (TLS client authentication) X.509 Certificate Chain for Trusting (i.e. signature verification of) Client X.509 Certificates, the certificate chain must be a X509 PEM file.
      * <p>
      * This certificate chain will be used if MockServer needs to perform mTLS (client authentication) for outbound TLS connections.
      *
@@ -907,9 +951,9 @@ public class ConfigurationProperties {
 
     /**
      * Path to support HTTP GET requests for status response (also available on PUT /mockserver/status).
-     *
+     * <p>
      * If this value is not modified then only PUT /mockserver/status but is a none blank value is provided for this value then GET requests to this path will return the 200 Ok status response showing the MockServer version and bound ports.
-     *
+     * <p>
      * A GET request to this path will be matched before any expectation matching or proxying of requests.
      *
      * @param livenessPath path to support HTTP GET requests for status response

@@ -87,7 +87,7 @@ public class KeyStoreFactory {
         return sslContext;
     }
 
-    @SuppressWarnings("InfiniteRecursion")
+    @SuppressWarnings({"InfiniteRecursion", "UnusedReturnValue"})
     public KeyStore loadOrCreateKeyStore(String keyStoreType) {
         keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
         return loadOrCreateKeyStore(

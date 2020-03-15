@@ -1,4 +1,4 @@
-package org.mockserver.netty.integration.mock;
+package org.mockserver.netty.integration.mock.tls.inbound;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -7,7 +7,6 @@ import org.mockserver.client.MockServerClient;
 import org.mockserver.socket.PortFactory;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.UUID;
 
 import static org.mockserver.configuration.ConfigurationProperties.*;

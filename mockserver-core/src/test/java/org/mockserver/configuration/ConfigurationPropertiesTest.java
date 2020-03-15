@@ -533,6 +533,40 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldSetAndReadPrivateKeyPath() throws IOException {
+        // given
+        System.clearProperty("mockserver.privateKeyPath");
+
+        // then
+        assertThat(privateKeyPath(), is(""));
+
+        // when
+        File tempFile = File.createTempFile("some", "temp");
+        privateKeyPath(tempFile.getAbsolutePath());
+
+        // then
+        assertThat(privateKeyPath(), is(tempFile.getAbsolutePath()));
+        assertEquals(tempFile.getAbsolutePath(), System.getProperty("mockserver.privateKeyPath"));
+    }
+
+    @Test
+    public void shouldSetAndReadX509CertificatePath() throws IOException {
+        // given
+        System.clearProperty("mockserver.x509CertificatePath");
+
+        // then
+        assertThat(x509CertificatePath(), is(""));
+
+        // when
+        File tempFile = File.createTempFile("some", "temp");
+        x509CertificatePath(tempFile.getAbsolutePath());
+
+        // then
+        assertThat(x509CertificatePath(), is(tempFile.getAbsolutePath()));
+        assertEquals(tempFile.getAbsolutePath(), System.getProperty("mockserver.x509CertificatePath"));
+    }
+
+    @Test
     public void shouldSetAndReadTLSMutualAuthenticationRequired() {
         // given
         System.clearProperty("mockserver.tlsMutualAuthenticationRequired");
