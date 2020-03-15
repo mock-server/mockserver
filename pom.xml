@@ -58,7 +58,7 @@
         <slf4j.version>1.7.30</slf4j.version>
         <jackson.version>2.10.1</jackson.version>
         <velocity.version>2.1</velocity.version>
-        <netty.version>4.1.45.Final</netty.version>
+        <netty.version>4.1.47.Final</netty.version>
         <httpcomponents.version>4.4.1</httpcomponents.version>
         <spring.version>5.2.2.RELEASE</spring.version>
         <mockito.version>3.2.4</mockito.version>
@@ -160,12 +160,12 @@
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-core</artifactId>
-                <version>9.0.30</version>
+                <version>9.0.31</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-logging-juli</artifactId>
-                <version>8.0.53 </version>
+                <version>8.0.53</version>
                 <scope>runtime</scope>
             </dependency>
 
