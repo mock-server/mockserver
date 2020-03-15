@@ -127,11 +127,12 @@ public abstract class AbstractProxyIntegrationTest {
             // when
             // - send GET request for headers only
             output.write(("" +
-                "GET " + addContextToPath("test_headers_only") + " HTTP/1.1" + NEW_LINE +
-                "Host: 127.0.0.1:" + getServerPort() + "" + NEW_LINE +
-                "x-test: test_headers_only" + NEW_LINE +
-                "Connection: keep-alive" + NEW_LINE +
-                NEW_LINE
+                "GET " + addContextToPath("test_headers_only") + " HTTP/1.1\r\n" +
+                "Host: 127.0.0.1:" + getServerPort() + "\r\n" +
+                "x-test: test_headers_only\r\n" +
+                "Content-Length: 0\r\n" +
+                "Connection: keep-alive\r\n" +
+                "\r\n"
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
@@ -148,11 +149,11 @@ public abstract class AbstractProxyIntegrationTest {
 
             // - send GET request for headers and body
             output.write(("" +
-                "GET " + addContextToPath("test_headers_and_body") + " HTTP/1.1" + NEW_LINE +
-                "Host: 127.0.0.1:" + getServerPort() + "" + NEW_LINE +
-                "Content-Length: " + "an_example_body".getBytes(StandardCharsets.UTF_8).length + "" + NEW_LINE +
-                "x-test: test_headers_and_body" + NEW_LINE +
-                NEW_LINE +
+                "GET " + addContextToPath("test_headers_and_body") + " HTTP/1.1\n" +
+                "Host: 127.0.0.1:" + getServerPort() + "\r\n" +
+                "Content-Length: " + "an_example_body".getBytes(StandardCharsets.UTF_8).length + "\r\n" +
+                "x-test: test_headers_and_body\r\n" +
+                "\r\n" +
                 "an_example_body"
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
@@ -295,10 +296,10 @@ public abstract class AbstractProxyIntegrationTest {
             // when
             // - send GET request
             output.write(("" +
-                "GET " + addContextToPath("not_found") + " HTTP/1.1" + NEW_LINE +
-                "Host: 127.0.0.1:" + getServerPort() + "" + NEW_LINE +
-                "Connection: close" + NEW_LINE +
-                NEW_LINE
+                "GET " + addContextToPath("not_found") + " HTTP/1.1\r\n" +
+                "Host: 127.0.0.1:" + getServerPort() + "\r\n" +
+                "Connection: close\r\n" +
+                "\r\n"
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
