@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
@@ -41,6 +42,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
 import static org.mockserver.matchers.Times.exactly;
+import static org.mockserver.matchers.Times.unlimited;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
@@ -222,6 +224,388 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingPathInOrderOfCreationExactTimes() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path")),
+                exactly(1)
+            )
+            .respond(
+                response()
+                    .withBody("some_body_one")
+            );
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path")),
+                exactly(1)
+            )
+            .respond(
+                response()
+                    .withBody("some_body_two")
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_one"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_two"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
+                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingPathInOrderOfCreationBeforeExpiry() throws InterruptedException {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path")),
+                unlimited(),
+                TimeToLive.exactly(SECONDS, 2L)
+            )
+            .respond(
+                response()
+                    .withBody("some_body_one")
+            );
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path")),
+                unlimited(),
+                TimeToLive.exactly(SECONDS, 4L)
+            )
+            .respond(
+                response()
+                    .withBody("some_body_two")
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_one"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+        MILLISECONDS.sleep(2500);
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_two"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+        MILLISECONDS.sleep(2250);
+        assertEquals(
+            response()
+                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
+                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingPathInOrderOfPriorityExactTimes() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path")),
+                exactly(1),
+                TimeToLive.unlimited(),
+                0
+            )
+            .respond(
+                response()
+                    .withBody("some_body_one")
+            );
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path")),
+                exactly(1),
+                TimeToLive.unlimited(),
+                10
+            )
+            .respond(
+                response()
+                    .withBody("some_body_two")
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_two"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_one"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
+                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingPathInOrderOfPriorityWithPriorityUpdate() {
+        // when
+        Expectation expectationOne = new Expectation(request().withPath(calculatePath("some_path")), unlimited(), TimeToLive.unlimited(), 0)
+            .thenRespond(
+                response()
+                    .withBody("some_body_one")
+            );
+        Expectation expectationTwo = new Expectation(request().withPath(calculatePath("some_path")), unlimited(), TimeToLive.unlimited(), 10)
+            .thenRespond(
+                response()
+                    .withBody("some_body_two")
+            );
+        mockServerClient
+            .upsert(
+                expectationOne,
+                expectationTwo
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_two"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+
+        // when
+        Expectation expectationOneWithHigherPriority = new Expectation(request().withPath(calculatePath("some_path")), unlimited(), TimeToLive.unlimited(), 15)
+            .thenRespond(
+                response()
+                    .withBody("some_body_one")
+            );
+        mockServerClient
+            .upsert(
+                expectationOneWithHigherPriority
+            );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_one"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingPathInOrderOfPriorityWithPriorityUpdateAndExactTimes() {
+        // when
+        Expectation expectationOne = new Expectation(request().withPath(calculatePath("some_path")), exactly(1), TimeToLive.unlimited(), 0)
+            .thenRespond(
+                response()
+                    .withBody("some_body_one")
+            );
+        Expectation expectationTwo = new Expectation(request().withPath(calculatePath("some_path")), exactly(1), TimeToLive.unlimited(), 10)
+            .thenRespond(
+                response()
+                    .withBody("some_body_two")
+            );
+        mockServerClient
+            .upsert(
+                expectationOne,
+                expectationTwo
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_two"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+
+        // when
+        Expectation expectationOneWithHigherPriority = new Expectation(request().withPath(calculatePath("some_path")), exactly(1), TimeToLive.unlimited(), 15)
+            .withId(expectationOne.getId())
+            .thenRespond(
+                response()
+                    .withBody("some_body_one")
+            );
+        mockServerClient
+            .upsert(
+                expectationOneWithHigherPriority,
+                expectationTwo
+            );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_one"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_two"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
+                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldUpdateExistingExpectation() {
+        // when
+        Expectation expectationOne = new Expectation(request().withPath(calculatePath("some_path_one")))
+            .thenRespond(
+                response()
+                    .withBody("some_body_one")
+            );
+        Expectation expectationTwo = new Expectation(request().withPath(calculatePath("some_path_two")))
+            .thenRespond(
+                response()
+                    .withBody("some_body_two")
+            );
+        mockServerClient
+            .upsert(
+                expectationOne,
+                expectationTwo
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_one"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path_one")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_two"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path_two")),
+                headersToIgnore)
+        );
+
+        // when
+        Expectation expectationOneUpdated = new Expectation(request().withPath(calculatePath("some_path_updated")))
+            .thenRespond(
+                response()
+                    .withBody("some_body_one_updated")
+            );
+        mockServerClient
+            .upsert(
+                expectationOneUpdated
+            );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_one_updated"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("some_path_updated")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_two"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path_two")),
                 headersToIgnore)
         );
     }
@@ -2551,10 +2935,10 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             .when(
                 request().withPath(calculatePath("some_path")),
                 exactly(2),
-                TimeToLive.exactly(TimeUnit.SECONDS, 3L)
+                TimeToLive.exactly(SECONDS, 3L)
             )
             .respond(
-                response().withBody("some_body").withDelay(TimeUnit.SECONDS, 3L)
+                response().withBody("some_body").withDelay(SECONDS, 3L)
             );
 
         // then
@@ -4677,15 +5061,15 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response("delayed data")
-                    .withDelay(new Delay(TimeUnit.SECONDS, 3))
+                    .withDelay(new Delay(SECONDS, 3))
             );
 
         Future<HttpResponse> delayedFuture = Executors.newSingleThreadExecutor().submit(() -> httpClient.sendRequest(
             request(addContextToPath(calculatePath("delayed")))
                 .withHeader(HOST.toString(), "localhost:" + getServerPort())
-        ).get(10, TimeUnit.SECONDS));
+        ).get(10, SECONDS));
 
-        Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS); // Let request reach server
+        Uninterruptibles.sleepUninterruptibly(1, SECONDS); // Let request reach server
 
         delayedFuture.cancel(true); // Then interrupt requesting thread
 
@@ -4700,7 +5084,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response("super slow")
-                    .withDelay(new Delay(TimeUnit.SECONDS, 5))
+                    .withDelay(new Delay(SECONDS, 5))
             );
         mockServerClient
             .when(
@@ -4719,7 +5103,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         });
 
         // Let fast request come to the server slightly after slow request
-        Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+        Uninterruptibles.sleepUninterruptibly(1, SECONDS);
 
         Future<Long> fastFuture = executorService.submit(() -> {
             long start = System.currentTimeMillis();

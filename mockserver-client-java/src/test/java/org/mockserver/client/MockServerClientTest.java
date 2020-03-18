@@ -10,6 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.internal.verification.AtLeast;
 import org.mockserver.Version;
+import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
@@ -23,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.CREATED;
@@ -34,6 +36,8 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.client.MockServerClientIntegrationTest.MOCK_SERVER_LOGGER;
+import static org.mockserver.matchers.Times.unlimited;
 import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -187,6 +191,37 @@ public class MockServerClientTest {
         }
 
 
+    }
+
+    @Test
+    public void shouldUpsertExpectations() {
+        // given
+        Expectation expectationOne = new Expectation(request().withPath("/some_path"), unlimited(), TimeToLive.unlimited(), 0)
+            .thenRespond(
+                response()
+                    .withBody("some_body_one")
+            );
+        Expectation expectationTwo = new Expectation(request().withPath("/some_path"), unlimited(), TimeToLive.unlimited(), 10)
+            .thenRespond(
+                response()
+                    .withBody("some_body_two")
+            );
+        when(mockExpectationSerializer.serialize(expectationOne, expectationTwo)).thenReturn("some_body");
+
+        // when
+        mockServerClient.upsert(expectationOne, expectationTwo);
+
+        // then
+        verify(mockHttpClient, atLeastOnce()).sendRequest(
+            request()
+                .withHeader(CONTENT_TYPE.toString(), APPLICATION_JSON_UTF_8.toString())
+                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withMethod("PUT")
+                .withPath("/mockserver/expectation")
+                .withBody("some_body", UTF_8),
+            20000,
+            TimeUnit.MILLISECONDS
+        );
     }
 
     @Test
@@ -716,7 +751,6 @@ public class MockServerClientTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void shouldQueryRunningStatusWhenSocketConnectionException() {
         // given
         when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenThrow(SocketConnectionException.class);

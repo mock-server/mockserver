@@ -8,8 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - closure / object callbacks uses local method invocation (instead of Web Socket) when both the client in same JVM (i.e. ClientAndServer, JUnit Rule, etc)
-- added support to specify a fixed TLS X509 Certificate and Private Key for inbound TLS connections (HTTPS or SOCKS)
-- added ability to prioritise expectations such that the matching happens according to the specified priority (highest first) then creation order
+- support to specify a fixed TLS X509 Certificate and Private Key for inbound TLS connections (HTTPS or SOCKS)
+- ability to prioritise expectations such that the matching happens according to the specified priority (highest first) then creation order
+- ability to create or update (if id matches) expectations from the client using upsert method
 
 ### Changed
 - improved X509 certificates by adding Subject Key Identifier and Authority Key Identifier

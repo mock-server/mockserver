@@ -46,7 +46,7 @@ public class ForwardChainExpectation {
      */
     public void respond(final HttpResponse httpResponse) {
         expectation.thenRespond(httpResponse);
-        mockServerClient.sendExpectation(expectation);
+        mockServerClient.upsert(expectation);
     }
 
     /**
@@ -57,7 +57,7 @@ public class ForwardChainExpectation {
      */
     public void respond(final HttpTemplate httpTemplate) {
         expectation.thenRespond(httpTemplate);
-        mockServerClient.sendExpectation(expectation);
+        mockServerClient.upsert(expectation);
     }
 
     /**
@@ -73,7 +73,7 @@ public class ForwardChainExpectation {
      */
     public void respond(final HttpClassCallback httpClassCallback) {
         expectation.thenRespond(httpClassCallback);
-        mockServerClient.sendExpectation(expectation);
+        mockServerClient.upsert(expectation);
     }
 
     /**
@@ -84,7 +84,7 @@ public class ForwardChainExpectation {
      */
     public void respond(final ExpectationResponseCallback expectationResponseCallback) {
         expectation.thenRespond(new HttpObjectCallback().withClientId(registerWebSocketClient(expectationResponseCallback, null)));
-        mockServerClient.sendExpectation(expectation);
+        mockServerClient.upsert(expectation);
     }
 
     /**
@@ -100,7 +100,7 @@ public class ForwardChainExpectation {
                     .withClientId(registerWebSocketClient(expectationResponseCallback, null))
                     .withDelay(delay)
             );
-        mockServerClient.sendExpectation(expectation);
+        mockServerClient.upsert(expectation);
     }
 
     /**
@@ -110,7 +110,7 @@ public class ForwardChainExpectation {
      */
     public void forward(final HttpForward httpForward) {
         expectation.thenForward(httpForward);
-        mockServerClient.sendExpectation(expectation);
+        mockServerClient.upsert(expectation);
     }
 
     /**
@@ -121,7 +121,7 @@ public class ForwardChainExpectation {
      */
     public void forward(final HttpTemplate httpTemplate) {
         expectation.thenForward(httpTemplate);
-        mockServerClient.sendExpectation(expectation);
+        mockServerClient.upsert(expectation);
     }
 
     /**
@@ -137,7 +137,7 @@ public class ForwardChainExpectation {
      */
     public void forward(final HttpClassCallback httpClassCallback) {
         expectation.thenForward(httpClassCallback);
-        mockServerClient.sendExpectation(expectation);
+        mockServerClient.upsert(expectation);
     }
 
     /**
@@ -152,7 +152,7 @@ public class ForwardChainExpectation {
                 new HttpObjectCallback()
                     .withClientId(registerWebSocketClient(expectationForwardCallback, null))
             );
-        mockServerClient.sendExpectation(expectation);
+        mockServerClient.upsert(expectation);
     }
 
     /**
@@ -168,7 +168,7 @@ public class ForwardChainExpectation {
                     .withResponseCallback(true)
                     .withClientId(registerWebSocketClient(expectationForwardCallback, expectationForwardResponseCallback))
             );
-        mockServerClient.sendExpectation(expectation);
+        mockServerClient.upsert(expectation);
     }
 
     /**
@@ -184,7 +184,7 @@ public class ForwardChainExpectation {
                     .withClientId(registerWebSocketClient(expectationForwardCallback, null))
                     .withDelay(delay)
             );
-        mockServerClient.sendExpectation(expectation);
+        mockServerClient.upsert(expectation);
     }
 
     /**
@@ -201,7 +201,7 @@ public class ForwardChainExpectation {
                     .withClientId(registerWebSocketClient(expectationForwardCallback, expectationForwardResponseCallback))
                     .withDelay(delay)
             );
-        mockServerClient.sendExpectation(expectation);
+        mockServerClient.upsert(expectation);
     }
 
     /**
@@ -213,7 +213,7 @@ public class ForwardChainExpectation {
      */
     public void forward(final HttpOverrideForwardedRequest httpOverrideForwardedRequest) {
         expectation.thenForward(httpOverrideForwardedRequest);
-        mockServerClient.sendExpectation(expectation);
+        mockServerClient.upsert(expectation);
     }
 
     /**
@@ -223,7 +223,7 @@ public class ForwardChainExpectation {
      */
     public void error(final HttpError httpError) {
         expectation.thenError(httpError);
-        mockServerClient.sendExpectation(expectation);
+        mockServerClient.upsert(expectation);
     }
 
     @SuppressWarnings("rawtypes")

@@ -34,19 +34,23 @@ public class ExpectationSerializer implements Serializer<Expectation> {
     }
 
     public String serialize(Expectation expectation) {
-        try {
-            return objectMapper
-                .writerWithDefaultPrettyPrinter()
-                .writeValueAsString(new ExpectationDTO(expectation));
-        } catch (Exception e) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
-                    .setLogLevel(Level.ERROR)
-                    .setMessageFormat("exception while serializing expectation to JSON with value " + expectation)
-                    .setThrowable(e)
-            );
-            throw new RuntimeException("Exception while serializing expectation to JSON with value " + expectation, e);
+        if (expectation != null) {
+            try {
+                return objectMapper
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(new ExpectationDTO(expectation));
+            } catch (Exception e) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.EXCEPTION)
+                        .setLogLevel(Level.ERROR)
+                        .setMessageFormat("exception while serializing expectation to JSON with value " + expectation)
+                        .setThrowable(e)
+                );
+                throw new RuntimeException("Exception while serializing expectation to JSON with value " + expectation, e);
+            }
+        } else {
+            return "";
         }
     }
 

@@ -52,7 +52,7 @@ public class ForwardChainExpectationTest {
 
         // then
         verify(mockExpectation).thenRespond(same(response));
-        verify(mockAbstractClient).sendExpectation(mockExpectation);
+        verify(mockAbstractClient).upsert(mockExpectation);
     }
 
     @Test
@@ -65,7 +65,7 @@ public class ForwardChainExpectationTest {
 
         // then
         verify(mockExpectation).thenRespond(same(template));
-        verify(mockAbstractClient).sendExpectation(mockExpectation);
+        verify(mockAbstractClient).upsert(mockExpectation);
     }
 
     @Test
@@ -78,7 +78,7 @@ public class ForwardChainExpectationTest {
 
         // then
         verify(mockExpectation).thenRespond(same(callback));
-        verify(mockAbstractClient).sendExpectation(mockExpectation);
+        verify(mockAbstractClient).upsert(mockExpectation);
     }
 
     @Test
@@ -91,7 +91,7 @@ public class ForwardChainExpectationTest {
 
         // then
         verify(mockExpectation).thenForward(same(forward));
-        verify(mockAbstractClient).sendExpectation(mockExpectation);
+        verify(mockAbstractClient).upsert(mockExpectation);
     }
 
     @Test
@@ -104,7 +104,7 @@ public class ForwardChainExpectationTest {
 
         // then
         verify(mockExpectation).thenForward(same(template));
-        verify(mockAbstractClient).sendExpectation(mockExpectation);
+        verify(mockAbstractClient).upsert(mockExpectation);
     }
 
     @Test
@@ -117,7 +117,7 @@ public class ForwardChainExpectationTest {
 
         // then
         verify(mockExpectation).thenForward(same(callback));
-        verify(mockAbstractClient).sendExpectation(mockExpectation);
+        verify(mockAbstractClient).upsert(mockExpectation);
     }
 
     @Test
@@ -127,7 +127,7 @@ public class ForwardChainExpectationTest {
 
         // then
         verify(mockExpectation).thenForward(forwardOverriddenRequest(request().withBody("some_replaced_body")));
-        verify(mockAbstractClient).sendExpectation(mockExpectation);
+        verify(mockAbstractClient).upsert(mockExpectation);
     }
 
     @Test
@@ -140,7 +140,7 @@ public class ForwardChainExpectationTest {
 
         // then
         verify(mockExpectation).thenError(same(error));
-        verify(mockAbstractClient).sendExpectation(mockExpectation);
+        verify(mockAbstractClient).upsert(mockExpectation);
     }
 
 }

@@ -810,6 +810,64 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
+     * Specify one or more expectations to be create, or updated (if the id matches).
+     * <p>
+     * This method should be used to update existing expectation by id.  All fields will be updated for expectations with a matching id as the existing expectation is deleted and recreated.
+     * <p>
+     * To retrieve the id(s) for existing expectation(s) the retrieveActiveExpectations(HttpRequest httpRequest) method can be used.
+     * <p>
+     * Typically, to create expectations this method should not be used directly instead
+     * the when(...) and response(...) or forward(...) or error(...) methods should be used
+     * for example:
+     * <pre>
+     * mockServerClient
+     *  .when(
+     *      request()
+     *          .withPath("/some_path")
+     *          .withBody("some_request_body"),
+     *      Times.exactly(5),
+     *      TimeToLive.exactly(TimeUnit.SECONDS, 120)
+     *  )
+     *  .respond(
+     *      response()
+     *          .withBody("some_response_body")
+     *          .withHeader("responseName", "responseValue")
+     *  )
+     * </pre>
+     *
+     * @param expectations one or more expectations to create or update (if the id field matches)
+     */
+    public void upsert(Expectation... expectations) {
+        if (expectations != null) {
+            if (expectations.length == 1) {
+                HttpResponse httpResponse =
+                    sendRequest(
+                        request()
+                            .withMethod("PUT")
+                            .withContentType(APPLICATION_JSON_UTF_8)
+                            .withPath(calculatePath("expectation"))
+                            .withBody(expectationSerializer.serialize(expectations[0]), StandardCharsets.UTF_8)
+                    );
+                if (httpResponse != null && httpResponse.getStatusCode() != 201) {
+                    throw new ClientException(formatLogMessage("error:{}while submitted expectation:{}", httpResponse.getBody(), expectations[0]));
+                }
+            } else if (expectations.length > 1) {
+                HttpResponse httpResponse =
+                    sendRequest(
+                        request()
+                            .withMethod("PUT")
+                            .withContentType(APPLICATION_JSON_UTF_8)
+                            .withPath(calculatePath("expectation"))
+                            .withBody(expectationSerializer.serialize(expectations), StandardCharsets.UTF_8)
+                    );
+                if (httpResponse != null && httpResponse.getStatusCode() != 201) {
+                    throw new ClientException(formatLogMessage("error:{}while submitted expectations:{}", httpResponse.getBody(), expectations));
+                }
+            }
+        }
+    }
+
+    /**
      * Specify one or more expectations, normally this method should not be used directly instead the when(...) and response(...) or forward(...) or error(...) methods should be used
      * for example:
      * <pre>
@@ -829,22 +887,11 @@ public class MockServerClient implements Stoppable {
      * </pre>
      *
      * @param expectations one or more expectations
+     * @deprecated this is deprecated due to unclear naming, use method upsert(Expectation... expectations) instead
      */
-    @SuppressWarnings("WeakerAccess")
+    @Deprecated
     public void sendExpectation(Expectation... expectations) {
-        for (Expectation expectation : expectations) {
-            HttpResponse httpResponse =
-                sendRequest(
-                    request()
-                        .withMethod("PUT")
-                        .withContentType(APPLICATION_JSON_UTF_8)
-                        .withPath(calculatePath("expectation"))
-                        .withBody(expectation != null ? expectationSerializer.serialize(expectation) : "", StandardCharsets.UTF_8)
-                );
-            if (httpResponse != null && httpResponse.getStatusCode() != 201) {
-                throw new ClientException(formatLogMessage("error:{}while submitted expectation:{}", httpResponse.getBody(), expectation));
-            }
-        }
+        upsert(expectations);
     }
 
     /**
