@@ -20,6 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.ui.MockServerMatcherNotifier.Cause.API;
 
 public class ExpectationFileSystemPersistenceTest {
 
@@ -44,44 +45,39 @@ public class ExpectationFileSystemPersistenceTest {
 
             // when
             expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
-            mockServerMatcher.add(
-                new Expectation(
-                    request()
-                        .withPath("/simpleFirst")
-                )
-                    .withId("one")
-                    .thenRespond(
-                        response()
-                            .withBody("some first response")
-                    )
-            );
-            mockServerMatcher.add(
-                new Expectation(
-                    request()
-                        .withPath("/simpleSecond")
-                )
-                    .withId("two")
-                    .thenRespond(
-                        response()
-                            .withBody("some second response")
-                    )
-            );
-            mockServerMatcher.add(
-                new Expectation(
-                    request()
-                        .withPath("/simpleThird")
-                )
-                    .withId("three")
-                    .thenRespond(
-                        response()
-                            .withBody("some third response")
-                    )
-            );
+            mockServerMatcher.add(new Expectation(
+                request()
+                    .withPath("/simpleFirst")
+            )
+                .withId("one")
+                .thenRespond(
+                    response()
+                        .withBody("some first response")
+                ), API);
+            mockServerMatcher.add(new Expectation(
+                request()
+                    .withPath("/simpleSecond")
+            )
+                .withId("two")
+                .thenRespond(
+                    response()
+                        .withBody("some second response")
+                ), API);
+            mockServerMatcher.add(new Expectation(
+                request()
+                    .withPath("/simpleThird")
+            )
+                .withId("three")
+                .thenRespond(
+                    response()
+                        .withBody("some third response")
+                ), API);
             MILLISECONDS.sleep(1500);
 
             // then
             String expectedFileContents = "[ {" + NEW_LINE +
                 "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -96,6 +92,7 @@ public class ExpectationFileSystemPersistenceTest {
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
                 "  \"id\" : \"two\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleSecond\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -110,6 +107,7 @@ public class ExpectationFileSystemPersistenceTest {
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
                 "  \"id\" : \"three\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleThird\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -145,39 +143,33 @@ public class ExpectationFileSystemPersistenceTest {
 
             // when
             expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
-            mockServerMatcher.add(
-                new Expectation(
-                    request()
-                        .withPath("/simpleFirst")
-                )
-                    .withId("one")
-                    .thenRespond(
-                        response()
-                            .withBody("some first response")
-                    )
-            );
-            mockServerMatcher.add(
-                new Expectation(
-                    request()
-                        .withPath("/simpleSecond")
-                )
-                    .withId("two")
-                    .thenRespond(
-                        response()
-                            .withBody("some second response")
-                    )
-            );
-            mockServerMatcher.add(
-                new Expectation(
-                    request()
-                        .withPath("/simpleThird")
-                )
-                    .withId("three")
-                    .thenRespond(
-                        response()
-                            .withBody("some third response")
-                    )
-            );
+            mockServerMatcher.add(new Expectation(
+                request()
+                    .withPath("/simpleFirst")
+            )
+                .withId("one")
+                .thenRespond(
+                    response()
+                        .withBody("some first response")
+                ), API);
+            mockServerMatcher.add(new Expectation(
+                request()
+                    .withPath("/simpleSecond")
+            )
+                .withId("two")
+                .thenRespond(
+                    response()
+                        .withBody("some second response")
+                ), API);
+            mockServerMatcher.add(new Expectation(
+                request()
+                    .withPath("/simpleThird")
+            )
+                .withId("three")
+                .thenRespond(
+                    response()
+                        .withBody("some third response")
+                ), API);
             mockServerMatcher.clear(
                 request()
                     .withPath("/simpleSecond")
@@ -187,6 +179,7 @@ public class ExpectationFileSystemPersistenceTest {
             // then
             String expectedFileContents = "[ {" + NEW_LINE +
                 "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -201,6 +194,7 @@ public class ExpectationFileSystemPersistenceTest {
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
                 "  \"id\" : \"three\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleThird\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -236,55 +230,48 @@ public class ExpectationFileSystemPersistenceTest {
 
             // when
             expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
-            mockServerMatcher.add(
-                new Expectation(
-                    request()
-                        .withPath("/simpleFirst")
-                )
-                    .withId("one")
-                    .thenRespond(
-                        response()
-                            .withBody("some first response")
-                    )
-            );
-            mockServerMatcher.add(
-                new Expectation(
-                    request()
-                        .withPath("/simpleSecond")
-                )
-                    .withId("two")
-                    .thenRespond(
-                        response()
-                            .withBody("some second response")
-                    )
-            );
-            mockServerMatcher.add(
-                new Expectation(
-                    request()
-                        .withPath("/simpleThird")
-                )
-                    .withId("three")
-                    .thenRespond(
-                        response()
-                            .withBody("some third response")
-                    )
-            );
-            mockServerMatcher.add(
-                new Expectation(
-                    request()
-                        .withPath("/simpleSecondUpdated")
-                )
-                    .withId("two")
-                    .thenRespond(
-                        response()
-                            .withBody("some second updated response")
-                    )
-            );
+            mockServerMatcher.add(new Expectation(
+                request()
+                    .withPath("/simpleFirst")
+            )
+                .withId("one")
+                .thenRespond(
+                    response()
+                        .withBody("some first response")
+                ), API);
+            mockServerMatcher.add(new Expectation(
+                request()
+                    .withPath("/simpleSecond")
+            )
+                .withId("two")
+                .thenRespond(
+                    response()
+                        .withBody("some second response")
+                ), API);
+            mockServerMatcher.add(new Expectation(
+                request()
+                    .withPath("/simpleThird")
+            )
+                .withId("three")
+                .thenRespond(
+                    response()
+                        .withBody("some third response")
+                ), API);
+            mockServerMatcher.add(new Expectation(
+                request()
+                    .withPath("/simpleSecondUpdated")
+            )
+                .withId("two")
+                .thenRespond(
+                    response()
+                        .withBody("some second updated response")
+                ), API);
             MILLISECONDS.sleep(1500);
 
             // then
             String expectedFileContents = "[ {" + NEW_LINE +
                 "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -299,6 +286,7 @@ public class ExpectationFileSystemPersistenceTest {
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
                 "  \"id\" : \"two\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleSecondUpdated\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -313,6 +301,7 @@ public class ExpectationFileSystemPersistenceTest {
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
                 "  \"id\" : \"three\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleThird\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -348,39 +337,33 @@ public class ExpectationFileSystemPersistenceTest {
 
             // when
             expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
-            mockServerMatcher.add(
-                new Expectation(
-                    request()
-                        .withPath("/simpleFirst")
-                )
-                    .withId("one")
-                    .thenRespond(
-                        response()
-                            .withBody("some first response")
-                    )
-            );
-            mockServerMatcher.add(
-                new Expectation(
-                    request()
-                        .withPath("/simpleSecond")
-                )
-                    .withId("two")
-                    .thenRespond(
-                        response()
-                            .withBody("some second response")
-                    )
-            );
-            mockServerMatcher.add(
-                new Expectation(
-                    request()
-                        .withPath("/simpleThird")
-                )
-                    .withId("three")
-                    .thenRespond(
-                        response()
-                            .withBody("some third response")
-                    )
-            );
+            mockServerMatcher.add(new Expectation(
+                request()
+                    .withPath("/simpleFirst")
+            )
+                .withId("one")
+                .thenRespond(
+                    response()
+                        .withBody("some first response")
+                ), API);
+            mockServerMatcher.add(new Expectation(
+                request()
+                    .withPath("/simpleSecond")
+            )
+                .withId("two")
+                .thenRespond(
+                    response()
+                        .withBody("some second response")
+                ), API);
+            mockServerMatcher.add(new Expectation(
+                request()
+                    .withPath("/simpleThird")
+            )
+                .withId("three")
+                .thenRespond(
+                    response()
+                        .withBody("some third response")
+                ), API);
             mockServerMatcher.update(new Expectation[]{
                 new Expectation(
                     request()
@@ -409,12 +392,13 @@ public class ExpectationFileSystemPersistenceTest {
                     response()
                         .withBody("some fourth response")
                 )
-            }, MockServerMatcherNotifier.Cause.API);
+            }, API);
             MILLISECONDS.sleep(1500);
 
             // then
             String expectedFileContents = "[ {" + NEW_LINE +
                 "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -429,6 +413,7 @@ public class ExpectationFileSystemPersistenceTest {
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
                 "  \"id\" : \"two\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleSecondUpdated\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -443,6 +428,7 @@ public class ExpectationFileSystemPersistenceTest {
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
                 "  \"id\" : \"four\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFourth\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -481,39 +467,33 @@ public class ExpectationFileSystemPersistenceTest {
 
             // when
             expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
-            mockServerMatcher.add(
-                new Expectation(
-                    request()
-                        .withPath("/simpleFirst")
-                )
-                    .withId("one")
-                    .thenRespond(
-                        response()
-                            .withBody("some first response")
-                    )
-            );
-            mockServerMatcher.add(
-                new Expectation(
-                    request()
-                        .withPath("/simpleSecond")
-                )
-                    .withId("two")
-                    .thenRespond(
-                        response()
-                            .withBody("some second response")
-                    )
-            );
-            mockServerMatcher.add(
-                new Expectation(
-                    request()
-                        .withPath("/simpleThird")
-                )
-                    .withId("three")
-                    .thenRespond(
-                        response()
-                            .withBody("some third response")
-                    )
-            );
+            mockServerMatcher.add(new Expectation(
+                request()
+                    .withPath("/simpleFirst")
+            )
+                .withId("one")
+                .thenRespond(
+                    response()
+                        .withBody("some first response")
+                ), API);
+            mockServerMatcher.add(new Expectation(
+                request()
+                    .withPath("/simpleSecond")
+            )
+                .withId("two")
+                .thenRespond(
+                    response()
+                        .withBody("some second response")
+                ), API);
+            mockServerMatcher.add(new Expectation(
+                request()
+                    .withPath("/simpleThird")
+            )
+                .withId("three")
+                .thenRespond(
+                    response()
+                        .withBody("some third response")
+                ), API);
             MILLISECONDS.sleep(1500);
             mockServerMatcher.update(new Expectation[]{
                 new Expectation(
@@ -549,6 +529,7 @@ public class ExpectationFileSystemPersistenceTest {
             // then
             String expectedFileContents = "[ {" + NEW_LINE +
                 "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -563,6 +544,7 @@ public class ExpectationFileSystemPersistenceTest {
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
                 "  \"id\" : \"two\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleSecond\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -577,6 +559,7 @@ public class ExpectationFileSystemPersistenceTest {
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
                 "  \"id\" : \"three\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleThird\"" + NEW_LINE +
                 "  }," + NEW_LINE +

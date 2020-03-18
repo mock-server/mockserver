@@ -53,7 +53,8 @@ public class ExpectationWithForwardSerializerTest {
                 cookie("cookieName", "cookieValue")
             ),
         Times.once(),
-        TimeToLive.exactly(TimeUnit.HOURS, 2L))
+        TimeToLive.exactly(TimeUnit.HOURS, 2L),
+        0)
         .thenForward(
             forward()
                 .withHost("some_host")

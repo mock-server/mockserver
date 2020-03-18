@@ -683,17 +683,17 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "[" +
                     new ExpectationSerializer(new MockServerLogger())
                         .serialize(
-                            new Expectation(request("/path_one"), once(), TimeToLive.unlimited())
+                            new Expectation(request("/path_one"), once(), TimeToLive.unlimited(), 0)
                                 .thenRespond(response().withBody("some_body_one"))
                         ) + "," +
                     new ExpectationSerializer(new MockServerLogger())
                         .serialize(
-                            new Expectation(request("/path_two"), once(), TimeToLive.unlimited())
+                            new Expectation(request("/path_two"), once(), TimeToLive.unlimited(), 0)
                                 .thenRespond(response().withBody("some_body_two"))
                         ) + "," +
                     new ExpectationSerializer(new MockServerLogger())
                         .serialize(
-                            new Expectation(request("/path_three"), once(), TimeToLive.unlimited())
+                            new Expectation(request("/path_three"), once(), TimeToLive.unlimited(), 0)
                                 .thenRespond(response().withBody("some_body_three"))
                         ) +
                     "]"
@@ -1325,7 +1325,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         assertThat(
             mockServerClient.retrieveActiveExpectations(request().withPath(calculatePath("some_path.*"))),
             arrayContaining(
-                new Expectation(complexRequest, exactly(4), TimeToLive.unlimited())
+                new Expectation(complexRequest, exactly(4), TimeToLive.unlimited(), 0)
                     .thenRespond(response().withBody("some_body")),
                 new Expectation(request().withPath(calculatePath("some_path.*")))
                     .thenRespond(response().withBody("some_body"))
@@ -1335,7 +1335,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         assertThat(
             mockServerClient.retrieveActiveExpectations(null),
             arrayContaining(
-                new Expectation(complexRequest, exactly(4), TimeToLive.unlimited())
+                new Expectation(complexRequest, exactly(4), TimeToLive.unlimited(), 0)
                     .thenRespond(response().withBody("some_body")),
                 new Expectation(request().withPath(calculatePath("some_path.*")))
                     .thenRespond(response().withBody("some_body")),
@@ -1349,7 +1349,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         assertThat(
             mockServerClient.retrieveActiveExpectations(request()),
             arrayContaining(
-                new Expectation(complexRequest, exactly(4), TimeToLive.unlimited())
+                new Expectation(complexRequest, exactly(4), TimeToLive.unlimited(), 0)
                     .thenRespond(response().withBody("some_body")),
                 new Expectation(request().withPath(calculatePath("some_path.*")))
                     .thenRespond(response().withBody("some_body")),
@@ -1474,6 +1474,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                    "\t  \"priority\" : 0," + NEW_LINE +
                     "\t  \"httpRequest\" : {" + NEW_LINE +
                     "\t    \"path\" : \"/some_path.*\"" + NEW_LINE +
                     "\t  }," + NEW_LINE +
@@ -1506,6 +1507,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         NEW_LINE +
                         "\t{" + NEW_LINE +
                         "\t  \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                        "\t  \"priority\" : 0," + NEW_LINE +
                         "\t  \"httpRequest\" : {" + NEW_LINE +
                         "\t    \"path\" : \"/some_path.*\"" + NEW_LINE +
                         "\t  }," + NEW_LINE +
@@ -1556,6 +1558,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         NEW_LINE +
                         "\t{" + NEW_LINE +
                         "\t  \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                        "\t  \"priority\" : 0," + NEW_LINE +
                         "\t  \"httpRequest\" : {" + NEW_LINE +
                         "\t    \"path\" : \"/some_path.*\"" + NEW_LINE +
                         "\t  }," + NEW_LINE +
@@ -1608,6 +1611,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         NEW_LINE +
                         "\t{" + NEW_LINE +
                         "\t  \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                        "\t  \"priority\" : 0," + NEW_LINE +
                         "\t  \"httpRequest\" : {" + NEW_LINE +
                         "\t    \"path\" : \"/some_path.*\"" + NEW_LINE +
                         "\t  }," + NEW_LINE +

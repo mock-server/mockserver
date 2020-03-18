@@ -105,6 +105,7 @@ public class ExpectationFileSystemPersistenceIntegrationTest {
             // then
             String expectedFileContents = "[ {" + NEW_LINE +
                 "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -119,6 +120,7 @@ public class ExpectationFileSystemPersistenceIntegrationTest {
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
                 "  \"id\" : \"two\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleSecond\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -133,6 +135,7 @@ public class ExpectationFileSystemPersistenceIntegrationTest {
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
                 "  \"id\" : \"three\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleThird\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -220,6 +223,7 @@ public class ExpectationFileSystemPersistenceIntegrationTest {
             // then
             String expectedFileContents = "[ {" + NEW_LINE +
                 "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -234,6 +238,7 @@ public class ExpectationFileSystemPersistenceIntegrationTest {
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
                 "  \"id\" : \"three\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleThird\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -329,6 +334,7 @@ public class ExpectationFileSystemPersistenceIntegrationTest {
             // then
             String expectedFileContents = "[ {" + NEW_LINE +
                 "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -343,6 +349,7 @@ public class ExpectationFileSystemPersistenceIntegrationTest {
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
                 "  \"id\" : \"two\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleSecondUpdated\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -357,6 +364,7 @@ public class ExpectationFileSystemPersistenceIntegrationTest {
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
                 "  \"id\" : \"three\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleThird\"" + NEW_LINE +
                 "  }," + NEW_LINE +

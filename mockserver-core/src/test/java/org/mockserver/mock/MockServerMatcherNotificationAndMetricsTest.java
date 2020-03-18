@@ -22,6 +22,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.ui.MockServerMatcherNotifier.Cause.API;
 
 /**
  * @author jamesdbloom
@@ -61,21 +62,18 @@ public class MockServerMatcherNotificationAndMetricsTest {
         });
 
         // when
-        mockServerMatcher
-            .add(
-                new Expectation(
+        mockServerMatcher.add(new Expectation(
                     request()
                         .withPath("somePath")
                 ).thenRespond(
                     response()
                         .withBody("someBody")
-                )
-            );
+                ), API);
 
         // then
         MILLISECONDS.sleep(500);
         assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
-        assertThat(causes, contains(MockServerMatcherNotifier.Cause.API));
+        assertThat(causes, contains(API));
         assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(1));
     }
 
@@ -86,30 +84,24 @@ public class MockServerMatcherNotificationAndMetricsTest {
         mockServerMatcher.registerListener((mockServerMatcher, cause) -> {
             causes.add(cause);
         });
-        mockServerMatcher
-            .add(
-                new Expectation(
+        mockServerMatcher.add(new Expectation(
                     request()
                         .withPath("somePath")
                 ).thenForward(
                     forward()
-                )
-            );
-        mockServerMatcher
-            .add(
-                new Expectation(
+                ), API);
+        mockServerMatcher.add(new Expectation(
                     request()
                         .withPath("somePath")
                 ).thenRespond(
                     response()
                         .withBody("someBody")
-                )
-            );
+                ), API);
 
         // then
         MILLISECONDS.sleep(500);
         assertThat(mockServerMatcher.httpRequestMatchers.size(), is(2));
-        assertThat(causes, contains(MockServerMatcherNotifier.Cause.API, MockServerMatcherNotifier.Cause.API));
+        assertThat(causes, contains(API, API));
         assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(1));
         assertThat(Metrics.get(Metrics.Name.ACTION_FORWARD_COUNT), is(1));
 
@@ -120,7 +112,7 @@ public class MockServerMatcherNotificationAndMetricsTest {
         // then
         MILLISECONDS.sleep(500);
         assertThat(mockServerMatcher.httpRequestMatchers.size(), is(0));
-        assertThat(causes, contains(MockServerMatcherNotifier.Cause.API));
+        assertThat(causes, contains(API));
         assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(0));
         assertThat(Metrics.get(Metrics.Name.ACTION_FORWARD_COUNT), is(0));
     }
@@ -132,40 +124,34 @@ public class MockServerMatcherNotificationAndMetricsTest {
         mockServerMatcher.registerListener((mockServerMatcher, cause) -> {
             causes.add(cause);
         });
-        mockServerMatcher
-            .add(
-                new Expectation(
+        mockServerMatcher.add(new Expectation(
                     request()
                         .withPath("somePath")
                 ).withId("one").thenRespond(
                     response()
                         .withBody("someBody")
-                )
-            );
+                ), API);
 
         // then
         MILLISECONDS.sleep(500);
         assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
-        assertThat(causes, contains(MockServerMatcherNotifier.Cause.API));
+        assertThat(causes, contains(API));
         assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(1));
 
         // when
         causes.clear();
-        mockServerMatcher
-            .add(
-                new Expectation(
+        mockServerMatcher.add(new Expectation(
                     request()
                         .withPath("someOtherPath")
                 ).withId("one").thenRespond(
                     response()
                         .withBody("someOtherBody")
-                )
-            );
+                ), API);
 
         // then
         MILLISECONDS.sleep(500);
         assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
-        assertThat(causes, contains(MockServerMatcherNotifier.Cause.API));
+        assertThat(causes, contains(API));
         assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(1));
     }
 
@@ -179,24 +165,24 @@ public class MockServerMatcherNotificationAndMetricsTest {
             causes.add(cause);
         });
         String keyOne = UUID.randomUUID().toString();
-        mockServerMatcher.add(new Expectation(request().withPath("path_one")).withId(keyOne).thenRespond(response().withBody("body_one")));
+        mockServerMatcher.add(new Expectation(request().withPath("path_one")).withId(keyOne).thenRespond(response().withBody("body_one")), API);
         String keyTwo = UUID.randomUUID().toString();
         mockServerMatcher.add(new Expectation(request().withPath("path_two")).withId(keyTwo).thenForward(new HttpObjectCallback(){
 
-        }));
+        }), API);
         String keyThree = UUID.randomUUID().toString();
         mockServerMatcher.add(new Expectation(request().withPath("path_three")).withId(keyThree).thenRespond(new HttpObjectCallback(){
 
-        }));
+        }), API);
         String keyFour = UUID.randomUUID().toString();
 
         // then
         MILLISECONDS.sleep(500);
         assertThat(mockServerMatcher.httpRequestMatchers.size(), is(3));
         assertThat(causes, contains(
-            MockServerMatcherNotifier.Cause.API,
-            MockServerMatcherNotifier.Cause.API,
-            MockServerMatcherNotifier.Cause.API
+            API,
+            API,
+            API
         ));
         assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(1));
         assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_OBJECT_CALLBACK_COUNT), is(1));
@@ -210,13 +196,13 @@ public class MockServerMatcherNotificationAndMetricsTest {
                 new Expectation(request().withPath("new_path_three")).withId(keyThree).thenRespond(response().withBody("new_body_three")),
                 new Expectation(request().withPath("path_four")).withId(keyFour).thenRespond(response().withBody("body_four"))
             },
-            MockServerMatcherNotifier.Cause.API
+            API
         );
 
         // then
         MILLISECONDS.sleep(500);
         assertThat(mockServerMatcher.httpRequestMatchers.size(), is(3));
-        assertThat(causes, contains(MockServerMatcherNotifier.Cause.API));
+        assertThat(causes, contains(API));
         assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(3));
     }
 

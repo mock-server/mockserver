@@ -69,6 +69,7 @@ public class DashboardLogEntryDTOSerializerTest {
             "    }," + NEW_LINE +
             "    \"expectation\" : {" + NEW_LINE +
             "      \"id\" : \"key_one\"," + NEW_LINE +
+            "      \"priority\" : 0," + NEW_LINE +
             "      \"httpRequest\" : {" + NEW_LINE +
             "        \"path\" : \"request_one\"" + NEW_LINE +
             "      }," + NEW_LINE +
@@ -109,7 +110,7 @@ public class DashboardLogEntryDTOSerializerTest {
             )
             .setExpectation(
                 new Expectation(request("request_one")
-                    .withBody("some random string body"), Times.once(), TimeToLive.unlimited())
+                    .withBody("some random string body"), Times.once(), TimeToLive.unlimited(), 0)
                     .withId("key_one")
                     .thenRespond(response("response_one")
                         .withBody(json("{\"derivationMode\":\"HASHED\",\"deviceUrn\":\"411323184fd0c2bf724713149de137f4dde072c1fd31f0e29256800a1b2c1afc\",\"ciphertextBytesFormat\":\"JSON\"}")))
@@ -149,6 +150,7 @@ public class DashboardLogEntryDTOSerializerTest {
             "    }," + NEW_LINE +
             "    \"expectation\" : {" + NEW_LINE +
             "      \"id\" : \"key_one\"," + NEW_LINE +
+            "      \"priority\" : 0," + NEW_LINE +
             "      \"httpRequest\" : {" + NEW_LINE +
             "        \"path\" : \"request_one\"," + NEW_LINE +
             "        \"body\" : \"some random string body\"" + NEW_LINE +

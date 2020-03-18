@@ -12,6 +12,7 @@ import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.Parameter;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.ui.MockServerMatcherNotifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +28,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockserver.matchers.TimeToLive.unlimited;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.ui.MockServerMatcherNotifier.Cause.API;
 
 /**
  * @author jamesdbloom
@@ -51,14 +53,14 @@ public class MockServerMatcherClearAndResetTest {
             request()
                 .withPath("somepath"),
             Times.exactly(2),
-            unlimited()
-        ).thenRespond(
+            unlimited(),
+                0).thenRespond(
             response()
                 .withBody("somebody")
         );
 
         // when
-        mockServerMatcher.add(expectation);
+        mockServerMatcher.add(expectation, API);
 
         // and
         assertEquals(expectation, mockServerMatcher.postProcess(mockServerMatcher.firstMatchingExpectation(request().withPath("somepath"))));
@@ -79,8 +81,8 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withPath(pathToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -88,14 +90,14 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withPath(pathToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0]);
-        mockServerMatcher.add(expectation[1]);
+        mockServerMatcher.add(expectation[0], API);
+        mockServerMatcher.add(expectation[1], API);
 
         // when
         mockServerMatcher.clear(request().withPath(pathToMatchOn));
@@ -112,8 +114,8 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withPath("abc"),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -121,14 +123,14 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withPath("def"),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0]);
-        mockServerMatcher.add(expectation[1]);
+        mockServerMatcher.add(expectation[0], API);
+        mockServerMatcher.add(expectation[1], API);
 
         // when
         mockServerMatcher.clear(null);
@@ -145,8 +147,8 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withPath("abc"),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -154,14 +156,14 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withPath("def"),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0]);
-        mockServerMatcher.add(expectation[1]);
+        mockServerMatcher.add(expectation[0], API);
+        mockServerMatcher.add(expectation[1], API);
 
         // when
         mockServerMatcher.reset();
@@ -179,8 +181,8 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withPath(pathToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -188,14 +190,14 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withPath("def"),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0]);
-        mockServerMatcher.add(expectation[1]);
+        mockServerMatcher.add(expectation[0], API);
+        mockServerMatcher.add(expectation[1], API);
 
         // when
         mockServerMatcher.clear(request().withPath(pathToMatchOn));
@@ -215,8 +217,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withMethod(methodToMatchOn)
                     .withPath("abc"),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -225,8 +227,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withMethod(methodToMatchOn)
                     .withPath("def"),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -235,15 +237,15 @@ public class MockServerMatcherClearAndResetTest {
                     .withMethod("POST")
                     .withPath("def"),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0]);
-        mockServerMatcher.add(expectation[1]);
-        mockServerMatcher.add(expectation[2]);
+        mockServerMatcher.add(expectation[0], API);
+        mockServerMatcher.add(expectation[1], API);
+        mockServerMatcher.add(expectation[2], API);
 
         // when
         mockServerMatcher.clear(request().withMethod(methodToMatchOn));
@@ -264,8 +266,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("abc")
                     .withHeader(headerToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -275,8 +277,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("def")
                     .withHeaders(headerToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -285,15 +287,15 @@ public class MockServerMatcherClearAndResetTest {
                     .withMethod("POST")
                     .withPath("def"),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0]);
-        mockServerMatcher.add(expectation[1]);
-        mockServerMatcher.add(expectation[2]);
+        mockServerMatcher.add(expectation[0], API);
+        mockServerMatcher.add(expectation[1], API);
+        mockServerMatcher.add(expectation[2], API);
 
         // when
         mockServerMatcher.clear(request().withHeader(headerToMatchOn));
@@ -314,8 +316,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("abc")
                     .withHeader(headerToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -325,8 +327,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("def")
                     .withHeaders(headerToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -336,15 +338,15 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("def")
                     .withHeaders(new Header("headerOneName", "headerOneValue")),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0]);
-        mockServerMatcher.add(expectation[1]);
-        mockServerMatcher.add(expectation[2]);
+        mockServerMatcher.add(expectation[0], API);
+        mockServerMatcher.add(expectation[1], API);
+        mockServerMatcher.add(expectation[2], API);
 
         // when
         mockServerMatcher.clear(request().withHeader(headerToMatchOn));
@@ -365,8 +367,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("abc")
                     .withHeader(headerToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -376,8 +378,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("abc")
                     .withHeader(headerToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -386,15 +388,15 @@ public class MockServerMatcherClearAndResetTest {
                     .withMethod("POST")
                     .withPath("def"),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0]);
-        mockServerMatcher.add(expectation[1]);
-        mockServerMatcher.add(expectation[2]);
+        mockServerMatcher.add(expectation[0], API);
+        mockServerMatcher.add(expectation[1], API);
+        mockServerMatcher.add(expectation[2], API);
 
         // when
         mockServerMatcher.clear(request().withHeader(headerToMatchOn));
@@ -417,8 +419,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("abc")
                     .withHeaders(headersToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -428,8 +430,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("def")
                     .withHeaders(headersToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -441,15 +443,15 @@ public class MockServerMatcherClearAndResetTest {
                         new Header("headerOneName", "headerOneValue")
                     ),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0]);
-        mockServerMatcher.add(expectation[1]);
-        mockServerMatcher.add(expectation[2]);
+        mockServerMatcher.add(expectation[0], API);
+        mockServerMatcher.add(expectation[1], API);
+        mockServerMatcher.add(expectation[2], API);
 
         // when
         mockServerMatcher.clear(request().withHeaders(headersToMatchOn));
@@ -473,8 +475,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("abc")
                     .withHeaders(headersToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -484,8 +486,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("abc")
                     .withHeaders(headersToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -497,15 +499,15 @@ public class MockServerMatcherClearAndResetTest {
                         new Header("headerTwoName", "headerTwoName")
                     ),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0]);
-        mockServerMatcher.add(expectation[1]);
-        mockServerMatcher.add(expectation[2]);
+        mockServerMatcher.add(expectation[0], API);
+        mockServerMatcher.add(expectation[1], API);
+        mockServerMatcher.add(expectation[2], API);
 
         // when
         mockServerMatcher.clear(request().withHeaders(headersToMatchOn));
@@ -528,8 +530,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("abc")
                     .withHeaders(headersToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -539,8 +541,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("def")
                     .withHeaders(headersToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -553,15 +555,15 @@ public class MockServerMatcherClearAndResetTest {
                         new Header("headerTwoName", "headerTwoName")
                     ),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0]);
-        mockServerMatcher.add(expectation[1]);
-        mockServerMatcher.add(expectation[2]);
+        mockServerMatcher.add(expectation[0], API);
+        mockServerMatcher.add(expectation[1], API);
+        mockServerMatcher.add(expectation[2], API);
 
         // when
         mockServerMatcher.clear(request().withHeaders(headersToMatchOn));
@@ -585,8 +587,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("abc")
                     .withHeaders(headersToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -596,8 +598,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("abc")
                     .withHeaders(headersToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -606,15 +608,15 @@ public class MockServerMatcherClearAndResetTest {
                     .withMethod("POST")
                     .withPath("def"),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0]);
-        mockServerMatcher.add(expectation[1]);
-        mockServerMatcher.add(expectation[2]);
+        mockServerMatcher.add(expectation[0], API);
+        mockServerMatcher.add(expectation[1], API);
+        mockServerMatcher.add(expectation[2], API);
 
         // when
         mockServerMatcher.clear(request().withHeaders(headersToMatchOn));
@@ -637,8 +639,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("abc")
                     .withCookies(cookiesToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -648,8 +650,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("def")
                     .withCookies(cookiesToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -662,15 +664,15 @@ public class MockServerMatcherClearAndResetTest {
                         new Cookie("cookieTwoName", "cookieTwoName")
                     ),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0]);
-        mockServerMatcher.add(expectation[1]);
-        mockServerMatcher.add(expectation[2]);
+        mockServerMatcher.add(expectation[0], API);
+        mockServerMatcher.add(expectation[1], API);
+        mockServerMatcher.add(expectation[2], API);
 
         // when
         mockServerMatcher.clear(request().withCookies(cookiesToMatchOn));
@@ -694,8 +696,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("abc")
                     .withCookies(cookiesToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -705,8 +707,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("abc")
                     .withCookies(cookiesToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -715,15 +717,15 @@ public class MockServerMatcherClearAndResetTest {
                     .withMethod("POST")
                     .withPath("def"),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0]);
-        mockServerMatcher.add(expectation[1]);
-        mockServerMatcher.add(expectation[2]);
+        mockServerMatcher.add(expectation[0], API);
+        mockServerMatcher.add(expectation[1], API);
+        mockServerMatcher.add(expectation[2], API);
 
         // when
         mockServerMatcher.clear(request().withCookies(cookiesToMatchOn));
@@ -746,8 +748,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("abc")
                     .withQueryStringParameters(parametersToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -757,8 +759,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("def")
                     .withQueryStringParameters(parametersToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -771,15 +773,15 @@ public class MockServerMatcherClearAndResetTest {
                         new Parameter("parameterTwoName", "parameterTwoName")
                     ),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0]);
-        mockServerMatcher.add(expectation[1]);
-        mockServerMatcher.add(expectation[2]);
+        mockServerMatcher.add(expectation[0], API);
+        mockServerMatcher.add(expectation[1], API);
+        mockServerMatcher.add(expectation[2], API);
 
         // when
         mockServerMatcher.clear(request().withQueryStringParameters(parametersToMatchOn));
@@ -803,8 +805,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("abc")
                     .withQueryStringParameters(parametersToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -814,8 +816,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("abc")
                     .withQueryStringParameters(parametersToMatchOn),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -824,15 +826,15 @@ public class MockServerMatcherClearAndResetTest {
                     .withMethod("POST")
                     .withPath("def"),
                 Times.unlimited(),
-                unlimited()
-            ).thenRespond(
+                unlimited(),
+                    0).thenRespond(
                 response()
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0]);
-        mockServerMatcher.add(expectation[1]);
-        mockServerMatcher.add(expectation[2]);
+        mockServerMatcher.add(expectation[0], API);
+        mockServerMatcher.add(expectation[1], API);
+        mockServerMatcher.add(expectation[2], API);
 
         // when
         mockServerMatcher.clear(request().withQueryStringParameters(parametersToMatchOn));
@@ -846,11 +848,11 @@ public class MockServerMatcherClearAndResetTest {
         // given
         HttpResponse httpResponse = response().withBody("somebody");
         Expectation[] expectations = new Expectation[]{
-            new Expectation(request().withPath("somepath"), Times.unlimited(), unlimited()).thenRespond(httpResponse),
-            new Expectation(request().withPath("somepath"), Times.unlimited(), unlimited()).thenRespond(httpResponse)
+            new Expectation(request().withPath("somepath"), Times.unlimited(), unlimited(), 0).thenRespond(httpResponse),
+            new Expectation(request().withPath("somepath"), Times.unlimited(), unlimited(), 0).thenRespond(httpResponse)
         };
         for (Expectation expectation : expectations) {
-            mockServerMatcher.add(expectation);
+            mockServerMatcher.add(expectation, API);
         }
         List<HttpRequestMatcher> httpRequestMatchers = new ArrayList<>(mockServerMatcher.httpRequestMatchers);
 
@@ -858,7 +860,7 @@ public class MockServerMatcherClearAndResetTest {
         mockServerMatcher.clear(request().withPath("foobar"));
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers, is(httpRequestMatchers));
+        assertThat(mockServerMatcher.httpRequestMatchers.toSortedList(), is(httpRequestMatchers));
     }
 
 }

@@ -10,10 +10,13 @@ import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.*;
 import org.slf4j.event.Level;
 
+import java.util.Comparator;
+
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_MATCHED;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED;
+import static org.mockserver.mock.Expectation.EXPECTATION_PRIORITY_COMPARATOR;
 import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
 import static org.mockserver.model.NottableString.string;
 
@@ -23,6 +26,8 @@ import static org.mockserver.model.NottableString.string;
 @SuppressWarnings("rawtypes")
 public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
 
+    public static final Comparator<? super HttpRequestMatcher> EXPECTATION_PRIORITY_COMPARATOR =
+        Comparator.comparing(HttpRequestMatcher::getExpectation, Expectation.EXPECTATION_PRIORITY_COMPARATOR);
     private static final String[] excludedFields = {"mockServerLogger", "objectMapper"};
     private static final String DID_NOT_MATCH = "didn't match";
     private static final String MATCHED = "matched";

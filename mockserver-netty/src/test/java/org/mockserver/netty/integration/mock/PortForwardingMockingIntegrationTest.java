@@ -301,6 +301,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                    "\t  \"priority\" : 0," + NEW_LINE +
                     "\t  \"httpRequest\" : {" + NEW_LINE +
                     "\t    \"path\" : \"/some_path.*\"" + NEW_LINE +
                     "\t  }," + NEW_LINE +
@@ -332,6 +333,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                         NEW_LINE +
                         "\t{" + NEW_LINE +
                         "\t  \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                        "\t  \"priority\" : 0," + NEW_LINE +
                         "\t  \"httpRequest\" : {" + NEW_LINE +
                         "\t    \"path\" : \"/some_path.*\"" + NEW_LINE +
                         "\t  }," + NEW_LINE +
@@ -382,6 +384,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                         NEW_LINE +
                         "\t{" + NEW_LINE +
                         "\t  \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                        "\t  \"priority\" : 0," + NEW_LINE +
                         "\t  \"httpRequest\" : {" + NEW_LINE +
                         "\t    \"path\" : \"/some_path.*\"" + NEW_LINE +
                         "\t  }," + NEW_LINE +
@@ -432,6 +435,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                         NEW_LINE +
                         "\t{" + NEW_LINE +
                         "\t  \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                        "\t  \"priority\" : 0," + NEW_LINE +
                         "\t  \"httpRequest\" : {" + NEW_LINE +
                         "\t    \"path\" : \"/some_path.*\"" + NEW_LINE +
                         "\t  }," + NEW_LINE +

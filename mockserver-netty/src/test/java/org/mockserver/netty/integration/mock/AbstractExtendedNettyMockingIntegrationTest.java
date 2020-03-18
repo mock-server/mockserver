@@ -1763,7 +1763,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 .withBody("some_overridden_body"),
             httpResponse
         );
-        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(MILLISECONDS.toMillis(2750)));
         assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(5)));
     }
 }

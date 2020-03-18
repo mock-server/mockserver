@@ -54,7 +54,8 @@ public class ExpectationWithForwardTemplateSerializerTest {
                 cookie("cookieName", "cookieValue")
             )),
         Times.once(),
-        TimeToLive.exactly(HOURS, 2L))
+        TimeToLive.exactly(HOURS, 2L),
+        0)
         .thenForward(
             template(HttpTemplate.TemplateType.JAVASCRIPT, "some_random_template")
                 .withDelay(SECONDS, 5)

@@ -225,7 +225,7 @@ public class ProxyServletTest {
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_one"))
                 .setHttpResponse(response("response_one"))
-                .setExpectation(new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).withId("key_one").thenRespond(response("response_one")))
+                .setExpectation(new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited(), 0).withId("key_one").thenRespond(response("response_one")))
         );
         // when
         MockHttpServletRequest expectationRetrieveExpectationsRequest = buildHttpServletRequest(
@@ -238,7 +238,7 @@ public class ProxyServletTest {
 
         // then
         assertResponse(response, 200, expectationSerializer.serialize(Collections.singletonList(
-            new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).withId("key_one").thenRespond(response("response_one"))
+            new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited(), 0).withId("key_one").thenRespond(response("response_one"))
         )));
     }
 

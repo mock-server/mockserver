@@ -2,7 +2,7 @@ package org.mockserver.log;
 
 import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.dsl.Disruptor;
-import org.mockserver.collections.BoundedConcurrentLinkedDeque;
+import org.mockserver.collections.CircularConcurrentLinkedDeque;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -59,7 +59,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             .withTimestamp(logEntry.getTimestamp());
     private static final String[] EXCLUDED_FIELDS = {"id", "disruptor"};
     private MockServerLogger mockServerLogger;
-    private Deque<LogEntry> eventLog = new BoundedConcurrentLinkedDeque<>(ConfigurationProperties.maxLogEntries());
+    private Deque<LogEntry> eventLog = new CircularConcurrentLinkedDeque<>(ConfigurationProperties.maxLogEntries());
     private MatcherBuilder matcherBuilder;
     private HttpRequestSerializer httpRequestSerializer;
     private final boolean asynchronousEventProcessing;

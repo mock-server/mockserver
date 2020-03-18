@@ -6,17 +6,17 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 /**
  * @author jamesdbloom
  */
-public class BoundedConcurrentLinkedDeque<E> extends ConcurrentLinkedDeque<E> {
+public class CircularConcurrentLinkedDeque<E> extends ConcurrentLinkedDeque<E> {
     private final int maxSize;
 
-    public BoundedConcurrentLinkedDeque(int maxSize) {
+    public CircularConcurrentLinkedDeque(int maxSize) {
         this.maxSize = maxSize;
     }
 
     @Override
     public boolean add(E element) {
         if (maxSize > 0) {
-            if (size() >= maxSize) {
+            while (size() >= maxSize) {
                 super.poll();
             }
             return super.add(element);
@@ -43,7 +43,7 @@ public class BoundedConcurrentLinkedDeque<E> extends ConcurrentLinkedDeque<E> {
     @Override
     public boolean offer(E element) {
         if (maxSize > 0) {
-            if (size() >= maxSize) {
+            while (size() >= maxSize) {
                 super.poll();
             }
             return super.offer(element);

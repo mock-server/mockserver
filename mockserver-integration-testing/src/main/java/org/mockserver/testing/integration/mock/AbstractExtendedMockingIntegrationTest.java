@@ -3981,7 +3981,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     false
                 ),
             arrayContaining(
-                new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited(), 0)
                     .thenRespond(response().withBody("some_body")),
                 new Expectation(request().withPath(calculatePath("some_path.*")))
                     .thenRespond(response().withBody("some_body"))
@@ -3996,7 +3996,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     false
                 ),
             arrayContaining(
-                new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited(), 0)
                     .thenRespond(response().withBody("some_body")),
                 new Expectation(request().withPath(calculatePath("some_path.*")))
                     .thenRespond(response().withBody("some_body")),
@@ -4015,7 +4015,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     false
                 ),
             arrayContaining(
-                new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited(), 0)
                     .thenRespond(response().withBody("some_body")),
                 new Expectation(request().withPath(calculatePath("some_path.*")))
                     .thenRespond(response().withBody("some_body")),
@@ -4043,7 +4043,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         assertThat(
             mockServerClient.retrieveActiveExpectations(request().withPath(calculatePath("some_path.*")), Format.JAVA),
             is(new ExpectationToJavaSerializer().serialize(Arrays.asList(
-                new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited(), 0)
                     .thenRespond(response().withBody("some_body")),
                 new Expectation(request().withPath(calculatePath("some_path.*")))
                     .thenRespond(response().withBody("some_body"))
@@ -4053,7 +4053,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         assertThat(
             mockServerClient.retrieveActiveExpectations(null, Format.JAVA),
             is(new ExpectationToJavaSerializer().serialize(Arrays.asList(
-                new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited(), 0)
                     .thenRespond(response().withBody("some_body")),
                 new Expectation(request().withPath(calculatePath("some_path.*")))
                     .thenRespond(response().withBody("some_body")),
@@ -4067,7 +4067,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         assertThat(
             mockServerClient.retrieveActiveExpectations(request(), Format.JAVA),
             is(new ExpectationToJavaSerializer().serialize(Arrays.asList(
-                new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited(), 0)
                     .thenRespond(response().withBody("some_body")),
                 new Expectation(request().withPath(calculatePath("some_path.*")))
                     .thenRespond(response().withBody("some_body")),

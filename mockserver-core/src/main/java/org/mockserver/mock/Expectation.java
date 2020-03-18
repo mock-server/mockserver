@@ -6,14 +6,23 @@ import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
 import org.mockserver.uuid.UUIDService;
 
+import java.util.Comparator;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * @author jamesdbloom
  */
 @SuppressWarnings("rawtypes")
 public class Expectation extends ObjectWithJsonToString {
 
-    private static final String[] excludedFields = {"id"};
+    private static final String[] excludedFields = {"id", "created"};
+    private static final AtomicInteger EXPECTATION_COUNTER = new AtomicInteger(0);
+    private static final long START_TIME = System.currentTimeMillis();
     private String id;
+    @JsonIgnore
+    private long created;
+    private final Integer priority;
     private final HttpRequest httpRequest;
     private final Times times;
     private final TimeToLive timeToLive;
@@ -28,22 +37,43 @@ public class Expectation extends ObjectWithJsonToString {
     private HttpOverrideForwardedRequest httpOverrideForwardedRequest;
     private HttpError httpError;
 
+    public static final Comparator<Expectation> EXPECTATION_PRIORITY_COMPARATOR = Comparator
+        .comparing(Expectation::getPriority, Comparator.nullsLast(Comparator.reverseOrder()))
+        .thenComparing(Expectation::getCreated, Comparator.nullsLast(Comparator.naturalOrder()));
+
     public static Expectation when(HttpRequest httpRequest) {
         return new Expectation(httpRequest);
     }
 
+    public static Expectation when(HttpRequest httpRequest, Integer priority) {
+        return new Expectation(httpRequest, Times.unlimited(), TimeToLive.unlimited(), priority);
+    }
+
     public static Expectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
-        return new Expectation(httpRequest, times, timeToLive);
+        return new Expectation(httpRequest, times, timeToLive, 0);
+    }
+
+    public static Expectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive, Integer priority) {
+        return new Expectation(httpRequest, times, timeToLive, priority);
     }
 
     public Expectation(HttpRequest httpRequest) {
-        this(httpRequest, Times.unlimited(), TimeToLive.unlimited());
+        this(httpRequest, Times.unlimited(), TimeToLive.unlimited(), 0);
     }
 
-    public Expectation(HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
+    public Expectation(HttpRequest httpRequest, Times times, TimeToLive timeToLive, Integer priority) {
+        // ensure created enforces insertion order by relying on system time, and a counter
+        EXPECTATION_COUNTER.compareAndSet(Integer.MAX_VALUE, 0);
+        this.created = System.currentTimeMillis() - START_TIME + EXPECTATION_COUNTER.incrementAndGet();
         this.httpRequest = httpRequest;
         this.times = times;
         this.timeToLive = timeToLive;
+        this.priority = priority;
+    }
+
+    public Expectation withId(String key) {
+        this.id = key;
+        return this;
     }
 
     public String getId() {
@@ -53,9 +83,17 @@ public class Expectation extends ObjectWithJsonToString {
         return id;
     }
 
-    public Expectation withId(String key) {
-        this.id = key;
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public Expectation withCreated(long created) {
+        this.created = created;
         return this;
+    }
+
+    public long getCreated() {
+        return created;
     }
 
     public HttpRequest getHttpRequest() {
@@ -284,8 +322,9 @@ public class Expectation extends ObjectWithJsonToString {
 
     @SuppressWarnings("MethodDoesntCallSuperMethod")
     public Expectation clone() {
-        return new Expectation(httpRequest, times.clone(), timeToLive)
+        return new Expectation(httpRequest, times.clone(), timeToLive, priority)
             .withId(id)
+            .withCreated(created)
             .thenRespond(httpResponse)
             .thenRespond(httpResponseTemplate)
             .thenRespond(httpResponseClassCallback)

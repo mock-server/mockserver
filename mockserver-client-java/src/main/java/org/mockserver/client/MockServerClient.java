@@ -719,8 +719,9 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
-     * Specify an limited expectation that will respond a specified number of times when the http is matched
-     * for example:
+     * Specify a limited expectation that will respond a specified number of times when the http is matched
+     * <p>
+     * Example use:
      * <pre>
      * mockServerClient
      *  .when(
@@ -741,12 +742,13 @@ public class MockServerClient implements Stoppable {
      * @return an Expectation object that can be used to specify the response
      */
     public ForwardChainExpectation when(HttpRequest httpRequest, Times times) {
-        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(httpRequest, times, TimeToLive.unlimited()));
+        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(httpRequest, times, TimeToLive.unlimited(), 0));
     }
 
     /**
-     * Specify an limited expectation that will respond a specified number of times when the http is matched
-     * for example:
+     * Specify a limited expectation that will respond a specified number of times when the http is matched
+     * <p>
+     * Example use:
      * <pre>
      * mockServerClient
      *  .when(
@@ -769,7 +771,42 @@ public class MockServerClient implements Stoppable {
      * @return an Expectation object that can be used to specify the response
      */
     public ForwardChainExpectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
-        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(httpRequest, times, timeToLive));
+        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(httpRequest, times, timeToLive, 0));
+    }
+
+    /**
+     * Specify a limited expectation that will respond a specified number of times when the http is matched and will be matched according to priority as follows:
+     * <p>
+     * - higher priority expectation will be matched first
+     * - identical priority expectations will be match in the order they were submitted
+     * - default priority is 0
+     * <p>
+     * Example use:
+     * <pre>
+     * mockServerClient
+     *  .when(
+     *      request()
+     *          .withPath("/some_path")
+     *          .withBody("some_request_body"),
+     *      Times.exactly(5),
+     *      TimeToLive.exactly(TimeUnit.SECONDS, 120),
+     *      10
+     *  )
+     *  .respond(
+     *      response()
+     *          .withBody("some_response_body")
+     *          .withHeader("responseName", "responseValue")
+     *  )
+     * </pre>
+     *
+     * @param httpRequest the http request that must be matched for this expectation to respond
+     * @param times       the number of times to respond when this http is matched
+     * @param timeToLive  the length of time from when the server receives the expectation that the expectation should be active
+     * @param priority    the priority for the expectation when matching, higher priority expectation will be matched first, identical priority expectations will be match in the order they were submitted
+     * @return an Expectation object that can be used to specify the response
+     */
+    public ForwardChainExpectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive, Integer priority) {
+        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(httpRequest, times, timeToLive, priority));
     }
 
     /**

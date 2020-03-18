@@ -13,7 +13,6 @@ import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
-import org.mockserver.mockservlet.MockServerServlet;
 import org.mockserver.model.MediaType;
 import org.mockserver.model.RetrieveType;
 import org.mockserver.scheduler.Scheduler;
@@ -26,10 +25,11 @@ import org.slf4j.event.Level;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
-import static org.apache.commons.codec.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -231,14 +231,14 @@ public class MockServerServletTest {
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_one"))
                 .setHttpResponse(response("response_one"))
-                .setExpectation(new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).withId("key_one").thenRespond(response("response_one")))
+                .setExpectation(new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited(), 0).withId("key_one").thenRespond(response("response_one")))
         );
         httpStateHandler.log(
             new LogEntry()
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_two"))
                 .setHttpResponse(response("response_two"))
-                .setExpectation(new Expectation(request("request_two"), Times.once(), TimeToLive.unlimited()).withId("key_two").thenRespond(response("response_two")))
+                .setExpectation(new Expectation(request("request_two"), Times.once(), TimeToLive.unlimited(), 0).withId("key_two").thenRespond(response("response_two")))
         );
 
         // when
@@ -252,7 +252,7 @@ public class MockServerServletTest {
 
         // then
         assertResponse(response, 200, expectationSerializer.serialize(Collections.singletonList(
-            new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).withId("key_one").thenRespond(response("response_one"))
+            new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited(), 0).withId("key_one").thenRespond(response("response_one"))
         )));
     }
 
@@ -318,6 +318,7 @@ public class MockServerServletTest {
                 "" + NEW_LINE +
                 "\t{" + NEW_LINE +
                 "\t  \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                "\t  \"priority\" : 0," + NEW_LINE +
                 "\t  \"httpRequest\" : {" + NEW_LINE +
                 "\t    \"path\" : \"request_one\"" + NEW_LINE +
                 "\t  }," + NEW_LINE +

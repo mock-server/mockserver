@@ -1421,8 +1421,8 @@ public class MockServerClientIntegrationTest {
                 .withStatusCode(201)
                 .withContentType(APPLICATION_JSON)
                 .withBody(new StringBody(new ExpectationSerializer(MOCK_SERVER_LOGGER).serialize(
-                    new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-                    new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+                    new Expectation(request("/some_request_one")).thenRespond(response()),
+                    new Expectation(request("/some_request_two")).thenRespond(response())
                 )))
         );
 
@@ -1435,8 +1435,8 @@ public class MockServerClientIntegrationTest {
 
         // then
         assertThat(Arrays.asList(actualResponse), hasItems(
-            new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-            new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+            new Expectation(request("/some_request_one")).thenRespond(response()),
+            new Expectation(request("/some_request_two")).thenRespond(response())
         ));
         assertThat(retrieveRequests(request()).size(), is(1));
         String result = verify(verification().withRequest(
@@ -1471,8 +1471,8 @@ public class MockServerClientIntegrationTest {
                 .withStatusCode(201)
                 .withContentType(APPLICATION_JSON)
                 .withBody(new StringBody(new ExpectationSerializer(MOCK_SERVER_LOGGER).serialize(
-                    new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-                    new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+                    new Expectation(request("/some_request_one")).thenRespond(response()),
+                    new Expectation(request("/some_request_two")).thenRespond(response())
                 )))
         );
 
@@ -1481,8 +1481,8 @@ public class MockServerClientIntegrationTest {
 
         // then
         assertThat(Arrays.asList(actualResponse), hasItems(
-            new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-            new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+            new Expectation(request("/some_request_one")).thenRespond(response()),
+            new Expectation(request("/some_request_two")).thenRespond(response())
         ));
         assertThat(retrieveRequests(request()).size(), is(1));
         String result = verify(verification().withRequest(
@@ -1510,8 +1510,8 @@ public class MockServerClientIntegrationTest {
     public void shouldRetrieveActiveExpectationsAsJson() {
         // given
         String serializeExpectations = new ExpectationSerializer(MOCK_SERVER_LOGGER).serialize(
-            new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-            new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+            new Expectation(request("/some_request_one")).thenRespond(response()),
+            new Expectation(request("/some_request_two")).thenRespond(response())
         );
         echoServerOne.withNextResponse(
             response()
@@ -1559,8 +1559,8 @@ public class MockServerClientIntegrationTest {
     public void shouldRetrieveActiveExpectationsAsJava() {
         // given
         String serializedExpectations = new ExpectationToJavaSerializer().serialize(Arrays.asList(
-            new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-            new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+            new Expectation(request("/some_request_one")).thenRespond(response()),
+            new Expectation(request("/some_request_two")).thenRespond(response())
         ));
         echoServerOne.withNextResponse(
             response()
@@ -1612,8 +1612,8 @@ public class MockServerClientIntegrationTest {
                 .withStatusCode(201)
                 .withContentType(APPLICATION_JSON)
                 .withBody(new StringBody(new ExpectationSerializer(MOCK_SERVER_LOGGER).serialize(
-                    new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-                    new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+                    new Expectation(request("/some_request_one")).thenRespond(response()),
+                    new Expectation(request("/some_request_two")).thenRespond(response())
                 )))
         );
 
@@ -1626,8 +1626,8 @@ public class MockServerClientIntegrationTest {
 
         // then
         assertThat(Arrays.asList(actualResponse), hasItems(
-            new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-            new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+            new Expectation(request("/some_request_one")).thenRespond(response()),
+            new Expectation(request("/some_request_two")).thenRespond(response())
         ));
         assertThat(retrieveRequests(request()).size(), is(1));
         String result = verify(verification().withRequest(
@@ -1662,8 +1662,8 @@ public class MockServerClientIntegrationTest {
                 .withStatusCode(201)
                 .withContentType(APPLICATION_JSON)
                 .withBody(new StringBody(new ExpectationSerializer(MOCK_SERVER_LOGGER).serialize(
-                    new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-                    new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+                    new Expectation(request("/some_request_one")).thenRespond(response()),
+                    new Expectation(request("/some_request_two")).thenRespond(response())
                 )))
         );
 
@@ -1672,8 +1672,8 @@ public class MockServerClientIntegrationTest {
 
         // then
         assertThat(Arrays.asList(actualResponse), hasItems(
-            new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-            new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+            new Expectation(request("/some_request_one")).thenRespond(response()),
+            new Expectation(request("/some_request_two")).thenRespond(response())
         ));
         assertThat(retrieveRequests(request()).size(), is(1));
         String result = verify(verification().withRequest(
@@ -1701,8 +1701,8 @@ public class MockServerClientIntegrationTest {
     public void shouldRetrieveRecordedExpectationsAsJson() {
         // given
         String serializeExpectations = new ExpectationSerializer(MOCK_SERVER_LOGGER).serialize(
-            new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-            new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+            new Expectation(request("/some_request_one")).thenRespond(response()),
+            new Expectation(request("/some_request_two")).thenRespond(response())
         );
         echoServerOne.withNextResponse(
             response()
@@ -1750,8 +1750,8 @@ public class MockServerClientIntegrationTest {
     public void shouldRetrieveRecordedExpectationsAsJava() {
         // given
         String serializedExpectations = new ExpectationToJavaSerializer().serialize(Arrays.asList(
-            new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-            new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+            new Expectation(request("/some_request_one")).thenRespond(response()),
+            new Expectation(request("/some_request_two")).thenRespond(response())
         ));
         echoServerOne.withNextResponse(
             response()

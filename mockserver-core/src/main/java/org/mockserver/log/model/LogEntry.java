@@ -218,7 +218,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     }
 
     public LogEntry setExpectation(HttpRequest httpRequest, HttpResponse httpResponse) {
-        this.expectation = new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenRespond(httpResponse);
+        this.expectation = new Expectation(httpRequest, Times.once(), TimeToLive.unlimited(), 0).thenRespond(httpResponse);
         return this;
     }
 

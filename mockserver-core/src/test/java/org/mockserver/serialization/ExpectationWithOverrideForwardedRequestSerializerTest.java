@@ -49,7 +49,8 @@ public class ExpectationWithOverrideForwardedRequestSerializerTest {
             .withHeaders(new Header("headerName", "headerValue"))
             .withCookies(new Cookie("cookieName", "cookieValue")),
         Times.once(),
-        TimeToLive.exactly(TimeUnit.HOURS, 2L))
+        TimeToLive.exactly(TimeUnit.HOURS, 2L),
+        0)
         .thenForward(
             new HttpOverrideForwardedRequest()
                 .withHttpRequest(

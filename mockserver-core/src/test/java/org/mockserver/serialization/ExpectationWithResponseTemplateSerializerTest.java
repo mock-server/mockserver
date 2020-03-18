@@ -49,7 +49,8 @@ public class ExpectationWithResponseTemplateSerializerTest {
             .withHeaders(new Header("headerName", "headerValue"))
             .withCookies(new Cookie("cookieName", "cookieValue")),
         Times.once(),
-        TimeToLive.exactly(HOURS, 2L))
+        TimeToLive.exactly(HOURS, 2L),
+        0)
         .thenRespond(
             template(HttpTemplate.TemplateType.JAVASCRIPT, "some_random_template")
                 .withDelay(SECONDS, 5)

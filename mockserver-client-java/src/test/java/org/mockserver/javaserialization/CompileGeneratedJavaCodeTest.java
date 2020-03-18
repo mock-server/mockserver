@@ -40,42 +40,42 @@ public class CompileGeneratedJavaCodeTest {
     public void shouldCompileExpectationWithHttpResponse() throws URISyntaxException {
 
         String expectationAsJavaCode = new ExpectationToJavaSerializer().serialize(1,
-            new Expectation(
-                request()
-                    .withMethod("GET")
-                    .withPath("somePath")
-                    .withQueryStringParameters(
-                        new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
-                        new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
-                    )
-                    .withHeaders(
-                        new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
-                        new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
-                    )
-                    .withCookies(
-                        new Cookie("requestCookieNameOne", "requestCookieValueOne"),
-                        new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
-                    )
-                    .withSecure(false)
-                    .withKeepAlive(true)
-                    .withSocketAddress("someHost", 1234, SocketAddress.Scheme.HTTP)
-                    .withBody(new StringBody("somebody")),
-                Times.once(),
-                TimeToLive.unlimited()
-            )
-                .thenRespond(
-                    response()
-                        .withStatusCode(304)
+            new Expectation
+                (
+                    request()
+                        .withMethod("GET")
+                        .withPath("somePath")
+                        .withQueryStringParameters(
+                            new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                            new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
+                        )
                         .withHeaders(
-                            new Header("responseHeaderNameOne", "responseHeaderValueOneOne", "responseHeaderValueOneTwo"),
-                            new Header("responseHeaderNameTwo", "responseHeaderValueTwo")
+                            new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                            new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
                         )
                         .withCookies(
-                            new Cookie("responseCookieNameOne", "responseCookieValueOne"),
-                            new Cookie("responseCookieNameTwo", "responseCookieValueTwo")
+                            new Cookie("requestCookieNameOne", "requestCookieValueOne"),
+                            new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
                         )
-                        .withBody("responseBody")
+                        .withSecure(false)
+                        .withKeepAlive(true)
+                        .withSocketAddress("someHost", 1234, SocketAddress.Scheme.HTTP)
+                        .withBody(new StringBody("somebody"))
                 )
+                .thenRespond
+                    (
+                        response()
+                            .withStatusCode(304)
+                            .withHeaders(
+                                new Header("responseHeaderNameOne", "responseHeaderValueOneOne", "responseHeaderValueOneTwo"),
+                                new Header("responseHeaderNameTwo", "responseHeaderValueTwo")
+                            )
+                            .withCookies(
+                                new Cookie("responseCookieNameOne", "responseCookieValueOne"),
+                                new Cookie("responseCookieNameTwo", "responseCookieValueTwo")
+                            )
+                            .withBody("responseBody")
+                    )
         );
 
         assertTrue(compileJavaCode(commonImports +
@@ -112,8 +112,8 @@ public class CompileGeneratedJavaCodeTest {
                     .withKeepAlive(true)
                     .withBody(new StringBody("somebody")),
                 Times.once(),
-                TimeToLive.unlimited()
-            )
+                TimeToLive.unlimited(),
+                0)
                 .thenRespond(
                     template(HttpTemplate.TemplateType.JAVASCRIPT)
                         .withTemplate("some_random_template")
@@ -154,8 +154,8 @@ public class CompileGeneratedJavaCodeTest {
                     .withKeepAlive(true)
                     .withBody(new StringBody("somebody")),
                 Times.once(),
-                TimeToLive.unlimited()
-            )
+                TimeToLive.unlimited(),
+                0)
                 .thenForward(
                     forward()
                         .withHost("localhost")
@@ -198,8 +198,8 @@ public class CompileGeneratedJavaCodeTest {
                     .withKeepAlive(true)
                     .withBody(new StringBody("somebody")),
                 Times.once(),
-                TimeToLive.unlimited()
-            )
+                TimeToLive.unlimited(),
+                0)
                 .thenRespond(
                     callback()
                         .withCallbackClass("some_random_class")
@@ -240,8 +240,8 @@ public class CompileGeneratedJavaCodeTest {
                     .withKeepAlive(true)
                     .withBody(new StringBody("somebody")),
                 Times.once(),
-                TimeToLive.unlimited()
-            )
+                TimeToLive.unlimited(),
+                0)
                 .thenRespond(
                     new HttpObjectCallback()
                         .withClientId("some_random_clientId")

@@ -34,7 +34,7 @@ public class ExpectationDTOTest {
         HttpError httpError = new HttpError().withResponseBytes("some_bytes".getBytes(UTF_8));
 
         // when
-        ExpectationDTO expectationWithResponse = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenRespond(httpResponse));
+        ExpectationDTO expectationWithResponse = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited(), 0).thenRespond(httpResponse));
 
         // then
         assertThat(expectationWithResponse.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
@@ -51,7 +51,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithResponse.getHttpError());
 
         // when
-        Expectation expectationWithResponseTemplate = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenRespond(httpResponseTemplate)).buildObject();
+        Expectation expectationWithResponseTemplate = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited(), 0).thenRespond(httpResponseTemplate)).buildObject();
 
         // then
         assertThat(expectationWithResponseTemplate.getHttpRequest(), is(httpRequest));
@@ -69,7 +69,7 @@ public class ExpectationDTOTest {
 
 
         // when
-        ExpectationDTO expectationWithResponseClassCallback = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenRespond(httpResponseClassCallback));
+        ExpectationDTO expectationWithResponseClassCallback = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited(), 0).thenRespond(httpResponseClassCallback));
 
         // then
         assertThat(expectationWithResponseClassCallback.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
@@ -86,7 +86,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithResponseClassCallback.getHttpError());
 
         // when
-        ExpectationDTO expectationWithResponseObjectCallback = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenRespond(httpResponseObjectCallback));
+        ExpectationDTO expectationWithResponseObjectCallback = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited(), 0).thenRespond(httpResponseObjectCallback));
 
         // then
         assertThat(expectationWithResponseObjectCallback.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
@@ -103,7 +103,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithResponseObjectCallback.getHttpError());
 
         // when
-        ExpectationDTO expectationWithForward = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenForward(httpForward));
+        ExpectationDTO expectationWithForward = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited(), 0).thenForward(httpForward));
 
         // then
         assertThat(expectationWithForward.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
@@ -120,7 +120,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithForward.getHttpError());
 
         // when
-        Expectation expectationWithForwardTemplate = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenForward(httpForwardTemplate)).buildObject();
+        Expectation expectationWithForwardTemplate = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited(), 0).thenForward(httpForwardTemplate)).buildObject();
 
         // then
         assertThat(expectationWithForwardTemplate.getHttpRequest(), is(httpRequest));
@@ -138,7 +138,7 @@ public class ExpectationDTOTest {
 
 
         // when
-        ExpectationDTO expectationWithForwardClassCallback = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenForward(httpForwardClassCallback));
+        ExpectationDTO expectationWithForwardClassCallback = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited(), 0).thenForward(httpForwardClassCallback));
 
         // then
         assertThat(expectationWithForwardClassCallback.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
@@ -155,7 +155,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithForwardClassCallback.getHttpError());
 
         // when
-        ExpectationDTO expectationWithForwardObjectCallback = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenForward(httpForwardObjectCallback));
+        ExpectationDTO expectationWithForwardObjectCallback = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited(), 0).thenForward(httpForwardObjectCallback));
 
         // then
         assertThat(expectationWithForwardObjectCallback.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
@@ -172,7 +172,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithForwardObjectCallback.getHttpError());
 
         // when
-        ExpectationDTO expectationWithOverrideForwardedRequest = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenForward(httpOverrideForwardedRequest));
+        ExpectationDTO expectationWithOverrideForwardedRequest = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited(), 0).thenForward(httpOverrideForwardedRequest));
 
         // then
         assertThat(expectationWithOverrideForwardedRequest.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
@@ -189,7 +189,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithOverrideForwardedRequest.getHttpError());
 
         // when
-        ExpectationDTO expectationWithError = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenError(httpError));
+        ExpectationDTO expectationWithError = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited(), 0).thenError(httpError));
 
         // then
         assertThat(expectationWithError.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
@@ -220,7 +220,7 @@ public class ExpectationDTOTest {
         HttpOverrideForwardedRequest httpOverrideForwardedRequest = new HttpOverrideForwardedRequest().withHttpRequest(httpRequest);
 
         // when
-        Expectation expectationWithResponse = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenRespond(httpResponse)).buildObject();
+        Expectation expectationWithResponse = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited(), 0).thenRespond(httpResponse)).buildObject();
 
         // then
         assertThat(expectationWithResponse.getHttpRequest(), is(httpRequest));
@@ -237,7 +237,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithResponse.getHttpError());
 
         // when
-        Expectation expectationWithResponseTemplate = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenRespond(httpResponseTemplate)).buildObject();
+        Expectation expectationWithResponseTemplate = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited(), 0).thenRespond(httpResponseTemplate)).buildObject();
 
         // then
         assertThat(expectationWithResponseTemplate.getHttpRequest(), is(httpRequest));
@@ -254,7 +254,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithResponseTemplate.getHttpError());
 
         // when
-        Expectation expectationWithResponseClassCallback = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenRespond(httpClassCallback)).buildObject();
+        Expectation expectationWithResponseClassCallback = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited(), 0).thenRespond(httpClassCallback)).buildObject();
 
         // then
         assertThat(expectationWithResponseClassCallback.getHttpRequest(), is(httpRequest));
@@ -271,7 +271,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithResponseClassCallback.getHttpError());
 
         // when
-        Expectation expectationWithResponseObjectCallback = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenRespond(httpObjectCallback)).buildObject();
+        Expectation expectationWithResponseObjectCallback = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited(), 0).thenRespond(httpObjectCallback)).buildObject();
 
         // then
         assertThat(expectationWithResponseObjectCallback.getHttpRequest(), is(httpRequest));
@@ -288,7 +288,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithResponseObjectCallback.getHttpError());
 
         // when
-        Expectation expectationWithForward = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenForward(httpForward)).buildObject();
+        Expectation expectationWithForward = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited(), 0).thenForward(httpForward)).buildObject();
 
         // then
         assertThat(expectationWithForward.getHttpRequest(), is(httpRequest));
@@ -305,7 +305,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithForward.getHttpError());
 
         // when
-        Expectation expectationWithForwardTemplate = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenForward(httpForwardTemplate)).buildObject();
+        Expectation expectationWithForwardTemplate = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited(), 0).thenForward(httpForwardTemplate)).buildObject();
 
         // then
         assertThat(expectationWithForwardTemplate.getHttpRequest(), is(httpRequest));
@@ -322,7 +322,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithForwardTemplate.getHttpError());
 
         // when
-        Expectation expectationWithForwardClassCallback = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenForward(httpClassCallback)).buildObject();
+        Expectation expectationWithForwardClassCallback = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited(), 0).thenForward(httpClassCallback)).buildObject();
 
         // then
         assertThat(expectationWithForwardClassCallback.getHttpRequest(), is(httpRequest));
@@ -339,7 +339,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithForwardClassCallback.getHttpError());
 
         // when
-        Expectation expectationWithForwardObjectCallback = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenForward(httpObjectCallback)).buildObject();
+        Expectation expectationWithForwardObjectCallback = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited(), 0).thenForward(httpObjectCallback)).buildObject();
 
         // then
         assertThat(expectationWithForwardObjectCallback.getHttpRequest(), is(httpRequest));
@@ -356,7 +356,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithForwardObjectCallback.getHttpError());
 
         // when
-        Expectation expectationWithOverrideForwardedRequest = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenForward(httpOverrideForwardedRequest)).buildObject();
+        Expectation expectationWithOverrideForwardedRequest = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited(), 0).thenForward(httpOverrideForwardedRequest)).buildObject();
 
         // then
         assertThat(expectationWithOverrideForwardedRequest.getHttpRequest(), is(httpRequest));
@@ -373,7 +373,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithOverrideForwardedRequest.getHttpError());
 
         // when
-        Expectation expectationWithError = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenError(httpError)).buildObject();
+        Expectation expectationWithError = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited(), 0).thenError(httpError)).buildObject();
 
         // then
         assertThat(expectationWithError.getHttpRequest(), is(httpRequest));
@@ -393,7 +393,7 @@ public class ExpectationDTOTest {
     @Test
     public void shouldBuildObjectWithNulls() {
         // when
-        Expectation expectation = new ExpectationDTO(new Expectation(null, null, TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).thenError(null).thenRespond((HttpClassCallback)null).thenRespond((HttpObjectCallback)null)).buildObject();
+        Expectation expectation = new ExpectationDTO(new Expectation(null, null, TimeToLive.unlimited(), 0).thenRespond((HttpResponse)null).thenForward((HttpForward)null).thenError(null).thenRespond((HttpClassCallback)null).thenRespond((HttpObjectCallback)null)).buildObject();
 
         // then
         assertThat(expectation.getHttpRequest(), is(nullValue()));
@@ -479,7 +479,7 @@ public class ExpectationDTOTest {
     @Test
     public void shouldHandleNullFieldInput() {
         // when
-        ExpectationDTO expectationDTO = new ExpectationDTO(new Expectation(null, null, TimeToLive.unlimited()));
+        ExpectationDTO expectationDTO = new ExpectationDTO(new Expectation(null, null, TimeToLive.unlimited(), 0));
 
         // then
         assertThat(expectationDTO.getHttpRequest(), is(nullValue()));

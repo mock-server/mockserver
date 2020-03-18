@@ -84,6 +84,7 @@ public class ExpectationFileWatcherIntegrationTest {
             // when
             String watchedFileContents = "[ {" + NEW_LINE +
                 "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -98,6 +99,7 @@ public class ExpectationFileWatcherIntegrationTest {
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
                 "  \"id\" : \"two\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleSecond\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -112,6 +114,7 @@ public class ExpectationFileWatcherIntegrationTest {
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
                 "  \"id\" : \"three\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleThird\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -388,6 +391,7 @@ public class ExpectationFileWatcherIntegrationTest {
             // when
             watchedFileContents = "[ {" + NEW_LINE +
                 "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -402,6 +406,7 @@ public class ExpectationFileWatcherIntegrationTest {
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
                 "  \"id\" : \"two\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleSecondUpdated\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -416,6 +421,7 @@ public class ExpectationFileWatcherIntegrationTest {
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
                 "  \"id\" : \"four\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFourth\"" + NEW_LINE +
                 "  }," + NEW_LINE +

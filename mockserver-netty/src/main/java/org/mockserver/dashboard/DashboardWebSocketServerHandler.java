@@ -300,7 +300,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
                                 recordedExpectations.add(
                                     ImmutableMap.of(
                                         "key", logEntryDTO.getId(),
-                                        "value", new Expectation(logEntryDTO.getHttpRequest(), Times.once(), TimeToLive.unlimited())
+                                        "value", new Expectation(logEntryDTO.getHttpRequest(), Times.once(), TimeToLive.unlimited(), 0)
                                             .thenRespond(logEntryDTO.getHttpResponse())
                                     )
                                 );

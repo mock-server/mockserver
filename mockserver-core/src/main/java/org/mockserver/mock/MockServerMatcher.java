@@ -1,7 +1,7 @@
 package org.mockserver.mock;
 
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
-import org.mockserver.collections.CircularLinkedList;
+import org.mockserver.collections.CircularPriorityQueue;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
@@ -16,10 +16,12 @@ import org.slf4j.event.Level;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static org.mockserver.configuration.ConfigurationProperties.maxExpectations;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
+import static org.mockserver.matchers.HttpRequestMatcher.EXPECTATION_PRIORITY_COMPARATOR;
 import static org.mockserver.metrics.Metrics.Name.*;
 
 /**
@@ -27,7 +29,12 @@ import static org.mockserver.metrics.Metrics.Name.*;
  */
 public class MockServerMatcher extends MockServerMatcherNotifier {
 
-    final List<HttpRequestMatcher> httpRequestMatchers = Collections.synchronizedList(new CircularLinkedList<>(maxExpectations()));
+    final CircularPriorityQueue<String, HttpRequestMatcher> httpRequestMatchers = new CircularPriorityQueue<>(
+        maxExpectations(),
+        HttpRequestMatcher.class,
+        EXPECTATION_PRIORITY_COMPARATOR,
+        httpRequestMatcher -> httpRequestMatcher.getExpectation().getId()
+    );
     private final MockServerLogger mockServerLogger;
     private WebSocketClientRegistry webSocketClientRegistry;
     private MatcherBuilder matcherBuilder;
@@ -39,16 +46,10 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
         this.webSocketClientRegistry = webSocketClientRegistry;
     }
 
-    public void add(Expectation expectation) {
-        add(expectation, Cause.API);
-    }
-
     public void add(Expectation expectation, Cause cause) {
         if (expectation != null) {
             httpRequestMatchers
-                .stream()
-                .filter(existingHttpRequestMatcher -> existingHttpRequestMatcher.getExpectation().getId().equals(expectation.getId()))
-                .findFirst()
+                .getByKey(expectation.getId())
                 .map(httpRequestMatcher -> {
                     if (httpRequestMatcher.getExpectation() != null && httpRequestMatcher.getExpectation().getAction() != null) {
                         Metrics.decrement(httpRequestMatcher.getExpectation().getAction().getType());
@@ -68,22 +69,7 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
                     }
                     return httpRequestMatcher;
                 })
-                .orElseGet(() -> {
-                    HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(expectation);
-                    httpRequestMatchers.add(httpRequestMatcher);
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setType(CREATED_EXPECTATION)
-                            .setLogLevel(Level.INFO)
-                            .setHttpRequest(expectation.getHttpRequest())
-                            .setMessageFormat("creating expectation:{}")
-                            .setArguments(expectation.clone())
-                    );
-                    if (expectation.getAction() != null) {
-                        Metrics.increment(expectation.getAction().getType());
-                    }
-                    return httpRequestMatcher;
-                });
+                .orElseGet(() -> addPrioritisedExpectation(expectation));
             notifyListeners(this, cause);
         }
     }
@@ -91,18 +77,14 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
     public void update(Expectation[] expectations, Cause cause) {
         AtomicInteger numberOfChanges = new AtomicInteger(0);
         if (expectations != null) {
-            Set<String> existingKeys = new HashSet<>();
-            Map<String, HttpRequestMatcher> httpRequestMatchersByKey = httpRequestMatchers.stream().collect(Collectors.toMap(httpRequestMatcher -> {
-                existingKeys.add(httpRequestMatcher.getExpectation().getId());
-                return httpRequestMatcher.getExpectation().getId();
-            }, httpRequestMatcher -> httpRequestMatcher));
-            Map<String, Expectation> expectationsByKey = new LinkedHashMap<>();
-            Arrays.stream(expectations).forEach(expectation -> expectationsByKey.put(expectation.getId(), expectation));
-            expectationsByKey
-                .forEach((key, expectation) -> {
-                    existingKeys.remove(key);
-                    if (httpRequestMatchersByKey.containsKey(key)) {
-                        HttpRequestMatcher httpRequestMatcher = httpRequestMatchersByKey.get(key);
+            Map<String, HttpRequestMatcher> httpRequestMatchersByKey = httpRequestMatchers.keyMap();
+            Set<String> existingKeys = new HashSet<>(httpRequestMatchersByKey.keySet());
+            Arrays
+                .stream(expectations)
+                .forEach(expectation -> {
+                    existingKeys.remove(expectation.getId());
+                    if (httpRequestMatchersByKey.containsKey(expectation.getId())) {
+                        HttpRequestMatcher httpRequestMatcher = httpRequestMatchersByKey.get(expectation.getId());
                         if (httpRequestMatcher.getExpectation() != null && httpRequestMatcher.getExpectation().getAction() != null) {
                             Metrics.decrement(httpRequestMatcher.getExpectation().getAction().getType());
                         }
@@ -121,19 +103,8 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
                             }
                         }
                     } else {
-                        httpRequestMatchers.add(matcherBuilder.transformsToMatcher(expectation));
-                        if (expectation.getAction() != null) {
-                            Metrics.increment(expectation.getAction().getType());
-                        }
+                        addPrioritisedExpectation(expectation);
                         numberOfChanges.getAndIncrement();
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setType(CREATED_EXPECTATION)
-                                .setLogLevel(Level.INFO)
-                                .setHttpRequest(expectation.getHttpRequest())
-                                .setMessageFormat("creating expectation:{}")
-                                .setArguments(expectation.clone())
-                        );
                     }
                 });
             existingKeys
@@ -151,8 +122,21 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
         }
     }
 
-    private HttpRequestMatcher[] cloneMatchers() {
-        return httpRequestMatchers.toArray(new HttpRequestMatcher[0]);
+    private HttpRequestMatcher addPrioritisedExpectation(Expectation expectation) {
+        HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(expectation);
+        httpRequestMatchers.add(httpRequestMatcher);
+        if (expectation.getAction() != null) {
+            Metrics.increment(expectation.getAction().getType());
+        }
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(CREATED_EXPECTATION)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(expectation.getHttpRequest())
+                .setMessageFormat("creating expectation:{}")
+                .setArguments(expectation.clone())
+        );
+        return httpRequestMatcher;
     }
 
     public void reset(Cause cause) {
@@ -167,7 +151,7 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
 
     public Expectation firstMatchingExpectation(HttpRequest httpRequest) {
         Expectation matchingExpectation = null;
-        for (HttpRequestMatcher httpRequestMatcher : cloneMatchers()) {
+        for (HttpRequestMatcher httpRequestMatcher : httpRequestMatchers.toSortedList()) {
             boolean remainingMatchesDecremented = false;
             if (httpRequestMatcher.matches(httpRequest, httpRequest)) {
                 matchingExpectation = httpRequestMatcher.getExpectation();
@@ -198,7 +182,7 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
     public void clear(HttpRequest httpRequest) {
         if (httpRequest != null) {
             HttpRequestMatcher clearHttpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
-            for (HttpRequestMatcher httpRequestMatcher : cloneMatchers()) {
+            for (HttpRequestMatcher httpRequestMatcher : httpRequestMatchers.toSortedList()) {
                 if (clearHttpRequestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest())) {
                     removeHttpRequestMatcher(httpRequestMatcher);
                 }
@@ -261,7 +245,7 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
         } else {
             List<Expectation> expectations = new ArrayList<>();
             HttpRequestMatcher requestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
-            for (HttpRequestMatcher httpRequestMatcher : cloneMatchers()) {
+            for (HttpRequestMatcher httpRequestMatcher : httpRequestMatchers.toSortedList()) {
                 if (requestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest())) {
                     expectations.add(httpRequestMatcher.getExpectation());
                 }

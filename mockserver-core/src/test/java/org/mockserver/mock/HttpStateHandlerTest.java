@@ -174,6 +174,7 @@ public class HttpStateHandlerTest {
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"id\" : \"key_one\"," + NEW_LINE +
+                    "\t  \"priority\" : 0," + NEW_LINE +
                     "\t  \"httpRequest\" : {" + NEW_LINE +
                     "\t    \"path\" : \"request_one\"" + NEW_LINE +
                     "\t  }," + NEW_LINE +
@@ -201,6 +202,7 @@ public class HttpStateHandlerTest {
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"id\" : \"key_two\"," + NEW_LINE +
+                    "\t  \"priority\" : 0," + NEW_LINE +
                     "\t  \"httpRequest\" : {" + NEW_LINE +
                     "\t    \"path\" : \"request_two\"" + NEW_LINE +
                     "\t  }," + NEW_LINE +
@@ -315,6 +317,7 @@ public class HttpStateHandlerTest {
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"id\" : \"key_one\"," + NEW_LINE +
+                    "\t  \"priority\" : 0," + NEW_LINE +
                     "\t  \"httpRequest\" : {" + NEW_LINE +
                     "\t    \"path\" : \"request_one\"" + NEW_LINE +
                     "\t  }," + NEW_LINE +
@@ -420,6 +423,7 @@ public class HttpStateHandlerTest {
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"id\" : \"one\"," + NEW_LINE +
+                    "\t  \"priority\" : 0," + NEW_LINE +
                     "\t  \"httpRequest\" : {" + NEW_LINE +
                     "\t    \"path\" : \"request_one\"" + NEW_LINE +
                     "\t  }," + NEW_LINE +
@@ -510,6 +514,7 @@ public class HttpStateHandlerTest {
                     "" + NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"id\" : \"key_one\"," + NEW_LINE +
+                    "\t  \"priority\" : 0," + NEW_LINE +
                     "\t  \"httpRequest\" : {" + NEW_LINE +
                     "\t    \"path\" : \"request_one\"" + NEW_LINE +
                     "\t  }," + NEW_LINE +
@@ -537,6 +542,7 @@ public class HttpStateHandlerTest {
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"id\" : \"key_four\"," + NEW_LINE +
+                    "\t  \"priority\" : 0," + NEW_LINE +
                     "\t  \"httpRequest\" : {" + NEW_LINE +
                     "\t    \"path\" : \"request_four\"" + NEW_LINE +
                     "\t  }," + NEW_LINE +
@@ -576,6 +582,7 @@ public class HttpStateHandlerTest {
             is(response().withBody("" +
                     "[ {" + NEW_LINE +
                     "  \"id\" : \"key_one\"," + NEW_LINE +
+                    "  \"priority\" : 0," + NEW_LINE +
                     "  \"httpRequest\" : {" + NEW_LINE +
                     "    \"path\" : \"request_one\"" + NEW_LINE +
                     "  }," + NEW_LINE +
@@ -659,6 +666,7 @@ public class HttpStateHandlerTest {
             is(response().withBody("" +
                     "[ {" + NEW_LINE +
                     "  \"id\" : \"key_one\"," + NEW_LINE +
+                    "  \"priority\" : 0," + NEW_LINE +
                     "  \"httpRequest\" : {" + NEW_LINE +
                     "    \"path\" : \"request_one\"" + NEW_LINE +
                     "  }," + NEW_LINE +
@@ -969,6 +977,7 @@ public class HttpStateHandlerTest {
                 "    }," + NEW_LINE +
                 "    \"expectation\" : {" + NEW_LINE +
                 "      \"id\" : \"key_one\"," + NEW_LINE +
+                "      \"priority\" : 0," + NEW_LINE +
                 "      \"httpRequest\" : {" + NEW_LINE +
                 "        \"path\" : \"request_one\"" + NEW_LINE +
                 "      }," + NEW_LINE +
@@ -1063,7 +1072,7 @@ public class HttpStateHandlerTest {
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request("request_one"))
                 .setHttpResponse(response("response_one"))
-                .setExpectation(new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).withId("key_one").thenRespond(response("response_one")))
+                .setExpectation(new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited(), 0).withId("key_one").thenRespond(response("response_one")))
         );
         httpStateHandler.log(
             new LogEntry()
@@ -1071,7 +1080,7 @@ public class HttpStateHandlerTest {
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_two"))
                 .setHttpResponse(response("response_two"))
-                .setExpectation(new Expectation(request("request_two"), Times.once(), TimeToLive.unlimited()).withId("key_two").thenRespond(response("response_two")))
+                .setExpectation(new Expectation(request("request_two"), Times.once(), TimeToLive.unlimited(), 0).withId("key_two").thenRespond(response("response_two")))
         );
 
         // when
@@ -1085,8 +1094,8 @@ public class HttpStateHandlerTest {
         // then
         assertThat(response,
             is(response().withBody(httpExpectationSerializer.serialize(Arrays.asList(
-                new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).withId("key_one").thenRespond(response("response_one")),
-                new Expectation(request("request_two"), Times.once(), TimeToLive.unlimited()).withId("key_two").thenRespond(response("response_two"))
+                new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited(), 0).withId("key_one").thenRespond(response("response_one")),
+                new Expectation(request("request_two"), Times.once(), TimeToLive.unlimited(), 0).withId("key_two").thenRespond(response("response_two"))
             )), MediaType.JSON_UTF_8).withStatusCode(200))
         );
     }
@@ -1122,8 +1131,8 @@ public class HttpStateHandlerTest {
         // then
         assertThat(response,
             is(response().withBody(httpExpectationToJavaSerializer.serialize(Arrays.asList(
-                new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_one")),
-                new Expectation(request("request_two"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_two"))
+                new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited(), 0).thenRespond(response("response_one")),
+                new Expectation(request("request_two"), Times.once(), TimeToLive.unlimited(), 0).thenRespond(response("response_two"))
             )), MediaType.create("application", "java").withCharset(UTF_8)).withStatusCode(200))
         );
     }
@@ -1160,7 +1169,7 @@ public class HttpStateHandlerTest {
         // then
         assertThat(response,
             is(response().withBody(httpExpectationToJavaSerializer.serialize(Collections.singletonList(
-                new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_one"))
+                new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited(), 0).thenRespond(response("response_one"))
             )), MediaType.create("application", "java").withCharset(UTF_8)).withStatusCode(200))
         );
     }

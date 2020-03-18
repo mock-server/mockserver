@@ -13,6 +13,8 @@ import org.mockserver.serialization.*;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.server.initialize.ExpectationInitializerLoader;
+import org.mockserver.ui.MockServerMatcherNotifier;
+import org.mockserver.ui.MockServerMatcherNotifier.Cause;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.event.Level;
@@ -158,7 +160,7 @@ public class HttpStateHandler {
                     scheduler.submit(() -> addSubjectAlternativeName(hostHeader));
                 }
             }
-            mockServerMatcher.add(expectation);
+            mockServerMatcher.add(expectation, Cause.API);
         }
     }
 

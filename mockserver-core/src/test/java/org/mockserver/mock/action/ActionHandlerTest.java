@@ -114,7 +114,7 @@ public class ActionHandlerTest {
         responseFuture.complete(response);
         forwardedHttpRequest = mock(HttpRequest.class);
         httpForwardActionResult = new HttpForwardActionResult(forwardedHttpRequest, responseFuture, null, new InetSocketAddress(1234));
-        expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenRespond(response);
+        expectation = new Expectation(request).thenRespond(response);
 
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
         when(mockHttpResponseActionHandler.handle(any(HttpResponse.class))).thenReturn(response);
@@ -130,7 +130,7 @@ public class ActionHandlerTest {
     public void shouldProcessResponseAction() {
         // given
         HttpResponse response = response("some_body").withDelay(milliseconds(1));
-        expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenRespond(response);
+        expectation = new Expectation(request).thenRespond(response);
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
@@ -164,7 +164,7 @@ public class ActionHandlerTest {
     public void shouldProcessResponseTemplateAction() {
         // given
         HttpTemplate template = template(HttpTemplate.TemplateType.JAVASCRIPT, "some_template").withDelay(milliseconds(1));
-        expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenRespond(template);
+        expectation = new Expectation(request).thenRespond(template);
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
@@ -198,7 +198,7 @@ public class ActionHandlerTest {
     public void shouldHandleResponseTemplateActionException() {
         // given
         HttpTemplate template = template(HttpTemplate.TemplateType.JAVASCRIPT, "some_template").withDelay(milliseconds(1));
-        expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenRespond(template);
+        expectation = new Expectation(request).thenRespond(template);
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
         RuntimeException throwable = new RuntimeException("TEST_EXCEPTION");
         when(mockHttpResponseTemplateActionHandler.handle(any(HttpTemplate.class), any(HttpRequest.class))).thenThrow(throwable);
@@ -240,7 +240,7 @@ public class ActionHandlerTest {
     public void shouldProcessResponseClassCallbackAction() {
         // given
         HttpClassCallback callback = callback("some_class").withDelay(milliseconds(1));
-        expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenRespond(callback);
+        expectation = new Expectation(request).thenRespond(callback);
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
@@ -274,7 +274,7 @@ public class ActionHandlerTest {
     public void shouldProcessResponseObjectCallbackAction() {
         // given
         HttpObjectCallback callback = new HttpObjectCallback().withClientId("some_request_client_id").withDelay(milliseconds(1));
-        expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenRespond(callback);
+        expectation = new Expectation(request).thenRespond(callback);
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
         ResponseWriter mockResponseWriter = mock(ResponseWriter.class);
 
@@ -299,7 +299,7 @@ public class ActionHandlerTest {
         HttpForward forward = forward()
             .withHost("localhost")
             .withPort(1080);
-        expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenForward(forward);
+        expectation = new Expectation(request).thenForward(forward);
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
@@ -334,7 +334,7 @@ public class ActionHandlerTest {
     public void shouldProcessForwardTemplateAction() {
         // given
         HttpTemplate template = template(HttpTemplate.TemplateType.JAVASCRIPT, "some_template");
-        expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenForward(template);
+        expectation = new Expectation(request).thenForward(template);
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
@@ -369,7 +369,7 @@ public class ActionHandlerTest {
     public void shouldHandleForwardTemplateActionException() {
         // given
         HttpTemplate template = template(HttpTemplate.TemplateType.JAVASCRIPT, "some_template");
-        expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenForward(template);
+        expectation = new Expectation(request).thenForward(template);
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
         RuntimeException throwable = new RuntimeException("TEST_EXCEPTION");
         when(mockHttpForwardTemplateActionHandler.handle(any(HttpTemplate.class), any(HttpRequest.class))).thenThrow(throwable);
@@ -411,7 +411,7 @@ public class ActionHandlerTest {
     public void shouldProcessForwardClassCallbackAction() {
         // given
         HttpClassCallback callback = callback("some_class");
-        expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenForward(callback);
+        expectation = new Expectation(request).thenForward(callback);
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
@@ -446,7 +446,7 @@ public class ActionHandlerTest {
     public void shouldProcessForwardObjectCallbackAction() {
         // given
         HttpObjectCallback callback = new HttpObjectCallback().withClientId("some_forward_client_id");
-        expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenForward(callback);
+        expectation = new Expectation(request).thenForward(callback);
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
         ResponseWriter mockResponseWriter = mock(ResponseWriter.class);
 
@@ -469,7 +469,7 @@ public class ActionHandlerTest {
     public void shouldProcessOverrideForwardedRequest() {
         // given
         HttpOverrideForwardedRequest httpOverrideForwardedRequest = new HttpOverrideForwardedRequest().withHttpRequest(request("some_overridden_path"));
-        expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenForward(httpOverrideForwardedRequest);
+        expectation = new Expectation(request).thenForward(httpOverrideForwardedRequest);
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
         ResponseWriter mockResponseWriter = mock(ResponseWriter.class);
 
@@ -504,7 +504,7 @@ public class ActionHandlerTest {
     public void shouldProcessErrorAction() {
         // given
         HttpError error = error();
-        expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenError(error);
+        expectation = new Expectation(request).thenError(error);
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
         ResponseWriter mockResponseWriter = mock(ResponseWriter.class);
         ChannelHandlerContext mockChannelHandlerContext = mock(ChannelHandlerContext.class);

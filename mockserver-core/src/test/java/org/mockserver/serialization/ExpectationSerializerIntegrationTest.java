@@ -9,7 +9,6 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.serialization.model.*;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.concurrent.TimeUnit;
 
@@ -39,6 +38,7 @@ public class ExpectationSerializerIntegrationTest {
         // given
         String requestBytes = ("{" + NEW_LINE +
             "    \"id\" : \"some_key\"," + NEW_LINE +
+            "    \"priority\" : 10," + NEW_LINE +
             "    \"httpRequest\": {" + NEW_LINE +
             "        \"path\": \"somePath\"" + NEW_LINE +
             "    }," + NEW_LINE +
@@ -54,6 +54,7 @@ public class ExpectationSerializerIntegrationTest {
         assertArrayEquals(new Expectation[]{
             new ExpectationDTO()
                 .setId("some_key")
+                .setPriority(10)
                 .setHttpRequest(
                     new HttpRequestDTO()
                         .setPath(string("somePath"))
@@ -102,6 +103,7 @@ public class ExpectationSerializerIntegrationTest {
         String requestBytes = ("[" +
             "  {" + NEW_LINE +
             "      \"id\" : \"some_key\"," + NEW_LINE +
+            "      \"priority\" : 10," + NEW_LINE +
             "      \"httpRequest\": {" + NEW_LINE +
             "          \"path\": \"somePath\"" + NEW_LINE +
             "      }," + NEW_LINE +
@@ -111,6 +113,7 @@ public class ExpectationSerializerIntegrationTest {
             "  }," +
             "  {" + NEW_LINE +
             "      \"id\" : \"some_key\"," + NEW_LINE +
+            "      \"priority\" : 10," + NEW_LINE +
             "      \"httpRequest\": {" + NEW_LINE +
             "          \"path\": \"somePath\"" + NEW_LINE +
             "      }," + NEW_LINE +
@@ -120,6 +123,7 @@ public class ExpectationSerializerIntegrationTest {
             "  }," +
             "  {" + NEW_LINE +
             "      \"id\" : \"some_key\"," + NEW_LINE +
+            "      \"priority\" : 10," + NEW_LINE +
             "      \"httpRequest\": {" + NEW_LINE +
             "          \"path\": \"somePath\"" + NEW_LINE +
             "      }," + NEW_LINE +
@@ -130,6 +134,7 @@ public class ExpectationSerializerIntegrationTest {
             "]");
         Expectation expectation = new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -219,6 +224,7 @@ public class ExpectationSerializerIntegrationTest {
         // given
         String requestBytes = ("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -286,6 +292,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -343,6 +350,7 @@ public class ExpectationSerializerIntegrationTest {
         // given
         Expectation expected = new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -407,6 +415,7 @@ public class ExpectationSerializerIntegrationTest {
         // given
         String requestBytes = ("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"POST\"," + NEW_LINE +
             "    \"path\" : \"some_pathRequest\"," + NEW_LINE +
@@ -442,6 +451,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("POST"))
@@ -469,6 +479,7 @@ public class ExpectationSerializerIntegrationTest {
         // given
         String requestBytes = ("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -512,6 +523,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -544,6 +556,7 @@ public class ExpectationSerializerIntegrationTest {
         // given
         String requestBytes = ("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -582,6 +595,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -611,6 +625,7 @@ public class ExpectationSerializerIntegrationTest {
         // given
         String requestBytes = ("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -649,6 +664,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -678,6 +694,7 @@ public class ExpectationSerializerIntegrationTest {
         // given
         String requestBytes = ("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -718,6 +735,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -750,6 +768,7 @@ public class ExpectationSerializerIntegrationTest {
         // given
         String requestBytes = ("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -793,6 +812,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -825,6 +845,7 @@ public class ExpectationSerializerIntegrationTest {
         // given
         String requestBytes = ("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -863,6 +884,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -892,6 +914,7 @@ public class ExpectationSerializerIntegrationTest {
         // given
         String requestBytes = ("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -930,6 +953,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -959,6 +983,7 @@ public class ExpectationSerializerIntegrationTest {
         // given
         String requestBytes = ("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1000,6 +1025,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1038,6 +1064,7 @@ public class ExpectationSerializerIntegrationTest {
         // given
         String requestBytes = ("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1081,6 +1108,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1113,6 +1141,7 @@ public class ExpectationSerializerIntegrationTest {
         // given
         String requestBytes = ("{" + NEW_LINE +
             "    \"id\" : \"some_key\"," + NEW_LINE +
+            "    \"priority\" : 10," + NEW_LINE +
             "    \"httpRequest\": {" + NEW_LINE +
             "        \"path\": \"somePath\"" + NEW_LINE +
             "    }," + NEW_LINE +
@@ -1127,6 +1156,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -1143,6 +1173,7 @@ public class ExpectationSerializerIntegrationTest {
         // given
         String requestBytes = ("{" + NEW_LINE +
             "    \"id\" : \"some_key\"," + NEW_LINE +
+            "    \"priority\" : 10," + NEW_LINE +
             "    \"httpRequest\": {" + NEW_LINE +
             "        \"path\": \"somePath\"," + NEW_LINE +
             "        \"body\" : {" + NEW_LINE +
@@ -1161,6 +1192,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -1178,6 +1210,7 @@ public class ExpectationSerializerIntegrationTest {
         // given
         String requestBytes = ("{" + NEW_LINE +
             "    \"id\" : \"some_key\"," + NEW_LINE +
+            "    \"priority\" : 10," + NEW_LINE +
             "    \"httpRequest\": {" + NEW_LINE +
             "        \"path\": \"somePath\"," + NEW_LINE +
             "        \"body\" : {" + NEW_LINE +
@@ -1202,6 +1235,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -1222,6 +1256,7 @@ public class ExpectationSerializerIntegrationTest {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1272,6 +1307,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1326,6 +1362,7 @@ public class ExpectationSerializerIntegrationTest {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1356,6 +1393,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1393,6 +1431,7 @@ public class ExpectationSerializerIntegrationTest {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1421,6 +1460,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1454,6 +1494,7 @@ public class ExpectationSerializerIntegrationTest {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1482,6 +1523,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1515,6 +1557,7 @@ public class ExpectationSerializerIntegrationTest {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1545,6 +1588,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1580,6 +1624,7 @@ public class ExpectationSerializerIntegrationTest {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1610,6 +1655,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1647,6 +1693,7 @@ public class ExpectationSerializerIntegrationTest {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1675,6 +1722,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1708,6 +1756,7 @@ public class ExpectationSerializerIntegrationTest {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1736,6 +1785,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1769,6 +1819,7 @@ public class ExpectationSerializerIntegrationTest {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1804,6 +1855,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1844,6 +1896,7 @@ public class ExpectationSerializerIntegrationTest {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1874,6 +1927,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1912,6 +1966,7 @@ public class ExpectationSerializerIntegrationTest {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1943,6 +1998,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1981,6 +2037,7 @@ public class ExpectationSerializerIntegrationTest {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -1997,6 +2054,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"" + NEW_LINE +
             "  }," + NEW_LINE +
@@ -2018,6 +2076,7 @@ public class ExpectationSerializerIntegrationTest {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -2035,6 +2094,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
@@ -2081,6 +2141,7 @@ public class ExpectationSerializerIntegrationTest {
             "</xs:schema>";
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -2098,6 +2159,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
@@ -2141,6 +2203,7 @@ public class ExpectationSerializerIntegrationTest {
             "}";
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -2158,6 +2221,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
@@ -2184,6 +2248,7 @@ public class ExpectationSerializerIntegrationTest {
         String jsonBody = "{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}";
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -2200,6 +2265,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
@@ -2225,6 +2291,7 @@ public class ExpectationSerializerIntegrationTest {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -2241,6 +2308,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
@@ -2265,6 +2333,7 @@ public class ExpectationSerializerIntegrationTest {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -2284,6 +2353,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
@@ -2311,6 +2381,7 @@ public class ExpectationSerializerIntegrationTest {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -2325,6 +2396,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals("{" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"" + NEW_LINE +
             "  }," + NEW_LINE +
@@ -2346,6 +2418,7 @@ public class ExpectationSerializerIntegrationTest {
         // when
         Expectation expectation = new ExpectationDTO()
             .setId("some_key")
+            .setPriority(10)
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -2364,6 +2437,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertEquals("[ {" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"" + NEW_LINE +
             "  }," + NEW_LINE +
@@ -2378,6 +2452,7 @@ public class ExpectationSerializerIntegrationTest {
             "  }" + NEW_LINE +
             "}, {" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"" + NEW_LINE +
             "  }," + NEW_LINE +
@@ -2392,6 +2467,7 @@ public class ExpectationSerializerIntegrationTest {
             "  }" + NEW_LINE +
             "}, {" + NEW_LINE +
             "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"" + NEW_LINE +
             "  }," + NEW_LINE +

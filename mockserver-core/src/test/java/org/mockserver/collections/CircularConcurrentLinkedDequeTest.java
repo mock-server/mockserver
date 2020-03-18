@@ -12,12 +12,12 @@ import static org.junit.Assert.assertThat;
 /**
  * @author jamesdbloom
  */
-public class BoundedConcurrentLinkedDequeTest {
+public class CircularConcurrentLinkedDequeTest {
 
     @Test
     public void shouldNotAllowAddingMoreThenMaximumNumberOfEntriesWhenUsingAdd() {
         // given
-        BoundedConcurrentLinkedDeque<String> concurrentLinkedQueue = new BoundedConcurrentLinkedDeque<String>(3);
+        CircularConcurrentLinkedDeque<String> concurrentLinkedQueue = new CircularConcurrentLinkedDeque<String>(3);
 
         // when
         concurrentLinkedQueue.add("1");
@@ -34,7 +34,7 @@ public class BoundedConcurrentLinkedDequeTest {
     @Test
     public void shouldNotAllowAddingMoreThenMaximumNumberOfEntriesWhenUsingAddAll() {
         // given
-        BoundedConcurrentLinkedDeque<String> concurrentLinkedQueue = new BoundedConcurrentLinkedDeque<String>(3);
+        CircularConcurrentLinkedDeque<String> concurrentLinkedQueue = new CircularConcurrentLinkedDeque<String>(3);
 
         // when
         concurrentLinkedQueue.addAll(Arrays.asList("1", "2", "3", "4"));

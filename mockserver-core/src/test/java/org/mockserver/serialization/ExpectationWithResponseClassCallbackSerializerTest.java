@@ -48,7 +48,8 @@ public class ExpectationWithResponseClassCallbackSerializerTest {
             .withHeaders(new Header("headerName", "headerValue"))
             .withCookies(new Cookie("cookieName", "cookieValue")),
         Times.once(),
-        TimeToLive.exactly(TimeUnit.HOURS, 2L))
+        TimeToLive.exactly(TimeUnit.HOURS, 2L),
+        0)
         .thenRespond(
             callback("some_random_class")
         );

@@ -8,6 +8,8 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.serialization.ExpectationSerializer;
+import org.mockserver.ui.MockServerMatcherNotifier;
+import org.mockserver.ui.MockServerMatcherNotifier.Cause;
 
 import java.lang.reflect.Constructor;
 
@@ -34,7 +36,7 @@ public class ExpectationInitializerLoader {
 
     private void addExpectationsFromInitializer() {
         for (Expectation expectation : loadExpectations()) {
-            mockServerMatcher.add(expectation);
+            mockServerMatcher.add(expectation, Cause.INITIALISER);
         }
     }
 

@@ -6,6 +6,9 @@
         "id": {
             "type": "string"
         },
+        "priority": {
+            "type": "integer"
+        },
         "httpRequest": {
             "$ref": "#/definitions/httpRequest"
         },

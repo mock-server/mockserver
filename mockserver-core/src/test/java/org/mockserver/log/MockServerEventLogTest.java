@@ -2,7 +2,6 @@ package org.mockserver.log;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -13,7 +12,6 @@ import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.scheduler.Scheduler;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -247,7 +245,7 @@ public class MockServerEventLogTest {
                 .setExpectation(request("request_five"), response("response_five"))
         ));
         assertThat(retrieveRecordedExpectations(null), contains(
-            new Expectation(request("request_five"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_five"))
+            new Expectation(request("request_five"), Times.once(), TimeToLive.unlimited(), 0).thenRespond(response("response_five"))
         ));
         List<LogEntry> actual = retrieveMessageLogEntries(null);
         assertThat(actual, contains(
@@ -541,7 +539,7 @@ public class MockServerEventLogTest {
                 .setExpectation(request("request_five"), response("response_five"))
         ));
         assertThat(retrieveRecordedExpectations(null), contains(
-            new Expectation(request("request_five"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_five"))
+            new Expectation(request("request_five"), Times.once(), TimeToLive.unlimited(), 0).thenRespond(response("response_five"))
         ));
         List<LogEntry> actual = retrieveMessageLogEntries(null);
         assertThat(actual, contains(

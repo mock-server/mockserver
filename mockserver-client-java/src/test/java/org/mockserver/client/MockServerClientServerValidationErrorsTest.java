@@ -123,6 +123,7 @@ public class MockServerClientServerValidationErrorsTest {
                 NEW_LINE +
                 "\t{" + NEW_LINE +
                 "\t  \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                "\t  \"priority\" : 0," + NEW_LINE +
                 "\t  \"httpRequest\" : { }," + NEW_LINE +
                 "\t  \"times\" : {" + NEW_LINE +
                 "\t    \"unlimited\" : true" + NEW_LINE +

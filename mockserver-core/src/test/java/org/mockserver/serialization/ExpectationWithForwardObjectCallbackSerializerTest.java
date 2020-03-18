@@ -47,7 +47,8 @@ public class ExpectationWithForwardObjectCallbackSerializerTest {
             .withHeaders(new Header("headerName", "headerValue"))
             .withCookies(new Cookie("cookieName", "cookieValue")),
         Times.once(),
-        TimeToLive.exactly(TimeUnit.HOURS, 2L))
+        TimeToLive.exactly(TimeUnit.HOURS, 2L),
+        0)
         .thenForward(
             new HttpObjectCallback().withClientId("some_random_client_id")
         );

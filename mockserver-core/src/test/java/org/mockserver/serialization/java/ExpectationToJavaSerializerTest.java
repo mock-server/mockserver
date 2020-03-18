@@ -68,16 +68,16 @@ public class ExpectationToJavaSerializerTest {
                     new Expectation(
                         request("somePathOne"),
                         once(),
-                        null
-                    )
+                        null,
+                            0)
                         .thenRespond(
                             response("responseBodyOne")
                         ),
                     new Expectation(
                         request("somePathOne"),
                         exactly(2),
-                        TimeToLive.exactly(TimeUnit.MINUTES, 1L)
-                    )
+                        TimeToLive.exactly(TimeUnit.MINUTES, 1L),
+                            0)
                         .thenRespond(
                             response("responseBodyOne")
                         )
@@ -151,8 +151,8 @@ public class ExpectationToJavaSerializerTest {
                         )
                         .withBody(new StringBody("somebody")),
                     once(),
-                    unlimited()
-                )
+                    unlimited(),
+                        0)
                     .thenRespond(
                         response()
                             .withStatusCode(304)
@@ -227,8 +227,8 @@ public class ExpectationToJavaSerializerTest {
                         )
                         .withBody(new StringBody("somebody")),
                     once(),
-                    unlimited()
-                )
+                    unlimited(),
+                        0)
                     .thenRespond(
                         template(HttpTemplate.TemplateType.JAVASCRIPT, "if (request.method === 'POST' && request.path === '/somePath') {\n" +
                             "    return {\n" +
@@ -276,8 +276,8 @@ public class ExpectationToJavaSerializerTest {
                             )
                         ),
                     once(),
-                    unlimited()
-                )
+                    unlimited(),
+                        0)
                     .thenRespond(
                         response()
                             .withBody("responseBody")
@@ -308,8 +308,8 @@ public class ExpectationToJavaSerializerTest {
                             new BinaryBody("request body".getBytes(UTF_8))
                         ),
                     once(),
-                    unlimited()
-                )
+                    unlimited(),
+                        0)
                     .thenRespond(
                         response()
                             .withBody("responseBody")
@@ -366,8 +366,8 @@ public class ExpectationToJavaSerializerTest {
                         )
                         .withBody(new StringBody("somebody")),
                     once(),
-                    unlimited()
-                )
+                    unlimited(),
+                        0)
                     .thenRespond(
                         callback()
                             .withCallbackClass("some_class")
@@ -421,8 +421,8 @@ public class ExpectationToJavaSerializerTest {
                         )
                         .withBody(new StringBody("somebody")),
                     once(),
-                    unlimited()
-                )
+                    unlimited(),
+                        0)
                     .thenRespond(
                         new HttpObjectCallback()
                             .withClientId("some_client_id")
@@ -482,8 +482,8 @@ public class ExpectationToJavaSerializerTest {
                         )
                         .withBody(new StringBody("somebody")),
                     once(),
-                    unlimited()
-                )
+                    unlimited(),
+                        0)
                     .thenForward(
                         forward()
                             .withHost("some_host")
@@ -560,8 +560,8 @@ public class ExpectationToJavaSerializerTest {
                         )
                         .withBody(new StringBody("somebody")),
                     once(),
-                    unlimited()
-                )
+                    unlimited(),
+                        0)
                     .thenForward(
                         forwardOverriddenRequest()
                             .withHttpRequest(
@@ -636,8 +636,8 @@ public class ExpectationToJavaSerializerTest {
                         )
                         .withBody(new StringBody("somebody")),
                     once(),
-                    unlimited()
-                )
+                    unlimited(),
+                        0)
                     .thenForward(
                         template(HttpTemplate.TemplateType.JAVASCRIPT)
                             .withTemplate("return { 'path': \"somePath\", 'body': JSON.stringify({name: 'value'}) };")
@@ -695,8 +695,8 @@ public class ExpectationToJavaSerializerTest {
                         )
                         .withBody(new StringBody("somebody")),
                     once(),
-                    unlimited()
-                )
+                    unlimited(),
+                        0)
                     .thenForward(
                         callback()
                             .withCallbackClass("some_class")
@@ -750,8 +750,8 @@ public class ExpectationToJavaSerializerTest {
                         )
                         .withBody(new StringBody("somebody")),
                     once(),
-                    unlimited()
-                )
+                    unlimited(),
+                        0)
                     .thenForward(
                         new HttpObjectCallback()
                             .withClientId("some_client_id")
@@ -810,8 +810,8 @@ public class ExpectationToJavaSerializerTest {
                         )
                         .withBody(new StringBody("somebody")),
                     once(),
-                    unlimited()
-                )
+                    unlimited(),
+                        0)
                     .thenError(
                         error()
                             .withDelay(new Delay(TimeUnit.MINUTES, 1))
@@ -866,8 +866,8 @@ public class ExpectationToJavaSerializerTest {
                             "    }" + NEW_LINE +
                             "]")),
                     once(),
-                    unlimited()
-                )
+                    unlimited(),
+                        0)
                     .thenRespond(
                         response()
                             .withStatusCode(304)
@@ -951,8 +951,8 @@ public class ExpectationToJavaSerializerTest {
                         .withPath("somePath")
                         .withBody(new JsonSchemaBody(jsonSchema)),
                     once(),
-                    unlimited()
-                )
+                    unlimited(),
+                        0)
                     .thenRespond(
                         response()
                             .withStatusCode(304)
@@ -1005,8 +1005,8 @@ public class ExpectationToJavaSerializerTest {
                         .withPath("somePath")
                         .withBody(new XmlSchemaBody(xmlSchema)),
                     once(),
-                    unlimited()
-                )
+                    unlimited(),
+                        0)
                     .thenRespond(
                         response()
                             .withStatusCode(304)
@@ -1038,8 +1038,8 @@ public class ExpectationToJavaSerializerTest {
                         .withPath("somePath")
                         .withBody(new StringBody("responseBody")),
                     once(),
-                    unlimited()
-                )
+                    unlimited(),
+                        0)
                     .thenRespond(
                         response()
                             .withStatusCode(304)

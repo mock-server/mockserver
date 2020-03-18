@@ -4,7 +4,7 @@ servers:
   - url: 'https://localhost:1080/'
 info:
   title: MockServer API
-  version: "5.9.x"
+  version: "5.10.x"
   description: >-
     MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS with clients written in Java, JavaScript and Ruby and a simple REST API (as shown below).
 
@@ -238,6 +238,8 @@ components:
       properties:
         id:
           type: string
+        priority:
+          type: integer
         httpRequest:
           $ref: "#/components/schemas/HttpRequest"
         httpResponse:
