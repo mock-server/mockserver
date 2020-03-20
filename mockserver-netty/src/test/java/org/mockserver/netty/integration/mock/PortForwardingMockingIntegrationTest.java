@@ -4,12 +4,14 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.Not;
 import org.mockserver.netty.MockServer;
 import org.mockserver.testing.integration.mock.AbstractBasicMockingIntegrationTest;
 import org.mockserver.uuid.UUIDService;
+import org.slf4j.event.Level;
 
 import java.util.Arrays;
 
@@ -268,8 +270,12 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
     @Test
     @Override
     public void shouldRetrieveRecordedLogMessages() {
+        Level originalLevel = ConfigurationProperties.logLevel();
         try {
+            // given
+            ConfigurationProperties.logLevel("INFO");
             UUIDService.fixedUUID = true;
+
             // when
             mockServerClient.reset();
             mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(response().withBody("some_body"));
@@ -482,6 +488,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
             }
         } finally {
             UUIDService.fixedUUID = false;
+            ConfigurationProperties.logLevel(originalLevel.name());
         }
     }
 

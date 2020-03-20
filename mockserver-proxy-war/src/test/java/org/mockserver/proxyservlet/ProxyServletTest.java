@@ -244,42 +244,49 @@ public class ProxyServletTest {
 
     @Test
     public void shouldRetrieveLogMessages() {
-        // given
-        httpStateHandler.log(
-            new LogEntry()
-                .setType(RECEIVED_REQUEST)
-                .setLogLevel(Level.INFO)
-                .setHttpRequest(request("request_one"))
-                .setMessageFormat("received request:{}")
-                .setArguments(request("request_one"))
-        );
-        // when
-        MockHttpServletRequest retrieveLogRequest = buildHttpServletRequest(
-            "PUT",
-            "/mockserver/retrieve",
-            httpRequestSerializer.serialize(request("request_one"))
-        );
-        retrieveLogRequest.setQueryString("type=" + RetrieveType.LOGS.name());
-        proxyServlet.service(retrieveLogRequest, response);
+        Level originalLevel = ConfigurationProperties.logLevel();
+        try {
+            // given
+            ConfigurationProperties.logLevel("INFO");
+            httpStateHandler.log(
+                new LogEntry()
+                    .setType(RECEIVED_REQUEST)
+                    .setLogLevel(Level.INFO)
+                    .setHttpRequest(request("request_one"))
+                    .setMessageFormat("received request:{}")
+                    .setArguments(request("request_one"))
+            );
 
-        // then
-        assertThat(response.getStatus(), is(200));
-        assertThat(
-            new String(response.getContentAsByteArray(), UTF_8),
-            is(endsWith(LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - received request:" + NEW_LINE +
-                "" + NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t  \"path\" : \"request_one\"" + NEW_LINE +
-                "\t}" + NEW_LINE +
-                "" + NEW_LINE +
-                "------------------------------------" + NEW_LINE +
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                "" + NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t  \"path\" : \"request_one\"" + NEW_LINE +
-                "\t}" + NEW_LINE +
-                "" + NEW_LINE))
-        );
+            // when
+            MockHttpServletRequest retrieveLogRequest = buildHttpServletRequest(
+                "PUT",
+                "/mockserver/retrieve",
+                httpRequestSerializer.serialize(request("request_one"))
+            );
+            retrieveLogRequest.setQueryString("type=" + RetrieveType.LOGS.name());
+            proxyServlet.service(retrieveLogRequest, response);
+
+            // then
+            assertThat(response.getStatus(), is(200));
+            assertThat(
+                new String(response.getContentAsByteArray(), UTF_8),
+                is(endsWith(LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - received request:" + NEW_LINE +
+                    "" + NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"path\" : \"request_one\"" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    "" + NEW_LINE +
+                    "------------------------------------" + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
+                    "" + NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"path\" : \"request_one\"" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    "" + NEW_LINE))
+            );
+        } finally {
+            ConfigurationProperties.logLevel(originalLevel.name());
+        }
     }
 
     @Test

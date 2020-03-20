@@ -61,6 +61,7 @@ public class JsonStringMatcher extends BodyMatcher<String> {
                     .setHttpRequest(context)
                     .setMessageFormat("failed to perform json match{}with{}because{}")
                     .setArguments(matched, this.matcher, e.getMessage())
+                    .setThrowable(e)
             );
         }
 

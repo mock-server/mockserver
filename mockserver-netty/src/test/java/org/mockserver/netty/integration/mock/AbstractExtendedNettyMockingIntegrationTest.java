@@ -931,7 +931,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     }
 
     @Test
-    public void shouldBindToNewSocketAndReturnStatus() {
+    public void shouldBindToNewSocketAndReturnStatus() throws InterruptedException {
         // given
         int firstNewPort = PortFactory.findFreePort();
         int secondNewPort = PortFactory.findFreePort();
@@ -950,6 +950,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withMethod("PUT"),
                 headersToIgnore)
         );
+        MILLISECONDS.sleep(100);
 
         // then
         // - in http
@@ -1655,7 +1656,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                             return notFoundResponse();
                         }
                     },
-                    new Delay(SECONDS, 3)
+                    new Delay(SECONDS, 2)
                 );
 
             // then
@@ -1683,8 +1684,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withBody("an_object_callback_response"),
                 httpResponse
             );
-            assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
-            assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(5)));
+            assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(MILLISECONDS.toMillis(1900)));
+            assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(4)));
         });
     }
 
@@ -1717,7 +1718,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         return notFoundResponse();
                     }
                 },
-                new Delay(SECONDS, 3)
+                new Delay(SECONDS, 2)
             );
 
         // then
@@ -1745,8 +1746,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 .withBody("an_object_callback_response"),
             httpResponse
         );
-        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
-        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(5)));
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(MILLISECONDS.toMillis(1900)));
+        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(4)));
     }
 
     @Test
@@ -1764,7 +1765,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
                         .withBody("some_overridden_body")
                         .withSecure(httpRequest.isSecure()),
-                    new Delay(SECONDS, 3)
+                    new Delay(SECONDS, 2)
                 );
 
             // then
@@ -1792,8 +1793,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withBody("some_overridden_body"),
                 httpResponse
             );
-            assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
-            assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(5)));
+            assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(MILLISECONDS.toMillis(1900)));
+            assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(4)));
         });
     }
 
@@ -1811,7 +1812,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
                     .withBody("some_overridden_body")
                     .withSecure(httpRequest.isSecure()),
-                new Delay(SECONDS, 3)
+                new Delay(SECONDS, 2)
             );
 
         // then
@@ -1839,7 +1840,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 .withBody("some_overridden_body"),
             httpResponse
         );
-        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(MILLISECONDS.toMillis(2750)));
-        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(5)));
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(MILLISECONDS.toMillis(1900)));
+        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(4)));
     }
 }

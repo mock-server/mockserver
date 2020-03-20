@@ -63,7 +63,7 @@ public class MockServerLogger {
         this.httpStateHandler = null;
     }
 
-    public MockServerLogger(final Class loggerClass) {
+    public MockServerLogger(final Class<?> loggerClass) {
         this.logger = LoggerFactory.getLogger(loggerClass);
         this.httpStateHandler = null;
     }

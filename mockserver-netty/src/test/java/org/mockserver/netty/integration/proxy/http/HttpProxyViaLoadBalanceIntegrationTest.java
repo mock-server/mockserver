@@ -7,10 +7,12 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.NettyHttpClient;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
+import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.Future;
@@ -65,105 +67,123 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
 
     @Test
     public void shouldNotForwardInLoopIndefinitely() throws Exception {
-        // when
-        Future<HttpResponse> responseFuture =
-            httpClient.sendRequest(
-                request()
-                    .withPath("/some_path")
-                    .withHeader(HOST.toString(), "localhost:" + targetClientAndServer.getLocalPort()),
-                new InetSocketAddress(loadBalancerClientAndServer.getLocalPort())
+        Level originalLevel = ConfigurationProperties.logLevel();
+        try {
+            // given
+            ConfigurationProperties.logLevel("INFO");
+            targetClientAndServer.reset();
+            loadBalancerClientAndServer.reset();
+
+            // when
+            Future<HttpResponse> responseFuture =
+                httpClient.sendRequest(
+                    request()
+                        .withPath("/some_path")
+                        .withHeader(HOST.toString(), "localhost:" + targetClientAndServer.getLocalPort()),
+                    new InetSocketAddress(loadBalancerClientAndServer.getLocalPort())
+                );
+
+            // then - returns 404
+            assertThat(responseFuture.get(10, TimeUnit.MINUTES).getStatusCode(), is(404));
+
+            // and - verify request received by proxy (not possible for target due to loop prevention)
+            loadBalancerClientAndServer.verify(request().withPath("/some_path"), once());
+            targetClientAndServer.verify(request().withPath("/some_path"), once());
+
+            // and - logs hide proxied request
+            String[] loadBalancerLogMessages = loadBalancerClientAndServer.retrieveLogMessagesArray(null);
+            String[] targetLogMessages = targetClientAndServer.retrieveLogMessagesArray(null);
+            assertThat(loadBalancerLogMessages[2], containsString("returning response:" + NEW_LINE +
+                NEW_LINE +
+                "\t{" + NEW_LINE +
+                "\t  \"statusCode\" : 404," + NEW_LINE +
+                "\t  \"reasonPhrase\" : \"Not Found\",\n")
             );
-
-        // then - returns 404
-        assertThat(responseFuture.get(10, TimeUnit.MINUTES).getStatusCode(), is(404));
-
-        // and - verify request received by proxy (not possible for target due to loop prevention)
-        loadBalancerClientAndServer.verify(request().withPath("/some_path"), once());
-        targetClientAndServer.verify(request().withPath("/some_path"), once());
-
-        // and - logs hide proxied request
-        String[] loadBalancerLogMessages = loadBalancerClientAndServer.retrieveLogMessagesArray(null);
-        String[] targetLogMessages = targetClientAndServer.retrieveLogMessagesArray(null);
-        assertThat(loadBalancerLogMessages[2], containsString("returning response:" + NEW_LINE +
-            NEW_LINE +
-            "\t{" + NEW_LINE +
-            "\t  \"statusCode\" : 404," + NEW_LINE +
-            "\t  \"reasonPhrase\" : \"Not Found\",\n")
-        );
-        assertThat(loadBalancerLogMessages[2], containsString(" for forwarded request" + NEW_LINE +
-            NEW_LINE +
-            " in json:" + NEW_LINE +
-            "" + NEW_LINE +
-            "\t{" + NEW_LINE +
-            "\t  \"method\" : \"GET\"," + NEW_LINE +
-            "\t  \"path\" : \"/some_path\",\n")
-        );
-        assertThat(targetLogMessages[2], containsString("no expectation for:" + NEW_LINE +
-            NEW_LINE +
-            "\t{" + NEW_LINE +
-            "\t  \"method\" : \"GET\"," + NEW_LINE +
-            "\t  \"path\" : \"/some_path\",")
-        );
-        assertThat(targetLogMessages[2], containsString(" returning response:" + NEW_LINE +
-            NEW_LINE +
-            "\t{" + NEW_LINE +
-            "\t  \"statusCode\" : 404," + NEW_LINE +
-            "\t  \"reasonPhrase\" : \"Not Found\"")
-        );
+            assertThat(loadBalancerLogMessages[2], containsString(" for forwarded request" + NEW_LINE +
+                NEW_LINE +
+                " in json:" + NEW_LINE +
+                "" + NEW_LINE +
+                "\t{" + NEW_LINE +
+                "\t  \"method\" : \"GET\"," + NEW_LINE +
+                "\t  \"path\" : \"/some_path\",\n")
+            );
+            assertThat(targetLogMessages[2], containsString("no expectation for:" + NEW_LINE +
+                NEW_LINE +
+                "\t{" + NEW_LINE +
+                "\t  \"method\" : \"GET\"," + NEW_LINE +
+                "\t  \"path\" : \"/some_path\",")
+            );
+            assertThat(targetLogMessages[2], containsString(" returning response:" + NEW_LINE +
+                NEW_LINE +
+                "\t{" + NEW_LINE +
+                "\t  \"statusCode\" : 404," + NEW_LINE +
+                "\t  \"reasonPhrase\" : \"Not Found\"")
+            );
+        } finally {
+            ConfigurationProperties.logLevel(originalLevel.name());
+        }
     }
 
     @Test
     public void shouldReturnExpectationForTargetMockServer() throws Exception {
-        // given
-        targetClientAndServer
-            .when(
-                request()
-                    .withPath("/target")
-            )
-            .respond(
-                response()
-                    .withBody("target_response")
-            );
+        Level originalLevel = ConfigurationProperties.logLevel();
+        try {
+            // given
+            ConfigurationProperties.logLevel("INFO");
+            targetClientAndServer.reset();
+            loadBalancerClientAndServer.reset();
+            targetClientAndServer
+                .when(
+                    request()
+                        .withPath("/target")
+                )
+                .respond(
+                    response()
+                        .withBody("target_response")
+                );
 
-        // when
-        Future<HttpResponse> responseFuture =
-            httpClient.sendRequest(
-                request()
-                    .withPath("/target")
-                    .withHeader(HOST.toString(), "localhost:" + targetClientAndServer.getLocalPort()),
-                new InetSocketAddress(loadBalancerClientAndServer.getLocalPort())
-            );
+            // when
+            Future<HttpResponse> responseFuture =
+                httpClient.sendRequest(
+                    request()
+                        .withPath("/target")
+                        .withHeader(HOST.toString(), "localhost:" + targetClientAndServer.getLocalPort()),
+                    new InetSocketAddress(loadBalancerClientAndServer.getLocalPort())
+                );
 
-        // then - returns 404
-        HttpResponse httpResponse = responseFuture.get(10, TimeUnit.MINUTES);
-        assertThat(httpResponse.getStatusCode(), is(200));
-        assertThat(httpResponse.getBodyAsString(), is("target_response"));
+            // then - returns 404
+            HttpResponse httpResponse = responseFuture.get(10, TimeUnit.MINUTES);
+            assertThat(httpResponse.getStatusCode(), is(200));
+            assertThat(httpResponse.getBodyAsString(), is("target_response"));
 
-        // and - both proxy and target verify request received
-        loadBalancerClientAndServer.verify(request().withPath("/target"));
-        targetClientAndServer.verify(request().withPath("/target"));
+            // and - both proxy and target verify request received
+            loadBalancerClientAndServer.verify(request().withPath("/target"));
+            targetClientAndServer.verify(request().withPath("/target"));
 
-        // and - logs hide proxied request
-        String[] logMessages = loadBalancerClientAndServer.retrieveLogMessagesArray(null);
-        assertThat(logMessages[2], containsString("returning response:" + NEW_LINE +
-            "" + NEW_LINE +
-            "\t{" + NEW_LINE +
-            "\t  \"statusCode\" : 200," + NEW_LINE +
-            "\t  \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-            "\t  \"headers\" : {" + NEW_LINE +
-            "\t    \"connection\" : [ \"keep-alive\" ]," + NEW_LINE +
-            "\t    \"content-length\" : [ \"15\" ]" + NEW_LINE +
-            "\t  }," + NEW_LINE +
-            "\t  \"body\" : \"target_response\"" + NEW_LINE +
-            "\t}" + NEW_LINE +
-            "" + NEW_LINE +
-            " for forwarded request" + NEW_LINE +
-            "" + NEW_LINE +
-            " in json:" + NEW_LINE +
-            "" + NEW_LINE +
-            "\t{" + NEW_LINE +
-            "\t  \"method\" : \"GET\"," + NEW_LINE +
-            "\t  \"path\" : \"/target\"," + NEW_LINE));
+            // and - logs hide proxied request
+            String[] logMessages = loadBalancerClientAndServer.retrieveLogMessagesArray(null);
+            assertThat(logMessages[2], containsString("returning response:" + NEW_LINE +
+                "" + NEW_LINE +
+                "\t{" + NEW_LINE +
+                "\t  \"statusCode\" : 200," + NEW_LINE +
+                "\t  \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                "\t  \"headers\" : {" + NEW_LINE +
+                "\t    \"connection\" : [ \"keep-alive\" ]," + NEW_LINE +
+                "\t    \"content-length\" : [ \"15\" ]" + NEW_LINE +
+                "\t  }," + NEW_LINE +
+                "\t  \"body\" : \"target_response\"" + NEW_LINE +
+                "\t}" + NEW_LINE +
+                "" + NEW_LINE +
+                " for forwarded request" + NEW_LINE +
+                "" + NEW_LINE +
+                " in json:" + NEW_LINE +
+                "" + NEW_LINE +
+                "\t{" + NEW_LINE +
+                "\t  \"method\" : \"GET\"," + NEW_LINE +
+                "\t  \"path\" : \"/target\"," + NEW_LINE));
+        } finally {
+            ConfigurationProperties.logLevel(originalLevel.name());
+        }
     }
 
 }

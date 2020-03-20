@@ -645,6 +645,7 @@
                         <exclude>**/*IntegrationTest.java</exclude>
                     </excludes>
                     <systemProperties>
+                        <mockserver.logLevel>ERROR</mockserver.logLevel>
                         <mockserver.disableSystemOut>true</mockserver.disableSystemOut>
                         <mockserver.nioEventLoopThreadCount>1</mockserver.nioEventLoopThreadCount>
                     </systemProperties>
@@ -669,6 +670,7 @@
                         <include>**/*IntegrationTest.java</include>
                     </includes>
                     <systemProperties>
+                        <mockserver.logLevel>ERROR</mockserver.logLevel>
                         <mockserver.disableSystemOut>true</mockserver.disableSystemOut>
                         <mockserver.nioEventLoopThreadCount>20</mockserver.nioEventLoopThreadCount>
                         <mockserver.webSocketClientEventLoopThreadCount>5</mockserver.webSocketClientEventLoopThreadCount>

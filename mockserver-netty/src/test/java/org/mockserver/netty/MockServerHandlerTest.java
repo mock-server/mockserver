@@ -28,6 +28,7 @@ import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.serialization.HttpRequestSerializer;
 import org.mockserver.serialization.PortBindingSerializer;
+import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
 import java.util.Arrays;
@@ -251,51 +252,58 @@ public class MockServerHandlerTest {
 
     @Test
     public void shouldRetrieveLogMessages() {
-        // given
-        httpStateHandler.add(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_one")));
-        // when
-        HttpRequest retrieveLogRequest = request("/mockserver/retrieve")
-            .withMethod("PUT")
-            .withQueryStringParameter("type", RetrieveType.LOGS.name())
-            .withBody(
-                httpRequestSerializer.serialize(request("request_one"))
-            );
-        embeddedChannel.writeInbound(retrieveLogRequest);
+        Level originalLevel = ConfigurationProperties.logLevel();
+        try {
+            // given
+            ConfigurationProperties.logLevel("INFO");
+            httpStateHandler.add(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_one")));
 
-        // then
-        HttpResponse response = embeddedChannel.readOutbound();
-        assertThat(response.getStatusCode(), is(200));
-        assertThat(
-            response.getBodyAsString(),
-            is(endsWith(LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
-                NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t  \"id\" : \"key_one\"," + NEW_LINE +
-                "\t  \"priority\" : 0," + NEW_LINE +
-                "\t  \"httpRequest\" : {" + NEW_LINE +
-                "\t    \"path\" : \"request_one\"" + NEW_LINE +
-                "\t  }," + NEW_LINE +
-                "\t  \"times\" : {" + NEW_LINE +
-                "\t    \"unlimited\" : true" + NEW_LINE +
-                "\t  }," + NEW_LINE +
-                "\t  \"timeToLive\" : {" + NEW_LINE +
-                "\t    \"unlimited\" : true" + NEW_LINE +
-                "\t  }," + NEW_LINE +
-                "\t  \"httpResponse\" : {" + NEW_LINE +
-                "\t    \"statusCode\" : 200," + NEW_LINE +
-                "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                "\t    \"body\" : \"response_one\"" + NEW_LINE +
-                "\t  }" + NEW_LINE +
-                "\t}" + NEW_LINE +
-                NEW_LINE +
-                "------------------------------------" + NEW_LINE +
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                "" + NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t  \"path\" : \"request_one\"" + NEW_LINE +
-                "\t}" + NEW_LINE +
-                NEW_LINE))
-        );
+            // when
+            HttpRequest retrieveLogRequest = request("/mockserver/retrieve")
+                .withMethod("PUT")
+                .withQueryStringParameter("type", RetrieveType.LOGS.name())
+                .withBody(
+                    httpRequestSerializer.serialize(request("request_one"))
+                );
+            embeddedChannel.writeInbound(retrieveLogRequest);
+
+            // then
+            HttpResponse response = embeddedChannel.readOutbound();
+            assertThat(response.getStatusCode(), is(200));
+            assertThat(
+                response.getBodyAsString(),
+                is(endsWith(LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"id\" : \"key_one\"," + NEW_LINE +
+                    "\t  \"priority\" : 0," + NEW_LINE +
+                    "\t  \"httpRequest\" : {" + NEW_LINE +
+                    "\t    \"path\" : \"request_one\"" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"times\" : {" + NEW_LINE +
+                    "\t    \"unlimited\" : true" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"timeToLive\" : {" + NEW_LINE +
+                    "\t    \"unlimited\" : true" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"httpResponse\" : {" + NEW_LINE +
+                    "\t    \"statusCode\" : 200," + NEW_LINE +
+                    "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                    "\t    \"body\" : \"response_one\"" + NEW_LINE +
+                    "\t  }" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    NEW_LINE +
+                    "------------------------------------" + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
+                    "" + NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"path\" : \"request_one\"" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    NEW_LINE))
+            );
+        } finally {
+            ConfigurationProperties.logLevel(originalLevel.name());
+        }
     }
 
     @Test

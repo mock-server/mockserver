@@ -25,7 +25,6 @@ import org.slf4j.event.Level;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
@@ -297,9 +296,11 @@ public class MockServerServletTest {
 
     @Test
     public void shouldRetrieveLogMessages() {
+        Level originalLevel = ConfigurationProperties.logLevel();
         try {
-            UUIDService.fixedUUID = true;
             // given
+            ConfigurationProperties.logLevel("INFO");
+            UUIDService.fixedUUID = true;
             Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
             httpStateHandler.add(expectationOne);
             MockHttpServletRequest retrieveLogRequest = buildHttpServletRequest(
@@ -336,6 +337,7 @@ public class MockServerServletTest {
                 "\t}" + NEW_LINE));
         } finally {
             UUIDService.fixedUUID = false;
+            ConfigurationProperties.logLevel(originalLevel.name());
         }
     }
 

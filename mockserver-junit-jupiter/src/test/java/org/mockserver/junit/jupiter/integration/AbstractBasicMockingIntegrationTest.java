@@ -1,6 +1,7 @@
 package org.mockserver.junit.jupiter.integration;
 
 import org.junit.jupiter.api.Test;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
@@ -10,6 +11,7 @@ import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwa
 import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequestAndResponse;
 import org.mockserver.uuid.UUIDService;
 import org.mockserver.verify.VerificationTimes;
+import org.slf4j.event.Level;
 
 import java.util.Arrays;
 
@@ -1441,8 +1443,10 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
 
     @Test
     public void shouldRetrieveRecordedLogMessages() {
+        Level originalLevel = ConfigurationProperties.logLevel();
         try {
-            // when
+            // given
+            ConfigurationProperties.logLevel("INFO");
             UUIDService.fixedUUID = true;
             mockServerClient.reset();
             mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(response().withBody("some_body"));
@@ -1658,6 +1662,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             }
         } finally {
             UUIDService.fixedUUID = false;
+            ConfigurationProperties.logLevel(originalLevel.name());
         }
     }
 
@@ -1890,7 +1895,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             .respond(
                 response()
                     .withBody("some_body1")
-                    .withDelay(new Delay(SECONDS, 3))
+                    .withDelay(new Delay(SECONDS, 2))
             );
 
         // then
@@ -1910,8 +1915,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withBody("some_body1"),
             httpResponse
         );
-        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
-        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(5)));
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(MILLISECONDS.toMillis(1900)));
+        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(4)));
     }
 
     @Test
@@ -1925,7 +1930,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             .respond(
                 callback()
                     .withCallbackClass("org.mockserver.testing.integration.callback.PrecannedTestExpectationResponseCallback")
-                    .withDelay(new Delay(SECONDS, 3))
+                    .withDelay(new Delay(SECONDS, 2))
             );
 
         // then
@@ -1953,8 +1958,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withBody("a_callback_response"),
             httpResponse
         );
-        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
-        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(5)));
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(MILLISECONDS.toMillis(1900)));
+        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(4)));
     }
 
     @Test
@@ -1974,7 +1979,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                             "     \"body\": \"$!request.body\"" + NEW_LINE +
                             "}" + NEW_LINE
                     )
-                    .withDelay(new Delay(SECONDS, 3))
+                    .withDelay(new Delay(SECONDS, 2))
             );
 
         // then
@@ -1996,8 +2001,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withBody("some_request_body"),
             response
         );
-        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
-        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(5)));
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(MILLISECONDS.toMillis(1900)));
+        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(4)));
     }
 
     @Test
@@ -2012,7 +2017,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 forward()
                     .withHost("127.0.0.1")
                     .withPort(insecureEchoServer.getPort())
-                    .withDelay(new Delay(SECONDS, 3))
+                    .withDelay(new Delay(SECONDS, 2))
             );
 
         // then
@@ -2039,8 +2044,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withBody("an_example_body_http"),
             httpResponse
         );
-        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
-        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(5)));
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(MILLISECONDS.toMillis(1900)));
+        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(4)));
     }
 
     @Test
@@ -2059,7 +2064,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                             .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
                             .withBody("some_overridden_body")
                     )
-                    .withDelay(SECONDS, 3)
+                    .withDelay(SECONDS, 2)
             );
 
         // then
@@ -2087,8 +2092,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withBody("some_overridden_body"),
             httpResponse
         );
-        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
-        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(5)));
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(MILLISECONDS.toMillis(1900)));
+        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(4)));
     }
 
     @Test
@@ -2108,7 +2113,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         .withHeader("extra_header", "some_value")
                         .withHeader("content-length", "29")
                         .withBody("some_overridden_response_body")
-                ).withDelay(new Delay(SECONDS, 3))
+                ).withDelay(new Delay(SECONDS, 2))
             );
 
         // then
@@ -2137,8 +2142,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withBody("some_overridden_response_body"),
             response
         );
-        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
-        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(5)));
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(MILLISECONDS.toMillis(1900)));
+        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(4)));
     }
 
     @Test
@@ -2152,7 +2157,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             .forward(
                 callback()
                     .withCallbackClass(PrecannedTestExpectationForwardCallbackRequest.class)
-                    .withDelay(new Delay(SECONDS, 3))
+                    .withDelay(new Delay(SECONDS, 2))
             );
 
         // then
@@ -2181,7 +2186,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withBody("some_overridden_body"),
             httpResponse
         );
-        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
-        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(5)));
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(MILLISECONDS.toMillis(1900)));
+        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(4)));
     }
 }

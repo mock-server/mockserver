@@ -4,8 +4,10 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.uuid.UUIDService;
+import org.slf4j.event.Level;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
@@ -103,8 +105,10 @@ public class MockServerClientServerValidationErrorsTest {
 
     @Test
     public void shouldHandleOtherClientError() {
+        Level originalLevel = ConfigurationProperties.logLevel();
         try {
             // given
+            ConfigurationProperties.logLevel("INFO");
             UUIDService.fixedUUID = true;
             String responseBody = "some_random_response";
             echoServer.withNextResponse(response()
@@ -139,6 +143,7 @@ public class MockServerClientServerValidationErrorsTest {
             mockServerClient.when(request()).respond(response());
         } finally {
             UUIDService.fixedUUID = false;
+            ConfigurationProperties.logLevel(originalLevel.name());
         }
     }
 }
