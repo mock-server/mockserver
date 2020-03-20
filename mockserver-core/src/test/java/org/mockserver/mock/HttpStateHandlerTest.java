@@ -1,8 +1,12 @@
 package org.mockserver.mock;
 
-import org.junit.*;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.TimeService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -70,279 +74,291 @@ public class HttpStateHandlerTest {
 
     @Test
     public void shouldRetrieveLogEntries() {
-        // given
-        httpStateHandler.log(
-            new LogEntry()
-                .setLogLevel(INFO)
-                .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
-                .setHttpRequest(request("request_one"))
-                .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
-                .setMessageFormat("no expectation for:{}returning response:{}")
-                .setArguments(request("request_one"), notFoundResponse())
-        );
-        httpStateHandler.log(
-            new LogEntry()
-                .setLogLevel(INFO)
-                .setType(EXPECTATION_RESPONSE)
-                .setHttpRequest(request("request_two"))
-                .setHttpResponse(response("response_two"))
-                .setMessageFormat("returning error:{}for request:{}for action:{}")
-                .setArguments(request("request_two"), response("response_two"), response("response_two"))
-        );
-        httpStateHandler.log(
-            new LogEntry()
-                .setLogLevel(INFO)
-                .setType(EXPECTATION_MATCHED)
-                .setHttpRequest(request("request_one"))
-                .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
-                .setMessageFormat("request:{}matched expectation:{}")
-                .setArguments(request("request_one"), new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
-        );
-        httpStateHandler.log(
-            new LogEntry()
-                .setLogLevel(INFO)
-                .setType(EXPECTATION_MATCHED)
-                .setHttpRequest(request("request_two"))
-                .setExpectation(new Expectation(request("request_two")).withId("key_two").thenRespond(response("response_two")))
-                .setMessageFormat("request:{}matched expectation:{}")
-                .setArguments(request("request_two"), new Expectation(request("request_two")).withId("key_two").thenRespond(response("response_two")))
-        );
-        httpStateHandler.log(
-            new LogEntry()
-                .setType(TRACE)
-                .setLogLevel(INFO)
-                .setHttpRequest(request("request_four"))
-                .setExpectation(new Expectation(request("request_four")).withId("key_four").thenRespond(response("response_four")))
-                .setMessageFormat("some random{}message")
-                .setArguments("argument_one")
-        );
-
-        // when
-        HttpResponse response = httpStateHandler
-            .retrieve(
-                request()
-                    .withQueryStringParameter("type", "logs")
+        Level originalLevel = ConfigurationProperties.logLevel();
+        try {
+            // given
+            ConfigurationProperties.logLevel("INFO");
+            httpStateHandler.log(
+                new LogEntry()
+                    .setLogLevel(INFO)
+                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                    .setHttpRequest(request("request_one"))
+                    .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
+                    .setMessageFormat("no expectation for:{}returning response:{}")
+                    .setArguments(request("request_one"), notFoundResponse())
+            );
+            httpStateHandler.log(
+                new LogEntry()
+                    .setLogLevel(INFO)
+                    .setType(EXPECTATION_RESPONSE)
+                    .setHttpRequest(request("request_two"))
+                    .setHttpResponse(response("response_two"))
+                    .setMessageFormat("returning error:{}for request:{}for action:{}")
+                    .setArguments(request("request_two"), response("response_two"), response("response_two"))
+            );
+            httpStateHandler.log(
+                new LogEntry()
+                    .setLogLevel(INFO)
+                    .setType(EXPECTATION_MATCHED)
+                    .setHttpRequest(request("request_one"))
+                    .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
+                    .setMessageFormat("request:{}matched expectation:{}")
+                    .setArguments(request("request_one"), new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
+            );
+            httpStateHandler.log(
+                new LogEntry()
+                    .setLogLevel(INFO)
+                    .setType(EXPECTATION_MATCHED)
+                    .setHttpRequest(request("request_two"))
+                    .setExpectation(new Expectation(request("request_two")).withId("key_two").thenRespond(response("response_two")))
+                    .setMessageFormat("request:{}matched expectation:{}")
+                    .setArguments(request("request_two"), new Expectation(request("request_two")).withId("key_two").thenRespond(response("response_two")))
+            );
+            httpStateHandler.log(
+                new LogEntry()
+                    .setType(TRACE)
+                    .setLogLevel(INFO)
+                    .setHttpRequest(request("request_four"))
+                    .setExpectation(new Expectation(request("request_four")).withId("key_four").thenRespond(response("response_four")))
+                    .setMessageFormat("some random{}message")
+                    .setArguments("argument_one")
             );
 
-        // then
-        assertThat(response,
-            is(response().withBody("" +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - no expectation for:" + NEW_LINE +
-                    NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"path\" : \"request_one\"" + NEW_LINE +
-                    "\t}" + NEW_LINE +
-                    NEW_LINE +
-                    " returning response:" + NEW_LINE +
-                    NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"statusCode\" : 404," + NEW_LINE +
-                    "\t  \"reasonPhrase\" : \"Not Found\"" + NEW_LINE +
-                    "\t}" + NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - returning error:" + NEW_LINE +
-                    NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"path\" : \"request_two\"" + NEW_LINE +
-                    "\t}" + NEW_LINE +
-                    NEW_LINE +
-                    " for request:" + NEW_LINE +
-                    NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"statusCode\" : 200," + NEW_LINE +
-                    "\t  \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                    "\t  \"body\" : \"response_two\"" + NEW_LINE +
-                    "\t}" + NEW_LINE +
-                    NEW_LINE +
-                    " for action:" + NEW_LINE +
-                    NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"statusCode\" : 200," + NEW_LINE +
-                    "\t  \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                    "\t  \"body\" : \"response_two\"" + NEW_LINE +
-                    "\t}" + NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
-                    NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"path\" : \"request_one\"" + NEW_LINE +
-                    "\t}" + NEW_LINE +
-                    NEW_LINE +
-                    " matched expectation:" + NEW_LINE +
-                    NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"id\" : \"key_one\"," + NEW_LINE +
-                    "\t  \"priority\" : 0," + NEW_LINE +
-                    "\t  \"httpRequest\" : {" + NEW_LINE +
-                    "\t    \"path\" : \"request_one\"" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"times\" : {" + NEW_LINE +
-                    "\t    \"unlimited\" : true" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"timeToLive\" : {" + NEW_LINE +
-                    "\t    \"unlimited\" : true" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"httpResponse\" : {" + NEW_LINE +
-                    "\t    \"statusCode\" : 200," + NEW_LINE +
-                    "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                    "\t    \"body\" : \"response_two\"" + NEW_LINE +
-                    "\t  }" + NEW_LINE +
-                    "\t}" + NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
-                    NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"path\" : \"request_two\"" + NEW_LINE +
-                    "\t}" + NEW_LINE +
-                    NEW_LINE +
-                    " matched expectation:" + NEW_LINE +
-                    NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"id\" : \"key_two\"," + NEW_LINE +
-                    "\t  \"priority\" : 0," + NEW_LINE +
-                    "\t  \"httpRequest\" : {" + NEW_LINE +
-                    "\t    \"path\" : \"request_two\"" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"times\" : {" + NEW_LINE +
-                    "\t    \"unlimited\" : true" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"timeToLive\" : {" + NEW_LINE +
-                    "\t    \"unlimited\" : true" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"httpResponse\" : {" + NEW_LINE +
-                    "\t    \"statusCode\" : 200," + NEW_LINE +
-                    "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                    "\t    \"body\" : \"response_two\"" + NEW_LINE +
-                    "\t  }" + NEW_LINE +
-                    "\t}" + NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - some random" + NEW_LINE +
-                    NEW_LINE +
-                    "\targument_one" + NEW_LINE +
-                    NEW_LINE +
-                    " message" + NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    "" + NEW_LINE +
-                    "\t{ }" + NEW_LINE +
-                    NEW_LINE,
-                MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
-        );
+            // when
+            HttpResponse response = httpStateHandler
+                .retrieve(
+                    request()
+                        .withQueryStringParameter("type", "logs")
+                );
+
+            // then
+            assertThat(response,
+                is(response().withBody("" +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - no expectation for:" + NEW_LINE +
+                        NEW_LINE +
+                        "\t{" + NEW_LINE +
+                        "\t  \"path\" : \"request_one\"" + NEW_LINE +
+                        "\t}" + NEW_LINE +
+                        NEW_LINE +
+                        " returning response:" + NEW_LINE +
+                        NEW_LINE +
+                        "\t{" + NEW_LINE +
+                        "\t  \"statusCode\" : 404," + NEW_LINE +
+                        "\t  \"reasonPhrase\" : \"Not Found\"" + NEW_LINE +
+                        "\t}" + NEW_LINE +
+                        NEW_LINE +
+                        "------------------------------------" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - returning error:" + NEW_LINE +
+                        NEW_LINE +
+                        "\t{" + NEW_LINE +
+                        "\t  \"path\" : \"request_two\"" + NEW_LINE +
+                        "\t}" + NEW_LINE +
+                        NEW_LINE +
+                        " for request:" + NEW_LINE +
+                        NEW_LINE +
+                        "\t{" + NEW_LINE +
+                        "\t  \"statusCode\" : 200," + NEW_LINE +
+                        "\t  \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                        "\t  \"body\" : \"response_two\"" + NEW_LINE +
+                        "\t}" + NEW_LINE +
+                        NEW_LINE +
+                        " for action:" + NEW_LINE +
+                        NEW_LINE +
+                        "\t{" + NEW_LINE +
+                        "\t  \"statusCode\" : 200," + NEW_LINE +
+                        "\t  \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                        "\t  \"body\" : \"response_two\"" + NEW_LINE +
+                        "\t}" + NEW_LINE +
+                        NEW_LINE +
+                        "------------------------------------" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                        NEW_LINE +
+                        "\t{" + NEW_LINE +
+                        "\t  \"path\" : \"request_one\"" + NEW_LINE +
+                        "\t}" + NEW_LINE +
+                        NEW_LINE +
+                        " matched expectation:" + NEW_LINE +
+                        NEW_LINE +
+                        "\t{" + NEW_LINE +
+                        "\t  \"id\" : \"key_one\"," + NEW_LINE +
+                        "\t  \"priority\" : 0," + NEW_LINE +
+                        "\t  \"httpRequest\" : {" + NEW_LINE +
+                        "\t    \"path\" : \"request_one\"" + NEW_LINE +
+                        "\t  }," + NEW_LINE +
+                        "\t  \"times\" : {" + NEW_LINE +
+                        "\t    \"unlimited\" : true" + NEW_LINE +
+                        "\t  }," + NEW_LINE +
+                        "\t  \"timeToLive\" : {" + NEW_LINE +
+                        "\t    \"unlimited\" : true" + NEW_LINE +
+                        "\t  }," + NEW_LINE +
+                        "\t  \"httpResponse\" : {" + NEW_LINE +
+                        "\t    \"statusCode\" : 200," + NEW_LINE +
+                        "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                        "\t    \"body\" : \"response_two\"" + NEW_LINE +
+                        "\t  }" + NEW_LINE +
+                        "\t}" + NEW_LINE +
+                        NEW_LINE +
+                        "------------------------------------" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                        NEW_LINE +
+                        "\t{" + NEW_LINE +
+                        "\t  \"path\" : \"request_two\"" + NEW_LINE +
+                        "\t}" + NEW_LINE +
+                        NEW_LINE +
+                        " matched expectation:" + NEW_LINE +
+                        NEW_LINE +
+                        "\t{" + NEW_LINE +
+                        "\t  \"id\" : \"key_two\"," + NEW_LINE +
+                        "\t  \"priority\" : 0," + NEW_LINE +
+                        "\t  \"httpRequest\" : {" + NEW_LINE +
+                        "\t    \"path\" : \"request_two\"" + NEW_LINE +
+                        "\t  }," + NEW_LINE +
+                        "\t  \"times\" : {" + NEW_LINE +
+                        "\t    \"unlimited\" : true" + NEW_LINE +
+                        "\t  }," + NEW_LINE +
+                        "\t  \"timeToLive\" : {" + NEW_LINE +
+                        "\t    \"unlimited\" : true" + NEW_LINE +
+                        "\t  }," + NEW_LINE +
+                        "\t  \"httpResponse\" : {" + NEW_LINE +
+                        "\t    \"statusCode\" : 200," + NEW_LINE +
+                        "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                        "\t    \"body\" : \"response_two\"" + NEW_LINE +
+                        "\t  }" + NEW_LINE +
+                        "\t}" + NEW_LINE +
+                        NEW_LINE +
+                        "------------------------------------" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - some random" + NEW_LINE +
+                        NEW_LINE +
+                        "\targument_one" + NEW_LINE +
+                        NEW_LINE +
+                        " message" + NEW_LINE +
+                        "------------------------------------" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
+                        "" + NEW_LINE +
+                        "\t{ }" + NEW_LINE +
+                        NEW_LINE,
+                    MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
+            );
+        } finally {
+            ConfigurationProperties.logLevel(originalLevel.name());
+        }
     }
 
     @Test
     public void shouldRetrieveLogEntriesWithRequestMatcher() {
-        // given
-        httpStateHandler.log(
-            new LogEntry()
-                .setLogLevel(INFO)
-                .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
-                .setHttpRequest(request("request_one"))
-                .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
-                .setMessageFormat("no expectation for:{}returning response:{}")
-                .setArguments(request("request_one"), notFoundResponse())
-        );
-        httpStateHandler.log(
-            new LogEntry()
-                .setLogLevel(INFO)
-                .setType(EXPECTATION_RESPONSE)
-                .setHttpRequest(request("request_two"))
-                .setHttpResponse(response("response_two"))
-                .setMessageFormat("returning error:{}for request:{}for action:{}")
-                .setArguments(request("request_two"), response("response_two"), response("response_two"))
-        );
-        httpStateHandler.log(
-            new LogEntry()
-                .setType(EXPECTATION_MATCHED)
-                .setLogLevel(INFO)
-                .setHttpRequest(request("request_one"))
-                .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
-                .setMessageFormat("request:{}matched expectation:{}")
-                .setArguments(request("request_one"), new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
-        );
-        httpStateHandler.log(
-            new LogEntry()
-                .setType(EXPECTATION_MATCHED)
-                .setLogLevel(INFO)
-                .setHttpRequest(request("request_two"))
-                .setExpectation(new Expectation(request("request_two")).withId("key_two").thenRespond(response("response_two")))
-                .setMessageFormat("request:{}matched expectation:{}")
-                .setArguments(request("request_two"), new Expectation(request("request_two")).withId("key_two").thenRespond(response("response_two")))
-        );
-        httpStateHandler.log(
-            new LogEntry()
-                .setType(TRACE)
-                .setHttpRequest(request("request_four"))
-                .setExpectation(new Expectation(request("request_four")).withId("key_four").thenRespond(response("response_four")))
-                .setMessageFormat("some random{}message")
-                .setArguments("argument_one")
-        );
-
-        // when
-        HttpResponse response = httpStateHandler
-            .retrieve(
-                request()
-                    .withQueryStringParameter("type", "logs")
-                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+        Level originalLevel = ConfigurationProperties.logLevel();
+        try {
+            // given
+            ConfigurationProperties.logLevel("INFO");
+            httpStateHandler.log(
+                new LogEntry()
+                    .setLogLevel(INFO)
+                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                    .setHttpRequest(request("request_one"))
+                    .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
+                    .setMessageFormat("no expectation for:{}returning response:{}")
+                    .setArguments(request("request_one"), notFoundResponse())
+            );
+            httpStateHandler.log(
+                new LogEntry()
+                    .setLogLevel(INFO)
+                    .setType(EXPECTATION_RESPONSE)
+                    .setHttpRequest(request("request_two"))
+                    .setHttpResponse(response("response_two"))
+                    .setMessageFormat("returning error:{}for request:{}for action:{}")
+                    .setArguments(request("request_two"), response("response_two"), response("response_two"))
+            );
+            httpStateHandler.log(
+                new LogEntry()
+                    .setType(EXPECTATION_MATCHED)
+                    .setLogLevel(INFO)
+                    .setHttpRequest(request("request_one"))
+                    .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
+                    .setMessageFormat("request:{}matched expectation:{}")
+                    .setArguments(request("request_one"), new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
+            );
+            httpStateHandler.log(
+                new LogEntry()
+                    .setType(EXPECTATION_MATCHED)
+                    .setLogLevel(INFO)
+                    .setHttpRequest(request("request_two"))
+                    .setExpectation(new Expectation(request("request_two")).withId("key_two").thenRespond(response("response_two")))
+                    .setMessageFormat("request:{}matched expectation:{}")
+                    .setArguments(request("request_two"), new Expectation(request("request_two")).withId("key_two").thenRespond(response("response_two")))
+            );
+            httpStateHandler.log(
+                new LogEntry()
+                    .setType(TRACE)
+                    .setHttpRequest(request("request_four"))
+                    .setExpectation(new Expectation(request("request_four")).withId("key_four").thenRespond(response("response_four")))
+                    .setMessageFormat("some random{}message")
+                    .setArguments("argument_one")
             );
 
-        // then
-        assertThat(response,
-            is(response().withBody("" +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - no expectation for:" + NEW_LINE +
-                    NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"path\" : \"request_one\"" + NEW_LINE +
-                    "\t}" + NEW_LINE +
-                    NEW_LINE +
-                    " returning response:" + NEW_LINE +
-                    NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"statusCode\" : 404," + NEW_LINE +
-                    "\t  \"reasonPhrase\" : \"Not Found\"" + NEW_LINE +
-                    "\t}" + NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
-                    NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"path\" : \"request_one\"" + NEW_LINE +
-                    "\t}" + NEW_LINE +
-                    NEW_LINE +
-                    " matched expectation:" + NEW_LINE +
-                    NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"id\" : \"key_one\"," + NEW_LINE +
-                    "\t  \"priority\" : 0," + NEW_LINE +
-                    "\t  \"httpRequest\" : {" + NEW_LINE +
-                    "\t    \"path\" : \"request_one\"" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"times\" : {" + NEW_LINE +
-                    "\t    \"unlimited\" : true" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"timeToLive\" : {" + NEW_LINE +
-                    "\t    \"unlimited\" : true" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"httpResponse\" : {" + NEW_LINE +
-                    "\t    \"statusCode\" : 200," + NEW_LINE +
-                    "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                    "\t    \"body\" : \"response_two\"" + NEW_LINE +
-                    "\t  }" + NEW_LINE +
-                    "\t}" + NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    "" + NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"path\" : \"request_one\"" + NEW_LINE +
-                    "\t}" + NEW_LINE +
-                    NEW_LINE,
-                MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
-        );
+            // when
+            HttpResponse response = httpStateHandler
+                .retrieve(
+                    request()
+                        .withQueryStringParameter("type", "logs")
+                        .withBody(httpRequestSerializer.serialize(request("request_one")))
+                );
+
+            // then
+            assertThat(response,
+                is(response().withBody("" +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - no expectation for:" + NEW_LINE +
+                        NEW_LINE +
+                        "\t{" + NEW_LINE +
+                        "\t  \"path\" : \"request_one\"" + NEW_LINE +
+                        "\t}" + NEW_LINE +
+                        NEW_LINE +
+                        " returning response:" + NEW_LINE +
+                        NEW_LINE +
+                        "\t{" + NEW_LINE +
+                        "\t  \"statusCode\" : 404," + NEW_LINE +
+                        "\t  \"reasonPhrase\" : \"Not Found\"" + NEW_LINE +
+                        "\t}" + NEW_LINE +
+                        NEW_LINE +
+                        "------------------------------------" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                        NEW_LINE +
+                        "\t{" + NEW_LINE +
+                        "\t  \"path\" : \"request_one\"" + NEW_LINE +
+                        "\t}" + NEW_LINE +
+                        NEW_LINE +
+                        " matched expectation:" + NEW_LINE +
+                        NEW_LINE +
+                        "\t{" + NEW_LINE +
+                        "\t  \"id\" : \"key_one\"," + NEW_LINE +
+                        "\t  \"priority\" : 0," + NEW_LINE +
+                        "\t  \"httpRequest\" : {" + NEW_LINE +
+                        "\t    \"path\" : \"request_one\"" + NEW_LINE +
+                        "\t  }," + NEW_LINE +
+                        "\t  \"times\" : {" + NEW_LINE +
+                        "\t    \"unlimited\" : true" + NEW_LINE +
+                        "\t  }," + NEW_LINE +
+                        "\t  \"timeToLive\" : {" + NEW_LINE +
+                        "\t    \"unlimited\" : true" + NEW_LINE +
+                        "\t  }," + NEW_LINE +
+                        "\t  \"httpResponse\" : {" + NEW_LINE +
+                        "\t    \"statusCode\" : 200," + NEW_LINE +
+                        "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                        "\t    \"body\" : \"response_two\"" + NEW_LINE +
+                        "\t  }" + NEW_LINE +
+                        "\t}" + NEW_LINE +
+                        NEW_LINE +
+                        "------------------------------------" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
+                        "" + NEW_LINE +
+                        "\t{" + NEW_LINE +
+                        "\t  \"path\" : \"request_one\"" + NEW_LINE +
+                        "\t}" + NEW_LINE +
+                        NEW_LINE,
+                    MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
+            );
+        } finally {
+            ConfigurationProperties.logLevel(originalLevel.name());
+        }
     }
 
     @Test
@@ -388,309 +404,327 @@ public class HttpStateHandlerTest {
 
     @Test
     public void shouldClearLogsAndExpectations() {
-        // given
-        httpStateHandler.add(
-            new Expectation(request("request_one"))
-                .withId("one")
-                .thenRespond(response("response_one"))
-        );
-        // given - some log entries
-        httpStateHandler.log(
-            new LogEntry()
-                .setType(TRACE)
-                .setHttpRequest(request("request_four"))
-                .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
-                .setMessageFormat("some random{}message")
-                .setArguments("argument_one")
-        );
-
-        // when
-        httpStateHandler
-            .clear(
-                request()
-                    .withQueryStringParameter("type", "all")
+        Level originalLevel = ConfigurationProperties.logLevel();
+        try {
+            // given
+            ConfigurationProperties.logLevel("INFO");
+            httpStateHandler.add(
+                new Expectation(request("request_one"))
+                    .withId("one")
+                    .thenRespond(response("response_one"))
+            );
+            // given - some log entries
+            httpStateHandler.log(
+                new LogEntry()
+                    .setType(TRACE)
+                    .setHttpRequest(request("request_four"))
+                    .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
+                    .setMessageFormat("some random{}message")
+                    .setArguments("argument_one")
             );
 
-        // then - retrieves correct state
-        assertThat(
+            // when
             httpStateHandler
-                .retrieve(
+                .clear(
                     request()
-                        .withQueryStringParameter("type", "logs")
-                ),
-            is(response().withBody("" +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
-                    NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"id\" : \"one\"," + NEW_LINE +
-                    "\t  \"priority\" : 0," + NEW_LINE +
-                    "\t  \"httpRequest\" : {" + NEW_LINE +
-                    "\t    \"path\" : \"request_one\"" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"times\" : {" + NEW_LINE +
-                    "\t    \"unlimited\" : true" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"timeToLive\" : {" + NEW_LINE +
-                    "\t    \"unlimited\" : true" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"httpResponse\" : {" + NEW_LINE +
-                    "\t    \"statusCode\" : 200," + NEW_LINE +
-                    "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                    "\t    \"body\" : \"response_one\"" + NEW_LINE +
-                    "\t  }" + NEW_LINE +
-                    "\t}" + NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing expectations and logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "\t{}" + NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "\t{ }" + NEW_LINE +
-                    NEW_LINE,
-                MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
-        );
-        assertThat(
-            httpStateHandler
-                .retrieve(
-                    request()
-                        .withQueryStringParameter("type", "active_expectations")
-                ),
-            is(response().withBody("[]", MediaType.JSON_UTF_8).withStatusCode(200))
-        );
-        assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
+                        .withQueryStringParameter("type", "all")
+                );
+
+            // then - retrieves correct state
+            assertThat(
+                httpStateHandler
+                    .retrieve(
+                        request()
+                            .withQueryStringParameter("type", "logs")
+                    ),
+                is(response().withBody("" +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
+                        NEW_LINE +
+                        "\t{" + NEW_LINE +
+                        "\t  \"id\" : \"one\"," + NEW_LINE +
+                        "\t  \"priority\" : 0," + NEW_LINE +
+                        "\t  \"httpRequest\" : {" + NEW_LINE +
+                        "\t    \"path\" : \"request_one\"" + NEW_LINE +
+                        "\t  }," + NEW_LINE +
+                        "\t  \"times\" : {" + NEW_LINE +
+                        "\t    \"unlimited\" : true" + NEW_LINE +
+                        "\t  }," + NEW_LINE +
+                        "\t  \"timeToLive\" : {" + NEW_LINE +
+                        "\t    \"unlimited\" : true" + NEW_LINE +
+                        "\t  }," + NEW_LINE +
+                        "\t  \"httpResponse\" : {" + NEW_LINE +
+                        "\t    \"statusCode\" : 200," + NEW_LINE +
+                        "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                        "\t    \"body\" : \"response_one\"" + NEW_LINE +
+                        "\t  }" + NEW_LINE +
+                        "\t}" + NEW_LINE +
+                        NEW_LINE +
+                        "------------------------------------" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing expectations and logs that match:" + NEW_LINE +
+                        NEW_LINE +
+                        "\t{}" + NEW_LINE +
+                        NEW_LINE +
+                        "------------------------------------" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
+                        NEW_LINE +
+                        "\t{ }" + NEW_LINE +
+                        NEW_LINE,
+                    MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
+            );
+            assertThat(
+                httpStateHandler
+                    .retrieve(
+                        request()
+                            .withQueryStringParameter("type", "active_expectations")
+                    ),
+                is(response().withBody("[]", MediaType.JSON_UTF_8).withStatusCode(200))
+            );
+            assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
+        } finally {
+            ConfigurationProperties.logLevel(originalLevel.name());
+        }
     }
 
     @Test
     public void shouldClearLogsAndExpectationsWithRequestMatcher() {
-        // given
-        httpStateHandler.add(
-            new Expectation(request("request_one"))
-                .withId("key_one")
-                .thenRespond(response("response_one"))
-        );
-        httpStateHandler.add(
-            new Expectation(request("request_four"))
-                .withId("key_four")
-                .thenRespond(response("response_four"))
-        );
-        // given - some log entries
-        httpStateHandler.log(
-            new LogEntry()
-                .setType(TRACE)
-                .setLogLevel(INFO)
-                .setHttpRequest(request("request_one"))
-                .setMessageFormat("some random{}message")
-                .setArguments("argument_one")
-        );
-        httpStateHandler.log(
-            new LogEntry()
-                .setType(TRACE)
-                .setLogLevel(INFO)
-                .setHttpRequest(request("request_four"))
-                .setMessageFormat("some random{}message")
-                .setArguments("argument_four")
-        );
-
-        // when
-        httpStateHandler
-            .clear(
-                request()
-                    .withQueryStringParameter("type", "all")
-                    .withBody(httpRequestSerializer.serialize(request("request_four")))
+        Level originalLevel = ConfigurationProperties.logLevel();
+        try {
+            // given
+            ConfigurationProperties.logLevel("INFO");
+            httpStateHandler.add(
+                new Expectation(request("request_one"))
+                    .withId("key_one")
+                    .thenRespond(response("response_one"))
+            );
+            httpStateHandler.add(
+                new Expectation(request("request_four"))
+                    .withId("key_four")
+                    .thenRespond(response("response_four"))
+            );
+            // given - some log entries
+            httpStateHandler.log(
+                new LogEntry()
+                    .setType(TRACE)
+                    .setLogLevel(INFO)
+                    .setHttpRequest(request("request_one"))
+                    .setMessageFormat("some random{}message")
+                    .setArguments("argument_one")
+            );
+            httpStateHandler.log(
+                new LogEntry()
+                    .setType(TRACE)
+                    .setLogLevel(INFO)
+                    .setHttpRequest(request("request_four"))
+                    .setMessageFormat("some random{}message")
+                    .setArguments("argument_four")
             );
 
-        // then - retrieves correct state
-        assertThat(
+            // when
             httpStateHandler
-                .retrieve(
+                .clear(
                     request()
-                        .withQueryStringParameter("type", "logs")
-                ),
-            is(response().withBody("" +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
-                    "" + NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"id\" : \"key_one\"," + NEW_LINE +
-                    "\t  \"priority\" : 0," + NEW_LINE +
-                    "\t  \"httpRequest\" : {" + NEW_LINE +
-                    "\t    \"path\" : \"request_one\"" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"times\" : {" + NEW_LINE +
-                    "\t    \"unlimited\" : true" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"timeToLive\" : {" + NEW_LINE +
-                    "\t    \"unlimited\" : true" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"httpResponse\" : {" + NEW_LINE +
-                    "\t    \"statusCode\" : 200," + NEW_LINE +
-                    "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                    "\t    \"body\" : \"response_one\"" + NEW_LINE +
-                    "\t  }" + NEW_LINE +
-                    "\t}" + NEW_LINE +
-                    "" + NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - some random" + NEW_LINE +
-                    "" + NEW_LINE +
-                    "\targument_one" + NEW_LINE +
-                    "" + NEW_LINE +
-                    " message" + NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
-                    NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"id\" : \"key_four\"," + NEW_LINE +
-                    "\t  \"priority\" : 0," + NEW_LINE +
-                    "\t  \"httpRequest\" : {" + NEW_LINE +
-                    "\t    \"path\" : \"request_four\"" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"times\" : {" + NEW_LINE +
-                    "\t    \"unlimited\" : true" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"timeToLive\" : {" + NEW_LINE +
-                    "\t    \"unlimited\" : true" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"httpResponse\" : {" + NEW_LINE +
-                    "\t    \"statusCode\" : 200," + NEW_LINE +
-                    "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                    "\t    \"body\" : \"response_four\"" + NEW_LINE +
-                    "\t  }" + NEW_LINE +
-                    "\t}" + NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing expectations and logs that match:" + NEW_LINE +
-                    "" + NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"path\" : \"request_four\"" + NEW_LINE +
-                    "\t}" + NEW_LINE +
-                    "" + NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    "" + NEW_LINE +
-                    "\t{ }" + NEW_LINE +
-                    NEW_LINE,
-                MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
-        );
-        assertThat(
-            httpStateHandler
-                .retrieve(
-                    request()
-                        .withQueryStringParameter("type", "active_expectations")
-                ),
-            is(response().withBody("" +
-                    "[ {" + NEW_LINE +
-                    "  \"id\" : \"key_one\"," + NEW_LINE +
-                    "  \"priority\" : 0," + NEW_LINE +
-                    "  \"httpRequest\" : {" + NEW_LINE +
-                    "    \"path\" : \"request_one\"" + NEW_LINE +
-                    "  }," + NEW_LINE +
-                    "  \"httpResponse\" : {" + NEW_LINE +
-                    "    \"statusCode\" : 200," + NEW_LINE +
-                    "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                    "    \"body\" : \"response_one\"" + NEW_LINE +
-                    "  }," + NEW_LINE +
-                    "  \"times\" : {" + NEW_LINE +
-                    "    \"unlimited\" : true" + NEW_LINE +
-                    "  }," + NEW_LINE +
-                    "  \"timeToLive\" : {" + NEW_LINE +
-                    "    \"unlimited\" : true" + NEW_LINE +
-                    "  }" + NEW_LINE +
-                    "} ]",
-                MediaType.JSON_UTF_8).withStatusCode(200))
-        );
-        assertThat(
-            httpStateHandler.firstMatchingExpectation(request("request_one")),
-            is(
-                new Expectation(request("request_one"))
-                    .thenRespond(response("response_one"))
-            )
-        );
-        assertThat(
-            httpStateHandler.firstMatchingExpectation(request("request_four")),
-            nullValue()
-        );
+                        .withQueryStringParameter("type", "all")
+                        .withBody(httpRequestSerializer.serialize(request("request_four")))
+                );
+
+            // then - retrieves correct state
+            assertThat(
+                httpStateHandler
+                    .retrieve(
+                        request()
+                            .withQueryStringParameter("type", "logs")
+                    ),
+                is(response().withBody("" +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
+                        "" + NEW_LINE +
+                        "\t{" + NEW_LINE +
+                        "\t  \"id\" : \"key_one\"," + NEW_LINE +
+                        "\t  \"priority\" : 0," + NEW_LINE +
+                        "\t  \"httpRequest\" : {" + NEW_LINE +
+                        "\t    \"path\" : \"request_one\"" + NEW_LINE +
+                        "\t  }," + NEW_LINE +
+                        "\t  \"times\" : {" + NEW_LINE +
+                        "\t    \"unlimited\" : true" + NEW_LINE +
+                        "\t  }," + NEW_LINE +
+                        "\t  \"timeToLive\" : {" + NEW_LINE +
+                        "\t    \"unlimited\" : true" + NEW_LINE +
+                        "\t  }," + NEW_LINE +
+                        "\t  \"httpResponse\" : {" + NEW_LINE +
+                        "\t    \"statusCode\" : 200," + NEW_LINE +
+                        "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                        "\t    \"body\" : \"response_one\"" + NEW_LINE +
+                        "\t  }" + NEW_LINE +
+                        "\t}" + NEW_LINE +
+                        "" + NEW_LINE +
+                        "------------------------------------" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - some random" + NEW_LINE +
+                        "" + NEW_LINE +
+                        "\targument_one" + NEW_LINE +
+                        "" + NEW_LINE +
+                        " message" + NEW_LINE +
+                        "------------------------------------" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
+                        NEW_LINE +
+                        "\t{" + NEW_LINE +
+                        "\t  \"id\" : \"key_four\"," + NEW_LINE +
+                        "\t  \"priority\" : 0," + NEW_LINE +
+                        "\t  \"httpRequest\" : {" + NEW_LINE +
+                        "\t    \"path\" : \"request_four\"" + NEW_LINE +
+                        "\t  }," + NEW_LINE +
+                        "\t  \"times\" : {" + NEW_LINE +
+                        "\t    \"unlimited\" : true" + NEW_LINE +
+                        "\t  }," + NEW_LINE +
+                        "\t  \"timeToLive\" : {" + NEW_LINE +
+                        "\t    \"unlimited\" : true" + NEW_LINE +
+                        "\t  }," + NEW_LINE +
+                        "\t  \"httpResponse\" : {" + NEW_LINE +
+                        "\t    \"statusCode\" : 200," + NEW_LINE +
+                        "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                        "\t    \"body\" : \"response_four\"" + NEW_LINE +
+                        "\t  }" + NEW_LINE +
+                        "\t}" + NEW_LINE +
+                        NEW_LINE +
+                        "------------------------------------" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing expectations and logs that match:" + NEW_LINE +
+                        "" + NEW_LINE +
+                        "\t{" + NEW_LINE +
+                        "\t  \"path\" : \"request_four\"" + NEW_LINE +
+                        "\t}" + NEW_LINE +
+                        "" + NEW_LINE +
+                        "------------------------------------" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
+                        "" + NEW_LINE +
+                        "\t{ }" + NEW_LINE +
+                        NEW_LINE,
+                    MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
+            );
+            assertThat(
+                httpStateHandler
+                    .retrieve(
+                        request()
+                            .withQueryStringParameter("type", "active_expectations")
+                    ),
+                is(response().withBody("" +
+                        "[ {" + NEW_LINE +
+                        "  \"id\" : \"key_one\"," + NEW_LINE +
+                        "  \"priority\" : 0," + NEW_LINE +
+                        "  \"httpRequest\" : {" + NEW_LINE +
+                        "    \"path\" : \"request_one\"" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"httpResponse\" : {" + NEW_LINE +
+                        "    \"statusCode\" : 200," + NEW_LINE +
+                        "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                        "    \"body\" : \"response_one\"" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"times\" : {" + NEW_LINE +
+                        "    \"unlimited\" : true" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"timeToLive\" : {" + NEW_LINE +
+                        "    \"unlimited\" : true" + NEW_LINE +
+                        "  }" + NEW_LINE +
+                        "} ]",
+                    MediaType.JSON_UTF_8).withStatusCode(200))
+            );
+            assertThat(
+                httpStateHandler.firstMatchingExpectation(request("request_one")),
+                is(
+                    new Expectation(request("request_one"))
+                        .thenRespond(response("response_one"))
+                )
+            );
+            assertThat(
+                httpStateHandler.firstMatchingExpectation(request("request_four")),
+                nullValue()
+            );
+        } finally {
+            ConfigurationProperties.logLevel(originalLevel.name());
+        }
     }
 
     @Test
     public void shouldClearLogsOnly() {
-        // given
-        httpStateHandler.add(
-            new Expectation(request("request_one"))
-                .withId("key_one")
-                .thenRespond(response("response_one"))
-        );
-        // given - some log entries
-        httpStateHandler.log(
-            new LogEntry()
-                .setType(TRACE)
-                .setHttpRequest(request("request_four"))
-                .setExpectation(new Expectation(request("request_four")).withId("key_four").thenRespond(response("response_four")))
-                .setMessageFormat("some random{}message")
-                .setArguments("argument_one")
-        );
-
-        // when
-        httpStateHandler
-            .clear(
-                request()
-                    .withQueryStringParameter("type", "log")
+        Level originalLevel = ConfigurationProperties.logLevel();
+        try {
+            // given
+            ConfigurationProperties.logLevel("INFO");
+            httpStateHandler.add(
+                new Expectation(request("request_one"))
+                    .withId("key_one")
+                    .thenRespond(response("response_one"))
+            );
+            // given - some log entries
+            httpStateHandler.log(
+                new LogEntry()
+                    .setType(TRACE)
+                    .setHttpRequest(request("request_four"))
+                    .setExpectation(new Expectation(request("request_four")).withId("key_four").thenRespond(response("response_four")))
+                    .setMessageFormat("some random{}message")
+                    .setArguments("argument_one")
             );
 
-        // then - retrieves correct state
-        assertThat(
+            // when
             httpStateHandler
-                .retrieve(
+                .clear(
                     request()
-                        .withQueryStringParameter("type", "logs")
-                ),
-            is(response().withBody("" +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "\t{}" + NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    "" + NEW_LINE +
-                    "\t{ }" + NEW_LINE +
-                    NEW_LINE,
-                MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
-        );
-        assertThat(
-            httpStateHandler
-                .retrieve(
-                    request()
-                        .withQueryStringParameter("type", "active_expectations")
-                ),
-            is(response().withBody("" +
-                    "[ {" + NEW_LINE +
-                    "  \"id\" : \"key_one\"," + NEW_LINE +
-                    "  \"priority\" : 0," + NEW_LINE +
-                    "  \"httpRequest\" : {" + NEW_LINE +
-                    "    \"path\" : \"request_one\"" + NEW_LINE +
-                    "  }," + NEW_LINE +
-                    "  \"httpResponse\" : {" + NEW_LINE +
-                    "    \"statusCode\" : 200," + NEW_LINE +
-                    "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                    "    \"body\" : \"response_one\"" + NEW_LINE +
-                    "  }," + NEW_LINE +
-                    "  \"times\" : {" + NEW_LINE +
-                    "    \"unlimited\" : true" + NEW_LINE +
-                    "  }," + NEW_LINE +
-                    "  \"timeToLive\" : {" + NEW_LINE +
-                    "    \"unlimited\" : true" + NEW_LINE +
-                    "  }" + NEW_LINE +
-                    "} ]",
-                MediaType.JSON_UTF_8).withStatusCode(200))
-        );
-        assertThat(
-            httpStateHandler.firstMatchingExpectation(request("request_one")),
-            is(
-                new Expectation(request("request_one"))
-                    .thenRespond(response("response_one"))
-            )
-        );
+                        .withQueryStringParameter("type", "log")
+                );
+
+            // then - retrieves correct state
+            assertThat(
+                httpStateHandler
+                    .retrieve(
+                        request()
+                            .withQueryStringParameter("type", "logs")
+                    ),
+                is(response().withBody("" +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing logs that match:" + NEW_LINE +
+                        NEW_LINE +
+                        "\t{}" + NEW_LINE +
+                        NEW_LINE +
+                        "------------------------------------" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
+                        "" + NEW_LINE +
+                        "\t{ }" + NEW_LINE +
+                        NEW_LINE,
+                    MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
+            );
+            assertThat(
+                httpStateHandler
+                    .retrieve(
+                        request()
+                            .withQueryStringParameter("type", "active_expectations")
+                    ),
+                is(response().withBody("" +
+                        "[ {" + NEW_LINE +
+                        "  \"id\" : \"key_one\"," + NEW_LINE +
+                        "  \"priority\" : 0," + NEW_LINE +
+                        "  \"httpRequest\" : {" + NEW_LINE +
+                        "    \"path\" : \"request_one\"" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"httpResponse\" : {" + NEW_LINE +
+                        "    \"statusCode\" : 200," + NEW_LINE +
+                        "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                        "    \"body\" : \"response_one\"" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"times\" : {" + NEW_LINE +
+                        "    \"unlimited\" : true" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"timeToLive\" : {" + NEW_LINE +
+                        "    \"unlimited\" : true" + NEW_LINE +
+                        "  }" + NEW_LINE +
+                        "} ]",
+                    MediaType.JSON_UTF_8).withStatusCode(200))
+            );
+            assertThat(
+                httpStateHandler.firstMatchingExpectation(request("request_one")),
+                is(
+                    new Expectation(request("request_one"))
+                        .thenRespond(response("response_one"))
+                )
+            );
+        } finally {
+            ConfigurationProperties.logLevel(originalLevel.name());
+        }
     }
 
     @Test
@@ -1231,49 +1265,55 @@ public class HttpStateHandlerTest {
 
     @Test
     public void shouldReset() {
-        // given
-        httpStateHandler.add(
-            new Expectation(request("request_one"))
-                .thenRespond(response("response_one"))
-        );
-        // given - some log entries
-        httpStateHandler.log(
-            new LogEntry()
-                .setType(TRACE)
-                .setHttpRequest(request("request_four"))
-                .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
-                .setMessageFormat("some random{}message")
-                .setArguments("argument_one")
-        );
+        Level originalLevel = ConfigurationProperties.logLevel();
+        try {
+            // given
+            ConfigurationProperties.logLevel("INFO");
+            httpStateHandler.add(
+                new Expectation(request("request_one"))
+                    .thenRespond(response("response_one"))
+            );
+            // given - some log entries
+            httpStateHandler.log(
+                new LogEntry()
+                    .setType(TRACE)
+                    .setHttpRequest(request("request_four"))
+                    .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
+                    .setMessageFormat("some random{}message")
+                    .setArguments("argument_one")
+            );
 
-        // when
-        httpStateHandler.reset();
+            // when
+            httpStateHandler.reset();
 
-        // then - retrieves correct state
-        assertThat(
-            httpStateHandler
-                .retrieve(
-                    request()
-                        .withQueryStringParameter("type", "logs")
-                ),
-            is(response().withBody("" +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - resetting all expectations and request logs" + NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    "" + NEW_LINE +
-                    "\t{ }" + NEW_LINE +
-                    NEW_LINE,
-                MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
-        );
-        assertThat(
-            httpStateHandler
-                .retrieve(
-                    request()
-                        .withQueryStringParameter("type", "active_expectations")
-                ),
-            is(response().withBody("[]", MediaType.JSON_UTF_8).withStatusCode(200))
-        );
-        assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
+            // then - retrieves correct state
+            assertThat(
+                httpStateHandler
+                    .retrieve(
+                        request()
+                            .withQueryStringParameter("type", "logs")
+                    ),
+                is(response().withBody("" +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - resetting all expectations and request logs" + NEW_LINE +
+                        "------------------------------------" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
+                        "" + NEW_LINE +
+                        "\t{ }" + NEW_LINE +
+                        NEW_LINE,
+                    MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
+            );
+            assertThat(
+                httpStateHandler
+                    .retrieve(
+                        request()
+                            .withQueryStringParameter("type", "active_expectations")
+                    ),
+                is(response().withBody("[]", MediaType.JSON_UTF_8).withStatusCode(200))
+            );
+            assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
+        } finally {
+            ConfigurationProperties.logLevel(originalLevel.name());
+        }
     }
 
 }
