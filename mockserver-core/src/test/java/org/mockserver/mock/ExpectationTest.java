@@ -28,9 +28,10 @@ public class ExpectationTest {
         HttpObjectCallback httpObjectCallback = new HttpObjectCallback();
         Times times = Times.exactly(3);
         TimeToLive timeToLive = TimeToLive.exactly(TimeUnit.HOURS, 5L);
+        Integer priority = 10;
 
         // when
-        Expectation expectationThatResponds = new Expectation(httpRequest, times, timeToLive, 0).thenRespond(httpResponse);
+        Expectation expectationThatResponds = new Expectation(httpRequest, times, timeToLive, priority).thenRespond(httpResponse);
 
         // then
         assertEquals(httpRequest, expectationThatResponds.getHttpRequest());
@@ -42,9 +43,10 @@ public class ExpectationTest {
         assertNull(expectationThatResponds.getHttpResponseObjectCallback());
         assertEquals(times, expectationThatResponds.getTimes());
         assertEquals(timeToLive, expectationThatResponds.getTimeToLive());
+        assertEquals(priority, expectationThatResponds.getPriority());
 
         // when
-        Expectation expectationThatForwards = new Expectation(httpRequest, times, timeToLive, 0).thenForward(httpForward);
+        Expectation expectationThatForwards = new Expectation(httpRequest, times, timeToLive, priority).thenForward(httpForward);
 
         // then
         assertEquals(httpRequest, expectationThatForwards.getHttpRequest());
@@ -56,9 +58,10 @@ public class ExpectationTest {
         assertNull(expectationThatForwards.getHttpResponseObjectCallback());
         assertEquals(times, expectationThatForwards.getTimes());
         assertEquals(timeToLive, expectationThatForwards.getTimeToLive());
+        assertEquals(priority, expectationThatForwards.getPriority());
 
         // when
-        Expectation expectationThatErrors = new Expectation(httpRequest, times, timeToLive, 0).thenError(httpError);
+        Expectation expectationThatErrors = new Expectation(httpRequest, times, timeToLive, priority).thenError(httpError);
 
         // then
         assertEquals(httpRequest, expectationThatErrors.getHttpRequest());
@@ -70,9 +73,10 @@ public class ExpectationTest {
         assertNull(expectationThatErrors.getHttpResponseObjectCallback());
         assertEquals(times, expectationThatErrors.getTimes());
         assertEquals(timeToLive, expectationThatErrors.getTimeToLive());
+        assertEquals(priority, expectationThatErrors.getPriority());
 
         // when
-        Expectation expectationThatCallsbacksClass = new Expectation(httpRequest, times, timeToLive, 0).thenRespond(httpClassCallback);
+        Expectation expectationThatCallsbacksClass = new Expectation(httpRequest, times, timeToLive, priority).thenRespond(httpClassCallback);
 
         // then
         assertEquals(httpRequest, expectationThatForwards.getHttpRequest());
@@ -84,9 +88,10 @@ public class ExpectationTest {
         assertNull(expectationThatCallsbacksClass.getHttpResponseObjectCallback());
         assertEquals(times, expectationThatCallsbacksClass.getTimes());
         assertEquals(timeToLive, expectationThatCallsbacksClass.getTimeToLive());
+        assertEquals(priority, expectationThatCallsbacksClass.getPriority());
 
         // when
-        Expectation expectationThatCallsbackObject = new Expectation(httpRequest, times, timeToLive, 0).thenRespond(httpObjectCallback);
+        Expectation expectationThatCallsbackObject = new Expectation(httpRequest, times, timeToLive, priority).thenRespond(httpObjectCallback);
 
         // then
         assertEquals(httpRequest, expectationThatForwards.getHttpRequest());
@@ -98,12 +103,13 @@ public class ExpectationTest {
         assertEquals(httpObjectCallback, expectationThatCallsbackObject.getAction());
         assertEquals(times, expectationThatCallsbackObject.getTimes());
         assertEquals(timeToLive, expectationThatCallsbackObject.getTimeToLive());
+        assertEquals(priority, expectationThatCallsbackObject.getPriority());
     }
 
     @Test
     public void shouldAllowForNulls() {
         // when
-        Expectation expectation = new Expectation(null, null, TimeToLive.unlimited(), 0).thenRespond((HttpResponse)null).thenForward((HttpForward)null).thenRespond((HttpClassCallback)null).thenRespond((HttpObjectCallback)null);
+        Expectation expectation = new Expectation(null, null, null, null).thenRespond((HttpResponse)null).thenForward((HttpForward)null).thenRespond((HttpClassCallback)null).thenRespond((HttpObjectCallback)null);
 
         // then
         assertTrue(expectation.isActive());
@@ -114,6 +120,8 @@ public class ExpectationTest {
         assertNull(expectation.getHttpResponseClassCallback());
         assertNull(expectation.getHttpResponseObjectCallback());
         assertNull(expectation.getTimes());
+        assertNull(expectation.getTimeToLive());
+        assertNull(expectation.getPriority());
     }
 
     @Test
