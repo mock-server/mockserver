@@ -734,19 +734,24 @@ public class ConfigurationPropertiesTest {
 
     @Test
     public void shouldSetAndReadDisableSystemOut() {
-        // when
-        disableSystemOut(true);
+        boolean originalSetting = disableSystemOut();
+        try {
+            // when
+            disableSystemOut(true);
 
-        // then
-        assertTrue(disableSystemOut());
-        assertEquals("true", System.getProperty("mockserver.disableSystemOut"));
+            // then
+            assertTrue(disableSystemOut());
+            assertEquals("true", System.getProperty("mockserver.disableSystemOut"));
 
-        // when
-        disableSystemOut(false);
+            // when
+            disableSystemOut(false);
 
-        // then
-        assertFalse(disableSystemOut());
-        assertEquals("false", System.getProperty("mockserver.disableSystemOut"));
+            // then
+            assertFalse(disableSystemOut());
+            assertEquals("false", System.getProperty("mockserver.disableSystemOut"));
+        } finally {
+            disableSystemOut(originalSetting);
+        }
     }
 
     @Test

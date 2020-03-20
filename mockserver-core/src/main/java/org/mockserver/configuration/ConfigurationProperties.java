@@ -710,6 +710,7 @@ public class ConfigurationProperties {
     public static void disableSystemOut(boolean disable) {
         System.setProperty(MOCKSERVER_DISABLE_SYSTEM_OUT, "" + disable);
         disableSystemOut = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DISABLE_SYSTEM_OUT, "MOCKSERVER_DISABLE_SYSTEM_OUT", "" + false));
+        configureLogger();
     }
 
     public static boolean metricsEnabled() {

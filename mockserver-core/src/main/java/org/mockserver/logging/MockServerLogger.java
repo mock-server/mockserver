@@ -1,7 +1,6 @@
 package org.mockserver.logging;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.mock.HttpStateHandler;
 import org.slf4j.Logger;
@@ -14,8 +13,7 @@ import java.util.logging.LogManager;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.configuration.ConfigurationProperties.javaLoggerLogLevel;
-import static org.mockserver.configuration.ConfigurationProperties.logLevel;
+import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.slf4j.event.Level.ERROR;
 
@@ -32,7 +30,7 @@ public class MockServerLogger {
         try {
             if (isNotBlank(javaLoggerLogLevel()) && System.getProperty("java.util.logging.config.file") == null && System.getProperty("java.util.logging.config.class") == null) {
                 String loggingConfiguration = "" +
-                    "handlers=org.mockserver.logging.StandardOutConsoleHandler\n" +
+                    (!disableSystemOut() ? "handlers=org.mockserver.logging.StandardOutConsoleHandler\n" : "") +
                     "org.mockserver.logging.StandardOutConsoleHandler.level=ALL\n" +
                     "org.mockserver.logging.StandardOutConsoleHandler.formatter=java.util.logging.SimpleFormatter\n" +
                     "java.util.logging.SimpleFormatter.format=%1$tF %1$tT  %3$s  %4$s  %5$s %6$s%n\n" +
@@ -93,8 +91,7 @@ public class MockServerLogger {
     }
 
     public static void writeToSystemOut(Logger logger, LogEntry logEntry) {
-        if (!ConfigurationProperties.disableSystemOut() &&
-            isEnabled(logEntry.getLogLevel()) &&
+        if (isEnabled(logEntry.getLogLevel()) &&
             isNotBlank(logEntry.getMessage())) {
             switch (logEntry.getLogLevel()) {
                 case ERROR:
