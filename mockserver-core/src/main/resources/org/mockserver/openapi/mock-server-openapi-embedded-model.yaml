@@ -681,18 +681,20 @@ components:
       type: object
       additionalProperties: false
       properties:
+        suppressContentLengthHeader:
+          type: boolean
+        contentLengthHeaderOverride:
+          type: integer
+        suppressConnectionHeader:
+          type: boolean
+        chunkSize:
+          type: integer
+        keepAliveOverride:
+          type: boolean
         closeSocket:
           type: boolean
         closeSocketDelay:
           $ref: "#/components/schemas/Delay"
-        contentLengthHeaderOverride:
-          type: integer
-        suppressContentLengthHeader:
-          type: boolean
-        suppressConnectionHeader:
-          type: boolean
-        keepAliveOverride:
-          type: boolean
     Verification:
       description: "verification"
       type: object

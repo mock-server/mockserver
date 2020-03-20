@@ -1,10 +1,10 @@
 package org.mockserver.codec;
 
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.ConnectionOptions;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
@@ -16,15 +16,17 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.model.BinaryBody.binary;
+import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
 
 /**
  * @author jamesdbloom
  */
-public class MockServerResponseEncoderBasicMappingTest {
+public class MockServerToNettyResponseEncoderBasicMappingTest {
 
     private MockServerToNettyResponseEncoder mockServerResponseEncoder;
     private List<Object> output;
@@ -34,7 +36,7 @@ public class MockServerResponseEncoderBasicMappingTest {
     @Before
     public void setupFixture() {
         mockServerResponseEncoder = new MockServerToNettyResponseEncoder(mockServerLogger);
-        output = new ArrayList<Object>();
+        output = new ArrayList<>();
         httpResponse = response();
     }
 
@@ -178,6 +180,28 @@ public class MockServerResponseEncoderBasicMappingTest {
     }
 
     @Test
+    public void shouldEncodeChunkedStringBody() {
+        // given
+        httpResponse.withBody("somebody");
+        httpResponse.withConnectionOptions(connectionOptions().withChunkSize(3));
+
+        // when
+        new MockServerToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
+
+        // then
+        DefaultHttpResponse responseHeaders = (DefaultHttpResponse) output.get(0);
+        assertThat(responseHeaders.status(), is(HttpResponseStatus.OK));
+        assertThat(responseHeaders.protocolVersion(), is(HttpVersion.HTTP_1_1));
+        assertThat(responseHeaders.headers().getAll("transfer-encoding"), containsInAnyOrder("chunked"));
+        DefaultHttpContent chunkOne = (DefaultHttpContent) output.get(1);
+        assertThat(new String(chunkOne.content().array()), is("som"));
+        DefaultHttpContent chunkTwo = (DefaultHttpContent) output.get(2);
+        assertThat(new String(chunkTwo.content().array()), is("ebo"));
+        DefaultLastHttpContent lastChunk = (DefaultLastHttpContent) output.get(3);
+        assertThat(new String(lastChunk.content().array()), is("dy"));
+    }
+
+    @Test
     public void shouldEncodeBinaryBody() {
         // given
         httpResponse.withBody(binary("somebody".getBytes(UTF_8)));
@@ -188,6 +212,7 @@ public class MockServerResponseEncoderBasicMappingTest {
         // then
         FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
         assertThat(new String(fullHttpResponse.content().array()), is("somebody"));
+        assertThat(fullHttpResponse.headers().getAll("transfer-encoding"), empty());
     }
 
     @Test

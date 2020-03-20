@@ -8,6 +8,7 @@ public class ConnectionOptions extends ObjectWithJsonToString {
     private Boolean suppressContentLengthHeader = null;
     private Integer contentLengthHeaderOverride = null;
     private Boolean suppressConnectionHeader = null;
+    private Integer chunkSize = null;
     private Boolean keepAliveOverride = null;
     private Boolean closeSocket = null;
     private Delay closeSocketDelay = null;
@@ -61,6 +62,23 @@ public class ConnectionOptions extends ObjectWithJsonToString {
 
     public Boolean getSuppressConnectionHeader() {
         return suppressConnectionHeader;
+    }
+
+    /**
+     * Specifies the size of chunks in a response:
+     * <p>
+     * If null (the default value), zero or negative then response will not be chunked
+     * If positive and non-null the response will have "Transfer-Encoding: chunked" header and will be chunked into chunks of the size specified (as long as the body is large enough)
+     *
+     * @param chunkSize the size of response chunks, if null response will not be chunked
+     */
+    public ConnectionOptions withChunkSize(Integer chunkSize) {
+        this.chunkSize = chunkSize;
+        return this;
+    }
+
+    public Integer getChunkSize() {
+        return chunkSize;
     }
 
     /**

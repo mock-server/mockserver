@@ -33,7 +33,7 @@ import static org.mockserver.model.XmlBody.xml;
 /**
  * @author jamesdbloom
  */
-public class MockServerRequestEncoderContentTypeTest {
+public class MockServerToNettyRequestEncoderContentTypeTest {
 
     private List<Object> output;
     private HttpRequest httpRequest;

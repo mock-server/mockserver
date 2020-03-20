@@ -46,6 +46,7 @@ public class HttpResponseDTOSerializerTest {
                             .withSuppressContentLengthHeader(true)
                             .withContentLengthHeaderOverride(50)
                             .withSuppressConnectionHeader(true)
+                            .withChunkSize(100)
                             .withKeepAliveOverride(true)
                             .withCloseSocket(true)
                             .withCloseSocketDelay(new Delay(MILLISECONDS, 100))
@@ -70,6 +71,7 @@ public class HttpResponseDTOSerializerTest {
                 "    \"suppressContentLengthHeader\" : true," + NEW_LINE +
                 "    \"contentLengthHeaderOverride\" : 50," + NEW_LINE +
                 "    \"suppressConnectionHeader\" : true," + NEW_LINE +
+                "    \"chunkSize\" : 100," + NEW_LINE +
                 "    \"keepAliveOverride\" : true," + NEW_LINE +
                 "    \"closeSocket\" : true," + NEW_LINE +
                 "    \"closeSocketDelay\" : {" + NEW_LINE +

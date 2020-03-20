@@ -444,7 +444,7 @@ public class ExpectationDTOTest {
         // then
         assertThat(expectation.getTimes(), is(Times.unlimited()));
         assertThat(expectation.getTimeToLive(), is(TimeToLive.unlimited()));
-        assertThat(expectation.getPriority(), is(nullValue()));
+        assertThat(expectation.getPriority(), is(0));
         assertThat(expectation.getHttpRequest(), is(nullValue()));
         assertThat(expectation.getHttpResponse(), is(nullValue()));
         assertThat(expectation.getHttpResponseTemplate(), is(nullValue()));

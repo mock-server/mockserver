@@ -13,6 +13,7 @@ public class ConnectionOptionsDTO extends ObjectWithJsonToString implements DTO<
     private Boolean suppressContentLengthHeader = null;
     private Integer contentLengthHeaderOverride = null;
     private Boolean suppressConnectionHeader = null;
+    private Integer chunkSize = null;
     private Boolean keepAliveOverride = null;
     private Boolean closeSocket = null;
     private DelayDTO closeSocketDelay = null;
@@ -22,6 +23,7 @@ public class ConnectionOptionsDTO extends ObjectWithJsonToString implements DTO<
             suppressContentLengthHeader = connectionOptions.getSuppressContentLengthHeader();
             contentLengthHeaderOverride = connectionOptions.getContentLengthHeaderOverride();
             suppressConnectionHeader = connectionOptions.getSuppressConnectionHeader();
+            chunkSize = connectionOptions.getChunkSize();
             keepAliveOverride = connectionOptions.getKeepAliveOverride();
             closeSocket = connectionOptions.getCloseSocket();
             if (connectionOptions.getCloseSocketDelay() != null) {
@@ -38,6 +40,7 @@ public class ConnectionOptionsDTO extends ObjectWithJsonToString implements DTO<
             .withSuppressContentLengthHeader(suppressContentLengthHeader)
             .withContentLengthHeaderOverride(contentLengthHeaderOverride)
             .withSuppressConnectionHeader(suppressConnectionHeader)
+            .withChunkSize(chunkSize)
             .withKeepAliveOverride(keepAliveOverride)
             .withCloseSocket(closeSocket)
             .withCloseSocketDelay(closeSocketDelay != null ? closeSocketDelay.buildObject() : null);
@@ -67,6 +70,15 @@ public class ConnectionOptionsDTO extends ObjectWithJsonToString implements DTO<
 
     public ConnectionOptionsDTO setSuppressConnectionHeader(Boolean suppressConnectionHeader) {
         this.suppressConnectionHeader = suppressConnectionHeader;
+        return this;
+    }
+
+    public Integer getChunkSize() {
+        return chunkSize;
+    }
+
+    public ConnectionOptionsDTO setChunkSize(Integer chunkSize) {
+        this.chunkSize = chunkSize;
         return this;
     }
 

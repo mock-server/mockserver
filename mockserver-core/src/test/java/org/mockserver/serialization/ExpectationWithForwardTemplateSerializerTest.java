@@ -55,7 +55,7 @@ public class ExpectationWithForwardTemplateSerializerTest {
             )),
         Times.once(),
         TimeToLive.exactly(HOURS, 2L),
-        0)
+        10)
         .thenForward(
             template(HttpTemplate.TemplateType.JAVASCRIPT, "some_random_template")
                 .withDelay(SECONDS, 5)
@@ -84,7 +84,8 @@ public class ExpectationWithForwardTemplateSerializerTest {
             )
         )
         .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.once()))
-        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(HOURS, 2L)));
+        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(HOURS, 2L)))
+        .setPriority(10);
 
     @Rule
     public final ExpectedException thrown = ExpectedException.none();

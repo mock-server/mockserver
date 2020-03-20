@@ -22,6 +22,7 @@ public class ConnectionOptionsToJavaSerializerTest {
                 "                .withSuppressContentLengthHeader(false)" + NEW_LINE +
                 "                .withContentLengthHeaderOverride(10)" + NEW_LINE +
                 "                .withSuppressConnectionHeader(true)" + NEW_LINE +
+                "                .withChunkSize(100)" + NEW_LINE +
                 "                .withKeepAliveOverride(false)" + NEW_LINE +
                 "                .withCloseSocket(true)" + NEW_LINE +
                 "                .withCloseSocketDelay(new Delay(TimeUnit.MILLISECONDS, 50))",
@@ -30,6 +31,7 @@ public class ConnectionOptionsToJavaSerializerTest {
                     .withSuppressContentLengthHeader(false)
                     .withContentLengthHeaderOverride(10)
                     .withSuppressConnectionHeader(true)
+                    .withChunkSize(100)
                     .withKeepAliveOverride(false)
                     .withCloseSocket(true)
                     .withCloseSocketDelay(new Delay(MILLISECONDS, 50))

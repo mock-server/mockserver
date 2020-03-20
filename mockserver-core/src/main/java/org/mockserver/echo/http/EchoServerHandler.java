@@ -4,6 +4,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.DefaultHttpObject;
 import org.mockserver.codec.MockServerToNettyResponseEncoder;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
@@ -52,7 +53,7 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
         if (!nextResponse.httpResponse.isEmpty()) {
             // WARNING: this logic is only for unit tests that run in series and is NOT thread safe!!!
-            DefaultFullHttpResponse httpResponse = new MockServerHttpResponseToFullHttpResponse(mockServerLogger).mapMockServerResponseToNettyResponse(nextResponse.httpResponse.remove());
+            DefaultHttpObject httpResponse = new MockServerHttpResponseToFullHttpResponse(mockServerLogger).mapMockServerResponseToNettyResponse(nextResponse.httpResponse.remove()).get(0);
             ctx.writeAndFlush(httpResponse);
         } else {
             HttpResponse httpResponse =
@@ -61,7 +62,7 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                     .withHeaders(request.getHeaderList());
 
             if (request.getBody() instanceof BodyWithContentType) {
-                httpResponse.withBody((BodyWithContentType) request.getBody());
+                httpResponse.withBody((BodyWithContentType<?>) request.getBody());
             } else {
                 httpResponse.withBody(request.getBodyAsString());
             }

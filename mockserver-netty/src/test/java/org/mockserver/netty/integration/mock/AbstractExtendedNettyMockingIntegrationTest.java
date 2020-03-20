@@ -1324,9 +1324,9 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
 
             // when
             output.write(("" +
-                "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
-                "Content-Length: 0" + NEW_LINE +
-                NEW_LINE
+                "GET " + calculatePath("") + " HTTP/1.1\r\n" +
+                "Content-Length: 0\r\n" +
+                "\r\n"
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
@@ -1385,6 +1385,82 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     }
 
     @Test
+    public void shouldReturnChunkedResponseWithConnectionOptions() throws Exception {
+        // when
+        mockServerClient
+            .when(
+                request()
+            )
+            .respond(
+                response()
+                    .withBody("some_long_body")
+                    .withConnectionOptions(
+                        connectionOptions()
+                            .withCloseSocket(true)
+                            .withChunkSize(10)
+                    )
+            );
+
+        // then
+        // - in http
+        try (Socket socket = new Socket("localhost", this.getServerPort())) {
+            // given
+            OutputStream output = socket.getOutputStream();
+
+            // when
+            output.write(("" +
+                "GET " + calculatePath("") + " HTTP/1.1\r\n" +
+                "Content-Length: 0\r\n" +
+                "\r\n"
+            ).getBytes(StandardCharsets.UTF_8));
+            output.flush();
+
+            // then
+            String actual = IOUtils.toString(socket.getInputStream(), StandardCharsets.UTF_8.name());
+            assertThat(actual, is("HTTP/1.1 200 OK\r\n" +
+                "connection: close\r\n" +
+                "transfer-encoding: chunked\r\n" +
+                "\r\n" +
+                "a\r\n" +
+                "some_long_\r\n" +
+                "4\r\n" +
+                "body\r\n" +
+                "0\r\n" +
+                "\r\n"
+            ));
+
+        }
+
+        // and
+        // - in https
+        try (SSLSocket sslSocket = sslSocketFactory().wrapSocket(new Socket("localhost", this.getServerPort()))) {
+            OutputStream output = sslSocket.getOutputStream();
+
+            // when
+            output.write(("" +
+                "GET " + calculatePath("") + " HTTP/1.1\r\n" +
+                "Content-Length: 0\r\n" +
+                "\r\n"
+            ).getBytes(StandardCharsets.UTF_8));
+            output.flush();
+
+            // then
+            String actual = IOUtils.toString(sslSocket.getInputStream(), StandardCharsets.UTF_8.name());
+            assertThat(actual, is("HTTP/1.1 200 OK\r\n" +
+                "connection: close\r\n" +
+                "transfer-encoding: chunked\r\n" +
+                "\r\n" +
+                "a\r\n" +
+                "some_long_\r\n" +
+                "4\r\n" +
+                "body\r\n" +
+                "0\r\n" +
+                "\r\n"
+            ));
+        }
+    }
+
+    @Test
     public void shouldReturnErrorResponseForExpectationWithHttpError() throws Exception {
         // when
         mockServerClient
@@ -1405,9 +1481,9 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
 
             // when
             output.write(("" +
-                "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
-                "Content-Length: 0" + NEW_LINE +
-                NEW_LINE
+                "GET " + calculatePath("") + " HTTP/1.1\r\n" +
+                "Content-Length: 0\r\n" +
+                "\r\n"
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
@@ -1422,9 +1498,9 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
 
             // when
             output.write(("" +
-                "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
-                "Content-Length: 0" + NEW_LINE +
-                NEW_LINE
+                "GET " + calculatePath("") + " HTTP/1.1\r\n" +
+                "Content-Length: 0\r\n" +
+                "\r\n"
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
@@ -1453,9 +1529,9 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
 
             // when
             output.write(("" +
-                "GET " + calculatePath("http_error") + " HTTP/1.1" + NEW_LINE +
-                "Content-Length: 0" + NEW_LINE +
-                NEW_LINE
+                "GET " + calculatePath("http_error") + " HTTP/1.1\r\n" +
+                "Content-Length: 0\r\n" +
+                "\r\n"
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 

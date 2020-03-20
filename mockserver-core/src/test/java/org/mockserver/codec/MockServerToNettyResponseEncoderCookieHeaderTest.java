@@ -22,7 +22,7 @@ import static org.mockserver.model.HttpResponse.response;
 /**
  * @author jamesdbloom
  */
-public class MockServerResponseEncoderCookieHeaderTest {
+public class MockServerToNettyResponseEncoderCookieHeaderTest {
 
     private MockServerToNettyResponseEncoder mockServerResponseEncoder;
     private List<Object> output;

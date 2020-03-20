@@ -30,7 +30,7 @@ import static org.mockserver.model.XmlBody.xml;
 /**
  * @author jamesdbloom
  */
-public class MockServerResponseEncoderContentTypeTest {
+public class MockServerToNettyResponseEncoderContentTypeTest {
 
     private List<Object> output;
     private HttpResponse httpResponse;

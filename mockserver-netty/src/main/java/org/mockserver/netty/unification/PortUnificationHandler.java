@@ -222,7 +222,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                     .mapMockServerResponseToNettyResponse(
                         // Upgrade Required
                         httpResponse
-                    )
+                    ).get(0)
                 )
                 .addListener((ChannelFuture future) -> future.channel().disconnect().awaitUninterruptibly());
         } else {

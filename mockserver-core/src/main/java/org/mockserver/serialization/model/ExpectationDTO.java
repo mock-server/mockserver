@@ -13,7 +13,7 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
 
     private static final String[] excludedFields = {"id"};
     private String id;
-    private Integer priority = 0;
+    private Integer priority;
     private HttpRequestDTO httpRequest;
     private HttpResponseDTO httpResponse;
     private HttpTemplateDTO httpResponseTemplate;
@@ -31,7 +31,10 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
     public ExpectationDTO(Expectation expectation) {
         if (expectation != null) {
             this.id = expectation.getId();
-            this.priority = expectation.getPriority();
+            Integer priority = expectation.getPriority();
+            if (priority != null) {
+                this.priority = expectation.getPriority();
+            }
             HttpRequest httpRequest = expectation.getHttpRequest();
             if (httpRequest != null) {
                 this.httpRequest = new HttpRequestDTO(httpRequest, httpRequest.getNot());
@@ -104,6 +107,7 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
         HttpError httpError = null;
         Times times;
         TimeToLive timeToLive;
+        int priority;
         if (this.httpRequest != null) {
             httpRequest = this.httpRequest.buildObject();
         }
@@ -147,7 +151,12 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
         } else {
             timeToLive = TimeToLive.unlimited();
         }
-        return new Expectation(httpRequest, times, timeToLive, this.priority)
+        if (this.priority != null) {
+            priority = this.priority;
+        } else {
+            priority = 0;
+        }
+        return new Expectation(httpRequest, times, timeToLive, priority)
             .withId(this.id)
             .thenRespond(httpResponse)
             .thenRespond(httpResponseTemplate)

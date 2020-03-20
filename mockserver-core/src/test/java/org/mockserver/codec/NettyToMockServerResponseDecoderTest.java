@@ -28,7 +28,7 @@ import static org.mockserver.model.StringBody.exact;
  * @author jamesdbloom
  */
 @SuppressWarnings("rawtypes")
-public class MockServerResponseDecoderTest {
+public class NettyToMockServerResponseDecoderTest {
 
     private NettyToMockServerResponseDecoder mockServerResponseDecoder;
     private List<Object> output;

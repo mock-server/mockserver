@@ -25,6 +25,9 @@ public class ConnectionOptionsToJavaSerializer implements ToJavaSerializer<Conne
             if (connectionOptions.getSuppressConnectionHeader() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withSuppressConnectionHeader(").append(connectionOptions.getSuppressConnectionHeader()).append(")");
             }
+            if (connectionOptions.getChunkSize() != null) {
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withChunkSize(").append(connectionOptions.getChunkSize()).append(")");
+            }
             if (connectionOptions.getKeepAliveOverride() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withKeepAliveOverride(").append(connectionOptions.getKeepAliveOverride()).append(")");
             }

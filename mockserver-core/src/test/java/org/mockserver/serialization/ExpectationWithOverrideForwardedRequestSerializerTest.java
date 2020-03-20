@@ -50,7 +50,7 @@ public class ExpectationWithOverrideForwardedRequestSerializerTest {
             .withCookies(new Cookie("cookieName", "cookieValue")),
         Times.once(),
         TimeToLive.exactly(TimeUnit.HOURS, 2L),
-        0)
+        10)
         .thenForward(
             new HttpOverrideForwardedRequest()
                 .withHttpRequest(
@@ -94,7 +94,8 @@ public class ExpectationWithOverrideForwardedRequestSerializerTest {
             )
         )
         .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.once()))
-        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2L)));
+        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2L)))
+        .setPriority(10);
 
     @Rule
     public final ExpectedException thrown = ExpectedException.none();

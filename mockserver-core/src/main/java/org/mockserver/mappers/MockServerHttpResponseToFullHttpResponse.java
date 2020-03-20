@@ -1,9 +1,7 @@
 package org.mockserver.mappers;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import org.mockserver.codec.BodyDecoderEncoder;
 import org.mockserver.log.model.LogEntry;
@@ -13,6 +11,9 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.model.NottableString;
 import org.slf4j.event.Level;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
@@ -33,8 +34,29 @@ public class MockServerHttpResponseToFullHttpResponse {
         this.bodyDecoderEncoder = new BodyDecoderEncoder(mockServerLogger);
     }
 
-    public DefaultFullHttpResponse mapMockServerResponseToNettyResponse(HttpResponse httpResponse) {
+    public List<DefaultHttpObject>  mapMockServerResponseToNettyResponse(HttpResponse httpResponse) {
         try {
+            ConnectionOptions connectionOptions = httpResponse.getConnectionOptions();
+            if (connectionOptions != null && connectionOptions.getChunkSize() != null && connectionOptions.getChunkSize() > 0) {
+                List<DefaultHttpObject> httpMessages = new ArrayList<>();
+                ByteBuf body = getBody(httpResponse);
+                DefaultHttpResponse defaultHttpResponse = new DefaultHttpResponse(
+                    HttpVersion.HTTP_1_1,
+                    getStatus(httpResponse)
+                );
+                setHeaders(httpResponse, defaultHttpResponse, body);
+                HttpUtil.setTransferEncodingChunked(defaultHttpResponse, true);
+                setCookies(httpResponse, defaultHttpResponse);
+                httpMessages.add(defaultHttpResponse);
+
+                ByteBuf[] chunks = bodyDecoderEncoder.bodyToByteBuf(httpResponse.getBody(), httpResponse.getFirstHeader(CONTENT_TYPE.toString()), connectionOptions.getChunkSize());
+                for (int i = 0; i < chunks.length - 1; i++) {
+                    DefaultHttpContent defaultHttpContent = new DefaultHttpContent(chunks[i]);
+                    httpMessages.add(defaultHttpContent);
+                }
+                httpMessages.add(new DefaultLastHttpContent(chunks[chunks.length - 1]));
+                return httpMessages;
+            } else {
             ByteBuf body = getBody(httpResponse);
             DefaultFullHttpResponse defaultFullHttpResponse = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1,
@@ -43,7 +65,8 @@ public class MockServerHttpResponseToFullHttpResponse {
             );
             setHeaders(httpResponse, defaultFullHttpResponse, body);
             setCookies(httpResponse, defaultFullHttpResponse);
-            return defaultFullHttpResponse;
+                return Collections.singletonList(defaultFullHttpResponse);
+            }
         } catch (Throwable throwable) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -53,7 +76,7 @@ public class MockServerHttpResponseToFullHttpResponse {
                     .setArguments(httpResponse)
                     .setThrowable(throwable)
             );
-            return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, getStatus(httpResponse));
+            return Collections.singletonList(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, getStatus(httpResponse)));
         }
     }
 
@@ -70,7 +93,7 @@ public class MockServerHttpResponseToFullHttpResponse {
         return bodyDecoderEncoder.bodyToByteBuf(httpResponse.getBody(), httpResponse.getFirstHeader(CONTENT_TYPE.toString()));
     }
 
-    private void setHeaders(HttpResponse httpResponse, DefaultFullHttpResponse response, ByteBuf body) {
+    private void setHeaders(HttpResponse httpResponse, DefaultHttpResponse response, ByteBuf body) {
         if (httpResponse.getHeaderMultimap() != null) {
             httpResponse
                 .getHeaderMultimap()
@@ -91,19 +114,23 @@ public class MockServerHttpResponseToFullHttpResponse {
         }
 
         // Content-Length
+        ConnectionOptions connectionOptions = httpResponse.getConnectionOptions();
         if (isBlank(httpResponse.getFirstHeader(CONTENT_LENGTH.toString()))) {
-            ConnectionOptions connectionOptions = httpResponse.getConnectionOptions();
             boolean overrideContentLength = connectionOptions != null && connectionOptions.getContentLengthHeaderOverride() != null;
             boolean addContentLength = connectionOptions == null || isFalseOrNull(connectionOptions.getSuppressContentLengthHeader());
+            boolean chunkedEncoding = connectionOptions != null && connectionOptions.getChunkSize() != null;
             if (overrideContentLength) {
                 response.headers().set(CONTENT_LENGTH, connectionOptions.getContentLengthHeaderOverride());
-            } else if (addContentLength) {
+            } else if (addContentLength && !chunkedEncoding) {
                 response.headers().set(CONTENT_LENGTH, body.readableBytes());
+            }
+            if (chunkedEncoding) {
+                response.headers().set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED);
             }
         }
     }
 
-    private void setCookies(HttpResponse httpResponse, DefaultFullHttpResponse response) {
+    private void setCookies(HttpResponse httpResponse, DefaultHttpResponse response) {
         if (httpResponse.getCookieMap() != null) {
             for (Map.Entry<NottableString, NottableString> cookie : httpResponse.getCookieMap().entrySet()) {
                 if (httpResponse.cookieHeadeDoesNotAlreadyExists(cookie.getKey().getValue(), cookie.getValue().getValue())) {

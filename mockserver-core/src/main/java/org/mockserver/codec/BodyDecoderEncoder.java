@@ -37,6 +37,38 @@ public class BodyDecoderEncoder {
         }
     }
 
+    public ByteBuf[] bodyToByteBuf(Body body, String contentTypeHeader, int chunkSize) {
+        byte[][] chunks = split(bodyToBytes(body, contentTypeHeader), chunkSize);
+        ByteBuf[] byteBufs = new ByteBuf[chunks.length];
+        for (int i = 0; i < chunks.length; i++) {
+            if (chunks[i] != null) {
+                byteBufs[i] = Unpooled.copiedBuffer(chunks[i]);
+            } else {
+                byteBufs[i] = Unpooled.buffer(0, 0);
+            }
+        }
+        return byteBufs;
+    }
+
+    public static byte[][] split(byte[] array, int chunkSize) {
+        if (chunkSize < array.length) {
+            int numOfChunks = (array.length + chunkSize - 1) / chunkSize;
+            byte[][] output = new byte[numOfChunks][];
+
+            for (int i = 0; i < numOfChunks; ++i) {
+                int start = i * chunkSize;
+                int length = Math.min(array.length - start, chunkSize);
+
+                byte[] temp = new byte[length];
+                System.arraycopy(array, start, temp, 0, length);
+                output[i] = temp;
+            }
+            return output;
+        } else {
+            return new byte[][]{array};
+        }
+    }
+
     public void bodyToServletResponse(HttpServletResponse httpServletResponse, Body body, String contentTypeHeader) {
         byte[] bytes = bodyToBytes(body, contentTypeHeader);
         if (bytes != null) {

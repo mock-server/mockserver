@@ -50,7 +50,7 @@ public class ExpectationWithErrorSerializerTest {
             .withCookies(new Cookie("cookieName", "cookieValue")),
         Times.once(),
         TimeToLive.exactly(TimeUnit.HOURS, 2L),
-        0)
+        10)
         .thenError(
             error()
                 .withDelay(new Delay(TimeUnit.MICROSECONDS, 1))
@@ -83,7 +83,8 @@ public class ExpectationWithErrorSerializerTest {
             )
         )
         .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.once()))
-        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2L)));
+        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2L)))
+        .setPriority(10);
 
     @Rule
     public final ExpectedException thrown = ExpectedException.none();

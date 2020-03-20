@@ -48,7 +48,7 @@ public class ExpectationWithResponseObjectCallbackSerializerTest {
             .withCookies(new Cookie("cookieName", "cookieValue")),
         Times.once(),
         TimeToLive.exactly(TimeUnit.HOURS, 2L),
-        0)
+        10)
         .thenRespond(
             new HttpObjectCallback().withClientId("some_random_client_id")
         );
@@ -75,7 +75,8 @@ public class ExpectationWithResponseObjectCallbackSerializerTest {
             )
         )
         .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.once()))
-        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2L)));
+        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2L)))
+        .setPriority(10);
 
     @Rule
     public final ExpectedException thrown = ExpectedException.none();

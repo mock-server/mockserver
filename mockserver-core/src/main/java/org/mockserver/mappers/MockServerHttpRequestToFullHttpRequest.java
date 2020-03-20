@@ -79,7 +79,7 @@ public class MockServerHttpRequestToFullHttpRequest {
     }
 
     private void setCookies(HttpRequest httpRequest, FullHttpRequest request) {
-        List<io.netty.handler.codec.http.cookie.Cookie> cookies = new ArrayList<io.netty.handler.codec.http.cookie.Cookie>();
+        List<io.netty.handler.codec.http.cookie.Cookie> cookies = new ArrayList<>();
         for (org.mockserver.model.Cookie cookie : httpRequest.getCookieList()) {
             cookies.add(new io.netty.handler.codec.http.cookie.DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue()));
         }

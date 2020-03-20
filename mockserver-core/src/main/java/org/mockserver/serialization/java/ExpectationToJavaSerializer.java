@@ -31,11 +31,23 @@ public class ExpectationToJavaSerializer implements ToJavaSerializer<Expectation
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append("new MockServerClient(\"localhost\", 1080)");
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".when(");
             output.append(new HttpRequestToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getHttpRequest()));
+            output.append(",");
             if (expectation.getTimes() != null) {
-                output.append(",").append(new TimesToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getTimes()));
+                output.append(new TimesToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getTimes()));
+            } else {
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append("null");
             }
+            output.append(",");
             if (expectation.getTimeToLive() != null) {
-                output.append(",").append(new TimeToLiveToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getTimeToLive()));
+                output.append(new TimeToLiveToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getTimeToLive()));
+            } else {
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append("null");
+            }
+            output.append(",");
+            if (expectation.getPriority() != null) {
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(expectation.getPriority());
+            } else {
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append("null");
             }
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
             if (expectation.getHttpResponse() != null) {

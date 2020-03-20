@@ -54,7 +54,7 @@ public class ExpectationWithForwardSerializerTest {
             ),
         Times.once(),
         TimeToLive.exactly(TimeUnit.HOURS, 2L),
-        0)
+        10)
         .thenForward(
             forward()
                 .withHost("some_host")
@@ -88,7 +88,8 @@ public class ExpectationWithForwardSerializerTest {
             )
         )
         .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.once()))
-        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2L)));
+        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2L)))
+        .setPriority(10);
 
     @Rule
     public final ExpectedException thrown = ExpectedException.none();

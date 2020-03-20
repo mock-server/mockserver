@@ -32,7 +32,7 @@ import static org.mockserver.model.StringBody.exact;
 /**
  * @author jamesdbloom
  */
-public class MockServerRequestEncoderBasicMappingTest {
+public class MockServerToNettyRequestEncoderBasicMappingTest {
 
     private MockServerToNettyRequestEncoder mockServerRequestEncoder;
     private List<Object> output;
@@ -42,7 +42,7 @@ public class MockServerRequestEncoderBasicMappingTest {
     @Before
     public void setupFixture() {
         mockServerRequestEncoder = new MockServerToNettyRequestEncoder(mockServerLogger);
-        output = new ArrayList<Object>();
+        output = new ArrayList<>();
         httpRequest = request();
     }
 

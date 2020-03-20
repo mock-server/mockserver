@@ -6,13 +6,17 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockserver.serialization.model.*;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.*;
+import org.mockserver.model.Cookies;
+import org.mockserver.model.Delay;
+import org.mockserver.model.Headers;
+import org.mockserver.model.HttpResponse;
+import org.mockserver.serialization.model.*;
 
 import java.io.IOException;
 import java.util.Arrays;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.file.FileReader.openStreamToFileFromClassPathOrPath;
@@ -22,7 +26,6 @@ import static org.mockserver.model.Delay.minutes;
 import static org.mockserver.model.Delay.seconds;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.JsonBody.json;
-import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.XmlBody.xml;
 
@@ -57,22 +60,29 @@ public class HttpResponseSerializerIntegrationTest {
         // given
         String requestBytes = "{" + NEW_LINE +
             "  \"statusCode\" : 123," + NEW_LINE +
+            "  \"headers\" : {" + NEW_LINE +
+            "    \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"cookies\" : {" + NEW_LINE +
+            "    \"someCookieName\" : \"someCookieValue\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"body\" : \"somebody\"," + NEW_LINE +
             "  \"delay\" : {" + NEW_LINE +
             "    \"timeUnit\" : \"SECONDS\"," + NEW_LINE +
             "    \"value\" : 5" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"body\" : {" + NEW_LINE +
-            "    \"type\" : \"STRING\"," + NEW_LINE +
-            "    \"string\" : \"somebody\"" + NEW_LINE +
-            "  }," + NEW_LINE +
-            "  \"cookies\" : [ {" + NEW_LINE +
-            "    \"name\" : \"someCookieName\"," + NEW_LINE +
-            "    \"value\" : \"someCookieValue\"" + NEW_LINE +
-            "  } ]," + NEW_LINE +
-            "  \"headers\" : [ {" + NEW_LINE +
-            "    \"name\" : \"someHeaderName\"," + NEW_LINE +
-            "    \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
-            "  } ]" + NEW_LINE +
+            "  \"connectionOptions\" : {" + NEW_LINE +
+            "    \"suppressContentLengthHeader\" : true," + NEW_LINE +
+            "    \"contentLengthHeaderOverride\" : 100," + NEW_LINE +
+            "    \"suppressConnectionHeader\" : true," + NEW_LINE +
+            "    \"chunkSize\" : 100," + NEW_LINE +
+            "    \"keepAliveOverride\" : true," + NEW_LINE +
+            "    \"closeSocket\" : true," + NEW_LINE +
+            "    \"closeSocketDelay\" : {" + NEW_LINE +
+            "      \"timeUnit\" : \"SECONDS\"," + NEW_LINE +
+            "      \"value\" : 10" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }" + NEW_LINE +
             "}";
 
         // when
@@ -89,6 +99,16 @@ public class HttpResponseSerializerIntegrationTest {
                 cookie("someCookieName", "someCookieValue")
             ))
             .setDelay(new DelayDTO(seconds(5)))
+            .setConnectionOptions(
+                new ConnectionOptionsDTO()
+                    .setContentLengthHeaderOverride(100)
+                    .setSuppressConnectionHeader(true)
+                    .setChunkSize(100)
+                    .setCloseSocket(true)
+                    .setCloseSocketDelay(new DelayDTO(new Delay(SECONDS, 10)))
+                    .setKeepAliveOverride(true)
+                    .setSuppressContentLengthHeader(true)
+            )
             .buildObject(), httpResponse);
     }
 
@@ -219,6 +239,16 @@ public class HttpResponseSerializerIntegrationTest {
                     cookie("someCookieName", "someCookieValue")
                 ))
                 .setDelay(new DelayDTO(minutes(1)))
+                .setConnectionOptions(
+                    new ConnectionOptionsDTO()
+                        .setContentLengthHeaderOverride(100)
+                        .setSuppressConnectionHeader(true)
+                        .setChunkSize(100)
+                        .setCloseSocket(true)
+                        .setCloseSocketDelay(new DelayDTO(new Delay(SECONDS, 10)))
+                        .setKeepAliveOverride(true)
+                        .setSuppressContentLengthHeader(true)
+                )
                 .buildObject()
         );
 
@@ -235,6 +265,18 @@ public class HttpResponseSerializerIntegrationTest {
             "  \"delay\" : {" + NEW_LINE +
             "    \"timeUnit\" : \"MINUTES\"," + NEW_LINE +
             "    \"value\" : 1" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"connectionOptions\" : {" + NEW_LINE +
+            "    \"suppressContentLengthHeader\" : true," + NEW_LINE +
+            "    \"contentLengthHeaderOverride\" : 100," + NEW_LINE +
+            "    \"suppressConnectionHeader\" : true," + NEW_LINE +
+            "    \"chunkSize\" : 100," + NEW_LINE +
+            "    \"keepAliveOverride\" : true," + NEW_LINE +
+            "    \"closeSocket\" : true," + NEW_LINE +
+            "    \"closeSocketDelay\" : {" + NEW_LINE +
+            "      \"timeUnit\" : \"SECONDS\"," + NEW_LINE +
+            "      \"value\" : 10" + NEW_LINE +
+            "    }" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonHttpResponse);
     }
