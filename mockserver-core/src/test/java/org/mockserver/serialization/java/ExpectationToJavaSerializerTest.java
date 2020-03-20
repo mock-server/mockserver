@@ -39,7 +39,25 @@ public class ExpectationToJavaSerializerTest {
                 ".when(" + NEW_LINE +
                 "        request()" + NEW_LINE +
                 "                .withPath(\"somePathOne\")," + NEW_LINE +
-                "        Times.once()" + NEW_LINE +
+                "        null," + NEW_LINE +
+                "        null," + NEW_LINE +
+                "        null" + NEW_LINE +
+                ")" + NEW_LINE +
+                ".respond(" + NEW_LINE +
+                "        response()" + NEW_LINE +
+                "                .withStatusCode(200)" + NEW_LINE +
+                "                .withReasonPhrase(\"OK\")" + NEW_LINE +
+                "                .withBody(\"responseBodyOne\")" + NEW_LINE +
+                ");" + NEW_LINE +
+                NEW_LINE +
+                NEW_LINE +
+                "new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                ".when(" + NEW_LINE +
+                "        request()" + NEW_LINE +
+                "                .withPath(\"somePathOne\")," + NEW_LINE +
+                "        Times.once()," + NEW_LINE +
+                "        null," + NEW_LINE +
+                "        0" + NEW_LINE +
                 ")" + NEW_LINE +
                 ".respond(" + NEW_LINE +
                 "        response()" + NEW_LINE +
@@ -54,7 +72,8 @@ public class ExpectationToJavaSerializerTest {
                 "        request()" + NEW_LINE +
                 "                .withPath(\"somePathOne\")," + NEW_LINE +
                 "        Times.exactly(2)," + NEW_LINE +
-                "        TimeToLive.exactly(TimeUnit.MINUTES, 1L)" + NEW_LINE +
+                "        TimeToLive.exactly(TimeUnit.MINUTES, 1L)," + NEW_LINE +
+                "        100" + NEW_LINE +
                 ")" + NEW_LINE +
                 ".respond(" + NEW_LINE +
                 "        response()" + NEW_LINE +
@@ -67,6 +86,14 @@ public class ExpectationToJavaSerializerTest {
                 Arrays.asList(
                     new Expectation(
                         request("somePathOne"),
+                        null,
+                        null,
+                        null)
+                        .thenRespond(
+                            response("responseBodyOne")
+                        ),
+                    new Expectation(
+                        request("somePathOne"),
                         once(),
                         null,
                             0)
@@ -77,7 +104,7 @@ public class ExpectationToJavaSerializerTest {
                         request("somePathOne"),
                         exactly(2),
                         TimeToLive.exactly(TimeUnit.MINUTES, 1L),
-                            0)
+                            100)
                         .thenRespond(
                             response("responseBodyOne")
                         )
@@ -108,7 +135,8 @@ public class ExpectationToJavaSerializerTest {
                 "                        )" + NEW_LINE +
                 "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
                 "                Times.once()," + NEW_LINE +
-                "                TimeToLive.unlimited()" + NEW_LINE +
+                "                TimeToLive.unlimited()," + NEW_LINE +
+                "                0" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .respond(" + NEW_LINE +
                 "                response()" + NEW_LINE +
@@ -201,7 +229,8 @@ public class ExpectationToJavaSerializerTest {
                 "                        )" + NEW_LINE +
                 "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
                 "                Times.once()," + NEW_LINE +
-                "                TimeToLive.unlimited()" + NEW_LINE +
+                "                TimeToLive.unlimited()," + NEW_LINE +
+                "                0" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .respond(" + NEW_LINE +
                 "                template(HttpTemplate.TemplateType.JAVASCRIPT)" + NEW_LINE +
@@ -260,7 +289,8 @@ public class ExpectationToJavaSerializerTest {
                 "                                )" + NEW_LINE +
                 "                        )," + NEW_LINE +
                 "                Times.once()," + NEW_LINE +
-                "                TimeToLive.unlimited()" + NEW_LINE +
+                "                TimeToLive.unlimited()," + NEW_LINE +
+                "                0" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .respond(" + NEW_LINE +
                 "                response()" + NEW_LINE +
@@ -295,7 +325,8 @@ public class ExpectationToJavaSerializerTest {
                 "                request()" + NEW_LINE +
                 "                        .withBody(new Base64Converter().base64StringToBytes(\"" + base64Converter.bytesToBase64String("request body".getBytes(UTF_8)) + "\"))," + NEW_LINE +
                 "                Times.once()," + NEW_LINE +
-                "                TimeToLive.unlimited()" + NEW_LINE +
+                "                TimeToLive.unlimited()," + NEW_LINE +
+                "                0" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .respond(" + NEW_LINE +
                 "                response()" + NEW_LINE +
@@ -340,7 +371,8 @@ public class ExpectationToJavaSerializerTest {
                 "                        )" + NEW_LINE +
                 "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
                 "                Times.once()," + NEW_LINE +
-                "                TimeToLive.unlimited()" + NEW_LINE +
+                "                TimeToLive.unlimited()," + NEW_LINE +
+                "                0" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .respond(" + NEW_LINE +
                 "                callback()" + NEW_LINE +
@@ -399,7 +431,8 @@ public class ExpectationToJavaSerializerTest {
                 "                        )" + NEW_LINE +
                 "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
                 "                Times.once()," + NEW_LINE +
-                "                TimeToLive.unlimited()" + NEW_LINE +
+                "                TimeToLive.unlimited()," + NEW_LINE +
+                "                0" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        /*NOT POSSIBLE TO GENERATE CODE FOR OBJECT CALLBACK*/;",
             new ExpectationToJavaSerializer().serialize(1,
@@ -454,7 +487,8 @@ public class ExpectationToJavaSerializerTest {
                 "                        )" + NEW_LINE +
                 "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
                 "                Times.once()," + NEW_LINE +
-                "                TimeToLive.unlimited()" + NEW_LINE +
+                "                TimeToLive.unlimited()," + NEW_LINE +
+                "                0" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .forward(" + NEW_LINE +
                 "                forward()" + NEW_LINE +
@@ -517,7 +551,8 @@ public class ExpectationToJavaSerializerTest {
                 "                        )" + NEW_LINE +
                 "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
                 "                Times.once()," + NEW_LINE +
-                "                TimeToLive.unlimited()" + NEW_LINE +
+                "                TimeToLive.unlimited()," + NEW_LINE +
+                "                0" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .forward(" + NEW_LINE +
                 "                forwardOverriddenRequest()" + NEW_LINE +
@@ -610,7 +645,8 @@ public class ExpectationToJavaSerializerTest {
                 "                        )" + NEW_LINE +
                 "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
                 "                Times.once()," + NEW_LINE +
-                "                TimeToLive.unlimited()" + NEW_LINE +
+                "                TimeToLive.unlimited()," + NEW_LINE +
+                "                0" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .forward(" + NEW_LINE +
                 "                template(HttpTemplate.TemplateType.JAVASCRIPT)" + NEW_LINE +
@@ -669,7 +705,8 @@ public class ExpectationToJavaSerializerTest {
                 "                        )" + NEW_LINE +
                 "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
                 "                Times.once()," + NEW_LINE +
-                "                TimeToLive.unlimited()" + NEW_LINE +
+                "                TimeToLive.unlimited()," + NEW_LINE +
+                "                0" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .forward(" + NEW_LINE +
                 "                callback()" + NEW_LINE +
@@ -728,7 +765,8 @@ public class ExpectationToJavaSerializerTest {
                 "                        )" + NEW_LINE +
                 "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
                 "                Times.once()," + NEW_LINE +
-                "                TimeToLive.unlimited()" + NEW_LINE +
+                "                TimeToLive.unlimited()," + NEW_LINE +
+                "                0" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        /*NOT POSSIBLE TO GENERATE CODE FOR OBJECT CALLBACK*/;",
             new ExpectationToJavaSerializer().serialize(1,
@@ -783,7 +821,8 @@ public class ExpectationToJavaSerializerTest {
                 "                        )" + NEW_LINE +
                 "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
                 "                Times.once()," + NEW_LINE +
-                "                TimeToLive.unlimited()" + NEW_LINE +
+                "                TimeToLive.unlimited()," + NEW_LINE +
+                "                0" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .error(" + NEW_LINE +
                 "                error()" + NEW_LINE +
@@ -831,7 +870,8 @@ public class ExpectationToJavaSerializerTest {
                 "                        .withPath(\"somePath\")" + NEW_LINE +
                 "                        .withBody(new JsonBody(\"[" + StringEscapeUtils.escapeJava(NEW_LINE) + "    {" + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"id\\\": \\\"1\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"author\\\": \\\"James Tatum\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"isbn\\\": \\\"0691067570\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"publicationDate\\\": \\\"1989\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) + "    }," + StringEscapeUtils.escapeJava(NEW_LINE) + "    {" + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"id\\\": \\\"2\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"author\\\": \\\"Katharine A. Harmon\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"isbn\\\": \\\"1568984308\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"publicationDate\\\": \\\"2004\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) + "    }," + StringEscapeUtils.escapeJava(NEW_LINE) + "    {" + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"id\\\": \\\"3\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"author\\\": \\\"Deborah Tannen\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"isbn\\\": \\\"0345372050\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"publicationDate\\\": \\\"1990\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) + "    }" + StringEscapeUtils.escapeJava(NEW_LINE) + "]\", JsonBodyMatchType.ONLY_MATCHING_FIELDS))," + NEW_LINE +
                 "                Times.once()," + NEW_LINE +
-                "                TimeToLive.unlimited()" + NEW_LINE +
+                "                TimeToLive.unlimited()," + NEW_LINE +
+                "                0" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .respond(" + NEW_LINE +
                 "                response()" + NEW_LINE +
@@ -938,7 +978,8 @@ public class ExpectationToJavaSerializerTest {
                 "                        .withPath(\"somePath\")" + NEW_LINE +
                 "                        .withBody(new JsonSchemaBody(\"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"))," + NEW_LINE +
                 "                Times.once()," + NEW_LINE +
-                "                TimeToLive.unlimited()" + NEW_LINE +
+                "                TimeToLive.unlimited()," + NEW_LINE +
+                "                0" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .respond(" + NEW_LINE +
                 "                response()" + NEW_LINE +
@@ -992,7 +1033,8 @@ public class ExpectationToJavaSerializerTest {
                 "                        .withPath(\"somePath\")" + NEW_LINE +
                 "                        .withBody(new XmlSchemaBody(\"" + StringEscapeUtils.escapeJava(xmlSchema) + "\"))," + NEW_LINE +
                 "                Times.once()," + NEW_LINE +
-                "                TimeToLive.unlimited()" + NEW_LINE +
+                "                TimeToLive.unlimited()," + NEW_LINE +
+                "                0" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .respond(" + NEW_LINE +
                 "                response()" + NEW_LINE +
@@ -1025,7 +1067,8 @@ public class ExpectationToJavaSerializerTest {
                 "                        .withPath(\"somePath\")" + NEW_LINE +
                 "                        .withBody(new StringBody(\"responseBody\"))," + NEW_LINE +
                 "                Times.once()," + NEW_LINE +
-                "                TimeToLive.unlimited()" + NEW_LINE +
+                "                TimeToLive.unlimited()," + NEW_LINE +
+                "                0" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .respond(" + NEW_LINE +
                 "                response()" + NEW_LINE +
