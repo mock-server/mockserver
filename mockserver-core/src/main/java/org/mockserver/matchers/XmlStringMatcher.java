@@ -10,6 +10,7 @@ import org.xml.sax.SAXException;
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.builder.Input;
 import org.xmlunit.diff.Diff;
+import org.xmlunit.placeholder.PlaceholderDifferenceEvaluator;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -39,6 +40,7 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
             this.diffBuilder = DiffBuilder.compare(Input.fromString(this.matcher.getValue()))
                 .ignoreComments()
                 .ignoreWhitespace()
+                .normalizeWhitespace()
                 .checkForSimilar();
         } catch (Exception e) {
             mockServerLogger.logEvent(
@@ -52,18 +54,13 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
     }
 
     public String normaliseXmlString(final String input) throws ParserConfigurationException, SAXException, IOException, TransformerException {
-        return stringToXmlDocumentParser.normaliseXmlString(input, new StringToXmlDocumentParser.ErrorLogger() {
-            @Override
-            public void logError(final String matched, final Exception exception) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
-                        .setLogLevel(Level.ERROR)
-                        .setMessageFormat("SAXParseException while parsing [" + input + "]")
-                        .setThrowable(exception)
-                );
-            }
-        });
+        return stringToXmlDocumentParser.normaliseXmlString(input, (matched, exception) -> mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(LogEntry.LogMessageType.EXCEPTION)
+                .setLogLevel(Level.ERROR)
+                .setMessageFormat("SAXParseException while parsing [" + input + "]")
+                .setThrowable(exception)
+        ));
     }
 
     public NottableString normaliseXmlNottableString(final NottableString input)
@@ -80,7 +77,7 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
 
         if (diffBuilder != null) {
             try {
-                Diff diff = diffBuilder.withTest(Input.fromString(normaliseXmlString(matched.getValue()))).build();
+                Diff diff = diffBuilder.withTest(Input.fromString(normaliseXmlString(matched.getValue()))).withDifferenceEvaluator(new PlaceholderDifferenceEvaluator()).build();
                 result = !diff.hasDifferences();
 
                 if (!result) {

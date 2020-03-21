@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ability to prioritise expectations such that the matching happens according to the specified priority (highest first) then creation order
 - ability to create or update (if id matches) expectations from the client using upsert method
 - ability to return chunked responses where each chunk is a specific size by using response connection options
+- support for XmlUnit placeholders https://github.com/xmlunit/user-guide/wiki/Placeholders
 
 ### Changed
 - improved X509 certificates by adding Subject Key Identifier and Authority Key Identifier
