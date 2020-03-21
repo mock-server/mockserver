@@ -577,6 +577,13 @@ public class JsonStringMatcherTest {
     }
 
     @Test
+    public void shouldMatchBasicValues() {
+        assertTrue(new JsonStringMatcher(new MockServerLogger(), "null", MatchType.ONLY_MATCHING_FIELDS).matches(null, "null"));
+        assertTrue(new JsonStringMatcher(new MockServerLogger(), "1", MatchType.ONLY_MATCHING_FIELDS).matches(null, "1"));
+        assertTrue(new JsonStringMatcher(new MockServerLogger(), "true", MatchType.ONLY_MATCHING_FIELDS).matches(null, "true"));
+    }
+
+    @Test
     public void showHaveCorrectEqualsBehaviour() {
         MockServerLogger mockServerLogger = new MockServerLogger();
         assertEquals(new JsonStringMatcher(mockServerLogger, "some_value", MatchType.ONLY_MATCHING_FIELDS), new JsonStringMatcher(mockServerLogger, "some_value", MatchType.ONLY_MATCHING_FIELDS));
