@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - improved X509 certificates by adding Subject Key Identifier and Authority Key Identifier
 - stopped delay being applied twice on response actions (#721)
 - improve support for clients making initial SOCKS or HTTP CONNECT requests over TLS
+- replaced JSONAssert with JsonUnit to improve JSON matching and remove problematic transitive dependencies
 
 ### Fixed
 - fixed null point for expectation initialiser with file watcher in working directory specified with relative path
