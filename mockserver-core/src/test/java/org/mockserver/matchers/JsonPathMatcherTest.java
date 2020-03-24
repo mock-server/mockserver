@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 
 import static org.junit.Assert.*;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.NotMatcher.not;
 
 /**
@@ -14,29 +15,29 @@ public class JsonPathMatcherTest {
     @Test
     public void shouldMatchMatchingJsonPath() {
         String matched = "" +
-                "{\n" +
-            "    \"store\": {\n" +
-            "        \"book\": [\n" +
-            "            {\n" +
-            "                \"category\": \"reference\",\n" +
-            "                \"author\": \"Nigel Rees\",\n" +
-            "                \"title\": \"Sayings of the Century\",\n" +
-            "                \"price\": 8.95\n" +
-            "            },\n" +
-            "            {\n" +
-            "                \"category\": \"fiction\",\n" +
-            "                \"author\": \"Herman Melville\",\n" +
-            "                \"title\": \"Moby Dick\",\n" +
-            "                \"isbn\": \"0-553-21311-3\",\n" +
-            "                \"price\": 8.99\n" +
-            "            }\n" +
-            "        ],\n" +
-            "        \"bicycle\": {\n" +
-            "            \"color\": \"red\",\n" +
-            "            \"price\": 19.95\n" +
-            "        }\n" +
-            "    },\n" +
-            "    \"expensive\": 10\n" +
+                "{" + NEW_LINE +
+            "    \"store\": {" + NEW_LINE +
+            "        \"book\": [" + NEW_LINE +
+            "            {" + NEW_LINE +
+            "                \"category\": \"reference\"," + NEW_LINE +
+            "                \"author\": \"Nigel Rees\"," + NEW_LINE +
+            "                \"title\": \"Sayings of the Century\"," + NEW_LINE +
+            "                \"price\": 8.95" + NEW_LINE +
+            "            }," + NEW_LINE +
+            "            {" + NEW_LINE +
+            "                \"category\": \"fiction\"," + NEW_LINE +
+            "                \"author\": \"Herman Melville\"," + NEW_LINE +
+            "                \"title\": \"Moby Dick\"," + NEW_LINE +
+            "                \"isbn\": \"0-553-21311-3\"," + NEW_LINE +
+            "                \"price\": 8.99" + NEW_LINE +
+            "            }" + NEW_LINE +
+            "        ]," + NEW_LINE +
+            "        \"bicycle\": {" + NEW_LINE +
+            "            \"color\": \"red\"," + NEW_LINE +
+            "            \"price\": 19.95" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"expensive\": 10" + NEW_LINE +
             "}";
         assertTrue(new JsonPathMatcher(new MockServerLogger(),"$..book[?(@.price <= $['expensive'])]").matches(null, matched));
         assertTrue(new JsonPathMatcher(new MockServerLogger(),"$..book[?(@.isbn)]").matches(null, matched));
@@ -46,29 +47,29 @@ public class JsonPathMatcherTest {
     @Test
     public void shouldNotMatchMatchingJsonPathWithNot() {
         String matched = "" +
-            "{\n" +
-            "    \"store\": {\n" +
-            "        \"book\": [\n" +
-            "            {\n" +
-            "                \"category\": \"reference\",\n" +
-            "                \"author\": \"Nigel Rees\",\n" +
-            "                \"title\": \"Sayings of the Century\",\n" +
-            "                \"price\": 8.95\n" +
-            "            },\n" +
-            "            {\n" +
-            "                \"category\": \"fiction\",\n" +
-            "                \"author\": \"Herman Melville\",\n" +
-            "                \"title\": \"Moby Dick\",\n" +
-            "                \"isbn\": \"0-553-21311-3\",\n" +
-            "                \"price\": 8.99\n" +
-            "            }\n" +
-            "        ],\n" +
-            "        \"bicycle\": {\n" +
-            "            \"color\": \"red\",\n" +
-            "            \"price\": 19.95\n" +
-            "        }\n" +
-            "    },\n" +
-            "    \"expensive\": 10\n" +
+            "{" + NEW_LINE +
+            "    \"store\": {" + NEW_LINE +
+            "        \"book\": [" + NEW_LINE +
+            "            {" + NEW_LINE +
+            "                \"category\": \"reference\"," + NEW_LINE +
+            "                \"author\": \"Nigel Rees\"," + NEW_LINE +
+            "                \"title\": \"Sayings of the Century\"," + NEW_LINE +
+            "                \"price\": 8.95" + NEW_LINE +
+            "            }," + NEW_LINE +
+            "            {" + NEW_LINE +
+            "                \"category\": \"fiction\"," + NEW_LINE +
+            "                \"author\": \"Herman Melville\"," + NEW_LINE +
+            "                \"title\": \"Moby Dick\"," + NEW_LINE +
+            "                \"isbn\": \"0-553-21311-3\"," + NEW_LINE +
+            "                \"price\": 8.99" + NEW_LINE +
+            "            }" + NEW_LINE +
+            "        ]," + NEW_LINE +
+            "        \"bicycle\": {" + NEW_LINE +
+            "            \"color\": \"red\"," + NEW_LINE +
+            "            \"price\": 19.95" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"expensive\": 10" + NEW_LINE +
             "}";
         assertFalse(not(new JsonPathMatcher(new MockServerLogger(),"$..book[?(@.price <= $['expensive'])]")).matches(null, matched));
         assertFalse(not(new JsonPathMatcher(new MockServerLogger(),"$..book[?(@.isbn)]")).matches(null, matched));
@@ -94,29 +95,29 @@ public class JsonPathMatcherTest {
     @Test
     public void shouldNotMatchNotMatchingJsonPath() {
         String matched = "" +
-            "{\n" +
-            "    \"store\": {\n" +
-            "        \"book\": [\n" +
-            "            {\n" +
-            "                \"category\": \"reference\",\n" +
-            "                \"author\": \"Nigel Rees\",\n" +
-            "                \"title\": \"Sayings of the Century\",\n" +
-            "                \"price\": 8.95\n" +
-            "            },\n" +
-            "            {\n" +
-            "                \"category\": \"fiction\",\n" +
-            "                \"author\": \"Herman Melville\",\n" +
-            "                \"title\": \"Moby Dick\",\n" +
-            "                \"isbn\": \"0-553-21311-3\",\n" +
-            "                \"price\": 8.99\n" +
-            "            }\n" +
-            "        ],\n" +
-            "        \"bicycle\": {\n" +
-            "            \"color\": \"red\",\n" +
-            "            \"price\": 19.95\n" +
-            "        }\n" +
-            "    },\n" +
-            "    \"expensive\": 10\n" +
+            "{" + NEW_LINE +
+            "    \"store\": {" + NEW_LINE +
+            "        \"book\": [" + NEW_LINE +
+            "            {" + NEW_LINE +
+            "                \"category\": \"reference\"," + NEW_LINE +
+            "                \"author\": \"Nigel Rees\"," + NEW_LINE +
+            "                \"title\": \"Sayings of the Century\"," + NEW_LINE +
+            "                \"price\": 8.95" + NEW_LINE +
+            "            }," + NEW_LINE +
+            "            {" + NEW_LINE +
+            "                \"category\": \"fiction\"," + NEW_LINE +
+            "                \"author\": \"Herman Melville\"," + NEW_LINE +
+            "                \"title\": \"Moby Dick\"," + NEW_LINE +
+            "                \"isbn\": \"0-553-21311-3\"," + NEW_LINE +
+            "                \"price\": 8.99" + NEW_LINE +
+            "            }" + NEW_LINE +
+            "        ]," + NEW_LINE +
+            "        \"bicycle\": {" + NEW_LINE +
+            "            \"color\": \"red\"," + NEW_LINE +
+            "            \"price\": 19.95" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"expensive\": 10" + NEW_LINE +
             "}";
         assertFalse(new JsonPathMatcher(new MockServerLogger(),"$..book[?(@.price > $['expensive'])]").matches(null, matched));
         assertFalse(new JsonPathMatcher(new MockServerLogger(),"$..book[?(@.color)]").matches(null, matched));
@@ -125,29 +126,29 @@ public class JsonPathMatcherTest {
     @Test
     public void shouldMatchNotMatchingJsonPathWithNot() {
         String matched = "" +
-            "{\n" +
-            "    \"store\": {\n" +
-            "        \"book\": [\n" +
-            "            {\n" +
-            "                \"category\": \"reference\",\n" +
-            "                \"author\": \"Nigel Rees\",\n" +
-            "                \"title\": \"Sayings of the Century\",\n" +
-            "                \"price\": 8.95\n" +
-            "            },\n" +
-            "            {\n" +
-            "                \"category\": \"fiction\",\n" +
-            "                \"author\": \"Herman Melville\",\n" +
-            "                \"title\": \"Moby Dick\",\n" +
-            "                \"isbn\": \"0-553-21311-3\",\n" +
-            "                \"price\": 8.99\n" +
-            "            }\n" +
-            "        ],\n" +
-            "        \"bicycle\": {\n" +
-            "            \"color\": \"red\",\n" +
-            "            \"price\": 19.95\n" +
-            "        }\n" +
-            "    },\n" +
-            "    \"expensive\": 10\n" +
+            "{" + NEW_LINE +
+            "    \"store\": {" + NEW_LINE +
+            "        \"book\": [" + NEW_LINE +
+            "            {" + NEW_LINE +
+            "                \"category\": \"reference\"," + NEW_LINE +
+            "                \"author\": \"Nigel Rees\"," + NEW_LINE +
+            "                \"title\": \"Sayings of the Century\"," + NEW_LINE +
+            "                \"price\": 8.95" + NEW_LINE +
+            "            }," + NEW_LINE +
+            "            {" + NEW_LINE +
+            "                \"category\": \"fiction\"," + NEW_LINE +
+            "                \"author\": \"Herman Melville\"," + NEW_LINE +
+            "                \"title\": \"Moby Dick\"," + NEW_LINE +
+            "                \"isbn\": \"0-553-21311-3\"," + NEW_LINE +
+            "                \"price\": 8.99" + NEW_LINE +
+            "            }" + NEW_LINE +
+            "        ]," + NEW_LINE +
+            "        \"bicycle\": {" + NEW_LINE +
+            "            \"color\": \"red\"," + NEW_LINE +
+            "            \"price\": 19.95" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"expensive\": 10" + NEW_LINE +
             "}";
         assertTrue(not(new JsonPathMatcher(new MockServerLogger(),"$..book[?(@.price > $['expensive'])]")).matches(null, matched));
         assertTrue(not(new JsonPathMatcher(new MockServerLogger(),"$..book[?(@.color)]")).matches(null, matched));

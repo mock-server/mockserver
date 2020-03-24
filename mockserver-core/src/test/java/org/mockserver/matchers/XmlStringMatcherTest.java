@@ -64,39 +64,39 @@ public class XmlStringMatcherTest {
             "  <content>Hello</content>" + NEW_LINE +
             "</message>";
         assertTrue(new XmlStringMatcher(new MockServerLogger(), "" +
-            "<message>\n" +
-            "  <id>${xmlunit.ignore}</id>\n" +
-            "  <content>Hello</content>\n" +
+            "<message>" + NEW_LINE +
+            "  <id>${xmlunit.ignore}</id>" + NEW_LINE +
+            "  <content>Hello</content>" + NEW_LINE +
             "</message>").matches(matched));
     }
 
     @Test
     public void shouldMatchMatchingXMLWithDifferentNamespaceOrders() {
         String matched = "" +
-            "<?xml version=\"1.0\"?>\n" +
-            "\n" +
-            "<soap:Envelope\n" +
-            "xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\"\n" +
-            "soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\">\n" +
-            "\n" +
-            "<soap:Body xmlns:m=\"http://www.example.org/stock\">\n" +
-            "  <m:GetStockPriceResponse>\n" +
-            "    <m:Price>34.5</m:Price>\n" +
-            "  </m:GetStockPriceResponse>\n" +
-            "</soap:Body>\n" +
-            "\n" +
+            "<?xml version=\"1.0\"?>" + NEW_LINE +
+            NEW_LINE +
+            "<soap:Envelope" + NEW_LINE +
+            "xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\"" + NEW_LINE +
+            "soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\">" + NEW_LINE +
+            NEW_LINE +
+            "<soap:Body xmlns:m=\"http://www.example.org/stock\">" + NEW_LINE +
+            "  <m:GetStockPriceResponse>" + NEW_LINE +
+            "    <m:Price>34.5</m:Price>" + NEW_LINE +
+            "  </m:GetStockPriceResponse>" + NEW_LINE +
+            "</soap:Body>" + NEW_LINE +
+            NEW_LINE +
             "</soap:Envelope>";
         assertTrue(new XmlStringMatcher(new MockServerLogger(), "" +
-            "<?xml version=\"1.0\"?>\n" +
-            "<soap:Envelope\n" +
-            "soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\"\n" +
-            "xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\"\n" +
-            "xmlns:m=\"http://www.example.org/stock\">\n" +
-            "<soap:Body>\n" +
-            "  <m:GetStockPriceResponse>\n" +
-            "    <m:Price>34.5</m:Price>\n" +
-            "  </m:GetStockPriceResponse>\n" +
-            "</soap:Body>\n" +
+            "<?xml version=\"1.0\"?>" + NEW_LINE +
+            "<soap:Envelope" + NEW_LINE +
+            "soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\"" + NEW_LINE +
+            "xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\"" + NEW_LINE +
+            "xmlns:m=\"http://www.example.org/stock\">" + NEW_LINE +
+            "<soap:Body>" + NEW_LINE +
+            "  <m:GetStockPriceResponse>" + NEW_LINE +
+            "    <m:Price>34.5</m:Price>" + NEW_LINE +
+            "  </m:GetStockPriceResponse>" + NEW_LINE +
+            "</soap:Body>" + NEW_LINE +
             "</soap:Envelope>").matches(matched));
     }
 

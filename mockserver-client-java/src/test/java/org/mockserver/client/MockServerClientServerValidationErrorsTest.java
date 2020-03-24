@@ -121,22 +121,22 @@ public class MockServerClientServerValidationErrorsTest {
             exception.expect(ClientException.class);
             exception.expectMessage(is("error:" + NEW_LINE +
                 NEW_LINE +
-                "\t" + responseBody + NEW_LINE +
+                "  " + responseBody + NEW_LINE +
                 NEW_LINE +
                 " while submitted expectation:" + NEW_LINE +
                 NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t  \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
-                "\t  \"priority\" : 0," + NEW_LINE +
-                "\t  \"httpRequest\" : { }," + NEW_LINE +
-                "\t  \"times\" : {" + NEW_LINE +
-                "\t    \"unlimited\" : true" + NEW_LINE +
-                "\t  }," + NEW_LINE +
-                "\t  \"timeToLive\" : {" + NEW_LINE +
-                "\t    \"unlimited\" : true" + NEW_LINE +
-                "\t  }," + NEW_LINE +
-                "\t  \"httpResponse\" : { }" + NEW_LINE +
-                "\t}" + NEW_LINE
+                "  {" + NEW_LINE +
+                "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                "    \"priority\" : 0," + NEW_LINE +
+                "    \"httpRequest\" : { }," + NEW_LINE +
+                "    \"times\" : {" + NEW_LINE +
+                "      \"unlimited\" : true" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"timeToLive\" : {" + NEW_LINE +
+                "      \"unlimited\" : true" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"httpResponse\" : { }" + NEW_LINE +
+                "  }" + NEW_LINE
             ));
 
             // when

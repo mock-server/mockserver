@@ -274,31 +274,31 @@ public class MockServerHandlerTest {
                 response.getBodyAsString(),
                 is(endsWith(LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
                     NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"id\" : \"key_one\"," + NEW_LINE +
-                    "\t  \"priority\" : 0," + NEW_LINE +
-                    "\t  \"httpRequest\" : {" + NEW_LINE +
-                    "\t    \"path\" : \"request_one\"" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"times\" : {" + NEW_LINE +
-                    "\t    \"unlimited\" : true" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"timeToLive\" : {" + NEW_LINE +
-                    "\t    \"unlimited\" : true" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"httpResponse\" : {" + NEW_LINE +
-                    "\t    \"statusCode\" : 200," + NEW_LINE +
-                    "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                    "\t    \"body\" : \"response_one\"" + NEW_LINE +
-                    "\t  }" + NEW_LINE +
-                    "\t}" + NEW_LINE +
+                    "  {" + NEW_LINE +
+                    "    \"id\" : \"key_one\"," + NEW_LINE +
+                    "    \"priority\" : 0," + NEW_LINE +
+                    "    \"httpRequest\" : {" + NEW_LINE +
+                    "      \"path\" : \"request_one\"" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"times\" : {" + NEW_LINE +
+                    "      \"unlimited\" : true" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"timeToLive\" : {" + NEW_LINE +
+                    "      \"unlimited\" : true" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"httpResponse\" : {" + NEW_LINE +
+                    "      \"statusCode\" : 200," + NEW_LINE +
+                    "      \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                    "      \"body\" : \"response_one\"" + NEW_LINE +
+                    "    }" + NEW_LINE +
+                    "  }" + NEW_LINE +
                     NEW_LINE +
                     "------------------------------------" + NEW_LINE +
                     LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
                     "" + NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"path\" : \"request_one\"" + NEW_LINE +
-                    "\t}" + NEW_LINE +
+                    "  {" + NEW_LINE +
+                    "    \"path\" : \"request_one\"" + NEW_LINE +
+                    "  }" + NEW_LINE +
                     NEW_LINE))
             );
         } finally {

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lmax.disruptor.EventTranslator;
 import org.mockserver.log.TimeService;
 import org.mockserver.matchers.HttpRequestMatcher;
+import org.mockserver.matchers.MatchDifference;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
@@ -47,6 +48,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     private Expectation expectation;
     private Throwable throwable;
     private Runnable consumer;
+    private MatchDifference matchDifference;
 
     private String messageFormat;
     private Object[] arguments;
@@ -270,6 +272,9 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         } else {
             this.arguments = null;
         }
+        if (matchDifference != null) {
+            matchDifference.addDifference(messageFormat, arguments);
+        }
         return this;
     }
 
@@ -285,9 +290,17 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         return message;
     }
 
+    public LogEntry setMatchDifference(MatchDifference matchDifference) {
+        this.matchDifference = matchDifference;
+        if (matchDifference != null) {
+            setHttpRequest(matchDifference.getHttpRequest());
+        }
+        return this;
+    }
+
     private HttpRequest updateBody(HttpRequest httpRequest) {
         if (httpRequest != null) {
-            Body body = httpRequest.getBody();
+            Body<?> body = httpRequest.getBody();
             if (body != null && JsonBody.class.isAssignableFrom(body.getClass())) {
                 try {
                     return httpRequest
@@ -318,7 +331,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
 
     private HttpResponse updateBody(HttpResponse httpResponse) {
         if (httpResponse != null) {
-            Body body = httpResponse.getBody();
+            Body<?> body = httpResponse.getBody();
             if (body != null && JsonBody.class.isAssignableFrom(body.getClass())) {
                 try {
                     return httpResponse

@@ -755,6 +755,50 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldSetAndReadDetailedMatchFailures() {
+        boolean originalSetting = detailedMatchFailures();
+        try {
+            // when
+            detailedMatchFailures(true);
+
+            // then
+            assertTrue(detailedMatchFailures());
+            assertEquals("true", System.getProperty("mockserver.detailedMatchFailures"));
+
+            // when
+            detailedMatchFailures(false);
+
+            // then
+            assertFalse(detailedMatchFailures());
+            assertEquals("false", System.getProperty("mockserver.detailedMatchFailures"));
+        } finally {
+            detailedMatchFailures(originalSetting);
+        }
+    }
+
+    @Test
+    public void shouldSetAndReadMatchersFailFast() {
+        boolean originalSetting = matchersFailFast();
+        try {
+            // when
+            matchersFailFast(true);
+
+            // then
+            assertTrue(matchersFailFast());
+            assertEquals("true", System.getProperty("mockserver.matchersFailFast"));
+
+            // when
+            matchersFailFast(false);
+
+            // then
+            assertFalse(matchersFailFast());
+            assertEquals("false", System.getProperty("mockserver.matchersFailFast"));
+        } finally {
+            matchersFailFast(originalSetting);
+        }
+    }
+
+    @Test
     @Deprecated
     public void shouldSetAndReadHttpProxy() {
         // given

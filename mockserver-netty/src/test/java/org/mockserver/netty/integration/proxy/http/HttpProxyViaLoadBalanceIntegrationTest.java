@@ -95,29 +95,29 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
             String[] targetLogMessages = targetClientAndServer.retrieveLogMessagesArray(null);
             assertThat(loadBalancerLogMessages[2], containsString("returning response:" + NEW_LINE +
                 NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t  \"statusCode\" : 404," + NEW_LINE +
-                "\t  \"reasonPhrase\" : \"Not Found\",\n")
+                "  {" + NEW_LINE +
+                "    \"statusCode\" : 404," + NEW_LINE +
+                "    \"reasonPhrase\" : \"Not Found\"," + NEW_LINE)
             );
             assertThat(loadBalancerLogMessages[2], containsString(" for forwarded request" + NEW_LINE +
                 NEW_LINE +
                 " in json:" + NEW_LINE +
                 "" + NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t  \"method\" : \"GET\"," + NEW_LINE +
-                "\t  \"path\" : \"/some_path\",\n")
+                "  {" + NEW_LINE +
+                "    \"method\" : \"GET\"," + NEW_LINE +
+                "    \"path\" : \"/some_path\"," + NEW_LINE)
             );
             assertThat(targetLogMessages[2], containsString("no expectation for:" + NEW_LINE +
                 NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t  \"method\" : \"GET\"," + NEW_LINE +
-                "\t  \"path\" : \"/some_path\",")
+                "  {" + NEW_LINE +
+                "    \"method\" : \"GET\"," + NEW_LINE +
+                "    \"path\" : \"/some_path\",")
             );
             assertThat(targetLogMessages[2], containsString(" returning response:" + NEW_LINE +
                 NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t  \"statusCode\" : 404," + NEW_LINE +
-                "\t  \"reasonPhrase\" : \"Not Found\"")
+                "  {" + NEW_LINE +
+                "    \"statusCode\" : 404," + NEW_LINE +
+                "    \"reasonPhrase\" : \"Not Found\"")
             );
         } finally {
             ConfigurationProperties.logLevel(originalLevel.name());
@@ -164,23 +164,23 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
             String[] logMessages = loadBalancerClientAndServer.retrieveLogMessagesArray(null);
             assertThat(logMessages[2], containsString("returning response:" + NEW_LINE +
                 "" + NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t  \"statusCode\" : 200," + NEW_LINE +
-                "\t  \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                "\t  \"headers\" : {" + NEW_LINE +
-                "\t    \"connection\" : [ \"keep-alive\" ]," + NEW_LINE +
-                "\t    \"content-length\" : [ \"15\" ]" + NEW_LINE +
-                "\t  }," + NEW_LINE +
-                "\t  \"body\" : \"target_response\"" + NEW_LINE +
-                "\t}" + NEW_LINE +
+                "  {" + NEW_LINE +
+                "    \"statusCode\" : 200," + NEW_LINE +
+                "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                "    \"headers\" : {" + NEW_LINE +
+                "      \"connection\" : [ \"keep-alive\" ]," + NEW_LINE +
+                "      \"content-length\" : [ \"15\" ]" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"body\" : \"target_response\"" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "" + NEW_LINE +
                 " for forwarded request" + NEW_LINE +
                 "" + NEW_LINE +
                 " in json:" + NEW_LINE +
                 "" + NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t  \"method\" : \"GET\"," + NEW_LINE +
-                "\t  \"path\" : \"/target\"," + NEW_LINE));
+                "  {" + NEW_LINE +
+                "    \"method\" : \"GET\"," + NEW_LINE +
+                "    \"path\" : \"/target\"," + NEW_LINE));
         } finally {
             ConfigurationProperties.logLevel(originalLevel.name());
         }

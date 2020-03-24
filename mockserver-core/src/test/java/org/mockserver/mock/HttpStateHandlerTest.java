@@ -136,106 +136,106 @@ public class HttpStateHandlerTest {
                 is(response().withBody("" +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - no expectation for:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"path\" : \"request_one\"" + NEW_LINE +
-                        "\t}" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"path\" : \"request_one\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         NEW_LINE +
                         " returning response:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"statusCode\" : 404," + NEW_LINE +
-                        "\t  \"reasonPhrase\" : \"Not Found\"" + NEW_LINE +
-                        "\t}" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"statusCode\" : 404," + NEW_LINE +
+                        "    \"reasonPhrase\" : \"Not Found\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - returning error:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"path\" : \"request_two\"" + NEW_LINE +
-                        "\t}" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"path\" : \"request_two\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         NEW_LINE +
                         " for request:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"statusCode\" : 200," + NEW_LINE +
-                        "\t  \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                        "\t  \"body\" : \"response_two\"" + NEW_LINE +
-                        "\t}" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"statusCode\" : 200," + NEW_LINE +
+                        "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                        "    \"body\" : \"response_two\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         NEW_LINE +
                         " for action:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"statusCode\" : 200," + NEW_LINE +
-                        "\t  \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                        "\t  \"body\" : \"response_two\"" + NEW_LINE +
-                        "\t}" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"statusCode\" : 200," + NEW_LINE +
+                        "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                        "    \"body\" : \"response_two\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"path\" : \"request_one\"" + NEW_LINE +
-                        "\t}" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"path\" : \"request_one\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         NEW_LINE +
                         " matched expectation:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"id\" : \"key_one\"," + NEW_LINE +
-                        "\t  \"priority\" : 0," + NEW_LINE +
-                        "\t  \"httpRequest\" : {" + NEW_LINE +
-                        "\t    \"path\" : \"request_one\"" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"times\" : {" + NEW_LINE +
-                        "\t    \"unlimited\" : true" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"timeToLive\" : {" + NEW_LINE +
-                        "\t    \"unlimited\" : true" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"httpResponse\" : {" + NEW_LINE +
-                        "\t    \"statusCode\" : 200," + NEW_LINE +
-                        "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                        "\t    \"body\" : \"response_two\"" + NEW_LINE +
-                        "\t  }" + NEW_LINE +
-                        "\t}" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"id\" : \"key_one\"," + NEW_LINE +
+                        "    \"priority\" : 0," + NEW_LINE +
+                        "    \"httpRequest\" : {" + NEW_LINE +
+                        "      \"path\" : \"request_one\"" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"times\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"timeToLive\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"httpResponse\" : {" + NEW_LINE +
+                        "      \"statusCode\" : 200," + NEW_LINE +
+                        "      \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                        "      \"body\" : \"response_two\"" + NEW_LINE +
+                        "    }" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"path\" : \"request_two\"" + NEW_LINE +
-                        "\t}" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"path\" : \"request_two\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         NEW_LINE +
                         " matched expectation:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"id\" : \"key_two\"," + NEW_LINE +
-                        "\t  \"priority\" : 0," + NEW_LINE +
-                        "\t  \"httpRequest\" : {" + NEW_LINE +
-                        "\t    \"path\" : \"request_two\"" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"times\" : {" + NEW_LINE +
-                        "\t    \"unlimited\" : true" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"timeToLive\" : {" + NEW_LINE +
-                        "\t    \"unlimited\" : true" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"httpResponse\" : {" + NEW_LINE +
-                        "\t    \"statusCode\" : 200," + NEW_LINE +
-                        "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                        "\t    \"body\" : \"response_two\"" + NEW_LINE +
-                        "\t  }" + NEW_LINE +
-                        "\t}" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"id\" : \"key_two\"," + NEW_LINE +
+                        "    \"priority\" : 0," + NEW_LINE +
+                        "    \"httpRequest\" : {" + NEW_LINE +
+                        "      \"path\" : \"request_two\"" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"times\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"timeToLive\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"httpResponse\" : {" + NEW_LINE +
+                        "      \"statusCode\" : 200," + NEW_LINE +
+                        "      \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                        "      \"body\" : \"response_two\"" + NEW_LINE +
+                        "    }" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - some random" + NEW_LINE +
                         NEW_LINE +
-                        "\targument_one" + NEW_LINE +
+                        "  argument_one" + NEW_LINE +
                         NEW_LINE +
                         " message" + NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
                         "" + NEW_LINE +
-                        "\t{ }" + NEW_LINE +
+                        "  { }" + NEW_LINE +
                         NEW_LINE,
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
             );
@@ -308,51 +308,51 @@ public class HttpStateHandlerTest {
                 is(response().withBody("" +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - no expectation for:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"path\" : \"request_one\"" + NEW_LINE +
-                        "\t}" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"path\" : \"request_one\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         NEW_LINE +
                         " returning response:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"statusCode\" : 404," + NEW_LINE +
-                        "\t  \"reasonPhrase\" : \"Not Found\"" + NEW_LINE +
-                        "\t}" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"statusCode\" : 404," + NEW_LINE +
+                        "    \"reasonPhrase\" : \"Not Found\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"path\" : \"request_one\"" + NEW_LINE +
-                        "\t}" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"path\" : \"request_one\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         NEW_LINE +
                         " matched expectation:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"id\" : \"key_one\"," + NEW_LINE +
-                        "\t  \"priority\" : 0," + NEW_LINE +
-                        "\t  \"httpRequest\" : {" + NEW_LINE +
-                        "\t    \"path\" : \"request_one\"" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"times\" : {" + NEW_LINE +
-                        "\t    \"unlimited\" : true" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"timeToLive\" : {" + NEW_LINE +
-                        "\t    \"unlimited\" : true" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"httpResponse\" : {" + NEW_LINE +
-                        "\t    \"statusCode\" : 200," + NEW_LINE +
-                        "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                        "\t    \"body\" : \"response_two\"" + NEW_LINE +
-                        "\t  }" + NEW_LINE +
-                        "\t}" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"id\" : \"key_one\"," + NEW_LINE +
+                        "    \"priority\" : 0," + NEW_LINE +
+                        "    \"httpRequest\" : {" + NEW_LINE +
+                        "      \"path\" : \"request_one\"" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"times\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"timeToLive\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"httpResponse\" : {" + NEW_LINE +
+                        "      \"statusCode\" : 200," + NEW_LINE +
+                        "      \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                        "      \"body\" : \"response_two\"" + NEW_LINE +
+                        "    }" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
                         "" + NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"path\" : \"request_one\"" + NEW_LINE +
-                        "\t}" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"path\" : \"request_one\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         NEW_LINE,
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
             );
@@ -440,34 +440,34 @@ public class HttpStateHandlerTest {
                 is(response().withBody("" +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"id\" : \"one\"," + NEW_LINE +
-                        "\t  \"priority\" : 0," + NEW_LINE +
-                        "\t  \"httpRequest\" : {" + NEW_LINE +
-                        "\t    \"path\" : \"request_one\"" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"times\" : {" + NEW_LINE +
-                        "\t    \"unlimited\" : true" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"timeToLive\" : {" + NEW_LINE +
-                        "\t    \"unlimited\" : true" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"httpResponse\" : {" + NEW_LINE +
-                        "\t    \"statusCode\" : 200," + NEW_LINE +
-                        "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                        "\t    \"body\" : \"response_one\"" + NEW_LINE +
-                        "\t  }" + NEW_LINE +
-                        "\t}" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"id\" : \"one\"," + NEW_LINE +
+                        "    \"priority\" : 0," + NEW_LINE +
+                        "    \"httpRequest\" : {" + NEW_LINE +
+                        "      \"path\" : \"request_one\"" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"times\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"timeToLive\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"httpResponse\" : {" + NEW_LINE +
+                        "      \"statusCode\" : 200," + NEW_LINE +
+                        "      \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                        "      \"body\" : \"response_one\"" + NEW_LINE +
+                        "    }" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing expectations and logs that match:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{}" + NEW_LINE +
+                        "  {}" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{ }" + NEW_LINE +
+                        "  { }" + NEW_LINE +
                         NEW_LINE,
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
             );
@@ -537,64 +537,64 @@ public class HttpStateHandlerTest {
                 is(response().withBody("" +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
                         "" + NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"id\" : \"key_one\"," + NEW_LINE +
-                        "\t  \"priority\" : 0," + NEW_LINE +
-                        "\t  \"httpRequest\" : {" + NEW_LINE +
-                        "\t    \"path\" : \"request_one\"" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"times\" : {" + NEW_LINE +
-                        "\t    \"unlimited\" : true" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"timeToLive\" : {" + NEW_LINE +
-                        "\t    \"unlimited\" : true" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"httpResponse\" : {" + NEW_LINE +
-                        "\t    \"statusCode\" : 200," + NEW_LINE +
-                        "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                        "\t    \"body\" : \"response_one\"" + NEW_LINE +
-                        "\t  }" + NEW_LINE +
-                        "\t}" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"id\" : \"key_one\"," + NEW_LINE +
+                        "    \"priority\" : 0," + NEW_LINE +
+                        "    \"httpRequest\" : {" + NEW_LINE +
+                        "      \"path\" : \"request_one\"" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"times\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"timeToLive\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"httpResponse\" : {" + NEW_LINE +
+                        "      \"statusCode\" : 200," + NEW_LINE +
+                        "      \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                        "      \"body\" : \"response_one\"" + NEW_LINE +
+                        "    }" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         "" + NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - some random" + NEW_LINE +
                         "" + NEW_LINE +
-                        "\targument_one" + NEW_LINE +
+                        "  argument_one" + NEW_LINE +
                         "" + NEW_LINE +
                         " message" + NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"id\" : \"key_four\"," + NEW_LINE +
-                        "\t  \"priority\" : 0," + NEW_LINE +
-                        "\t  \"httpRequest\" : {" + NEW_LINE +
-                        "\t    \"path\" : \"request_four\"" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"times\" : {" + NEW_LINE +
-                        "\t    \"unlimited\" : true" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"timeToLive\" : {" + NEW_LINE +
-                        "\t    \"unlimited\" : true" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"httpResponse\" : {" + NEW_LINE +
-                        "\t    \"statusCode\" : 200," + NEW_LINE +
-                        "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                        "\t    \"body\" : \"response_four\"" + NEW_LINE +
-                        "\t  }" + NEW_LINE +
-                        "\t}" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"id\" : \"key_four\"," + NEW_LINE +
+                        "    \"priority\" : 0," + NEW_LINE +
+                        "    \"httpRequest\" : {" + NEW_LINE +
+                        "      \"path\" : \"request_four\"" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"times\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"timeToLive\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"httpResponse\" : {" + NEW_LINE +
+                        "      \"statusCode\" : 200," + NEW_LINE +
+                        "      \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                        "      \"body\" : \"response_four\"" + NEW_LINE +
+                        "    }" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing expectations and logs that match:" + NEW_LINE +
                         "" + NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"path\" : \"request_four\"" + NEW_LINE +
-                        "\t}" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"path\" : \"request_four\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         "" + NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
                         "" + NEW_LINE +
-                        "\t{ }" + NEW_LINE +
+                        "  { }" + NEW_LINE +
                         NEW_LINE,
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
             );
@@ -679,12 +679,12 @@ public class HttpStateHandlerTest {
                 is(response().withBody("" +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing logs that match:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{}" + NEW_LINE +
+                        "  {}" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
                         "" + NEW_LINE +
-                        "\t{ }" + NEW_LINE +
+                        "  { }" + NEW_LINE +
                         NEW_LINE,
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
             );
@@ -1031,14 +1031,14 @@ public class HttpStateHandlerTest {
                 "      \"no expectation for:\"," + NEW_LINE +
                 "      \"\"," + NEW_LINE +
                 "      \"   {\"," + NEW_LINE +
-                "      \"     \\\"path\\\" : \\\"request_one\\\"\"," + NEW_LINE +
+                "      \"      \\\"path\\\" : \\\"request_one\\\"\"," + NEW_LINE +
                 "      \"   }\"," + NEW_LINE +
                 "      \"\"," + NEW_LINE +
                 "      \" returning response:\"," + NEW_LINE +
                 "      \"\"," + NEW_LINE +
                 "      \"   {\"," + NEW_LINE +
-                "      \"     \\\"statusCode\\\" : 404,\"," + NEW_LINE +
-                "      \"     \\\"reasonPhrase\\\" : \\\"Not Found\\\"\"," + NEW_LINE +
+                "      \"      \\\"statusCode\\\" : 404,\"," + NEW_LINE +
+                "      \"      \\\"reasonPhrase\\\" : \\\"Not Found\\\"\"," + NEW_LINE +
                 "      \"   }\"" + NEW_LINE +
                 "    ]" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -1058,23 +1058,23 @@ public class HttpStateHandlerTest {
                 "      \"returning error:\"," + NEW_LINE +
                 "      \"\"," + NEW_LINE +
                 "      \"   {\"," + NEW_LINE +
-                "      \"     \\\"path\\\" : \\\"request_two\\\"\"," + NEW_LINE +
+                "      \"      \\\"path\\\" : \\\"request_two\\\"\"," + NEW_LINE +
                 "      \"   }\"," + NEW_LINE +
                 "      \"\"," + NEW_LINE +
                 "      \" for request:\"," + NEW_LINE +
                 "      \"\"," + NEW_LINE +
                 "      \"   {\"," + NEW_LINE +
-                "      \"     \\\"statusCode\\\" : 200,\"," + NEW_LINE +
-                "      \"     \\\"reasonPhrase\\\" : \\\"OK\\\",\"," + NEW_LINE +
-                "      \"     \\\"body\\\" : \\\"response_two\\\"\"," + NEW_LINE +
+                "      \"      \\\"statusCode\\\" : 200,\"," + NEW_LINE +
+                "      \"      \\\"reasonPhrase\\\" : \\\"OK\\\",\"," + NEW_LINE +
+                "      \"      \\\"body\\\" : \\\"response_two\\\"\"," + NEW_LINE +
                 "      \"   }\"," + NEW_LINE +
                 "      \"\"," + NEW_LINE +
                 "      \" for action:\"," + NEW_LINE +
                 "      \"\"," + NEW_LINE +
                 "      \"   {\"," + NEW_LINE +
-                "      \"     \\\"statusCode\\\" : 200,\"," + NEW_LINE +
-                "      \"     \\\"reasonPhrase\\\" : \\\"OK\\\",\"," + NEW_LINE +
-                "      \"     \\\"body\\\" : \\\"response_two\\\"\"," + NEW_LINE +
+                "      \"      \\\"statusCode\\\" : 200,\"," + NEW_LINE +
+                "      \"      \\\"reasonPhrase\\\" : \\\"OK\\\",\"," + NEW_LINE +
+                "      \"      \\\"body\\\" : \\\"response_two\\\"\"," + NEW_LINE +
                 "      \"   }\"" + NEW_LINE +
                 "    ]" + NEW_LINE +
                 "  }" + NEW_LINE +
@@ -1298,7 +1298,7 @@ public class HttpStateHandlerTest {
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
                         "" + NEW_LINE +
-                        "\t{ }" + NEW_LINE +
+                        "  { }" + NEW_LINE +
                         NEW_LINE,
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
             );

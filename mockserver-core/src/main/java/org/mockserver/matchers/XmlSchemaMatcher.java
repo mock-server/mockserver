@@ -1,8 +1,8 @@
 package org.mockserver.matchers;
 
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.validator.xmlschema.XmlSchemaValidator;
 
 import static org.slf4j.event.Level.DEBUG;
@@ -15,20 +15,20 @@ import static org.slf4j.event.Level.DEBUG;
 public class XmlSchemaMatcher extends BodyMatcher<String> {
     private static final String[] EXCLUDED_FIELDS = {"mockServerLogger", "xmlSchemaValidator"};
     private final MockServerLogger mockServerLogger;
-    private String schema;
+    private String matcher;
     private XmlSchemaValidator xmlSchemaValidator;
 
-    XmlSchemaMatcher(MockServerLogger mockServerLogger, String schema) {
+    XmlSchemaMatcher(MockServerLogger mockServerLogger, String matcher) {
         this.mockServerLogger = mockServerLogger;
-        this.schema = schema;
-        xmlSchemaValidator = new XmlSchemaValidator(mockServerLogger, schema);
+        this.matcher = matcher;
+        xmlSchemaValidator = new XmlSchemaValidator(mockServerLogger, matcher);
     }
 
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
         return EXCLUDED_FIELDS;
     }
 
-    public boolean matches(final HttpRequest context, String matched) {
+    public boolean matches(final MatchDifference context, String matched) {
         boolean result = false;
 
         try {
@@ -40,22 +40,26 @@ public class XmlSchemaMatcher extends BodyMatcher<String> {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(DEBUG)
-                        .setHttpRequest(context)
-                        .setMessageFormat("failed to perform xml schema match of{}with{}because{}")
-                        .setArguments(matched, this.schema, validation)
+                        .setMatchDifference(context)
+                        .setMessageFormat("xml schema match failed expected:{}found:{}failed because:{}")
+                        .setArguments(this.matcher, matched, validation)
                 );
             }
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(DEBUG)
-                    .setHttpRequest(context)
-                    .setMessageFormat("failed to perform xml schema match of{}with{}because{}")
-                    .setArguments(matched, this.schema, e.getMessage())
+                    .setMatchDifference(context)
+                    .setMessageFormat("xml schema match failed expected:{}found:{}failed because:{}")
+                    .setArguments(this.matcher, matched, e.getMessage())
             );
         }
 
         return not != result;
+    }
+
+    public boolean isBlank() {
+        return StringUtils.isBlank(matcher);
     }
 
 }

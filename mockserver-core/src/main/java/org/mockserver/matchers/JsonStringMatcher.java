@@ -8,12 +8,11 @@ import com.google.common.base.Joiner;
 import net.javacrumbs.jsonunit.core.Configuration;
 import net.javacrumbs.jsonunit.core.internal.Diff;
 import net.javacrumbs.jsonunit.core.internal.Options;
-import net.javacrumbs.jsonunit.core.listener.Difference;
 import net.javacrumbs.jsonunit.core.listener.DifferenceContext;
 import net.javacrumbs.jsonunit.core.listener.DifferenceListener;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.serialization.ObjectMapperFactory;
 
 import java.util.ArrayList;
@@ -21,6 +20,7 @@ import java.util.List;
 
 import static net.javacrumbs.jsonunit.core.Option.*;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.slf4j.event.Level.DEBUG;
 
 /**
@@ -41,11 +41,11 @@ public class JsonStringMatcher extends BodyMatcher<String> {
         this.matchType = matchType;
     }
 
-    public boolean matches(final HttpRequest context, String matched) {
+    public boolean matches(final MatchDifference context, String matched) {
         boolean result = false;
 
         try {
-            if (isBlank(matcher)) {
+            if (StringUtils.isBlank(matcher)) {
                 result = true;
             } else {
                 Options options = Options.empty();
@@ -60,7 +60,7 @@ public class JsonStringMatcher extends BodyMatcher<String> {
                         );
                         break;
                 }
-                final DiffListener diffListener = new DiffListener();
+                final Difference diffListener = new Difference();
                 Configuration diffConfig = Configuration.empty().withDifferenceListener(diffListener).withOptions(options);
 
                 try {
@@ -80,9 +80,9 @@ public class JsonStringMatcher extends BodyMatcher<String> {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(DEBUG)
-                            .setHttpRequest(context)
-                            .setMessageFormat("exception while perform json match of{}with{}")
-                            .setArguments(matched, this.matcher)
+                            .setMatchDifference(context)
+                            .setMessageFormat("exception while perform json  match failed expected:{}found:{}")
+                            .setArguments(this.matcher, matched)
                             .setThrowable(throwable)
                     );
                 }
@@ -92,17 +92,17 @@ public class JsonStringMatcher extends BodyMatcher<String> {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(DEBUG)
-                                .setHttpRequest(context)
-                                .setMessageFormat("failed to perform json match of{}with{}")
-                                .setArguments(matched, this.matcher)
+                                .setMatchDifference(context)
+                                .setMessageFormat("json match failed expected:{}found:{}")
+                                .setArguments(this.matcher, matched)
                         );
                     } else {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(DEBUG)
-                                .setHttpRequest(context)
-                                .setMessageFormat("failed to perform json match of{}with{}because{}")
-                                .setArguments(matched, this.matcher, Joiner.on(",\n").join(diffListener.differences))
+                                .setMatchDifference(context)
+                                .setMessageFormat("json match failed expected:{}found:{}failed because:{}")
+                                .setArguments(this.matcher, matched, Joiner.on("," + NEW_LINE).join(diffListener.differences))
                         );
                     }
                 }
@@ -111,9 +111,9 @@ public class JsonStringMatcher extends BodyMatcher<String> {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(DEBUG)
-                    .setHttpRequest(context)
-                    .setMessageFormat("failed to perform json match{}with{}because{}")
-                    .setArguments(matched, this.matcher, e.getMessage())
+                    .setMatchDifference(context)
+                    .setMessageFormat("json match failed expected:{}found:{}failed because:{}")
+                    .setArguments(this.matcher, matched, e.getMessage())
                     .setThrowable(e)
             );
         }
@@ -121,12 +121,12 @@ public class JsonStringMatcher extends BodyMatcher<String> {
         return not != result;
     }
 
-    private static class DiffListener implements DifferenceListener {
+    private static class Difference implements DifferenceListener {
 
         public List<String> differences = new ArrayList<>();
 
         @Override
-        public void diff(Difference difference, DifferenceContext context) {
+        public void diff(net.javacrumbs.jsonunit.core.listener.Difference difference, DifferenceContext context) {
             switch (difference.getType()) {
                 case EXTRA:
                     differences.add("additional element at \"" + difference.getActualPath() + "\" with value: " + prettyPrint(difference.getActual()));
@@ -147,6 +147,10 @@ public class JsonStringMatcher extends BodyMatcher<String> {
                 return String.valueOf(value);
             }
         }
+    }
+
+    public boolean isBlank() {
+        return StringUtils.isBlank(matcher);
     }
 
     @Override

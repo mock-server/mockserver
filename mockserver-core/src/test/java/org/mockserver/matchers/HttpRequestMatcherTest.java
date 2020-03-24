@@ -887,29 +887,29 @@ public class HttpRequestMatcherTest {
     @Test
     public void matchesMatchingBodyJsonPath() {
         String matched = "" +
-            "{\n" +
-            "    \"store\": {\n" +
-            "        \"book\": [\n" +
-            "            {\n" +
-            "                \"category\": \"reference\",\n" +
-            "                \"author\": \"Nigel Rees\",\n" +
-            "                \"title\": \"Sayings of the Century\",\n" +
-            "                \"price\": 8.95\n" +
-            "            },\n" +
-            "            {\n" +
-            "                \"category\": \"fiction\",\n" +
-            "                \"author\": \"Herman Melville\",\n" +
-            "                \"title\": \"Moby Dick\",\n" +
-            "                \"isbn\": \"0-553-21311-3\",\n" +
-            "                \"price\": 8.99\n" +
-            "            }\n" +
-            "        ],\n" +
-            "        \"bicycle\": {\n" +
-            "            \"color\": \"red\",\n" +
-            "            \"price\": 19.95\n" +
-            "        }\n" +
-            "    },\n" +
-            "    \"expensive\": 10\n" +
+            "{" + NEW_LINE +
+            "    \"store\": {" + NEW_LINE +
+            "        \"book\": [" + NEW_LINE +
+            "            {" + NEW_LINE +
+            "                \"category\": \"reference\"," + NEW_LINE +
+            "                \"author\": \"Nigel Rees\"," + NEW_LINE +
+            "                \"title\": \"Sayings of the Century\"," + NEW_LINE +
+            "                \"price\": 8.95" + NEW_LINE +
+            "            }," + NEW_LINE +
+            "            {" + NEW_LINE +
+            "                \"category\": \"fiction\"," + NEW_LINE +
+            "                \"author\": \"Herman Melville\"," + NEW_LINE +
+            "                \"title\": \"Moby Dick\"," + NEW_LINE +
+            "                \"isbn\": \"0-553-21311-3\"," + NEW_LINE +
+            "                \"price\": 8.99" + NEW_LINE +
+            "            }" + NEW_LINE +
+            "        ]," + NEW_LINE +
+            "        \"bicycle\": {" + NEW_LINE +
+            "            \"color\": \"red\"," + NEW_LINE +
+            "            \"price\": 19.95" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"expensive\": 10" + NEW_LINE +
             "}";
         assertTrue(
             new HttpRequestMatcher(
@@ -941,29 +941,29 @@ public class HttpRequestMatcherTest {
     @Test
     public void doesNotMatchIncorrectBodyJsonPath() {
         String matched = "" +
-            "{\n" +
-            "    \"store\": {\n" +
-            "        \"book\": [\n" +
-            "            {\n" +
-            "                \"category\": \"reference\",\n" +
-            "                \"author\": \"Nigel Rees\",\n" +
-            "                \"title\": \"Sayings of the Century\",\n" +
-            "                \"price\": 8.95\n" +
-            "            },\n" +
-            "            {\n" +
-            "                \"category\": \"fiction\",\n" +
-            "                \"author\": \"Herman Melville\",\n" +
-            "                \"title\": \"Moby Dick\",\n" +
-            "                \"isbn\": \"0-553-21311-3\",\n" +
-            "                \"price\": 8.99\n" +
-            "            }\n" +
-            "        ],\n" +
-            "        \"bicycle\": {\n" +
-            "            \"color\": \"red\",\n" +
-            "            \"price\": 19.95\n" +
-            "        }\n" +
-            "    },\n" +
-            "    \"expensive\": 10\n" +
+            "{" + NEW_LINE +
+            "    \"store\": {" + NEW_LINE +
+            "        \"book\": [" + NEW_LINE +
+            "            {" + NEW_LINE +
+            "                \"category\": \"reference\"," + NEW_LINE +
+            "                \"author\": \"Nigel Rees\"," + NEW_LINE +
+            "                \"title\": \"Sayings of the Century\"," + NEW_LINE +
+            "                \"price\": 8.95" + NEW_LINE +
+            "            }," + NEW_LINE +
+            "            {" + NEW_LINE +
+            "                \"category\": \"fiction\"," + NEW_LINE +
+            "                \"author\": \"Herman Melville\"," + NEW_LINE +
+            "                \"title\": \"Moby Dick\"," + NEW_LINE +
+            "                \"isbn\": \"0-553-21311-3\"," + NEW_LINE +
+            "                \"price\": 8.99" + NEW_LINE +
+            "            }" + NEW_LINE +
+            "        ]," + NEW_LINE +
+            "        \"bicycle\": {" + NEW_LINE +
+            "            \"color\": \"red\"," + NEW_LINE +
+            "            \"price\": 19.95" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"expensive\": 10" + NEW_LINE +
             "}";
         assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(jsonPath("$..book[?(@.price > $['expensive'])]"))).matches(null, new HttpRequest().withBody(matched)));
     }

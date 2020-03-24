@@ -59,14 +59,14 @@ public class XmlSchemaValidatorTest {
     @Test
     public void shouldSupportXmlImports() {
         // given
-        String xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-            "<ParentType>\n" +
-            "    <embedded>\n" +
-            "        <numeric>12</numeric>\n" +
-            "        <embedded>\n" +
-            "            <numeric>5</numeric>\n" +
-            "        </embedded>\n" +
-            "    </embedded>\n" +
+        String xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+            "<ParentType>" + NEW_LINE +
+            "    <embedded>" + NEW_LINE +
+            "        <numeric>12</numeric>" + NEW_LINE +
+            "        <embedded>" + NEW_LINE +
+            "            <numeric>5</numeric>" + NEW_LINE +
+            "        </embedded>" + NEW_LINE +
+            "    </embedded>" + NEW_LINE +
             "</ParentType>";
 
         // when
@@ -149,7 +149,7 @@ public class XmlSchemaValidatorTest {
         } catch (Throwable throwable) {
             // then
             assertThat(throwable, instanceOf(RuntimeException.class));
-            assertThat(throwable.getMessage(), is("exception parsing schema\n\n\tillegal_xml\n"));
+            assertThat(throwable.getMessage(), is("exception parsing schema" + NEW_LINE + NEW_LINE + "  illegal_xml" + NEW_LINE));
         }
     }
 
@@ -162,7 +162,7 @@ public class XmlSchemaValidatorTest {
         } catch (Throwable throwable) {
             // then
             assertThat(throwable, instanceOf(RuntimeException.class));
-            assertThat(throwable.getMessage(), is("exception parsing schema\n\n\tnull\n"));
+            assertThat(throwable.getMessage(), is("exception parsing schema" + NEW_LINE + NEW_LINE + "  null" + NEW_LINE));
         }
     }
 
@@ -175,7 +175,7 @@ public class XmlSchemaValidatorTest {
         } catch (Throwable throwable) {
             // then
             assertThat(throwable, instanceOf(RuntimeException.class));
-            assertThat(throwable.getMessage(), is("exception parsing schema\n\n\n"));
+            assertThat(throwable.getMessage(), is("exception parsing schema" + NEW_LINE + NEW_LINE + NEW_LINE));
         }
     }
 

@@ -5,6 +5,7 @@ import org.mockserver.collections.CircularPriorityQueue;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
+import org.mockserver.matchers.MatchDifference;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.metrics.Metrics;
 import org.mockserver.model.Action;
@@ -16,7 +17,6 @@ import org.slf4j.event.Level;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static org.mockserver.configuration.ConfigurationProperties.maxExpectations;
@@ -153,7 +153,7 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
         Expectation matchingExpectation = null;
         for (HttpRequestMatcher httpRequestMatcher : httpRequestMatchers.toSortedList()) {
             boolean remainingMatchesDecremented = false;
-            if (httpRequestMatcher.matches(httpRequest, httpRequest)) {
+            if (httpRequestMatcher.matches(new MatchDifference(httpRequest), httpRequest)) {
                 matchingExpectation = httpRequestMatcher.getExpectation();
                 httpRequestMatcher.setResponseInProgress(true);
                 if (matchingExpectation.decrementRemainingMatches()) {

@@ -20,7 +20,6 @@ import static org.mockserver.character.Character.NEW_LINE;
 @Sharable
 public class LoggingHandler extends ChannelDuplexHandler {
 
-    private static final String NEWLINE = "\n";
     private static final String[] BYTE2HEX = new String[256];
     private static final String[] HEXPADDING = new String[16];
     private static final String[] BYTEPADDING = new String[16];
@@ -211,11 +210,11 @@ public class LoggingHandler extends ChannelDuplexHandler {
         StringBuilder dump = new StringBuilder(rows * 80 + eventName.length() + 16);
 
         dump.append(eventName).append('(').append(length).append('B').append(')')
-            .append(NEWLINE)
+            .append(NEW_LINE)
             .append("         +-------------------------------------------------+")
-            .append(NEWLINE)
+            .append(NEW_LINE)
             .append("         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |")
-            .append(NEWLINE)
+            .append(NEW_LINE)
             .append("+--------+-------------------------------------------------+----------------+");
 
         final int startIndex = buf.readerIndex();
@@ -226,7 +225,7 @@ public class LoggingHandler extends ChannelDuplexHandler {
             int relIdx = i - startIndex;
             int relIdxMod16 = relIdx & 15;
             if (relIdxMod16 == 0) {
-                dump.append(NEWLINE);
+                dump.append(NEW_LINE);
                 dump.append(Long.toHexString(relIdx & 0xFFFFFFFFL | 0x100000000L));
                 dump.setCharAt(dump.length() - 9, '|');
                 dump.append('|');
@@ -256,7 +255,7 @@ public class LoggingHandler extends ChannelDuplexHandler {
             dump.append('|');
         }
 
-        dump.append(NEWLINE).append("+--------+-------------------------------------------------+----------------+");
+        dump.append(NEW_LINE).append("+--------+-------------------------------------------------+----------------+");
 
         return dump.toString();
     }

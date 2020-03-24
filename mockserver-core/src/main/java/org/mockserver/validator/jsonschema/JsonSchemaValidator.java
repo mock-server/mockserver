@@ -92,6 +92,10 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
 
     @Override
     public String isValid(String json) {
+        return isValid(json, true);
+    }
+
+    public String isValid(String json, boolean addOpenAPISpecificationMessage) {
         String validationResult = "";
         if (isNotBlank(json)) {
             try {
@@ -104,7 +108,7 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                     );
 
                 if (!processingReport.isSuccess()) {
-                    validationResult = formatProcessingReport(processingReport);
+                    validationResult = formatProcessingReport(processingReport, addOpenAPISpecificationMessage);
                 }
             } catch (Exception e) {
                 mockServerLogger.logEvent(
@@ -120,7 +124,7 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
         return validationResult;
     }
 
-    private String formatProcessingReport(ProcessingReport validate) {
+    private String formatProcessingReport(ProcessingReport validate, boolean addOpenAPISpecificationMessage) {
         List<String> validationErrors = new ArrayList<>();
         for (ProcessingMessage processingMessage : validate) {
             String fieldPointer = "";
@@ -294,8 +298,7 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
             }
         }
         return validationErrors.size() + " error" + (validationErrors.size() > 1 ? "s" : "") + ":" + NEW_LINE
-            + " - " + Joiner.on(NEW_LINE + " - ").join(validationErrors) + NEW_LINE +
-            NEW_LINE +
-            OPEN_API_SPECIFICATION_URL;
+            + " - " + Joiner.on(NEW_LINE + " - ").join(validationErrors) +
+            (addOpenAPISpecificationMessage ? NEW_LINE + NEW_LINE + OPEN_API_SPECIFICATION_URL : "");
     }
 }

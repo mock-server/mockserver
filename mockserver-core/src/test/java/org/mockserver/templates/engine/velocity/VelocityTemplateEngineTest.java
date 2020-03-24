@@ -275,28 +275,28 @@ public class VelocityTemplateEngineTest {
         exception.expectCause(isA(ScriptException.class));
         exception.expectMessage(containsString("Exception transforming template:" + NEW_LINE +
             NEW_LINE +
-            "\t#if {" + NEW_LINE +
-            "\t    'path' : \"/somePath\"," + NEW_LINE +
-            "\t    'queryStringParameters' : [ {" + NEW_LINE +
-            "\t        'name' : \"queryParameter\"," + NEW_LINE +
-            "\t        'values' : [ \"$!request.queryStringParameters['queryParameter'][0]\" ]" + NEW_LINE +
-            "\t    } ]," + NEW_LINE +
-            "\t    'headers' : [ {" + NEW_LINE +
-            "\t        'name' : \"Host\"," + NEW_LINE +
-            "\t        'values' : [ \"localhost:1080\" ]" + NEW_LINE +
-            "\t    } ]," + NEW_LINE +
-            "\t    'body': \"{'name': 'value'}\"" + NEW_LINE +
-            "\t}" + NEW_LINE +
+            "  #if {" + NEW_LINE +
+            "      'path' : \"/somePath\"," + NEW_LINE +
+            "      'queryStringParameters' : [ {" + NEW_LINE +
+            "          'name' : \"queryParameter\"," + NEW_LINE +
+            "          'values' : [ \"$!request.queryStringParameters['queryParameter'][0]\" ]" + NEW_LINE +
+            "      } ]," + NEW_LINE +
+            "      'headers' : [ {" + NEW_LINE +
+            "          'name' : \"Host\"," + NEW_LINE +
+            "          'values' : [ \"localhost:1080\" ]" + NEW_LINE +
+            "      } ]," + NEW_LINE +
+            "      'body': \"{'name': 'value'}\"" + NEW_LINE +
+            "  }" + NEW_LINE +
             NEW_LINE +
             " for request:" + NEW_LINE +
             NEW_LINE +
-            "\t{" + NEW_LINE +
-            "\t  \"path\" : \"/someOtherPath\"," + NEW_LINE +
-            "\t  \"queryStringParameters\" : {" + NEW_LINE +
-            "\t    \"queryParameter\" : [ \"someValue\" ]" + NEW_LINE +
-            "\t  }," + NEW_LINE +
-            "\t  \"body\" : \"some_body\"" + NEW_LINE +
-            "\t}"));
+            "  {" + NEW_LINE +
+            "    \"path\" : \"/someOtherPath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : {" + NEW_LINE +
+            "      \"queryParameter\" : [ \"someValue\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"body\" : \"some_body\"" + NEW_LINE +
+            "  }"));
 
         // when
         new VelocityTemplateEngine(logFormatter).executeTemplate(template, request()

@@ -40,6 +40,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.util.Collections.unmodifiableSet;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.tlsMutualAuthenticationRequired;
 import static org.mockserver.exception.ExceptionHandling.*;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED_RESPONSE;
@@ -299,7 +300,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(Level.WARN)
-                        .setMessageFormat("TSL handshake failure:\n\n Client does not trust MockServer Certificate Authority for:{}See http://mock-server.com/mock_server/HTTPS_TLS.html to enable the client to trust MocksServer Certificate Authority.\n")
+                        .setMessageFormat("TSL handshake failure:" + NEW_LINE + NEW_LINE + " Client does not trust MockServer Certificate Authority for:{}See http://mock-server.com/mock_server/HTTPS_TLS.html to enable the client to trust MocksServer Certificate Authority." + NEW_LINE)
                         .setArguments(ctx.channel())
                 );
             } else if (!throwable.getMessage().contains("close_notify during handshake")) {

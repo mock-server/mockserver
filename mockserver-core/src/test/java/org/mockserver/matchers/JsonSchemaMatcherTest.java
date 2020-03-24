@@ -94,7 +94,7 @@ public class JsonSchemaMatcherTest {
     public void shouldMatchJson() {
         // given
         String json = "some_json";
-        when(mockJsonSchemaValidator.isValid(json)).thenReturn("");
+        when(mockJsonSchemaValidator.isValid(json, false)).thenReturn("");
 
         // then
         assertTrue(jsonSchemaMatcher.matches(null, json));
@@ -107,59 +107,59 @@ public class JsonSchemaMatcherTest {
             // given
             logLevel("TRACE");
             String json = "some_json";
-            when(mockJsonSchemaValidator.isValid(json)).thenReturn("validator_error");
+            when(mockJsonSchemaValidator.isValid(json, false)).thenReturn("validator_error");
 
             // when
             assertFalse(jsonSchemaMatcher.matches(null, json));
 
             // then
-            verify(logger).debug("failed to perform json schema match of" + NEW_LINE +
-                NEW_LINE +
-                "\tsome_json" + NEW_LINE +
-                NEW_LINE +
-                " with" + NEW_LINE +
-                NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t    \"type\": \"object\"," + NEW_LINE +
-                "\t    \"properties\": {" + NEW_LINE +
-                "\t        \"enumField\": {" + NEW_LINE +
-                "\t            \"enum\": [ \"one\", \"two\" ]" + NEW_LINE +
-                "\t        }," + NEW_LINE +
-                "\t        \"arrayField\": {" + NEW_LINE +
-                "\t            \"type\": \"array\"," + NEW_LINE +
-                "\t            \"minItems\": 1," + NEW_LINE +
-                "\t            \"items\": {" + NEW_LINE +
-                "\t                \"type\": \"string\"" + NEW_LINE +
-                "\t            }," + NEW_LINE +
-                "\t            \"uniqueItems\": true" + NEW_LINE +
-                "\t        }," + NEW_LINE +
-                "\t        \"stringField\": {" + NEW_LINE +
-                "\t            \"type\": \"string\"," + NEW_LINE +
-                "\t            \"minLength\": 5," + NEW_LINE +
-                "\t            \"maxLength\": 6" + NEW_LINE +
-                "\t        }," + NEW_LINE +
-                "\t        \"booleanField\": {" + NEW_LINE +
-                "\t            \"type\": \"boolean\"" + NEW_LINE +
-                "\t        }," + NEW_LINE +
-                "\t        \"objectField\": {" + NEW_LINE +
-                "\t            \"type\": \"object\"," + NEW_LINE +
-                "\t            \"properties\": {" + NEW_LINE +
-                "\t                \"stringField\": {" + NEW_LINE +
-                "\t                    \"type\": \"string\"," + NEW_LINE +
-                "\t                    \"minLength\": 1," + NEW_LINE +
-                "\t                    \"maxLength\": 3" + NEW_LINE +
-                "\t                }" + NEW_LINE +
-                "\t            }," + NEW_LINE +
-                "\t            \"required\": [ \"stringField\" ]" + NEW_LINE +
-                "\t        }" + NEW_LINE +
-                "\t    }," + NEW_LINE +
-                "\t    \"additionalProperties\" : false," + NEW_LINE +
-                "\t    \"required\": [ \"enumField\", \"arrayField\" ]" + NEW_LINE +
-                "\t}" + NEW_LINE +
-                NEW_LINE +
-                " because" + NEW_LINE +
-                NEW_LINE +
-                "\tvalidator_error" + NEW_LINE,
+            verify(logger).debug("json schema match failed expected:" + NEW_LINE +
+                    "" + NEW_LINE +
+                    "  {" + NEW_LINE +
+                    "      \"type\": \"object\"," + NEW_LINE +
+                    "      \"properties\": {" + NEW_LINE +
+                    "          \"enumField\": {" + NEW_LINE +
+                    "              \"enum\": [ \"one\", \"two\" ]" + NEW_LINE +
+                    "          }," + NEW_LINE +
+                    "          \"arrayField\": {" + NEW_LINE +
+                    "              \"type\": \"array\"," + NEW_LINE +
+                    "              \"minItems\": 1," + NEW_LINE +
+                    "              \"items\": {" + NEW_LINE +
+                    "                  \"type\": \"string\"" + NEW_LINE +
+                    "              }," + NEW_LINE +
+                    "              \"uniqueItems\": true" + NEW_LINE +
+                    "          }," + NEW_LINE +
+                    "          \"stringField\": {" + NEW_LINE +
+                    "              \"type\": \"string\"," + NEW_LINE +
+                    "              \"minLength\": 5," + NEW_LINE +
+                    "              \"maxLength\": 6" + NEW_LINE +
+                    "          }," + NEW_LINE +
+                    "          \"booleanField\": {" + NEW_LINE +
+                    "              \"type\": \"boolean\"" + NEW_LINE +
+                    "          }," + NEW_LINE +
+                    "          \"objectField\": {" + NEW_LINE +
+                    "              \"type\": \"object\"," + NEW_LINE +
+                    "              \"properties\": {" + NEW_LINE +
+                    "                  \"stringField\": {" + NEW_LINE +
+                    "                      \"type\": \"string\"," + NEW_LINE +
+                    "                      \"minLength\": 1," + NEW_LINE +
+                    "                      \"maxLength\": 3" + NEW_LINE +
+                    "                  }" + NEW_LINE +
+                    "              }," + NEW_LINE +
+                    "              \"required\": [ \"stringField\" ]" + NEW_LINE +
+                    "          }" + NEW_LINE +
+                    "      }," + NEW_LINE +
+                    "      \"additionalProperties\" : false," + NEW_LINE +
+                    "      \"required\": [ \"enumField\", \"arrayField\" ]" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    "" + NEW_LINE +
+                    " found:" + NEW_LINE +
+                    "" + NEW_LINE +
+                    "  some_json" + NEW_LINE +
+                    "" + NEW_LINE +
+                    " failed because:" + NEW_LINE +
+                    "" + NEW_LINE +
+                    "  validator_error" + NEW_LINE,
                 (Throwable) null);
         } finally {
             logLevel(originalLevel.toString());
@@ -173,59 +173,59 @@ public class JsonSchemaMatcherTest {
             // given
             logLevel("TRACE");
             String json = "some_json";
-            when(mockJsonSchemaValidator.isValid(json)).thenThrow(new RuntimeException("TEST_EXCEPTION"));
+            when(mockJsonSchemaValidator.isValid(json, false)).thenThrow(new RuntimeException("TEST_EXCEPTION"));
 
             // when
             assertFalse(jsonSchemaMatcher.matches(null, json));
 
             // then
-            verify(logger).debug("failed to perform json schema match of" + NEW_LINE +
-                NEW_LINE +
-                "\tsome_json" + NEW_LINE +
-                NEW_LINE +
-                " with" + NEW_LINE +
-                NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t    \"type\": \"object\"," + NEW_LINE +
-                "\t    \"properties\": {" + NEW_LINE +
-                "\t        \"enumField\": {" + NEW_LINE +
-                "\t            \"enum\": [ \"one\", \"two\" ]" + NEW_LINE +
-                "\t        }," + NEW_LINE +
-                "\t        \"arrayField\": {" + NEW_LINE +
-                "\t            \"type\": \"array\"," + NEW_LINE +
-                "\t            \"minItems\": 1," + NEW_LINE +
-                "\t            \"items\": {" + NEW_LINE +
-                "\t                \"type\": \"string\"" + NEW_LINE +
-                "\t            }," + NEW_LINE +
-                "\t            \"uniqueItems\": true" + NEW_LINE +
-                "\t        }," + NEW_LINE +
-                "\t        \"stringField\": {" + NEW_LINE +
-                "\t            \"type\": \"string\"," + NEW_LINE +
-                "\t            \"minLength\": 5," + NEW_LINE +
-                "\t            \"maxLength\": 6" + NEW_LINE +
-                "\t        }," + NEW_LINE +
-                "\t        \"booleanField\": {" + NEW_LINE +
-                "\t            \"type\": \"boolean\"" + NEW_LINE +
-                "\t        }," + NEW_LINE +
-                "\t        \"objectField\": {" + NEW_LINE +
-                "\t            \"type\": \"object\"," + NEW_LINE +
-                "\t            \"properties\": {" + NEW_LINE +
-                "\t                \"stringField\": {" + NEW_LINE +
-                "\t                    \"type\": \"string\"," + NEW_LINE +
-                "\t                    \"minLength\": 1," + NEW_LINE +
-                "\t                    \"maxLength\": 3" + NEW_LINE +
-                "\t                }" + NEW_LINE +
-                "\t            }," + NEW_LINE +
-                "\t            \"required\": [ \"stringField\" ]" + NEW_LINE +
-                "\t        }" + NEW_LINE +
-                "\t    }," + NEW_LINE +
-                "\t    \"additionalProperties\" : false," + NEW_LINE +
-                "\t    \"required\": [ \"enumField\", \"arrayField\" ]" + NEW_LINE +
-                "\t}" + NEW_LINE +
-                NEW_LINE +
-                " because" + NEW_LINE +
-                NEW_LINE +
-                "\tTEST_EXCEPTION" + NEW_LINE,
+            verify(logger).debug("json schema match failed expected:" + NEW_LINE +
+                    "" + NEW_LINE +
+                    "  {" + NEW_LINE +
+                    "      \"type\": \"object\"," + NEW_LINE +
+                    "      \"properties\": {" + NEW_LINE +
+                    "          \"enumField\": {" + NEW_LINE +
+                    "              \"enum\": [ \"one\", \"two\" ]" + NEW_LINE +
+                    "          }," + NEW_LINE +
+                    "          \"arrayField\": {" + NEW_LINE +
+                    "              \"type\": \"array\"," + NEW_LINE +
+                    "              \"minItems\": 1," + NEW_LINE +
+                    "              \"items\": {" + NEW_LINE +
+                    "                  \"type\": \"string\"" + NEW_LINE +
+                    "              }," + NEW_LINE +
+                    "              \"uniqueItems\": true" + NEW_LINE +
+                    "          }," + NEW_LINE +
+                    "          \"stringField\": {" + NEW_LINE +
+                    "              \"type\": \"string\"," + NEW_LINE +
+                    "              \"minLength\": 5," + NEW_LINE +
+                    "              \"maxLength\": 6" + NEW_LINE +
+                    "          }," + NEW_LINE +
+                    "          \"booleanField\": {" + NEW_LINE +
+                    "              \"type\": \"boolean\"" + NEW_LINE +
+                    "          }," + NEW_LINE +
+                    "          \"objectField\": {" + NEW_LINE +
+                    "              \"type\": \"object\"," + NEW_LINE +
+                    "              \"properties\": {" + NEW_LINE +
+                    "                  \"stringField\": {" + NEW_LINE +
+                    "                      \"type\": \"string\"," + NEW_LINE +
+                    "                      \"minLength\": 1," + NEW_LINE +
+                    "                      \"maxLength\": 3" + NEW_LINE +
+                    "                  }" + NEW_LINE +
+                    "              }," + NEW_LINE +
+                    "              \"required\": [ \"stringField\" ]" + NEW_LINE +
+                    "          }" + NEW_LINE +
+                    "      }," + NEW_LINE +
+                    "      \"additionalProperties\" : false," + NEW_LINE +
+                    "      \"required\": [ \"enumField\", \"arrayField\" ]" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    "" + NEW_LINE +
+                    " found:" + NEW_LINE +
+                    "" + NEW_LINE +
+                    "  some_json" + NEW_LINE +
+                    "" + NEW_LINE +
+                    " failed because:" + NEW_LINE +
+                    "" + NEW_LINE +
+                    "  TEST_EXCEPTION" + NEW_LINE,
                 (Throwable) null);
         } finally {
             logLevel(originalLevel.toString());

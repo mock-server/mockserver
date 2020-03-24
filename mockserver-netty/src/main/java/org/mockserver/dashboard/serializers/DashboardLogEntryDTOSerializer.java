@@ -7,6 +7,8 @@ import org.mockserver.dashboard.model.DashboardLogEntryDTO;
 
 import java.io.IOException;
 
+import static org.mockserver.character.Character.NEW_LINE;
+
 /**
  * @author jamesdbloom
  */
@@ -43,7 +45,7 @@ public class DashboardLogEntryDTOSerializer extends StdSerializer<DashboardLogEn
             jgen.writeObjectField("expectation", logEntry.getExpectation());
         }
         if (logEntry.getMessage() != null) {
-            jgen.writeObjectField("message", logEntry.getMessage().replaceAll("\t", "   ").split("\n"));
+            jgen.writeObjectField("message", logEntry.getMessage().replaceAll(" {2}", "   ").split(NEW_LINE));
         }
         if (logEntry.getMessage() != null) {
             jgen.writeObjectField("messageFormat", logEntry.getMessageFormat());

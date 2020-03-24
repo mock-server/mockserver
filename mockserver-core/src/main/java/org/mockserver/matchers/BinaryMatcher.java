@@ -1,12 +1,15 @@
 package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.netty.buffer.ByteBuf;
 import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.BinaryArrayFormatter;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.HttpRequest;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.slf4j.event.Level.DEBUG;
 
 /**
@@ -22,7 +25,7 @@ public class BinaryMatcher extends BodyMatcher<byte[]> {
         this.matcher = matcher;
     }
 
-    public boolean matches(final HttpRequest context, byte[] matched) {
+    public boolean matches(final MatchDifference context, byte[] matched) {
         boolean result = false;
 
         if (matcher == null || matcher.length == 0 || Arrays.equals(matcher, matched)) {
@@ -33,13 +36,17 @@ public class BinaryMatcher extends BodyMatcher<byte[]> {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(DEBUG)
-                    .setHttpRequest(context)
-                    .setMessageFormat("failed to perform binary match of{}with{}")
-                    .setArguments(matched, this.matcher)
+                    .setMatchDifference(context)
+                    .setMessageFormat("binary match failed expected:{}found:{}")
+                    .setArguments(BinaryArrayFormatter.byteArrayToString(this.matcher), BinaryArrayFormatter.byteArrayToString(matched))
             );
         }
 
         return not != result;
+    }
+
+    public boolean isBlank() {
+        return matcher == null || matcher.length == 0;
     }
 
     @Override

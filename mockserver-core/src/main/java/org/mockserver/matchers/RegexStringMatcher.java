@@ -1,9 +1,9 @@
 package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.model.NottableString;
 
 import java.util.regex.PatternSyntaxException;
@@ -39,7 +39,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
         return matches(null, string(matched));
     }
 
-    public boolean matches(final HttpRequest context, NottableString matched) {
+    public boolean matches(final MatchDifference context, NottableString matched) {
         boolean result = false;
 
         if (matcher == null || matches(matcher.getValue(), matched.getValue(), true)) {
@@ -50,9 +50,9 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(DEBUG)
-                    .setHttpRequest(context)
-                    .setMessageFormat("failed to perform regex match{}with{}")
-                    .setArguments(matched, this.matcher)
+                    .setMatchDifference(context)
+                    .setMessageFormat("string or regex match failed expected:{}found:{}")
+                    .setArguments(this.matcher, matched)
             );
         }
 
@@ -69,77 +69,8 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
         }
     }
 
-    private boolean matchesInternal(NottableString matcher, NottableString matched, boolean ignoreCase) {
-        if (matcher.isBlank()) {
-            return true;
-        } else if (matched.getValue() != null) {
-            // match as exact string
-            if (matched.getValue().equals(matcher.getValue())) {
-                return true;
-            }
-
-            // match as regex - matcher -> matched (data plane or control plane)
-            try {
-                if (matcher.matches(matched.getValue())) {
-                    return true;
-                }
-            } catch (PatternSyntaxException pse) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(TRACE)
-                        .setMessageFormat("error while matching regex [" + matcher + "] for string [" + matched + "] " + pse.getMessage())
-                );
-            }
-            // match as regex - matched -> matcher (control plane only)
-            try {
-                if (controlPlaneMatcher && matched.matches(matcher.getValue())) {
-                    return true;
-                }
-            } catch (PatternSyntaxException pse) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(TRACE)
-                        .setMessageFormat("error while matching regex [" + matched + "] for string [" + matcher + "] " + pse.getMessage())
-                );
-            }
-            // case insensitive comparison is mainly to improve matching in web containers like Tomcat that convert header names to lower case
-            if (ignoreCase) {
-                // match as exact string lower-case
-                if (matcher.getValue().equalsIgnoreCase(matched.getValue())) {
-                    return true;
-                }
-                // match as regex - matcher -> matched (data plane or control plane)
-                try {
-                    if (matcher.matchesIgnoreCase(matched.getValue())) {
-                        return true;
-                    }
-                } catch (PatternSyntaxException pse) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setLogLevel(TRACE)
-                            .setMessageFormat("error while matching regex [" + matcher + "] for string [" + matched + "] and ignoring case " + pse.getMessage())
-                    );
-                }
-                // match as regex - matched -> matcher (control plane only)
-                try {
-                    if (controlPlaneMatcher && matched.matchesIgnoreCase(matcher.getValue())) {
-                        return true;
-                    }
-                } catch (PatternSyntaxException pse) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setLogLevel(TRACE)
-                            .setMessageFormat("error while matching regex [" + matched + "] for string [" + matcher + "] and ignoring case " + pse.getMessage())
-                    );
-                }
-            }
-        }
-
-        return false;
-    }
-
     public boolean matches(String matcher, String matched, boolean ignoreCase) {
-        if (isBlank(matcher)) {
+        if (StringUtils.isBlank(matcher)) {
             return true;
         } else if (matched != null) {
             // match as exact string
@@ -205,6 +136,10 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
         }
 
         return false;
+    }
+
+    public boolean isBlank() {
+        return matcher == null || StringUtils.isBlank(matcher.getValue());
     }
 
     @Override

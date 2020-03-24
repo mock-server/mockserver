@@ -7,6 +7,8 @@ import org.mockserver.log.model.LogEntry;
 
 import java.io.IOException;
 
+import static org.mockserver.character.Character.NEW_LINE;
+
 /**
  * @author jamesdbloom
  */
@@ -45,7 +47,7 @@ public class LogEntrySerializer extends StdSerializer<LogEntry> {
             jgen.writeObjectField("expectation", logEntry.getExpectation());
         }
         if (logEntry.getMessage() != null) {
-            jgen.writeObjectField("message", logEntry.getMessage().replaceAll("\t", "   ").split("\n"));
+            jgen.writeObjectField("message", logEntry.getMessage().replaceAll(" {2}", "   ").split(NEW_LINE));
         }
         if (logEntry.getThrowable() != null) {
             jgen.writeObjectField("throwable", logEntry.getThrowable());

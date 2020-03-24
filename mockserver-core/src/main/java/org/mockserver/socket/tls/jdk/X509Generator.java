@@ -274,7 +274,7 @@ public class X509Generator {
         try {
             return x509FromPEM(new ByteArrayInputStream(pem.getBytes()));
         } catch (Exception e) {
-            throw new RuntimeException("Exception reading X509 from PEM \n" + pem, e);
+            throw new RuntimeException("Exception reading X509 from PEM " + NEW_LINE + pem, e);
         }
     }
 
@@ -298,7 +298,7 @@ public class X509Generator {
         try {
             return x509ChainFromPEM(new ByteArrayInputStream(pem.getBytes()));
         } catch (Exception e) {
-            throw new RuntimeException("Exception reading X509 from PEM \n" + pem, e);
+            throw new RuntimeException("Exception reading X509 from PEM " + NEW_LINE + pem, e);
         }
     }
 

@@ -13,12 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ability to create or update (if id matches) expectations from the client using upsert method
 - ability to return chunked responses where each chunk is a specific size by using response connection options
 - support for XmlUnit placeholders https://github.com/xmlunit/user-guide/wiki/Placeholders
+- added ability to control (via configuration) whether matches fail fast or show all mismatching fields
 
 ### Changed
 - improved X509 certificates by adding Subject Key Identifier and Authority Key Identifier
 - stopped delay being applied twice on response actions (#721)
 - improve support for clients making initial SOCKS or HTTP CONNECT requests over TLS
 - replaced JSONAssert with JsonUnit to improve JSON matching and remove problematic transitive dependencies
+- added more detail of cause of match failure
 
 ### Fixed
 - fixed null point for expectation initialiser with file watcher in working directory specified with relative path

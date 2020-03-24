@@ -1,8 +1,8 @@
 package org.mockserver.matchers;
 
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.model.NottableString;
 
 import static org.apache.commons.lang3.StringUtils.*;
@@ -38,11 +38,11 @@ public class SubStringMatcher extends BodyMatcher<NottableString> {
         return false;
     }
 
-    public boolean matches(final HttpRequest context, String matched) {
+    public boolean matches(final MatchDifference context, String matched) {
         return matches(context, string(matched));
     }
 
-    public boolean matches(final HttpRequest context, NottableString matched) {
+    public boolean matches(final MatchDifference context, NottableString matched) {
         boolean result = false;
 
         if (matches(matcher.getValue(), matched.getValue(), false)) {
@@ -53,13 +53,17 @@ public class SubStringMatcher extends BodyMatcher<NottableString> {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(DEBUG)
-                    .setHttpRequest(context)
-                    .setMessageFormat("failed to perform substring match{}with{}")
-                    .setArguments(matched, this.matcher)
+                    .setMatchDifference(context)
+                    .setMessageFormat("substring match failed expected:{}found:{}")
+                    .setArguments(this.matcher, matched)
             );
         }
 
         return matched.isNot() == (matcher.isNot() == (not != result));
+    }
+
+    public boolean isBlank() {
+        return matcher == null || StringUtils.isBlank(matcher.getValue());
     }
 
     @Override

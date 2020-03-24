@@ -523,7 +523,7 @@ components:
             jsonSchema:
               type: string
         - type: object
-          description: "json path body matcher"
+          description: "JSON path body matcher"
           additionalProperties: false
           properties:
             not:

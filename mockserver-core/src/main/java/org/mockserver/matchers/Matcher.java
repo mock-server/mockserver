@@ -1,12 +1,12 @@
 package org.mockserver.matchers;
 
-import org.mockserver.model.HttpRequest;
-
 /**
  * @author jamesdbloom
  */
 public interface Matcher<T> {
 
-    boolean matches(HttpRequest context, T t);
+    boolean matches(MatchDifference context, T t);
+
+    boolean isBlank();
 
 }

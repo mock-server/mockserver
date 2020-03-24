@@ -272,16 +272,16 @@ public class ProxyServletTest {
                 new String(response.getContentAsByteArray(), UTF_8),
                 is(endsWith(LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - received request:" + NEW_LINE +
                     "" + NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"path\" : \"request_one\"" + NEW_LINE +
-                    "\t}" + NEW_LINE +
+                    "  {" + NEW_LINE +
+                    "    \"path\" : \"request_one\"" + NEW_LINE +
+                    "  }" + NEW_LINE +
                     "" + NEW_LINE +
                     "------------------------------------" + NEW_LINE +
                     LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
                     "" + NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"path\" : \"request_one\"" + NEW_LINE +
-                    "\t}" + NEW_LINE +
+                    "  {" + NEW_LINE +
+                    "    \"path\" : \"request_one\"" + NEW_LINE +
+                    "  }" + NEW_LINE +
                     "" + NEW_LINE))
             );
         } finally {

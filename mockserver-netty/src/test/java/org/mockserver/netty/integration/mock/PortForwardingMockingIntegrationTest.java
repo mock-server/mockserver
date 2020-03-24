@@ -305,174 +305,183 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                 "resetting all expectations and request logs",
                 "creating expectation:" + NEW_LINE +
                     NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
-                    "\t  \"priority\" : 0," + NEW_LINE +
-                    "\t  \"httpRequest\" : {" + NEW_LINE +
-                    "\t    \"path\" : \"/some_path.*\"" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"times\" : {" + NEW_LINE +
-                    "\t    \"remainingTimes\" : 4" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"timeToLive\" : {" + NEW_LINE +
-                    "\t    \"unlimited\" : true" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"httpResponse\" : {" + NEW_LINE +
-                    "\t    \"body\" : \"some_body\"" + NEW_LINE +
-                    "\t  }" + NEW_LINE +
-                    "\t}" + NEW_LINE,
+                    "  {" + NEW_LINE +
+                    "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                    "    \"priority\" : 0," + NEW_LINE +
+                    "    \"httpRequest\" : {" + NEW_LINE +
+                    "      \"path\" : \"/some_path.*\"" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"times\" : {" + NEW_LINE +
+                    "      \"remainingTimes\" : 4" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"timeToLive\" : {" + NEW_LINE +
+                    "      \"unlimited\" : true" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"httpResponse\" : {" + NEW_LINE +
+                    "      \"body\" : \"some_body\"" + NEW_LINE +
+                    "    }" + NEW_LINE +
+                    "  }" + NEW_LINE,
                 new String[]{
                     "received request:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"method\" : \"GET\"," + NEW_LINE +
-                        "\t  \"path\" : \"/some_path_one\"," + NEW_LINE +
-                        "\t  \"headers\" : {"
+                        "  {" + NEW_LINE +
+                        "    \"method\" : \"GET\"," + NEW_LINE +
+                        "    \"path\" : \"/some_path_one\"," + NEW_LINE +
+                        "    \"headers\" : {"
                 },
                 new String[]{
                     "request:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"method\" : \"GET\"," + NEW_LINE +
-                        "\t  \"path\" : \"/some_path_one\",",
+                        "  {" + NEW_LINE +
+                        "    \"method\" : \"GET\"," + NEW_LINE +
+                        "    \"path\" : \"/some_path_one\",",
                     " matched expectation:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
-                        "\t  \"priority\" : 0," + NEW_LINE +
-                        "\t  \"httpRequest\" : {" + NEW_LINE +
-                        "\t    \"path\" : \"/some_path.*\"" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"times\" : {" + NEW_LINE +
-                        "\t    \"remainingTimes\" : 4" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"timeToLive\" : {" + NEW_LINE +
-                        "\t    \"unlimited\" : true" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"httpResponse\" : {" + NEW_LINE +
-                        "\t    \"body\" : \"some_body\"" + NEW_LINE +
-                        "\t  }" + NEW_LINE +
-                        "\t}"
+                        "  {" + NEW_LINE +
+                        "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                        "    \"priority\" : 0," + NEW_LINE +
+                        "    \"httpRequest\" : {" + NEW_LINE +
+                        "      \"path\" : \"/some_path.*\"" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"times\" : {" + NEW_LINE +
+                        "      \"remainingTimes\" : 4" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"timeToLive\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"httpResponse\" : {" + NEW_LINE +
+                        "      \"body\" : \"some_body\"" + NEW_LINE +
+                        "    }" + NEW_LINE +
+                        "  }"
                 },
                 new String[]{
                     "returning response:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"body\" : \"some_body\"" + NEW_LINE +
-                        "\t}" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"body\" : \"some_body\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         NEW_LINE +
                         " for request:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"method\" : \"GET\"," + NEW_LINE +
-                        "\t  \"path\" : \"/some_path_one\",",
+                        "  {" + NEW_LINE +
+                        "    \"method\" : \"GET\"," + NEW_LINE +
+                        "    \"path\" : \"/some_path_one\",",
                     " for action:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"body\" : \"some_body\"" + NEW_LINE +
-                        "\t}" + NEW_LINE
+                        "  {" + NEW_LINE +
+                        "    \"body\" : \"some_body\"" + NEW_LINE +
+                        "  }" + NEW_LINE
                 },
                 new String[]{
                     "received request:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"method\" : \"GET\"," + NEW_LINE +
-                        "\t  \"path\" : \"/not_found\"," + NEW_LINE +
-                        "\t  \"headers\" : {"
+                        "  {" + NEW_LINE +
+                        "    \"method\" : \"GET\"," + NEW_LINE +
+                        "    \"path\" : \"/not_found\"," + NEW_LINE +
+                        "    \"headers\" : {"
                 },
                 new String[]{
                     "request:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"method\" : \"GET\"," + NEW_LINE +
-                        "\t  \"path\" : \"/not_found\",",
+                        "  {" + NEW_LINE +
+                        "    \"method\" : \"GET\"," + NEW_LINE +
+                        "    \"path\" : \"/not_found\",",
                     " didn't match expectation:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
-                        "\t  \"priority\" : 0," + NEW_LINE +
-                        "\t  \"httpRequest\" : {" + NEW_LINE +
-                        "\t    \"path\" : \"/some_path.*\"" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"times\" : {" + NEW_LINE +
-                        "\t    \"remainingTimes\" : 3" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"timeToLive\" : {" + NEW_LINE +
-                        "\t    \"unlimited\" : true" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"httpResponse\" : {" + NEW_LINE +
-                        "\t    \"body\" : \"some_body\"" + NEW_LINE +
-                        "\t  }" + NEW_LINE +
-                        "\t}" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                        "    \"priority\" : 0," + NEW_LINE +
+                        "    \"httpRequest\" : {" + NEW_LINE +
+                        "      \"path\" : \"/some_path.*\"" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"times\" : {" + NEW_LINE +
+                        "      \"remainingTimes\" : 3" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"timeToLive\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"httpResponse\" : {" + NEW_LINE +
+                        "      \"body\" : \"some_body\"" + NEW_LINE +
+                        "    }" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         NEW_LINE +
                         " because:" + NEW_LINE +
                         NEW_LINE +
-                        "\tmethod matched," + NEW_LINE +
-                        "\tpath didn't match" + NEW_LINE
+                        "  method matched" + NEW_LINE +
+                        "  path didn't match: " + NEW_LINE +
+                        "  " + NEW_LINE +
+                        "    string or regex match failed expected:" + NEW_LINE +
+                        "  " + NEW_LINE +
+                        "      /some_path.*" + NEW_LINE +
+                        "  " + NEW_LINE +
+                        "     found:" + NEW_LINE +
+                        "  " + NEW_LINE +
+                        "      /not_found" + NEW_LINE +
+                        NEW_LINE
                 },
                 new String[]{
                     "no expectation for:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"method\" : \"GET\"," + NEW_LINE +
-                        "\t  \"path\" : \"/not_found\"",
+                        "  {" + NEW_LINE +
+                        "    \"method\" : \"GET\"," + NEW_LINE +
+                        "    \"path\" : \"/not_found\"",
                     " returning response:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"statusCode\" : 404," + NEW_LINE +
-                        "\t  \"reasonPhrase\" : \"Not Found\"" + NEW_LINE +
-                        "\t}"
+                        "  {" + NEW_LINE +
+                        "    \"statusCode\" : 404," + NEW_LINE +
+                        "    \"reasonPhrase\" : \"Not Found\"" + NEW_LINE +
+                        "  }"
                 },
                 new String[]{
                     "received request:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"method\" : \"GET\"," + NEW_LINE +
-                        "\t  \"path\" : \"/some_path_three\"," + NEW_LINE +
-                        "\t  \"headers\" : {"
+                        "  {" + NEW_LINE +
+                        "    \"method\" : \"GET\"," + NEW_LINE +
+                        "    \"path\" : \"/some_path_three\"," + NEW_LINE +
+                        "    \"headers\" : {"
                 },
                 new String[]{
                     "request:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"method\" : \"GET\"," + NEW_LINE +
-                        "\t  \"path\" : \"/some_path_three\",",
+                        "  {" + NEW_LINE +
+                        "    \"method\" : \"GET\"," + NEW_LINE +
+                        "    \"path\" : \"/some_path_three\",",
                     " matched expectation:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
-                        "\t  \"priority\" : 0," + NEW_LINE +
-                        "\t  \"httpRequest\" : {" + NEW_LINE +
-                        "\t    \"path\" : \"/some_path.*\"" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"times\" : {" + NEW_LINE +
-                        "\t    \"remainingTimes\" : 3" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"timeToLive\" : {" + NEW_LINE +
-                        "\t    \"unlimited\" : true" + NEW_LINE +
-                        "\t  }," + NEW_LINE +
-                        "\t  \"httpResponse\" : {" + NEW_LINE +
-                        "\t    \"body\" : \"some_body\"" + NEW_LINE +
-                        "\t  }" + NEW_LINE +
-                        "\t}"
+                        "  {" + NEW_LINE +
+                        "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                        "    \"priority\" : 0," + NEW_LINE +
+                        "    \"httpRequest\" : {" + NEW_LINE +
+                        "      \"path\" : \"/some_path.*\"" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"times\" : {" + NEW_LINE +
+                        "      \"remainingTimes\" : 3" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"timeToLive\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"httpResponse\" : {" + NEW_LINE +
+                        "      \"body\" : \"some_body\"" + NEW_LINE +
+                        "    }" + NEW_LINE +
+                        "  }"
                 },
                 new String[]{
                     "returning response:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"body\" : \"some_body\"" + NEW_LINE +
-                        "\t}" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"body\" : \"some_body\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         NEW_LINE +
                         " for request:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"method\" : \"GET\"," + NEW_LINE +
-                        "\t  \"path\" : \"/some_path_three\",",
+                        "  {" + NEW_LINE +
+                        "    \"method\" : \"GET\"," + NEW_LINE +
+                        "    \"path\" : \"/some_path_three\",",
                     " for action:" + NEW_LINE +
                         NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"body\" : \"some_body\"" + NEW_LINE +
-                        "\t}" + NEW_LINE
+                        "  {" + NEW_LINE +
+                        "    \"body\" : \"some_body\"" + NEW_LINE +
+                        "  }" + NEW_LINE
                 }
             };
 

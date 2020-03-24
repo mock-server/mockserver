@@ -62,15 +62,15 @@ public class MockServerLoggerTest {
             assertThat(messageLogEntry.getHttpRequests(), is(new HttpRequest[]{request}));
             assertThat(messageLogEntry.getMessage(), containsString("some random message with" + NEW_LINE +
                 NEW_LINE +
-                "\tsome" + NEW_LINE +
-                "\tmulti-line" + NEW_LINE +
-                "\tobject" + NEW_LINE +
+                "  some" + NEW_LINE +
+                "  multi-line" + NEW_LINE +
+                "  object" + NEW_LINE +
                 NEW_LINE +
                 " and" + NEW_LINE +
                 NEW_LINE +
-                "\tanother" + NEW_LINE +
-                "\tmulti-line" + NEW_LINE +
-                "\tobject" + NEW_LINE));
+                "  another" + NEW_LINE +
+                "  multi-line" + NEW_LINE +
+                "  object" + NEW_LINE));
             assertThat(messageLogEntry.getMessageFormat(), containsString("some random message with{}and{}"));
             assertThat(messageLogEntry.getArguments(), arrayContaining(new Object[]{
                 "some" + NEW_LINE + "multi-line" + NEW_LINE + "object",
@@ -104,15 +104,15 @@ public class MockServerLoggerTest {
             // then
             String message = "some random message with" + NEW_LINE +
                 NEW_LINE +
-                "\tsome" + NEW_LINE +
-                "\tmulti-line" + NEW_LINE +
-                "\tobject" + NEW_LINE +
+                "  some" + NEW_LINE +
+                "  multi-line" + NEW_LINE +
+                "  object" + NEW_LINE +
                 NEW_LINE +
                 " and" + NEW_LINE +
                 NEW_LINE +
-                "\tanother" + NEW_LINE +
-                "\tmulti-line" + NEW_LINE +
-                "\tobject" + NEW_LINE;
+                "  another" + NEW_LINE +
+                "  multi-line" + NEW_LINE +
+                "  object" + NEW_LINE;
             verify(mockLogger).error(message, (Throwable) null);
         } finally {
             logLevel(originalLevel.toString());
@@ -151,15 +151,15 @@ public class MockServerLoggerTest {
             // then
             String message = "some random message with" + NEW_LINE +
                 NEW_LINE +
-                "\tsome" + NEW_LINE +
-                "\tmulti-line" + NEW_LINE +
-                "\tobject" + NEW_LINE +
+                "  some" + NEW_LINE +
+                "  multi-line" + NEW_LINE +
+                "  object" + NEW_LINE +
                 NEW_LINE +
                 " and" + NEW_LINE +
                 NEW_LINE +
-                "\tanother" + NEW_LINE +
-                "\tmulti-line" + NEW_LINE +
-                "\tobject" + NEW_LINE;
+                "  another" + NEW_LINE +
+                "  multi-line" + NEW_LINE +
+                "  object" + NEW_LINE;
             verify(mockLogger).error(message, exception);
         } finally {
             logLevel(originalLevel.toString());
@@ -196,15 +196,15 @@ public class MockServerLoggerTest {
             // then
             String message = "some random message with" + NEW_LINE +
                 NEW_LINE +
-                "\tsome" + NEW_LINE +
-                "\tmulti-line" + NEW_LINE +
-                "\tobject" + NEW_LINE +
+                "  some" + NEW_LINE +
+                "  multi-line" + NEW_LINE +
+                "  object" + NEW_LINE +
                 NEW_LINE +
                 " and" + NEW_LINE +
                 NEW_LINE +
-                "\tanother" + NEW_LINE +
-                "\tmulti-line" + NEW_LINE +
-                "\tobject" + NEW_LINE;
+                "  another" + NEW_LINE +
+                "  multi-line" + NEW_LINE +
+                "  object" + NEW_LINE;
             verify(mockLogger).error(message, (Throwable) null);
         } finally {
             logLevel(originalLevel.toString());

@@ -2,6 +2,8 @@ package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Joiner;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
@@ -12,11 +14,10 @@ import org.slf4j.event.Level;
 
 import java.util.Comparator;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.ConfigurationProperties.matchersFailFast;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_MATCHED;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED;
-import static org.mockserver.mock.Expectation.EXPECTATION_PRIORITY_COMPARATOR;
 import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
 import static org.mockserver.model.NottableString.string;
 
@@ -31,11 +32,22 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     private static final String[] excludedFields = {"mockServerLogger", "objectMapper"};
     private static final String DID_NOT_MATCH = "didn't match";
     private static final String MATCHED = "matched";
-    private static final String REQUEST_DID_NOT_MATCH = "request:{}didn't match request:{}because:{}";
+    private static final String REQUEST_DID_NOT_MATCH = "request:{}didn't match request matcher:{}because:{}";
     private static final String EXPECTATION_DID_NOT_MATCH = "request:{}didn't match expectation:{}because:{}";
     private static final String EXPECTATION_DID_NOT_MATCH_WITHOUT_BECAUSE = "request:{}didn't match expectation:{}";
     private static final String REQUEST_DID_MATCH = "request:{}matched request:{}";
     private static final String EXPECTATION_DID_MATCH = "request:{}matched expectation:{}";
+    private static final String SPACE = " ";
+    private static final String SSL_MATCHES = "sslMatches";
+    private static final String KEEP_ALIVE = "keep-alive";
+    private static final String QUERY = "query";
+    private static final String COOKIES = "cookies";
+    private static final String HEADERS = "headers";
+    private static final String BODY = "body";
+    private static final String PATH = "path";
+    private static final String METHOD = "method";
+    private static final String COMMA = ",";
+    private static final String EMPTY = "";
     private MockServerLogger mockServerLogger;
     private Expectation expectation;
     private HttpRequest httpRequest;
@@ -48,7 +60,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     private BooleanMatcher keepAliveMatcher = null;
     private BodyDTO bodyDTOMatcher = null;
     private BooleanMatcher sslMatcher = null;
-    private final boolean controlPlaneMatcher;
+    private boolean controlPlaneMatcher;
     private boolean responseInProgress = false;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
@@ -91,6 +103,11 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
             update(expectation.getHttpRequest());
             return true;
         }
+    }
+
+    public HttpRequestMatcher withControlPlaneMatcher(boolean controlPlaneMatcher) {
+        this.controlPlaneMatcher = controlPlaneMatcher;
+        return this;
     }
 
     public boolean isResponseInProgress() {
@@ -204,9 +221,9 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
         return matches(null, request);
     }
 
-    public boolean matches(final HttpRequest context, final HttpRequest request) {
+    public boolean matches(final MatchDifference matchDifference, final HttpRequest request) {
         StringBuilder becauseBuilder = new StringBuilder();
-        boolean overallMatch = matches(context, request, becauseBuilder);
+        boolean overallMatch = matches(matchDifference, request, becauseBuilder);
         if (!controlPlaneMatcher) {
             if (overallMatch) {
                 mockServerLogger.logEvent(
@@ -219,6 +236,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                         .setArguments(request, (this.expectation == null ? this : this.expectation.clone()))
                 );
             } else {
+                becauseBuilder.replace(0, 1, "");
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(EXPECTATION_NOT_MATCHED)
@@ -233,64 +251,118 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
         return overallMatch;
     }
 
-    private boolean matches(HttpRequest context, HttpRequest request, StringBuilder becauseBuilder) {
+    public boolean isBlank() {
+        return httpRequest == null;
+    }
+
+    private boolean matches(MatchDifference matchDifference, HttpRequest request, StringBuilder becauseBuilder) {
         if (isActive()) {
             if (request == this.httpRequest) {
                 return true;
             } else if (this.httpRequest == null) {
                 return true;
             } else {
+                if (matchDifference == null) {
+                    matchDifference = new MatchDifference(request);
+                }
                 if (request != null) {
-                    boolean methodMatches = isBlank(request.getMethod().getValue()) || matches(context, methodMatcher, request.getMethod());
-                    if (matchFailed(request, becauseBuilder, methodMatches, "", "method ")) {
-                        return combineResults(false, request.isNot(), this.httpRequest.isNot(), not);
+                    boolean methodMatches = StringUtils.isBlank(request.getMethod().getValue()) || matches(METHOD, matchDifference, methodMatcher, request.getMethod());
+                    if (failFast(methodMatcher, matchDifference, becauseBuilder, methodMatches, METHOD, EMPTY)) {
+                        return false;
                     }
 
-                    boolean pathMatches = isBlank(request.getPath().getValue()) || matches(context, pathMatcher, request.getPath());
-                    if (matchFailed(request, becauseBuilder, pathMatches, ",", "path ")) {
-                        return combineResults(false, request.isNot(), this.httpRequest.isNot(), not);
+                    boolean pathMatches = StringUtils.isBlank(request.getPath().getValue()) || matches(PATH, matchDifference, pathMatcher, request.getPath());
+                    if (failFast(pathMatcher, matchDifference, becauseBuilder, pathMatches, PATH, EMPTY)) {
+                        return false;
                     }
 
-                    boolean bodyMatches = bodyMatches(context, request);
-                    if (matchFailed(request, becauseBuilder, bodyMatches, ",", "body ")) {
-                        return combineResults(false, request.isNot(), this.httpRequest.isNot(), not);
+                    boolean bodyMatches = bodyMatches(matchDifference, request);
+                    if (failFast(bodyMatcher, matchDifference, becauseBuilder, bodyMatches, BODY, EMPTY)) {
+                        return false;
                     }
 
-                    boolean headersMatch = matches(context, headerMatcher, request.getHeaders());
-                    if (matchFailed(request, becauseBuilder, headersMatch, ",", "headers ")) {
-                        return combineResults(false, request.isNot(), this.httpRequest.isNot(), not);
+                    boolean headersMatch = matches(HEADERS, matchDifference, headerMatcher, request.getHeaders());
+                    if (failFast(headerMatcher, matchDifference, becauseBuilder, headersMatch, HEADERS, EMPTY)) {
+                        return false;
                     }
 
-                    boolean cookiesMatch = matches(context, cookieMatcher, request.getCookies());
-                    if (matchFailed(request, becauseBuilder, cookiesMatch, ",", "cookies ")) {
-                        return combineResults(false, request.isNot(), this.httpRequest.isNot(), not);
+                    boolean cookiesMatch = matches(COOKIES, matchDifference, cookieMatcher, request.getCookies());
+                    if (failFast(cookieMatcher, matchDifference, becauseBuilder, cookiesMatch, COOKIES, EMPTY)) {
+                        return false;
                     }
 
-                    boolean queryStringParametersMatches = matches(context, queryStringParameterMatcher, request.getQueryStringParameters());
-                    if (matchFailed(request, becauseBuilder, queryStringParametersMatches, ",", "query ")) {
-                        return combineResults(false, request.isNot(), this.httpRequest.isNot(), not);
+                    boolean queryStringParametersMatches = matches(QUERY, matchDifference, queryStringParameterMatcher, request.getQueryStringParameters());
+                    if (failFast(queryStringParameterMatcher, matchDifference, becauseBuilder, queryStringParametersMatches, QUERY, EMPTY)) {
+                        return false;
                     }
 
-                    boolean keepAliveMatches = matches(context, keepAliveMatcher, request.isKeepAlive());
-                    if (matchFailed(request, becauseBuilder, keepAliveMatches, ",", "keep-alive ")) {
-                        return combineResults(false, request.isNot(), this.httpRequest.isNot(), not);
+                    boolean keepAliveMatches = matches(KEEP_ALIVE, matchDifference, keepAliveMatcher, request.isKeepAlive());
+                    if (failFast(keepAliveMatcher, matchDifference, becauseBuilder, keepAliveMatches, KEEP_ALIVE, EMPTY)) {
+                        return false;
                     }
 
-                    boolean sslMatches = matches(context, sslMatcher, request.isSecure());
-                    if (matchFailed(request, becauseBuilder, sslMatches, ",", "sslMatches ")) {
-                        return combineResults(false, request.isNot(), this.httpRequest.isNot(), not);
+                    boolean sslMatches = matches(SSL_MATCHES, matchDifference, sslMatcher, request.isSecure());
+                    if (failFast(sslMatcher, matchDifference, becauseBuilder, sslMatches, SSL_MATCHES, EMPTY)) {
+                        return false;
                     }
 
-                    return combineResults(true, request.isNot(), this.httpRequest.isNot(), not);
+                    return combinedResultAreTrue(matchDifference.getFailures() == 0, request.isNot(), this.httpRequest.isNot(), not);
                 } else {
-                    return combineResults(true, this.httpRequest.isNot(), not);
+                    return combinedResultAreTrue(true, this.httpRequest.isNot(), not);
                 }
             }
         }
         return false;
     }
 
-    private static boolean combineResults(boolean... inputs) {
+    private boolean failFast(Matcher<?> matcher, MatchDifference matchDifference, StringBuilder becauseBuilder, boolean fieldMatches, String fieldName, String separator) {
+        // update because builder
+        if (!controlPlaneMatcher) {
+            becauseBuilder
+                .append(separator).append(NEW_LINE)
+                .append(fieldName).append(SPACE).append((fieldMatches ? MATCHED : DID_NOT_MATCH));
+            if (matchDifference.getDifferences(fieldName) != null && !matchDifference.getDifferences(fieldName).isEmpty()) {
+                becauseBuilder
+                    .append(": ").append(NEW_LINE).append(NEW_LINE)
+                    .append(Joiner.on(NEW_LINE).join(matchDifference.getDifferences(fieldName)));
+            }
+        }
+        if (!fieldMatches) {
+            if (!controlPlaneMatcher) {
+                if (matchDifference.getHttpRequest().isNot()) {
+                    becauseBuilder
+                        .append(COMMA)
+                        .append(NEW_LINE)
+                        .append("request 'not' operator is enabled");
+                }
+                if (this.httpRequest.isNot()) {
+                    becauseBuilder
+                        .append(COMMA)
+                        .append(NEW_LINE)
+                        .append("expectation's request 'not' operator is enabled");
+                }
+                if (not) {
+                    becauseBuilder
+                        .append(COMMA)
+                        .append(NEW_LINE)
+                        .append("expectation's request matcher 'not' operator is enabled");
+                }
+            }
+        }
+        // update match difference and potentially fail fast
+        if (!fieldMatches) {
+            matchDifference.incrementFailures();
+        }
+        if (matcher != null && !matcher.isBlank() && matchersFailFast()) {
+            return combinedResultAreTrue(matchDifference.getFailures() != 0, matchDifference.getHttpRequest().isNot(), this.httpRequest.isNot(), not);
+        }
+        return false;
+    }
+
+    /**
+     * true for odd number of false inputs
+     */
+    private static boolean combinedResultAreTrue(boolean... inputs) {
         int count = 0;
         for (boolean input : inputs) {
             count += (input ? 1 : 0);
@@ -298,42 +370,20 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
         return count % 2 != 0;
     }
 
-    private boolean matchFailed(HttpRequest request, StringBuilder becauseBuilder, boolean testResult, String separator, String fieldName) {
-        boolean matchFailed = false;
-        if (!controlPlaneMatcher) {
-            becauseBuilder.append(separator).append(separator.length() > 0 ? NEW_LINE : "").append(fieldName).append((testResult ? MATCHED : DID_NOT_MATCH));
-        }
-        if (!testResult) {
-            if (!controlPlaneMatcher) {
-                if (request.isNot()) {
-                    becauseBuilder.append(",").append(NEW_LINE).append("request 'not' operator is enabled");
-                }
-                if (this.httpRequest.isNot()) {
-                    becauseBuilder.append(",").append(NEW_LINE).append("expectation's request 'not' operator is enabled");
-                }
-                if (not) {
-                    becauseBuilder.append(",").append(NEW_LINE).append("expectation's request matcher 'not' operator is enabled");
-                }
-            }
-            matchFailed = true;
-        }
-        return matchFailed;
-    }
-
     @SuppressWarnings("unchecked")
-    private boolean bodyMatches(HttpRequest context, HttpRequest request) {
+    private boolean bodyMatches(MatchDifference context, HttpRequest request) {
         boolean bodyMatches;
         String bodyAsString = request.getBody() != null ? new String(request.getBody().getRawBytes(), request.getBody().getCharset(DEFAULT_HTTP_CHARACTER_SET)) : "";
         if (bodyMatcher instanceof BinaryMatcher) {
-            bodyMatches = matches(context, bodyMatcher, request.getBodyAsRawBytes());
+            bodyMatches = matches(BODY, context, bodyMatcher, request.getBodyAsRawBytes());
         } else {
             if (bodyMatcher instanceof ExactStringMatcher ||
                 bodyMatcher instanceof SubStringMatcher ||
                 bodyMatcher instanceof RegexStringMatcher ||
                 bodyMatcher instanceof XmlStringMatcher) {
-                bodyMatches = matches(context, bodyMatcher, string(bodyAsString));
+                bodyMatches = matches(BODY, context, bodyMatcher, string(bodyAsString));
             } else {
-                bodyMatches = matches(context, bodyMatcher, bodyAsString);
+                bodyMatches = matches(BODY, context, bodyMatcher, bodyAsString);
             }
         }
         if (!bodyMatches) {
@@ -347,7 +397,10 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
         return bodyMatches;
     }
 
-    private <T> boolean matches(HttpRequest context, Matcher<T> matcher, T t) {
+    private <T> boolean matches(String fieldName, MatchDifference context, Matcher<T> matcher, T t) {
+        if (context != null) {
+            context.currentField(fieldName);
+        }
         boolean result = false;
 
         if (matcher == null) {
@@ -362,10 +415,6 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     public boolean isActive() {
         return expectation == null || expectation.isActive();
 
-    }
-
-    public boolean decrementRemainingMatches() {
-        return expectation.decrementRemainingMatches();
     }
 
     @Override

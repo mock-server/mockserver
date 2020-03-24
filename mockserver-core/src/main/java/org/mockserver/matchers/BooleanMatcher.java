@@ -3,7 +3,6 @@ package org.mockserver.matchers;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
 import static org.slf4j.event.Level.DEBUG;
@@ -22,7 +21,7 @@ public class BooleanMatcher extends ObjectWithReflectiveEqualsHashCodeToString i
     }
 
     @Override
-    public boolean matches(final HttpRequest context, Boolean matched) {
+    public boolean matches(final MatchDifference context, Boolean matched) {
         boolean result = false;
 
         if (matcher == null) {
@@ -35,13 +34,17 @@ public class BooleanMatcher extends ObjectWithReflectiveEqualsHashCodeToString i
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(DEBUG)
-                    .setHttpRequest(context)
-                    .setMessageFormat("failed to perform boolean match of{}with{}")
-                    .setArguments(matched, this.matcher)
+                    .setMatchDifference(context)
+                    .setMessageFormat("boolean match failed expected:{}found:{}")
+                    .setArguments(this.matcher, matched)
             );
         }
 
         return result;
+    }
+
+    public boolean isBlank() {
+        return matcher == null;
     }
 
     @Override

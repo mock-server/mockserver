@@ -3,9 +3,9 @@ package org.mockserver.matchers;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jayway.jsonpath.JsonPath;
 import net.minidev.json.JSONArray;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.HttpRequest;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.slf4j.event.Level.DEBUG;
@@ -39,7 +39,7 @@ public class JsonPathMatcher extends BodyMatcher<String> {
         }
     }
 
-    public boolean matches(final HttpRequest context, String matched) {
+    public boolean matches(final MatchDifference context, final String matched) {
         boolean result = false;
         boolean alreadyLoggedMatchFailure = false;
 
@@ -47,25 +47,26 @@ public class JsonPathMatcher extends BodyMatcher<String> {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(DEBUG)
-                    .setHttpRequest(context)
-                    .setMessageFormat("attempting match against null json path expression for [" + matched + "]")
-                    .setThrowable(new RuntimeException("Attempting match against null json path expression for [" + matched + "]"))
+                    .setMatchDifference(context)
+                    .setMessageFormat("json path match failed expected:{}found:{}failed because:{}")
+                    .setArguments("null", matched, "json path matcher was null")
             );
+            alreadyLoggedMatchFailure = true;
         } else if (matcher.equals(matched)) {
             result = true;
         } else if (matched != null) {
             try {
                 result = !jsonPath.<JSONArray>read(matched).isEmpty();
-            } catch (Exception e) {
+            } catch (Throwable throwable) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(DEBUG)
-                        .setHttpRequest(context)
-                        .setMessageFormat("failed to perform json path match of{}with{}because{}")
-                        .setArguments(matched, jsonPath, e.getMessage())
+                        .setMatchDifference(context)
+                        .setMessageFormat("json path match failed expected:{}found:{}failed because:{}")
+                        .setArguments(matcher, matched, throwable.getMessage())
+                        .setThrowable(throwable)
                 );
                 alreadyLoggedMatchFailure = true;
-
             }
         }
 
@@ -73,12 +74,17 @@ public class JsonPathMatcher extends BodyMatcher<String> {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(TRACE)
-                    .setMessageFormat("failed to perform json path match of{}with{}")
-                    .setArguments(matched, this.matcher)
+                    .setMatchDifference(context)
+                    .setMessageFormat("json path match failed expected:{}found:{}failed because:{}")
+                    .setArguments(matcher, matched, "json path did not evaluate to truthy")
             );
         }
 
         return not != result;
+    }
+
+    public boolean isBlank() {
+        return StringUtils.isBlank(matcher);
     }
 
     @Override

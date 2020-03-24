@@ -22,26 +22,54 @@ public class StringFormatterTest {
         // then
         assertThat(logMessage, is(
             "returning response:" + NEW_LINE +
-                "" + NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t  \"statusCode\" : 200," + NEW_LINE +
-                "\t  \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                "\t  \"body\" : \"response_body\"" + NEW_LINE +
-                "\t}" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
+                "  {" + NEW_LINE +
+                "    \"statusCode\" : 200," + NEW_LINE +
+                "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                "    \"body\" : \"response_body\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                NEW_LINE +
                 " for request:" + NEW_LINE +
-                "" + NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t  \"path\" : \"request_path\"" + NEW_LINE +
-                "\t}" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
+                "  {" + NEW_LINE +
+                "    \"path\" : \"request_path\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                NEW_LINE +
                 " for action:" + NEW_LINE +
-                "" + NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t  \"port\" : 80," + NEW_LINE +
-                "\t  \"scheme\" : \"HTTP\"" + NEW_LINE +
-                "\t}" + NEW_LINE
+                NEW_LINE +
+                "  {" + NEW_LINE +
+                "    \"port\" : 80," + NEW_LINE +
+                "    \"scheme\" : \"HTTP\"" + NEW_LINE +
+                "  }" + NEW_LINE
         ));
+    }
+
+    @Test
+    public void shouldFormatLogMessageWithMultipleParametersWithIndent() {
+        // when
+        String logMessage = StringFormatter.formatLogMessage(2,"returning response:{}for request:{}for action:{}", response("response_body"), request("request_path"), forward());
+
+        // then
+        assertThat(logMessage, is("    returning response:" + NEW_LINE +
+            NEW_LINE +
+            "      {" + NEW_LINE +
+            "        \"statusCode\" : 200," + NEW_LINE +
+            "        \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+            "        \"body\" : \"response_body\"" + NEW_LINE +
+            "      }" + NEW_LINE +
+            NEW_LINE +
+            "     for request:" + NEW_LINE +
+            NEW_LINE +
+            "      {" + NEW_LINE +
+            "        \"path\" : \"request_path\"" + NEW_LINE +
+            "      }" + NEW_LINE +
+            NEW_LINE +
+            "     for action:" + NEW_LINE +
+            NEW_LINE +
+            "      {" + NEW_LINE +
+            "        \"port\" : 80," + NEW_LINE +
+            "        \"scheme\" : \"HTTP\"" + NEW_LINE +
+            "      }" + NEW_LINE));
     }
 
     @Test
@@ -53,11 +81,28 @@ public class StringFormatterTest {
         assertThat(logMessage, is(
             "returning response:" + NEW_LINE +
                 NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t  \"statusCode\" : 200," + NEW_LINE +
-                "\t  \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                "\t  \"body\" : \"response_body\"" + NEW_LINE +
-                "\t}" + NEW_LINE
+                "  {" + NEW_LINE +
+                "    \"statusCode\" : 200," + NEW_LINE +
+                "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                "    \"body\" : \"response_body\"" + NEW_LINE +
+                "  }" + NEW_LINE
+        ));
+    }
+
+    @Test
+    public void shouldFormatLogMessageWithASingleParameterWithIndent() {
+        // when
+        String logMessage = StringFormatter.formatLogMessage(1, "returning response:{}", response("response_body"));
+
+        // then
+        assertThat(logMessage, is(
+            "  returning response:" + NEW_LINE +
+                NEW_LINE +
+                "    {" + NEW_LINE +
+                "      \"statusCode\" : 200," + NEW_LINE +
+                "      \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                "      \"body\" : \"response_body\"" + NEW_LINE +
+                "    }" + NEW_LINE
         ));
     }
 
@@ -70,11 +115,11 @@ public class StringFormatterTest {
         assertThat(logMessage, is(
             "returning response:" + NEW_LINE +
                 NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t  \"statusCode\" : 200," + NEW_LINE +
-                "\t  \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                "\t  \"body\" : \"response_body\"" + NEW_LINE +
-                "\t}" + NEW_LINE
+                "  {" + NEW_LINE +
+                "    \"statusCode\" : 200," + NEW_LINE +
+                "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                "    \"body\" : \"response_body\"" + NEW_LINE +
+                "  }" + NEW_LINE
         ));
     }
 
@@ -86,13 +131,13 @@ public class StringFormatterTest {
         // then
         assertThat(logMessage, is(
             "returning response:" + NEW_LINE +
-                "" + NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t  \"statusCode\" : 200," + NEW_LINE +
-                "\t  \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                "\t  \"body\" : \"response_body\"" + NEW_LINE +
-                "\t}" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
+                "  {" + NEW_LINE +
+                "    \"statusCode\" : 200," + NEW_LINE +
+                "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                "    \"body\" : \"response_body\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                NEW_LINE +
                 " for request:" + NEW_LINE +
                 " for action:"
         ));
