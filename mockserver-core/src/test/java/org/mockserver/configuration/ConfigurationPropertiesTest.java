@@ -799,6 +799,42 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldSetAndReadLocalBoundIP() {
+        // given
+        System.clearProperty("mockserver.localBoundIP");
+
+        // when
+        assertEquals("", localBoundIP());
+        localBoundIP("127.0.0.1");
+
+        // then
+        assertEquals("127.0.0.1", localBoundIP());
+        assertEquals("127.0.0.1", System.getProperty("mockserver.localBoundIP"));
+    }
+
+    @Test
+    public void shouldThrowIllegalArgumentExceptionForInvalidLocalBoundIP() {
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(containsString("'abc.def' is not an IP string literal"));
+
+        localBoundIP("abc.def");
+    }
+
+    @Test
+    public void shouldSetAndReadAttemptToProxyIfNoMatchingExpectation() {
+        // given
+        System.clearProperty("mockserver.attemptToProxyIfNoMatchingExpectation");
+
+        // when
+        assertTrue(attemptToProxyIfNoMatchingExpectation());
+        attemptToProxyIfNoMatchingExpectation(false);
+
+        // then
+        assertFalse(attemptToProxyIfNoMatchingExpectation());
+        assertEquals("false", System.getProperty("mockserver.attemptToProxyIfNoMatchingExpectation"));
+    }
+
+    @Test
     @Deprecated
     public void shouldSetAndReadHttpProxy() {
         // given
@@ -962,28 +998,6 @@ public class ConfigurationPropertiesTest {
         // then
         assertEquals("bar_foo", forwardProxyAuthenticationPassword());
         assertEquals("bar_foo", System.getProperty("mockserver.forwardProxyAuthenticationPassword"));
-    }
-
-    @Test
-    public void shouldSetAndReadLocalBoundIP() {
-        // given
-        System.clearProperty("mockserver.localBoundIP");
-
-        // when
-        assertEquals("", localBoundIP());
-        localBoundIP("127.0.0.1");
-
-        // then
-        assertEquals("127.0.0.1", localBoundIP());
-        assertEquals("127.0.0.1", System.getProperty("mockserver.localBoundIP"));
-    }
-
-    @Test
-    public void shouldThrowIllegalArgumentExceptionForInvalidLocalBoundIP() {
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("'abc.def' is not an IP string literal"));
-
-        localBoundIP("abc.def");
     }
 
     @Test

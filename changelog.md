@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ability to return chunked responses where each chunk is a specific size by using response connection options
 - support for XmlUnit placeholders https://github.com/xmlunit/user-guide/wiki/Placeholders
 - added ability to control (via configuration) whether matches fail fast or show all mismatching fields
+- configuration to disable automatically attempted proxying of request that don't match an expectation and look like they should be proxied
 
 ### Changed
 - improved X509 certificates by adding Subject Key Identifier and Authority Key Identifier

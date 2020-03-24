@@ -151,7 +151,7 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
                     new InetSocketAddress(loadBalancerClientAndServer.getLocalPort())
                 );
 
-            // then - returns 404
+            // then - does not return a 404
             HttpResponse httpResponse = responseFuture.get(10, TimeUnit.MINUTES);
             assertThat(httpResponse.getStatusCode(), is(200));
             assertThat(httpResponse.getBodyAsString(), is("target_response"));
@@ -183,6 +183,109 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
                 "    \"path\" : \"/target\"," + NEW_LINE));
         } finally {
             ConfigurationProperties.logLevel(originalLevel.name());
+        }
+    }
+
+    @Test
+    public void shouldNotAttemptToProxyWhenNoExpectationMatched() throws Exception {
+        Level originalLevel = ConfigurationProperties.logLevel();
+        boolean originalAttemptToProxyIfNoMatchingExpectation = ConfigurationProperties.attemptToProxyIfNoMatchingExpectation();
+        try {
+            // given
+            ConfigurationProperties.logLevel("INFO");
+            ConfigurationProperties.attemptToProxyIfNoMatchingExpectation(false);
+            targetClientAndServer.reset();
+            loadBalancerClientAndServer.reset();
+            targetClientAndServer
+                .when(
+                    request()
+                        .withPath("/target")
+                )
+                .respond(
+                    response()
+                        .withBody("target_response")
+                );
+
+            // when
+            Future<HttpResponse> responseFuture =
+                httpClient.sendRequest(
+                    request()
+                        .withPath("/target")
+                        .withHeader(HOST.toString(), "localhost:" + targetClientAndServer.getLocalPort()),
+                    new InetSocketAddress(loadBalancerClientAndServer.getLocalPort())
+                );
+
+            // then - returns a 404
+            HttpResponse httpResponse = responseFuture.get(10, TimeUnit.MINUTES);
+            assertThat(httpResponse.getStatusCode(), is(404));
+        } finally {
+            ConfigurationProperties.logLevel(originalLevel.name());
+            ConfigurationProperties.attemptToProxyIfNoMatchingExpectation(originalAttemptToProxyIfNoMatchingExpectation);
+        }
+    }
+
+    @Test
+    public void shouldAttemptToProxyWhenNoExpectationMatched() throws Exception {
+        Level originalLevel = ConfigurationProperties.logLevel();
+        boolean originalAttemptToProxyIfNoMatchingExpectation = ConfigurationProperties.attemptToProxyIfNoMatchingExpectation();
+        try {
+            // given
+            ConfigurationProperties.logLevel("INFO");
+            ConfigurationProperties.attemptToProxyIfNoMatchingExpectation(true);
+            targetClientAndServer.reset();
+            loadBalancerClientAndServer.reset();
+            targetClientAndServer
+                .when(
+                    request()
+                        .withPath("/target")
+                )
+                .respond(
+                    response()
+                        .withBody("target_response")
+                );
+
+            // when
+            Future<HttpResponse> responseFuture =
+                httpClient.sendRequest(
+                    request()
+                        .withPath("/target")
+                        .withHeader(HOST.toString(), "localhost:" + targetClientAndServer.getLocalPort()),
+                    new InetSocketAddress(loadBalancerClientAndServer.getLocalPort())
+                );
+
+            // then - does not return a 404
+            HttpResponse httpResponse = responseFuture.get(10, TimeUnit.MINUTES);
+            assertThat(httpResponse.getStatusCode(), is(200));
+            assertThat(httpResponse.getBodyAsString(), is("target_response"));
+
+            // and - both proxy and target verify request received
+            loadBalancerClientAndServer.verify(request().withPath("/target"));
+            targetClientAndServer.verify(request().withPath("/target"));
+
+            // and - logs hide proxied request
+            String[] logMessages = loadBalancerClientAndServer.retrieveLogMessagesArray(null);
+            assertThat(logMessages[2], containsString("returning response:" + NEW_LINE +
+                "" + NEW_LINE +
+                "  {" + NEW_LINE +
+                "    \"statusCode\" : 200," + NEW_LINE +
+                "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                "    \"headers\" : {" + NEW_LINE +
+                "      \"connection\" : [ \"keep-alive\" ]," + NEW_LINE +
+                "      \"content-length\" : [ \"15\" ]" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"body\" : \"target_response\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "" + NEW_LINE +
+                " for forwarded request" + NEW_LINE +
+                "" + NEW_LINE +
+                " in json:" + NEW_LINE +
+                "" + NEW_LINE +
+                "  {" + NEW_LINE +
+                "    \"method\" : \"GET\"," + NEW_LINE +
+                "    \"path\" : \"/target\"," + NEW_LINE));
+        } finally {
+            ConfigurationProperties.logLevel(originalLevel.name());
+            ConfigurationProperties.attemptToProxyIfNoMatchingExpectation(originalAttemptToProxyIfNoMatchingExpectation);
         }
     }
 

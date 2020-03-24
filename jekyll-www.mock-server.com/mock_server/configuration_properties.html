@@ -288,6 +288,23 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 
 <h2>Proxying Configuration:</h2>
 
+<button id="button_configuration_attempt_to_proxy_if_no_matching_expectation" class="accordion title"><strong>Attempt To Proxy Request If No Matching Expectation</strong></button>
+<div class="panel title">
+    <p>If true (the default) when no matching expectation is found, and the host header of the request does not match MockServer's host, then MockServer attempts to proxy the request if that fails then a 404 is returned.</p>
+    <p>If false when no matching expectation is found, and MockServer is not being used as a proxy, then MockServer always returns a 404 immediately.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">true</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.attemptToProxyIfNoMatchingExpectation(boolean enable)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.attemptToProxyIfNoMatchingExpectation=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.attemptToProxyIfNoMatchingExpectation=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.attemptToProxyIfNoMatchingExpectation="false"</code></pre>
+</div>
+
 <button id="button_configuration_http_proxy" class="accordion title"><strong>HTTP Proxy For Forwarded Requests</strong></button>
 <div class="panel title">
     <p>Use HTTP proxy (i.e. via Host header) for all outbound / forwarded requests</p>
