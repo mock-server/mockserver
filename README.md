@@ -67,6 +67,7 @@ Docker Hub contains the following artifacts:
 ### Helm Chart
 
 * [MockServer Helm Chart](helm/mockserver/README.md) - a Helm Chart that installs MockServer to a Kubernetes cluster, available versions:
+  * [5.10.0](http://www.mock-server.com/mockserver-5.10.0.tgz)
   * [5.9.0](http://www.mock-server.com/mockserver-5.9.0.tgz)
   * [5.8.1](http://www.mock-server.com/mockserver-5.8.1.tgz)
   * [5.8.0](http://www.mock-server.com/mockserver-5.8.0.tgz)
@@ -85,12 +86,13 @@ Docker Hub contains the following artifacts:
 
 * [mockserver-client-ruby ![mockserver-client](https://badge.fury.io/rb/mockserver-client.png)](https://rubygems.org/gems/mockserver-client) - Ruby client for both the MockServer and the proxy 
 * [mockserver-client-java](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client-java) - a Java client for both the MockServer and the proxy 
-* [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js and [browser](https://raw.githubusercontent.com/mock-server/mockserver-client-node/mockserver-5.9.0/mockServerClient.js) client for both the MockServer and the proxy
+* [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js and [browser](https://raw.githubusercontent.com/mock-server/mockserver-client-node/mockserver-5.10.0/mockServerClient.js) client for both the MockServer and the proxy
 
 ### Document
 Version | Date        | Git & Docker Tag / Git Hash                                                                                                                                                                 | Documentation                                                         | Java API                                                              | REST API
 :-------|:------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:--------------------------------------------------------------------- |:--------------------------------------------------------------------- |:---------------------------------------------------------------------------------------
-5.9.0   | 01 Feb 2020 | [mockserver-5.9.0](https://github.com/mock-server/mockserver/tree/mockserver-5.9.0)   / [eacf07](https://github.com/mock-server/mockserver/commit/eacf07ad1eb738bacbf7c473f0d1aa62b4028602) | [Documentation](http://mock-server.com)	                            | [Java API](http://mock-server.com/versions/5.9.0/apidocs/index.html)  | [5.9.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x)
+5.10.0  | 24 Mar 2020 | [mockserver-5.10.0](https://github.com/mock-server/mockserver/tree/mockserver-5.10.0) / [756758](https://github.com/mock-server/mockserver/commit/756758ebe3d032f3852411a9bb91c3c66d819ddc) | [Documentation](http://mock-server.com)	                            | [Java API](http://mock-server.com/versions/5.10.0/apidocs/index.html) | [5.10.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x)
+5.9.0   | 01 Feb 2020 | [mockserver-5.9.0](https://github.com/mock-server/mockserver/tree/mockserver-5.9.0)   / [eacf07](https://github.com/mock-server/mockserver/commit/eacf07ad1eb738bacbf7c473f0d1aa62b4028602) | [Documentation](http://5-9.mock-server.com)	                        | [Java API](http://mock-server.com/versions/5.9.0/apidocs/index.html)  | [5.9.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x)
 5.8.1   | 23 Dec 2019 | [mockserver-5.8.1](https://github.com/mock-server/mockserver/tree/mockserver-5.8.1)   / [f0e9ab](https://github.com/mock-server/mockserver/commit/f0e9ab3b64f47f7f8f756d5ae8bf7b1b4611d8e6) | [Documentation](http://5-8.mock-server.com)	                        | [Java API](http://mock-server.com/versions/5.8.1/apidocs/index.html)  | [5.8.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x)
 5.8.0   | 01 Dec 2019 | [mockserver-5.8.0](https://github.com/mock-server/mockserver/tree/mockserver-5.8.0)   / [7c9fc5](https://github.com/mock-server/mockserver/commit/7c9fc5e5e831feac71dd68d0341ff089f37cec1e) | [Documentation](http://5-8.mock-server.com)	                        | [Java API](http://mock-server.com/versions/5.8.0/apidocs/index.html)  | [5.8.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x)
 5.7.2   | 16 Nov 2019 | [mockserver-5.7.2](https://github.com/mock-server/mockserver/tree/mockserver-5.7.2)   / [7c9fc5](https://github.com/mock-server/mockserver/commit/7c9fc5e5e831feac71dd68d0341ff089f37cec1e) | [Documentation](http://5-7.mock-server.com)	                        | [Java API](http://mock-server.com/versions/5.7.2/apidocs/index.html)  | [5.7.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.7.x)
@@ -117,7 +119,7 @@ Version | Date        | Git & Docker Tag / Git Hash                             
 # Issues
 
 If you have any problems, please [check the project issues](https://github.com/mock-server/mockserver/issues?state=open) and avoid opening issues that have already been fixed.  When you open an issue please provide the following information:
-- MockServer version (i.e. 5.9.0)
+- MockServer version (i.e. 5.10.0)
 - How your running the MockServer (i.e maven plugin, docker, etc)
 - MockServer log output, at INFO level (or higher)
 - What the error is
