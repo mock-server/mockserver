@@ -1,6 +1,7 @@
 name  | domain
 :-----|:-------------------
 [nb9hq](https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq/?region=us-east-1) | mock-server.com
+[5-10](https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-5-10/?region=eu-west-2) | 5-9.mock-server.com
 [ad01b](https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver--ad01b/?region=eu-west-2) | 5-9.mock-server.com
 [8001a](https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver--8001a/?region=eu-west-2) | 5-8.mock-server.com
 [c89db](https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver--c89db/?region=eu-west-2) | 5-7.mock-server.com

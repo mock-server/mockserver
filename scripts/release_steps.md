@@ -88,6 +88,7 @@ Release Steps
       1. cd _site
       1. copy to new bucket
    1. create cloud front distribution copying existing settings
+   1. make sure to set the default root object to "index.html"
    1. create Route53 A record as alias to cloud front distribution
    1. ensure links in README are correct
 1. update homebrew
