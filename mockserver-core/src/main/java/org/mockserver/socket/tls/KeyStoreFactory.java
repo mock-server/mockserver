@@ -23,10 +23,11 @@ import static org.slf4j.event.Level.*;
  */
 public class KeyStoreFactory {
 
+    public static final String KEY_STORE_TYPE = "jks";
     public static final String KEY_STORE_PASSWORD = "changeit";
     public static final String KEY_STORE_CERT_ALIAS = "mockserver-client-cert";
     public static final String KEY_STORE_CA_ALIAS = "mockserver-ca-cert";
-    public static final String KEY_STORE_FILE_NAME = "mockserver_keystore" + KeyStore.getDefaultType().toLowerCase();
+    public static final String KEY_STORE_FILE_NAME = "mockserver_keystore" + KEY_STORE_TYPE;
     /**
      * Enforce TLS 1.2 if available, since it's not default up to Java 8.
      * <p>
@@ -70,7 +71,6 @@ public class KeyStoreFactory {
                 // key manager
                 KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
                 keyManagerFactory.init(loadOrCreateKeyStore(
-                    KeyStore.getDefaultType(),
                     privateKey,
                     x509Certificate,
                     certificateAuthorityX509Certificate,
@@ -91,7 +91,6 @@ public class KeyStoreFactory {
     public KeyStore loadOrCreateKeyStore(String keyStoreType) {
         keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
         return loadOrCreateKeyStore(
-            keyStoreType,
             keyAndCertificateFactory.privateKey(),
             keyAndCertificateFactory.x509Certificate(),
             keyAndCertificateFactory.certificateAuthorityX509Certificate(),
@@ -99,12 +98,12 @@ public class KeyStoreFactory {
         );
     }
 
-    public KeyStore loadOrCreateKeyStore(String keyStoreType, PrivateKey privateKey, X509Certificate x509Certificate, X509Certificate certificateAuthorityX509Certificate, X509Certificate[] trustX509CertificateChain) {
+    public KeyStore loadOrCreateKeyStore(PrivateKey privateKey, X509Certificate x509Certificate, X509Certificate certificateAuthorityX509Certificate, X509Certificate[] trustX509CertificateChain) {
         KeyStore keystore = null;
         File keyStoreFile = new File(KEY_STORE_FILE_NAME);
         if (keyStoreFile.exists()) {
             try (FileInputStream fileInputStream = new FileInputStream(keyStoreFile)) {
-                keystore = KeyStore.getInstance(keyStoreType);
+                keystore = KeyStore.getInstance(KEY_STORE_TYPE);
                 keystore.load(fileInputStream, KEY_STORE_PASSWORD.toCharArray());
             } catch (Exception e) {
                 throw new RuntimeException("Exception while loading KeyStore from " + keyStoreFile.getAbsolutePath(), e);
@@ -114,7 +113,6 @@ public class KeyStoreFactory {
 
         return savePrivateKeyAndX509InKeyStore(
             keystore,
-            keyStoreType,
             privateKey,
             KEY_STORE_PASSWORD.toCharArray(),
             new X509Certificate[]{
@@ -146,12 +144,12 @@ public class KeyStoreFactory {
         }
     }
 
-    private KeyStore savePrivateKeyAndX509InKeyStore(KeyStore existingKeyStore, String keyStoreType, Key privateKey, char[] keyStorePassword, Certificate[] chain, X509Certificate... caCerts) {
+    private KeyStore savePrivateKeyAndX509InKeyStore(KeyStore existingKeyStore, Key privateKey, char[] keyStorePassword, Certificate[] chain, X509Certificate... caCerts) {
         try {
             KeyStore keyStore = existingKeyStore;
             if (keyStore == null) {
                 // create new key store
-                keyStore = KeyStore.getInstance(keyStoreType);
+                keyStore = KeyStore.getInstance("jks");
                 keyStore.load(null, keyStorePassword);
             }
 

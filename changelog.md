@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fixed error resulting in enum not found exception for log events
 - fixed error with parsing of json arrays for expectation responses with json body as json object not escaped string
 - fixed meaning of disableSystemOut property so that only system out is disabled not all logging
+- fixed key store type in key store factory to avoid issue with the JVM changing the defaults
 
 ## [5.9.0] - 2020-02-01
 
