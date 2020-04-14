@@ -42,6 +42,18 @@ public class HttpResponseClassCallbackActionHandlerTest {
         assertThat(actualHttpResponse, is(response("some_body")));
     }
 
+    @Test
+    public void shouldHandleValidLocalClassViaType() {
+        // given
+        HttpClassCallback httpClassCallback = callback(TestCallback.class);
+
+        // when
+        HttpResponse actualHttpResponse = new HttpResponseClassCallbackActionHandler(new MockServerLogger()).handle(httpClassCallback, request().withBody("some_body"));
+
+        // then        
+        assertThat(actualHttpResponse, is(response("some_body")));
+    }
+
     public static class TestCallback implements ExpectationResponseCallback {
 
         @Override
