@@ -51,6 +51,9 @@ public class HttpResponseDTOSerializer extends StdSerializer<HttpResponseDTO> {
         if (httpResponseDTO.getConnectionOptions() != null) {
             jgen.writeObjectField("connectionOptions", httpResponseDTO.getConnectionOptions());
         }
+        if (httpResponseDTO.getSession() != null) {
+            jgen.writeObjectField("session", httpResponseDTO.getSession());
+        }
         jgen.writeEndObject();
     }
 }

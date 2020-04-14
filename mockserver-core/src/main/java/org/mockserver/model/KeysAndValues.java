@@ -13,7 +13,7 @@ import static org.mockserver.model.NottableString.string;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public abstract class KeysAndValues<T extends KeyAndValue, K extends KeysAndValues> extends ObjectWithJsonToString {
 
-    private final Map<NottableString, NottableString> map = new LinkedHashMap<>();
+    private final Map<NottableString, NottableString> map = Collections.synchronizedMap(new LinkedHashMap<>());
 
     public CaseInsensitiveRegexHashMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, List<T> entries, boolean controlPlaneMatcher) {
         CaseInsensitiveRegexHashMap caseInsensitiveRegexHashMap = new CaseInsensitiveRegexHashMap(mockServerLogger, controlPlaneMatcher);
@@ -27,25 +27,25 @@ public abstract class KeysAndValues<T extends KeyAndValue, K extends KeysAndValu
 
     public abstract T build(NottableString name, NottableString value);
 
-    public K withEntries(List<T> cookies) {
+    public K withEntries(List<T> entries) {
         map.clear();
-        if (cookies != null) {
-            for (T cookie : cookies) {
-                withEntry(cookie);
+        if (entries != null) {
+            for (T entry : entries) {
+                withEntry(entry);
             }
         }
         return (K) this;
     }
 
-    public K withEntries(T... cookies) {
-        if (cookies != null) {
-            withEntries(Arrays.asList(cookies));
+    public K withEntries(T... entries) {
+        if (entries != null) {
+            withEntries(Arrays.asList(entries));
         }
         return (K) this;
     }
 
-    public K withEntry(T cookie) {
-        map.put(cookie.getName(), cookie.getValue());
+    public K withEntry(T entry) {
+        map.put(entry.getName(), entry.getValue());
         return (K) this;
     }
 
@@ -61,11 +61,11 @@ public abstract class KeysAndValues<T extends KeyAndValue, K extends KeysAndValu
 
     public List<T> getEntries() {
         if (!map.isEmpty()) {
-            ArrayList<T> cookies = new ArrayList<>();
+            ArrayList<T> entries = new ArrayList<>();
             for (NottableString nottableString : map.keySet()) {
-                cookies.add(build(nottableString, map.get(nottableString)));
+                entries.add(build(nottableString, map.get(nottableString)));
             }
-            return cookies;
+            return entries;
         } else {
             return Collections.emptyList();
         }

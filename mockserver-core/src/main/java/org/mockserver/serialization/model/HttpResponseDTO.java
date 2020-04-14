@@ -4,6 +4,7 @@ import org.mockserver.model.Cookies;
 import org.mockserver.model.Headers;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
+import org.mockserver.model.Session;
 
 /**
  * @author jamesdbloom
@@ -16,6 +17,8 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
     private Headers headers;
     private DelayDTO delay;
     private ConnectionOptionsDTO connectionOptions;
+    private Session session;
+    
 
     public HttpResponseDTO() {
     }
@@ -29,6 +32,7 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
             cookies = httpResponse.getCookies();
             delay = (httpResponse.getDelay() != null ? new DelayDTO(httpResponse.getDelay()) : null);
             connectionOptions = (httpResponse.getConnectionOptions() != null ? new ConnectionOptionsDTO(httpResponse.getConnectionOptions()) : null);
+            session = httpResponse.getSession();
         }
     }
 
@@ -40,7 +44,8 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
             .withHeaders(headers)
             .withCookies(cookies)
             .withDelay((delay != null ? delay.buildObject() : null))
-            .withConnectionOptions((connectionOptions != null ? connectionOptions.buildObject() : null));
+            .withConnectionOptions((connectionOptions != null ? connectionOptions.buildObject() : null))
+            .withSession(session);
     }
 
     public Integer getStatusCode() {
@@ -103,6 +108,15 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
 
     public HttpResponseDTO setConnectionOptions(ConnectionOptionsDTO connectionOptions) {
         this.connectionOptions = connectionOptions;
+        return this;
+    }
+
+    public Session getSession() {
+        return session;
+    }
+
+    public HttpResponseDTO setSession(Session session) {
+        this.session = session;
         return this;
     }
 }

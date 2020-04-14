@@ -51,6 +51,9 @@ public class HttpRequestSerializer extends StdSerializer<HttpRequest> {
         if (httpRequest.getBody() != null && isNotBlank(String.valueOf(httpRequest.getBody().getValue()))) {
             jgen.writeObjectField("body", httpRequest.getBody());
         }
+        if (httpRequest.getSession() != null && !httpRequest.getSession().isEmpty()) {
+            jgen.writeObjectField("session", httpRequest.getSession());
+        }
         jgen.writeEndObject();
     }
 }

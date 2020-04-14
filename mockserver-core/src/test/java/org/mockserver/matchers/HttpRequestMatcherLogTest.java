@@ -324,6 +324,7 @@ public class HttpRequestMatcherLogTest {
                     "  " + NEW_LINE +
                     "  headers matched" + NEW_LINE +
                     "  cookies matched" + NEW_LINE +
+                    "  session matched" + NEW_LINE +
                     "  query matched" + NEW_LINE +
                     "  keep-alive didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
@@ -451,6 +452,7 @@ public class HttpRequestMatcherLogTest {
                     "  " + NEW_LINE +
                     "  headers matched" + NEW_LINE +
                     "  cookies matched" + NEW_LINE +
+                    "  session matched" + NEW_LINE +                    
                     "  query matched" + NEW_LINE +
                     "  keep-alive didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
@@ -516,6 +518,7 @@ public class HttpRequestMatcherLogTest {
                 "  body matched" + NEW_LINE +
                 "  headers matched" + NEW_LINE +
                 "  cookies matched" + NEW_LINE +
+                "  session matched" + NEW_LINE +
                 "  query matched" + NEW_LINE +
                 "  keep-alive didn't match: " + NEW_LINE +
                 "  " + NEW_LINE +
@@ -546,6 +549,7 @@ public class HttpRequestMatcherLogTest {
                 "  body matched" + NEW_LINE +
                 "  headers matched" + NEW_LINE +
                 "  cookies matched" + NEW_LINE +
+                "  session matched" + NEW_LINE +
                 "  query matched" + NEW_LINE +
                 "  keep-alive didn't match: " + NEW_LINE +
                 "  " + NEW_LINE +
@@ -601,6 +605,7 @@ public class HttpRequestMatcherLogTest {
                     "  body matched" + NEW_LINE +
                     "  headers matched" + NEW_LINE +
                     "  cookies matched" + NEW_LINE +
+                    "  session matched" + NEW_LINE +                    
                     "  query matched" + NEW_LINE +
                     "  keep-alive didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
@@ -632,6 +637,7 @@ public class HttpRequestMatcherLogTest {
                     "  body matched" + NEW_LINE +
                     "  headers matched" + NEW_LINE +
                     "  cookies matched" + NEW_LINE +
+                    "  session matched" + NEW_LINE +                    
                     "  query matched" + NEW_LINE +
                     "  keep-alive didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
@@ -701,6 +707,7 @@ public class HttpRequestMatcherLogTest {
                     "  body matched" + NEW_LINE +
                     "  headers matched" + NEW_LINE +
                     "  cookies matched" + NEW_LINE +
+                    "  session matched" + NEW_LINE +                    
                     "  query matched" + NEW_LINE +
                     "  keep-alive didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
@@ -742,6 +749,7 @@ public class HttpRequestMatcherLogTest {
                     "  body matched" + NEW_LINE +
                     "  headers matched" + NEW_LINE +
                     "  cookies matched" + NEW_LINE +
+                    "  session matched" + NEW_LINE +                    
                     "  query matched" + NEW_LINE +
                     "  keep-alive didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
@@ -800,6 +808,7 @@ public class HttpRequestMatcherLogTest {
                     "  body matched" + NEW_LINE +
                     "  headers matched" + NEW_LINE +
                     "  cookies matched" + NEW_LINE +
+                    "  session matched" + NEW_LINE +                    
                     "  query matched" + NEW_LINE +
                     "  keep-alive matched" + NEW_LINE +
                     "  sslMatches didn't match: " + NEW_LINE +
@@ -831,6 +840,7 @@ public class HttpRequestMatcherLogTest {
                     "  body matched" + NEW_LINE +
                     "  headers matched" + NEW_LINE +
                     "  cookies matched" + NEW_LINE +
+                    "  session matched" + NEW_LINE +                    
                     "  query matched" + NEW_LINE +
                     "  keep-alive matched" + NEW_LINE +
                     "  sslMatches didn't match: " + NEW_LINE +
@@ -1145,6 +1155,7 @@ public class HttpRequestMatcherLogTest {
                     "  body matched" + NEW_LINE +
                     "  headers matched" + NEW_LINE +
                     "  cookies matched" + NEW_LINE +
+                    "  session matched" + NEW_LINE +                    
                     "  query didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
                     "    multimap subset match failed expected:" + NEW_LINE +
@@ -1212,6 +1223,7 @@ public class HttpRequestMatcherLogTest {
                     "  body matched" + NEW_LINE +
                     "  headers matched" + NEW_LINE +
                     "  cookies matched" + NEW_LINE +
+                    "  session matched" + NEW_LINE +                    
                     "  query didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
                     "    multimap subset match failed expected:" + NEW_LINE +

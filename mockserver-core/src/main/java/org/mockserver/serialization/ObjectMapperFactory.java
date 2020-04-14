@@ -9,6 +9,7 @@ import org.mockserver.serialization.deserializers.body.BodyWithContentTypeDTODes
 import org.mockserver.serialization.deserializers.collections.CookiesDeserializer;
 import org.mockserver.serialization.deserializers.collections.HeadersDeserializer;
 import org.mockserver.serialization.deserializers.collections.ParametersDeserializer;
+import org.mockserver.serialization.deserializers.collections.SessionDeserializer;
 import org.mockserver.serialization.deserializers.condition.TimeToLiveDTODeserializer;
 import org.mockserver.serialization.deserializers.condition.VerificationTimesDTODeserializer;
 import org.mockserver.serialization.deserializers.string.NottableStringDeserializer;
@@ -16,6 +17,7 @@ import org.mockserver.serialization.serializers.body.*;
 import org.mockserver.serialization.serializers.collections.CookiesSerializer;
 import org.mockserver.serialization.serializers.collections.HeadersSerializer;
 import org.mockserver.serialization.serializers.collections.ParametersSerializer;
+import org.mockserver.serialization.serializers.collections.SessionSerializer;
 import org.mockserver.serialization.serializers.condition.VerificationTimesDTOSerializer;
 import org.mockserver.serialization.serializers.condition.VerificationTimesSerializer;
 import org.mockserver.serialization.serializers.request.HttpRequestDTOSerializer;
@@ -106,7 +108,8 @@ public class ObjectMapperFactory {
             // key and multivalue
             new HeadersDeserializer(),
             new ParametersDeserializer(),
-            new CookiesDeserializer()
+            new CookiesDeserializer(),
+            new SessionDeserializer()
         );
         for (JsonDeserializer jsonDeserializer : jsonDeserializers) {
             Class type = jsonDeserializer.handledType();
@@ -158,6 +161,7 @@ public class ObjectMapperFactory {
             new HeadersSerializer(),
             new ParametersSerializer(),
             new CookiesSerializer(),
+            new SessionSerializer(),
             // log
             new org.mockserver.serialization.serializers.log.LogEntrySerializer()
         );

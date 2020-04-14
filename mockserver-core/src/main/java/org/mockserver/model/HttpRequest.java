@@ -30,6 +30,7 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
     private Boolean keepAlive = null;
     private Boolean secure = null;
     private SocketAddress socketAddress;
+    private Session session;
 
     public static HttpRequest request() {
         return new HttpRequest();
@@ -689,6 +690,15 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
             throw new IllegalArgumentException("Host header must be provided to determine remote socket address, the request does not include the \"Host\" header:" + NEW_LINE + this);
         }
     }
+    
+    public Session getSession() {
+        return session;
+    }
+    
+    public HttpRequest withSession(Session session) {
+        this.session = session;
+        return this;
+    }
 
     @SuppressWarnings("MethodDoesntCallSuperMethod")
     public HttpRequest clone() {
@@ -701,7 +711,8 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
             .withCookies(cookies != null ? cookies.clone() : null)
             .withKeepAlive(keepAlive)
             .withSecure(secure)
-            .withSocketAddress(socketAddress);
+            .withSocketAddress(socketAddress)
+            .withSession(session);
     }
 
     public HttpRequest update(HttpRequest replaceRequest) {
@@ -732,6 +743,10 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
         if (replaceRequest.getSocketAddress() != null) {
             withSocketAddress(replaceRequest.getSocketAddress());
         }
+        if (replaceRequest.getSession() != null) {
+            withSession(replaceRequest.getSession());
+        }
+
         return this;
     }
 }

@@ -29,6 +29,9 @@
         },
         "socketAddress": {
             "$ref": "#/definitions/socketAddress"
+        },
+        "session": {
+            "$ref": "#/definitions/keyToValue"
         }
     },
     "definitions": {

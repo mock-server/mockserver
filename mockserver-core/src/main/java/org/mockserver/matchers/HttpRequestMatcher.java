@@ -45,6 +45,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     private static final String HEADERS = "headers";
     private static final String BODY = "body";
     private static final String PATH = "path";
+    private static final String SESSION = "session";
     private static final String METHOD = "method";
     private static final String COMMA = ",";
     private static final String EMPTY = "";
@@ -60,6 +61,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     private BooleanMatcher keepAliveMatcher = null;
     private BodyDTO bodyDTOMatcher = null;
     private BooleanMatcher sslMatcher = null;
+    private HashMapMatcher sessionMatcher = null;
     private boolean controlPlaneMatcher;
     private boolean responseInProgress = false;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
@@ -84,6 +86,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                 withCookies(httpRequest.getCookies());
                 withKeepAlive(httpRequest.isKeepAlive());
                 withSsl(httpRequest.isSecure());
+                withSession(httpRequest.getSession());
             }
             return true;
         }
@@ -131,7 +134,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     private void withPath(NottableString path) {
         this.pathMatcher = new RegexStringMatcher(mockServerLogger, path, controlPlaneMatcher);
     }
-
+  
     private void withQueryStringParameters(Parameters parameters) {
         this.queryStringParameterMatcher = new MultiValueMapMatcher(mockServerLogger, parameters, controlPlaneMatcher);
     }
@@ -208,6 +211,10 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     private void withCookies(Cookies cookies) {
         this.cookieMatcher = new HashMapMatcher(mockServerLogger, cookies, controlPlaneMatcher);
     }
+        
+    private void withSession(Session session) {
+        this.sessionMatcher = new HashMapMatcher(mockServerLogger, session, controlPlaneMatcher);
+    }
 
     private void withKeepAlive(Boolean keepAlive) {
         this.keepAliveMatcher = new BooleanMatcher(mockServerLogger, keepAlive);
@@ -275,7 +282,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                     if (failFast(pathMatcher, matchDifference, becauseBuilder, pathMatches, PATH, EMPTY)) {
                         return false;
                     }
-
+                   
                     boolean bodyMatches = bodyMatches(matchDifference, request);
                     if (failFast(bodyMatcher, matchDifference, becauseBuilder, bodyMatches, BODY, EMPTY)) {
                         return false;
@@ -288,6 +295,11 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
 
                     boolean cookiesMatch = matches(COOKIES, matchDifference, cookieMatcher, request.getCookies());
                     if (failFast(cookieMatcher, matchDifference, becauseBuilder, cookiesMatch, COOKIES, EMPTY)) {
+                        return false;
+                    }
+                    
+                    boolean sessionMatches = matches(SESSION, matchDifference, sessionMatcher, request.getSession());
+                    if (failFast(sessionMatcher, matchDifference, becauseBuilder, sessionMatches, SESSION, EMPTY)) {
                         return false;
                     }
 

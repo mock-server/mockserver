@@ -23,6 +23,9 @@
         },
         "reasonPhrase": {
             "type": "string"
+        },
+        "session": {
+            "$ref": "#/definitions/keyToValue"
         }
     },
     "definitions": {
