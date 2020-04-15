@@ -62,7 +62,7 @@ public class DashboardHandler {
                     response =
                         response()
                             .withHeader(HttpHeaderNames.CONTENT_TYPE.toString(), MIME_MAP.get(extension))
-                            .withHeader(HttpHeaderNames.CONTENT_LENGTH.toString(), String.valueOf(content.length()))
+                            .withHeader(HttpHeaderNames.CONTENT_LENGTH.toString(), String.valueOf(content.getBytes().length))
                             .withBody(content);
                 } else {
                     final byte[] bytes = ByteStreams.toByteArray(contentStream);
