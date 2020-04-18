@@ -6,6 +6,7 @@ import org.mockserver.matchers.Times;
 import org.mockserver.model.Cookies;
 import org.mockserver.model.Headers;
 import org.mockserver.model.Parameters;
+import org.mockserver.model.Session;
 import org.mockserver.model.StringBody;
 
 import java.io.IOException;
@@ -17,6 +18,7 @@ import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.SessionEntry.sessionEntry;
 
 /**
  * @author jamesdbloom
@@ -46,6 +48,10 @@ public class ObjectMapperFactoryTest {
             "      \"name\" : \"someCookieName\"," + NEW_LINE +
             "      \"value\" : \"someCookieValue\"" + NEW_LINE +
             "    } ]," + NEW_LINE +
+            "    \"session\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someSessionKey1\"," + NEW_LINE +
+            "      \"value\" : \"someSessionValue1\"" + NEW_LINE +
+            "    } ]," + NEW_LINE +
             "    \"headers\" : [ {" + NEW_LINE +
             "      \"name\" : \"someHeaderName\"," + NEW_LINE +
             "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
@@ -57,6 +63,10 @@ public class ObjectMapperFactoryTest {
             "    \"cookies\" : [ {" + NEW_LINE +
             "      \"name\" : \"someCookieName\"," + NEW_LINE +
             "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"session\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someSessionKey2\"," + NEW_LINE +
+            "      \"value\" : \"someSessionValue2\"" + NEW_LINE +
             "    } ]," + NEW_LINE +
             "    \"headers\" : [ {" + NEW_LINE +
             "      \"name\" : \"someHeaderName\"," + NEW_LINE +
@@ -93,6 +103,9 @@ public class ObjectMapperFactoryTest {
                     .setCookies(new Cookies().withEntries(
                         cookie("someCookieName", "someCookieValue")
                     ))
+                    .setSession(new Session().withEntries(
+                        sessionEntry("someSessionKey1","someSessionValue1")
+                    ))
             )
             .setHttpResponse(
                 new HttpResponseDTO()
@@ -109,6 +122,9 @@ public class ObjectMapperFactoryTest {
                             .setTimeUnit(TimeUnit.MICROSECONDS)
                             .setValue(1)
                     )
+                    .setSession(new Session().withEntries(
+                        sessionEntry("someSessionKey2","someSessionValue2")
+                    ))
             )
             .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5))), expectationDTO);
     }

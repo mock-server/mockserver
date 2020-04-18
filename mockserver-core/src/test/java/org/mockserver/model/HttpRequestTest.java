@@ -135,7 +135,10 @@ public class HttpRequestTest {
                 "  }," + NEW_LINE +
                 "  \"keepAlive\" : true," + NEW_LINE +
                 "  \"secure\" : true," + NEW_LINE +
-                "  \"body\" : \"some_body\"" + NEW_LINE +
+                "  \"body\" : \"some_body\"," + NEW_LINE +
+                "  \"session\" : {" + NEW_LINE +
+                "    \"some_session_key\" : \"some_session_key_value\"" + NEW_LINE +
+                "  }" + NEW_LINE + 
                 "}",
             request()
                 .withPath("some_path")
@@ -143,6 +146,7 @@ public class HttpRequestTest {
                 .withMethod("METHOD")
                 .withHeaders(new Header("some_header", "some_header_value"))
                 .withCookies(new Cookie("some_cookie", "some_cookie_value"))
+                .withSession(new Session().withEntry("some_session_key", "some_session_key_value"))
                 .withSecure(true)
                 .withQueryStringParameters(new Parameter("some_parameter", "some_parameter_value"))
                 .withKeepAlive(true)
@@ -243,5 +247,17 @@ public class HttpRequestTest {
                 .withKeepAlive(false)
         ));
     }
-
+    
+    @Test
+    public void returnsSessionObject() {
+        Session session = new Session().withEntry("key", "value");
+        HttpRequest httpRequest = request().withSession(session);
+        
+        assertSame(session,httpRequest.getSession());
+    }
+    
+    @Test
+    public void defaultNullSession() {
+        assertNull(new HttpRequest().getSession());
+    }
 }

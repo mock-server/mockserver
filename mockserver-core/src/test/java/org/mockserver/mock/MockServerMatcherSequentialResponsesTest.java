@@ -7,14 +7,18 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.NottableString;
+import org.mockserver.model.Session;
 import org.mockserver.scheduler.Scheduler;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
+import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.ui.MockServerMatcherNotifier.Cause.API;
 
@@ -24,13 +28,15 @@ import static org.mockserver.ui.MockServerMatcherNotifier.Cause.API;
 public class MockServerMatcherSequentialResponsesTest {
 
     private MockServerMatcher mockServerMatcher;
+    private Session mockServerSession;
 
     @Before
     public void prepareTestFixture() {
         MockServerLogger mockLogFormatter = mock(MockServerLogger.class);
         Scheduler scheduler = mock(Scheduler.class);
         WebSocketClientRegistry webSocketClientRegistry = mock(WebSocketClientRegistry.class);
-        mockServerMatcher = new MockServerMatcher(mockLogFormatter, scheduler, webSocketClientRegistry);
+        mockServerSession = new Session();
+        mockServerMatcher = new MockServerMatcher(mockLogFormatter, scheduler, webSocketClientRegistry, mockServerSession);
     }
 
     @Test
@@ -141,5 +147,209 @@ public class MockServerMatcherSequentialResponsesTest {
         assertNull(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
     }
 
+    @Test
+    public void responedAfterSessionEntryAddedByPreviousResponse() {
+     // when
+        Expectation expectation1 = new Expectation(
+            request()
+            .withSession(new Session().withEntry("key1", "value1"))
+        ).thenRespond(
+            response()
+            .withBody("someBody")
+        );
+        
+        Expectation expectation2 = new Expectation(
+            request()
+        ).thenRespond(
+            response()
+            .withSession(new Session().withEntry("key1", "value1"))
+            .withBody("someBody")
+        );
+        
+        mockServerMatcher.add(expectation1, API);
+        mockServerMatcher.add(expectation2, API);
+                
+        //prior to match - session should remain the same
+        assertTrue(mockServerSession.getMap().isEmpty());
+        
+     //then 
+        //expectation2 should be matched because expectation1 requires session entries to exist
+        assertEquals(expectation2, mockServerMatcher.firstMatchingExpectation(new HttpRequest()));
+        
+        //session now should have the entry that was added by the response of expectation2
+        assertEquals(1, mockServerSession.getMap().size());
+        assertEquals(NottableString.string("value1"), mockServerSession.getMap().get(NottableString.string("key1")));
+        
+        //expectation1 should now be matched because session contains the required entries
+        assertEquals(expectation1, mockServerMatcher.firstMatchingExpectation(new HttpRequest()));
+        
+        //session should still have the entry that was added by the response of expectation2
+        assertEquals(1, mockServerSession.getMap().size());
+        assertEquals(NottableString.string("value1"), mockServerSession.getMap().get(NottableString.string("key1")));
+        
+        //expectation1 should be matched again because session still contains the required entries
+        assertEquals(expectation1, mockServerMatcher.firstMatchingExpectation(new HttpRequest()));
+    }
+    
+    @Test
+    public void doesNotResponedAfterSessionClearedByPreviousResponse() {
+     // when
+        Expectation expectation = new Expectation(
+            request()
+            .withSession(new Session().withEntry("key1", "value1"))
+        ).thenRespond(
+            response()
+            .withSession(new Session())
+            .withBody("someBody")
+        );
+        
+        mockServerMatcher.add(expectation, API);
+        mockServerSession.withEntry("key1", "value1");
+        
+     //then 
+        //expectation should be matched because session contains the required entries
+        assertEquals(expectation, mockServerMatcher.firstMatchingExpectation(new HttpRequest()));
+        
+        //matched response had explicit empty session - session now should be empty
+        assertTrue(mockServerSession.getMap().isEmpty());
+        
+        //expectation now should not be matched because session is missing the required entries
+        assertNull(mockServerMatcher.firstMatchingExpectation(new HttpRequest()));
+        
+        //session should still be empty
+        assertTrue(mockServerSession.getMap().isEmpty());
+        
+        //expectation should still not be matched because session is missing the required entries
+        assertNull(mockServerMatcher.firstMatchingExpectation(new HttpRequest()));
+    }
+    
+    @Test
+    public void responedAfterSessionEntryChangedByPreviousResponse() {
+     // when
+        Expectation expectation1 = new Expectation(
+            request()
+            .withSession(new Session().withEntry("key", "value1"))
+        ).thenRespond(
+            response()
+            .withSession(new Session().withEntry("key", "value2"))
+            .withBody("someBody")
+        );
+        
+        Expectation expectation2 = new Expectation(
+            request()
+            .withSession(new Session().withEntry("key", "value2"))
+        ).thenRespond(
+            response()
+            .withSession(new Session().withEntry("key", "value1"))
+            .withBody("someBody")
+        );
+        
+        Expectation expectation3 = new Expectation(
+            request()
+        ).thenRespond(
+            response()
+            .withSession(new Session().withEntry("key", "value1"))
+            .withBody("someBody")
+        );
+        
+        mockServerMatcher.add(expectation1, API);
+        mockServerMatcher.add(expectation2, API);
+        mockServerMatcher.add(expectation3, API);
+                
+        //prior to match - session should remain the same
+        assertTrue(mockServerSession.getMap().isEmpty());
+        
+     //then 
+        //expectation3 should be matched because expectation1 and expectation2 require session entries to exist
+        assertEquals(expectation3, mockServerMatcher.firstMatchingExpectation(new HttpRequest()));
+        
+        //session now should have the entry that was added by the response of expectation3
+        assertEquals(1, mockServerSession.getMap().size());
+        assertEquals(NottableString.string("value1"), mockServerSession.getMap().get(NottableString.string("key")));
+        
+        //expectation1 should now be matched because session contains the required entries
+        assertEquals(expectation1, mockServerMatcher.firstMatchingExpectation(new HttpRequest()));
+        
+        //session now should have the entry that was added by the response of expectation1
+        assertEquals(1, mockServerSession.getMap().size());
+        assertEquals(NottableString.string("value2"), mockServerSession.getMap().get(NottableString.string("key")));
+        
+        //expectation2 should now be matched because session contains the required entries
+        assertEquals(expectation2, mockServerMatcher.firstMatchingExpectation(new HttpRequest()));
+        
+        //session now should have the entry value that was changed by the response of expectation2
+        assertEquals(1, mockServerSession.getMap().size());
+        assertEquals(NottableString.string("value1"), mockServerSession.getMap().get(NottableString.string("key")));
+        
+        //expectation1 should now be matched because session contains the required entries
+        assertEquals(expectation1, mockServerMatcher.firstMatchingExpectation(new HttpRequest()));
+    }
+    
+    @Test
+    public void responedAfterSessionEntriesAddedByPreviousResponses() {
+     // when
+        Expectation expectation1 = new Expectation(
+            request()
+            .withSession(new Session()
+                .withEntry("key1", "value1")
+                .withEntry("key2", "value2")
+            )
+        ).thenRespond(
+            response()
+            .withBody("someBody")
+        );
+        
+        Expectation expectation2 = new Expectation(
+            request()
+            .withSession(new Session().withEntry("key1", "value1"))
+        ).thenRespond(
+            response()
+            .withSession(new Session().withEntry("key2", "value2"))
+            .withBody("someBody")
+        );
+        
+        Expectation expectation3 = new Expectation(
+            request()
+        ).thenRespond(
+            response()
+            .withSession(new Session().withEntry("key1", "value1"))
+            .withBody("someBody")
+        );
+        
+        mockServerMatcher.add(expectation1, API);
+        mockServerMatcher.add(expectation2, API);
+        mockServerMatcher.add(expectation3, API);
+                
+        //prior to match - session should remain the same
+        assertTrue(mockServerSession.getMap().isEmpty());
+        
+     //then 
+        //expectation3 should be matched because expectation1 and expectation2 require session entries to exist
+        assertEquals(expectation3, mockServerMatcher.firstMatchingExpectation(new HttpRequest()));
+        
+        //session now should have the entry that was added by the response of expectation3
+        assertEquals(1, mockServerSession.getMap().size());
+        assertEquals(NottableString.string("value1"), mockServerSession.getMap().get(NottableString.string("key1")));
+        
+        //expectation2 should now be matched because session contains the required entry for it
+        assertEquals(expectation2, mockServerMatcher.firstMatchingExpectation(new HttpRequest()));
+        
+        //session now should also have the entry that was added by the response of expectation2
+        assertEquals(2, mockServerSession.getMap().size());
+        assertEquals(NottableString.string("value1"), mockServerSession.getMap().get(NottableString.string("key1")));
+        assertEquals(NottableString.string("value2"), mockServerSession.getMap().get(NottableString.string("key2")));
+        
+        //expectation1 should now be matched because session contains the required entries
+        assertEquals(expectation1, mockServerMatcher.firstMatchingExpectation(new HttpRequest()));
+        
+        //session should still have the entries that was added by the response of expectation3 and expectation2 
+        assertEquals(2, mockServerSession.getMap().size());
+        assertEquals(NottableString.string("value1"), mockServerSession.getMap().get(NottableString.string("key1")));
+        assertEquals(NottableString.string("value2"), mockServerSession.getMap().get(NottableString.string("key2")));
+        
+        //expectation1 should still be matched because session contains the required entries
+        assertEquals(expectation1, mockServerMatcher.firstMatchingExpectation(new HttpRequest()));
+
+    }
 
 }

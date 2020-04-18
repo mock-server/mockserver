@@ -37,16 +37,21 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
         EXPECTATION_PRIORITY_COMPARATOR,
         httpRequestMatcher -> httpRequestMatcher.getExpectation().getId()
     );
-    private final Session mockServerSession = new Session();
+    private final Session mockServerSession;
     private final MockServerLogger mockServerLogger;
     private WebSocketClientRegistry webSocketClientRegistry;
     private MatcherBuilder matcherBuilder;
 
     public MockServerMatcher(MockServerLogger mockServerLogger, Scheduler scheduler, WebSocketClientRegistry webSocketClientRegistry) {
+        this(mockServerLogger, scheduler, webSocketClientRegistry, new Session());
+    }
+    
+    public MockServerMatcher(MockServerLogger mockServerLogger, Scheduler scheduler, WebSocketClientRegistry webSocketClientRegistry, Session mockServerSession) {
         super(scheduler);
         this.matcherBuilder = new MatcherBuilder(mockServerLogger);
         this.mockServerLogger = mockServerLogger;
         this.webSocketClientRegistry = webSocketClientRegistry;
+        this.mockServerSession = mockServerSession;
     }
 
     public void add(Expectation expectation, Cause cause) {

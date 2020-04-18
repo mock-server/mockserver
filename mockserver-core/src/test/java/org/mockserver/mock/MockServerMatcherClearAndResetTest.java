@@ -11,6 +11,7 @@ import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.Parameter;
+import org.mockserver.model.Session;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.ui.MockServerMatcherNotifier;
 
@@ -19,6 +20,8 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.anEmptyMap;
+import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
@@ -37,13 +40,15 @@ public class MockServerMatcherClearAndResetTest {
 
     private MockServerMatcher mockServerMatcher;
     private MockServerLogger logFormatter;
+    private Session mockServerSession;
 
     @Before
     public void prepareTestFixture() {
         logFormatter = new MockServerLogger();
         Scheduler scheduler = mock(Scheduler.class);
         WebSocketClientRegistry webSocketClientRegistry = mock(WebSocketClientRegistry.class);
-        mockServerMatcher = new MockServerMatcher(logFormatter, scheduler, webSocketClientRegistry);
+        mockServerSession = new Session();
+        mockServerMatcher = new MockServerMatcher(logFormatter, scheduler, webSocketClientRegistry, mockServerSession);
     }
 
     @Test
@@ -861,6 +866,22 @@ public class MockServerMatcherClearAndResetTest {
 
         // then
         assertThat(mockServerMatcher.httpRequestMatchers.toSortedList(), is(httpRequestMatchers));
+    }
+
+    @Test
+    public void shouldResetAllSessionEntries() {
+        // given
+        mockServerSession
+            .withEntry("key1", "value1")
+            .withEntry("key2", "value2");
+        
+        assertThat(mockServerSession.getMap(), aMapWithSize(2));
+        
+        // when
+        mockServerMatcher.reset();
+
+        // then
+        assertThat(mockServerSession.getMap(), anEmptyMap());
     }
 
 }

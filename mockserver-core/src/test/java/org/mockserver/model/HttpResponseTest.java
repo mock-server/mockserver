@@ -18,6 +18,8 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsSame.sameInstance;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.HttpResponse.response;
@@ -177,6 +179,9 @@ public class HttpResponseTest {
                 "  \"connectionOptions\" : {" + NEW_LINE +
                 "    \"contentLengthHeaderOverride\" : 10," + NEW_LINE +
                 "    \"keepAliveOverride\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"session\" : {" + NEW_LINE +
+                "    \"some_session_key\" : \"some_session_key_value\"" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}",
             response()
@@ -185,6 +190,7 @@ public class HttpResponseTest {
                 .withReasonPhrase("randomPhrase")
                 .withHeaders(new Header("some_header", "some_header_value"))
                 .withCookies(new Cookie("some_cookie", "some_cookie_value"))
+                .withSession(new Session().withEntry("some_session_key", "some_session_key_value"))
                 .withConnectionOptions(
                     connectionOptions()
                         .withContentLengthHeaderOverride(10)
@@ -304,5 +310,18 @@ public class HttpResponseTest {
                         .withKeepAliveOverride(false)
                 )
         ));
+    }
+    
+    @Test
+    public void returnsSessionObject() {
+        Session session = new Session().withEntry("key", "value");
+        HttpResponse httpRsponse = response().withSession(session);
+        
+        assertSame(session,httpRsponse.getSession());
+    }
+    
+    @Test
+    public void defaultNullSession() {
+        assertNull(new HttpResponse().getSession());
     }
 }

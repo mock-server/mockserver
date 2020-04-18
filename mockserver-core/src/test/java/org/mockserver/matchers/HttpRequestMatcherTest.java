@@ -1067,6 +1067,59 @@ public class HttpRequestMatcherTest {
     public void doesNotMatchIncorrectCookieValueRegex() {
         assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withCookies(new Cookie("name", "[A-Z]{0,10}"))).matches(null, new HttpRequest().withCookies(new Cookie("name", "value1"))));
     }
+    
+    @Test
+    public void matchesMatchingSession() {
+        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withSession(new Session().withEntry("key1", "value1"))).matches(null, new HttpRequest().withSession(new Session().withEntry("key1", "value1"))));
+    }
+    
+    @Test
+    public void matchesMatchingSessionWithRegex() {
+        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withSession(new Session().withEntry("key1", "value[0-9]+"))).matches(null, new HttpRequest().withSession(new Session().withEntry("key1", "value1"))));
+    }
+    
+    
+
+    @Test
+    public void doesNotMatchIncorrectSessionEntryName() {
+        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withSession(new Session().withEntry("key1", "value1"))).matches(null, new HttpRequest().withSession(new Session().withEntry("key2", "value2"))));
+    }
+    
+    @Test
+    public void matchesMatchingSessionWithMultipleEntries() {
+        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withSession(
+                new Session()
+                .withEntry("key1", "value1")
+                .withEntry("key2", "value2"))).matches(
+            null, new HttpRequest().withSession(
+                new Session()
+                .withEntry("key2", "value2")
+                .withEntry("key1", "value1")))
+        );
+    }
+    
+    @Test
+    public void doesNotMatchMissingSessionEntry() {
+        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withSession(
+                new Session()
+                .withEntry("key1", "value1")
+                .withEntry("key2", "value2"))).matches(
+            null, new HttpRequest().withSession(
+                new Session()
+                .withEntry("key2", "value2")))
+        );
+    }
+
+    @Test
+    public void doesNotMatchIncorrectSessionEntryValue() {
+        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withSession(new Session().withEntry("key1", "value1"))).matches(null, new HttpRequest().withSession(new Session().withEntry("key1", "value2"))));
+    }
+
+    @Test
+    public void doesNotMatchIncorrectSessionEntryValueRegex() {
+        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withSession(new Session().withEntry("key1", "value[0-9]+"))).matches(null, new HttpRequest().withSession(new Session().withEntry("key1", "valueOne"))));
+    }
+
 
     @Test
     public void shouldReturnFormattedRequestWithStringBodyInToString() {
