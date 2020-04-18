@@ -217,7 +217,7 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
     
     private HttpRequest readFromSession(HttpRequest request) {
         synchronized (mockServerSession) {
-            if (mockServerSession.isEmpty()) {
+            if (mockServerSession.isEmpty() && (request.getSession() == null || request.getSession().isEmpty()) ) {
                 return request;
             }
             return request.clone().withSession(mockServerSession.clone());         
