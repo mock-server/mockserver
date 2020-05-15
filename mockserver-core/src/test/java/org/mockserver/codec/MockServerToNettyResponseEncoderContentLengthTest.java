@@ -25,13 +25,13 @@ import static org.mockserver.model.StringBody.exact;
  */
 public class MockServerToNettyResponseEncoderContentLengthTest {
 
-    private MockServerToNettyResponseEncoder mockServerResponseEncoder;
+    private MockServerHttpToNettyResponseEncoder mockServerResponseEncoder;
     private List<Object> output;
     private HttpResponse httpResponse;
 
     @Before
     public void setupFixture() {
-        mockServerResponseEncoder = new MockServerToNettyResponseEncoder(new MockServerLogger());
+        mockServerResponseEncoder = new MockServerHttpToNettyResponseEncoder(new MockServerLogger());
         output = new ArrayList<>();
         httpResponse = response();
     }

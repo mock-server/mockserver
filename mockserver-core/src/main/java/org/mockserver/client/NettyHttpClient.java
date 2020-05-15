@@ -1,7 +1,9 @@
 package org.mockserver.client;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -9,11 +11,15 @@ import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.BinaryMessage;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.Message;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.socket.tls.NettySslContextFactory;
+import org.slf4j.event.Level;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -29,7 +35,7 @@ public class NettyHttpClient {
 
     static final AttributeKey<Boolean> SECURE = AttributeKey.valueOf("SECURE");
     static final AttributeKey<InetSocketAddress> REMOTE_SOCKET = AttributeKey.valueOf("REMOTE_SOCKET");
-    static final AttributeKey<CompletableFuture<HttpResponse>> RESPONSE_FUTURE = AttributeKey.valueOf("RESPONSE_FUTURE");
+    static final AttributeKey<CompletableFuture<Message>> RESPONSE_FUTURE = AttributeKey.valueOf("RESPONSE_FUTURE");
     private final MockServerLogger mockServerLogger;
     private final EventLoopGroup eventLoopGroup;
     private final ProxyConfiguration proxyConfiguration;
@@ -65,6 +71,7 @@ public class NettyHttpClient {
             }
 
             final CompletableFuture<HttpResponse> httpResponseFuture = new CompletableFuture<>();
+            final CompletableFuture<Message> responseFuture = new CompletableFuture<>();
             new Bootstrap()
                 .group(eventLoopGroup)
                 .channel(NioSocketChannel.class)
@@ -74,8 +81,8 @@ public class NettyHttpClient {
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectionTimeoutMillis)
                 .attr(SECURE, httpRequest.isSecure() != null && httpRequest.isSecure())
                 .attr(REMOTE_SOCKET, remoteAddress)
-                .attr(RESPONSE_FUTURE, httpResponseFuture)
-                .handler(new HttpClientInitializer(proxyConfiguration, mockServerLogger, forwardProxyClient, nettySslContextFactory))
+                .attr(RESPONSE_FUTURE, responseFuture)
+                .handler(new HttpClientInitializer(proxyConfiguration, mockServerLogger, forwardProxyClient, nettySslContextFactory, true))
                 .connect(remoteAddress)
                 .addListener((ChannelFutureListener) future -> {
                     if (future.isSuccess()) {
@@ -86,7 +93,69 @@ public class NettyHttpClient {
                     }
                 });
 
+            responseFuture
+                .whenComplete((message, throwable) -> {
+                    if (throwable == null) {
+                        httpResponseFuture.complete((HttpResponse) message);
+                    } else {
+                        httpResponseFuture.completeExceptionally(throwable);
+                    }
+                });
+
             return httpResponseFuture;
+        } else {
+            throw new IllegalStateException("Request sent after client has been stopped - the event loop has been shutdown so it is not possible to send a request");
+        }
+    }
+
+    public CompletableFuture<BinaryMessage> sendRequest(final BinaryMessage binaryRequest, final boolean isSecure, InetSocketAddress remoteAddress, Integer connectionTimeoutMillis) throws SocketConnectionException {
+        if (!eventLoopGroup.isShuttingDown()) {
+            if (proxyConfiguration != null && proxyConfiguration.getType() == ProxyConfiguration.Type.HTTP) {
+                remoteAddress = proxyConfiguration.getProxyAddress();
+            } else if (remoteAddress == null) {
+                throw new IllegalArgumentException("Remote address cannot be null");
+            }
+
+            final CompletableFuture<BinaryMessage> binaryResponseFuture = new CompletableFuture<>();
+            final CompletableFuture<Message> responseFuture = new CompletableFuture<>();
+            new Bootstrap()
+                .group(eventLoopGroup)
+                .channel(NioSocketChannel.class)
+                .option(ChannelOption.AUTO_READ, true)
+                .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectionTimeoutMillis)
+                .attr(SECURE, isSecure)
+                .attr(REMOTE_SOCKET, remoteAddress)
+                .attr(RESPONSE_FUTURE, responseFuture)
+                .handler(new HttpClientInitializer(proxyConfiguration, mockServerLogger, forwardProxyClient, nettySslContextFactory, false))
+                .connect(remoteAddress)
+                .addListener((ChannelFutureListener) future -> {
+                    if (future.isSuccess()) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(Level.DEBUG)
+                                .setMessageFormat("sending bytes hex{}to{}")
+                                .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()), future.channel().attr(REMOTE_SOCKET).get())
+                        );
+                        // send the binary request
+                        future.channel().writeAndFlush(Unpooled.copiedBuffer(binaryRequest.getBytes()));
+                    } else {
+                        binaryResponseFuture.completeExceptionally(future.cause());
+                    }
+                });
+
+            responseFuture
+                .whenComplete((message, throwable) -> {
+                    if (throwable == null) {
+                        binaryResponseFuture.complete((BinaryMessage) message);
+                    } else {
+                        throwable.printStackTrace();
+                        binaryResponseFuture.completeExceptionally(throwable);
+                    }
+                });
+
+            return binaryResponseFuture;
         } else {
             throw new IllegalStateException("Request sent after client has been stopped - the event loop has been shutdown so it is not possible to send a request");
         }

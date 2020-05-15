@@ -11,11 +11,11 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class MockServerToNettyRequestEncoder extends MessageToMessageEncoder<HttpRequest> {
+public class MockServerHttpToNettyRequestEncoder extends MessageToMessageEncoder<HttpRequest> {
 
     private final MockServerHttpRequestToFullHttpRequest mockServerHttpRequestToFullHttpRequest;
 
-    MockServerToNettyRequestEncoder(MockServerLogger mockServerLogger) {
+    MockServerHttpToNettyRequestEncoder(MockServerLogger mockServerLogger) {
         mockServerHttpRequestToFullHttpRequest = new MockServerHttpRequestToFullHttpRequest(mockServerLogger);
     }
 

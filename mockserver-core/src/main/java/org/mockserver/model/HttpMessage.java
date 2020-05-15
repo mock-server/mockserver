@@ -9,7 +9,7 @@ import java.util.List;
  * @author jamesdbloom
  */
 @SuppressWarnings("rawtypes")
-public interface HttpObject<T extends HttpObject, B extends Body> {
+public interface HttpMessage<T extends HttpMessage, B extends Body> extends Message {
 
     T withBody(String body);
 

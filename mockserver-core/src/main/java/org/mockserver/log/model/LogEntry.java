@@ -399,6 +399,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         DEBUG,
         INFO,
         WARN,
+        ERROR,
         EXCEPTION,
         CLEARED,
         RETRIEVED,

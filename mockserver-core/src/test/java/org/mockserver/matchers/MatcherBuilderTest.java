@@ -7,7 +7,6 @@ import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.FullHttpRequestToMockServerRequest;
 import org.mockserver.model.*;
-import org.mockserver.codec.NettyToMockServerRequestDecoder;
 
 import static io.netty.buffer.Unpooled.wrappedBuffer;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;

@@ -4,8 +4,11 @@ import com.google.common.annotations.VisibleForTesting;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.KeyStoreFactory;
 
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.Socket;
 
 /**
@@ -27,5 +30,14 @@ public class SSLSocketFactory {
         sslSocket.setUseClientMode(true);
         sslSocket.startHandshake();
         return sslSocket;
+    }
+
+    @VisibleForTesting
+    public synchronized SSLServerSocket wrapSocket() throws IOException {
+        // ssl socket factory
+        SSLServerSocketFactory sslSocketFactory = new KeyStoreFactory(new MockServerLogger()).sslContext().getServerSocketFactory();
+
+        // ssl socket
+        return (SSLServerSocket) sslSocketFactory.createServerSocket(0);
     }
 }

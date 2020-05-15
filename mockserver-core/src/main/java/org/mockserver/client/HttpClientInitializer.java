@@ -9,7 +9,9 @@ import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.proxy.HttpProxyHandler;
 import io.netty.handler.proxy.Socks5ProxyHandler;
-import org.mockserver.codec.MockServerClientCodec;
+import org.mockserver.codec.MockServerBinaryToNettyRequestEncoder;
+import org.mockserver.codec.MockServerClientBinaryCodec;
+import org.mockserver.codec.MockServerClientHttpCodec;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
@@ -26,17 +28,19 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
 
     private final MockServerLogger mockServerLogger;
     private final boolean forwardProxyClient;
-    private final HttpClientConnectionHandler httpClientConnectionHandler;
+    private final boolean isHttp;
+    private final HttpClientConnectionErrorHandler httpClientConnectionHandler;
     private final HttpClientHandler httpClientHandler;
     private final ProxyConfiguration proxyConfiguration;
     private final NettySslContextFactory nettySslContextFactory;
 
-    HttpClientInitializer(ProxyConfiguration proxyConfiguration, MockServerLogger mockServerLogger, boolean forwardProxyClient, NettySslContextFactory nettySslContextFactory) {
+    HttpClientInitializer(ProxyConfiguration proxyConfiguration, MockServerLogger mockServerLogger, boolean forwardProxyClient, NettySslContextFactory nettySslContextFactory, boolean isHttp) {
         this.proxyConfiguration = proxyConfiguration;
         this.mockServerLogger = mockServerLogger;
         this.forwardProxyClient = forwardProxyClient;
+        this.isHttp = isHttp;
         this.httpClientHandler = new HttpClientHandler();
-        this.httpClientConnectionHandler = new HttpClientConnectionHandler();
+        this.httpClientConnectionHandler = new HttpClientConnectionErrorHandler();
         this.nettySslContextFactory = nettySslContextFactory;
     }
 
@@ -72,13 +76,17 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
             pipeline.addLast(new LoggingHandler("NettyHttpClient -->"));
         }
 
-        pipeline.addLast(new HttpClientCodec());
+        if (isHttp) {
+            pipeline.addLast(new HttpClientCodec());
 
-        pipeline.addLast(new HttpContentDecompressor());
+            pipeline.addLast(new HttpContentDecompressor());
 
-        pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
+            pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
 
-        pipeline.addLast(new MockServerClientCodec(mockServerLogger));
+            pipeline.addLast(new MockServerClientHttpCodec(mockServerLogger));
+        } else {
+            pipeline.addLast(new MockServerClientBinaryCodec());
+        }
 
         pipeline.addLast(httpClientHandler);
     }

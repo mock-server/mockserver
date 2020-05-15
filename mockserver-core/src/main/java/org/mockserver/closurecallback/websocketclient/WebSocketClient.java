@@ -19,7 +19,7 @@ import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.action.ExpectationCallback;
 import org.mockserver.mock.action.ExpectationForwardAndResponseCallback;
-import org.mockserver.model.HttpObject;
+import org.mockserver.model.HttpMessage;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpRequestAndHttpResponse;
 import org.mockserver.model.HttpResponse;
@@ -31,7 +31,6 @@ import org.slf4j.event.Level;
 import javax.net.ssl.SSLException;
 import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
@@ -43,7 +42,7 @@ import static org.slf4j.event.Level.WARN;
  * @author jamesdbloom
  */
 @SuppressWarnings("rawtypes")
-public class WebSocketClient<T extends HttpObject> {
+public class WebSocketClient<T extends HttpMessage> {
 
     static final AttributeKey<CompletableFuture<String>> REGISTRATION_FUTURE = AttributeKey.valueOf("REGISTRATION_FUTURE");
     private final MockServerLogger mockServerLogger;

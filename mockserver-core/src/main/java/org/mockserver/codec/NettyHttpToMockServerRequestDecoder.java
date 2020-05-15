@@ -11,11 +11,11 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class NettyToMockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRequest> {
+public class NettyHttpToMockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRequest> {
 
     private final FullHttpRequestToMockServerRequest fullHttpRequestToMockServerRequest;
 
-    public NettyToMockServerRequestDecoder(MockServerLogger mockServerLogger, boolean isSecure) {
+    public NettyHttpToMockServerRequestDecoder(MockServerLogger mockServerLogger, boolean isSecure) {
         fullHttpRequestToMockServerRequest = new FullHttpRequestToMockServerRequest(mockServerLogger, isSecure);
     }
 

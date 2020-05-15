@@ -5,21 +5,21 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.ssl.NotSslRecordException;
-import org.mockserver.model.HttpResponse;
+import org.mockserver.model.Message;
 
 import javax.net.ssl.SSLException;
 
 import static org.mockserver.client.NettyHttpClient.RESPONSE_FUTURE;
 
 @ChannelHandler.Sharable
-public class HttpClientHandler extends SimpleChannelInboundHandler<HttpResponse> {
+public class HttpClientHandler extends SimpleChannelInboundHandler<Message> {
 
     HttpClientHandler() {
         super(false);
     }
 
     @Override
-    public void channelRead0(ChannelHandlerContext ctx, HttpResponse response) {
+    public void channelRead0(ChannelHandlerContext ctx, Message response) {
         ctx.channel().attr(RESPONSE_FUTURE).get().complete(response);
         ctx.close();
     }

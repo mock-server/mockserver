@@ -200,7 +200,7 @@ public class ActionHandler {
 
             } else {
 
-                final InetSocketAddress remoteAddress = ctx != null ? ctx.channel().attr(REMOTE_SOCKET).get() : null;
+                final InetSocketAddress remoteAddress = getRemoteAddress(ctx);
                 final HttpRequest clonedRequest = hopByHopHeaderFilter.onRequest(request).withHeader(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue());
                 final HttpForwardActionResult responseFuture = new HttpForwardActionResult(clonedRequest, httpClient.sendRequest(clonedRequest, remoteAddress, potentiallyHttpProxy ? 1000 : ConfigurationProperties.socketConnectionTimeout()), null, remoteAddress);
                 scheduler.submit(responseFuture, () -> {
@@ -500,4 +500,16 @@ public class ActionHandler {
         return httpErrorActionHandler;
     }
 
+    public NettyHttpClient getHttpClient() {
+        return httpClient;
+    }
+
+
+    public static InetSocketAddress getRemoteAddress(final ChannelHandlerContext ctx) {
+        if (ctx != null && ctx.channel() != null && ctx.channel().attr(REMOTE_SOCKET) != null) {
+            return ctx.channel().attr(REMOTE_SOCKET).get();
+        } else {
+            return null;
+        }
+    }
 }

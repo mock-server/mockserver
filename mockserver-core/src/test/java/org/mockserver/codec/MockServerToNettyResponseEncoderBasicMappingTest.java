@@ -4,7 +4,6 @@ import io.netty.handler.codec.http.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.ConnectionOptions;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
@@ -28,14 +27,14 @@ import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
  */
 public class MockServerToNettyResponseEncoderBasicMappingTest {
 
-    private MockServerToNettyResponseEncoder mockServerResponseEncoder;
+    private MockServerHttpToNettyResponseEncoder mockServerResponseEncoder;
     private List<Object> output;
     private HttpResponse httpResponse;
     private final MockServerLogger mockServerLogger = new MockServerLogger();
 
     @Before
     public void setupFixture() {
-        mockServerResponseEncoder = new MockServerToNettyResponseEncoder(mockServerLogger);
+        mockServerResponseEncoder = new MockServerHttpToNettyResponseEncoder(mockServerLogger);
         output = new ArrayList<>();
         httpResponse = response();
     }
@@ -77,7 +76,7 @@ public class MockServerToNettyResponseEncoderBasicMappingTest {
         httpResponse.withCookies(new Cookie("cookieName1", "cookieValue1"), new Cookie("cookieName2", "cookieValue2"));
 
         // when
-        new MockServerToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
+        new MockServerHttpToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
 
         // then
         HttpHeaders headers = ((FullHttpResponse) output.get(0)).headers();
@@ -93,7 +92,7 @@ public class MockServerToNettyResponseEncoderBasicMappingTest {
         httpResponse.withCookies((Cookie[]) null);
 
         // when
-        new MockServerToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
+        new MockServerHttpToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
 
         // then
         HttpHeaders headers = ((FullHttpResponse) output.get(0)).headers();
@@ -107,7 +106,7 @@ public class MockServerToNettyResponseEncoderBasicMappingTest {
         httpResponse.withStatusCode(10);
 
         // when
-        new MockServerToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
+        new MockServerHttpToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
 
         // then
         FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
@@ -120,7 +119,7 @@ public class MockServerToNettyResponseEncoderBasicMappingTest {
         httpResponse.withStatusCode(null);
 
         // when
-        new MockServerToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
+        new MockServerHttpToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
 
         // then
         FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
@@ -133,7 +132,7 @@ public class MockServerToNettyResponseEncoderBasicMappingTest {
         httpResponse.withReasonPhrase("someReasonPhrase");
 
         // when
-        new MockServerToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
+        new MockServerHttpToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
 
         // then
         FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
@@ -146,7 +145,7 @@ public class MockServerToNettyResponseEncoderBasicMappingTest {
         httpResponse.withReasonPhrase(null);
 
         // when
-        new MockServerToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
+        new MockServerHttpToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
 
         // then
         FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
@@ -159,7 +158,7 @@ public class MockServerToNettyResponseEncoderBasicMappingTest {
         httpResponse.withStatusCode(404);
 
         // when
-        new MockServerToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
+        new MockServerHttpToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
 
         // then
         FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
@@ -172,7 +171,7 @@ public class MockServerToNettyResponseEncoderBasicMappingTest {
         httpResponse.withBody("somebody");
 
         // when
-        new MockServerToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
+        new MockServerHttpToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
 
         // then
         FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
@@ -186,7 +185,7 @@ public class MockServerToNettyResponseEncoderBasicMappingTest {
         httpResponse.withConnectionOptions(connectionOptions().withChunkSize(3));
 
         // when
-        new MockServerToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
+        new MockServerHttpToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
 
         // then
         DefaultHttpResponse responseHeaders = (DefaultHttpResponse) output.get(0);
@@ -207,7 +206,7 @@ public class MockServerToNettyResponseEncoderBasicMappingTest {
         httpResponse.withBody(binary("somebody".getBytes(UTF_8)));
 
         // when
-        new MockServerToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
+        new MockServerHttpToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
 
         // then
         FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
@@ -221,7 +220,7 @@ public class MockServerToNettyResponseEncoderBasicMappingTest {
         httpResponse.withBody((String) null);
 
         // when
-        new MockServerToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
+        new MockServerHttpToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
 
         // then
         FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);

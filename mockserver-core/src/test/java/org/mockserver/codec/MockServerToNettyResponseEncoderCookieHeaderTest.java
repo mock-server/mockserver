@@ -9,7 +9,6 @@ import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,13 +23,13 @@ import static org.mockserver.model.HttpResponse.response;
  */
 public class MockServerToNettyResponseEncoderCookieHeaderTest {
 
-    private MockServerToNettyResponseEncoder mockServerResponseEncoder;
+    private MockServerHttpToNettyResponseEncoder mockServerResponseEncoder;
     private List<Object> output;
     private HttpResponse httpResponse;
 
     @Before
     public void setupFixture() {
-        mockServerResponseEncoder = new MockServerToNettyResponseEncoder(new MockServerLogger());
+        mockServerResponseEncoder = new MockServerHttpToNettyResponseEncoder(new MockServerLogger());
         output = new ArrayList<Object>();
         httpResponse = response();
     }

@@ -19,7 +19,7 @@ import static org.mockserver.model.HttpStatusCode.OK_200;
  * @author jamesdbloom
  */
 @SuppressWarnings("rawtypes")
-public class HttpResponse extends Action<HttpResponse> implements HttpObject<HttpResponse, BodyWithContentType> {
+public class HttpResponse extends Action<HttpResponse> implements HttpMessage<HttpResponse, BodyWithContentType> {
     private Integer statusCode;
     private String reasonPhrase;
     private BodyWithContentType body;

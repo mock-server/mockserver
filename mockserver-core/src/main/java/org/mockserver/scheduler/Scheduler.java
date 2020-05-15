@@ -1,10 +1,12 @@
 package org.mockserver.scheduler;
 
+import io.netty.buffer.ByteBuf;
 import org.mockserver.client.SocketCommunicationException;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.action.HttpForwardActionResult;
+import org.mockserver.model.BinaryMessage;
 import org.mockserver.model.Delay;
 import org.mockserver.model.HttpResponse;
 import org.slf4j.event.Level;
@@ -149,6 +151,23 @@ public class Scheduler {
                 run(command);
             } else {
                 future.getHttpResponse().whenCompleteAsync((httpResponse, throwable) -> command.run(), scheduler);
+            }
+        }
+    }
+
+    public void submit(CompletableFuture<BinaryMessage> future, Runnable command, boolean synchronous) {
+        if (future != null) {
+            if (synchronous) {
+                try {
+                    future.get(ConfigurationProperties.maxSocketTimeout(), MILLISECONDS);
+                } catch (TimeoutException e) {
+                    future.completeExceptionally(new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause()));
+                } catch (InterruptedException | ExecutionException ex) {
+                    future.completeExceptionally(ex);
+                }
+                run(command);
+            } else {
+                future.whenCompleteAsync((httpResponse, throwable) -> command.run(), scheduler);
             }
         }
     }

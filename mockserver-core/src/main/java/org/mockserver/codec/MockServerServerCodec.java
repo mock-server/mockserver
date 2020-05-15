@@ -6,8 +6,8 @@ import org.mockserver.logging.MockServerLogger;
 /**
  * @author jamesdbloom
  */
-public class MockServerServerCodec extends CombinedChannelDuplexHandler<NettyToMockServerRequestDecoder, MockServerToNettyResponseEncoder> {
+public class MockServerServerCodec extends CombinedChannelDuplexHandler<NettyHttpToMockServerRequestDecoder, MockServerHttpToNettyResponseEncoder> {
     public MockServerServerCodec(MockServerLogger mockServerLogger, boolean isSecure) {
-        init(new NettyToMockServerRequestDecoder(mockServerLogger, isSecure), new MockServerToNettyResponseEncoder(mockServerLogger));
+        init(new NettyHttpToMockServerRequestDecoder(mockServerLogger, isSecure), new MockServerHttpToNettyResponseEncoder(mockServerLogger));
     }
 }

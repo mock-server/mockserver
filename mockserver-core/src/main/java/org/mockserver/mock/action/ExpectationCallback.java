@@ -1,13 +1,13 @@
 package org.mockserver.mock.action;
 
-import org.mockserver.model.HttpObject;
+import org.mockserver.model.HttpMessage;
 import org.mockserver.model.HttpRequest;
 
 /**
  * @author jamesdbloom
  */
 @SuppressWarnings("rawtypes")
-public interface ExpectationCallback<T extends HttpObject> {
+public interface ExpectationCallback<T extends HttpMessage> {
 
     /**
      * Called for every request when expectation condition has been satisfied.

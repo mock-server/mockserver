@@ -227,7 +227,7 @@ public class ForwardChainExpectation {
     }
 
     @SuppressWarnings("rawtypes")
-    private <T extends HttpObject> String registerWebSocketClient(ExpectationCallback<T> expectationCallback, ExpectationForwardAndResponseCallback expectationForwardResponseCallback) {
+    private <T extends HttpMessage> String registerWebSocketClient(ExpectationCallback<T> expectationCallback, ExpectationForwardAndResponseCallback expectationForwardResponseCallback) {
         try {
             String clientId = UUID.randomUUID().toString();
             LocalCallbackRegistry.registerCallback(clientId, expectationCallback);

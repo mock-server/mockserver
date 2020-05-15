@@ -20,7 +20,7 @@ import static org.mockserver.model.NottableString.string;
  * @author jamesdbloom
  */
 @SuppressWarnings("rawtypes")
-public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
+public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
     private NottableString method = string("");
     private NottableString path = string("");
     private Parameters queryStringParameters;

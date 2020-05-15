@@ -24,6 +24,7 @@ import org.mockserver.mappers.MockServerHttpResponseToFullHttpResponse;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.netty.BinaryHandler;
 import org.mockserver.netty.MockServerHandler;
 import org.mockserver.netty.proxy.socks.Socks4ProxyHandler;
 import org.mockserver.netty.proxy.socks.Socks5ProxyHandler;
@@ -126,16 +127,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         } else if (isHttp(msg)) {
             switchToHttp(ctx, msg);
         } else {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(Level.DEBUG)
-                    .setMessageFormat("unknown message{}")
-                    .setArguments(msg)
-            );
-            // Unknown protocol; discard everything and close the connection.
-            msg.clear();
-            ctx.flush();
-            ctx.close();
+            switchToBinary(ctx, msg);
         }
 
         addLoggingHandler(ctx);
@@ -238,6 +230,12 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
             // fire message back through pipeline
             ctx.fireChannelRead(msg.readBytes(actualReadableBytes()));
         }
+    }
+
+    private void switchToBinary(ChannelHandlerContext ctx, ByteBuf msg) {
+        addLastIfNotPresent(ctx.pipeline(), new BinaryHandler(httpStateHandler.getMockServerLogger(), httpStateHandler.getScheduler(), actionHandler.getHttpClient()));
+        // fire message back through pipeline
+        ctx.fireChannelRead(msg.readBytes(actualReadableBytes()));
     }
 
     private Set<String> getLocalAddresses(ChannelHandlerContext ctx) {

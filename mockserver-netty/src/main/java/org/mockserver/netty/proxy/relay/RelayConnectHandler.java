@@ -20,6 +20,7 @@ import java.net.InetSocketAddress;
 
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
 import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
+import static org.mockserver.mock.action.ActionHandler.getRemoteAddress;
 import static org.mockserver.netty.MockServerHandler.PROXYING;
 import static org.mockserver.netty.unification.PortUnificationHandler.*;
 import static org.slf4j.event.Level.DEBUG;
@@ -94,7 +95,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                 }
             });
 
-        final InetSocketAddress remoteSocket = getDownstreamSocket(serverCtx.channel());
+        final InetSocketAddress remoteSocket = getDownstreamSocket(serverCtx);
         bootstrap.connect(remoteSocket).addListener((ChannelFutureListener) future -> {
             if (!future.isSuccess()) {
                 failure("Connection failed to " + remoteSocket, future.cause(), serverCtx, failureResponse(request));
@@ -109,9 +110,10 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
         });
     }
 
-    private InetSocketAddress getDownstreamSocket(Channel channel) {
-        if (channel.attr(REMOTE_SOCKET).get() != null) {
-            return channel.attr(REMOTE_SOCKET).get();
+    private InetSocketAddress getDownstreamSocket(ChannelHandlerContext ctx) {
+        InetSocketAddress remoteAddress = getRemoteAddress(ctx);
+        if (remoteAddress != null) {
+            return remoteAddress;
         } else {
             return new InetSocketAddress(server.getLocalPort());
         }
