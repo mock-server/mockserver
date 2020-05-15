@@ -30,7 +30,7 @@ public class CertificateSigningRequest {
      * Current time minus 1 year, just in case software clock goes back due to
      * time synchronization
      */
-    public static final Date NOT_BEFORE = new Date(System.currentTimeMillis() - 86400000L * 365);
+    public static final Date NOT_BEFORE = new Date(System.currentTimeMillis() - 86400000L * 5);
     /**
      * The maximum possible value in X.509 specification: 9999-12-31 23:59:59,
      * new Date(253402300799000L), but Apple iOS 8 fails with a certificate
@@ -38,7 +38,7 @@ public class CertificateSigningRequest {
      * <p>
      * Hundred years in the future from starting the proxy should be enough.
      */
-    public static final Date NOT_AFTER = new Date(System.currentTimeMillis() + 86400000L * 365 * 100);
+    public static final Date NOT_AFTER = new Date(System.currentTimeMillis() + 86400000L * 365 * 5);
     // distinguishing name
     public static final String ROOT_COMMON_NAME = "www.mockserver.com";
     public static final String ORGANISATION = "MockServer";
