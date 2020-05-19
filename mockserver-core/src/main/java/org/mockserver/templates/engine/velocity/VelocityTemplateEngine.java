@@ -13,6 +13,7 @@ import org.slf4j.event.Level;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import javax.script.SimpleScriptContext;
 import java.io.StringWriter;
 import java.io.Writer;
 
@@ -44,10 +45,10 @@ public class VelocityTemplateEngine implements TemplateEngine {
         T result;
         try {
             Writer writer = new StringWriter();
-            ScriptContext context = engine.getContext();
+            ScriptContext context = new SimpleScriptContext();
             context.setWriter(writer);
             context.setAttribute("request", new HttpRequestTemplateObject(request), ScriptContext.ENGINE_SCOPE);
-            engine.eval(template);
+            engine.eval(template, context);
             logFormatter.logEvent(
                 new LogEntry()
                     .setType(TEMPLATE_GENERATED)

@@ -16,6 +16,13 @@ import org.mockserver.serialization.model.HttpResponseDTO;
 
 import javax.script.ScriptException;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
@@ -305,6 +312,51 @@ public class VelocityTemplateEngineTest {
                 .withBody("some_body"),
             HttpRequestDTO.class
         );
+    }
+
+    @Test
+    public void shouldHandleMultipleHttpRequestsWithVelocityResponseTemplateInParallel()
+        throws InterruptedException, ExecutionException {
+        // given
+        String template = "#if ( $request.method == 'POST' && $request.path == '/somePath' )" + NEW_LINE +
+            "    {" + NEW_LINE +
+            "        'statusCode': 200," + NEW_LINE +
+            "        'body': \"{'name': 'value'}\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "#else" + NEW_LINE +
+            "    {" + NEW_LINE +
+            "        'statusCode': 406," + NEW_LINE +
+            "        'body': \"$!request.body\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "#end";
+
+        HttpRequest request = request()
+            .withPath("/somePath")
+            .withMethod("POST")
+            .withBody("some_body");
+
+        // when
+        VelocityTemplateEngine velocityTemplateEngine = new VelocityTemplateEngine(logFormatter);
+
+        ExecutorService newFixedThreadPool = Executors.newFixedThreadPool(30);
+
+        List<Future<Boolean>> futures = new ArrayList<>();
+        for (int i = 0; i < 100; i++) {
+            futures.add(newFixedThreadPool.submit(() -> {
+                assertThat(velocityTemplateEngine.executeTemplate(template, request, HttpResponseDTO.class), is(
+                    response()
+                        .withStatusCode(200)
+                        .withBody("{'name': 'value'}")
+                ));
+                return true;
+            }));
+
+        }
+
+        for (Future<Boolean> future : futures) {
+            future.get();
+        }
+        newFixedThreadPool.shutdown();
     }
 
 }
