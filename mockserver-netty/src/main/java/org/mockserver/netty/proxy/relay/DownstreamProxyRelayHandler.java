@@ -32,23 +32,20 @@ public class DownstreamProxyRelayHandler extends SimpleChannelInboundHandler<Ful
 
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, final FullHttpResponse response) {
-        upstreamChannel.writeAndFlush(response).addListener(new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture future) {
-                if (future.isSuccess()) {
-                    ctx.read();
-                } else {
-                    if (isNotSocketClosedException(future.cause())) {
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setType(LogEntry.LogMessageType.EXCEPTION)
-                                .setLogLevel(Level.ERROR)
-                                .setMessageFormat("exception while returning writing " + response)
-                                .setThrowable(future.cause())
-                        );
-                    }
-                    future.channel().close();
+        upstreamChannel.writeAndFlush(response).addListener((ChannelFutureListener) future -> {
+            if (future.isSuccess()) {
+                ctx.read();
+            } else {
+                if (isNotSocketClosedException(future.cause())) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.EXCEPTION)
+                            .setLogLevel(Level.ERROR)
+                            .setMessageFormat("exception while returning writing " + response)
+                            .setThrowable(future.cause())
+                    );
                 }
+                future.channel().close();
             }
         });
     }

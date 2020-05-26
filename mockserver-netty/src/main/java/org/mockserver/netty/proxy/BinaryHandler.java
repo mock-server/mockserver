@@ -1,4 +1,4 @@
-package org.mockserver.netty;
+package org.mockserver.netty.proxy;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
@@ -22,6 +22,8 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.exception.ExceptionHandling.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
+import static org.mockserver.log.model.LogEntry.LogMessageType.FORWARDED_REQUEST;
+import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
 import static org.mockserver.mock.action.ActionHandler.getRemoteAddress;
 import static org.mockserver.model.BinaryMessage.bytes;
 import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabledUpstream;
@@ -46,15 +48,15 @@ public class BinaryHandler extends SimpleChannelInboundHandler<ByteBuf> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ByteBuf byteBuf) {
         BinaryMessage binaryRequest = bytes(ByteBufUtil.getBytes(byteBuf));
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setMessageFormat("received binary request:{}")
+                .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()))
+        );
         final InetSocketAddress remoteAddress = getRemoteAddress(ctx);
         if (remoteAddress != null) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(Level.DEBUG)
-                    .setMessageFormat("received binary request hex{}for{}")
-                    .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()), remoteAddress)
-            );
-
             boolean synchronous = true;
             CompletableFuture<BinaryMessage> binaryResponseFuture = httpClient.sendRequest(binaryRequest, isSslEnabledUpstream(ctx.channel()), remoteAddress, ConfigurationProperties.socketConnectionTimeout());
             scheduler.submit(binaryResponseFuture, () -> {
@@ -62,9 +64,10 @@ public class BinaryHandler extends SimpleChannelInboundHandler<ByteBuf> {
                     BinaryMessage binaryResponse = binaryResponseFuture.get(maxFutureTimeout(), MILLISECONDS);
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setLogLevel(Level.DEBUG)
-                            .setMessageFormat("received binary response hex{}from{}")
-                            .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()), remoteAddress)
+                            .setType(FORWARDED_REQUEST)
+                            .setLogLevel(Level.INFO)
+                            .setMessageFormat("returning binary response:{}from:{}for forwarded binary request:{}")
+                            .setArguments(ByteBufUtil.hexDump(binaryResponse.getBytes()), remoteAddress, ByteBufUtil.hexDump(binaryRequest.getBytes()))
                     );
                     ctx.writeAndFlush(Unpooled.copiedBuffer(binaryResponse.getBytes()));
                 } catch (Throwable throwable) {
@@ -81,8 +84,8 @@ public class BinaryHandler extends SimpleChannelInboundHandler<ByteBuf> {
         } else {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setLogLevel(Level.DEBUG)
-                    .setMessageFormat("unknown message{}")
+                    .setLogLevel(Level.INFO)
+                    .setMessageFormat("unknown message format{}")
                     .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()))
             );
             ctx.writeAndFlush(Unpooled.copiedBuffer("unknown message format".getBytes(StandardCharsets.UTF_8)));

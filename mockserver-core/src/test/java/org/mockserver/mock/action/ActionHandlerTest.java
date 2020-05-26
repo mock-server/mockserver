@@ -324,7 +324,7 @@ public class ActionHandlerTest {
                 .setHttpRequest(request)
                 .setHttpResponse(response)
                 .setExpectation(request, response)
-                .setMessageFormat("returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}for action:{}")
+                .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}")
                 .setArguments(response, forwardedHttpRequest, "curl -v 'http://" + remoteAddress.getHostName() + ":" + remoteAddress.getPort() + "/'", expectation.getAction())
         );
         verify(httpRequestToCurlSerializer).toCurl(forwardedHttpRequest, remoteAddress);
@@ -359,7 +359,7 @@ public class ActionHandlerTest {
                 .setHttpRequest(request)
                 .setHttpResponse(response)
                 .setExpectation(request, response)
-                .setMessageFormat("returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}for action:{}")
+                .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}")
                 .setArguments(response, forwardedHttpRequest, "curl -v 'http://" + remoteAddress.getHostName() + ":" + remoteAddress.getPort() + "/'", expectation.getAction())
         );
         verify(httpRequestToCurlSerializer).toCurl(forwardedHttpRequest, remoteAddress);
@@ -436,7 +436,7 @@ public class ActionHandlerTest {
                 .setHttpRequest(request)
                 .setHttpResponse(response)
                 .setExpectation(request, response)
-                .setMessageFormat("returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}for action:{}")
+                .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}")
                 .setArguments(response, forwardedHttpRequest, "curl -v 'http://" + remoteAddress.getHostName() + ":" + remoteAddress.getPort() + "/'", expectation.getAction())
         );
         verify(httpRequestToCurlSerializer).toCurl(forwardedHttpRequest, remoteAddress);
@@ -494,7 +494,7 @@ public class ActionHandlerTest {
                 .setHttpRequest(request)
                 .setHttpResponse(response)
                 .setExpectation(request, response)
-                .setMessageFormat("returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}for action:{}")
+                .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}")
                 .setArguments(response, forwardedHttpRequest, "curl -v 'http://" + remoteAddress.getHostName() + ":" + remoteAddress.getPort() + "/'", expectation.getAction())
         );
         verify(httpRequestToCurlSerializer).toCurl(forwardedHttpRequest, remoteAddress);

@@ -24,7 +24,7 @@ import org.mockserver.mappers.MockServerHttpResponseToFullHttpResponse;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.netty.BinaryHandler;
+import org.mockserver.netty.proxy.BinaryHandler;
 import org.mockserver.netty.MockServerHandler;
 import org.mockserver.netty.proxy.socks.Socks4ProxyHandler;
 import org.mockserver.netty.proxy.socks.Socks5ProxyHandler;
