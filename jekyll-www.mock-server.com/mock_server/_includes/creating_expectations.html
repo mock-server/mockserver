@@ -56,15 +56,29 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 );</code></pre>
 </div>
 
-<p>An expectation contains:</p>
+<p>An expectation may contain:</p>
 <ul>
     <li><strong><a href="#request_matchers">request matcher</a></strong> - used to match which requests this expectation should be applied to</li>
     <li><strong><a href="#actions">action</a></strong> - what action to take, actions include <strong>response</strong>, <strong>forward</strong>, <strong>callback</strong> and <strong>error</strong></li>
-    <li><strong><a href="#button_match_request_by_path_exactly_twice">times</a></strong> - how many times the action should be taken</li>
-    <li><strong><a href="#button_match_request_by_path_exactly_once_in_the_next_60_seconds">timeToLive</a></strong> - how long the expectation should stay active</li>
+    <li><strong><a href="#button_match_request_by_path_exactly_twice">times</a></strong> <em>(optional)</em> - how many times the action should be taken</li>
+    <li><strong><a href="#button_match_request_by_path_exactly_once_in_the_next_60_seconds">timeToLive</a></strong> <em>(optional)</em> - how long the expectation should stay active</li>
+    <li><strong><a href="#button_match_request_by_priority">priority</a></strong> <em>(optional)</em> - matching is ordered by priority (highest first) then creation (earliest first)</li>
+    <li><strong><a href="#button_match_request_update_by_id">id</a></strong> <em>(optional)</em> - used for updating an existing expectation (i.e. when the id matches)</li>
 </ul>
 
-<p>MockServer will play expectations in the exact order they are added. For example, if an expectation <span class="annotation">A</span> is added with <span class="inline_code">Times.exactly(3)</span> then expectation <span class="annotation">B</span> is added with <span class="inline_code">Times.exactly(2)</span> with the same request matcher they will be applied in the following order <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">B</span>, <span class="annotation">B</span>.</p>
+<a id="matching_order" class="anchor" href="#matching_order">&nbsp;</a>
+
+<h4>Matching Order</h4>
+
+<p>MockServer will match (or play) active expectations in the exact order they are added (if their priority is identical). For example, if an expectation <span class="annotation">A</span> is added with <span class="inline_code">Times.exactly(3)</span> then expectation <span class="annotation">B</span> is added with <span class="inline_code">Times.exactly(2)</span> with the same request matcher they will be applied in the following order <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">B</span>, <span class="annotation">B</span>.  Priority can be used to alter the order that expectations are matched; matching is ordered by priority (highest first) then creation (earliest first).  </p>
+
+<a id="updating_expectations" class="anchor" href="#updating_expectations">&nbsp;</a>
+
+<h4>Updating Expectations</h4>
+
+<p>If an expectation is added and the <strong>id</strong> field matches an existing expectation the existing expectation will be updated (i.e. replaced).  A UUID will be used assigned to each expectation if no value for <strong>id</strong> is specified.</p>
+
+<p></p>
 
 <a id="request_matchers" class="anchor" href="#request_matchers">&nbsp;</a>
 

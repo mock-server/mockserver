@@ -175,6 +175,76 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
+<button id="button_match_request_by_priority" class="accordion">match requests using priority</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path"),
+        Times.once(),
+        TimeToLive.exactly(TimeUnit.SECONDS, 60L),
+        10
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    },
+    "times": {
+        "remainingTimes": 1,
+        "unlimited": false
+    },
+    "timeToLive": {
+        "timeUnit": "SECONDS",
+        "timeToLive": 60,
+        "unlimited": false
+    },
+    "priority" : 10
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+  "httpRequest" : {
+    "path" : "/some/path"
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  },
+  "times" : {
+    "remainingTimes" : 1,
+    "unlimited" : false
+  },
+  "timeToLive" : {
+    "timeUnit" : "SECONDS",
+    "timeToLive" : 60,
+    "unlimited" : false
+  },
+  "priority" : 10
+}'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 <button id="button_match_request_by_regex_path" class="accordion">match request by regex path</button>
 <div class="panel">
     <p>For details of the full regex syntax supported please see <a href="https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">the JDK documentation</a>.</p>
@@ -2034,5 +2104,80 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     }
 }'</code></pre>
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+<button id="button_match_request_update_by_id" class="accordion">update expectation by id</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .upsert(
+        new Expectation(
+            request()
+                .withPath("/some/path"),
+            Times.once(),
+            TimeToLive.exactly(TimeUnit.SECONDS, 60L),
+            100
+        )
+        .withId("some_unique_id")
+        .thenRespond(
+            response()
+                .withBody("some_response_body")
+        )
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "id": "some_unique_id",
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    },
+    "times": {
+        "remainingTimes": 1,
+        "unlimited": false
+    },
+    "timeToLive": {
+        "timeUnit": "SECONDS",
+        "timeToLive": 60,
+        "unlimited": false
+    },
+    "priority" : 100
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+  "id": "some_unique_id",
+  "httpRequest" : {
+    "path" : "/some/path"
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  },
+  "times" : {
+    "remainingTimes" : 1,
+    "unlimited" : false
+  },
+  "timeToLive" : {
+    "timeUnit" : "SECONDS",
+    "timeToLive" : 60,
+    "unlimited" : false
+  },
+  "priority" : 100
+}'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
