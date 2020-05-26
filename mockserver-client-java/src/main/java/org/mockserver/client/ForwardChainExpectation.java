@@ -43,10 +43,11 @@ public class ForwardChainExpectation {
      * Return response when expectation is matched
      *
      * @param httpResponse response to return
+     * @return added or updated expectations
      */
-    public void respond(final HttpResponse httpResponse) {
+    public Expectation[] respond(final HttpResponse httpResponse) {
         expectation.thenRespond(httpResponse);
-        mockServerClient.upsert(expectation);
+        return mockServerClient.upsert(expectation);
     }
 
     /**
@@ -54,10 +55,11 @@ public class ForwardChainExpectation {
      * to return when expectation is matched
      *
      * @param httpTemplate Velocity or JavaScript template used to generate response
+     * @return added or updated expectations
      */
-    public void respond(final HttpTemplate httpTemplate) {
+    public Expectation[] respond(final HttpTemplate httpTemplate) {
         expectation.thenRespond(httpTemplate);
-        mockServerClient.upsert(expectation);
+        return mockServerClient.upsert(expectation);
     }
 
     /**
@@ -70,10 +72,11 @@ public class ForwardChainExpectation {
      * - be available in the classpath of the MockServer
      *
      * @param httpClassCallback class to callback as a fully qualified class name, i.e. "com.foo.MyExpectationResponseCallback"
+     * @return added or updated expectations
      */
-    public void respond(final HttpClassCallback httpClassCallback) {
+    public Expectation[] respond(final HttpClassCallback httpClassCallback) {
         expectation.thenRespond(httpClassCallback);
-        mockServerClient.upsert(expectation);
+        return mockServerClient.upsert(expectation);
     }
 
     /**
@@ -81,10 +84,11 @@ public class ForwardChainExpectation {
      * to generate response to return when expectation is matched
      *
      * @param expectationResponseCallback object to call locally or remotely to generate response
+     * @return added or updated expectations
      */
-    public void respond(final ExpectationResponseCallback expectationResponseCallback) {
+    public Expectation[] respond(final ExpectationResponseCallback expectationResponseCallback) {
         expectation.thenRespond(new HttpObjectCallback().withClientId(registerWebSocketClient(expectationResponseCallback, null)));
-        mockServerClient.upsert(expectation);
+        return mockServerClient.upsert(expectation);
     }
 
     /**
@@ -92,25 +96,27 @@ public class ForwardChainExpectation {
      * to generate response to return when expectation is matched
      *
      * @param expectationResponseCallback object to call locally or remotely to generate response
+     * @return added or updated expectations
      */
-    public void respond(final ExpectationResponseCallback expectationResponseCallback, Delay delay) {
+    public Expectation[] respond(final ExpectationResponseCallback expectationResponseCallback, Delay delay) {
         expectation
             .thenRespond(
                 new HttpObjectCallback()
                     .withClientId(registerWebSocketClient(expectationResponseCallback, null))
                     .withDelay(delay)
             );
-        mockServerClient.upsert(expectation);
+        return mockServerClient.upsert(expectation);
     }
 
     /**
      * Forward request to the specified host and port when expectation is matched
      *
      * @param httpForward host and port to forward to
+     * @return added or updated expectations
      */
-    public void forward(final HttpForward httpForward) {
+    public Expectation[] forward(final HttpForward httpForward) {
         expectation.thenForward(httpForward);
-        mockServerClient.upsert(expectation);
+        return mockServerClient.upsert(expectation);
     }
 
     /**
@@ -118,10 +124,11 @@ public class ForwardChainExpectation {
      * request to forward when expectation is matched
      *
      * @param httpTemplate Velocity or JavaScript template used to generate response
+     * @return added or updated expectations
      */
-    public void forward(final HttpTemplate httpTemplate) {
+    public Expectation[] forward(final HttpTemplate httpTemplate) {
         expectation.thenForward(httpTemplate);
-        mockServerClient.upsert(expectation);
+        return mockServerClient.upsert(expectation);
     }
 
     /**
@@ -134,10 +141,11 @@ public class ForwardChainExpectation {
      * - be available in the classpath of the MockServer
      *
      * @param httpClassCallback class to callback as a fully qualified class name, i.e. "com.foo.MyExpectationResponseCallback"
+     * @return added or updated expectations
      */
-    public void forward(final HttpClassCallback httpClassCallback) {
+    public Expectation[] forward(final HttpClassCallback httpClassCallback) {
         expectation.thenForward(httpClassCallback);
-        mockServerClient.upsert(expectation);
+        return mockServerClient.upsert(expectation);
     }
 
     /**
@@ -145,14 +153,15 @@ public class ForwardChainExpectation {
      * to generate request to forward when expectation is matched
      *
      * @param expectationForwardCallback object to call locally or remotely to generate request
+     * @return added or updated expectations
      */
-    public void forward(final ExpectationForwardCallback expectationForwardCallback) {
+    public Expectation[] forward(final ExpectationForwardCallback expectationForwardCallback) {
         expectation
             .thenForward(
                 new HttpObjectCallback()
                     .withClientId(registerWebSocketClient(expectationForwardCallback, null))
             );
-        mockServerClient.upsert(expectation);
+        return mockServerClient.upsert(expectation);
     }
 
     /**
@@ -160,15 +169,16 @@ public class ForwardChainExpectation {
      * to generate request to forward when expectation is matched
      *
      * @param expectationForwardCallback object to call locally or remotely to generate request
+     * @return added or updated expectations
      */
-    public void forward(final ExpectationForwardCallback expectationForwardCallback, final ExpectationForwardAndResponseCallback expectationForwardResponseCallback) {
+    public Expectation[] forward(final ExpectationForwardCallback expectationForwardCallback, final ExpectationForwardAndResponseCallback expectationForwardResponseCallback) {
         expectation
             .thenForward(
                 new HttpObjectCallback()
                     .withResponseCallback(true)
                     .withClientId(registerWebSocketClient(expectationForwardCallback, expectationForwardResponseCallback))
             );
-        mockServerClient.upsert(expectation);
+        return mockServerClient.upsert(expectation);
     }
 
     /**
@@ -176,15 +186,16 @@ public class ForwardChainExpectation {
      * to generate request to forward when expectation is matched
      *
      * @param expectationForwardCallback object to call locally or remotely to generate request
+     * @return added or updated expectations
      */
-    public void forward(final ExpectationForwardCallback expectationForwardCallback, final Delay delay) {
+    public Expectation[] forward(final ExpectationForwardCallback expectationForwardCallback, final Delay delay) {
         expectation
             .thenForward(
                 new HttpObjectCallback()
                     .withClientId(registerWebSocketClient(expectationForwardCallback, null))
                     .withDelay(delay)
             );
-        mockServerClient.upsert(expectation);
+        return mockServerClient.upsert(expectation);
     }
 
     /**
@@ -192,8 +203,9 @@ public class ForwardChainExpectation {
      * to generate request to forward when expectation is matched
      *
      * @param expectationForwardCallback object to call locally or remotely to generate request
+     * @return added or updated expectations
      */
-    public void forward(final ExpectationForwardCallback expectationForwardCallback, final ExpectationForwardAndResponseCallback expectationForwardResponseCallback, final Delay delay) {
+    public Expectation[] forward(final ExpectationForwardCallback expectationForwardCallback, final ExpectationForwardAndResponseCallback expectationForwardResponseCallback, final Delay delay) {
         expectation
             .thenForward(
                 new HttpObjectCallback()
@@ -201,7 +213,7 @@ public class ForwardChainExpectation {
                     .withClientId(registerWebSocketClient(expectationForwardCallback, expectationForwardResponseCallback))
                     .withDelay(delay)
             );
-        mockServerClient.upsert(expectation);
+        return mockServerClient.upsert(expectation);
     }
 
     /**
@@ -210,20 +222,22 @@ public class ForwardChainExpectation {
      * when expectation is matched
      *
      * @param httpOverrideForwardedRequest contains request to override request being forwarded
+     * @return added or updated expectations
      */
-    public void forward(final HttpOverrideForwardedRequest httpOverrideForwardedRequest) {
+    public Expectation[] forward(final HttpOverrideForwardedRequest httpOverrideForwardedRequest) {
         expectation.thenForward(httpOverrideForwardedRequest);
-        mockServerClient.upsert(expectation);
+        return mockServerClient.upsert(expectation);
     }
 
     /**
      * Return error when expectation is matched
      *
      * @param httpError error to return
+     * @return added or updated expectations
      */
-    public void error(final HttpError httpError) {
+    public Expectation[] error(final HttpError httpError) {
         expectation.thenError(httpError);
-        mockServerClient.upsert(expectation);
+        return mockServerClient.upsert(expectation);
     }
 
     @SuppressWarnings("rawtypes")

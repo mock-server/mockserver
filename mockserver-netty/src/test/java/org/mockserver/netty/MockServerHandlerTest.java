@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -320,7 +321,26 @@ public class MockServerHandlerTest {
         // then
         HttpResponse httpResponse = embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(201));
-        assertThat(httpResponse.getBodyAsString(), is(""));
+        assertThat(httpResponse.getBodyAsString(), containsString("[ {" + NEW_LINE +
+            "  \"id\" : \""));
+        assertThat(httpResponse.getBodyAsString(), containsString("\"," + NEW_LINE +
+            "  \"priority\" : 0," + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"path\" : \"request_one\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"statusCode\" : 200," + NEW_LINE +
+            "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+            "    \"body\" : \"response_one\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "} ]"));
+        assertThat(httpResponse.getBodyAsString(), containsString(""));
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), is(expectationOne));
     }
 

@@ -420,13 +420,16 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 response()
                     .withBody("some_body_two")
             );
-        mockServerClient
+        Expectation[] upsertedExpectations = mockServerClient
             .upsert(
                 expectationOne,
                 expectationTwo
             );
 
         // then
+        assertThat(upsertedExpectations.length, is(2));
+        assertThat(upsertedExpectations[0], is(expectationOne));
+        assertThat(upsertedExpectations[1], is(expectationTwo));
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -444,10 +447,14 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 response()
                     .withBody("some_body_one")
             );
-        mockServerClient
+        upsertedExpectations = mockServerClient
             .upsert(
                 expectationOneWithHigherPriority
             );
+
+        // then
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(expectationOneWithHigherPriority));
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -1301,34 +1308,29 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     @Test
     public void shouldReturnResponseByMatchingBodyWithJsonAsRawBody() {
         // when
-        assertEquals(
-            response()
-                .withStatusCode(CREATED_201.code())
-                .withReasonPhrase(CREATED_201.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("mockserver/expectation"))
-                    .withMethod("PUT")
-                    .withBody("{" + NEW_LINE +
-                        "  \"httpRequest\" : {" + NEW_LINE +
-                        "    \"body\" : {" + NEW_LINE +
-                        "        \"id\": 1," + NEW_LINE +
-                        "        \"name\": \"A green door\"," + NEW_LINE +
-                        "        \"price\": 12.50," + NEW_LINE +
-                        "        \"tags\": [\"home\", \"green\"]" + NEW_LINE +
-                        "    }" + NEW_LINE +
-                        "  }," + NEW_LINE +
-                        "  \"httpResponse\" : {" + NEW_LINE +
-                        "    \"body\" : {" + NEW_LINE +
-                        "        \"id\": 1," + NEW_LINE +
-                        "        \"name\": \"A green door\"," + NEW_LINE +
-                        "        \"price\": 12.50," + NEW_LINE +
-                        "        \"tags\": [\"home\", \"green\"]" + NEW_LINE +
-                        "    }" + NEW_LINE +
-                        "  }" + NEW_LINE +
-                        "}"),
-                headersToIgnore)
-        );
+        makeRequest(
+            request()
+                .withPath(calculatePath("mockserver/expectation"))
+                .withMethod("PUT")
+                .withBody("{" + NEW_LINE +
+                    "  \"httpRequest\" : {" + NEW_LINE +
+                    "    \"body\" : {" + NEW_LINE +
+                    "        \"id\": 1," + NEW_LINE +
+                    "        \"name\": \"A green door\"," + NEW_LINE +
+                    "        \"price\": 12.50," + NEW_LINE +
+                    "        \"tags\": [\"home\", \"green\"]" + NEW_LINE +
+                    "    }" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"httpResponse\" : {" + NEW_LINE +
+                    "    \"body\" : {" + NEW_LINE +
+                    "        \"id\": 1," + NEW_LINE +
+                    "        \"name\": \"A green door\"," + NEW_LINE +
+                    "        \"price\": 12.50," + NEW_LINE +
+                    "        \"tags\": [\"home\", \"green\"]" + NEW_LINE +
+                    "    }" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    "}"),
+            headersToIgnore);
 
         // then
         assertEquals(

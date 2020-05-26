@@ -13,12 +13,12 @@ import org.mockserver.serialization.*;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.server.initialize.ExpectationInitializerLoader;
-import org.mockserver.ui.MockServerMatcherNotifier;
 import org.mockserver.ui.MockServerMatcherNotifier.Cause;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.event.Level;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -152,7 +152,8 @@ public class HttpStateHandler {
         );
     }
 
-    public void add(Expectation... expectations) {
+    public List<Expectation> add(Expectation... expectations) {
+        List<Expectation> upsertedExpectations = new ArrayList<>();
         for (Expectation expectation : expectations) {
             if (expectation.getHttpRequest() != null) {
                 final String hostHeader = expectation.getHttpRequest().getFirstHeader(HOST.toString());
@@ -160,8 +161,9 @@ public class HttpStateHandler {
                     scheduler.submit(() -> addSubjectAlternativeName(hostHeader));
                 }
             }
-            mockServerMatcher.add(expectation, Cause.API);
+            upsertedExpectations.add(mockServerMatcher.add(expectation, Cause.API));
         }
+        return upsertedExpectations;
     }
 
     public Expectation firstMatchingExpectation(HttpRequest request) {
@@ -184,7 +186,7 @@ public class HttpStateHandler {
 
     public HttpResponse retrieve(HttpRequest request) {
         CompletableFuture<HttpResponse> httpResponseFuture = new CompletableFuture<>();
-        HttpResponse response = response().withStatusCode(200);
+        HttpResponse response = response().withStatusCode(OK.code());
         if (request != null) {
             try {
                 final HttpRequest httpRequest = isNotBlank(request.getBodyAsString()) ? httpRequestSerializer.deserialize(request.getBodyAsString()) : null;
@@ -448,12 +450,16 @@ public class HttpStateHandler {
 
             if (request.matches("PUT", PATH_PREFIX + "/expectation", "/expectation")) {
 
+                List<Expectation> upsertedExpectations = new ArrayList<>();
                 for (Expectation expectation : expectationSerializer.deserializeArray(request.getBodyAsString(), false)) {
                     if (!warDeployment || validateSupportedFeatures(expectation, request, responseWriter)) {
-                        add(expectation);
+                        upsertedExpectations.addAll(add(expectation));
                     }
                 }
-                responseWriter.writeResponse(request, CREATED);
+
+                responseWriter.writeResponse(request, response()
+                    .withStatusCode(CREATED.code())
+                    .withBody(expectationSerializer.serialize(upsertedExpectations), MediaType.JSON_UTF_8), true);
                 canHandle.complete(true);
 
             } else if (request.matches("PUT", PATH_PREFIX + "/clear", "/clear")) {

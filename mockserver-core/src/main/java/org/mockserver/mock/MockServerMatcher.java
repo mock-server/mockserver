@@ -46,9 +46,10 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
         this.webSocketClientRegistry = webSocketClientRegistry;
     }
 
-    public void add(Expectation expectation, Cause cause) {
+    public Expectation add(Expectation expectation, Cause cause) {
+        Expectation upsertedExpectation = null;
         if (expectation != null) {
-            httpRequestMatchers
+            upsertedExpectation = httpRequestMatchers
                 .getByKey(expectation.getId())
                 .map(httpRequestMatcher -> {
                     if (httpRequestMatcher.getExpectation() != null && httpRequestMatcher.getExpectation().getAction() != null) {
@@ -69,9 +70,11 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
                     }
                     return httpRequestMatcher;
                 })
-                .orElseGet(() -> addPrioritisedExpectation(expectation));
+                .orElseGet(() -> addPrioritisedExpectation(expectation))
+                .getExpectation();
             notifyListeners(this, cause);
         }
+        return upsertedExpectation;
     }
 
     public void update(Expectation[] expectations, Cause cause) {

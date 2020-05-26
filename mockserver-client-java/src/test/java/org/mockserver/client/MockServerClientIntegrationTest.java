@@ -7,7 +7,6 @@ import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.serialization.ExpectationSerializer;
@@ -32,7 +31,8 @@ import static org.hamcrest.core.IsCollectionContaining.hasItems;
 import static org.hamcrest.core.IsSame.sameInstance;
 import static org.junit.Assert.fail;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.matchers.Times.*;
+import static org.mockserver.matchers.Times.exactly;
+import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpForward.Scheme.HTTPS;
@@ -126,10 +126,31 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSetupExpectationWithResponse() {
         // given
-        echoServerOne.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response()
+            .withStatusCode(201)
+            .withBody(json("" +
+                "{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/some_path\"," + NEW_LINE +
+                "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"headers\" : {" + NEW_LINE +
+                "      \"responseName\" : [ \"responseValue\" ]" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"body\" : \"some_response_body\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}", APPLICATION_JSON_UTF_8))
+        );
 
         // when
-        mockServerClientOne
+        Expectation[] upsertedExpectations = mockServerClientOne
             .when(
                 request()
                     .withPath("/some_path")
@@ -142,6 +163,16 @@ public class MockServerClientIntegrationTest {
             );
 
         // then
+        assertThat(upsertedExpectations[0], is(new Expectation(
+            request()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body")))
+            .thenRespond(
+                response()
+                    .withBody("some_response_body")
+                    .withHeaders(new Header("responseName", "responseValue"))
+            )
+        ));
         assertThat(retrieveRequests(request()).size(), is(1));
         String result = verify(verification().withRequest(
             request()
@@ -183,10 +214,29 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSetupExpectationWithResponseTemplate() {
         // given
-        echoServerOne.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response()
+            .withStatusCode(201)
+            .withBody(json("" +
+                "{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/some_path\"," + NEW_LINE +
+                "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponseTemplate\" : {" + NEW_LINE +
+                "    \"template\" : \"some_response_template\"," + NEW_LINE +
+                "    \"templateType\" : \"VELOCITY\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}", APPLICATION_JSON_UTF_8))
+        );
 
         // when
-        mockServerClientOne
+        Expectation[] upsertedExpectations = mockServerClientOne
             .when(
                 request()
                     .withPath("/some_path")
@@ -198,6 +248,15 @@ public class MockServerClientIntegrationTest {
             );
 
         // then
+        assertThat(upsertedExpectations[0], is(new Expectation(
+            request()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body")))
+            .thenRespond(
+                template(HttpTemplate.TemplateType.VELOCITY)
+                    .withTemplate("some_response_template")
+            )
+        ));
         assertThat(retrieveRequests(request()).size(), is(1));
         String result = verify(verification().withRequest(
             request()
@@ -237,10 +296,28 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSetupExpectationWithResponseClassCallback() {
         // given
-        echoServerOne.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response()
+            .withStatusCode(201)
+            .withBody(json("" +
+                "{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/some_path\"," + NEW_LINE +
+                "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponseClassCallback\" : {" + NEW_LINE +
+                "    \"callbackClass\" : \"some_class\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}", APPLICATION_JSON_UTF_8))
+        );
 
         // when
-        mockServerClientOne
+        Expectation[] upsertedExpectations = mockServerClientOne
             .when(
                 request()
                     .withPath("/some_path")
@@ -252,6 +329,15 @@ public class MockServerClientIntegrationTest {
             );
 
         // then
+        assertThat(upsertedExpectations[0], is(new Expectation(
+            request()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body")))
+            .thenRespond(
+                callback()
+                    .withCallbackClass("some_class")
+            )
+        ));
         assertThat(retrieveRequests(request()).size(), is(1));
         String result = verify(verification().withRequest(
             request()
@@ -433,10 +519,30 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSetupExpectationWithForward() {
         // given
-        echoServerOne.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response()
+            .withStatusCode(201)
+            .withBody(json("" +
+                "{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/some_path\"," + NEW_LINE +
+                "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpForward\" : {" + NEW_LINE +
+                "    \"host\" : \"some_host\"," + NEW_LINE +
+                "    \"port\" : 9090," + NEW_LINE +
+                "    \"scheme\" : \"HTTPS\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}", APPLICATION_JSON_UTF_8))
+        );
 
         // when
-        mockServerClientOne
+        Expectation[] upsertedExpectations = mockServerClientOne
             .when(
                 request()
                     .withPath("/some_path")
@@ -450,6 +556,17 @@ public class MockServerClientIntegrationTest {
             );
 
         // then
+        assertThat(upsertedExpectations[0], is(new Expectation(
+            request()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body")))
+            .thenForward(
+                forward()
+                    .withHost("some_host")
+                    .withPort(9090)
+                    .withScheme(HTTPS)
+            )
+        ));
         assertThat(retrieveRequests(request()).size(), is(1));
         String result = verify(verification().withRequest(
             request()
@@ -490,10 +607,29 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSetupExpectationWithForwardTemplate() {
         // given
-        echoServerOne.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response()
+            .withStatusCode(201)
+            .withBody(json("" +
+                "{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/some_path\"," + NEW_LINE +
+                "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpForwardTemplate\" : {" + NEW_LINE +
+                "    \"template\" : \"some_response_template\"," + NEW_LINE +
+                "    \"templateType\" : \"VELOCITY\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}", APPLICATION_JSON_UTF_8))
+        );
 
         // when
-        mockServerClientOne
+        Expectation[] upsertedExpectations = mockServerClientOne
             .when(
                 request()
                     .withPath("/some_path")
@@ -505,6 +641,15 @@ public class MockServerClientIntegrationTest {
             );
 
         // then
+        assertThat(upsertedExpectations[0], is(new Expectation(
+            request()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body")))
+            .thenForward(
+                template(HttpTemplate.TemplateType.VELOCITY)
+                    .withTemplate("some_response_template")
+            )
+        ));
         assertThat(retrieveRequests(request()).size(), is(1));
         String result = verify(verification().withRequest(
             request()
@@ -544,10 +689,28 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSetupExpectationWithForwardClassCallback() {
         // given
-        echoServerOne.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response()
+            .withStatusCode(201)
+            .withBody(json("" +
+                "{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/some_path\"," + NEW_LINE +
+                "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpForwardClassCallback\" : {" + NEW_LINE +
+                "    \"callbackClass\" : \"some_class\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}", APPLICATION_JSON_UTF_8))
+        );
 
         // when
-        mockServerClientOne
+        Expectation[] upsertedExpectations = mockServerClientOne
             .when(
                 request()
                     .withPath("/some_path")
@@ -559,6 +722,15 @@ public class MockServerClientIntegrationTest {
             );
 
         // then
+        assertThat(upsertedExpectations[0], is(new Expectation(
+            request()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body")))
+            .thenForward(
+                callback()
+                    .withCallbackClass("some_class")
+            )
+        ));
         assertThat(retrieveRequests(request()).size(), is(1));
         String result = verify(verification().withRequest(
             request()
@@ -606,10 +778,7 @@ public class MockServerClientIntegrationTest {
                     .withPath("/some_path")
                     .withBody(new StringBody("some_request_body"))
             )
-            .forward(
-                callback()
-                    .withCallbackClass("some_class")
-            );
+            .forward(httpRequest -> request());
 
         // then
         assertThat(retrieveRequests(request()).size(), is(1));
@@ -631,8 +800,8 @@ public class MockServerClientIntegrationTest {
                     "    \"path\" : \"/some_path\"," + NEW_LINE +
                     "    \"body\" : \"some_request_body\"" + NEW_LINE +
                     "  }," + NEW_LINE +
-                    "  \"httpForwardClassCallback\" : {" + NEW_LINE +
-                    "    \"callbackClass\" : \"some_class\"" + NEW_LINE +
+                    "  \"httpForwardObjectCallback\" : {" + NEW_LINE +
+                    "    \"clientId\" : \"" + echoServerOne.getRegisteredClients().get(0) + "\"" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"times\" : {" + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
@@ -650,10 +819,33 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSetupExpectationWithOverrideForwardedRequest() {
         // given
-        echoServerOne.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response()
+            .withStatusCode(201)
+            .withBody(json("" +
+                "{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/some_path\"," + NEW_LINE +
+                "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpOverrideForwardedRequest\" : {" + NEW_LINE +
+                "    \"httpRequest\" : {" + NEW_LINE +
+                "      \"headers\" : {" + NEW_LINE +
+                "        \"host\" : [ \"localhost:" + echoServerOne.getPort() + "\" ]" + NEW_LINE +
+                "      }," + NEW_LINE +
+                "      \"body\" : \"some_override_body\"" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}", APPLICATION_JSON_UTF_8))
+        );
 
         // when
-        mockServerClientOne
+        Expectation[] upsertedExpectations = mockServerClientOne
             .when(
                 request()
                     .withPath("/some_path")
@@ -711,10 +903,29 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSetupExpectationWithError() {
         // given
-        echoServerOne.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response()
+            .withStatusCode(201)
+            .withBody(json("" +
+                "{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/some_path\"," + NEW_LINE +
+                "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpError\" : {" + NEW_LINE +
+                "    \"dropConnection\" : true," + NEW_LINE +
+                "    \"responseBytes\" : \"c2lsbHlfYnl0ZXM=\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}", APPLICATION_JSON_UTF_8))
+        );
 
         // when
-        mockServerClientOne
+        Expectation[] upsertedExpectations = mockServerClientOne
             .when(
                 request()
                     .withPath("/some_path")
@@ -727,6 +938,16 @@ public class MockServerClientIntegrationTest {
             );
 
         // then
+        assertThat(upsertedExpectations[0], is(new Expectation(
+            request()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body")))
+            .thenError(
+                error()
+                    .withDropConnection(true)
+                    .withResponseBytes("silly_bytes".getBytes(UTF_8))
+            )
+        ));
         assertThat(retrieveRequests(request()).size(), is(1));
         String result = verify(verification().withRequest(
             request()

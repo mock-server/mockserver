@@ -836,11 +836,13 @@ public class MockServerClient implements Stoppable {
      * </pre>
      *
      * @param expectations one or more expectations to create or update (if the id field matches)
+     * @return upserted expectations
      */
-    public void upsert(Expectation... expectations) {
+    public Expectation[] upsert(Expectation... expectations) {
         if (expectations != null) {
+            HttpResponse httpResponse = null;
             if (expectations.length == 1) {
-                HttpResponse httpResponse =
+                httpResponse =
                     sendRequest(
                         request()
                             .withMethod("PUT")
@@ -852,7 +854,7 @@ public class MockServerClient implements Stoppable {
                     throw new ClientException(formatLogMessage("error:{}while submitted expectation:{}", httpResponse.getBody(), expectations[0]));
                 }
             } else if (expectations.length > 1) {
-                HttpResponse httpResponse =
+                httpResponse =
                     sendRequest(
                         request()
                             .withMethod("PUT")
@@ -864,7 +866,11 @@ public class MockServerClient implements Stoppable {
                     throw new ClientException(formatLogMessage("error:{}while submitted expectations:{}", httpResponse.getBody(), expectations));
                 }
             }
+            if (httpResponse != null && isNotBlank(httpResponse.getBodyAsString())) {
+                return expectationSerializer.deserializeArray(httpResponse.getBodyAsString(), true);
+            }
         }
+        return new Expectation[0];
     }
 
     /**
@@ -888,10 +894,11 @@ public class MockServerClient implements Stoppable {
      *
      * @param expectations one or more expectations
      * @deprecated this is deprecated due to unclear naming, use method upsert(Expectation... expectations) instead
+     * @return added or updated expectations
      */
     @Deprecated
-    public void sendExpectation(Expectation... expectations) {
-        upsert(expectations);
+    public Expectation[] sendExpectation(Expectation... expectations) {
+        return upsert(expectations);
     }
 
     /**

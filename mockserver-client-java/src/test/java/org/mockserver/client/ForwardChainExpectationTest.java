@@ -1,5 +1,6 @@
 package org.mockserver.client;
 
+import org.hamcrest.core.Is;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -9,9 +10,10 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.closurecallback.websocketclient.WebSocketClient;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.same;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpError.error;
@@ -38,6 +40,7 @@ public class ForwardChainExpectationTest {
     public void setupMocks() {
         mockAbstractClient = mock(MockServerClient.class);
         mockExpectation = mock(Expectation.class);
+        when(mockAbstractClient.upsert(mockExpectation)).thenReturn(new Expectation[]{mockExpectation});
         forwardChainExpectation = new ForwardChainExpectation(new MockServerLogger(), new MockServerEventBus(), mockAbstractClient, mockExpectation);
         initMocks(this);
     }
@@ -48,9 +51,10 @@ public class ForwardChainExpectationTest {
         HttpResponse response = response();
 
         // when
-        forwardChainExpectation.respond(response);
+        Expectation[] upsertedExpectations = forwardChainExpectation.respond(response);
 
         // then
+        assertThat(upsertedExpectations, is(new Expectation[]{mockExpectation}));
         verify(mockExpectation).thenRespond(same(response));
         verify(mockAbstractClient).upsert(mockExpectation);
     }
@@ -61,9 +65,10 @@ public class ForwardChainExpectationTest {
         HttpTemplate template = template(HttpTemplate.TemplateType.VELOCITY, "some_template");
 
         // when
-        forwardChainExpectation.respond(template);
+        Expectation[] upsertedExpectations = forwardChainExpectation.respond(template);
 
         // then
+        assertThat(upsertedExpectations, is(new Expectation[]{mockExpectation}));
         verify(mockExpectation).thenRespond(same(template));
         verify(mockAbstractClient).upsert(mockExpectation);
     }
@@ -74,9 +79,10 @@ public class ForwardChainExpectationTest {
         HttpClassCallback callback = callback();
 
         // when
-        forwardChainExpectation.respond(callback);
+        Expectation[] upsertedExpectations = forwardChainExpectation.respond(callback);
 
         // then
+        assertThat(upsertedExpectations, is(new Expectation[]{mockExpectation}));
         verify(mockExpectation).thenRespond(same(callback));
         verify(mockAbstractClient).upsert(mockExpectation);
     }
@@ -87,9 +93,10 @@ public class ForwardChainExpectationTest {
         HttpForward forward = forward();
 
         // when
-        forwardChainExpectation.forward(forward);
+        Expectation[] upsertedExpectations = forwardChainExpectation.forward(forward);
 
         // then
+        assertThat(upsertedExpectations, is(new Expectation[]{mockExpectation}));
         verify(mockExpectation).thenForward(same(forward));
         verify(mockAbstractClient).upsert(mockExpectation);
     }
@@ -100,9 +107,10 @@ public class ForwardChainExpectationTest {
         HttpTemplate template = template(HttpTemplate.TemplateType.VELOCITY, "some_template");
 
         // when
-        forwardChainExpectation.forward(template);
+        Expectation[] upsertedExpectations = forwardChainExpectation.forward(template);
 
         // then
+        assertThat(upsertedExpectations, is(new Expectation[]{mockExpectation}));
         verify(mockExpectation).thenForward(same(template));
         verify(mockAbstractClient).upsert(mockExpectation);
     }
@@ -113,9 +121,10 @@ public class ForwardChainExpectationTest {
         HttpClassCallback callback = callback();
 
         // when
-        forwardChainExpectation.forward(callback);
+        Expectation[] upsertedExpectations = forwardChainExpectation.forward(callback);
 
         // then
+        assertThat(upsertedExpectations, is(new Expectation[]{mockExpectation}));
         verify(mockExpectation).thenForward(same(callback));
         verify(mockAbstractClient).upsert(mockExpectation);
     }
@@ -123,9 +132,10 @@ public class ForwardChainExpectationTest {
     @Test
     public void shouldSetOverrideForwardedRequest() {
         // when
-        forwardChainExpectation.forward(forwardOverriddenRequest(request().withBody("some_replaced_body")));
+        Expectation[] upsertedExpectations = forwardChainExpectation.forward(forwardOverriddenRequest(request().withBody("some_replaced_body")));
 
         // then
+        assertThat(upsertedExpectations, is(new Expectation[]{mockExpectation}));
         verify(mockExpectation).thenForward(forwardOverriddenRequest(request().withBody("some_replaced_body")));
         verify(mockAbstractClient).upsert(mockExpectation);
     }
@@ -136,9 +146,10 @@ public class ForwardChainExpectationTest {
         HttpError error = error();
 
         // when
-        forwardChainExpectation.error(error);
+        Expectation[] upsertedExpectations = forwardChainExpectation.error(error);
 
         // then
+        assertThat(upsertedExpectations, is(new Expectation[]{mockExpectation}));
         verify(mockExpectation).thenError(same(error));
         verify(mockAbstractClient).upsert(mockExpectation);
     }

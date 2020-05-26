@@ -2,13 +2,13 @@ package org.mockserver.testing.integration.mock;
 
 import org.junit.Test;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequest;
-import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequestAndResponse;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.serialization.ExpectationSerializer;
+import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequest;
+import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequestAndResponse;
 import org.mockserver.uuid.UUIDService;
 import org.mockserver.verify.VerificationTimes;
 import org.slf4j.event.Level;
@@ -50,7 +50,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     @Test
     public void shouldForwardRequestInHTTP() {
         // when
-        mockServerClient
+        Expectation[] upsertedExpectations = mockServerClient
             .when(
                 request()
                     .withPath(calculatePath("echo"))
@@ -62,6 +62,18 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             );
 
         // then
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+                .thenForward(
+                    forward()
+                        .withHost("127.0.0.1")
+                        .withPort(insecureEchoServer.getPort())
+                )
+        ));
         // - in http
         assertEquals(
             response()
@@ -106,7 +118,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     @Test
     public void shouldForwardRequestInHTTPS() {
         // when
-        mockServerClient
+        Expectation[] upsertedExpectations = mockServerClient
             .when(
                 request()
                     .withPath(calculatePath("echo"))
@@ -117,6 +129,20 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withPort(secureEchoServer.getPort())
                     .withScheme(HttpForward.Scheme.HTTPS)
             );
+        // then
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+                .thenForward(
+                    forward()
+                        .withHost("127.0.0.1")
+                        .withPort(secureEchoServer.getPort())
+                        .withScheme(HttpForward.Scheme.HTTPS)
+                )
+        ));
 
         // then
         // - in http
@@ -163,7 +189,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     @Test
     public void shouldForwardOverriddenRequest() {
         // when
-        mockServerClient
+        Expectation[] upsertedExpectations = mockServerClient
             .when(
                 request()
                     .withPath(calculatePath("echo"))
@@ -176,7 +202,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         .withBody("some_overridden_body")
                 ).withDelay(MILLISECONDS, 10)
             );
-        mockServerClient
+        Expectation[] upsertedSecureExpectations = mockServerClient
             .when(
                 request()
                     .withPath(calculatePath("echo"))
@@ -192,6 +218,21 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
 
         // then
         // - in http
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(false)
+            )
+                .thenForward(
+                    forwardOverriddenRequest(
+                        request()
+                            .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
+                            .withBody("some_overridden_body")
+                    ).withDelay(MILLISECONDS, 10)
+                )
+        ));
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -213,6 +254,21 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             )
         );
         // - in https
+        assertThat(upsertedSecureExpectations.length, is(1));
+        assertThat(upsertedSecureExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(true)
+            )
+                .thenForward(
+                    forwardOverriddenRequest(
+                        request()
+                            .withHeader("Host", "localhost:" + secureEchoServer.getPort())
+                            .withBody("some_overridden_body")
+                    ).withDelay(MILLISECONDS, 10)
+                )
+        ));
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -237,7 +293,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     @Test
     public void shouldForwardOverriddenRequestWithOverriddenResponse() {
         // when
-        mockServerClient
+        Expectation[] upsertedExpectations = mockServerClient
             .when(
                 request()
                     .withPath(calculatePath("echo"))
@@ -254,7 +310,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         .withBody("some_overridden_response_body")
                 ).withDelay(MILLISECONDS, 10)
             );
-        mockServerClient
+        Expectation[] upsertedSecureExpectations = mockServerClient
             .when(
                 request()
                     .withPath(calculatePath("echo"))
@@ -295,6 +351,25 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
 
             )
         );
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(false)
+            )
+                .thenForward(
+                    forwardOverriddenRequest(
+                        request()
+                            .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
+                            .withBody("some_overridden_body"),
+                        response()
+                            .withHeader("extra_header", "some_value")
+                            .withHeader("content-length", "29")
+                            .withBody("some_overridden_response_body")
+                    ).withDelay(MILLISECONDS, 10)
+                )
+        ));
         // - in https
         assertEquals(
             response()
@@ -316,12 +391,31 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withBody("an_example_body_https"),
                 headersToIgnore)
         );
+        assertThat(upsertedSecureExpectations.length, is(1));
+        assertThat(upsertedSecureExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(true)
+            )
+                .thenForward(
+                    forwardOverriddenRequest(
+                        request()
+                            .withHeader("Host", "localhost:" + secureEchoServer.getPort())
+                            .withBody("some_overridden_body"),
+                        response()
+                            .withHeader("extra_header", "some_value")
+                            .withHeader("content-length", "29")
+                            .withBody("some_overridden_response_body")
+                    ).withDelay(MILLISECONDS, 10)
+                )
+        ));
     }
 
     @Test
     public void shouldForwardOverriddenRequestWithSocketAddress() {
         // when
-        mockServerClient
+        Expectation[] upsertedExpectations = mockServerClient
             .when(
                 request()
                     .withPath(calculatePath("echo"))
@@ -339,7 +433,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         )
                 ).withDelay(MILLISECONDS, 10)
             );
-        mockServerClient
+        Expectation[] upsertedSecureExpectations = mockServerClient
             .when(
                 request()
                     .withPath(calculatePath("echo"))
@@ -380,6 +474,26 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
 
             )
         );
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(false)
+            )
+                .thenForward(
+                    forwardOverriddenRequest(
+                        request()
+                            .withHeader("Host", "incorrect_host:1234")
+                            .withBody("some_overridden_body")
+                            .withSocketAddress(
+                                "localhost",
+                                insecureEchoServer.getPort(),
+                                SocketAddress.Scheme.HTTP
+                            )
+                    ).withDelay(MILLISECONDS, 10)
+                )
+        ));
         // - in https
         assertEquals(
             response()
@@ -400,12 +514,32 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withBody("an_example_body_https"),
                 headersToIgnore)
         );
+        assertThat(upsertedSecureExpectations.length, is(1));
+        assertThat(upsertedSecureExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(true)
+            )
+                .thenForward(
+                    forwardOverriddenRequest(
+                        request()
+                            .withHeader("Host", "incorrect_host:1234")
+                            .withBody("some_overridden_body")
+                            .withSocketAddress(
+                                "localhost",
+                                secureEchoServer.getPort(),
+                                SocketAddress.Scheme.HTTPS
+                            )
+                    ).withDelay(MILLISECONDS, 10)
+                )
+        ));
     }
 
     @Test
     public void shouldCallbackForwardCallbackToOverrideRequestInTestClasspath() {
         // when
-        mockServerClient
+        Expectation[] upsertedExpectations = mockServerClient
             .when(
                 request()
                     .withPath(calculatePath("echo"))
@@ -437,6 +571,17 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 headersToIgnore
             )
         );
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+                .thenForward(
+                    callback()
+                        .withCallbackClass(PrecannedTestExpectationForwardCallbackRequest.class)
+                )
+        ));
 
         // - in https
         assertEquals(
@@ -465,7 +610,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     @Test
     public void shouldCallbackForwardCallbackToOverrideRequestAndResponseInTestClasspath() {
         // when
-        mockServerClient
+        Expectation[] upsertedExpectations = mockServerClient
             .when(
                 request()
                     .withPath(calculatePath("echo"))
@@ -498,6 +643,17 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 headersToIgnore
             )
         );
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+                .thenForward(
+                    callback()
+                        .withCallbackClass(PrecannedTestExpectationForwardCallbackRequestAndResponse.class)
+                )
+        ));
 
         // - in https
         assertEquals(
@@ -527,7 +683,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     @Test
     public void shouldForwardTemplateInVelocity() {
         // when
-        mockServerClient
+        Expectation[] upsertedExpectations = mockServerClient
             .when(
                 request()
                     .withPath(calculatePath("echo"))
@@ -568,6 +724,28 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 headersToIgnore
             )
         );
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+                .thenForward(
+                    template(HttpTemplate.TemplateType.VELOCITY,
+                        "{" + NEW_LINE +
+                            "    'path' : \"/somePath\"," + NEW_LINE +
+                            "    'headers' : [ {" + NEW_LINE +
+                            "        'name' : \"Host\"," + NEW_LINE +
+                            "        'values' : [ \"127.0.0.1:" + insecureEchoServer.getPort() + "\" ]" + NEW_LINE +
+                            "    }, {" + NEW_LINE +
+                            "        'name' : \"x-test\"," + NEW_LINE +
+                            "        'values' : [ \"$!request.headers['x-test'][0]\" ]" + NEW_LINE +
+                            "    } ]," + NEW_LINE +
+                            "    'body': \"{'name': 'value'}\"" + NEW_LINE +
+                            "}")
+                        .withDelay(MILLISECONDS, 10)
+                )
+        ));
     }
 
     @Test
@@ -676,7 +854,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     @Test
     public void shouldSupportBatchedExpectations() throws Exception {
         // when
-        httpClient.sendRequest(
+        HttpResponse httpResponse = httpClient.sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
@@ -703,6 +881,20 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         ).get(10, SECONDS);
 
         // then
+        Expectation[] upsertedExpectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(httpResponse.getBodyAsString(), true);
+        assertThat(upsertedExpectations.length, is(3));
+        assertThat(upsertedExpectations[0], is(
+            new Expectation(request("/path_one"), once(), TimeToLive.unlimited(), 0)
+                .thenRespond(response().withBody("some_body_one"))
+        ));
+        assertThat(upsertedExpectations[1], is(
+            new Expectation(request("/path_two"), once(), TimeToLive.unlimited(), 0)
+                .thenRespond(response().withBody("some_body_two"))
+        ));
+        assertThat(upsertedExpectations[2], is(
+            new Expectation(request("/path_three"), once(), TimeToLive.unlimited(), 0)
+                .thenRespond(response().withBody("some_body_three"))
+        ));
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -738,7 +930,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     @Test
     public void shouldReturnResponseWithOnlyBody() {
         // when
-        mockServerClient.when(request()).respond(response().withBody("some_body"));
+        Expectation[] upsertedExpectations = mockServerClient.when(request()).respond(response().withBody("some_body"));
 
         // then
         assertEquals(
@@ -751,6 +943,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withPath(calculatePath("")),
                 headersToIgnore)
         );
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(new Expectation(request()).thenRespond(response().withBody("some_body"))));
     }
 
     @Test

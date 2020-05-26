@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - reduced time range of CA certificates to increase likelihood they will be accepted by strict systems (i.e. VMWare vCenter Server)
 - improved error message when exception loading or reading certificates or keys (i.e. file not found)
 - certificate and private key are saved to directoryToSaveDynamicSSLCertificate when preventCertificateDynamicUpdate is enabled
+- returns created expectations from /mockserver/expectation so that it is possible to view the id for new (or updated) expectations
 
 ### Fixed
 

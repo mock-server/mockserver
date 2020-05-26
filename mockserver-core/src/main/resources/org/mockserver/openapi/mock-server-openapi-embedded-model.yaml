@@ -4,7 +4,7 @@ servers:
   - url: 'https://localhost:1080/'
 info:
   title: MockServer API
-  version: "5.10.x"
+  version: "5.11.0"
   description: >-
     MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS with clients written in Java, JavaScript and Ruby and a simple REST API (as shown below).
 
@@ -33,6 +33,14 @@ paths:
       responses:
         '201':
           description: expectation created
+          content:
+            application/json:
+              schema:
+                title: list of upserted expectations
+                type: array
+                additionalProperties: false
+                items:
+                  $ref: "#/components/schemas/Expectation"
         '400':
           description: incorrect request format
         '406':
@@ -41,11 +49,7 @@ paths:
         content:
           application/json:
             schema:
-              title: list of expectations
-              type: array
-              additionalProperties: false
-              items:
-                $ref: "#/components/schemas/Expectations"
+              $ref: "#/components/schemas/Expectations"
         description: expectation to create
         required: true
   /clear:
