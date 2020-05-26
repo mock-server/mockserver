@@ -58,6 +58,7 @@
 <div class="panel title">
     <p>MockServer dynamically updates the Subject Alternative Name (SAN) values for its TLS certificate to add domain names and IP addresses from request Host headers and Host headers in expectations,
         this configuration setting disables this automatic update and only uses SAN value provided in <strong>TLS Subject Alternative Name Domains</strong> and <strong>TLS Subject Alternative Name IPs</strong> configuration properties.</p>
+    <p>When this property is enabled the generated X509 Certificate and Private Key pair are saved to the <a href="#button_configuration_directory_to_save_dynamic_ssl_certificates">directoryToSaveDynamicSSLCertificate</a> as <strong>Certificate.pem</strong> and <strong>PKCS8PrivateKey.pem</strong></p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
     <p>Java Code:</p>
     <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.preventCertificateDynamicUpdate(boolean prevent)</code></pre>
