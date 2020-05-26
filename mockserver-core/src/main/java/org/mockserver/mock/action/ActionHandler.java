@@ -327,7 +327,8 @@ public class ActionHandler {
                         .setHttpRequest(request)
                         .setHttpResponse(response)
                         .setExpectation(request, response)
-                        .setMessageFormat("returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}for action:{}")
+                        .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}")
+                        .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}")
                         .setArguments(response, responseFuture.getHttpRequest(), httpRequestToCurlSerializer.toCurl(responseFuture.getHttpRequest(), responseFuture.getRemoteAddress()), action)
                 );
             } catch (Throwable throwable) {
@@ -380,7 +381,7 @@ public class ActionHandler {
                     .setHttpRequest(request)
                     .setHttpResponse(response)
                     .setExpectation(request, response)
-                    .setMessageFormat("returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}for action:{}")
+                    .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}")
                     .setArguments(response, response, httpRequestToCurlSerializer.toCurl(request), action)
             );
         } catch (Throwable throwable) {
