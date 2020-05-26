@@ -5,9 +5,11 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.jdk.JDKKeyAndCertificateFactory;
 import org.mockserver.socket.tls.jdk.X509Generator;
+import org.slf4j.event.Level;
 
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
@@ -29,11 +31,13 @@ import static org.mockserver.configuration.ConfigurationProperties.*;
  */
 public class NettySslContextFactory {
 
+    private final MockServerLogger mockServerLogger;
     private final KeyAndCertificateFactory keyAndCertificateFactory;
     private SslContext clientSslContext = null;
     private SslContext serverSslContext = null;
 
     public NettySslContextFactory(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
         keyAndCertificateFactory = new JDKKeyAndCertificateFactory(mockServerLogger);
         System.setProperty("https.protocols", "SSLv3,TLSv1,TLSv1.1,TLSv1.2");
     }
@@ -135,8 +139,14 @@ public class NettySslContextFactory {
                     .clientAuth(tlsMutualAuthenticationRequired() ? ClientAuth.REQUIRE : ClientAuth.NONE)
                     .build();
                 rebuildServerTLSContext(false);
-            } catch (Exception e) {
-                throw new RuntimeException("Exception creating SSL context for server", e);
+            } catch (Throwable throwable) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.EXCEPTION)
+                        .setLogLevel(Level.ERROR)
+                        .setMessageFormat("Exception creating SSL context for server" + throwable.getMessage())
+                        .setThrowable(throwable)
+                );
             }
         }
         return serverSslContext;
