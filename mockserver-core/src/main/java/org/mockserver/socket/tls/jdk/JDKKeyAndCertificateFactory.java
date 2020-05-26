@@ -16,6 +16,7 @@ import java.util.Arrays;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mockserver.configuration.ConfigurationProperties.preventCertificateDynamicUpdate;
 import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.*;
 import static org.mockserver.socket.tls.jdk.X509Generator.*;
 import static org.slf4j.event.Level.*;
@@ -129,19 +130,19 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
         return !validX509PEMFileExists(certificateAuthorityX509CertificatePath());
     }
 
-    private String certificateAuthorityX509CertificatePath() {
-        if (dynamicCertificateAuthorityUpdate()) {
-            return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "CertificateAuthorityCertificate.pem").getAbsolutePath();
-        } else {
-            return ConfigurationProperties.certificateAuthorityCertificate();
-        }
-    }
-
     private String certificateAuthorityPrivateKeyPath() {
         if (dynamicCertificateAuthorityUpdate()) {
             return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "PKCS8CertificateAuthorityPrivateKey.pem").getAbsolutePath();
         } else {
             return ConfigurationProperties.certificateAuthorityPrivateKey();
+        }
+    }
+
+    private String certificateAuthorityX509CertificatePath() {
+        if (dynamicCertificateAuthorityUpdate()) {
+            return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "CertificateAuthorityCertificate.pem").getAbsolutePath();
+        } else {
+            return ConfigurationProperties.certificateAuthorityCertificate();
         }
     }
 
@@ -211,6 +212,10 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
                             .setArguments(x509Certificate(), Arrays.toString(ConfigurationProperties.sslSubjectAlternativeNameDomains()), Arrays.toString(ConfigurationProperties.sslSubjectAlternativeNameIps()))
                     );
                 }
+                if (preventCertificateDynamicUpdate()) {
+                    saveCertificateAuthorityPEMToFile(x509AndPrivateKey.getCert(), x509CertificatePath(), "X509 Certificate");
+                    saveCertificateAuthorityPEMToFile(x509AndPrivateKey.getPrivateKey(), privateKeyPath(), "Private Key");
+                }
             } catch (Exception e) {
                 mockServerLogger.logEvent(
                     new LogEntry()
@@ -225,6 +230,22 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
 
     public boolean certificateNotYetCreated() {
         return x509AndPrivateKey == null;
+    }
+
+    private String privateKeyPath() {
+        if (dynamicCertificateAuthorityUpdate()) {
+            return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "PKCS8PrivateKey.pem").getAbsolutePath();
+        } else {
+            return ConfigurationProperties.certificateAuthorityPrivateKey();
+        }
+    }
+
+    private String x509CertificatePath() {
+        if (dynamicCertificateAuthorityUpdate()) {
+            return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "Certificate.pem").getAbsolutePath();
+        } else {
+            return ConfigurationProperties.certificateAuthorityCertificate();
+        }
     }
 
     public PrivateKey privateKey() {
