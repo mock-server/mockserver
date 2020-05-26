@@ -414,12 +414,14 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             .thenRespond(
                 response()
                     .withBody("some_body_one")
-            );
+            )
+            .withId("one");
         Expectation expectationTwo = new Expectation(request().withPath(calculatePath("some_path")), unlimited(), TimeToLive.unlimited(), 10)
             .thenRespond(
                 response()
                     .withBody("some_body_two")
-            );
+            )
+            .withId("two");
         Expectation[] upsertedExpectations = mockServerClient
             .upsert(
                 expectationOne,
@@ -446,7 +448,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             .thenRespond(
                 response()
                     .withBody("some_body_one")
-            );
+            )
+            .withId("one");
         upsertedExpectations = mockServerClient
             .upsert(
                 expectationOneWithHigherPriority
@@ -481,13 +484,16 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 response()
                     .withBody("some_body_two")
             );
-        mockServerClient
+        Expectation[] upsertedExpectations = mockServerClient
             .upsert(
                 expectationOne,
                 expectationTwo
             );
 
         // then
+        assertThat(upsertedExpectations.length, is(2));
+        assertThat(upsertedExpectations[0], is(expectationOne));
+        assertThat(upsertedExpectations[1], is(expectationTwo));
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -501,16 +507,20 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
 
         // when
         Expectation expectationOneWithHigherPriority = new Expectation(request().withPath(calculatePath("some_path")), exactly(1), TimeToLive.unlimited(), 15)
-            .withId(expectationOne.getId())
+            .withId(upsertedExpectations[0].getId())
             .thenRespond(
                 response()
                     .withBody("some_body_one")
             );
-        mockServerClient
+        upsertedExpectations = mockServerClient
             .upsert(
                 expectationOneWithHigherPriority,
                 expectationTwo
             );
+
+        // then
+        assertThat(upsertedExpectations.length, is(2));
+        assertThat(upsertedExpectations[0], is(expectationOneWithHigherPriority));
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
