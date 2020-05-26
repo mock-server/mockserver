@@ -2,6 +2,7 @@ package org.mockserver.junit.jupiter;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -10,6 +11,7 @@ import java.lang.annotation.RetentionPolicy;
  */
 @ExtendWith(MockServerExtension.class)
 @Retention(RetentionPolicy.RUNTIME)
+@Inherited
 public @interface MockServerSettings {
     boolean perTestSuite() default false;
     int[] ports() default {};

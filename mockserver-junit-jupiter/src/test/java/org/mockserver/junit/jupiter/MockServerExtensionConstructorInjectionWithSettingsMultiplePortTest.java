@@ -15,11 +15,11 @@ import static org.hamcrest.core.IsNot.not;
     MockServerExtension.class,
     TestLoggerExtension.class,
 })
-@MockServerSettings(ports = 8989)
-class MockServerExtensionConstructorInjectionSinglePortTest {
+@MockServerSettings(ports = {8787, 8888})
+class MockServerExtensionConstructorInjectionWithSettingsMultiplePortTest {
     private final MockServerClient client;
 
-    public MockServerExtensionConstructorInjectionSinglePortTest(MockServerClient client) {
+    public MockServerExtensionConstructorInjectionWithSettingsMultiplePortTest(MockServerClient client) {
         this.client = client;
     }
 
@@ -30,7 +30,7 @@ class MockServerExtensionConstructorInjectionSinglePortTest {
     }
 
     @Test
-    void usesRequestedPort() {
-        assertThat(client.remoteAddress().getPort(), is(equalTo(8989)));
+    void usesRequestedPorts() {
+        assertThat(client.remoteAddress().getPort(), is(equalTo(8787)));
     }
 }

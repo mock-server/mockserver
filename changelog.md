@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - improved error message when exception loading or reading certificates or keys (i.e. file not found)
 - certificate and private key are saved to directoryToSaveDynamicSSLCertificate when preventCertificateDynamicUpdate is enabled
 - returns created expectations from /mockserver/expectation so that it is possible to view the id for new (or updated) expectations
+- added ability to inherit @MockServerSettings for Junit5 tests
 
 ### Fixed
 
