@@ -149,7 +149,7 @@ public abstract class AbstractProxyIntegrationTest {
 
             // - send GET request for headers and body
             output.write(("" +
-                "GET " + addContextToPath("test_headers_and_body") + " HTTP/1.1\n" +
+                "GET " + addContextToPath("test_headers_and_body") + " HTTP/1.1\r\n" +
                 "Host: 127.0.0.1:" + getServerPort() + "\r\n" +
                 "Content-Length: " + "an_example_body".getBytes(StandardCharsets.UTF_8).length + "\r\n" +
                 "x-test: test_headers_and_body\r\n" +
