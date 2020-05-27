@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - certificate and private key are saved to directoryToSaveDynamicSSLCertificate when preventCertificateDynamicUpdate is enabled
 - returns created expectations from /mockserver/expectation so that it is possible to view the id for new (or updated) expectations
 - added ability to inherit @MockServerSettings for Junit5 tests
+- switched to distroless container base for security and size
 
 ### Fixed
 

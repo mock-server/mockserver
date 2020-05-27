@@ -1,12 +1,10 @@
 version: "2.4"
 services:
   mockServer:
-    image: mockserver/mockserver:mockserver-5.7.2
+    image: mockserver/mockserver:mockserver-5.10.0
     ports:
       - 1080:1090
     environment:
-      LOG_LEVEL: "DEBUG"
-      SERVER_PORT: 1090
-      PROXY_REMOTE_PORT: 80
-      PROXY_REMOTE_HOST: www.mock-server.com
-      JVM_OPTIONS: -Dmockserver.sslSubjectAlternativeNameDomains='org.mock-server.com,mock-server.com'
+      MOCKSERVER_LOG_LEVEL: TRACE
+      MOCKSERVER_MAX_EXPECTATIONS: 100
+      MOCKSERVER_MAX_HEADER_SIZE: 8192

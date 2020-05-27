@@ -37,56 +37,21 @@ docker run --rm --name mockserver -p <serverPort>:1080 mockserver/mockserver
 docker stop mockserver && docker rm mockserver
 ```
 
-* **DEBUG** any issues or change the command line options you can run the container with a shell prompt
-
-```bash
-docker run -i -t --rm --name mockserver -p 1080:1080 mockserver/mockserver /bin/bash
-```
-
 The default command executed when the container runs is:
  
 ```bash
-/opt/mockserver/run_mockserver.sh -serverPort 1080 -logLevel INFO
+-logLevel INFO -serverPort 1080
 ```
 
-This can be modified to change the command line options passed to the `/opt/mockserver/run_mockserver.sh` script, which supports the following options:
+This can be modified to change the command line options passed to the MockServer for example:
 
-```
-run_mockserver.sh -serverPort <port> [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>] [-logLevel <level>] 
-
- valid options are:
-
-    -serverPort <port>           The HTTP, HTTPS, SOCKS and HTTP CONNECT       
-                                 port(s) for both mocking and proxying         
-                                 requests.  Port unification is used to        
-                                 support all protocols for proxying and        
-                                 mocking on the same port(s). Supports         
-                                 comma separated list for binding to           
-                                 multiple ports.                               
-        
-    -proxyRemotePort <port>      Optionally enables port forwarding mode.      
-                                 When specified all requests received will     
-                                 be forwarded to the specified port, unless    
-                                 they match an expectation.                    
-        
-    -proxyRemoteHost <hostname>  Specified the host to forward all proxy       
-                                 requests to when port forwarding mode has     
-                                 been enabled using the proxyRemotePort        
-                                 option.  This setting is ignored unless       
-                                 proxyRemotePort has been specified. If no     
-                                 value is provided for proxyRemoteHost when    
-                                 proxyRemotePort has been specified,           
-                                 proxyRemoteHost will default to \"localhost\".
-        
-    -logLevel <level>            Optionally specify log level using SLF4J levels:
-                                 TRACE, DEBUG, INFO, WARN, ERROR, OFF or Java    
-                                 Logger levels: FINEST, FINE, INFO, WARNING,     
-                                 SEVERE or OFF. If not specified default is INFO                               
-        
-i.e. run_mockserver.sh -logLevel INFO -serverPort 1080,1081 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com
+```bash
+docker run --rm --name mockserver -p 1090:1090 mockserver/mockserver -logLevel INFO -serverPort 1090 -proxyRemotePort 443 -proxyRemoteHost mock-server.com
 ```
 
-The `logLevel` can also be modified by passing environment variable through docker-compose.yml file. The following is a sample docker-compose.yml file for changing logLevel:
+All configuration values (see: https://mock-server.com/mock_server/configuration_properties.html) can also be modified by passing environment variable through docker-compose.yml file. 
+
+The following is a sample docker-compose.yml file for changing maximum expectations and maximum header size:
 
  ```
  mockServer:
@@ -94,12 +59,10 @@ The `logLevel` can also be modified by passing environment variable through dock
    ports:
    - 1080:1080
    environment:
-   - LOG_LEVEL=WARN
+   - MOCKSERVER_MAX_EXPECTATIONS=100
+   - MOCKSERVER_MAX_HEADER_SIZE=8192
  ```
  
-If no `LOG_LEVEL` value is passed in docker-compose, the default value will be `INFO` unless you run the container with other logLevel value on command line.  
-
-
 ### What is MockServer
 
 MockServer is for mocking of any system you integrate with via HTTP or HTTPS (i.e. services, web sites, etc).
@@ -110,7 +73,7 @@ MockServer supports:
 * recording requests and responses to analyse how a system behaves ([learn more](http://www.mock-server.com/#what-is-mockserver))
 * verifying which requests and responses have been sent as part of a test ([learn more](http://www.mock-server.com/#what-is-mockserver))
 
-This docker container will run an instance of the MockServer on the following port:
+This docker container will (by default) run an instance of the MockServer on the following port:
 
 * serverPort **1080**
 
