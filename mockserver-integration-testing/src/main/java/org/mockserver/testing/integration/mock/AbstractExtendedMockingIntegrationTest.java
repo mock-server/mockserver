@@ -408,6 +408,67 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
+    public void shouldReturnResponseByMatchingPathInOrderOfPriorityWithNegativePriorities() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path")),
+                exactly(1),
+                TimeToLive.unlimited(),
+                -10
+            )
+            .respond(
+                response()
+                    .withBody("some_body_one")
+            );
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path")),
+                exactly(1),
+                TimeToLive.unlimited(),
+                0
+            )
+            .respond(
+                response()
+                    .withBody("some_body_two")
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_two"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_one"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
+                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
     public void shouldReturnResponseByMatchingPathInOrderOfPriorityWithPriorityUpdate() {
         // when
         Expectation expectationOne = new Expectation(request().withPath(calculatePath("some_path")), unlimited(), TimeToLive.unlimited(), 0)
