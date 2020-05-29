@@ -1070,7 +1070,7 @@ public class ConfigurationProperties {
     @SuppressWarnings("unused")
     private static List<Integer> readIntegerListProperty(String key, String environmentVariableKey, Integer defaultValue) {
         try {
-            return INTEGER_STRING_LIST_PARSER.toList(readPropertyHierarchically(key, "", "" + defaultValue));
+            return INTEGER_STRING_LIST_PARSER.toList(readPropertyHierarchically(key, environmentVariableKey, "" + defaultValue));
         } catch (NumberFormatException nfe) {
             MOCK_SERVER_LOGGER.logEvent(
                 new LogEntry()
@@ -1085,7 +1085,7 @@ public class ConfigurationProperties {
 
     private static Integer readIntegerProperty(String key, String environmentVariableKey, int defaultValue) {
         try {
-            return Integer.parseInt(readPropertyHierarchically(key, "", "" + defaultValue));
+            return Integer.parseInt(readPropertyHierarchically(key, environmentVariableKey, "" + defaultValue));
         } catch (NumberFormatException nfe) {
             MOCK_SERVER_LOGGER.logEvent(
                 new LogEntry()
@@ -1100,7 +1100,7 @@ public class ConfigurationProperties {
 
     private static Long readLongProperty(String key, String environmentVariableKey, long defaultValue) {
         try {
-            return Long.parseLong(readPropertyHierarchically(key, "", "" + defaultValue));
+            return Long.parseLong(readPropertyHierarchically(key, environmentVariableKey, "" + defaultValue));
         } catch (NumberFormatException nfe) {
             MOCK_SERVER_LOGGER.logEvent(
                 new LogEntry()
@@ -1196,6 +1196,9 @@ public class ConfigurationProperties {
 
     @SuppressWarnings("ConstantConditions")
     private static String readPropertyHierarchically(String systemPropertyKey, String environmentVariableKey, String defaultValue) {
+        if (isBlank(environmentVariableKey)) {
+            throw new IllegalArgumentException("environment property name cannot be null for " + systemPropertyKey);
+        }
         String defaultOrEnvironmentVariable = isBlank(System.getenv(environmentVariableKey)) ?
             defaultValue :
             System.getenv(environmentVariableKey);

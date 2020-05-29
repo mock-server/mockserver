@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added explicit gc suggestion after reset and clear
 
 ### Fixed
+- fixed but with environment vairable configuration for long, integer and integer list values
 
 ## [5.10.0] - 2020-03-24
 
