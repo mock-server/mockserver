@@ -6,7 +6,7 @@ import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.mock.RequestMatchers;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.ui.MockServerMatcherNotifier;
 
@@ -29,12 +29,12 @@ import static org.mockserver.model.HttpResponse.response;
 public class ExpectationFileWatcherTest {
 
     private MockServerLogger mockServerLogger;
-    private MockServerMatcher mockServerMatcher;
+    private RequestMatchers requestMatchers;
 
     @Before
     public void createMockServerMatcher() {
         mockServerLogger = new MockServerLogger();
-        mockServerMatcher = new MockServerMatcher(mockServerLogger, new Scheduler(mockServerLogger), new WebSocketClientRegistry(mockServerLogger));
+        requestMatchers = new RequestMatchers(mockServerLogger, new Scheduler(mockServerLogger), new WebSocketClientRegistry(mockServerLogger));
     }
 
     @Test
@@ -49,9 +49,9 @@ public class ExpectationFileWatcherTest {
             ConfigurationProperties.initializationJsonPath(mockserverInitialization.getPath());
             // and - expectation update notification
             CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
-            mockServerMatcher.registerListener((mockServerMatcher, cause) -> expectationsUpdated.complete("updated"));
+            requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
             // and - file watcher
-            expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, mockServerMatcher);
+            expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
             MILLISECONDS.sleep(1500);
 
             // when
@@ -105,7 +105,7 @@ public class ExpectationFileWatcherTest {
             System.out.println("update processed in: " + (System.currentTimeMillis() - updatedFileTime) + "ms");
 
             // then
-            List<Expectation> expectations = mockServerMatcher.retrieveActiveExpectations(null);
+            List<Expectation> expectations = requestMatchers.retrieveActiveExpectations(null);
             assertThat(
                 expectations,
                 contains(
@@ -159,9 +159,9 @@ public class ExpectationFileWatcherTest {
             ConfigurationProperties.initializationJsonPath(mockserverInitialization.getAbsolutePath());
             // and - expectation update notification
             CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
-            mockServerMatcher.registerListener((mockServerMatcher, cause) -> expectationsUpdated.complete("updated"));
+            requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
             // and - file watcher
-            expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, mockServerMatcher);
+            expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
             MILLISECONDS.sleep(1500);
 
             // when
@@ -215,7 +215,7 @@ public class ExpectationFileWatcherTest {
             System.out.println("update processed in: " + (System.currentTimeMillis() - updatedFileTime) + "ms");
 
             // then
-            List<Expectation> expectations = mockServerMatcher.retrieveActiveExpectations(null);
+            List<Expectation> expectations = requestMatchers.retrieveActiveExpectations(null);
             assertThat(
                 expectations,
                 contains(
@@ -313,7 +313,7 @@ public class ExpectationFileWatcherTest {
                 "} ]";
             Files.write(mockserverInitialization.toPath(), watchedFileContents.getBytes(StandardCharsets.UTF_8));
             // and - matching existing expectations
-            mockServerMatcher.update(new Expectation[]{
+            requestMatchers.update(new Expectation[]{
                 new Expectation(
                     request()
                         .withPath("/simpleFirst")
@@ -345,9 +345,9 @@ public class ExpectationFileWatcherTest {
             }, MockServerMatcherNotifier.Cause.FILE_WATCHER);
             // and - expectation update notification
             CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
-            mockServerMatcher.registerListener((mockServerMatcher, cause) -> expectationsUpdated.complete("updated"));
+            requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
             // and - file watcher
-            expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, mockServerMatcher);
+            expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
             MILLISECONDS.sleep(1500);
 
             // when
@@ -359,7 +359,7 @@ public class ExpectationFileWatcherTest {
             System.out.println("update processed in: " + (System.currentTimeMillis() - updatedFileTime) + "ms");
 
             // then
-            List<Expectation> expectations = mockServerMatcher.retrieveActiveExpectations(null);
+            List<Expectation> expectations = requestMatchers.retrieveActiveExpectations(null);
             assertThat(
                 expectations,
                 emptyCollectionOf(Expectation.class)
@@ -429,9 +429,9 @@ public class ExpectationFileWatcherTest {
             Files.write(mockserverInitialization.toPath(), watchedFileContents.getBytes(StandardCharsets.UTF_8));
             // and - expectation update notification
             CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
-            mockServerMatcher.registerListener((mockServerMatcher, cause) -> expectationsUpdated.complete("updated"));
+            requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
             // and - file watcher
-            expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, mockServerMatcher);
+            expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
             MILLISECONDS.sleep(1500);
 
             // when
@@ -442,7 +442,7 @@ public class ExpectationFileWatcherTest {
             System.out.println("update processed in: " + (System.currentTimeMillis() - updatedFileTime) + "ms");
 
             // then
-            List<Expectation> expectations = mockServerMatcher.retrieveActiveExpectations(null);
+            List<Expectation> expectations = requestMatchers.retrieveActiveExpectations(null);
             assertThat(
                 expectations,
                 contains(
@@ -541,9 +541,9 @@ public class ExpectationFileWatcherTest {
             Files.write(mockserverInitialization.toPath(), watchedFileContents.getBytes(StandardCharsets.UTF_8));
             // and - expectation update notification
             CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
-            mockServerMatcher.registerListener((mockServerMatcher, cause) -> expectationsUpdated.complete("updated"));
+            requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
             // and - file watcher
-            expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, mockServerMatcher);
+            expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
             MILLISECONDS.sleep(1500);
 
             // when
@@ -597,7 +597,7 @@ public class ExpectationFileWatcherTest {
             System.out.println("update processed in: " + (System.currentTimeMillis() - updatedFileTime) + "ms");
 
             // then
-            List<Expectation> expectations = mockServerMatcher.retrieveActiveExpectations(null);
+            List<Expectation> expectations = requestMatchers.retrieveActiveExpectations(null);
             assertThat(
                 expectations,
                 contains(

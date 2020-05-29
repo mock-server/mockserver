@@ -43,6 +43,7 @@ public class ConfigurationProperties {
     private static final String DEFAULT_MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS = "false";
     private static final int DEFAULT_MAX_FUTURE_TIMEOUT = 60;
     private static final int DEFAULT_MAX_EXPECTATIONS = 5000;
+    private static final String DEFAULT_OUTPUT_MEMORY_USAGE_CSV = "false";
     private static final int DEFAULT_MAX_WEB_SOCKET_EXPECTATIONS = 1500;
     private static final int DEFAULT_MAX_INITIAL_LINE_LENGTH = Integer.MAX_VALUE;
     private static final int DEFAULT_MAX_HEADER_SIZE = Integer.MAX_VALUE;
@@ -73,6 +74,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES = "mockserver.enableCORSForAllResponses";
     private static final String MOCKSERVER_MAX_EXPECTATIONS = "mockserver.maxExpectations";
     private static final String MOCKSERVER_MAX_LOG_ENTRIES = "mockserver.maxLogEntries";
+    private static final String MOCKSERVER_OUTPUT_MEMORY_USAGE_CSV = "mockserver.outputMemoryUsageCsv";
     private static final String MOCKSERVER_MAX_WEB_SOCKET_EXPECTATIONS = "mockserver.maxWebSocketExpectations";
     private static final String MOCKSERVER_MAX_INITIAL_LINE_LENGTH = "mockserver.maxInitialLineLength";
     private static final String MOCKSERVER_MAX_HEADER_SIZE = "mockserver.maxHeaderSize";
@@ -282,6 +284,14 @@ public class ConfigurationProperties {
             }
         }
         return (int) Math.pow(2, 16);
+    }
+
+    public static boolean outputMemoryUsageCsv() {
+        return Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_OUTPUT_MEMORY_USAGE_CSV, "MOCKSERVER_OUTPUT_MEMORY_USAGE_CSV", DEFAULT_OUTPUT_MEMORY_USAGE_CSV));
+    }
+
+    public static void outputMemoryUsageCsv(boolean enable) {
+        System.setProperty(MOCKSERVER_OUTPUT_MEMORY_USAGE_CSV, "" + enable);
     }
 
     public static int maxWebSocketExpectations() {

@@ -27,7 +27,7 @@ import static org.mockserver.metrics.Metrics.Name.*;
 /**
  * @author jamesdbloom
  */
-public class MockServerMatcher extends MockServerMatcherNotifier {
+public class RequestMatchers extends MockServerMatcherNotifier {
 
     final CircularPriorityQueue<String, HttpRequestMatcher> httpRequestMatchers = new CircularPriorityQueue<>(
         maxExpectations(),
@@ -39,7 +39,7 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
     private WebSocketClientRegistry webSocketClientRegistry;
     private MatcherBuilder matcherBuilder;
 
-    public MockServerMatcher(MockServerLogger mockServerLogger, Scheduler scheduler, WebSocketClientRegistry webSocketClientRegistry) {
+    public RequestMatchers(MockServerLogger mockServerLogger, Scheduler scheduler, WebSocketClientRegistry webSocketClientRegistry) {
         super(scheduler);
         this.matcherBuilder = new MatcherBuilder(mockServerLogger);
         this.mockServerLogger = mockServerLogger;
@@ -140,6 +140,10 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
                 .setArguments(expectation.clone())
         );
         return httpRequestMatcher;
+    }
+
+    public int size() {
+        return httpRequestMatchers.size();
     }
 
     public void reset(Cause cause) {

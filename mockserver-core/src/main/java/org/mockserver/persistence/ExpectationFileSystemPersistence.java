@@ -5,7 +5,7 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.mock.RequestMatchers;
 import org.mockserver.serialization.serializers.response.TimeToLiveSerializer;
 import org.mockserver.ui.MockServerMatcherListener;
 import org.mockserver.ui.MockServerMatcherNotifier;
@@ -34,12 +34,12 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
     private final Path filePath;
     private final boolean initializationPathMatchesPersistencePath;
     private final ReentrantLock fileWriteLock = new ReentrantLock();
-    private final MockServerMatcher mockServerMatcher;
+    private final RequestMatchers requestMatchers;
 
-    public ExpectationFileSystemPersistence(MockServerLogger mockServerLogger, MockServerMatcher mockServerMatcher) {
+    public ExpectationFileSystemPersistence(MockServerLogger mockServerLogger, RequestMatchers requestMatchers) {
         if (ConfigurationProperties.persistExpectations()) {
             this.mockServerLogger = mockServerLogger;
-            this.mockServerMatcher = mockServerMatcher;
+            this.requestMatchers = requestMatchers;
             this.objectMapper = createObjectMapper(new TimeToLiveSerializer());
             this.filePath = Paths.get(ConfigurationProperties.persistedExpectationsPath());
             try {
@@ -55,7 +55,7 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
                 );
             }
             this.initializationPathMatchesPersistencePath = ConfigurationProperties.initializationJsonPath().equals(ConfigurationProperties.persistedExpectationsPath());
-            mockServerMatcher.registerListener(this);
+            requestMatchers.registerListener(this);
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(INFO)
@@ -64,7 +64,7 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
             );
         } else {
             this.mockServerLogger = null;
-            this.mockServerMatcher = null;
+            this.requestMatchers = null;
             this.objectMapper = null;
             this.filePath = null;
             this.initializationPathMatchesPersistencePath = true;
@@ -72,7 +72,7 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
     }
 
     @Override
-    public void updated(MockServerMatcher mockServerLog, MockServerMatcherNotifier.Cause cause) {
+    public void updated(RequestMatchers requestMatchers, MockServerMatcherNotifier.Cause cause) {
         // ignore non-API changes from the same file
         if (cause == MockServerMatcherNotifier.Cause.API || !initializationPathMatchesPersistencePath) {
             fileWriteLock.lock();
@@ -84,7 +84,7 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
                         FileLock fileLock = fileChannel.lock()
                     ) {
                         if (fileLock != null) {
-                            List<Expectation> expectations = mockServerLog.retrieveActiveExpectations(null);
+                            List<Expectation> expectations = requestMatchers.retrieveActiveExpectations(null);
                             if (MockServerLogger.isEnabled(TRACE)) {
                                 mockServerLogger.logEvent(
                                     new LogEntry()
@@ -150,8 +150,8 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
     }
 
     public void stop() {
-        if (mockServerMatcher != null) {
-            mockServerMatcher.unregisterListener(this);
+        if (requestMatchers != null) {
+            requestMatchers.unregisterListener(this);
         }
     }
 }

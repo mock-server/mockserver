@@ -6,9 +6,8 @@ import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.mock.RequestMatchers;
 import org.mockserver.serialization.ExpectationSerializer;
-import org.mockserver.ui.MockServerMatcherNotifier;
 import org.mockserver.ui.MockServerMatcherNotifier.Cause;
 
 import java.lang.reflect.Constructor;
@@ -25,18 +24,18 @@ public class ExpectationInitializerLoader {
 
     private final ExpectationSerializer expectationSerializer;
     private final MockServerLogger mockServerLogger;
-    private final MockServerMatcher mockServerMatcher;
+    private final RequestMatchers requestMatchers;
 
-    public ExpectationInitializerLoader(MockServerLogger mockServerLogger, MockServerMatcher mockServerMatcher) {
+    public ExpectationInitializerLoader(MockServerLogger mockServerLogger, RequestMatchers requestMatchers) {
         this.expectationSerializer = new ExpectationSerializer(mockServerLogger);
         this.mockServerLogger = mockServerLogger;
-        this.mockServerMatcher = mockServerMatcher;
+        this.requestMatchers = requestMatchers;
         addExpectationsFromInitializer();
     }
 
     private void addExpectationsFromInitializer() {
         for (Expectation expectation : loadExpectations()) {
-            mockServerMatcher.add(expectation, Cause.INITIALISER);
+            requestMatchers.add(expectation, Cause.INITIALISER);
         }
     }
 

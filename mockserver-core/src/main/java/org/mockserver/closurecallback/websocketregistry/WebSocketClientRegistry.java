@@ -94,6 +94,10 @@ public class WebSocketClientRegistry {
         }
     }
 
+    public int size() {
+        return clientRegistry.size();
+    }
+
     void registerClient(String clientId, ChannelHandlerContext ctx) {
         try {
             ctx.channel().writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(new WebSocketClientIdDTO().setClientId(clientId))));

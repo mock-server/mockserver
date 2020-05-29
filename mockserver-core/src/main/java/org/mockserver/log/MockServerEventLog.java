@@ -87,6 +87,10 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         }
     }
 
+    public int size() {
+        return eventLog.size();
+    }
+
     private void startRingBuffer() {
         disruptor = new Disruptor<>(LogEntry::new, ConfigurationProperties.ringBufferSize(), new Scheduler.SchedulerThreadFactory("EventLog"));
 

@@ -55,8 +55,8 @@ public class HttpStateHandler {
     private final ExpectationFileSystemPersistence expectationFileSystemPersistence;
     private final ExpectationFileWatcher expectationFileWatcher;
     // mockserver
-    private MockServerMatcher mockServerMatcher;
-    private final MockServerLogger mockServerLogger;
+    private RequestMatchers requestMatchers;
+    private MockServerLogger mockServerLogger;
     private WebSocketClientRegistry webSocketClientRegistry;
     // serializers
     private HttpRequestSerializer httpRequestSerializer;
@@ -73,7 +73,7 @@ public class HttpStateHandler {
         this.scheduler = scheduler;
         this.webSocketClientRegistry = new WebSocketClientRegistry(mockServerLogger);
         this.mockServerLog = new MockServerEventLog(mockServerLogger, scheduler, true);
-        this.mockServerMatcher = new MockServerMatcher(mockServerLogger, scheduler, webSocketClientRegistry);
+        this.requestMatchers = new RequestMatchers(mockServerLogger, scheduler, webSocketClientRegistry);
         this.httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
         this.httpRequestResponseSerializer = new LogEventRequestAndResponseSerializer(mockServerLogger);
         this.expectationSerializer = new ExpectationSerializer(mockServerLogger);
@@ -82,13 +82,25 @@ public class HttpStateHandler {
         this.verificationSerializer = new VerificationSerializer(mockServerLogger);
         this.verificationSequenceSerializer = new VerificationSequenceSerializer(mockServerLogger);
         this.logEntrySerializer = new LogEntrySerializer(mockServerLogger);
-        this.expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
-        this.expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, mockServerMatcher);
-        new ExpectationInitializerLoader(mockServerLogger, mockServerMatcher);
+        this.expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, requestMatchers);
+        this.expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
+        new ExpectationInitializerLoader(mockServerLogger, requestMatchers);
     }
 
     public MockServerLogger getMockServerLogger() {
         return mockServerLogger;
+    }
+
+    public int eventLogSize() {
+        return mockServerLog.size();
+    }
+
+    public int expectationsSize() {
+        return requestMatchers.size();
+    }
+
+    public int webSocketClientRegistrySize() {
+        return webSocketClientRegistry.size();
     }
 
     public void clear(HttpRequest request) {
@@ -111,7 +123,7 @@ public class HttpStateHandler {
                     );
                     break;
                 case EXPECTATIONS:
-                    mockServerMatcher.clear(requestMatcher);
+                    requestMatchers.clear(requestMatcher);
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setType(CLEARED)
@@ -123,7 +135,7 @@ public class HttpStateHandler {
                     break;
                 case ALL:
                     mockServerLog.clear(requestMatcher);
-                    mockServerMatcher.clear(requestMatcher);
+                    requestMatchers.clear(requestMatcher);
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setType(CLEARED)
@@ -140,7 +152,7 @@ public class HttpStateHandler {
     }
 
     public void reset() {
-        mockServerMatcher.reset();
+        requestMatchers.reset();
         mockServerLog.reset();
         webSocketClientRegistry.reset();
         mockServerLogger.logEvent(
@@ -161,21 +173,21 @@ public class HttpStateHandler {
                     scheduler.submit(() -> addSubjectAlternativeName(hostHeader));
                 }
             }
-            upsertedExpectations.add(mockServerMatcher.add(expectation, Cause.API));
+            upsertedExpectations.add(requestMatchers.add(expectation, Cause.API));
         }
         return upsertedExpectations;
     }
 
     public Expectation firstMatchingExpectation(HttpRequest request) {
-        if (mockServerMatcher.isEmpty()) {
+        if (requestMatchers.isEmpty()) {
             return null;
         } else {
-            return mockServerMatcher.firstMatchingExpectation(request);
+            return requestMatchers.firstMatchingExpectation(request);
         }
     }
 
     public void postProcess(Expectation expectation) {
-        mockServerMatcher.postProcess(expectation);
+        requestMatchers.postProcess(expectation);
     }
 
     public void log(LogEntry logEntry) {
@@ -380,7 +392,7 @@ public class HttpStateHandler {
                                 .setMessageFormat("retrieving active expectations in " + format.name().toLowerCase() + " that match:{}")
                                 .setArguments(httpRequest == null ? request() : httpRequest)
                         );
-                        List<Expectation> expectations = mockServerMatcher.retrieveActiveExpectations(httpRequest);
+                        List<Expectation> expectations = requestMatchers.retrieveActiveExpectations(httpRequest);
                         switch (format) {
                             case JAVA:
                                 response.withBody(expectationToJavaSerializer.serialize(expectations), MediaType.create("application", "java").withCharset(UTF_8));
@@ -562,8 +574,8 @@ public class HttpStateHandler {
         return webSocketClientRegistry;
     }
 
-    public MockServerMatcher getMockServerMatcher() {
-        return mockServerMatcher;
+    public RequestMatchers getRequestMatchers() {
+        return requestMatchers;
     }
 
     public MockServerEventLog getMockServerLog() {

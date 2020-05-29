@@ -23,7 +23,7 @@ import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
-import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.mock.RequestMatchers;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.serialization.HttpRequestSerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
@@ -69,7 +69,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     private HttpRequestSerializer httpRequestSerializer;
     private WebSocketServerHandshaker handshaker;
     private final Map<ChannelHandlerContext, HttpRequest> clientRegistry = new CircularHashMap<>(100);
-    private MockServerMatcher mockServerMatcher;
+    private RequestMatchers requestMatchers;
     private MockServerEventLog mockServerEventLog;
     private ThreadPoolExecutor scheduler;
     private ScheduledExecutorService throttleExecutorService;
@@ -145,8 +145,8 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
         if (mockServerEventLog == null) {
             mockServerEventLog = httpStateHandler.getMockServerLog();
             mockServerEventLog.registerListener(this);
-            mockServerMatcher = httpStateHandler.getMockServerMatcher();
-            mockServerMatcher.registerListener(this);
+            requestMatchers = httpStateHandler.getRequestMatchers();
+            requestMatchers.registerListener(this);
         }
         String webSocketURL = (sslEnabledUpstream ? "wss" : "ws") + "://" + httpRequest.headers().get(HOST) + UPGRADE_CHANNEL_FOR_UI_WEB_SOCKET_URI;
         mockServerLogger.logEvent(
@@ -259,8 +259,8 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        if (mockServerMatcher != null) {
-            mockServerMatcher.unregisterListener(this);
+        if (requestMatchers != null) {
+            requestMatchers.unregisterListener(this);
         }
         if (mockServerEventLog != null) {
             mockServerEventLog.unregisterListener(this);
@@ -276,7 +276,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     }
 
     @Override
-    public void updated(MockServerMatcher mockServerMatcher, MockServerMatcherNotifier.Cause cause) {
+    public void updated(RequestMatchers requestMatchers, MockServerMatcherNotifier.Cause cause) {
         for (Map.Entry<ChannelHandlerContext, HttpRequest> registryEntry : clientRegistry.entrySet()) {
             sendUpdate(registryEntry.getValue(), registryEntry.getKey());
         }
@@ -324,7 +324,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
                             }
                         });
                     sendMessage(channelHandlerContext, ImmutableMap.of(
-                        "activeExpectations", mockServerMatcher
+                        "activeExpectations", requestMatchers
                             .retrieveActiveExpectations(httpRequest)
                             .stream()
                             .limit(UI_UPDATE_ITEM_LIMIT)

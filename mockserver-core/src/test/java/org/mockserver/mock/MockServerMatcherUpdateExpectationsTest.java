@@ -6,7 +6,6 @@ import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.ui.MockServerMatcherNotifier;
 
 import java.util.UUID;
 
@@ -23,84 +22,84 @@ import static org.mockserver.ui.MockServerMatcherNotifier.Cause.API;
  */
 public class MockServerMatcherUpdateExpectationsTest {
 
-    private MockServerMatcher mockServerMatcher;
+    private RequestMatchers requestMatchers;
 
     @Before
     public void prepareTestFixture() {
         Scheduler scheduler = mock(Scheduler.class);
         WebSocketClientRegistry webSocketClientRegistry = mock(WebSocketClientRegistry.class);
-        mockServerMatcher = new MockServerMatcher(new MockServerLogger(), scheduler, webSocketClientRegistry);
+        requestMatchers = new RequestMatchers(new MockServerLogger(), scheduler, webSocketClientRegistry);
     }
 
     @Test
     public void shouldUpdateExistingExpectation() {
         // given
         String key = UUID.randomUUID().toString();
-        mockServerMatcher.add(new Expectation(request().withPath("somePath")).withId(key).thenRespond(response().withBody("someBody")), API);
+        requestMatchers.add(new Expectation(request().withPath("somePath")).withId(key).thenRespond(response().withBody("someBody")), API);
 
         // then
-        assertThat(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("someOtherPath")), nullValue());
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
+        assertThat(requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("someOtherPath")), nullValue());
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
 
         // when
         Expectation expectation = new Expectation(request().withPath("someOtherPath")).withId(key).thenRespond(response().withBody("someBody"));
-        mockServerMatcher.add(expectation, API);
+        requestMatchers.add(expectation, API);
 
         // then
-        assertThat(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("someOtherPath")), is(expectation));
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
+        assertThat(requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("someOtherPath")), is(expectation));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
     }
 
     @Test
     public void shouldUpdateAllExpectationAndHandleNull() {
         // given
         String keyOne = UUID.randomUUID().toString();
-        mockServerMatcher.add(new Expectation(request().withPath("path_one")).withId(keyOne).thenRespond(response().withBody("body_one")), API);
+        requestMatchers.add(new Expectation(request().withPath("path_one")).withId(keyOne).thenRespond(response().withBody("body_one")), API);
         String keyTwo = UUID.randomUUID().toString();
-        mockServerMatcher.add(new Expectation(request().withPath("path_two")).withId(keyTwo).thenRespond(response().withBody("body_two")), API);
+        requestMatchers.add(new Expectation(request().withPath("path_two")).withId(keyTwo).thenRespond(response().withBody("body_two")), API);
         String keyThree = UUID.randomUUID().toString();
-        mockServerMatcher.add(new Expectation(request().withPath("path_three")).withId(keyThree).thenRespond(response().withBody("body_three")), API);
+        requestMatchers.add(new Expectation(request().withPath("path_three")).withId(keyThree).thenRespond(response().withBody("body_three")), API);
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(3));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(3));
 
         // when
-        mockServerMatcher.update(
+        requestMatchers.update(
             null,
             API
         );
 
         // then
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("path_one")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("path_one")),
             is(new Expectation(request().withPath("path_one")).withId(keyOne).thenRespond(response().withBody("body_one")))
         );
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("path_two")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("path_two")),
             is(new Expectation(request().withPath("path_two")).withId(keyOne).thenRespond(response().withBody("body_two")))
         );
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("path_three")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("path_three")),
             is(new Expectation(request().withPath("path_three")).withId(keyOne).thenRespond(response().withBody("body_three")))
         );
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(3));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(3));
     }
 
     @Test
     public void shouldUpdateAllExpectationNoneNewNoneRemoved() {
         // given
         String keyOne = UUID.randomUUID().toString();
-        mockServerMatcher.add(new Expectation(request().withPath("path_one")).withId(keyOne).thenRespond(response().withBody("body_one")), API);
+        requestMatchers.add(new Expectation(request().withPath("path_one")).withId(keyOne).thenRespond(response().withBody("body_one")), API);
         String keyTwo = UUID.randomUUID().toString();
-        mockServerMatcher.add(new Expectation(request().withPath("path_two")).withId(keyTwo).thenRespond(response().withBody("body_two")), API);
+        requestMatchers.add(new Expectation(request().withPath("path_two")).withId(keyTwo).thenRespond(response().withBody("body_two")), API);
         String keyThree = UUID.randomUUID().toString();
-        mockServerMatcher.add(new Expectation(request().withPath("path_three")).withId(keyThree).thenRespond(response().withBody("body_three")), API);
+        requestMatchers.add(new Expectation(request().withPath("path_three")).withId(keyThree).thenRespond(response().withBody("body_three")), API);
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(3));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(3));
 
         // when
-        mockServerMatcher.update(
+        requestMatchers.update(
             new Expectation[]{
                 new Expectation(request().withPath("new_path_one")).withId(keyOne).thenRespond(response().withBody("new_body_one")),
                 new Expectation(request().withPath("path_two")).withId(keyTwo).thenRespond(response().withBody("body_two")),
@@ -111,35 +110,35 @@ public class MockServerMatcherUpdateExpectationsTest {
 
         // then
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("path_one")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("path_one")),
             nullValue()
         );
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("new_path_one")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("new_path_one")),
             is(new Expectation(request().withPath("new_path_one")).thenRespond(response().withBody("new_body_one")))
         );
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("path_two")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("path_two")),
             is(new Expectation(request().withPath("path_two")).thenRespond(response().withBody("body_two")))
         );
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("path_three")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("path_three")),
             nullValue()
         );
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("new_path_three")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("new_path_three")),
             is(new Expectation(request().withPath("new_path_three")).thenRespond(response().withBody("new_body_three")))
         );
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(3));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(3));
     }
 
     @Test
     public void shouldUpdateAllExpectationNoneExistingNoneRemoved() {
         // given
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(0));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(0));
 
         // when
-        mockServerMatcher.update(
+        requestMatchers.update(
             new Expectation[]{
                 new Expectation(request().withPath("path_one")).thenRespond(response().withBody("body_one")),
                 new Expectation(request().withPath("path_two")).thenRespond(response().withBody("body_two")),
@@ -150,35 +149,35 @@ public class MockServerMatcherUpdateExpectationsTest {
 
         // then
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("path_one")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("path_one")),
             is(new Expectation(request().withPath("path_one")).thenRespond(response().withBody("body_one")))
         );
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("path_two")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("path_two")),
             is(new Expectation(request().withPath("path_two")).thenRespond(response().withBody("body_two")))
         );
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("path_three")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("path_three")),
             is(new Expectation(request().withPath("path_three")).thenRespond(response().withBody("body_three")))
         );
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(3));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(3));
     }
 
     @Test
     public void shouldUpdateAllExpectationNoneNewNoneExisting() {
         // given
         String keyOne = UUID.randomUUID().toString();
-        mockServerMatcher.add(new Expectation(request().withPath("path_one")).withId(keyOne).thenRespond(response().withBody("body_one")), API);
+        requestMatchers.add(new Expectation(request().withPath("path_one")).withId(keyOne).thenRespond(response().withBody("body_one")), API);
         String keyTwo = UUID.randomUUID().toString();
-        mockServerMatcher.add(new Expectation(request().withPath("path_two")).withId(keyTwo).thenRespond(response().withBody("body_two")), API);
+        requestMatchers.add(new Expectation(request().withPath("path_two")).withId(keyTwo).thenRespond(response().withBody("body_two")), API);
         String keyThree = UUID.randomUUID().toString();
-        mockServerMatcher.add(new Expectation(request().withPath("path_three")).withId(keyThree).thenRespond(response().withBody("body_three")), API);
+        requestMatchers.add(new Expectation(request().withPath("path_three")).withId(keyThree).thenRespond(response().withBody("body_three")), API);
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(3));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(3));
 
         // when
-        mockServerMatcher.update(
+        requestMatchers.update(
             new Expectation[]{
 
             },
@@ -187,35 +186,35 @@ public class MockServerMatcherUpdateExpectationsTest {
 
         // then
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("path_one")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("path_one")),
             nullValue()
         );
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("path_two")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("path_two")),
             nullValue()
         );
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("path_three")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("path_three")),
             nullValue()
         );
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(0));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(0));
     }
 
     @Test
     public void shouldUpdateAllExpectationWithExistingAndRemoved() {
         // given
         String keyOne = UUID.randomUUID().toString();
-        mockServerMatcher.add(new Expectation(request().withPath("path_one")).withId(keyOne).thenRespond(response().withBody("body_one")), API);
+        requestMatchers.add(new Expectation(request().withPath("path_one")).withId(keyOne).thenRespond(response().withBody("body_one")), API);
         String keyTwo = UUID.randomUUID().toString();
-        mockServerMatcher.add(new Expectation(request().withPath("path_two")).withId(keyTwo).thenRespond(response().withBody("body_two")), API);
+        requestMatchers.add(new Expectation(request().withPath("path_two")).withId(keyTwo).thenRespond(response().withBody("body_two")), API);
         String keyThree = UUID.randomUUID().toString();
-        mockServerMatcher.add(new Expectation(request().withPath("path_three")).withId(keyThree).thenRespond(response().withBody("body_three")), API);
+        requestMatchers.add(new Expectation(request().withPath("path_three")).withId(keyThree).thenRespond(response().withBody("body_three")), API);
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(3));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(3));
 
         // when
-        mockServerMatcher.update(
+        requestMatchers.update(
             new Expectation[]{
                 new Expectation(request().withPath("new_path_one")).withId(keyOne).thenRespond(response().withBody("new_body_one")),
                 new Expectation(request().withPath("new_path_three")).withId(keyThree).thenRespond(response().withBody("new_body_three"))
@@ -225,44 +224,44 @@ public class MockServerMatcherUpdateExpectationsTest {
 
         // then
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("path_one")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("path_one")),
             nullValue()
         );
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("new_path_one")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("new_path_one")),
             is(new Expectation(request().withPath("new_path_one")).thenRespond(response().withBody("new_body_one")))
         );
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("path_two")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("path_two")),
             nullValue()
         );
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("path_three")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("path_three")),
             nullValue()
         );
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("new_path_three")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("new_path_three")),
             is(new Expectation(request().withPath("new_path_three")).thenRespond(response().withBody("new_body_three")))
         );
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(2));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(2));
     }
 
     @Test
     public void shouldUpdateAllExpectationWithNewExistingAndRemoved() {
         // given
         String keyOne = UUID.randomUUID().toString();
-        mockServerMatcher.add(new Expectation(request().withPath("path_one")).withId(keyOne).thenRespond(response().withBody("body_one")), API);
+        requestMatchers.add(new Expectation(request().withPath("path_one")).withId(keyOne).thenRespond(response().withBody("body_one")), API);
         String keyTwo = UUID.randomUUID().toString();
-        mockServerMatcher.add(new Expectation(request().withPath("path_two")).withId(keyTwo).thenRespond(response().withBody("body_two")), API);
+        requestMatchers.add(new Expectation(request().withPath("path_two")).withId(keyTwo).thenRespond(response().withBody("body_two")), API);
         String keyThree = UUID.randomUUID().toString();
-        mockServerMatcher.add(new Expectation(request().withPath("path_three")).withId(keyThree).thenRespond(response().withBody("body_three")), API);
+        requestMatchers.add(new Expectation(request().withPath("path_three")).withId(keyThree).thenRespond(response().withBody("body_three")), API);
         String keyFour = UUID.randomUUID().toString();
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(3));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(3));
 
         // when
-        mockServerMatcher.update(
+        requestMatchers.update(
             new Expectation[]{
                 new Expectation(request().withPath("new_path_one")).withId(keyOne).thenRespond(response().withBody("new_body_one")),
                 new Expectation(request().withPath("new_path_three")).withId(keyThree).thenRespond(response().withBody("new_body_three")),
@@ -273,30 +272,30 @@ public class MockServerMatcherUpdateExpectationsTest {
 
         // then
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("path_one")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("path_one")),
             nullValue()
         );
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("new_path_one")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("new_path_one")),
             is(new Expectation(request().withPath("new_path_one")).thenRespond(response().withBody("new_body_one")))
         );
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("path_two")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("path_two")),
             nullValue()
         );
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("path_three")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("path_three")),
             nullValue()
         );
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("new_path_three")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("new_path_three")),
             is(new Expectation(request().withPath("new_path_three")).thenRespond(response().withBody("new_body_three")))
         );
         assertThat(
-            mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("path_four")),
+            requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("path_four")),
             is(new Expectation(request().withPath("path_four")).thenRespond(response().withBody("body_four")))
         );
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(3));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(3));
     }
 
 }

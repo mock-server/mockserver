@@ -11,7 +11,6 @@ import org.mockserver.model.Cookie;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.ui.MockServerMatcherNotifier;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -22,7 +21,7 @@ import static org.mockserver.ui.MockServerMatcherNotifier.Cause.API;
  */
 public class MockServerMatcherOverlappingRequestsTest {
 
-    private MockServerMatcher mockServerMatcher;
+    private RequestMatchers requestMatchers;
 
     private HttpResponse[] httpResponse;
 
@@ -36,7 +35,7 @@ public class MockServerMatcherOverlappingRequestsTest {
         };
         MockServerLogger mockLogFormatter = mock(MockServerLogger.class);
         WebSocketClientRegistry webSocketClientRegistry = mock(WebSocketClientRegistry.class);
-        mockServerMatcher = new MockServerMatcher(mockLogFormatter, scheduler, webSocketClientRegistry);
+        requestMatchers = new RequestMatchers(mockLogFormatter, scheduler, webSocketClientRegistry);
     }
 
 
@@ -49,26 +48,26 @@ public class MockServerMatcherOverlappingRequestsTest {
     public void respondWhenPathMatchesAlwaysReturnFirstMatching() {
         // when
         Expectation expectationZero = new Expectation(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value"))).thenRespond(httpResponse[0].withBody("somebody1"));
-        mockServerMatcher.add(expectationZero, API);
+        requestMatchers.add(expectationZero, API);
         Expectation expectationOne = new Expectation(new HttpRequest().withPath("somepath")).thenRespond(httpResponse[1].withBody("somebody2"));
-        mockServerMatcher.add(expectationOne, API);
+        requestMatchers.add(expectationOne, API);
 
         // then
-        assertEquals(expectationOne, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
-        assertEquals(expectationOne, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
+        assertEquals(expectationOne, requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
+        assertEquals(expectationOne, requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
     }
 
     @Test
     public void respondWhenPathMatchesReturnFirstMatchingWithRemainingTimes() {
         // when
         Expectation expectationZero = new Expectation(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value")), Times.once(), TimeToLive.unlimited(), 0).thenRespond(httpResponse[0].withBody("somebody1"));
-        mockServerMatcher.add(expectationZero, API);
+        requestMatchers.add(expectationZero, API);
         Expectation expectationOne = new Expectation(new HttpRequest().withPath("somepath")).thenRespond(httpResponse[1].withBody("somebody2"));
-        mockServerMatcher.add(expectationOne, API);
+        requestMatchers.add(expectationOne, API);
 
         // then
-        assertEquals(expectationZero, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value"))));
-        assertEquals(expectationOne, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value"))));
+        assertEquals(expectationZero, requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value"))));
+        assertEquals(expectationOne, requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("somepath").withCookies(new Cookie("name", "value"))));
     }
 
 }

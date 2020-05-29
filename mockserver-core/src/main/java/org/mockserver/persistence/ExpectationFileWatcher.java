@@ -5,7 +5,7 @@ import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.mock.RequestMatchers;
 import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.ui.MockServerMatcherNotifier;
 import org.slf4j.event.Level;
@@ -20,14 +20,14 @@ public class ExpectationFileWatcher {
 
     private final ExpectationSerializer expectationSerializer;
     private final MockServerLogger mockServerLogger;
-    private final MockServerMatcher mockServerMatcher;
+    private final RequestMatchers requestMatchers;
     private FileWatcher fileWatcher;
 
-    public ExpectationFileWatcher(MockServerLogger mockServerLogger, MockServerMatcher mockServerMatcher) {
+    public ExpectationFileWatcher(MockServerLogger mockServerLogger, RequestMatchers requestMatchers) {
         if (ConfigurationProperties.watchInitializationJson()) {
             this.expectationSerializer = new ExpectationSerializer(mockServerLogger);
             this.mockServerLogger = mockServerLogger;
-            this.mockServerMatcher = mockServerMatcher;
+            this.requestMatchers = requestMatchers;
             try {
                 fileWatcher = new FileWatcher(ConfigurationProperties.initializationJsonPath(), () -> {
                     if (MockServerLogger.isEnabled(DEBUG)) {
@@ -66,7 +66,7 @@ public class ExpectationFileWatcher {
         } else {
             this.expectationSerializer = null;
             this.mockServerLogger = null;
-            this.mockServerMatcher = null;
+            this.requestMatchers = null;
         }
     }
 
@@ -80,7 +80,7 @@ public class ExpectationFileWatcher {
                     .setArguments(ConfigurationProperties.initializationJsonPath(), Arrays.asList(expectations))
             );
         }
-        mockServerMatcher.update(expectations, MockServerMatcherNotifier.Cause.FILE_WATCHER);
+        requestMatchers.update(expectations, MockServerMatcherNotifier.Cause.FILE_WATCHER);
     }
 
     private Expectation[] retrieveExpectationsFromJson() {

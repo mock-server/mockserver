@@ -31,7 +31,7 @@ public class MockServerMatcherNotificationAndMetricsTest {
 
     private static MockServerLogger mockServerLogger;
     private static Scheduler scheduler;
-    private MockServerMatcher mockServerMatcher;
+    private RequestMatchers requestMatchers;
 
     @BeforeClass
     public static void createScheduler() {
@@ -43,7 +43,7 @@ public class MockServerMatcherNotificationAndMetricsTest {
     @Before
     public void createMatcher() {
         WebSocketClientRegistry webSocketClientRegistry = mock(WebSocketClientRegistry.class);
-        mockServerMatcher = new MockServerMatcher(mockServerLogger, scheduler, webSocketClientRegistry);
+        requestMatchers = new RequestMatchers(mockServerLogger, scheduler, webSocketClientRegistry);
         Metrics.clear();
     }
 
@@ -57,12 +57,12 @@ public class MockServerMatcherNotificationAndMetricsTest {
     public void shouldNotifyOnAdd() throws InterruptedException {
         // given
         List<MockServerMatcherNotifier.Cause> causes = new ArrayList<>();
-        mockServerMatcher.registerListener((mockServerMatcher, cause) -> {
+        requestMatchers.registerListener((requestMatchers, cause) -> {
             causes.add(cause);
         });
 
         // when
-        mockServerMatcher.add(new Expectation(
+        requestMatchers.add(new Expectation(
                     request()
                         .withPath("somePath")
                 ).thenRespond(
@@ -72,7 +72,7 @@ public class MockServerMatcherNotificationAndMetricsTest {
 
         // then
         MILLISECONDS.sleep(500);
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
         assertThat(causes, contains(API));
         assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(1));
     }
@@ -81,16 +81,16 @@ public class MockServerMatcherNotificationAndMetricsTest {
     public void shouldNotifyOnRemove() throws InterruptedException {
         // given
         List<MockServerMatcherNotifier.Cause> causes = new ArrayList<>();
-        mockServerMatcher.registerListener((mockServerMatcher, cause) -> {
+        requestMatchers.registerListener((requestMatchers, cause) -> {
             causes.add(cause);
         });
-        mockServerMatcher.add(new Expectation(
+        requestMatchers.add(new Expectation(
                     request()
                         .withPath("somePath")
                 ).thenForward(
                     forward()
                 ), API);
-        mockServerMatcher.add(new Expectation(
+        requestMatchers.add(new Expectation(
                     request()
                         .withPath("somePath")
                 ).thenRespond(
@@ -100,18 +100,18 @@ public class MockServerMatcherNotificationAndMetricsTest {
 
         // then
         MILLISECONDS.sleep(500);
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(2));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(2));
         assertThat(causes, contains(API, API));
         assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(1));
         assertThat(Metrics.get(Metrics.Name.ACTION_FORWARD_COUNT), is(1));
 
         // when
         causes.clear();
-        mockServerMatcher.reset();
+        requestMatchers.reset();
 
         // then
         MILLISECONDS.sleep(500);
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(0));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(0));
         assertThat(causes, contains(API));
         assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(0));
         assertThat(Metrics.get(Metrics.Name.ACTION_FORWARD_COUNT), is(0));
@@ -121,10 +121,10 @@ public class MockServerMatcherNotificationAndMetricsTest {
     public void shouldNotifyOnUpdate() throws InterruptedException {
         // given
         List<MockServerMatcherNotifier.Cause> causes = new ArrayList<>();
-        mockServerMatcher.registerListener((mockServerMatcher, cause) -> {
+        requestMatchers.registerListener((requestMatchers, cause) -> {
             causes.add(cause);
         });
-        mockServerMatcher.add(new Expectation(
+        requestMatchers.add(new Expectation(
                     request()
                         .withPath("somePath")
                 ).withId("one").thenRespond(
@@ -134,13 +134,13 @@ public class MockServerMatcherNotificationAndMetricsTest {
 
         // then
         MILLISECONDS.sleep(500);
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
         assertThat(causes, contains(API));
         assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(1));
 
         // when
         causes.clear();
-        mockServerMatcher.add(new Expectation(
+        requestMatchers.add(new Expectation(
                     request()
                         .withPath("someOtherPath")
                 ).withId("one").thenRespond(
@@ -150,7 +150,7 @@ public class MockServerMatcherNotificationAndMetricsTest {
 
         // then
         MILLISECONDS.sleep(500);
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
         assertThat(causes, contains(API));
         assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(1));
     }
@@ -161,24 +161,24 @@ public class MockServerMatcherNotificationAndMetricsTest {
     public void shouldUpdateAllExpectationWithNewExistingAndRemoved() throws InterruptedException {
         // given
         List<MockServerMatcherNotifier.Cause> causes = new ArrayList<>();
-        mockServerMatcher.registerListener((mockServerMatcher, cause) -> {
+        requestMatchers.registerListener((requestMatchers, cause) -> {
             causes.add(cause);
         });
         String keyOne = UUID.randomUUID().toString();
-        mockServerMatcher.add(new Expectation(request().withPath("path_one")).withId(keyOne).thenRespond(response().withBody("body_one")), API);
+        requestMatchers.add(new Expectation(request().withPath("path_one")).withId(keyOne).thenRespond(response().withBody("body_one")), API);
         String keyTwo = UUID.randomUUID().toString();
-        mockServerMatcher.add(new Expectation(request().withPath("path_two")).withId(keyTwo).thenForward(new HttpObjectCallback(){
+        requestMatchers.add(new Expectation(request().withPath("path_two")).withId(keyTwo).thenForward(new HttpObjectCallback(){
 
         }), API);
         String keyThree = UUID.randomUUID().toString();
-        mockServerMatcher.add(new Expectation(request().withPath("path_three")).withId(keyThree).thenRespond(new HttpObjectCallback(){
+        requestMatchers.add(new Expectation(request().withPath("path_three")).withId(keyThree).thenRespond(new HttpObjectCallback(){
 
         }), API);
         String keyFour = UUID.randomUUID().toString();
 
         // then
         MILLISECONDS.sleep(500);
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(3));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(3));
         assertThat(causes, contains(
             API,
             API,
@@ -190,7 +190,7 @@ public class MockServerMatcherNotificationAndMetricsTest {
 
         // when
         causes.clear();
-        mockServerMatcher.update(
+        requestMatchers.update(
             new Expectation[]{
                 new Expectation(request().withPath("new_path_one")).withId(keyOne).thenRespond(response().withBody("new_body_one")),
                 new Expectation(request().withPath("new_path_three")).withId(keyThree).thenRespond(response().withBody("new_body_three")),
@@ -201,7 +201,7 @@ public class MockServerMatcherNotificationAndMetricsTest {
 
         // then
         MILLISECONDS.sleep(500);
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(3));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(3));
         assertThat(causes, contains(API));
         assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(3));
     }

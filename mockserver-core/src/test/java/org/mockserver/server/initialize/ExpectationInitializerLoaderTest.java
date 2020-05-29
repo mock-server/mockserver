@@ -4,7 +4,7 @@ import org.junit.Test;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.mock.RequestMatchers;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -25,7 +25,7 @@ public class ExpectationInitializerLoaderTest {
             ConfigurationProperties.initializationJsonPath("org/mockserver/server/initialize/initializerJson.json");
 
             // when
-            final Expectation[] expectations = new ExpectationInitializerLoader(new MockServerLogger(), mock(MockServerMatcher.class)).loadExpectations();
+            final Expectation[] expectations = new ExpectationInitializerLoader(new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
 
             // then
             assertThat(expectations, is(new Expectation[]{
@@ -59,7 +59,7 @@ public class ExpectationInitializerLoaderTest {
             ConfigurationProperties.initializationClass(ExpectationInitializerExample.class.getName());
 
             // when
-            final Expectation[] expectations = new ExpectationInitializerLoader(new MockServerLogger(), mock(MockServerMatcher.class)).loadExpectations();
+            final Expectation[] expectations = new ExpectationInitializerLoader(new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
 
             // then
             assertThat(expectations, is(new Expectation[]{

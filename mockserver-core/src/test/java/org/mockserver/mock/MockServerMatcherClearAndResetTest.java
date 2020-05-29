@@ -12,7 +12,6 @@ import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.Parameter;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.ui.MockServerMatcherNotifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +34,7 @@ import static org.mockserver.ui.MockServerMatcherNotifier.Cause.API;
  */
 public class MockServerMatcherClearAndResetTest {
 
-    private MockServerMatcher mockServerMatcher;
+    private RequestMatchers requestMatchers;
     private MockServerLogger logFormatter;
 
     @Before
@@ -43,7 +42,7 @@ public class MockServerMatcherClearAndResetTest {
         logFormatter = new MockServerLogger();
         Scheduler scheduler = mock(Scheduler.class);
         WebSocketClientRegistry webSocketClientRegistry = mock(WebSocketClientRegistry.class);
-        mockServerMatcher = new MockServerMatcher(logFormatter, scheduler, webSocketClientRegistry);
+        requestMatchers = new RequestMatchers(logFormatter, scheduler, webSocketClientRegistry);
     }
 
     @Test
@@ -60,15 +59,15 @@ public class MockServerMatcherClearAndResetTest {
         );
 
         // when
-        mockServerMatcher.add(expectation, API);
+        requestMatchers.add(expectation, API);
 
         // and
-        assertEquals(expectation, mockServerMatcher.postProcess(mockServerMatcher.firstMatchingExpectation(request().withPath("somepath"))));
-        assertEquals(expectation, mockServerMatcher.postProcess(mockServerMatcher.firstMatchingExpectation(request().withPath("somepath"))));
+        assertEquals(expectation, requestMatchers.postProcess(requestMatchers.firstMatchingExpectation(request().withPath("somepath"))));
+        assertEquals(expectation, requestMatchers.postProcess(requestMatchers.firstMatchingExpectation(request().withPath("somepath"))));
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers, is(empty()));
-        assertNull(mockServerMatcher.firstMatchingExpectation(request().withPath("somepath")));
+        assertThat(requestMatchers.httpRequestMatchers, is(empty()));
+        assertNull(requestMatchers.firstMatchingExpectation(request().withPath("somepath")));
     }
 
     @Test
@@ -96,14 +95,14 @@ public class MockServerMatcherClearAndResetTest {
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0], API);
-        mockServerMatcher.add(expectation[1], API);
+        requestMatchers.add(expectation[0], API);
+        requestMatchers.add(expectation[1], API);
 
         // when
-        mockServerMatcher.clear(request().withPath(pathToMatchOn));
+        requestMatchers.clear(request().withPath(pathToMatchOn));
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers, is(empty()));
+        assertThat(requestMatchers.httpRequestMatchers, is(empty()));
     }
 
     @Test
@@ -129,14 +128,14 @@ public class MockServerMatcherClearAndResetTest {
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0], API);
-        mockServerMatcher.add(expectation[1], API);
+        requestMatchers.add(expectation[0], API);
+        requestMatchers.add(expectation[1], API);
 
         // when
-        mockServerMatcher.clear(null);
+        requestMatchers.clear(null);
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers, is(empty()));
+        assertThat(requestMatchers.httpRequestMatchers, is(empty()));
     }
 
     @Test
@@ -162,14 +161,14 @@ public class MockServerMatcherClearAndResetTest {
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0], API);
-        mockServerMatcher.add(expectation[1], API);
+        requestMatchers.add(expectation[0], API);
+        requestMatchers.add(expectation[1], API);
 
         // when
-        mockServerMatcher.reset();
+        requestMatchers.reset();
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers, is(empty()));
+        assertThat(requestMatchers.httpRequestMatchers, is(empty()));
     }
 
     @Test
@@ -196,15 +195,15 @@ public class MockServerMatcherClearAndResetTest {
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0], API);
-        mockServerMatcher.add(expectation[1], API);
+        requestMatchers.add(expectation[0], API);
+        requestMatchers.add(expectation[1], API);
 
         // when
-        mockServerMatcher.clear(request().withPath(pathToMatchOn));
+        requestMatchers.clear(request().withPath(pathToMatchOn));
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
-        assertThat(mockServerMatcher.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[1])));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
+        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[1])));
     }
 
     @Test
@@ -243,16 +242,16 @@ public class MockServerMatcherClearAndResetTest {
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0], API);
-        mockServerMatcher.add(expectation[1], API);
-        mockServerMatcher.add(expectation[2], API);
+        requestMatchers.add(expectation[0], API);
+        requestMatchers.add(expectation[1], API);
+        requestMatchers.add(expectation[2], API);
 
         // when
-        mockServerMatcher.clear(request().withMethod(methodToMatchOn));
+        requestMatchers.clear(request().withMethod(methodToMatchOn));
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
-        assertThat(mockServerMatcher.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
+        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
     }
 
     @Test
@@ -293,16 +292,16 @@ public class MockServerMatcherClearAndResetTest {
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0], API);
-        mockServerMatcher.add(expectation[1], API);
-        mockServerMatcher.add(expectation[2], API);
+        requestMatchers.add(expectation[0], API);
+        requestMatchers.add(expectation[1], API);
+        requestMatchers.add(expectation[2], API);
 
         // when
-        mockServerMatcher.clear(request().withHeader(headerToMatchOn));
+        requestMatchers.clear(request().withHeader(headerToMatchOn));
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
-        assertThat(mockServerMatcher.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
+        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
     }
 
     @Test
@@ -344,16 +343,16 @@ public class MockServerMatcherClearAndResetTest {
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0], API);
-        mockServerMatcher.add(expectation[1], API);
-        mockServerMatcher.add(expectation[2], API);
+        requestMatchers.add(expectation[0], API);
+        requestMatchers.add(expectation[1], API);
+        requestMatchers.add(expectation[2], API);
 
         // when
-        mockServerMatcher.clear(request().withHeader(headerToMatchOn));
+        requestMatchers.clear(request().withHeader(headerToMatchOn));
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
-        assertThat(mockServerMatcher.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
+        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
     }
 
     @Test
@@ -394,15 +393,15 @@ public class MockServerMatcherClearAndResetTest {
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0], API);
-        mockServerMatcher.add(expectation[1], API);
-        mockServerMatcher.add(expectation[2], API);
+        requestMatchers.add(expectation[0], API);
+        requestMatchers.add(expectation[1], API);
+        requestMatchers.add(expectation[2], API);
 
         // when
-        mockServerMatcher.clear(request().withHeader(headerToMatchOn));
+        requestMatchers.clear(request().withHeader(headerToMatchOn));
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(0));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(0));
     }
 
     @Test
@@ -449,16 +448,16 @@ public class MockServerMatcherClearAndResetTest {
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0], API);
-        mockServerMatcher.add(expectation[1], API);
-        mockServerMatcher.add(expectation[2], API);
+        requestMatchers.add(expectation[0], API);
+        requestMatchers.add(expectation[1], API);
+        requestMatchers.add(expectation[2], API);
 
         // when
-        mockServerMatcher.clear(request().withHeaders(headersToMatchOn));
+        requestMatchers.clear(request().withHeaders(headersToMatchOn));
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
-        assertThat(mockServerMatcher.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
+        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
     }
 
     @Test
@@ -505,15 +504,15 @@ public class MockServerMatcherClearAndResetTest {
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0], API);
-        mockServerMatcher.add(expectation[1], API);
-        mockServerMatcher.add(expectation[2], API);
+        requestMatchers.add(expectation[0], API);
+        requestMatchers.add(expectation[1], API);
+        requestMatchers.add(expectation[2], API);
 
         // when
-        mockServerMatcher.clear(request().withHeaders(headersToMatchOn));
+        requestMatchers.clear(request().withHeaders(headersToMatchOn));
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(0));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(0));
     }
 
     @Test
@@ -561,16 +560,16 @@ public class MockServerMatcherClearAndResetTest {
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0], API);
-        mockServerMatcher.add(expectation[1], API);
-        mockServerMatcher.add(expectation[2], API);
+        requestMatchers.add(expectation[0], API);
+        requestMatchers.add(expectation[1], API);
+        requestMatchers.add(expectation[2], API);
 
         // when
-        mockServerMatcher.clear(request().withHeaders(headersToMatchOn));
+        requestMatchers.clear(request().withHeaders(headersToMatchOn));
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
-        assertThat(mockServerMatcher.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
+        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
     }
 
     @Test
@@ -614,15 +613,15 @@ public class MockServerMatcherClearAndResetTest {
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0], API);
-        mockServerMatcher.add(expectation[1], API);
-        mockServerMatcher.add(expectation[2], API);
+        requestMatchers.add(expectation[0], API);
+        requestMatchers.add(expectation[1], API);
+        requestMatchers.add(expectation[2], API);
 
         // when
-        mockServerMatcher.clear(request().withHeaders(headersToMatchOn));
+        requestMatchers.clear(request().withHeaders(headersToMatchOn));
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(0));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(0));
     }
 
     @Test
@@ -670,16 +669,16 @@ public class MockServerMatcherClearAndResetTest {
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0], API);
-        mockServerMatcher.add(expectation[1], API);
-        mockServerMatcher.add(expectation[2], API);
+        requestMatchers.add(expectation[0], API);
+        requestMatchers.add(expectation[1], API);
+        requestMatchers.add(expectation[2], API);
 
         // when
-        mockServerMatcher.clear(request().withCookies(cookiesToMatchOn));
+        requestMatchers.clear(request().withCookies(cookiesToMatchOn));
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
-        assertThat(mockServerMatcher.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
+        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
     }
 
     @Test
@@ -723,15 +722,15 @@ public class MockServerMatcherClearAndResetTest {
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0], API);
-        mockServerMatcher.add(expectation[1], API);
-        mockServerMatcher.add(expectation[2], API);
+        requestMatchers.add(expectation[0], API);
+        requestMatchers.add(expectation[1], API);
+        requestMatchers.add(expectation[2], API);
 
         // when
-        mockServerMatcher.clear(request().withCookies(cookiesToMatchOn));
+        requestMatchers.clear(request().withCookies(cookiesToMatchOn));
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(0));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(0));
     }
 
     @Test
@@ -779,16 +778,16 @@ public class MockServerMatcherClearAndResetTest {
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0], API);
-        mockServerMatcher.add(expectation[1], API);
-        mockServerMatcher.add(expectation[2], API);
+        requestMatchers.add(expectation[0], API);
+        requestMatchers.add(expectation[1], API);
+        requestMatchers.add(expectation[2], API);
 
         // when
-        mockServerMatcher.clear(request().withQueryStringParameters(parametersToMatchOn));
+        requestMatchers.clear(request().withQueryStringParameters(parametersToMatchOn));
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
-        assertThat(mockServerMatcher.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
+        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
     }
 
     @Test
@@ -832,15 +831,15 @@ public class MockServerMatcherClearAndResetTest {
                     .withBody("somebody")
             )
         };
-        mockServerMatcher.add(expectation[0], API);
-        mockServerMatcher.add(expectation[1], API);
-        mockServerMatcher.add(expectation[2], API);
+        requestMatchers.add(expectation[0], API);
+        requestMatchers.add(expectation[1], API);
+        requestMatchers.add(expectation[2], API);
 
         // when
-        mockServerMatcher.clear(request().withQueryStringParameters(parametersToMatchOn));
+        requestMatchers.clear(request().withQueryStringParameters(parametersToMatchOn));
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(0));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(0));
     }
 
     @Test
@@ -852,15 +851,15 @@ public class MockServerMatcherClearAndResetTest {
             new Expectation(request().withPath("somepath"), Times.unlimited(), unlimited(), 0).thenRespond(httpResponse)
         };
         for (Expectation expectation : expectations) {
-            mockServerMatcher.add(expectation, API);
+            requestMatchers.add(expectation, API);
         }
-        List<HttpRequestMatcher> httpRequestMatchers = new ArrayList<>(mockServerMatcher.httpRequestMatchers);
+        List<HttpRequestMatcher> httpRequestMatchers = new ArrayList<>(requestMatchers.httpRequestMatchers);
 
         // when
-        mockServerMatcher.clear(request().withPath("foobar"));
+        requestMatchers.clear(request().withPath("foobar"));
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers.toSortedList(), is(httpRequestMatchers));
+        assertThat(requestMatchers.httpRequestMatchers.toSortedList(), is(httpRequestMatchers));
     }
 
 }

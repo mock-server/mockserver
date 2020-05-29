@@ -1,6 +1,6 @@
 package org.mockserver.ui;
 
-import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.mock.RequestMatchers;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.scheduler.Scheduler;
 
@@ -21,7 +21,7 @@ public class MockServerMatcherNotifier extends ObjectWithReflectiveEqualsHashCod
         this.scheduler = scheduler;
     }
 
-    protected void notifyListeners(final MockServerMatcher notifier, Cause cause) {
+    protected void notifyListeners(final RequestMatchers notifier, Cause cause) {
         if (listenerAdded && !listeners.isEmpty()) {
             for (MockServerMatcherListener listener : listeners.toArray(new MockServerMatcherListener[0])) {
                 scheduler.submit(() -> listener.updated(notifier, cause));

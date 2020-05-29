@@ -6,7 +6,7 @@ import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.mock.RequestMatchers;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.ui.MockServerMatcherNotifier;
 
@@ -25,12 +25,12 @@ import static org.mockserver.ui.MockServerMatcherNotifier.Cause.API;
 public class ExpectationFileSystemPersistenceTest {
 
     private MockServerLogger mockServerLogger;
-    private MockServerMatcher mockServerMatcher;
+    private RequestMatchers requestMatchers;
 
     @Before
     public void createMockServerMatcher() {
         mockServerLogger = new MockServerLogger();
-        mockServerMatcher = new MockServerMatcher(mockServerLogger, new Scheduler(mockServerLogger), new WebSocketClientRegistry(mockServerLogger));
+        requestMatchers = new RequestMatchers(mockServerLogger, new Scheduler(mockServerLogger), new WebSocketClientRegistry(mockServerLogger));
     }
 
     @Test
@@ -44,8 +44,8 @@ public class ExpectationFileSystemPersistenceTest {
             ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
 
             // when
-            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
-            mockServerMatcher.add(new Expectation(
+            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, requestMatchers);
+            requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleFirst")
             )
@@ -54,7 +54,7 @@ public class ExpectationFileSystemPersistenceTest {
                     response()
                         .withBody("some first response")
                 ), API);
-            mockServerMatcher.add(new Expectation(
+            requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleSecond")
             )
@@ -63,7 +63,7 @@ public class ExpectationFileSystemPersistenceTest {
                     response()
                         .withBody("some second response")
                 ), API);
-            mockServerMatcher.add(new Expectation(
+            requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleThird")
             )
@@ -142,8 +142,8 @@ public class ExpectationFileSystemPersistenceTest {
             ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
 
             // when
-            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
-            mockServerMatcher.add(new Expectation(
+            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, requestMatchers);
+            requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleFirst")
             )
@@ -152,7 +152,7 @@ public class ExpectationFileSystemPersistenceTest {
                     response()
                         .withBody("some first response")
                 ), API);
-            mockServerMatcher.add(new Expectation(
+            requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleSecond")
             )
@@ -161,7 +161,7 @@ public class ExpectationFileSystemPersistenceTest {
                     response()
                         .withBody("some second response")
                 ), API);
-            mockServerMatcher.add(new Expectation(
+            requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleThird")
             )
@@ -170,7 +170,7 @@ public class ExpectationFileSystemPersistenceTest {
                     response()
                         .withBody("some third response")
                 ), API);
-            mockServerMatcher.clear(
+            requestMatchers.clear(
                 request()
                     .withPath("/simpleSecond")
             );
@@ -229,8 +229,8 @@ public class ExpectationFileSystemPersistenceTest {
             ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
 
             // when
-            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
-            mockServerMatcher.add(new Expectation(
+            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, requestMatchers);
+            requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleFirst")
             )
@@ -239,7 +239,7 @@ public class ExpectationFileSystemPersistenceTest {
                     response()
                         .withBody("some first response")
                 ), API);
-            mockServerMatcher.add(new Expectation(
+            requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleSecond")
             )
@@ -248,7 +248,7 @@ public class ExpectationFileSystemPersistenceTest {
                     response()
                         .withBody("some second response")
                 ), API);
-            mockServerMatcher.add(new Expectation(
+            requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleThird")
             )
@@ -257,7 +257,7 @@ public class ExpectationFileSystemPersistenceTest {
                     response()
                         .withBody("some third response")
                 ), API);
-            mockServerMatcher.add(new Expectation(
+            requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleSecondUpdated")
             )
@@ -336,8 +336,8 @@ public class ExpectationFileSystemPersistenceTest {
             ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
 
             // when
-            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
-            mockServerMatcher.add(new Expectation(
+            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, requestMatchers);
+            requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleFirst")
             )
@@ -346,7 +346,7 @@ public class ExpectationFileSystemPersistenceTest {
                     response()
                         .withBody("some first response")
                 ), API);
-            mockServerMatcher.add(new Expectation(
+            requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleSecond")
             )
@@ -355,7 +355,7 @@ public class ExpectationFileSystemPersistenceTest {
                     response()
                         .withBody("some second response")
                 ), API);
-            mockServerMatcher.add(new Expectation(
+            requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleThird")
             )
@@ -364,7 +364,7 @@ public class ExpectationFileSystemPersistenceTest {
                     response()
                         .withBody("some third response")
                 ), API);
-            mockServerMatcher.update(new Expectation[]{
+            requestMatchers.update(new Expectation[]{
                 new Expectation(
                     request()
                         .withPath("/simpleFirst")
@@ -466,8 +466,8 @@ public class ExpectationFileSystemPersistenceTest {
             ConfigurationProperties.initializationJsonPath(persistedExpectations.getAbsolutePath());
 
             // when
-            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
-            mockServerMatcher.add(new Expectation(
+            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, requestMatchers);
+            requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleFirst")
             )
@@ -476,7 +476,7 @@ public class ExpectationFileSystemPersistenceTest {
                     response()
                         .withBody("some first response")
                 ), API);
-            mockServerMatcher.add(new Expectation(
+            requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleSecond")
             )
@@ -485,7 +485,7 @@ public class ExpectationFileSystemPersistenceTest {
                     response()
                         .withBody("some second response")
                 ), API);
-            mockServerMatcher.add(new Expectation(
+            requestMatchers.add(new Expectation(
                 request()
                     .withPath("/simpleThird")
             )
@@ -495,7 +495,7 @@ public class ExpectationFileSystemPersistenceTest {
                         .withBody("some third response")
                 ), API);
             MILLISECONDS.sleep(1500);
-            mockServerMatcher.update(new Expectation[]{
+            requestMatchers.update(new Expectation[]{
                 new Expectation(
                     request()
                         .withPath("/simpleFirst")
