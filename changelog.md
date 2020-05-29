@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - returns created expectations from /mockserver/expectation so that it is possible to view the id for new (or updated) expectations
 - added ability to inherit @MockServerSettings for Junit5 tests
 - switched to distroless container base for security and size
+- added explicit gc suggestion after reset and clear
 
 ### Fixed
 

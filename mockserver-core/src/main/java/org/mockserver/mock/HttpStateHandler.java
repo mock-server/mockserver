@@ -467,12 +467,14 @@ public class HttpStateHandler {
                 clear(request);
                 responseWriter.writeResponse(request, OK);
                 canHandle.complete(true);
+                System.gc();
 
             } else if (request.matches("PUT", PATH_PREFIX + "/reset", "/reset")) {
 
                 reset();
                 responseWriter.writeResponse(request, OK);
                 canHandle.complete(true);
+                System.gc();
 
             } else if (request.matches("PUT", PATH_PREFIX + "/retrieve", "/retrieve")) {
 
