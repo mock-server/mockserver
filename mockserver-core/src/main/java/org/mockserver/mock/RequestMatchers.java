@@ -35,6 +35,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         EXPECTATION_PRIORITY_COMPARATOR,
         httpRequestMatcher -> httpRequestMatcher.getExpectation().getId()
     );
+    private List<HttpRequestMatcher> httpRequestMatchersCopy;
     private final MockServerLogger mockServerLogger;
     private WebSocketClientRegistry webSocketClientRegistry;
     private MatcherBuilder matcherBuilder;
@@ -146,6 +147,10 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         return httpRequestMatchers.size();
     }
 
+    public void setMaxSize(int maxSize) {
+        httpRequestMatchers.setMaxSize(maxSize);
+    }
+
     public void reset(Cause cause) {
         new ArrayList<>(httpRequestMatchers).forEach(httpRequestMatcher -> removeHttpRequestMatcher(httpRequestMatcher, cause, false));
         Metrics.clearActionMetrics();
@@ -158,7 +163,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
 
     public Expectation firstMatchingExpectation(HttpRequest httpRequest) {
         Expectation matchingExpectation = null;
-        for (HttpRequestMatcher httpRequestMatcher : httpRequestMatchers.toSortedList()) {
+        for (HttpRequestMatcher httpRequestMatcher : getHttpRequestMatchersCopy()) {
             boolean remainingMatchesDecremented = false;
             if (httpRequestMatcher.matches(new MatchDifference(httpRequest), httpRequest)) {
                 matchingExpectation = httpRequestMatcher.getExpectation();
@@ -189,7 +194,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
     public void clear(HttpRequest httpRequest) {
         if (httpRequest != null) {
             HttpRequestMatcher clearHttpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
-            for (HttpRequestMatcher httpRequestMatcher : httpRequestMatchers.toSortedList()) {
+            for (HttpRequestMatcher httpRequestMatcher : getHttpRequestMatchersCopy()) {
                 if (clearHttpRequestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest())) {
                     removeHttpRequestMatcher(httpRequestMatcher);
                 }
@@ -252,7 +257,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         } else {
             List<Expectation> expectations = new ArrayList<>();
             HttpRequestMatcher requestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
-            for (HttpRequestMatcher httpRequestMatcher : httpRequestMatchers.toSortedList()) {
+            for (HttpRequestMatcher httpRequestMatcher : getHttpRequestMatchersCopy()) {
                 if (requestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest())) {
                     expectations.add(httpRequestMatcher.getExpectation());
                 }
@@ -263,5 +268,18 @@ public class RequestMatchers extends MockServerMatcherNotifier {
 
     public boolean isEmpty() {
         return httpRequestMatchers.isEmpty();
+    }
+
+    protected void notifyListeners(final RequestMatchers notifier, Cause cause) {
+        httpRequestMatchersCopy = null;
+        super.notifyListeners(notifier, cause);
+    }
+
+
+    private List<HttpRequestMatcher> getHttpRequestMatchersCopy() {
+        if (httpRequestMatchersCopy == null) {
+            httpRequestMatchersCopy = httpRequestMatchers.toSortedList();
+        }
+        return httpRequestMatchersCopy;
     }
 }

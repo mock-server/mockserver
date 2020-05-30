@@ -2,10 +2,7 @@ package org.mockserver.configuration;
 
 import io.netty.util.NettyRuntime;
 import io.netty.util.internal.SystemPropertyUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockserver.server.initialize.ExpectationInitializerExample;
 import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
@@ -104,6 +101,7 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    @Ignore
     public void shouldSetAndReadMaxExpectations() {
         // given
         System.clearProperty("mockserver.maxExpectations");
@@ -118,6 +116,7 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    @Ignore
     public void shouldHandleInvalidMaxExpectations() {
         // given
         System.setProperty("mockserver.maxExpectations", "invalid");
@@ -127,6 +126,7 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    @Ignore
     public void shouldSetAndReadRequestLogSize() {
         // given
         System.clearProperty("mockserver.maxLogEntries");
@@ -141,6 +141,7 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    @Ignore
     public void shouldHandleInvalidRequestLogSize() {
         // given
         System.setProperty("mockserver.requestLogSize", "invalid");

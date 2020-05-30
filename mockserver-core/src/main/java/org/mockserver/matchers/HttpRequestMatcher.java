@@ -27,9 +27,8 @@ import static org.mockserver.model.NottableString.string;
 @SuppressWarnings("rawtypes")
 public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
 
-    public static final Comparator<? super HttpRequestMatcher> EXPECTATION_PRIORITY_COMPARATOR =
-        Comparator.comparing(HttpRequestMatcher::getExpectation, Expectation.EXPECTATION_PRIORITY_COMPARATOR);
-    private static final String[] excludedFields = {"mockServerLogger", "objectMapper"};
+    public static final Comparator<? super HttpRequestMatcher> EXPECTATION_PRIORITY_COMPARATOR = Comparator.comparing(HttpRequestMatcher::getExpectation, Expectation.EXPECTATION_PRIORITY_COMPARATOR);
+    private static final String[] excludedFields = {"mockServerLogger", "methodMatcher", "pathMatcher", "queryStringParameterMatcher", "bodyMatcher", "headerMatcher", "cookieMatcher", "keepAliveMatcher", "bodyDTOMatcher", "sslMatcher", "controlPlaneMatcher", "responseInProgress", "objectMapper"};
     private static final String DID_NOT_MATCH = "didn't match";
     private static final String MATCHED = "matched";
     private static final String REQUEST_DID_NOT_MATCH = "request:{}didn't match request matcher:{}because:{}";
@@ -267,42 +266,42 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                 }
                 if (request != null) {
                     boolean methodMatches = StringUtils.isBlank(request.getMethod().getValue()) || matches(METHOD, matchDifference, methodMatcher, request.getMethod());
-                    if (failFast(methodMatcher, matchDifference, becauseBuilder, methodMatches, METHOD, EMPTY)) {
+                    if (failFast(methodMatcher, matchDifference, becauseBuilder, methodMatches, METHOD)) {
                         return false;
                     }
 
                     boolean pathMatches = StringUtils.isBlank(request.getPath().getValue()) || matches(PATH, matchDifference, pathMatcher, request.getPath());
-                    if (failFast(pathMatcher, matchDifference, becauseBuilder, pathMatches, PATH, EMPTY)) {
+                    if (failFast(pathMatcher, matchDifference, becauseBuilder, pathMatches, PATH)) {
                         return false;
                     }
 
                     boolean bodyMatches = bodyMatches(matchDifference, request);
-                    if (failFast(bodyMatcher, matchDifference, becauseBuilder, bodyMatches, BODY, EMPTY)) {
+                    if (failFast(bodyMatcher, matchDifference, becauseBuilder, bodyMatches, BODY)) {
                         return false;
                     }
 
                     boolean headersMatch = matches(HEADERS, matchDifference, headerMatcher, request.getHeaders());
-                    if (failFast(headerMatcher, matchDifference, becauseBuilder, headersMatch, HEADERS, EMPTY)) {
+                    if (failFast(headerMatcher, matchDifference, becauseBuilder, headersMatch, HEADERS)) {
                         return false;
                     }
 
                     boolean cookiesMatch = matches(COOKIES, matchDifference, cookieMatcher, request.getCookies());
-                    if (failFast(cookieMatcher, matchDifference, becauseBuilder, cookiesMatch, COOKIES, EMPTY)) {
+                    if (failFast(cookieMatcher, matchDifference, becauseBuilder, cookiesMatch, COOKIES)) {
                         return false;
                     }
 
                     boolean queryStringParametersMatches = matches(QUERY, matchDifference, queryStringParameterMatcher, request.getQueryStringParameters());
-                    if (failFast(queryStringParameterMatcher, matchDifference, becauseBuilder, queryStringParametersMatches, QUERY, EMPTY)) {
+                    if (failFast(queryStringParameterMatcher, matchDifference, becauseBuilder, queryStringParametersMatches, QUERY)) {
                         return false;
                     }
 
                     boolean keepAliveMatches = matches(KEEP_ALIVE, matchDifference, keepAliveMatcher, request.isKeepAlive());
-                    if (failFast(keepAliveMatcher, matchDifference, becauseBuilder, keepAliveMatches, KEEP_ALIVE, EMPTY)) {
+                    if (failFast(keepAliveMatcher, matchDifference, becauseBuilder, keepAliveMatches, KEEP_ALIVE)) {
                         return false;
                     }
 
                     boolean sslMatches = matches(SSL_MATCHES, matchDifference, sslMatcher, request.isSecure());
-                    if (failFast(sslMatcher, matchDifference, becauseBuilder, sslMatches, SSL_MATCHES, EMPTY)) {
+                    if (failFast(sslMatcher, matchDifference, becauseBuilder, sslMatches, SSL_MATCHES)) {
                         return false;
                     }
 
@@ -315,11 +314,11 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
         return false;
     }
 
-    private boolean failFast(Matcher<?> matcher, MatchDifference matchDifference, StringBuilder becauseBuilder, boolean fieldMatches, String fieldName, String separator) {
+    private boolean failFast(Matcher<?> matcher, MatchDifference matchDifference, StringBuilder becauseBuilder, boolean fieldMatches, String fieldName) {
         // update because builder
         if (!controlPlaneMatcher) {
             becauseBuilder
-                .append(separator).append(NEW_LINE)
+                .append(HttpRequestMatcher.EMPTY).append(NEW_LINE)
                 .append(fieldName).append(SPACE).append((fieldMatches ? MATCHED : DID_NOT_MATCH));
             if (matchDifference.getDifferences(fieldName) != null && !matchDifference.getDifferences(fieldName).isEmpty()) {
                 becauseBuilder

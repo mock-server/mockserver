@@ -11,7 +11,7 @@ import java.util.function.Function;
  * @author jamesdbloom
  */
 public class CircularPriorityQueue<K, V> extends PriorityBlockingQueue<V> {
-    private final int maxSize;
+    private int maxSize;
     private final Class<V> valueType;
     private final Function<V, K> keyFunction;
     private ConcurrentLinkedQueue<V> insertionOrderQueue = new ConcurrentLinkedQueue<>();
@@ -22,6 +22,10 @@ public class CircularPriorityQueue<K, V> extends PriorityBlockingQueue<V> {
         this.maxSize = maxSize;
         this.valueType = valueType;
         this.keyFunction = keyFunction;
+    }
+
+    public void setMaxSize(int maxSize) {
+        this.maxSize = maxSize;
     }
 
     @Override
@@ -67,7 +71,7 @@ public class CircularPriorityQueue<K, V> extends PriorityBlockingQueue<V> {
     }
 
     public List<V> toSortedList() {
-        PriorityBlockingQueue<V> secondQueue = new PriorityBlockingQueue<V>(this);
+        PriorityBlockingQueue<V> secondQueue = new PriorityBlockingQueue<>(this);
         List<V> contents = new ArrayList<>(secondQueue.size());
         while (secondQueue.size() > 0) {
             contents.add(secondQueue.poll());

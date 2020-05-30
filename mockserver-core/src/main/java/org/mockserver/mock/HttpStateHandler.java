@@ -4,6 +4,7 @@ import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.memory.MemoryMonitoring;
 import org.mockserver.model.*;
 import org.mockserver.persistence.ExpectationFileSystemPersistence;
 import org.mockserver.persistence.ExpectationFileWatcher;
@@ -33,6 +34,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.addSubjectAlternativeName;
@@ -67,6 +69,7 @@ public class HttpStateHandler {
     private VerificationSerializer verificationSerializer;
     private VerificationSequenceSerializer verificationSequenceSerializer;
     private LogEntrySerializer logEntrySerializer;
+    private MemoryMonitoring memoryMonitoring;
 
     public HttpStateHandler(MockServerLogger mockServerLogger, Scheduler scheduler) {
         this.mockServerLogger = mockServerLogger.setHttpStateHandler(this);
@@ -84,23 +87,12 @@ public class HttpStateHandler {
         this.logEntrySerializer = new LogEntrySerializer(mockServerLogger);
         this.expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, requestMatchers);
         this.expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
+        this.memoryMonitoring = new MemoryMonitoring(this.mockServerLog, this.requestMatchers);
         new ExpectationInitializerLoader(mockServerLogger, requestMatchers);
     }
 
     public MockServerLogger getMockServerLogger() {
         return mockServerLogger;
-    }
-
-    public int eventLogSize() {
-        return mockServerLog.size();
-    }
-
-    public int expectationsSize() {
-        return requestMatchers.size();
-    }
-
-    public int webSocketClientRegistrySize() {
-        return webSocketClientRegistry.size();
     }
 
     public void clear(HttpRequest request) {
@@ -149,6 +141,7 @@ public class HttpStateHandler {
         } catch (IllegalArgumentException iae) {
             throw new IllegalArgumentException("\"" + request.getFirstQueryStringParameter("type") + "\" is not a valid value for \"type\" parameter, only the following values are supported " + Arrays.stream(ClearType.values()).map(input -> input.name().toLowerCase()).collect(Collectors.toList()));
         }
+        System.gc();
     }
 
     public void reset() {
@@ -162,6 +155,15 @@ public class HttpStateHandler {
                 .setHttpRequest(request())
                 .setMessageFormat("resetting all expectations and request logs")
         );
+        System.gc();
+        new Thread(() -> {
+            try {
+                SECONDS.sleep(10);
+                memoryMonitoring.logMemoryMetrics();
+            } catch (InterruptedException ie) {
+                ie.printStackTrace();
+            }
+        });
     }
 
     public List<Expectation> add(Expectation... expectations) {
@@ -479,14 +481,12 @@ public class HttpStateHandler {
                 clear(request);
                 responseWriter.writeResponse(request, OK);
                 canHandle.complete(true);
-                System.gc();
 
             } else if (request.matches("PUT", PATH_PREFIX + "/reset", "/reset")) {
 
                 reset();
                 responseWriter.writeResponse(request, OK);
                 canHandle.complete(true);
-                System.gc();
 
             } else if (request.matches("PUT", PATH_PREFIX + "/retrieve", "/retrieve")) {
 

@@ -55,7 +55,6 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     private LifeCycle server;
     private ActionHandler actionHandler;
     private DashboardHandler dashboardHandler = new DashboardHandler();
-    private MemoryMonitoring memoryMonitoring;
 
     public MockServerHandler(LifeCycle server, HttpStateHandler httpStateHandler, ActionHandler actionHandler) {
         super(false);
@@ -63,7 +62,6 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         this.httpStateHandler = httpStateHandler;
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
-        this.memoryMonitoring = new MemoryMonitoring(mockServerLogger, httpStateHandler);
         this.actionHandler = actionHandler;
     }
 
@@ -95,7 +93,6 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 if (request.matches("PUT", PATH_PREFIX + "/status", "/status") ||
                     isNotBlank(ConfigurationProperties.livenessHttpGetPath()) && request.matches("GET", ConfigurationProperties.livenessHttpGetPath())) {
 
-                    memoryMonitoring.logMemoryMetrics();
                     responseWriter.writeResponse(request, OK, portBindingSerializer.serialize(portBinding(server.getLocalPorts())), "application/json");
 
                 } else if (request.matches("PUT", PATH_PREFIX + "/bind", "/bind")) {

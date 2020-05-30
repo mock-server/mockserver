@@ -7,9 +7,13 @@ import java.util.concurrent.ConcurrentLinkedDeque;
  * @author jamesdbloom
  */
 public class CircularConcurrentLinkedDeque<E> extends ConcurrentLinkedDeque<E> {
-    private final int maxSize;
+    private int maxSize;
 
     public CircularConcurrentLinkedDeque(int maxSize) {
+        this.maxSize = maxSize;
+    }
+
+    public void setMaxSize(int maxSize) {
         this.maxSize = maxSize;
     }
 

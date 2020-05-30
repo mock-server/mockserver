@@ -10,6 +10,7 @@ import io.netty.util.internal.SystemPropertyUtil;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.memory.MemoryMonitoring;
 import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
 import org.mockserver.socket.tls.jdk.CertificateSigningRequest;
 import org.slf4j.event.Level;
@@ -199,6 +200,9 @@ public class ConfigurationProperties {
         }
     }
 
+    private static MemoryMonitoring memoryMonitoring = new MemoryMonitoring();
+    private static int defaultMaxExpectations = memoryMonitoring.defaultMaxExpectations();
+    private static int defaultMaxLogEntries = memoryMonitoring.defaultMaxLogEntries();
     private static Level logLevel = Level.valueOf(getSLF4JOrJavaLoggerToSLF4JLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, "MOCKSERVER_LOG_LEVEL", DEFAULT_LOG_LEVEL).toUpperCase()));
     private static String javaLoggerLogLevel = getSLF4JOrJavaLoggerToJavaLoggerLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, "MOCKSERVER_LOG_LEVEL", DEFAULT_LOG_LEVEL).toUpperCase());
     private static boolean metricsEnabled = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_METRICS_ENABLED, "MOCKSERVER_METRICS_ENABLED", "" + false));
@@ -256,16 +260,32 @@ public class ConfigurationProperties {
         return System.getProperty(MOCKSERVER_PROPERTY_FILE, isBlank(System.getenv("MOCKSERVER_PROPERTY_FILE")) ? "mockserver.properties" : System.getenv("MOCKSERVER_PROPERTY_FILE"));
     }
 
+    public static int defaultMaxExpectations() {
+        return defaultMaxExpectations;
+    }
+
+    public static void defaultMaxExpectations(int defaultMaxExpectations) {
+        ConfigurationProperties.defaultMaxExpectations = defaultMaxExpectations;
+    }
+
     public static int maxExpectations() {
-        return readIntegerProperty(MOCKSERVER_MAX_EXPECTATIONS, "MOCKSERVER_MAX_EXPECTATIONS", DEFAULT_MAX_EXPECTATIONS);
+        return readIntegerProperty(MOCKSERVER_MAX_EXPECTATIONS, "MOCKSERVER_MAX_EXPECTATIONS", defaultMaxExpectations());
     }
 
     public static void maxExpectations(int count) {
         System.setProperty(MOCKSERVER_MAX_EXPECTATIONS, "" + count);
     }
 
+    public static int defaultMaxLogEntries() {
+        return defaultMaxLogEntries;
+    }
+
+    public static void defaultMaxLogEntries(int defaultMaxLogEntries) {
+        ConfigurationProperties.defaultMaxLogEntries = defaultMaxLogEntries;
+    }
+
     public static int maxLogEntries() {
-        return readIntegerProperty(MOCKSERVER_MAX_LOG_ENTRIES, "MOCKSERVER_MAX_LOG_ENTRIES", maxExpectations() * maxExpectations());
+        return readIntegerProperty(MOCKSERVER_MAX_LOG_ENTRIES, "MOCKSERVER_MAX_LOG_ENTRIES", defaultMaxLogEntries());
     }
 
     public static void maxLogEntries(int count) {
@@ -273,7 +293,7 @@ public class ConfigurationProperties {
     }
 
     public static int ringBufferSize() {
-        return nextPowerOfTwo(maxExpectations() * maxExpectations());
+        return nextPowerOfTwo(maxExpectations() * 10);
     }
 
     private static int nextPowerOfTwo(int value) {

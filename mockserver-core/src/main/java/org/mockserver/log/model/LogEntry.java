@@ -301,7 +301,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     private HttpRequest updateBody(HttpRequest httpRequest) {
         if (httpRequest != null) {
             Body<?> body = httpRequest.getBody();
-            if (body != null && JsonBody.class.isAssignableFrom(body.getClass())) {
+            if (body instanceof JsonBody) {
                 try {
                     return httpRequest
                         .clone()
@@ -315,7 +315,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
                             new LogEventBody(body.toString())
                         );
                 }
-            } else if (body != null && !(body instanceof LogEventBody) && BodyWithContentType.class.isAssignableFrom(body.getClass())) {
+            } else if (body instanceof BodyWithContentType && !(body instanceof LogEventBody)) {
                 return httpRequest
                     .clone()
                     .withBody(

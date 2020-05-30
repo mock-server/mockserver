@@ -19,7 +19,7 @@ ARG REPOSITORY_URL=https://oss.sonatype.org/service/local/artifact/maven/redirec
 RUN wget --max-redirect=10 -O mockserver-netty-jar-with-dependencies.jar "$REPOSITORY_URL"
 
 # runtime image
-FROM gcr.io/distroless/java:8
+FROM gcr.io/distroless/java:11
 
 # maintainer details
 MAINTAINER James Bloom "jamesdbloom@gmail.com"

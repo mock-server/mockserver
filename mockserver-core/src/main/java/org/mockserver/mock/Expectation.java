@@ -8,7 +8,6 @@ import org.mockserver.uuid.UUIDService;
 
 import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author jamesdbloom

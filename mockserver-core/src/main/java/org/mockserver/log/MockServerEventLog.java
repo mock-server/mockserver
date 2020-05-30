@@ -25,6 +25,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -59,7 +60,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             .withTimestamp(logEntry.getTimestamp());
     private static final String[] EXCLUDED_FIELDS = {"id", "disruptor"};
     private MockServerLogger mockServerLogger;
-    private Deque<LogEntry> eventLog = new CircularConcurrentLinkedDeque<>(ConfigurationProperties.maxLogEntries());
+    private CircularConcurrentLinkedDeque<LogEntry> eventLog = new CircularConcurrentLinkedDeque<>(ConfigurationProperties.maxLogEntries());
     private MatcherBuilder matcherBuilder;
     private HttpRequestSerializer httpRequestSerializer;
     private final boolean asynchronousEventProcessing;
@@ -89,6 +90,10 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
 
     public int size() {
         return eventLog.size();
+    }
+
+    public void setMaxSize(int maxSize) {
+        eventLog.setMaxSize(maxSize);
     }
 
     private void startRingBuffer() {
