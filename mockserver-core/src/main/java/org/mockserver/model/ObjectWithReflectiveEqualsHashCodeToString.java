@@ -12,23 +12,31 @@ public abstract class ObjectWithReflectiveEqualsHashCodeToString {
 
     private static final String[] IGNORE_KEY_FIELD = {};
 
-    static {
-        ReflectionToStringBuilder.setDefaultStyle(ToStringStyle.SHORT_PREFIX_STYLE);
-    }
-
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
         return IGNORE_KEY_FIELD;
     }
 
     @Override
     public String toString() {
-        return ReflectionToStringBuilder.toStringExclude(this, fieldsExcludedFromEqualsAndHashCode());
+        return new ReflectionToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE, null, ObjectWithReflectiveEqualsHashCodeToString.class, false, false).setExcludeFieldNames(fieldsExcludedFromEqualsAndHashCode()).toString();
     }
 
     @Override
     @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
     public boolean equals(Object other) {
-        return EqualsBuilder.reflectionEquals(this, other, fieldsExcludedFromEqualsAndHashCode());
+        if (this == other) {
+            return true;
+        }
+        if (other == null) {
+            return false;
+        }
+        return new EqualsBuilder()
+                    .setExcludeFields(fieldsExcludedFromEqualsAndHashCode())
+                    .setReflectUpToClass(ObjectWithReflectiveEqualsHashCodeToString.class)
+                    .setTestTransients(false)
+                    .setTestRecursive(false)
+                    .reflectionAppend(this, other)
+                    .isEquals();
     }
 
     @Override
