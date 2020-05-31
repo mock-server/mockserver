@@ -43,7 +43,6 @@ public class ConfigurationProperties {
     private static final int DEFAULT_CONNECT_TIMEOUT = 20000;
     private static final String DEFAULT_MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS = "false";
     private static final int DEFAULT_MAX_FUTURE_TIMEOUT = 60;
-    private static final int DEFAULT_MAX_EXPECTATIONS = 5000;
     private static final String DEFAULT_OUTPUT_MEMORY_USAGE_CSV = "false";
     private static final int DEFAULT_MAX_WEB_SOCKET_EXPECTATIONS = 1500;
     private static final int DEFAULT_MAX_INITIAL_LINE_LENGTH = Integer.MAX_VALUE;

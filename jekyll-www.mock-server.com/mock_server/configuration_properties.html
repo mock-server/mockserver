@@ -96,7 +96,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 <button id="button_configuration_max_expectations" class="accordion title"><strong>Maximum Expectations To Hold In Memory</strong></button>
 <div class="panel title">
     <p>Maximum number of expectations held in the in-memory ring buffer</p>
-    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">1000</span></p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">free heap space in KB / 400</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxExpectations(int count)</code></pre>
     <p>System Property:</p>
@@ -112,7 +112,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 <button id="button_configuration_request_log_size" class="accordion title"><strong>Maximum Log Entries To Hold In Memory</strong></button>
 <div class="panel title">
     <p>Maximum number of log entries to hold in memory, this include recorded requests, expectation match failures and other log entries.  The lower the <a href="#button_configuration_log_level">log level</a> the more log entries will be captured, particularly at TRACE level logging.</p>
-    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">maxExpectations * maxExpectations</span></p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">free heap space in KB / 30</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxLogEntries(int count)</code></pre>
     <p>System Property:</p>
@@ -128,7 +128,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 <button id="button_configuration_max_web_socket_expectations" class="accordion title"><strong>Maximum WebSockets For Object Callback Expectations</strong></button>
 <div class="panel title">
     <p>Maximum number of WebSockets held in the in-memory ring buffer</p>
-    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">1000</span></p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">1500</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxWebSocketExpectations(int count)</code></pre>
     <p>System Property:</p>

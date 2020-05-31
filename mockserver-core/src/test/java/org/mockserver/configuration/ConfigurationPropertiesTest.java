@@ -101,13 +101,12 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    @Ignore
     public void shouldSetAndReadMaxExpectations() {
         // given
         System.clearProperty("mockserver.maxExpectations");
 
         // when
-        assertEquals(5000, maxExpectations());
+        assertEquals(defaultMaxExpectations(), maxExpectations());
         maxExpectations(100);
 
         // then
@@ -116,23 +115,21 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    @Ignore
     public void shouldHandleInvalidMaxExpectations() {
         // given
         System.setProperty("mockserver.maxExpectations", "invalid");
 
         // then
-        assertEquals(5000, maxExpectations());
+        assertEquals(defaultMaxExpectations(), maxExpectations());
     }
 
     @Test
-    @Ignore
     public void shouldSetAndReadRequestLogSize() {
         // given
         System.clearProperty("mockserver.maxLogEntries");
 
         // when
-        assertEquals(maxExpectations() * maxExpectations(), maxLogEntries());
+        assertEquals(defaultMaxLogEntries(), maxLogEntries());
         maxLogEntries(100);
 
         // then
@@ -141,13 +138,12 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    @Ignore
     public void shouldHandleInvalidRequestLogSize() {
         // given
         System.setProperty("mockserver.requestLogSize", "invalid");
 
         // then
-        assertEquals(5000 * 5000, maxLogEntries());
+        assertEquals(defaultMaxLogEntries(), maxLogEntries());
     }
 
     @Test
