@@ -23,10 +23,23 @@ public class IOStreamUtilsTest {
     private final IOStreamUtils ioStreamUtils = new IOStreamUtils(new MockServerLogger());
 
     @Test
-    public void shouldReadSocketInputStreamToString() throws IOException {
+    public void shouldReadSocketInputStreamWithoutNewLineToString() throws IOException {
         // given
         Socket socket = mock(Socket.class);
         when(socket.getInputStream()).thenReturn(IOUtils.toInputStream("bytes", UTF_8));
+
+        // when
+        String result = IOStreamUtils.readInputStreamToString(socket);
+
+        // then
+        assertEquals("bytes" + NEW_LINE, result);
+    }
+
+    @Test
+    public void shouldReadSocketInputStreamWithNewLineToString() throws IOException {
+        // given
+        Socket socket = mock(Socket.class);
+        when(socket.getInputStream()).thenReturn(IOUtils.toInputStream("bytes" + NEW_LINE, UTF_8));
 
         // when
         String result = IOStreamUtils.readInputStreamToString(socket);

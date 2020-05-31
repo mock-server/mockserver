@@ -19,6 +19,7 @@ public class HttpErrorActionHandler {
             }
         }
         if (httpError.getDropConnection() != null && httpError.getDropConnection()) {
+            ctx.disconnect();
             ctx.close();
         }
     }

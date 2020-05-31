@@ -1462,7 +1462,62 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     }
 
     @Test
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void shouldReturnErrorResponseForExpectationWithHttpError() throws Exception {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("/some_error"))
+            )
+            .error(
+                error()
+                    .withResponseBytes("b00m".getBytes(StandardCharsets.UTF_8))
+                    .withDropConnection(false)
+            );
+
+        // then
+        try (Socket socket = new Socket("localhost", this.getServerPort())) {
+            // given
+            OutputStream output = socket.getOutputStream();
+
+            // when
+            output.write(("" +
+                "POST " + calculatePath("/some_error") + " HTTP/1.1\r\n" +
+                "Content-Length: 0\r\n" +
+                "\r\n"
+            ).getBytes(StandardCharsets.UTF_8));
+            output.flush();
+
+            // then
+            byte[] bytes = new byte[4];
+            socket.getInputStream().read(bytes);
+            assertThat(new String(bytes, StandardCharsets.UTF_8), is("b00m"));
+        }
+
+        // and
+        // - in https
+        try (SSLSocket sslSocket = sslSocketFactory().wrapSocket(new Socket("localhost", this.getServerPort()))) {
+            OutputStream output = sslSocket.getOutputStream();
+
+            // when
+            output.write(("" +
+                "POST " + calculatePath("/some_error") + " HTTP/1.1" + NEW_LINE +
+                "Content-Length: 0" + NEW_LINE +
+                NEW_LINE
+            ).getBytes(StandardCharsets.UTF_8));
+            output.flush();
+
+            // then
+            byte[] bytes = new byte[4];
+            sslSocket.getInputStream().read(bytes);
+            assertThat(new String(bytes, StandardCharsets.UTF_8), is("b00m"));
+        }
+    }
+
+    @Test
+    public void shouldReturnErrorResponseForExpectationWithHttpErrorWithConnectionClosed() throws Exception {
         // when
         mockServerClient
             .when(

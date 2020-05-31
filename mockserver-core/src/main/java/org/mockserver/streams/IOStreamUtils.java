@@ -52,7 +52,7 @@ public class IOStreamUtils {
 
     public String readInputStreamToString(ServletRequest request) {
         try {
-            return new String(ByteStreams.toByteArray(request.getInputStream()), UTF_8.name());
+            return new String(ByteStreams.toByteArray(request.getInputStream()), request.getCharacterEncoding() != null ? request.getCharacterEncoding() : UTF_8.name());
         } catch (IOException ioe) {
             mockServerLogger.logEvent(
                 new LogEntry()
