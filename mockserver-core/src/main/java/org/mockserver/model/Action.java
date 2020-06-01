@@ -2,6 +2,7 @@ package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -9,7 +10,7 @@ import java.util.concurrent.TimeUnit;
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public abstract class Action<T extends Action> extends ObjectWithJsonToString {
-
+    private int hashCode;
     private Delay delay;
 
     /**
@@ -19,6 +20,7 @@ public abstract class Action<T extends Action> extends ObjectWithJsonToString {
      */
     public T withDelay(Delay delay) {
         this.delay = delay;
+        this.hashCode = 0;
         return (T) this;
     }
 
@@ -62,5 +64,28 @@ public abstract class Action<T extends Action> extends ObjectWithJsonToString {
     public enum Direction {
         FORWARD,
         RESPONSE
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (hashCode() != o.hashCode()) {
+            return false;
+        }
+        Action<?> action = (Action<?>) o;
+        return Objects.equals(delay, action.delay);
+    }
+
+    @Override
+    public int hashCode() {
+        if (hashCode == 0) {
+            hashCode = Objects.hash(delay);
+        }
+        return hashCode;
     }
 }

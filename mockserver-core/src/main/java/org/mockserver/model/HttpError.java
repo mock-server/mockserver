@@ -2,10 +2,14 @@ package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 /**
  * @author jamesdbloom
  */
 public class HttpError extends Action<HttpError> {
+    private int hashCode;
     private Boolean dropConnection;
     private byte[] responseBytes;
 
@@ -20,6 +24,7 @@ public class HttpError extends Action<HttpError> {
      */
     public HttpError withDropConnection(Boolean dropConnection) {
         this.dropConnection = dropConnection;
+        this.hashCode = 0;
         return this;
     }
 
@@ -34,6 +39,7 @@ public class HttpError extends Action<HttpError> {
      */
     public HttpError withResponseBytes(byte[] responseBytes) {
         this.responseBytes = responseBytes;
+        this.hashCode = 0;
         return this;
     }
 
@@ -45,6 +51,31 @@ public class HttpError extends Action<HttpError> {
     @JsonIgnore
     public Type getType() {
         return Type.ERROR;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (hashCode() != o.hashCode()) {
+            return false;
+        }
+        HttpError httpError = (HttpError) o;
+        return Objects.equals(dropConnection, httpError.dropConnection) &&
+            Arrays.equals(responseBytes, httpError.responseBytes);
+    }
+
+    @Override
+    public int hashCode() {
+        if (hashCode == 0) {
+            int result = Objects.hash(super.hashCode(), dropConnection);
+            hashCode = 31 * result + Arrays.hashCode(responseBytes);
+        }
+        return hashCode;
     }
 }
 

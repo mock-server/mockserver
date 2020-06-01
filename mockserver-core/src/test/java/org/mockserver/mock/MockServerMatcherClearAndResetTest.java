@@ -35,14 +35,13 @@ import static org.mockserver.ui.MockServerMatcherNotifier.Cause.API;
 public class MockServerMatcherClearAndResetTest {
 
     private RequestMatchers requestMatchers;
-    private MockServerLogger logFormatter;
+    private MockServerLogger mockServerLogger;
 
     @Before
     public void prepareTestFixture() {
-        logFormatter = new MockServerLogger();
-        Scheduler scheduler = mock(Scheduler.class);
+        mockServerLogger = new MockServerLogger();
         WebSocketClientRegistry webSocketClientRegistry = mock(WebSocketClientRegistry.class);
-        requestMatchers = new RequestMatchers(logFormatter, scheduler, webSocketClientRegistry);
+        requestMatchers = new RequestMatchers(mockServerLogger, new Scheduler(mockServerLogger, true), webSocketClientRegistry);
     }
 
     @Test
@@ -203,7 +202,7 @@ public class MockServerMatcherClearAndResetTest {
 
         // then
         assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
-        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[1])));
+        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(mockServerLogger).transformsToMatcher(expectation[1])));
     }
 
     @Test
@@ -251,7 +250,7 @@ public class MockServerMatcherClearAndResetTest {
 
         // then
         assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
-        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
+        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(mockServerLogger).transformsToMatcher(expectation[2])));
     }
 
     @Test
@@ -301,7 +300,7 @@ public class MockServerMatcherClearAndResetTest {
 
         // then
         assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
-        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
+        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(mockServerLogger).transformsToMatcher(expectation[2])));
     }
 
     @Test
@@ -352,7 +351,7 @@ public class MockServerMatcherClearAndResetTest {
 
         // then
         assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
-        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
+        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(mockServerLogger).transformsToMatcher(expectation[2])));
     }
 
     @Test
@@ -457,7 +456,7 @@ public class MockServerMatcherClearAndResetTest {
 
         // then
         assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
-        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
+        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(mockServerLogger).transformsToMatcher(expectation[2])));
     }
 
     @Test
@@ -569,7 +568,7 @@ public class MockServerMatcherClearAndResetTest {
 
         // then
         assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
-        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
+        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(mockServerLogger).transformsToMatcher(expectation[2])));
     }
 
     @Test
@@ -678,7 +677,7 @@ public class MockServerMatcherClearAndResetTest {
 
         // then
         assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
-        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
+        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(mockServerLogger).transformsToMatcher(expectation[2])));
     }
 
     @Test
@@ -787,7 +786,7 @@ public class MockServerMatcherClearAndResetTest {
 
         // then
         assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
-        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
+        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(mockServerLogger).transformsToMatcher(expectation[2])));
     }
 
     @Test

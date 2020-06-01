@@ -2,11 +2,13 @@ package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.util.Objects;
+
 /**
  * @author jamesdbloom
  */
 public class HttpOverrideForwardedRequest extends Action<HttpOverrideForwardedRequest> {
-
+    private int hashCode;
     private HttpRequest httpRequest;
     private HttpResponse httpResponse;
 
@@ -49,6 +51,7 @@ public class HttpOverrideForwardedRequest extends Action<HttpOverrideForwardedRe
      */
     public HttpOverrideForwardedRequest withHttpRequest(HttpRequest httpRequest) {
         this.httpRequest = httpRequest;
+        this.hashCode = 0;
         return this;
     }
 
@@ -63,6 +66,7 @@ public class HttpOverrideForwardedRequest extends Action<HttpOverrideForwardedRe
      */
     public HttpOverrideForwardedRequest withHttpResponse(HttpResponse httpResponse) {
         this.httpResponse = httpResponse;
+        this.hashCode = 0;
         return this;
     }
 
@@ -72,4 +76,27 @@ public class HttpOverrideForwardedRequest extends Action<HttpOverrideForwardedRe
         return Type.FORWARD_REPLACE;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (hashCode() != o.hashCode()) {
+            return false;
+        }
+        HttpOverrideForwardedRequest that = (HttpOverrideForwardedRequest) o;
+        return Objects.equals(httpRequest, that.httpRequest) &&
+            Objects.equals(httpResponse, that.httpResponse);
+    }
+
+    @Override
+    public int hashCode() {
+        if (hashCode == 0) {
+            hashCode = Objects.hash(super.hashCode(), httpRequest, httpResponse);
+        }
+        return hashCode;
+    }
 }

@@ -8,6 +8,7 @@ import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.SET_COOKIE;
@@ -20,6 +21,7 @@ import static org.mockserver.model.HttpStatusCode.OK_200;
  */
 @SuppressWarnings("rawtypes")
 public class HttpResponse extends Action<HttpResponse> implements HttpMessage<HttpResponse, BodyWithContentType> {
+    private int hashCode;
     private Integer statusCode;
     private String reasonPhrase;
     private BodyWithContentType body;
@@ -59,6 +61,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      */
     public HttpResponse withStatusCode(Integer statusCode) {
         this.statusCode = statusCode;
+        this.hashCode = 0;
         return this;
     }
 
@@ -75,6 +78,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      */
     public HttpResponse withReasonPhrase(String reasonPhrase) {
         this.reasonPhrase = reasonPhrase;
+        this.hashCode = 0;
         return this;
     }
 
@@ -91,6 +95,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
     public HttpResponse withBody(String body) {
         if (body != null) {
             this.body = new StringBody(body);
+            this.hashCode = 0;
         }
         return this;
     }
@@ -105,6 +110,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
     public HttpResponse withBody(String body, Charset charset) {
         if (body != null) {
             this.body = new StringBody(body, charset);
+            this.hashCode = 0;
         }
         return this;
     }
@@ -119,6 +125,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
     public HttpResponse withBody(String body, MediaType contentType) {
         if (body != null) {
             this.body = new StringBody(body, contentType);
+            this.hashCode = 0;
         }
         return this;
     }
@@ -130,6 +137,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      */
     public HttpResponse withBody(byte[] body) {
         this.body = new BinaryBody(body);
+        this.hashCode = 0;
         return this;
     }
 
@@ -154,6 +162,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      */
     public HttpResponse withBody(BodyWithContentType body) {
         this.body = body;
+        this.hashCode = 0;
         return this;
     }
 
@@ -182,6 +191,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
     private Headers getOrCreateHeaders() {
         if (this.headers == null) {
             this.headers = new Headers();
+            this.hashCode = 0;
         }
         return this.headers;
     }
@@ -192,6 +202,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
         } else {
             this.headers = headers;
         }
+        this.hashCode = 0;
         return this;
     }
 
@@ -202,6 +213,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      */
     public HttpResponse withHeaders(List<Header> headers) {
         getOrCreateHeaders().withEntries(headers);
+        this.hashCode = 0;
         return this;
     }
 
@@ -212,6 +224,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      */
     public HttpResponse withHeaders(Header... headers) {
         getOrCreateHeaders().withEntries(headers);
+        this.hashCode = 0;
         return this;
     }
 
@@ -224,6 +237,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      */
     public HttpResponse withHeader(Header header) {
         getOrCreateHeaders().withEntry(header);
+        this.hashCode = 0;
         return this;
     }
 
@@ -237,6 +251,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      */
     public HttpResponse withHeader(String name, String... values) {
         getOrCreateHeaders().withEntry(name, values);
+        this.hashCode = 0;
         return this;
     }
 
@@ -250,11 +265,13 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      */
     public HttpResponse withHeader(NottableString name, NottableString... values) {
         getOrCreateHeaders().withEntry(header(name, values));
+        this.hashCode = 0;
         return this;
     }
 
     public HttpResponse withContentType(MediaType mediaType) {
         getOrCreateHeaders().withEntry(header(CONTENT_TYPE.toString(), mediaType.toString()));
+        this.hashCode = 0;
         return this;
     }
 
@@ -266,6 +283,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      */
     public HttpResponse replaceHeader(Header header) {
         getOrCreateHeaders().replaceEntry(header);
+        this.hashCode = 0;
         return this;
     }
 
@@ -278,6 +296,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      */
     public HttpResponse replaceHeader(String name, String... values) {
         getOrCreateHeaders().replaceEntry(name, values);
+        this.hashCode = 0;
         return this;
     }
 
@@ -330,6 +349,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
     public HttpResponse removeHeader(String name) {
         if (this.headers != null) {
             headers.remove(name);
+            this.hashCode = 0;
         }
         return this;
     }
@@ -337,6 +357,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
     public HttpResponse removeHeader(NottableString name) {
         if (this.headers != null) {
             headers.remove(name);
+            this.hashCode = 0;
         }
         return this;
     }
@@ -364,6 +385,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
     private Cookies getOrCreateCookies() {
         if (this.cookies == null) {
             this.cookies = new Cookies();
+            this.hashCode = 0;
         }
         return this.cookies;
     }
@@ -374,6 +396,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
         } else {
             this.cookies = cookies;
         }
+        this.hashCode = 0;
         return this;
     }
 
@@ -384,6 +407,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      */
     public HttpResponse withCookies(List<Cookie> cookies) {
         getOrCreateCookies().withEntries(cookies);
+        this.hashCode = 0;
         return this;
     }
 
@@ -394,6 +418,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      */
     public HttpResponse withCookies(Cookie... cookies) {
         getOrCreateCookies().withEntries(cookies);
+        this.hashCode = 0;
         return this;
     }
 
@@ -404,6 +429,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      */
     public HttpResponse withCookie(Cookie cookie) {
         getOrCreateCookies().withEntry(cookie);
+        this.hashCode = 0;
         return this;
     }
 
@@ -415,6 +441,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      */
     public HttpResponse withCookie(String name, String value) {
         getOrCreateCookies().withEntry(name, value);
+        this.hashCode = 0;
         return this;
     }
 
@@ -429,6 +456,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      */
     public HttpResponse withCookie(NottableString name, NottableString value) {
         getOrCreateCookies().withEntry(name, value);
+        this.hashCode = 0;
         return this;
     }
 
@@ -480,6 +508,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      */
     public HttpResponse withConnectionOptions(ConnectionOptions connectionOptions) {
         this.connectionOptions = connectionOptions;
+        this.hashCode = 0;
         return this;
     }
 
@@ -524,6 +553,35 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
         if (replaceResponse.getConnectionOptions() != null) {
             withConnectionOptions(replaceResponse.getConnectionOptions());
         }
+        this.hashCode = 0;
         return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (hashCode() != o.hashCode()) {
+            return false;
+        }
+        HttpResponse that = (HttpResponse) o;
+        return Objects.equals(statusCode, that.statusCode) &&
+            Objects.equals(reasonPhrase, that.reasonPhrase) &&
+            Objects.equals(body, that.body) &&
+            Objects.equals(headers, that.headers) &&
+            Objects.equals(cookies, that.cookies) &&
+            Objects.equals(connectionOptions, that.connectionOptions);
+    }
+
+    @Override
+    public int hashCode() {
+        if (hashCode == 0) {
+            hashCode = Objects.hash(super.hashCode(), statusCode, reasonPhrase, body, headers, cookies, connectionOptions);
+        }
+        return hashCode;
     }
 }

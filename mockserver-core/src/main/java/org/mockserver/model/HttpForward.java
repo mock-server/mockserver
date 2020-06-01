@@ -2,11 +2,13 @@ package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.util.Objects;
+
 /**
  * @author jamesdbloom
  */
 public class HttpForward extends Action<HttpForward> {
-
+    private int hashCode;
     private String host;
     private Integer port = 80;
     private Scheme scheme = Scheme.HTTP;
@@ -35,6 +37,7 @@ public class HttpForward extends Action<HttpForward> {
      */
     public HttpForward withHost(String host) {
         this.host = host;
+        this.hashCode = 0;
         return this;
     }
 
@@ -49,6 +52,7 @@ public class HttpForward extends Action<HttpForward> {
      */
     public HttpForward withPort(Integer port) {
         this.port = port;
+        this.hashCode = 0;
         return this;
     }
 
@@ -63,11 +67,37 @@ public class HttpForward extends Action<HttpForward> {
      */
     public HttpForward withScheme(Scheme scheme) {
         this.scheme = scheme;
+        this.hashCode = 0;
         return this;
     }
 
     public enum Scheme {
         HTTP,
         HTTPS
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (hashCode() != o.hashCode()) {
+            return false;
+        }
+        HttpForward that = (HttpForward) o;
+        return Objects.equals(host, that.host) &&
+            Objects.equals(port, that.port) &&
+            scheme == that.scheme;
+    }
+
+    @Override
+    public int hashCode() {
+        if (hashCode == 0) {
+            hashCode = Objects.hash(super.hashCode(), host, port, scheme);
+        }
+        return hashCode;
     }
 }

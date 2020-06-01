@@ -7,6 +7,7 @@ import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
@@ -21,6 +22,7 @@ import static org.mockserver.model.NottableString.string;
  */
 @SuppressWarnings("rawtypes")
 public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
+    private int hashCode;
     private NottableString method = string("");
     private NottableString path = string("");
     private Parameters queryStringParameters;
@@ -50,6 +52,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withKeepAlive(Boolean isKeepAlive) {
         this.keepAlive = isKeepAlive;
+        this.hashCode = 0;
         return this;
     }
 
@@ -64,6 +67,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withSecure(Boolean isSsl) {
         this.secure = isSsl;
+        this.hashCode = 0;
         return this;
     }
 
@@ -79,6 +83,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withSocketAddress(SocketAddress socketAddress) {
         this.socketAddress = socketAddress;
+        this.hashCode = 0;
         return this;
     }
 
@@ -95,6 +100,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
             .withHost(host)
             .withPort(port)
             .withScheme(scheme);
+        this.hashCode = 0;
         return this;
     }
 
@@ -115,6 +121,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withMethod(NottableString method) {
         this.method = method;
+        this.hashCode = 0;
         return this;
     }
 
@@ -153,6 +160,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withPath(NottableString path) {
         this.path = path;
+        this.hashCode = 0;
         return this;
     }
 
@@ -182,6 +190,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
     private Parameters getOrCreateQueryStringParameters() {
         if (this.queryStringParameters == null) {
             this.queryStringParameters = new Parameters();
+            this.hashCode = 0;
         }
         return this.queryStringParameters;
     }
@@ -192,6 +201,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
         } else {
             this.queryStringParameters = parameters;
         }
+        this.hashCode = 0;
         return this;
     }
 
@@ -203,6 +213,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withQueryStringParameters(List<Parameter> parameters) {
         getOrCreateQueryStringParameters().withEntries(parameters);
+        this.hashCode = 0;
         return this;
     }
 
@@ -214,6 +225,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withQueryStringParameters(Parameter... parameters) {
         getOrCreateQueryStringParameters().withEntries(parameters);
+        this.hashCode = 0;
         return this;
     }
 
@@ -225,6 +237,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withQueryStringParameters(Map<String, List<String>> parameters) {
         getOrCreateQueryStringParameters().withEntries(parameters);
+        this.hashCode = 0;
         return this;
     }
 
@@ -236,6 +249,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withQueryStringParameter(Parameter parameter) {
         getOrCreateQueryStringParameters().withEntry(parameter);
+        this.hashCode = 0;
         return this;
     }
 
@@ -248,6 +262,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withQueryStringParameter(String name, String... values) {
         getOrCreateQueryStringParameters().withEntry(name, values);
+        this.hashCode = 0;
         return this;
     }
 
@@ -262,6 +277,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withQueryStringParameter(NottableString name, NottableString... values) {
         getOrCreateQueryStringParameters().withEntry(name, values);
+        this.hashCode = 0;
         return this;
     }
 
@@ -306,6 +322,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withBody(String body) {
         this.body = new StringBody(body);
+        this.hashCode = 0;
         return this;
     }
 
@@ -318,6 +335,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
     public HttpRequest withBody(String body, Charset charset) {
         if (body != null) {
             this.body = new StringBody(body, charset);
+            this.hashCode = 0;
         }
         return this;
     }
@@ -329,6 +347,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withBody(byte[] body) {
         this.body = new BinaryBody(body);
+        this.hashCode = 0;
         return this;
     }
 
@@ -407,6 +426,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withBody(Body body) {
         this.body = body;
+        this.hashCode = 0;
         return this;
     }
 
@@ -435,6 +455,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
     private Headers getOrCreateHeaders() {
         if (this.headers == null) {
             this.headers = new Headers();
+            this.hashCode = 0;
         }
         return this.headers;
     }
@@ -445,6 +466,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
         } else {
             this.headers = headers;
         }
+        this.hashCode = 0;
         return this;
     }
 
@@ -456,6 +478,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withHeaders(List<Header> headers) {
         getOrCreateHeaders().withEntries(headers);
+        this.hashCode = 0;
         return this;
     }
 
@@ -467,6 +490,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withHeaders(Header... headers) {
         getOrCreateHeaders().withEntries(headers);
+        this.hashCode = 0;
         return this;
     }
 
@@ -478,6 +502,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withHeader(Header header) {
         getOrCreateHeaders().withEntry(header);
+        this.hashCode = 0;
         return this;
     }
 
@@ -490,6 +515,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withHeader(String name, String... values) {
         getOrCreateHeaders().withEntry(header(name, values));
+        this.hashCode = 0;
         return this;
     }
 
@@ -504,11 +530,13 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withHeader(NottableString name, NottableString... values) {
         getOrCreateHeaders().withEntry(header(name, values));
+        this.hashCode = 0;
         return this;
     }
 
     public HttpRequest withContentType(MediaType mediaType) {
         getOrCreateHeaders().withEntry(header(CONTENT_TYPE.toString(), mediaType.toString()));
+        this.hashCode = 0;
         return this;
     }
 
@@ -520,6 +548,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest replaceHeader(Header header) {
         getOrCreateHeaders().replaceEntry(header);
+        this.hashCode = 0;
         return this;
     }
 
@@ -579,6 +608,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
     public HttpRequest removeHeader(String name) {
         if (this.headers != null) {
             headers.remove(name);
+            this.hashCode = 0;
         }
         return this;
     }
@@ -586,6 +616,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
     public HttpRequest removeHeader(NottableString name) {
         if (this.headers != null) {
             headers.remove(name);
+            this.hashCode = 0;
         }
         return this;
     }
@@ -597,6 +628,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
     private Cookies getOrCreateCookies() {
         if (this.cookies == null) {
             this.cookies = new Cookies();
+            this.hashCode = 0;
         }
         return this.cookies;
     }
@@ -607,6 +639,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
         } else {
             this.cookies = cookies;
         }
+        this.hashCode = 0;
         return this;
     }
 
@@ -618,6 +651,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withCookies(List<Cookie> cookies) {
         getOrCreateCookies().withEntries(cookies);
+        this.hashCode = 0;
         return this;
     }
 
@@ -629,6 +663,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withCookies(Cookie... cookies) {
         getOrCreateCookies().withEntries(cookies);
+        this.hashCode = 0;
         return this;
     }
 
@@ -640,6 +675,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withCookie(Cookie cookie) {
         getOrCreateCookies().withEntry(cookie);
+        this.hashCode = 0;
         return this;
     }
 
@@ -652,6 +688,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withCookie(String name, String value) {
         getOrCreateCookies().withEntry(name, value);
+        this.hashCode = 0;
         return this;
     }
 
@@ -666,6 +703,7 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
      */
     public HttpRequest withCookie(NottableString name, NottableString value) {
         getOrCreateCookies().withEntry(name, value);
+        this.hashCode = 0;
         return this;
     }
 
@@ -732,6 +770,38 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
         if (replaceRequest.getSocketAddress() != null) {
             withSocketAddress(replaceRequest.getSocketAddress());
         }
+        this.hashCode = 0;
         return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (hashCode() != o.hashCode()) {
+            return false;
+        }
+        HttpRequest that = (HttpRequest) o;
+        return Objects.equals(method, that.method) &&
+            Objects.equals(path, that.path) &&
+            Objects.equals(queryStringParameters, that.queryStringParameters) &&
+            Objects.equals(body, that.body) &&
+            Objects.equals(headers, that.headers) &&
+            Objects.equals(cookies, that.cookies) &&
+            Objects.equals(keepAlive, that.keepAlive) &&
+            Objects.equals(secure, that.secure) &&
+            Objects.equals(socketAddress, that.socketAddress);
+    }
+
+    @Override
+    public int hashCode() {
+        if (hashCode == 0) {
+            hashCode = Objects.hash(super.hashCode(), method, path, queryStringParameters, body, headers, cookies, keepAlive, secure, socketAddress);
+        }
+        return hashCode;
     }
 }

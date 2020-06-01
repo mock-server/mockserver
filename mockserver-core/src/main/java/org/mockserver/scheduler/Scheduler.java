@@ -1,6 +1,6 @@
 package org.mockserver.scheduler;
 
-import io.netty.buffer.ByteBuf;
+import com.google.common.annotations.VisibleForTesting;
 import org.mockserver.client.SocketCommunicationException;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
@@ -13,7 +13,6 @@ import org.slf4j.event.Level;
 
 import java.util.concurrent.*;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.log.model.LogEntry.LogMessageType.WARN;
@@ -28,6 +27,8 @@ public class Scheduler {
         new SchedulerThreadFactory("Scheduler"),
         new ThreadPoolExecutor.CallerRunsPolicy()
     );
+
+    private final boolean synchronous;
 
     public static class SchedulerThreadFactory implements ThreadFactory {
 
@@ -50,7 +51,13 @@ public class Scheduler {
     private final MockServerLogger mockServerLogger;
 
     public Scheduler(MockServerLogger mockServerLogger) {
+        this(mockServerLogger, false);
+    }
+
+    @VisibleForTesting
+    public Scheduler(MockServerLogger mockServerLogger, boolean synchronous) {
         this.mockServerLogger = mockServerLogger;
+        this.synchronous = synchronous;
     }
 
     public synchronized void shutdown() {
@@ -78,23 +85,9 @@ public class Scheduler {
         }
     }
 
-    private <T> void run(T input, Consumer<T> command) {
-        try {
-            command.accept(input);
-        } catch (Throwable throwable) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(WARN)
-                    .setLogLevel(Level.INFO)
-                    .setMessageFormat(throwable.getMessage())
-                    .setThrowable(throwable)
-            );
-        }
-    }
-
     public void schedule(Runnable command, boolean synchronous, Delay... delays) {
         Delay delay = addDelays(delays);
-        if (synchronous) {
+        if (this.synchronous || synchronous) {
             if (delay != null) {
                 delay.applyDelay();
             }
@@ -131,7 +124,7 @@ public class Scheduler {
     }
 
     public void submit(Runnable command, boolean synchronous) {
-        if (synchronous) {
+        if (this.synchronous || synchronous) {
             run(command);
         } else {
             scheduler.submit(() -> run(command));
@@ -140,7 +133,7 @@ public class Scheduler {
 
     public void submit(HttpForwardActionResult future, Runnable command, boolean synchronous) {
         if (future != null) {
-            if (synchronous) {
+            if (this.synchronous || synchronous) {
                 try {
                     future.getHttpResponse().get(ConfigurationProperties.maxSocketTimeout(), MILLISECONDS);
                 } catch (TimeoutException e) {
@@ -157,7 +150,7 @@ public class Scheduler {
 
     public void submit(CompletableFuture<BinaryMessage> future, Runnable command, boolean synchronous) {
         if (future != null) {
-            if (synchronous) {
+            if (this.synchronous || synchronous) {
                 try {
                     future.get(ConfigurationProperties.maxSocketTimeout(), MILLISECONDS);
                 } catch (TimeoutException e) {
@@ -174,7 +167,7 @@ public class Scheduler {
 
     public void submit(HttpForwardActionResult future, BiConsumer<HttpResponse, Throwable> consumer, boolean synchronous) {
         if (future != null) {
-            if (synchronous) {
+            if (this.synchronous || synchronous) {
                 HttpResponse httpResponse = null;
                 Throwable exception = null;
                 try {

@@ -17,6 +17,7 @@ import org.slf4j.event.Level;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static org.mockserver.configuration.ConfigurationProperties.maxExpectations;
@@ -35,13 +36,15 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         EXPECTATION_PRIORITY_COMPARATOR,
         httpRequestMatcher -> httpRequestMatcher.getExpectation().getId()
     );
-    private List<HttpRequestMatcher> httpRequestMatchersCopy;
+    private final AtomicReference<List<HttpRequestMatcher>> httpRequestMatchersCopy = new AtomicReference<>();
     private final MockServerLogger mockServerLogger;
+    private final Scheduler scheduler;
     private WebSocketClientRegistry webSocketClientRegistry;
     private MatcherBuilder matcherBuilder;
 
     public RequestMatchers(MockServerLogger mockServerLogger, Scheduler scheduler, WebSocketClientRegistry webSocketClientRegistry) {
         super(scheduler);
+        this.scheduler = scheduler;
         this.matcherBuilder = new MatcherBuilder(mockServerLogger);
         this.mockServerLogger = mockServerLogger;
         this.webSocketClientRegistry = webSocketClientRegistry;
@@ -205,17 +208,19 @@ public class RequestMatchers extends MockServerMatcherNotifier {
     }
 
     Expectation postProcess(Expectation expectation) {
-        if (expectation != null) {
-            for (HttpRequestMatcher httpRequestMatcher : httpRequestMatchers) {
-                if (httpRequestMatcher.getExpectation() == expectation) {
-                    if (!expectation.isActive()) {
-                        removeHttpRequestMatcher(httpRequestMatcher);
-                        break;
+        scheduler.submit(() -> {
+            if (expectation != null) {
+                for (HttpRequestMatcher httpRequestMatcher : getHttpRequestMatchersCopy()) {
+                    if (httpRequestMatcher.getExpectation() == expectation) {
+                        if (!expectation.isActive()) {
+                            removeHttpRequestMatcher(httpRequestMatcher);
+                            break;
+                        }
+                        httpRequestMatcher.setResponseInProgress(false);
                     }
-                    httpRequestMatcher.setResponseInProgress(false);
                 }
             }
-        }
+        });
         return expectation;
     }
 
@@ -271,15 +276,13 @@ public class RequestMatchers extends MockServerMatcherNotifier {
     }
 
     protected void notifyListeners(final RequestMatchers notifier, Cause cause) {
-        httpRequestMatchersCopy = null;
+        httpRequestMatchersCopy.set(null);
         super.notifyListeners(notifier, cause);
     }
 
 
     private List<HttpRequestMatcher> getHttpRequestMatchersCopy() {
-        if (httpRequestMatchersCopy == null) {
-            httpRequestMatchersCopy = httpRequestMatchers.toSortedList();
-        }
-        return httpRequestMatchersCopy;
+        httpRequestMatchersCopy.compareAndSet(null, httpRequestMatchers.toSortedList());
+        return httpRequestMatchersCopy.get();
     }
 }

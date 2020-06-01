@@ -32,9 +32,8 @@ public class MockServerMatcherManageExpectationsTest {
 
     @Before
     public void prepareTestFixture() {
-        Scheduler scheduler = mock(Scheduler.class);
         WebSocketClientRegistry webSocketClientRegistry = mock(WebSocketClientRegistry.class);
-        requestMatchers = new RequestMatchers(new MockServerLogger(), scheduler, webSocketClientRegistry);
+        requestMatchers = new RequestMatchers(new MockServerLogger(), new Scheduler(new MockServerLogger(), true), webSocketClientRegistry);
     }
 
     @Test

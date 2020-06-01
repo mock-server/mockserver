@@ -3,11 +3,14 @@ package org.mockserver.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.mock.action.ExpectationCallback;
 
+import java.util.Objects;
+
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("UnusedReturnValue")
 public class HttpClassCallback extends Action<HttpClassCallback> {
-
+    private int hashCode;
     private String callbackClass;
     private Type actionType;
 
@@ -68,6 +71,7 @@ public class HttpClassCallback extends Action<HttpClassCallback> {
      */
     public HttpClassCallback withCallbackClass(String callbackClass) {
         this.callbackClass = callbackClass;
+        this.hashCode = 0;
         return this;
     }
 
@@ -85,11 +89,13 @@ public class HttpClassCallback extends Action<HttpClassCallback> {
      */
     public HttpClassCallback withCallbackClass(Class<? extends ExpectationCallback<HttpRequest>> callbackClass) {
         this.callbackClass = callbackClass.getName();
+        this.hashCode = 0;
         return this;
     }
 
     public HttpClassCallback withActionType(Type actionType) {
         this.actionType = actionType;
+        this.hashCode = 0;
         return this;
     }
 
@@ -97,5 +103,29 @@ public class HttpClassCallback extends Action<HttpClassCallback> {
     @JsonIgnore
     public Type getType() {
         return actionType;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (hashCode() != o.hashCode()) {
+            return false;
+        }
+        HttpClassCallback that = (HttpClassCallback) o;
+        return Objects.equals(callbackClass, that.callbackClass) &&
+            actionType == that.actionType;
+    }
+
+    @Override
+    public int hashCode() {
+        if (hashCode == 0) {
+            hashCode = Objects.hash(super.hashCode(), callbackClass, actionType);
+        }
+        return hashCode;
     }
 }

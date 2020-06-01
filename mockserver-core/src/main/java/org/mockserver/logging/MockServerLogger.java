@@ -1,6 +1,7 @@
 package org.mockserver.logging;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.mock.HttpStateHandler;
 import org.slf4j.Logger;
@@ -92,24 +93,26 @@ public class MockServerLogger {
     }
 
     public static void writeToSystemOut(Logger logger, LogEntry logEntry) {
-        if (isEnabled(logEntry.getLogLevel()) &&
-            isNotBlank(logEntry.getMessage())) {
-            switch (logEntry.getLogLevel()) {
-                case ERROR:
-                    logger.error(logEntry.getMessage(), logEntry.getThrowable());
-                    break;
-                case WARN:
-                    logger.warn(logEntry.getMessage(), logEntry.getThrowable());
-                    break;
-                case INFO:
-                    logger.info(logEntry.getMessage(), logEntry.getThrowable());
-                    break;
-                case DEBUG:
-                    logger.debug(logEntry.getMessage(), logEntry.getThrowable());
-                    break;
-                case TRACE:
-                    logger.trace(logEntry.getMessage(), logEntry.getThrowable());
-                    break;
+        if (!ConfigurationProperties.disableSystemOut()) {
+            if (isEnabled(logEntry.getLogLevel()) &&
+                isNotBlank(logEntry.getMessage())) {
+                switch (logEntry.getLogLevel()) {
+                    case ERROR:
+                        logger.error(logEntry.getMessage(), logEntry.getThrowable());
+                        break;
+                    case WARN:
+                        logger.warn(logEntry.getMessage(), logEntry.getThrowable());
+                        break;
+                    case INFO:
+                        logger.info(logEntry.getMessage(), logEntry.getThrowable());
+                        break;
+                    case DEBUG:
+                        logger.debug(logEntry.getMessage(), logEntry.getThrowable());
+                        break;
+                    case TRACE:
+                        logger.trace(logEntry.getMessage(), logEntry.getThrowable());
+                        break;
+                }
             }
         }
     }

@@ -3,9 +3,8 @@ package org.mockserver.model;
 import org.junit.Test;
 import org.mockserver.serialization.Base64Converter;
 
-import java.nio.charset.StandardCharsets;
-
 import javax.xml.bind.DatatypeConverter;
+import java.nio.charset.StandardCharsets;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -23,7 +22,6 @@ public class BinaryBodyTest {
     private final Base64Converter base64Converter = new Base64Converter();
 
     @Test
-    @SuppressWarnings("AccessStaticViaInstance")
     public void shouldAlwaysCreateNewObject() {
         byte[] body = DatatypeConverter.parseBase64Binary("some_body");
 

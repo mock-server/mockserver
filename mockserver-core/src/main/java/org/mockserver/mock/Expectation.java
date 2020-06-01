@@ -7,6 +7,7 @@ import org.mockserver.model.*;
 import org.mockserver.uuid.UUIDService;
 
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -21,6 +22,7 @@ public class Expectation extends ObjectWithJsonToString {
     private String id;
     @JsonIgnore
     private long created;
+    private int hashCode;
     private final Integer priority;
     private final HttpRequest httpRequest;
     private final Times times;
@@ -77,7 +79,7 @@ public class Expectation extends ObjectWithJsonToString {
 
     public String getId() {
         if (id == null) {
-            id = UUIDService.getUUID();
+            withId(UUIDService.getUUID());
         }
         return id;
     }
@@ -178,15 +180,17 @@ public class Expectation extends ObjectWithJsonToString {
         if (httpResponse != null) {
             validationErrors("a response", httpResponse.getType());
             this.httpResponse = httpResponse;
+            this.hashCode = 0;
         }
         return this;
     }
 
     public Expectation thenRespond(HttpTemplate httpTemplate) {
         if (httpTemplate != null) {
-            httpTemplate.setActionType(Action.Type.RESPONSE_TEMPLATE);
+            httpTemplate.withActionType(Action.Type.RESPONSE_TEMPLATE);
             validationErrors("a response template", httpTemplate.getType());
             this.httpResponseTemplate = httpTemplate;
+            this.hashCode = 0;
         }
         return this;
     }
@@ -196,6 +200,7 @@ public class Expectation extends ObjectWithJsonToString {
             httpClassCallback.withActionType(Action.Type.RESPONSE_CLASS_CALLBACK);
             validationErrors("a response class callback", httpClassCallback.getType());
             this.httpResponseClassCallback = httpClassCallback;
+            this.hashCode = 0;
         }
         return this;
     }
@@ -205,6 +210,7 @@ public class Expectation extends ObjectWithJsonToString {
             httpObjectCallback.withActionType(Action.Type.RESPONSE_OBJECT_CALLBACK);
             validationErrors("a response object callback", httpObjectCallback.getType());
             this.httpResponseObjectCallback = httpObjectCallback;
+            this.hashCode = 0;
         }
         return this;
     }
@@ -213,15 +219,17 @@ public class Expectation extends ObjectWithJsonToString {
         if (httpForward != null) {
             validationErrors("a forward", httpForward.getType());
             this.httpForward = httpForward;
+            this.hashCode = 0;
         }
         return this;
     }
 
     public Expectation thenForward(HttpTemplate httpTemplate) {
         if (httpTemplate != null) {
-            httpTemplate.setActionType(Action.Type.FORWARD_TEMPLATE);
+            httpTemplate.withActionType(Action.Type.FORWARD_TEMPLATE);
             validationErrors("a forward template", httpTemplate.getType());
             this.httpForwardTemplate = httpTemplate;
+            this.hashCode = 0;
         }
         return this;
     }
@@ -231,6 +239,7 @@ public class Expectation extends ObjectWithJsonToString {
             httpClassCallback.withActionType(Action.Type.FORWARD_CLASS_CALLBACK);
             validationErrors("a forward class callback", httpClassCallback.getType());
             this.httpForwardClassCallback = httpClassCallback;
+            this.hashCode = 0;
         }
         return this;
     }
@@ -241,6 +250,7 @@ public class Expectation extends ObjectWithJsonToString {
                 .withActionType(Action.Type.FORWARD_OBJECT_CALLBACK);
             validationErrors("a forward object callback", httpObjectCallback.getType());
             this.httpForwardObjectCallback = httpObjectCallback;
+            this.hashCode = 0;
         }
         return this;
     }
@@ -249,6 +259,7 @@ public class Expectation extends ObjectWithJsonToString {
         if (httpOverrideForwardedRequest != null) {
             validationErrors("a forward replace", httpOverrideForwardedRequest.getType());
             this.httpOverrideForwardedRequest = httpOverrideForwardedRequest;
+            this.hashCode = 0;
         }
         return this;
     }
@@ -257,6 +268,7 @@ public class Expectation extends ObjectWithJsonToString {
         if (httpError != null) {
             validationErrors("an error", httpError.getType());
             this.httpError = httpError;
+            this.hashCode = 0;
         }
         return this;
     }
@@ -340,5 +352,41 @@ public class Expectation extends ObjectWithJsonToString {
     @JsonIgnore
     public String[] fieldsExcludedFromEqualsAndHashCode() {
         return excludedFields;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (hashCode() != o.hashCode()) {
+            return false;
+        }
+        Expectation that = (Expectation) o;
+        return Objects.equals(priority, that.priority) &&
+            Objects.equals(httpRequest, that.httpRequest) &&
+            Objects.equals(times, that.times) &&
+            Objects.equals(timeToLive, that.timeToLive) &&
+            Objects.equals(httpResponse, that.httpResponse) &&
+            Objects.equals(httpResponseTemplate, that.httpResponseTemplate) &&
+            Objects.equals(httpResponseClassCallback, that.httpResponseClassCallback) &&
+            Objects.equals(httpResponseObjectCallback, that.httpResponseObjectCallback) &&
+            Objects.equals(httpForward, that.httpForward) &&
+            Objects.equals(httpForwardTemplate, that.httpForwardTemplate) &&
+            Objects.equals(httpForwardClassCallback, that.httpForwardClassCallback) &&
+            Objects.equals(httpForwardObjectCallback, that.httpForwardObjectCallback) &&
+            Objects.equals(httpOverrideForwardedRequest, that.httpOverrideForwardedRequest) &&
+            Objects.equals(httpError, that.httpError);
+    }
+
+    @Override
+    public int hashCode() {
+        if (hashCode == 0) {
+            hashCode = Objects.hash(priority, httpRequest, times, timeToLive, httpResponse, httpResponseTemplate, httpResponseClassCallback, httpResponseObjectCallback, httpForward, httpForwardTemplate, httpForwardClassCallback, httpForwardObjectCallback, httpOverrideForwardedRequest, httpError);
+        }
+        return hashCode;
     }
 }

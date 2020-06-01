@@ -40,7 +40,7 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
             .withHeaders(headers)
             .withCookies(cookies)
             .withDelay((delay != null ? delay.buildObject() : null))
-            .withConnectionOptions((connectionOptions != null ? connectionOptions.buildObject() : null));
+            .withConnectionOptions(connectionOptions != null ? connectionOptions.buildObject() : null);
     }
 
     public Integer getStatusCode() {
