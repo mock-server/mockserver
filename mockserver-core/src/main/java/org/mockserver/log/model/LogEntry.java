@@ -69,7 +69,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     public void clear() {
         logLevel = Level.INFO;
         epochTime = -1;
-        httpRequests = new HttpRequest[]{request()};
+        httpRequests = null;
         timestamp = null;
         httpResponse = null;
         httpError = null;
