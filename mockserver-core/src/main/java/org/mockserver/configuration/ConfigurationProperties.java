@@ -200,8 +200,8 @@ public class ConfigurationProperties {
     }
 
     private static MemoryMonitoring memoryMonitoring = new MemoryMonitoring();
-    private static int defaultMaxExpectations = memoryMonitoring.defaultMaxExpectations();
-    private static int defaultMaxLogEntries = memoryMonitoring.defaultMaxLogEntries();
+    private static int defaultMaxExpectations = memoryMonitoring.startingMaxExpectations();
+    private static int defaultMaxLogEntries = memoryMonitoring.startingMaxLogEntries();
     private static Level logLevel = Level.valueOf(getSLF4JOrJavaLoggerToSLF4JLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, "MOCKSERVER_LOG_LEVEL", DEFAULT_LOG_LEVEL).toUpperCase()));
     private static String javaLoggerLogLevel = getSLF4JOrJavaLoggerToJavaLoggerLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, "MOCKSERVER_LOG_LEVEL", DEFAULT_LOG_LEVEL).toUpperCase());
     private static boolean metricsEnabled = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_METRICS_ENABLED, "MOCKSERVER_METRICS_ENABLED", "" + false));
@@ -292,7 +292,7 @@ public class ConfigurationProperties {
     }
 
     public static int ringBufferSize() {
-        return nextPowerOfTwo(maxExpectations());
+        return nextPowerOfTwo(defaultMaxLogEntries());
     }
 
     private static int nextPowerOfTwo(int value) {

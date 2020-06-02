@@ -28,10 +28,12 @@ import static org.mockserver.character.Character.NEW_LINE;
 public class MemoryMonitoring implements MockServerLogListener, MockServerMatcherListener {
 
     private static final AtomicInteger memoryUpdateFrequency = new AtomicInteger(0);
-    private static final AtomicInteger mockServerLogSize = new AtomicInteger(0);
-    private static final AtomicInteger requestMatchersSize = new AtomicInteger(0);
+    private static final AtomicInteger currentLogEntriesCount = new AtomicInteger(0);
+    private static final AtomicInteger currentExpectationsCount = new AtomicInteger(0);
     private static final List<MemoryPoolMXBean> memoryPoolMXBeans = ManagementFactory.getMemoryPoolMXBeans();
     private static final String CSV_FILE = "memoryUsage_" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".csv";
+    private static final int MAX_LOG_ENTRIES_UPPER_LIMIT = 60000;
+    private static final int MAX_EXPECTATIONS_UPPER_LIMIT = 5000;
 
     static {
         if (ConfigurationProperties.outputMemoryUsageCsv()) {
@@ -86,9 +88,9 @@ public class MemoryMonitoring implements MockServerLogListener, MockServerMatche
         Summary heap = getJVMMemory(MemoryType.HEAP);
         Summary nonHeap = getJVMMemory(MemoryType.NON_HEAP);
         List<ImmutablePair<String, Object>> memoryStatistics = new ArrayList<>();
-        memoryStatistics.add(ImmutablePair.of("eventLogSize", mockServerLogSize.get()));
+        memoryStatistics.add(ImmutablePair.of("eventLogSize", currentLogEntriesCount.get()));
         memoryStatistics.add(ImmutablePair.of("maxLogEntries", ConfigurationProperties.maxLogEntries()));
-        memoryStatistics.add(ImmutablePair.of("expectationsSize", requestMatchersSize.get()));
+        memoryStatistics.add(ImmutablePair.of("expectationsSize", currentExpectationsCount.get()));
         memoryStatistics.add(ImmutablePair.of("maxExpectations", ConfigurationProperties.maxExpectations()));
         memoryStatistics.add(ImmutablePair.of("heapInitialAllocation", heap.getNet().getInit()));
         memoryStatistics.add(ImmutablePair.of("heapUsed", heap.getNet().getUsed()));
@@ -101,17 +103,25 @@ public class MemoryMonitoring implements MockServerLogListener, MockServerMatche
         return memoryStatistics;
     }
 
-    public int defaultMaxLogEntries() {
-        return (int) (remainingHeapKB() / 30);
+    public int startingMaxLogEntries() {
+        return Math.min((int) (remainingHeapKB() / 30), MAX_LOG_ENTRIES_UPPER_LIMIT);
     }
 
-    public int defaultMaxExpectations() {
-        return (int) (remainingHeapKB() / 400);
+    public int adjustedMaxLogEntries() {
+        return Math.min(startingMaxLogEntries() + (currentLogEntriesCount.get() / 2), MAX_LOG_ENTRIES_UPPER_LIMIT);
+    }
+
+    public int startingMaxExpectations() {
+        return Math.min((int) (remainingHeapKB() / 400), MAX_EXPECTATIONS_UPPER_LIMIT);
+    }
+
+    public int adjustedMaxExpectations() {
+        return Math.min(startingMaxExpectations() + (currentExpectationsCount.get() / 2), MAX_EXPECTATIONS_UPPER_LIMIT);
     }
 
     @Override
     public void updated(MockServerEventLog mockServerLog) {
-        mockServerLogSize.set(mockServerLog.size());
+        currentLogEntriesCount.set(mockServerLog.size());
         if (shouldUpdate()) {
             updateMemoryUsageMaximums();
             mockServerLog.setMaxSize(ConfigurationProperties.maxLogEntries());
@@ -120,7 +130,7 @@ public class MemoryMonitoring implements MockServerLogListener, MockServerMatche
 
     @Override
     public void updated(RequestMatchers requestMatchers, MockServerMatcherNotifier.Cause cause) {
-        requestMatchersSize.set(requestMatchers.size());
+        currentExpectationsCount.set(requestMatchers.size());
         if (shouldUpdate()) {
             updateMemoryUsageMaximums();
             requestMatchers.setMaxSize(ConfigurationProperties.maxExpectations());
@@ -132,8 +142,8 @@ public class MemoryMonitoring implements MockServerLogListener, MockServerMatche
     }
 
     public void updateMemoryUsageMaximums() {
-        ConfigurationProperties.defaultMaxExpectations(defaultMaxExpectations() + requestMatchersSize.get() / 2);
-        ConfigurationProperties.defaultMaxLogEntries(defaultMaxLogEntries() + mockServerLogSize.get() / 2);
+        ConfigurationProperties.defaultMaxExpectations(adjustedMaxExpectations());
+        ConfigurationProperties.defaultMaxLogEntries(adjustedMaxLogEntries());
         logMemoryMetrics();
     }
 }
