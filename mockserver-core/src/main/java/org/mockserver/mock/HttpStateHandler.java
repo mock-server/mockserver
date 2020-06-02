@@ -1,6 +1,7 @@
 package org.mockserver.mock;
 
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -54,8 +55,8 @@ public class HttpStateHandler {
     private final String uniqueLoopPreventionHeaderValue = "MockServer_" + UUID.randomUUID().toString();
     private final MockServerEventLog mockServerLog;
     private final Scheduler scheduler;
-    private final ExpectationFileSystemPersistence expectationFileSystemPersistence;
-    private final ExpectationFileWatcher expectationFileWatcher;
+    private ExpectationFileSystemPersistence expectationFileSystemPersistence;
+    private ExpectationFileWatcher expectationFileWatcher;
     // mockserver
     private RequestMatchers requestMatchers;
     private MockServerLogger mockServerLogger;
@@ -77,16 +78,12 @@ public class HttpStateHandler {
         this.webSocketClientRegistry = new WebSocketClientRegistry(mockServerLogger);
         this.mockServerLog = new MockServerEventLog(mockServerLogger, scheduler, true);
         this.requestMatchers = new RequestMatchers(mockServerLogger, scheduler, webSocketClientRegistry);
-        this.httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
-        this.httpRequestResponseSerializer = new LogEventRequestAndResponseSerializer(mockServerLogger);
-        this.expectationSerializer = new ExpectationSerializer(mockServerLogger);
-        this.httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
-        this.expectationToJavaSerializer = new ExpectationToJavaSerializer();
-        this.verificationSerializer = new VerificationSerializer(mockServerLogger);
-        this.verificationSequenceSerializer = new VerificationSequenceSerializer(mockServerLogger);
-        this.logEntrySerializer = new LogEntrySerializer(mockServerLogger);
-        this.expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, requestMatchers);
-        this.expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
+        if (ConfigurationProperties.persistExpectations()) {
+            this.expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, requestMatchers);
+        }
+        if (ConfigurationProperties.watchInitializationJson()) {
+            this.expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
+        }
         this.memoryMonitoring = new MemoryMonitoring(this.mockServerLog, this.requestMatchers);
         new ExpectationInitializerLoader(mockServerLogger, requestMatchers);
     }
@@ -98,7 +95,7 @@ public class HttpStateHandler {
     public void clear(HttpRequest request) {
         HttpRequest requestMatcher = null;
         if (isNotBlank(request.getBodyAsString())) {
-            requestMatcher = httpRequestSerializer.deserialize(request.getBodyAsString());
+            requestMatcher = getHttpRequestSerializer().deserialize(request.getBodyAsString());
         }
         try {
             ClearType retrieveType = ClearType.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "ALL"));
@@ -203,7 +200,7 @@ public class HttpStateHandler {
         HttpResponse response = response().withStatusCode(OK.code());
         if (request != null) {
             try {
-                final HttpRequest httpRequest = isNotBlank(request.getBodyAsString()) ? httpRequestSerializer.deserialize(request.getBodyAsString()) : null;
+                final HttpRequest httpRequest = isNotBlank(request.getBodyAsString()) ? getHttpRequestSerializer().deserialize(request.getBodyAsString()) : null;
                 Format format = Format.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("format").toUpperCase(), "JSON"));
                 RetrieveType retrieveType = RetrieveType.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "REQUESTS"));
                 switch (retrieveType) {
@@ -252,7 +249,7 @@ public class HttpStateHandler {
                                         httpRequest,
                                         requests -> {
                                             response.withBody(
-                                                httpRequestToJavaSerializer.serialize(requests),
+                                                getHttpRequestToJavaSerializer().serialize(requests),
                                                 MediaType.create("application", "java").withCharset(UTF_8)
                                             );
                                             httpResponseFuture.complete(response);
@@ -265,7 +262,7 @@ public class HttpStateHandler {
                                         httpRequest,
                                         requests -> {
                                             response.withBody(
-                                                httpRequestSerializer.serialize(requests),
+                                                getHttpRequestSerializer().serialize(requests),
                                                 MediaType.JSON_UTF_8
                                             );
                                             httpResponseFuture.complete(response);
@@ -278,7 +275,7 @@ public class HttpStateHandler {
                                         httpRequest,
                                         logEntries -> {
                                             response.withBody(
-                                                logEntrySerializer.serialize(logEntries),
+                                                getLogEntrySerializer().serialize(logEntries),
                                                 MediaType.JSON_UTF_8
                                             );
                                             httpResponseFuture.complete(response);
@@ -309,7 +306,7 @@ public class HttpStateHandler {
                                         httpRequest,
                                         httpRequestAndHttpResponses -> {
                                             response.withBody(
-                                                httpRequestResponseSerializer.serialize(httpRequestAndHttpResponses),
+                                                getHttpRequestResponseSerializer().serialize(httpRequestAndHttpResponses),
                                                 MediaType.JSON_UTF_8
                                             );
                                             httpResponseFuture.complete(response);
@@ -322,7 +319,7 @@ public class HttpStateHandler {
                                         httpRequest,
                                         logEntries -> {
                                             response.withBody(
-                                                logEntrySerializer.serialize(logEntries),
+                                                getLogEntrySerializer().serialize(logEntries),
                                                 MediaType.JSON_UTF_8
                                             );
                                             httpResponseFuture.complete(response);
@@ -349,7 +346,7 @@ public class HttpStateHandler {
                                         httpRequest,
                                         requests -> {
                                             response.withBody(
-                                                expectationToJavaSerializer.serialize(requests),
+                                                getExpectationToJavaSerializer().serialize(requests),
                                                 MediaType.create("application", "java").withCharset(UTF_8)
                                             );
                                             httpResponseFuture.complete(response);
@@ -362,7 +359,7 @@ public class HttpStateHandler {
                                         httpRequest,
                                         requests -> {
                                             response.withBody(
-                                                expectationSerializer.serialize(requests),
+                                                getExpectationSerializer().serialize(requests),
                                                 MediaType.JSON_UTF_8
                                             );
                                             httpResponseFuture.complete(response);
@@ -375,7 +372,7 @@ public class HttpStateHandler {
                                         httpRequest,
                                         logEntries -> {
                                             response.withBody(
-                                                logEntrySerializer.serialize(logEntries),
+                                                getLogEntrySerializer().serialize(logEntries),
                                                 MediaType.JSON_UTF_8
                                             );
                                             httpResponseFuture.complete(response);
@@ -397,10 +394,10 @@ public class HttpStateHandler {
                         List<Expectation> expectations = requestMatchers.retrieveActiveExpectations(httpRequest);
                         switch (format) {
                             case JAVA:
-                                response.withBody(expectationToJavaSerializer.serialize(expectations), MediaType.create("application", "java").withCharset(UTF_8));
+                                response.withBody(getExpectationToJavaSerializer().serialize(expectations), MediaType.create("application", "java").withCharset(UTF_8));
                                 break;
                             case JSON:
-                                response.withBody(expectationSerializer.serialize(expectations), MediaType.JSON_UTF_8);
+                                response.withBody(getExpectationSerializer().serialize(expectations), MediaType.JSON_UTF_8);
                                 break;
                             case LOG_ENTRIES:
                                 response.withBody("LOG_ENTRIES not supported for ACTIVE_EXPECTATIONS", MediaType.create("text", "plain").withCharset(UTF_8));
@@ -465,7 +462,7 @@ public class HttpStateHandler {
             if (request.matches("PUT", PATH_PREFIX + "/expectation", "/expectation")) {
 
                 List<Expectation> upsertedExpectations = new ArrayList<>();
-                for (Expectation expectation : expectationSerializer.deserializeArray(request.getBodyAsString(), false)) {
+                for (Expectation expectation : getExpectationSerializer().deserializeArray(request.getBodyAsString(), false)) {
                     if (!warDeployment || validateSupportedFeatures(expectation, request, responseWriter)) {
                         upsertedExpectations.addAll(add(expectation));
                     }
@@ -473,7 +470,7 @@ public class HttpStateHandler {
 
                 responseWriter.writeResponse(request, response()
                     .withStatusCode(CREATED.code())
-                    .withBody(expectationSerializer.serialize(upsertedExpectations), MediaType.JSON_UTF_8), true);
+                    .withBody(getExpectationSerializer().serialize(upsertedExpectations), MediaType.JSON_UTF_8), true);
                 canHandle.complete(true);
 
             } else if (request.matches("PUT", PATH_PREFIX + "/clear", "/clear")) {
@@ -495,7 +492,7 @@ public class HttpStateHandler {
 
             } else if (request.matches("PUT", PATH_PREFIX + "/verify", "/verify")) {
 
-                Verification verification = verificationSerializer.deserialize(request.getBodyAsString());
+                Verification verification = getVerificationSerializer().deserialize(request.getBodyAsString());
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(VERIFICATION)
@@ -516,7 +513,7 @@ public class HttpStateHandler {
 
             } else if (request.matches("PUT", PATH_PREFIX + "/verifySequence", "/verifySequence")) {
 
-                VerificationSequence verificationSequence = verificationSequenceSerializer.deserialize(request.getBodyAsString());
+                VerificationSequence verificationSequence = getVerificationSequenceSerializer().deserialize(request.getBodyAsString());
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(VERIFICATION)
@@ -595,8 +592,68 @@ public class HttpStateHandler {
     }
 
     public void stop() {
-        expectationFileSystemPersistence.stop();
-        expectationFileWatcher.stop();
+        if (expectationFileSystemPersistence != null) {
+            expectationFileSystemPersistence.stop();
+        }
+        if (expectationFileWatcher != null) {
+            expectationFileWatcher.stop();
+        }
         getMockServerLog().stop();
+    }
+
+    private HttpRequestSerializer getHttpRequestSerializer() {
+        if (this.httpRequestSerializer == null) {
+            this.httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
+        }
+        return httpRequestSerializer;
+    }
+
+    private LogEventRequestAndResponseSerializer getHttpRequestResponseSerializer() {
+        if (this.httpRequestResponseSerializer == null) {
+            this.httpRequestResponseSerializer = new LogEventRequestAndResponseSerializer(mockServerLogger);
+        }
+        return httpRequestResponseSerializer;
+    }
+
+    private ExpectationSerializer getExpectationSerializer() {
+        if (this.expectationSerializer == null) {
+            this.expectationSerializer = new ExpectationSerializer(mockServerLogger);
+        }
+        return expectationSerializer;
+    }
+
+    private HttpRequestToJavaSerializer getHttpRequestToJavaSerializer() {
+        if (this.httpRequestToJavaSerializer == null) {
+            this.httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
+        }
+        return httpRequestToJavaSerializer;
+    }
+
+    private ExpectationToJavaSerializer getExpectationToJavaSerializer() {
+        if (this.expectationToJavaSerializer == null) {
+            this.expectationToJavaSerializer = new ExpectationToJavaSerializer();
+        }
+        return expectationToJavaSerializer;
+    }
+
+    private VerificationSerializer getVerificationSerializer() {
+        if (this.verificationSerializer == null) {
+            this.verificationSerializer = new VerificationSerializer(mockServerLogger);
+        }
+        return verificationSerializer;
+    }
+
+    private VerificationSequenceSerializer getVerificationSequenceSerializer() {
+        if (this.verificationSequenceSerializer == null) {
+            this.verificationSequenceSerializer = new VerificationSequenceSerializer(mockServerLogger);
+        }
+        return verificationSequenceSerializer;
+    }
+
+    private LogEntrySerializer getLogEntrySerializer() {
+        if (this.logEntrySerializer == null) {
+            this.logEntrySerializer = new LogEntrySerializer(mockServerLogger);
+        }
+        return logEntrySerializer;
     }
 }

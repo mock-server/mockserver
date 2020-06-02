@@ -13,6 +13,7 @@ import org.mockserver.serialization.model.*;
 import org.slf4j.event.Level;
 
 import java.util.Comparator;
+import java.util.Objects;
 
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.matchersFailFast;
@@ -29,14 +30,13 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
 
     public static final Comparator<? super HttpRequestMatcher> EXPECTATION_PRIORITY_COMPARATOR = Comparator.comparing(HttpRequestMatcher::getExpectation, Expectation.EXPECTATION_PRIORITY_COMPARATOR);
     private static final String[] excludedFields = {"mockServerLogger", "methodMatcher", "pathMatcher", "queryStringParameterMatcher", "bodyMatcher", "headerMatcher", "cookieMatcher", "keepAliveMatcher", "bodyDTOMatcher", "sslMatcher", "controlPlaneMatcher", "responseInProgress", "objectMapper"};
-    private static final String DID_NOT_MATCH = "didn't match";
-    private static final String MATCHED = "matched";
+    private static final String DID_NOT_MATCH = " didn't match";
+    private static final String MATCHED = " matched";
     private static final String REQUEST_DID_NOT_MATCH = "request:{}didn't match request matcher:{}because:{}";
     private static final String EXPECTATION_DID_NOT_MATCH = "request:{}didn't match expectation:{}because:{}";
     private static final String EXPECTATION_DID_NOT_MATCH_WITHOUT_BECAUSE = "request:{}didn't match expectation:{}";
     private static final String REQUEST_DID_MATCH = "request:{}matched request:{}";
     private static final String EXPECTATION_DID_MATCH = "request:{}matched expectation:{}";
-    private static final String SPACE = " ";
     private static final String SSL_MATCHES = "sslMatches";
     private static final String KEEP_ALIVE = "keep-alive";
     private static final String QUERY = "query";
@@ -46,7 +46,11 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     private static final String PATH = "path";
     private static final String METHOD = "method";
     private static final String COMMA = ",";
-    private static final String EMPTY = "";
+    private static final String COLON = ": " + NEW_LINE + NEW_LINE;
+    private static final String REQUEST_NOT_OPERATOR_IS_ENABLED = COMMA + NEW_LINE + "request 'not' operator is enabled";
+    private static final String EXPECTATION_REQUEST_NOT_OPERATOR_IS_ENABLED = COMMA + NEW_LINE + "expectation's request 'not' operator is enabled";
+    private static final String EXPECTATION_REQUEST_MATCHER_NOT_OPERATOR_IS_ENABLED = COMMA + NEW_LINE + "expectation's request matcher 'not' operator is enabled";
+    private int hashCode;
     private MockServerLogger mockServerLogger;
     private Expectation expectation;
     private HttpRequest httpRequest;
@@ -84,6 +88,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                 withKeepAlive(httpRequest.isKeepAlive());
                 withSsl(httpRequest.isSecure());
             }
+            this.hashCode = 0;
             return true;
         }
     }
@@ -100,6 +105,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
         } else {
             this.expectation = expectation;
             update(expectation.getHttpRequest());
+            this.hashCode = 0;
             return true;
         }
     }
@@ -318,11 +324,11 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
         // update because builder
         if (!controlPlaneMatcher) {
             becauseBuilder
-                .append(HttpRequestMatcher.EMPTY).append(NEW_LINE)
-                .append(fieldName).append(SPACE).append((fieldMatches ? MATCHED : DID_NOT_MATCH));
+                .append(NEW_LINE)
+                .append(fieldName).append((fieldMatches ? MATCHED : DID_NOT_MATCH));
             if (matchDifference.getDifferences(fieldName) != null && !matchDifference.getDifferences(fieldName).isEmpty()) {
                 becauseBuilder
-                    .append(": ").append(NEW_LINE).append(NEW_LINE)
+                    .append(COLON)
                     .append(Joiner.on(NEW_LINE).join(matchDifference.getDifferences(fieldName)));
             }
         }
@@ -330,21 +336,15 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
             if (!controlPlaneMatcher) {
                 if (matchDifference.getHttpRequest().isNot()) {
                     becauseBuilder
-                        .append(COMMA)
-                        .append(NEW_LINE)
-                        .append("request 'not' operator is enabled");
+                        .append(REQUEST_NOT_OPERATOR_IS_ENABLED);
                 }
                 if (this.httpRequest.isNot()) {
                     becauseBuilder
-                        .append(COMMA)
-                        .append(NEW_LINE)
-                        .append("expectation's request 'not' operator is enabled");
+                        .append(EXPECTATION_REQUEST_NOT_OPERATOR_IS_ENABLED);
                 }
                 if (not) {
                     becauseBuilder
-                        .append(COMMA)
-                        .append(NEW_LINE)
-                        .append("expectation's request matcher 'not' operator is enabled");
+                        .append(EXPECTATION_REQUEST_MATCHER_NOT_OPERATOR_IS_ENABLED);
                 }
             }
         }
@@ -432,5 +432,29 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     @JsonIgnore
     public String[] fieldsExcludedFromEqualsAndHashCode() {
         return excludedFields;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (hashCode() != o.hashCode()) {
+            return false;
+        }
+        HttpRequestMatcher that = (HttpRequestMatcher) o;
+        return Objects.equals(expectation, that.expectation) &&
+            Objects.equals(httpRequest, that.httpRequest);
+    }
+
+    @Override
+    public int hashCode() {
+        if (hashCode == 0) {
+            hashCode = Objects.hash(expectation, httpRequest);
+        }
+        return hashCode;
     }
 }

@@ -292,7 +292,7 @@ public class ConfigurationProperties {
     }
 
     public static int ringBufferSize() {
-        return nextPowerOfTwo(maxExpectations() * 10);
+        return nextPowerOfTwo(maxExpectations());
     }
 
     private static int nextPowerOfTwo(int value) {
