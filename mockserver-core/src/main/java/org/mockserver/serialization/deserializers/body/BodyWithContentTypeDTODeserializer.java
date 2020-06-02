@@ -139,13 +139,13 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
             if (type != null) {
                 switch (type) {
                     case BINARY:
-                        if (contentType != null) {
+                        if (contentType != null && isNotBlank(contentType.toString())) {
                             return new BinaryBodyDTO(new BinaryBody(rawBytes, contentType), not);
                         } else {
                             return new BinaryBodyDTO(new BinaryBody(rawBytes), not);
                         }
                     case JSON:
-                        if (contentType != null) {
+                        if (contentType != null && isNotBlank(contentType.toString())) {
                             return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, contentType, JsonBody.DEFAULT_MATCH_TYPE), not);
                         } else if (charset != null) {
                             return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, JsonBody.DEFAULT_CONTENT_TYPE.withCharset(charset), JsonBody.DEFAULT_MATCH_TYPE), not);
@@ -153,7 +153,7 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                             return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, JsonBody.DEFAULT_CONTENT_TYPE, JsonBody.DEFAULT_MATCH_TYPE), not);
                         }
                     case STRING:
-                        if (contentType != null) {
+                        if (contentType != null && isNotBlank(contentType.toString())) {
                             return new StringBodyDTO(new StringBody(valueJsonValue, rawBytes, false, contentType), not);
                         } else if (charset != null) {
                             return new StringBodyDTO(new StringBody(valueJsonValue, rawBytes, false, StringBody.DEFAULT_CONTENT_TYPE.withCharset(charset)), not);
@@ -161,7 +161,7 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                             return new StringBodyDTO(new StringBody(valueJsonValue, rawBytes, false, null), not);
                         }
                     case XML:
-                        if (contentType != null) {
+                        if (contentType != null && isNotBlank(contentType.toString())) {
                             return new XmlBodyDTO(new XmlBody(valueJsonValue, rawBytes, contentType), not);
                         } else if (charset != null) {
                             return new XmlBodyDTO(new XmlBody(valueJsonValue, rawBytes, XmlBody.DEFAULT_CONTENT_TYPE.withCharset(charset)), not);

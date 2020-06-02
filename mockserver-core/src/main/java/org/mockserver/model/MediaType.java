@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.*;
 import static org.slf4j.event.Level.TRACE;
+import static org.slf4j.event.Level.WARN;
 
 @SuppressWarnings("unused")
 public class MediaType extends ObjectWithJsonToString {
@@ -97,18 +98,28 @@ public class MediaType extends ObjectWithJsonToString {
             String parameters = mediaTypeHeader.substring(typeEndIndex).trim().toLowerCase().replaceAll("\"", "");
             Map<String, String> parameterMap = null;
             if (isNotBlank(parameters)) {
-                parameterMap = Splitter.on(';').trimResults().omitEmptyStrings().withKeyValueSeparator('=').split(parameters);
-                if (parameterMap.size() > 1) {
-                    // sort if multiple entries to ensure equals and hashcode is consistent
-                    parameterMap = parameterMap.entrySet()
-                        .stream()
-                        .sorted(Map.Entry.comparingByKey())
-                        .collect(Collectors.toMap(
-                            Map.Entry::getKey,
-                            Map.Entry::getValue,
-                            (oldValue, newValue) -> oldValue, LinkedHashMap::new
-                        ));
-                }
+//                try {
+                    parameterMap = Splitter.on(';').trimResults().omitEmptyStrings().withKeyValueSeparator('=').split(parameters);
+                    if (parameterMap.size() > 1) {
+                        // sort if multiple entries to ensure equals and hashcode is consistent
+                        parameterMap = parameterMap.entrySet()
+                            .stream()
+                            .sorted(Map.Entry.comparingByKey())
+                            .collect(Collectors.toMap(
+                                Map.Entry::getKey,
+                                Map.Entry::getValue,
+                                (oldValue, newValue) -> oldValue, LinkedHashMap::new
+                            ));
+                    }
+//                } catch (Throwable throwable) {
+//                    MOCK_SERVER_LOGGER.logEvent(
+//                        new LogEntry()
+//                            .setLogLevel(WARN)
+//                            .setMessageFormat("invalid parameters format \"" + parameters + "\", expected{}see:{}")
+//                            .setArguments("Content-Type := type \"/\" subtype *[\";\" parameter]\nparameter := attribute \"=\" value", "https://www.w3.org/Protocols/rfc1341/4_Content-Type.html")
+//                            .setThrowable(throwable)
+//                    );
+//                }
             }
             return new MediaType(type, subType, parameterMap);
         } else {

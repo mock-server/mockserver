@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - switched to distroless container base for security and size
 - added explicit gc suggestion after reset and clear
 - upgraded docker container to Java 11 to ensure JVM honours container memory constraints (i.e. inside kubernetes)
+- improved parsing of invalid content-type header parameters by handling error gracefully and outputting a clear error message
 
 ### Fixed
 - fixed but with environment vairable configuration for long, integer and integer list values
