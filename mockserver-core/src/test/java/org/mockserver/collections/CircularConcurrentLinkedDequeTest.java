@@ -17,7 +17,7 @@ public class CircularConcurrentLinkedDequeTest {
     @Test
     public void shouldNotAllowAddingMoreThenMaximumNumberOfEntriesWhenUsingAdd() {
         // given
-        CircularConcurrentLinkedDeque<String> concurrentLinkedQueue = new CircularConcurrentLinkedDeque<String>(3);
+        CircularConcurrentLinkedDeque<String> concurrentLinkedQueue = new CircularConcurrentLinkedDeque<String>(3, null);
 
         // when
         concurrentLinkedQueue.add("1");
@@ -34,7 +34,7 @@ public class CircularConcurrentLinkedDequeTest {
     @Test
     public void shouldNotAllowAddingMoreThenMaximumNumberOfEntriesWhenUsingAddAll() {
         // given
-        CircularConcurrentLinkedDeque<String> concurrentLinkedQueue = new CircularConcurrentLinkedDeque<String>(3);
+        CircularConcurrentLinkedDeque<String> concurrentLinkedQueue = new CircularConcurrentLinkedDeque<String>(3, null);
 
         // when
         concurrentLinkedQueue.addAll(Arrays.asList("1", "2", "3", "4"));

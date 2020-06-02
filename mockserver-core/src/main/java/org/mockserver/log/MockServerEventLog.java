@@ -25,7 +25,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -60,7 +59,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             .withTimestamp(logEntry.getTimestamp());
     private static final String[] EXCLUDED_FIELDS = {"id", "disruptor"};
     private MockServerLogger mockServerLogger;
-    private CircularConcurrentLinkedDeque<LogEntry> eventLog = new CircularConcurrentLinkedDeque<>(ConfigurationProperties.maxLogEntries());
+    private CircularConcurrentLinkedDeque<LogEntry> eventLog = new CircularConcurrentLinkedDeque<>(ConfigurationProperties.maxLogEntries(), LogEntry::clear);
     private MatcherBuilder matcherBuilder;
     private HttpRequestSerializer httpRequestSerializer;
     private final boolean asynchronousEventProcessing;
@@ -128,7 +127,6 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         disruptor.start();
     }
 
-    @SuppressWarnings("DuplicatedCode")
     private void processLogEntry(LogEntry logEntry) {
         eventLog.add(logEntry);
         notifyListeners(this);
@@ -185,7 +183,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                             matches = true;
                         }
                         if (matches) {
-                            eventLog.remove(logEntry);
+                            eventLog.removeItem(logEntry);
                         }
                     }
                 } else {
