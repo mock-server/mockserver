@@ -16,7 +16,6 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.tls.KeyStoreFactory;
-import sun.security.util.Debug;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLPeerUnverifiedException;
@@ -102,7 +101,12 @@ public class ClientAuthenticationCustomPrivateKeyAndCertificateMockingIntegratio
         HttpClient httpClient = HttpClients
             .custom()
             .setSSLContext(new KeyStoreFactory(new MockServerLogger()).sslContext())
-            .setSSLHostnameVerifier(new PinningHostnameVerifier(Sets.newHashSet(Debug.toHexString(x509Certificate.getSerialNumber()).replaceAll("\\W", ""))))
+            .setSSLHostnameVerifier(new PinningHostnameVerifier(Sets.newHashSet(
+                x509Certificate
+                    .getSerialNumber()
+                    .toString(16)
+                    .replaceAll("\\W", "")
+            )))
             .build();
         HttpResponse response = httpClient.execute(new HttpPost(new URIBuilder()
             .setScheme("https")
@@ -130,8 +134,10 @@ public class ClientAuthenticationCustomPrivateKeyAndCertificateMockingIntegratio
             try {
                 for (Certificate certificate : sslSession.getPeerCertificates()) {
                     if (certificate instanceof X509Certificate) {
-                        X509Certificate x509Certificate = (X509Certificate) certificate;
-                        String serialNumbers = Debug.toHexString(x509Certificate.getSerialNumber()).replaceAll("\\W", "");
+                        String serialNumbers = ((X509Certificate) certificate)
+                            .getSerialNumber()
+                            .toString(16)
+                            .replaceAll("\\W", "");
                         foundSerialNumbers.add(serialNumbers);
                         if (expectedSerialNumbers.contains(serialNumbers)) {
                             return true;
