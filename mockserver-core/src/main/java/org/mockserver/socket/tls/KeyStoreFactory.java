@@ -28,6 +28,7 @@ public class KeyStoreFactory {
     public static final String KEY_STORE_CERT_ALIAS = "mockserver-client-cert";
     public static final String KEY_STORE_CA_ALIAS = "mockserver-ca-cert";
     public static final String KEY_STORE_FILE_NAME = "mockserver_keystore" + KEY_STORE_TYPE;
+    private final String keyStoreFilenameSuffix;
     /**
      * Enforce TLS 1.2 if available, since it's not default up to Java 8.
      * <p>
@@ -51,7 +52,18 @@ public class KeyStoreFactory {
 
     public KeyStoreFactory(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
+        this.keyStoreFilenameSuffix = "";
         keyAndCertificateFactory = new JDKKeyAndCertificateFactory(mockServerLogger);
+    }
+
+    public KeyStoreFactory(MockServerLogger mockServerLogger, String keyStoreFilenameSuffix) {
+        this.mockServerLogger = mockServerLogger;
+        this.keyStoreFilenameSuffix = keyStoreFilenameSuffix;
+        keyAndCertificateFactory = new JDKKeyAndCertificateFactory(mockServerLogger);
+    }
+
+    private String getKeyStoreFileName() {
+        return KEY_STORE_FILE_NAME + keyStoreFilenameSuffix;
     }
 
     @SuppressWarnings("InfiniteRecursion")
@@ -100,7 +112,7 @@ public class KeyStoreFactory {
 
     public KeyStore loadOrCreateKeyStore(PrivateKey privateKey, X509Certificate x509Certificate, X509Certificate certificateAuthorityX509Certificate, X509Certificate[] trustX509CertificateChain) {
         KeyStore keystore = null;
-        File keyStoreFile = new File(KEY_STORE_FILE_NAME);
+        File keyStoreFile = new File(getKeyStoreFileName());
         if (keyStoreFile.exists()) {
             try (FileInputStream fileInputStream = new FileInputStream(keyStoreFile)) {
                 keystore = KeyStore.getInstance(KEY_STORE_TYPE);
@@ -172,7 +184,7 @@ public class KeyStoreFactory {
             }
 
             // save as JKS file
-            String keyStoreFileAbsolutePath = new File(KeyStoreFactory.KEY_STORE_FILE_NAME).getAbsolutePath();
+            String keyStoreFileAbsolutePath = new File(getKeyStoreFileName()).getAbsolutePath();
             try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreFileAbsolutePath)) {
                 keyStore.store(fileOutputStream, keyStorePassword);
                 mockServerLogger.logEvent(
