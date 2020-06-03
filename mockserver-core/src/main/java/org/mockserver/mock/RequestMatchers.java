@@ -2,6 +2,7 @@ package org.mockserver.mock;
 
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.collections.CircularPriorityQueue;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
@@ -175,7 +176,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                     remainingMatchesDecremented = true;
                 }
             } else if (!httpRequestMatcher.isResponseInProgress() && !httpRequestMatcher.isActive()) {
-                removeHttpRequestMatcher(httpRequestMatcher);
+                scheduler.submit(() -> removeHttpRequestMatcher(httpRequestMatcher));
             }
             if (remainingMatchesDecremented) {
                 notifyListeners(this, Cause.API);
@@ -184,12 +185,14 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                 break;
             }
         }
-        if (matchingExpectation == null || matchingExpectation.getAction() == null) {
-            Metrics.increment(EXPECTATION_NOT_MATCHED_COUNT);
-        } else if (matchingExpectation.getAction().getType().direction == Action.Direction.FORWARD) {
-            Metrics.increment(FORWARD_EXPECTATION_MATCHED_COUNT);
-        } else {
-            Metrics.increment(RESPONSE_EXPECTATION_MATCHED_COUNT);
+        if (ConfigurationProperties.metricsEnabled()) {
+            if (matchingExpectation == null || matchingExpectation.getAction() == null) {
+                Metrics.increment(EXPECTATION_NOT_MATCHED_COUNT);
+            } else if (matchingExpectation.getAction().getType().direction == Action.Direction.FORWARD) {
+                Metrics.increment(FORWARD_EXPECTATION_MATCHED_COUNT);
+            } else {
+                Metrics.increment(RESPONSE_EXPECTATION_MATCHED_COUNT);
+            }
         }
         return matchingExpectation;
     }
@@ -208,19 +211,17 @@ public class RequestMatchers extends MockServerMatcherNotifier {
     }
 
     Expectation postProcess(Expectation expectation) {
-        scheduler.submit(() -> {
-            if (expectation != null) {
-                for (HttpRequestMatcher httpRequestMatcher : getHttpRequestMatchersCopy()) {
-                    if (httpRequestMatcher.getExpectation() == expectation) {
-                        if (!expectation.isActive()) {
-                            removeHttpRequestMatcher(httpRequestMatcher);
-                            break;
-                        }
-                        httpRequestMatcher.setResponseInProgress(false);
+        if (expectation != null) {
+            for (HttpRequestMatcher httpRequestMatcher : getHttpRequestMatchersCopy()) {
+                if (httpRequestMatcher.getExpectation() == expectation) {
+                    if (!expectation.isActive()) {
+                        removeHttpRequestMatcher(httpRequestMatcher);
+                        break;
                     }
+                    httpRequestMatcher.setResponseInProgress(false);
                 }
             }
-        });
+        }
         return expectation;
     }
 
