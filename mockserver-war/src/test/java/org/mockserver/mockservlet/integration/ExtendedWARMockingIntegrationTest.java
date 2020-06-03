@@ -39,13 +39,14 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
         defaultConnector.setRedirectPort(SERVER_HTTPS_PORT);
 
         // add https connector
-        new KeyStoreFactory(new MockServerLogger()).loadOrCreateKeyStore("jks");
+        KeyStoreFactory keyStoreFactory = new KeyStoreFactory(new MockServerLogger());
+        keyStoreFactory.loadOrCreateKeyStore();
         Connector httpsConnector = new Connector();
         httpsConnector.setPort(SERVER_HTTPS_PORT);
         httpsConnector.setSecure(true);
         httpsConnector.setAttribute("keyAlias", KeyStoreFactory.KEY_STORE_CERT_ALIAS);
         httpsConnector.setAttribute("keystorePass", KeyStoreFactory.KEY_STORE_PASSWORD);
-        httpsConnector.setAttribute("keystoreFile", new File(KeyStoreFactory.KEY_STORE_FILE_NAME).getAbsoluteFile());
+        httpsConnector.setAttribute("keystoreFile", new File(keyStoreFactory.keyStoreFileName).getAbsoluteFile());
         httpsConnector.setAttribute("sslProtocol", "TLS");
         httpsConnector.setAttribute("clientAuth", false);
         httpsConnector.setAttribute("SSLEnabled", true);

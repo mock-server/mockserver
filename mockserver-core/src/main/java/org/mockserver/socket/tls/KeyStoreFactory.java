@@ -4,7 +4,6 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.socket.tls.jdk.JDKKeyAndCertificateFactory;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -14,8 +13,10 @@ import java.io.FileOutputStream;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.util.UUID;
 
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
+import static org.mockserver.socket.tls.KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory;
 import static org.slf4j.event.Level.*;
 
 /**
@@ -27,7 +28,7 @@ public class KeyStoreFactory {
     public static final String KEY_STORE_PASSWORD = "changeit";
     public static final String KEY_STORE_CERT_ALIAS = "mockserver-client-cert";
     public static final String KEY_STORE_CA_ALIAS = "mockserver-ca-cert";
-    public static final String KEY_STORE_FILE_NAME = "mockserver_keystore" + KEY_STORE_TYPE;
+    public final String keyStoreFileName = "mockserver_keystore_" + UUID.randomUUID().toString() + "_" + KEY_STORE_TYPE;
     /**
      * Enforce TLS 1.2 if available, since it's not default up to Java 8.
      * <p>
@@ -51,7 +52,7 @@ public class KeyStoreFactory {
 
     public KeyStoreFactory(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-        keyAndCertificateFactory = new JDKKeyAndCertificateFactory(mockServerLogger);
+        this.keyAndCertificateFactory = createKeyAndCertificateFactory(mockServerLogger);
     }
 
     @SuppressWarnings("InfiniteRecursion")
@@ -80,15 +81,15 @@ public class KeyStoreFactory {
                 // ssl context
                 sslContext = getSSLContextInstance();
                 sslContext.init(keyManagerFactory.getKeyManagers(), InsecureTrustManagerFactory.INSTANCE.getTrustManagers(), null);
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to initialize the SSLContext", e);
+            } catch (Throwable throwable) {
+                throw new RuntimeException("Failed to initialize the SSLContext", throwable);
             }
         }
         return sslContext;
     }
 
     @SuppressWarnings({"InfiniteRecursion", "UnusedReturnValue"})
-    public KeyStore loadOrCreateKeyStore(String keyStoreType) {
+    public KeyStore loadOrCreateKeyStore() {
         keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
         return loadOrCreateKeyStore(
             keyAndCertificateFactory.privateKey(),
@@ -100,7 +101,7 @@ public class KeyStoreFactory {
 
     public KeyStore loadOrCreateKeyStore(PrivateKey privateKey, X509Certificate x509Certificate, X509Certificate certificateAuthorityX509Certificate, X509Certificate[] trustX509CertificateChain) {
         KeyStore keystore = null;
-        File keyStoreFile = new File(KEY_STORE_FILE_NAME);
+        File keyStoreFile = new File(keyStoreFileName);
         if (keyStoreFile.exists()) {
             try (FileInputStream fileInputStream = new FileInputStream(keyStoreFile)) {
                 keystore = KeyStore.getInstance(KEY_STORE_TYPE);
@@ -172,7 +173,7 @@ public class KeyStoreFactory {
             }
 
             // save as JKS file
-            String keyStoreFileAbsolutePath = new File(KeyStoreFactory.KEY_STORE_FILE_NAME).getAbsolutePath();
+            String keyStoreFileAbsolutePath = new File(keyStoreFileName).getAbsolutePath();
             try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreFileAbsolutePath)) {
                 keyStore.store(fileOutputStream, keyStorePassword);
                 mockServerLogger.logEvent(

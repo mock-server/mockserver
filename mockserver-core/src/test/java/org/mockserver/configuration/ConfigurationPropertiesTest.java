@@ -449,6 +449,20 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldSetAndReadUseBouncyCastleForKeyAndCertificateGeneration() {
+        // given
+        System.clearProperty("mockserver.useBouncyCastleForKeyAndCertificateGeneration");
+
+        // when
+        assertFalse(useBouncyCastleForKeyAndCertificateGeneration());
+        useBouncyCastleForKeyAndCertificateGeneration(false);
+
+        // then
+        assertFalse(useBouncyCastleForKeyAndCertificateGeneration());
+        assertEquals("false", System.getProperty("mockserver.useBouncyCastleForKeyAndCertificateGeneration"));
+    }
+
+    @Test
     public void shouldSetAndReadPreventCertificateDynamicUpdate() {
         // given
         System.clearProperty("mockserver.preventCertificateDynamicUpdate");

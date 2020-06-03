@@ -89,6 +89,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME = "mockserver.sslCertificateDomainName";
     private static final String MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS = "mockserver.sslSubjectAlternativeNameDomains";
     private static final String MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS = "mockserver.sslSubjectAlternativeNameIps";
+    private static final String MOCKSERVER_USE_BOUNCY_CASTLE_FOR_KEY_AND_CERTIFICATE_GENERATION = "mockserver.useBouncyCastleForKeyAndCertificateGeneration";
     private static final String MOCKSERVER_PREVENT_CERTIFICATE_DYNAMIC_UPDATE = "mockserver.preventCertificateDynamicUpdate";
     private static final String MOCKSERVER_CERTIFICATE_AUTHORITY_PRIVATE_KEY = "mockserver.certificateAuthorityPrivateKey";
     private static final String MOCKSERVER_CERTIFICATE_AUTHORITY_X509_CERTIFICATE = "mockserver.certificateAuthorityCertificate";
@@ -490,6 +491,34 @@ public class ConfigurationProperties {
 
     public static void rebuildServerTLSContext(boolean rebuildServerTLSContext) {
         ConfigurationProperties.REBUILD_SERVER_KEY_STORE.set(rebuildServerTLSContext);
+    }
+
+    /**
+     * Use BouncyCastle instead of the Java JDK to generate Certificate and Keys, this is helpful if:
+     * - using the IBM JVM or
+     * - avoiding bugs in the X509 creation logic Java JDK (i.e. such as the format of SAN and CN)
+     * <p>
+     * When enabling this setting the following dependencies must be provided on the classpath (they are not included with MockServer)
+     * <dependency>
+     *     <groupId>org.bouncycastle</groupId>
+     *     <artifactId>bcprov-jdk15on</artifactId>
+     *     <version>1.65</version>
+     * </dependency>
+     * <dependency>
+     *     <groupId>org.bouncycastle</groupId>
+     *     <artifactId>bcpkix-jdk15on</artifactId>
+     *     <version>1.65</version>
+     * </dependency>
+     * </p>
+     *
+     * @param enable enable BouncyCastle instead of the Java JDK to generate Certificate and Keys
+     */
+    public static void useBouncyCastleForKeyAndCertificateGeneration(boolean enable) {
+        System.setProperty(MOCKSERVER_USE_BOUNCY_CASTLE_FOR_KEY_AND_CERTIFICATE_GENERATION, "" + enable);
+    }
+
+    public static boolean useBouncyCastleForKeyAndCertificateGeneration() {
+        return Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_USE_BOUNCY_CASTLE_FOR_KEY_AND_CERTIFICATE_GENERATION, "MOCKSERVER_USE_BOUNCY_CASTLE_FOR_KEY_AND_CERTIFICATE_GENERATION", "false"));
     }
 
     /**

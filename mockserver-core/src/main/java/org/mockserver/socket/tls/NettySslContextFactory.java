@@ -25,6 +25,7 @@ import java.util.function.Supplier;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.*;
+import static org.mockserver.socket.tls.KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory;
 
 /**
  * @author jamesdbloom
@@ -38,7 +39,7 @@ public class NettySslContextFactory {
 
     public NettySslContextFactory(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-        keyAndCertificateFactory = new JDKKeyAndCertificateFactory(mockServerLogger);
+        keyAndCertificateFactory = createKeyAndCertificateFactory(mockServerLogger);
         System.setProperty("https.protocols", "SSLv3,TLSv1,TLSv1.1,TLSv1.2");
     }
 
