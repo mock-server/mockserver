@@ -162,7 +162,6 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
     }
 
     @Test
-    @Ignore("need to fix test")
     public void shouldReceiveRequestInHTTPForwardRequestInHTTPS() throws Exception {
         // when
         mockServerClient
@@ -199,17 +198,17 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
         );
 
 
-        assertThat(insecureEchoServer
+        assertThat(secureEchoServer
                 .mockServerEventLog()
                 .verify(
                     verification()
                         .withRequest(
                             request()
-                                .withSecure(false)
+                                .withSecure(true)
                                 .withPath(calculatePath("echo"))
                                 .withMethod("POST")
                                 .withHeaders(
-                                    header("Host", "127.0.0.1:" + insecureEchoServer.getPort()),
+                                    header("Host", "127.0.0.1:" + secureEchoServer.getPort()),
                                     header("x-test", "test_headers_and_body")
                                 )
                                 .withBody("an_example_body_http")
