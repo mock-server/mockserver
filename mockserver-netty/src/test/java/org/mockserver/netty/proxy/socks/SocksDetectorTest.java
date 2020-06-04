@@ -331,7 +331,7 @@ public class SocksDetectorTest {
             0x05, // protocol version
             0x01, // amount of authentication methods
             0x00, // authentication methods
-            0x00 // additional byte
+            0x00  // additional byte
         });
         assertFalse(SocksDetector.isSocks5(msg, msg.readableBytes()));
     }

@@ -57,9 +57,7 @@ public class HttpProxyUnificationInitializerTest {
     @Test
     public void shouldSwitchToSOCKS() {
         // given - embedded channel
-        short localPort = 1234;
         EmbeddedChannel embeddedChannel = new EmbeddedChannel(new MockServerUnificationInitializer(mock(LifeCycle.class), new HttpStateHandler(new MockServerLogger(), mock(Scheduler.class)), mock(ActionHandler.class), null));
-//        embeddedChannel.attr(HTTP_CONNECT_SOCKET).set(new InetSocketAddress(localPort));
 
         // and - no SOCKS handlers
         assertThat(embeddedChannel.pipeline().get(Socks5ProxyHandler.class), is(nullValue()));

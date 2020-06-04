@@ -1,5 +1,9 @@
 package org.mockserver.netty.integration.proxy.socks;
 
+import com.google.common.primitives.Bytes;
+import io.netty.util.CharsetUtil;
+import io.netty.util.NetUtil;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -16,36 +20,37 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.netty.MockServer;
 import org.mockserver.model.HttpStatusCode;
+import org.mockserver.netty.MockServer;
 import org.mockserver.socket.tls.KeyStoreFactory;
 import org.mockserver.streams.IOStreamUtils;
 import org.slf4j.event.Level;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.math.BigInteger;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeThat;
 import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.testing.tls.SSLSocketFactory.sslSocketFactory;
 import static org.mockserver.stop.Stop.stopQuietly;
 import static org.mockserver.test.Assert.assertContains;
+import static org.mockserver.testing.tls.SSLSocketFactory.sslSocketFactory;
+import static org.mockserver.verify.Verification.verification;
 import static org.mockserver.verify.VerificationTimes.exactly;
 
 /**
@@ -424,5 +429,85 @@ public class NettyHttpProxySOCKSIntegrationTest {
                 socket.close();
             }
         }
+    }
+
+    @Test
+    @Ignore("need to finish implementing test - fix port and id address")
+    public void shouldHandleSOCKS5Connection() throws Exception {
+        // given
+        int localPort = secureEchoServer.getPort();
+        secureEchoServer.clearNextResponse();
+        Socket socket = new Socket("localhost", mockServerPort);
+//        Socket sslSocket = sslSocketFactory().wrapSocket(socket);
+        OutputStream outputStream = socket.getOutputStream();
+        InputStream inputStream = socket.getInputStream();
+
+        // when - INIT request (see: https://tools.ietf.org/html/rfc1928)
+        byte[] initRequest = {
+            (byte) 0x05,                                           // SOCKS5
+            (byte) 0x00,                                           // NO_AUTH
+        };
+        outputStream.write(initRequest);
+        outputStream.flush();
+
+        // then - INIT response
+        byte[] expectedInitResponse = {
+            (byte) 0x05,                                           // SOCKS5
+            (byte) 0x00,                                           // NO_AUTH
+        };
+        byte[] initResponse = new byte[expectedInitResponse.length];
+        inputStream.read(initResponse);
+        assertThat(Hex.encodeHexString(initResponse), is(Hex.encodeHexString(expectedInitResponse)));
+
+        // when - CONNECT request
+        byte[] connectRequest = Bytes.concat(
+            new byte[]{
+                (byte) 0x05,                                        // SOCKS5
+                (byte) 0x01,                                        // command type CONNECT
+                (byte) 0x00,                                        // reserved (must be 0x00)
+                (byte) 0x01                                         // address type IPv4
+            },
+            NetUtil.createByteArrayFromIpAddressString("127.0.0.1"),// ip address
+            Hex.decodeHex(BigInteger.valueOf(localPort).toString(16)) // port
+        );
+        outputStream.write(connectRequest);
+        outputStream.flush();
+
+        // then - CONNECT response
+        byte[] domainBytes = "127.0.0.1".getBytes(CharsetUtil.US_ASCII);
+        byte[] expectedResponse = Bytes.concat(
+            new byte[]{
+                (byte) 0x05,                                        // SOCKS5
+                (byte) 0x00,                                        // succeeded
+                (byte) 0x00,                                        // reserved (must be 0x00)
+                (byte) 0x03,                                        // address type domain
+            },
+            BigInteger.valueOf(domainBytes.length).toByteArray(), new BigInteger(domainBytes).toByteArray(), // ip address
+            Hex.decodeHex(BigInteger.valueOf(localPort).toString(16))// port
+        );
+        byte[] connectResponse = new byte[expectedResponse.length];
+        inputStream.read(connectResponse);
+        assertThat(Hex.encodeHexString(connectResponse), is(Hex.encodeHexString(expectedResponse)));
+
+        outputStream.write(("" +
+            "GET /some_path HTTP/1.1\r\n" +
+            "Content-Length: 0\r\n" +
+            "\r\n"
+        ).getBytes(StandardCharsets.UTF_8));
+        outputStream.flush();
+
+        System.out.println("localPort = " + localPort);
+        SECONDS.sleep(10);
+
+        // then - request is received
+        assertThat(
+            secureEchoServer.mockServerEventLog().verify(verification().withRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath("/some_path")
+            ))
+                .get(20, SECONDS),
+            is("")
+        );
     }
 }

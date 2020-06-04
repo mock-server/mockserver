@@ -1,5 +1,7 @@
 package org.mockserver.netty.proxy.http;
 
+import com.google.common.base.Strings;
+import com.google.common.primitives.Bytes;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -9,6 +11,9 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.socks.SocksInitRequestDecoder;
 import io.netty.handler.codec.socks.SocksMessageEncoder;
+import io.netty.util.CharsetUtil;
+import io.netty.util.NetUtil;
+import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Test;
 import org.mockserver.lifecycle.LifeCycle;
@@ -18,6 +23,8 @@ import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.netty.MockServerUnificationInitializer;
 import org.mockserver.netty.proxy.socks.Socks5ProxyHandler;
 import org.mockserver.scheduler.Scheduler;
+
+import java.math.BigInteger;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -31,7 +38,7 @@ import static org.slf4j.event.Level.TRACE;
 public class HttpProxyUnificationInitializerSOCKSErrorTest {
 
     @Test
-    public void shouldHandleErrorsDuringSOCKSConnection() {
+    public void shouldHandleErrorsDuringSOCKSConnection() throws DecoderException {
         // given - embedded channel
         short localPort = 1234;
         final LifeCycle lifeCycle = mock(LifeCycle.class);
@@ -79,24 +86,32 @@ public class HttpProxyUnificationInitializerSOCKSErrorTest {
         }
 
         // and when - SOCKS CONNECT command
-        embeddedChannel.writeInbound(Unpooled.wrappedBuffer(new byte[]{
-            (byte) 0x05,                                        // SOCKS5
-            (byte) 0x01,                                        // command type CONNECT
-            (byte) 0x00,                                        // reserved (must be 0x00)
-            (byte) 0x01,                                        // address type IPv4
-            (byte) 0x7f, (byte) 0x00, (byte) 0x00, (byte) 0x01, // ip address
-            (byte) (localPort & 0xFF00), (byte) localPort       // port
-        }));
+        String portInHex = Strings.padStart(BigInteger.valueOf(localPort).toString(16), 4, '0');
+        byte[] ipAddressInBytes = NetUtil.createByteArrayFromIpAddressString("127.0.0.1");
+        embeddedChannel.writeInbound(Unpooled.wrappedBuffer(Bytes.concat(
+            new byte[]{
+                (byte) 0x05,                                        // SOCKS5
+                (byte) 0x01,                                        // command type CONNECT
+                (byte) 0x00,                                        // reserved (must be 0x00)
+                (byte) 0x01                                         // address type IPv4
+            },
+            ipAddressInBytes,                                       // ip address
+            Hex.decodeHex(portInHex)                                // port
+        )));
 
         // then - CONNECT response
-        assertThat(ByteBufUtil.hexDump((ByteBuf) embeddedChannel.readOutbound()), is(Hex.encodeHexString(new byte[]{
-            (byte) 0x05,             // SOCKS5
-            (byte) 0x01,             // general failure (caused by connection failure)
-            (byte) 0x00,             // reserved (must be 0x00)
-            (byte) 0x03,             // address type domain
-            (byte) 0x00,             // domain of length 0
-            (byte) 0x00, (byte) 0x00 // port 0
-        })));
+        byte[] domainInBytes = "127.0.0.1".getBytes(CharsetUtil.US_ASCII);
+        String dominLegnthAndBytes = Strings.padStart(BigInteger.valueOf(domainInBytes.length).toString(16), 2, '0') + new BigInteger(domainInBytes).toString(16);
+        assertThat(ByteBufUtil.hexDump((ByteBuf) embeddedChannel.readOutbound()), is(
+            Hex.encodeHexString(new byte[]{
+                (byte) 0x05,                                        // SOCKS5
+                (byte) 0x01,                                        // general failure (caused by connection failure)
+                (byte) 0x00,                                        // reserved (must be 0x00)
+                (byte) 0x03,                                        // address type domain
+            }) +
+                dominLegnthAndBytes +                               // ip address
+                portInHex                                           // port
+        ));
 
         // then - channel is closed after error
         assertThat(embeddedChannel.isOpen(), is(false));

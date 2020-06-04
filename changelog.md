@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - fixed but with environment vairable configuration for long, integer and integer list values
 - removed call to ReflectionToStringBuilder.setDefaultStyle to avoid impacting toString globally for JVM
+- fixed destination port and ip in Socks5CommandResponse which prevented SOCKS5 proxied connections
 
 ## [5.10.0] - 2020-03-24
 
