@@ -12,4 +12,4 @@ echo
 echo
 
 # to run from specific test use argument in quotes "ExpectationFileWatcherIntegrationTest" or "ExpectationFileWatcherIntegrationTest#shouldDetectModifiedInitialiserJsonOnAdd"
-./mvnw -T 1C -Dtest="none" -Dit.test="$1" install -DskipAssembly=true -DfailIfNoTests=false
+./mvnw -T 1C -Dtest="none" -Dit.test="$1" clean install -DskipAssembly=true -DfailIfNoTests=false
