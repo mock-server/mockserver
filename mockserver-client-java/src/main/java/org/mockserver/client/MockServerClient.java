@@ -172,7 +172,7 @@ public class MockServerClient implements Stoppable {
         return (!cleanedPath.startsWith("/") ? "/" : "") + cleanedPath;
     }
 
-    private HttpResponse sendRequest(HttpRequest request) {
+    private HttpResponse sendRequest(HttpRequest request, boolean ignoreErrors) {
         try {
             if (secure != null) {
                 request.withSecure(secure);
@@ -183,7 +183,8 @@ public class MockServerClient implements Stoppable {
             HttpResponse response = nettyHttpClient.sendRequest(
                 request.withHeader(HOST.toString(), this.host + ":" + port()),
                 ConfigurationProperties.maxSocketTimeout(),
-                TimeUnit.MILLISECONDS
+                TimeUnit.MILLISECONDS,
+                ignoreErrors
             );
 
             if (response != null) {
@@ -206,6 +207,10 @@ public class MockServerClient implements Stoppable {
                 throw rex;
             }
         }
+    }
+
+    private HttpResponse sendRequest(HttpRequest request) {
+        return sendRequest(request, false);
     }
 
     /**
@@ -231,8 +236,8 @@ public class MockServerClient implements Stoppable {
     @Deprecated
     public boolean isRunning(int attempts, long timeout, TimeUnit timeUnit) {
         try {
-            HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("status")));
-            if (httpResponse.getStatusCode() == HttpStatusCode.OK_200.code()) {
+            HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("status")), true);
+            if (httpResponse != null && httpResponse.getStatusCode() == HttpStatusCode.OK_200.code()) {
                 return true;
             } else if (attempts <= 0) {
                 return false;
@@ -271,8 +276,8 @@ public class MockServerClient implements Stoppable {
      */
     public boolean hasStopped(int attempts, long timeout, TimeUnit timeUnit) {
         try {
-            HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("status")));
-            if (httpResponse.getStatusCode() == HttpStatusCode.OK_200.code()) {
+            HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("status")), true);
+            if (httpResponse != null && httpResponse.getStatusCode() == HttpStatusCode.OK_200.code()) {
                 if (attempts <= 0) {
                     return false;
                 } else {
@@ -378,8 +383,8 @@ public class MockServerClient implements Stoppable {
         new Scheduler.SchedulerThreadFactory("ClientStop").newThread(() -> {
             try {
                 sendRequest(request().withMethod("PUT").withPath(calculatePath("stop")));
-                if (isRunning()) {
-                    for (int i = 0; isRunning() && i < 50; i++) {
+                if (!hasStopped()) {
+                    for (int i = 0; !hasStopped() && i < 50; i++) {
                         TimeUnit.MILLISECONDS.sleep(5);
                     }
                 }

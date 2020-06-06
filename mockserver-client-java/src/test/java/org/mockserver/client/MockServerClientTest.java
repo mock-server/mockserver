@@ -112,7 +112,7 @@ public class MockServerClientTest {
             .reset();
 
         // then
-        verify(mockHttpClient).sendRequest(httpRequestArgumentCaptor.capture(), anyLong(), any(TimeUnit.class));
+        verify(mockHttpClient).sendRequest(httpRequestArgumentCaptor.capture(), anyLong(), any(TimeUnit.class), anyBoolean());
         List<String> authorizationHeader = httpRequestArgumentCaptor.getValue().getHeader(authorizationKey);
         assertTrue(authorizationHeader.contains(authorizationHeaderValue));
     }
@@ -134,7 +134,7 @@ public class MockServerClientTest {
         exception.expectMessage(containsString("error_body"));
 
         // given
-        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class)))
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean()))
             .thenReturn(response()
                 .withStatusCode(BAD_REQUEST.code())
                 .withBody("error_body")
@@ -155,7 +155,7 @@ public class MockServerClientTest {
             exception.expectMessage(containsString("Client version \"" + Version.getVersion() + "\" does not match server version \"another_non_matching_version\""));
 
             // given
-            when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class)))
+            when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean()))
                 .thenReturn(response()
                     .withHeader("version", "another_non_matching_version")
                     .withStatusCode(CREATED.code())
@@ -220,7 +220,8 @@ public class MockServerClientTest {
                 .withPath("/mockserver/expectation")
                 .withBody("some_body", UTF_8),
             20000,
-            TimeUnit.MILLISECONDS
+            TimeUnit.MILLISECONDS,
+            false
         );
     }
 
@@ -707,7 +708,8 @@ public class MockServerClientTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/stop"),
             20000,
-            TimeUnit.MILLISECONDS
+            TimeUnit.MILLISECONDS,
+            false
         );
     }
 
@@ -723,14 +725,15 @@ public class MockServerClientTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/stop"),
             20000,
-            TimeUnit.MILLISECONDS
+            TimeUnit.MILLISECONDS,
+            false
         );
     }
 
     @Test
     public void shouldQueryRunningStatus() {
         // given
-        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withStatusCode(HttpStatusCode.OK_200.code()));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean())).thenReturn(response().withStatusCode(HttpStatusCode.OK_200.code()));
 
         // when
         boolean hasStarted = mockServerClient.hasStarted();
@@ -746,14 +749,15 @@ public class MockServerClientTest {
                     .withMethod("PUT")
                     .withPath("/mockserver/status"),
                 20000,
-                TimeUnit.MILLISECONDS
+                TimeUnit.MILLISECONDS,
+                false
             );
     }
 
     @Test
     public void shouldQueryRunningStatusWhenSocketConnectionException() {
         // given
-        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenThrow(SocketConnectionException.class);
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean())).thenThrow(SocketConnectionException.class);
 
         // when
         boolean hasStopped = mockServerClient.hasStopped();
@@ -768,7 +772,8 @@ public class MockServerClientTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/status"),
             20000,
-            TimeUnit.MILLISECONDS
+            TimeUnit.MILLISECONDS,
+            false
         );
     }
 
@@ -784,7 +789,8 @@ public class MockServerClientTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/reset"),
             20000,
-            TimeUnit.MILLISECONDS
+            TimeUnit.MILLISECONDS,
+            false
         );
     }
 
@@ -808,7 +814,8 @@ public class MockServerClientTest {
                 .withPath("/mockserver/clear")
                 .withBody(someRequestMatcher.toString(), StandardCharsets.UTF_8),
             20000,
-            TimeUnit.MILLISECONDS
+            TimeUnit.MILLISECONDS,
+            false
         );
     }
 
@@ -833,7 +840,8 @@ public class MockServerClientTest {
                 .withQueryStringParameter("type", "log")
                 .withBody(someRequestMatcher.toString(), StandardCharsets.UTF_8),
             20000,
-            TimeUnit.MILLISECONDS
+            TimeUnit.MILLISECONDS,
+            false
         );
     }
 
@@ -852,7 +860,8 @@ public class MockServerClientTest {
                 .withPath("/mockserver/clear")
                 .withBody("", StandardCharsets.UTF_8),
             20000,
-            TimeUnit.MILLISECONDS
+            TimeUnit.MILLISECONDS,
+            false
         );
     }
 
@@ -865,7 +874,7 @@ public class MockServerClientTest {
         when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
 
         // and - a client
-        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("body"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean())).thenReturn(response().withBody("body"));
 
         // and - a response
         HttpRequest[] httpRequests = {};
@@ -885,7 +894,8 @@ public class MockServerClientTest {
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withBody(someRequestMatcher.toString(), StandardCharsets.UTF_8),
             20000,
-            TimeUnit.MILLISECONDS);
+            TimeUnit.MILLISECONDS,
+            false);
         verify(mockHttpRequestSerializer).deserializeArray("body");
     }
 
@@ -893,7 +903,7 @@ public class MockServerClientTest {
     public void shouldRetrieveRequestsWithNullRequest() {
         // given
         HttpRequest[] httpRequests = {};
-        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("body"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean())).thenReturn(response().withBody("body"));
         when(mockHttpRequestSerializer.deserializeArray("body")).thenReturn(httpRequests);
 
         // when
@@ -910,7 +920,8 @@ public class MockServerClientTest {
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withBody("", StandardCharsets.UTF_8),
             20000,
-            TimeUnit.MILLISECONDS
+            TimeUnit.MILLISECONDS,
+            false
         );
         verify(mockHttpRequestSerializer).deserializeArray("body");
     }
@@ -924,7 +935,7 @@ public class MockServerClientTest {
         when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
 
         // and - a client
-        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("body"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean())).thenReturn(response().withBody("body"));
 
         // and - a response
         LogEventRequestAndResponse[] httpRequests = {};
@@ -944,7 +955,9 @@ public class MockServerClientTest {
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withBody(someRequestMatcher.toString(), StandardCharsets.UTF_8),
             20000,
-            TimeUnit.MILLISECONDS);
+            TimeUnit.MILLISECONDS,
+            false
+        );
         verify(httpRequestResponseSerializer).deserializeArray("body");
     }
 
@@ -952,7 +965,7 @@ public class MockServerClientTest {
     public void shouldRetrieveRequestResponsesWithNullRequest() {
         // given
         LogEventRequestAndResponse[] httpRequests = {};
-        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("body"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean())).thenReturn(response().withBody("body"));
         when(httpRequestResponseSerializer.deserializeArray("body")).thenReturn(httpRequests);
 
         // when
@@ -969,7 +982,8 @@ public class MockServerClientTest {
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withBody("", StandardCharsets.UTF_8),
             20000,
-            TimeUnit.MILLISECONDS
+            TimeUnit.MILLISECONDS,
+            false
         );
         verify(httpRequestResponseSerializer).deserializeArray("body");
     }
@@ -983,7 +997,7 @@ public class MockServerClientTest {
         when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
 
         // and - a client
-        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("body"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean())).thenReturn(response().withBody("body"));
 
         // and - an expectation
         Expectation[] expectations = {};
@@ -1003,7 +1017,8 @@ public class MockServerClientTest {
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withBody(someRequestMatcher.toString(), StandardCharsets.UTF_8),
             20000,
-            TimeUnit.MILLISECONDS
+            TimeUnit.MILLISECONDS,
+            false
         );
         verify(mockExpectationSerializer).deserializeArray("body", true);
     }
@@ -1012,7 +1027,7 @@ public class MockServerClientTest {
     public void shouldRetrieveActiveExpectationsWithNullRequest() {
         // given
         Expectation[] expectations = {};
-        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("body"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean())).thenReturn(response().withBody("body"));
         when(mockExpectationSerializer.deserializeArray("body", true)).thenReturn(expectations);
 
         // when
@@ -1029,7 +1044,8 @@ public class MockServerClientTest {
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withBody("", StandardCharsets.UTF_8),
             20000,
-            TimeUnit.MILLISECONDS
+            TimeUnit.MILLISECONDS,
+            false
         );
         verify(mockExpectationSerializer).deserializeArray("body", true);
     }
@@ -1043,7 +1059,7 @@ public class MockServerClientTest {
         when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
 
         // and - a client
-        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("body"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean())).thenReturn(response().withBody("body"));
 
         // and - an expectation
         Expectation[] expectations = {};
@@ -1063,7 +1079,8 @@ public class MockServerClientTest {
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withBody(someRequestMatcher.toString(), StandardCharsets.UTF_8),
             20000,
-            TimeUnit.MILLISECONDS
+            TimeUnit.MILLISECONDS,
+            false
         );
         verify(mockExpectationSerializer).deserializeArray("body", true);
     }
@@ -1072,7 +1089,7 @@ public class MockServerClientTest {
     public void shouldRetrieveExpectationsWithNullRequest() {
         // given
         Expectation[] expectations = {};
-        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("body"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean())).thenReturn(response().withBody("body"));
         when(mockExpectationSerializer.deserializeArray("body", true)).thenReturn(expectations);
 
         // when
@@ -1089,7 +1106,8 @@ public class MockServerClientTest {
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withBody("", StandardCharsets.UTF_8),
             20000,
-            TimeUnit.MILLISECONDS
+            TimeUnit.MILLISECONDS,
+            false
         );
         verify(mockExpectationSerializer).deserializeArray("body", true);
     }
@@ -1097,7 +1115,7 @@ public class MockServerClientTest {
     @Test
     public void shouldVerifyDoesNotMatchSingleRequestNoVerificationTimes() {
         // given
-        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("Request not found at least once expected:<foo> but was:<bar>"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean())).thenReturn(response().withBody("Request not found at least once expected:<foo> but was:<bar>"));
         when(mockVerificationSequenceSerializer.serialize(any(VerificationSequence.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
             .withPath("/some_path")
@@ -1118,7 +1136,8 @@ public class MockServerClientTest {
                     .withPath("/mockserver/verifySequence")
                     .withBody("verification_json", StandardCharsets.UTF_8),
                 20000,
-                TimeUnit.MILLISECONDS
+                TimeUnit.MILLISECONDS,
+                false
             );
             assertThat(ae.getMessage(), is("Request not found at least once expected:<foo> but was:<bar>"));
         }
@@ -1127,7 +1146,7 @@ public class MockServerClientTest {
     @Test
     public void shouldVerifyDoesNotMatchMultipleRequestsNoVerificationTimes() {
         // given
-        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("Request not found at least once expected:<foo> but was:<bar>"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean())).thenReturn(response().withBody("Request not found at least once expected:<foo> but was:<bar>"));
         when(mockVerificationSequenceSerializer.serialize(any(VerificationSequence.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
             .withPath("/some_path")
@@ -1148,7 +1167,8 @@ public class MockServerClientTest {
                     .withPath("/mockserver/verifySequence")
                     .withBody("verification_json", StandardCharsets.UTF_8),
                 20000,
-                TimeUnit.MILLISECONDS
+                TimeUnit.MILLISECONDS,
+                false
             );
             assertThat(ae.getMessage(), is("Request not found at least once expected:<foo> but was:<bar>"));
         }
@@ -1157,7 +1177,7 @@ public class MockServerClientTest {
     @Test
     public void shouldVerifyDoesMatchSingleRequestNoVerificationTimes() {
         // given
-        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody(""));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean())).thenReturn(response().withBody(""));
         when(mockVerificationSequenceSerializer.serialize(any(VerificationSequence.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
             .withPath("/some_path")
@@ -1181,14 +1201,15 @@ public class MockServerClientTest {
                 .withPath("/mockserver/verifySequence")
                 .withBody("verification_json", StandardCharsets.UTF_8),
             20000,
-            TimeUnit.MILLISECONDS
+            TimeUnit.MILLISECONDS,
+            false
         );
     }
 
     @Test
     public void shouldVerifyDoesMatchSingleRequestOnce() {
         // given
-        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody(""));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean())).thenReturn(response().withBody(""));
         when(mockVerificationSerializer.serialize(any(Verification.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
             .withPath("/some_path")
@@ -1212,14 +1233,15 @@ public class MockServerClientTest {
                 .withPath("/mockserver/verify")
                 .withBody("verification_json", StandardCharsets.UTF_8),
             20000,
-            TimeUnit.MILLISECONDS
+            TimeUnit.MILLISECONDS,
+            false
         );
     }
 
     @Test
     public void shouldVerifyDoesNotMatchSingleRequest() {
         // given
-        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("Request not found at least once expected:<foo> but was:<bar>"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean())).thenReturn(response().withBody("Request not found at least once expected:<foo> but was:<bar>"));
         when(mockVerificationSerializer.serialize(any(Verification.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
             .withPath("/some_path")
@@ -1240,7 +1262,8 @@ public class MockServerClientTest {
                     .withPath("/mockserver/verify")
                     .withBody("verification_json", StandardCharsets.UTF_8),
                 20000,
-                TimeUnit.MILLISECONDS
+                TimeUnit.MILLISECONDS,
+                false
             );
             assertThat(ae.getMessage(), is("Request not found at least once expected:<foo> but was:<bar>"));
         }
@@ -1312,7 +1335,7 @@ public class MockServerClientTest {
         assertEquals(Times.unlimited(), expectation.getTimes());
 
         ArgumentCaptor<HttpRequest> configRequestCaptor = ArgumentCaptor.forClass(HttpRequest.class);
-        verify(mockHttpClient).sendRequest(configRequestCaptor.capture(), anyLong(), any(TimeUnit.class));
+        verify(mockHttpClient).sendRequest(configRequestCaptor.capture(), anyLong(), any(TimeUnit.class), anyBoolean());
         assertFalse(configRequestCaptor.getValue().isSecure());
     }
 
@@ -1342,7 +1365,7 @@ public class MockServerClientTest {
         assertEquals(Times.unlimited(), expectation.getTimes());
 
         ArgumentCaptor<HttpRequest> configRequestCaptor = ArgumentCaptor.forClass(HttpRequest.class);
-        verify(mockHttpClient).sendRequest(configRequestCaptor.capture(), anyLong(), any(TimeUnit.class));
+        verify(mockHttpClient).sendRequest(configRequestCaptor.capture(), anyLong(), any(TimeUnit.class), anyBoolean());
         assertTrue(configRequestCaptor.getValue().isSecure());
     }
 

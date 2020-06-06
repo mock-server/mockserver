@@ -161,24 +161,34 @@ public class NettyHttpClient {
         }
     }
 
-    public HttpResponse sendRequest(HttpRequest httpRequest, long timeout, TimeUnit unit) {
+    public HttpResponse sendRequest(HttpRequest httpRequest, long timeout, TimeUnit unit, boolean ignoreErrors) {
+        HttpResponse httpResponse = null;
         try {
-            return sendRequest(httpRequest).get(timeout, unit);
+            httpResponse = sendRequest(httpRequest).get(timeout, unit);
         } catch (TimeoutException e) {
-            throw new SocketCommunicationException("Response was not received from MockServer after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause());
+            if (!ignoreErrors) {
+                throw new SocketCommunicationException("Response was not received from MockServer after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause());
+            }
         } catch (InterruptedException | ExecutionException ex) {
-            Throwable cause = ex.getCause();
-            if (cause instanceof SocketConnectionException) {
-                throw (SocketConnectionException) cause;
-            } else if (cause instanceof ConnectException) {
-                throw new SocketConnectionException("Unable to connect to socket " + httpRequest.socketAddressFromHostHeader(), cause);
-            } else if (cause instanceof UnknownHostException) {
-                throw new SocketConnectionException("Unable to resolve host " + httpRequest.socketAddressFromHostHeader(), cause);
-            } else if (cause instanceof IOException) {
-                throw new SocketConnectionException(cause.getMessage(), cause);
-            } else {
-                throw new RuntimeException("Exception while sending request - " + ex.getMessage(), ex);
+            if (!ignoreErrors) {
+                Throwable cause = ex.getCause();
+                if (cause instanceof SocketConnectionException) {
+                    throw (SocketConnectionException) cause;
+                } else if (cause instanceof ConnectException) {
+                    throw new SocketConnectionException("Unable to connect to socket " + httpRequest.socketAddressFromHostHeader(), cause);
+                } else if (cause instanceof UnknownHostException) {
+                    throw new SocketConnectionException("Unable to resolve host " + httpRequest.socketAddressFromHostHeader(), cause);
+                } else if (cause instanceof IOException) {
+                    throw new SocketConnectionException(cause.getMessage(), cause);
+                } else {
+                    throw new RuntimeException("Exception while sending request - " + ex.getMessage(), ex);
+                }
             }
         }
+        return httpResponse;
+    }
+
+    public HttpResponse sendRequest(HttpRequest httpRequest, long timeout, TimeUnit unit) {
+        return sendRequest(httpRequest, timeout, unit, false);
     }
 }

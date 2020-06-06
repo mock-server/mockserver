@@ -62,31 +62,18 @@ public class MockServerClientIntegrationTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
-    @BeforeClass
-    public static void startEchoServer() {
-        echoServerOne = new EchoServer(false);
-        echoServerTwo = new EchoServer(false);
-    }
-
-    @AfterClass
-    public static void stopEchoServer() {
-        stopQuietly(echoServerOne);
-    }
-
     @Before
     public void createClient() {
+        echoServerOne = new EchoServer(false);
+        echoServerTwo = new EchoServer(false);
         mockServerClientOne = new MockServerClient("localhost", echoServerOne.getPort());
         mockServerClientTwo = new MockServerClient("localhost", echoServerTwo.getPort());
     }
 
-    @Before
-    public void clearRequestLog() {
-        echoServerOne.mockServerEventLog().reset();
-        echoServerTwo.mockServerEventLog().reset();
-    }
-
     @After
     public void stopClient() {
+        stopQuietly(echoServerOne);
+        stopQuietly(echoServerTwo);
         stopQuietly(mockServerClientOne);
     }
 
