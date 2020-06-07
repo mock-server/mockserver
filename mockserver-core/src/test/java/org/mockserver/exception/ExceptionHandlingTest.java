@@ -1,6 +1,7 @@
 package org.mockserver.exception;
 
 import org.junit.Test;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 
@@ -12,16 +13,22 @@ public class ExceptionHandlingTest {
 
     @Test
     public void shouldSwallowException() {
-        // given
-        ExceptionHandling.mockServerLogger = mock(MockServerLogger.class);
+        String originalLogLevel = ConfigurationProperties.logLevel().name();
+        try {
+            // given
+            ConfigurationProperties.logLevel("INFO");
+            ExceptionHandling.mockServerLogger = mock(MockServerLogger.class);
 
-        // when
-        swallowThrowable(() -> {
-            throw new RuntimeException();
-        });
+            // when
+            swallowThrowable(() -> {
+                throw new RuntimeException();
+            });
 
-        // then
-        verify(ExceptionHandling.mockServerLogger).logEvent(any(LogEntry.class));
+            // then
+            verify(ExceptionHandling.mockServerLogger).logEvent(any(LogEntry.class));
+        } finally {
+            ConfigurationProperties.logLevel(originalLogLevel);
+        }
     }
 
     @Test
