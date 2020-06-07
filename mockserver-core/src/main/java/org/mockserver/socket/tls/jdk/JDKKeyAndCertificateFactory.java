@@ -179,8 +179,8 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(TRACE)
-                        .setMessageFormat("loaded dynamic CA X509{}from path{}from PEM{}")
-                        .setArguments(certificateAuthorityX509Certificate, certificateAuthorityX509CertificatePath(), FileReader.readFileFromClassPathOrPath(certificateAuthorityX509CertificatePath()))
+                        .setMessageFormat("loaded dynamic CA X509 from path{}from PEM{}as{}")
+                        .setArguments(certificateAuthorityX509CertificatePath(), FileReader.readFileFromClassPathOrPath(certificateAuthorityX509CertificatePath()), certificateAuthorityX509Certificate)
                 );
             }
         }
