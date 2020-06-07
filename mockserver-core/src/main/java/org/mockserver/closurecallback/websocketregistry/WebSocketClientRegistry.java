@@ -210,13 +210,15 @@ public class WebSocketClientRegistry {
                 }
                 return true;
             } else {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(WARN)
-                        .setHttpRequest(httpRequest)
-                        .setMessageFormat("client " + clientId + " not found for request{}client registry only contains{}")
-                        .setArguments(httpRequest, clientRegistry)
-                );
+                if (MockServerLogger.isEnabled(WARN)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(WARN)
+                            .setHttpRequest(httpRequest)
+                            .setMessageFormat("client " + clientId + " not found for request{}client registry only contains{}")
+                            .setArguments(httpRequest, clientRegistry)
+                    );
+                }
                 return false;
             }
         } catch (Exception e) {

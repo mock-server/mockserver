@@ -46,7 +46,6 @@ public class XmlSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStri
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception parsing schema{}")
                     .setArguments(schema)
@@ -75,7 +74,6 @@ public class XmlSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStri
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception validating JSON")
                     .setThrowable(e)

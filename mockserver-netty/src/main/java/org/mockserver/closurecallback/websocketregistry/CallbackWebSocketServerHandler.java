@@ -132,7 +132,6 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
         if (connectionClosedException(cause)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("web socket server caught exception")
                     .setThrowable(cause)

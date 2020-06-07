@@ -37,7 +37,6 @@ public class FullHttpResponseToMockServerResponse {
         } catch (Throwable throwable) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception decoding request{}")
                     .setArguments(fullHttpResponse)

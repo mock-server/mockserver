@@ -74,13 +74,15 @@ public class Main {
         try {
             Map<String, String> parsedArguments = parseArguments(arguments);
 
-            MOCK_SERVER_LOGGER.logEvent(
-                new LogEntry()
-                    .setType(SERVER_CONFIGURATION)
-                    .setLogLevel(DEBUG)
-                    .setMessageFormat("using command line options:{}")
-                    .setArguments(Joiner.on(", ").withKeyValueSeparator("=").join(parsedArguments))
-            );
+            if (MockServerLogger.isEnabled(DEBUG)) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setType(SERVER_CONFIGURATION)
+                        .setLogLevel(DEBUG)
+                        .setMessageFormat("using command line options:{}")
+                        .setArguments(Joiner.on(", ").withKeyValueSeparator("=").join(parsedArguments))
+                );
+            }
 
             if (parsedArguments.size() > 0 && parsedArguments.containsKey(serverPort.name())) {
                 if (parsedArguments.containsKey(logLevel.name())) {
@@ -110,13 +112,18 @@ public class Main {
             }
 
         } catch (Throwable throwable) {
-            MOCK_SERVER_LOGGER.logEvent(
-                new LogEntry()
-                    .setType(SERVER_CONFIGURATION)
-                    .setLogLevel(ERROR)
-                    .setMessageFormat("exception while starting:{}")
-                    .setThrowable(throwable)
-            );
+            if (MockServerLogger.isEnabled(ERROR)) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setType(SERVER_CONFIGURATION)
+                        .setLogLevel(ERROR)
+                        .setMessageFormat("exception while starting:{}")
+                        .setThrowable(throwable)
+                );
+            }
+            if (ConfigurationProperties.disableSystemOut()) {
+                System.out.println("exception while starting: " + throwable);
+            }
             showUsage();
         }
     }

@@ -94,7 +94,6 @@ public class MockServerLoggerTest {
             // when
             logFormatter.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(request)
                     .setMessageFormat("some random message with{}and{}")
@@ -133,7 +132,6 @@ public class MockServerLoggerTest {
             // when
             logFormatter.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(request)
                     .setMessageFormat("some random message with{}and{}")
@@ -179,7 +177,6 @@ public class MockServerLoggerTest {
             // when
             logFormatter.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(request)
                     .setMessageFormat("some random message with{}and{}")

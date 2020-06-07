@@ -9,7 +9,6 @@ import org.mockserver.logging.MockServerLogger;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.slf4j.event.Level.DEBUG;
-import static org.slf4j.event.Level.TRACE;
 
 /**
  * See https://github.com/json-path/JsonPath
@@ -29,12 +28,14 @@ public class JsonPathMatcher extends BodyMatcher<String> {
             try {
                 jsonPath = JsonPath.compile(matcher);
             } catch (Throwable throwable) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(DEBUG)
-                        .setMessageFormat("error while creating xpath expression for [" + matcher + "] assuming matcher not xpath - " + throwable.getMessage())
-                        .setArguments(throwable)
-                );
+                if (MockServerLogger.isEnabled(DEBUG)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(DEBUG)
+                            .setMessageFormat("error while creating xpath expression for [" + matcher + "] assuming matcher not xpath - " + throwable.getMessage())
+                            .setArguments(throwable)
+                    );
+                }
             }
         }
     }
@@ -44,36 +45,40 @@ public class JsonPathMatcher extends BodyMatcher<String> {
         boolean alreadyLoggedMatchFailure = false;
 
         if (jsonPath == null) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(DEBUG)
-                    .setMatchDifference(context)
-                    .setMessageFormat("json path match failed expected:{}found:{}failed because:{}")
-                    .setArguments("null", matched, "json path matcher was null")
-            );
-            alreadyLoggedMatchFailure = true;
+            if (context != null) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(DEBUG)
+                        .setMatchDifference(context)
+                        .setMessageFormat("json path match failed expected:{}found:{}failed because:{}")
+                        .setArguments("null", matched, "json path matcher was null")
+                );
+                alreadyLoggedMatchFailure = true;
+            }
         } else if (matcher.equals(matched)) {
             result = true;
         } else if (matched != null) {
             try {
                 result = !jsonPath.<JSONArray>read(matched).isEmpty();
             } catch (Throwable throwable) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(DEBUG)
-                        .setMatchDifference(context)
-                        .setMessageFormat("json path match failed expected:{}found:{}failed because:{}")
-                        .setArguments(matcher, matched, throwable.getMessage())
-                        .setThrowable(throwable)
-                );
-                alreadyLoggedMatchFailure = true;
+                if (context != null) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(DEBUG)
+                            .setMatchDifference(context)
+                            .setMessageFormat("json path match failed expected:{}found:{}failed because:{}")
+                            .setArguments(matcher, matched, throwable.getMessage())
+                            .setThrowable(throwable)
+                    );
+                    alreadyLoggedMatchFailure = true;
+                }
             }
         }
 
-        if (!result && !alreadyLoggedMatchFailure) {
+        if (!result && !alreadyLoggedMatchFailure && context != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setLogLevel(TRACE)
+                    .setLogLevel(DEBUG)
                     .setMatchDifference(context)
                     .setMessageFormat("json path match failed expected:{}found:{}failed because:{}")
                     .setArguments(matcher, matched, "json path did not evaluate to truthy")

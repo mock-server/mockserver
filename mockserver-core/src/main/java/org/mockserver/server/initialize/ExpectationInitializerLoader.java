@@ -69,13 +69,15 @@ public class ExpectationInitializerLoader {
                     return new Expectation[0];
                 }
             } catch (Throwable throwable) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setType(SERVER_CONFIGURATION)
-                        .setLogLevel(WARN)
-                        .setMessageFormat("exception while loading JSON initialization file, ignoring file")
-                        .setThrowable(throwable)
-                );
+                if (MockServerLogger.isEnabled(WARN)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(SERVER_CONFIGURATION)
+                            .setLogLevel(WARN)
+                            .setMessageFormat("exception while loading JSON initialization file, ignoring file")
+                            .setThrowable(throwable)
+                    );
+                }
             }
         }
         return new Expectation[0];

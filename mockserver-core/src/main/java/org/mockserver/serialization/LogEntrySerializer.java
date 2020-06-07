@@ -33,7 +33,6 @@ public class LogEntrySerializer {
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception while serializing LogEntry to JSON with value " + logEntry)
                     .setThrowable(e)
@@ -56,7 +55,6 @@ public class LogEntrySerializer {
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception while serializing LogEntry to JSON with value " + Arrays.asList(logEntries))
                     .setThrowable(e)

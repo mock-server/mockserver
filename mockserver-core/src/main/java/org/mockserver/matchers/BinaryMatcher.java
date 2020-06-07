@@ -32,7 +32,7 @@ public class BinaryMatcher extends BodyMatcher<byte[]> {
             result = true;
         }
 
-        if (!result) {
+        if (!result && context != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(DEBUG)

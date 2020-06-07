@@ -87,7 +87,6 @@ public class EchoServer implements Stoppable {
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception while waiting for proxy to complete starting up")
                     .setThrowable(e)

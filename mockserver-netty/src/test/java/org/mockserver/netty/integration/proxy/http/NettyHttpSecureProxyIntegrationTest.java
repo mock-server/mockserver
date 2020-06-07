@@ -113,13 +113,14 @@ public class NettyHttpSecureProxyIntegrationTest {
                 assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200 OK");
             }
         } catch (java.net.SocketException se) {
-            new MockServerLogger().logEvent(
-                new LogEntry()
-                    .setLogLevel(ERROR)
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
-                    .setMessageFormat("Port port " + mockServerPort)
-                    .setThrowable(se)
-            );
+            if (MockServerLogger.isEnabled(ERROR)) {
+                new MockServerLogger().logEvent(
+                    new LogEntry()
+                        .setLogLevel(ERROR)
+                        .setMessageFormat("Port port " + mockServerPort)
+                        .setThrowable(se)
+                );
+            }
             throw se;
         }
     }
@@ -146,13 +147,14 @@ public class NettyHttpSecureProxyIntegrationTest {
                 }
             }
         } catch (java.net.SocketException se) {
-            new MockServerLogger().logEvent(
-                new LogEntry()
-                    .setLogLevel(ERROR)
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
-                    .setMessageFormat("Port port " + mockServerPort)
-                    .setThrowable(se)
-            );
+            if (MockServerLogger.isEnabled(ERROR)) {
+                new MockServerLogger().logEvent(
+                    new LogEntry()
+                        .setLogLevel(ERROR)
+                        .setMessageFormat("Port port " + mockServerPort)
+                        .setThrowable(se)
+                );
+            }
             throw se;
         }
     }

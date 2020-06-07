@@ -42,7 +42,6 @@ public class ExpectationSerializer implements Serializer<Expectation> {
             } catch (Exception e) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setMessageFormat("exception while serializing expectation to JSON with value " + expectation)
                         .setThrowable(e)
@@ -74,7 +73,6 @@ public class ExpectationSerializer implements Serializer<Expectation> {
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception while serializing expectation to JSON with value " + Arrays.asList(expectations))
                     .setThrowable(e)
@@ -103,7 +101,6 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                 } catch (Exception e) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
                             .setMessageFormat("exception while parsing{}for Expectation")
                             .setArguments(jsonExpectation)
@@ -115,7 +112,6 @@ public class ExpectationSerializer implements Serializer<Expectation> {
             } else {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setHttpRequest(null)
                         .setMessageFormat("validation failed:{}expectation:{}")

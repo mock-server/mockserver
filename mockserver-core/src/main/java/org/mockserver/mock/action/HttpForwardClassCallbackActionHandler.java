@@ -33,7 +33,6 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
             } else {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setHttpRequest(null)
                         .setMessageFormat(httpClassCallback.getCallbackClass() + " does not implement " + callbackClass.getName() + " required for forwarded requests with class callback")
@@ -42,7 +41,6 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
         } catch (ClassNotFoundException e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("ClassNotFoundException - while trying to instantiate " + callbackClass.getSimpleName() + " class \"" + httpClassCallback.getCallbackClass() + "\"")
                     .setThrowable(e)
@@ -50,7 +48,6 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
         } catch (NoSuchMethodException e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("NoSuchMethodException - while trying to create default constructor on " + callbackClass.getSimpleName() + " class \"" + httpClassCallback.getCallbackClass() + "\"")
                     .setThrowable(e)
@@ -58,7 +55,6 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("InvocationTargetException - while trying to execute default constructor on " + callbackClass.getSimpleName() + " class \"" + httpClassCallback.getCallbackClass() + "\"")
                     .setThrowable(e)
@@ -80,7 +76,6 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
                         } catch (Throwable throwable) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
-                                    .setType(LogEntry.LogMessageType.EXCEPTION)
                                     .setLogLevel(Level.ERROR)
                                     .setHttpRequest(httpRequest)
                                     .setMessageFormat(httpClassCallback.getCallbackClass() + " throw exception while executing handle callback method - " + throwable.getMessage())
@@ -92,7 +87,6 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
                 } catch (Throwable throwable) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
                             .setHttpRequest(httpRequest)
                             .setMessageFormat(httpClassCallback.getCallbackClass() + " throw exception while executing handle callback method - " + throwable.getMessage())

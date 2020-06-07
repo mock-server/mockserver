@@ -50,7 +50,6 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
                 if (isNotSocketClosedException(future.cause())) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
                             .setMessageFormat("exception while returning response for request \"" + request.method() + " " + request.uri() + "\"")
                             .setThrowable(future.cause())
@@ -75,7 +74,6 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
         if (connectionClosedException(cause)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception caught by upstream relay handler -> closing pipeline " + ctx.channel())
                     .setThrowable(cause)

@@ -36,13 +36,14 @@ public class ExceptionHandling {
         try {
             runnable.run();
         } catch (Throwable throwable) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
-                    .setLogLevel(WARN)
-                    .setMessageFormat(throwable.getMessage())
-                    .setThrowable(throwable)
-            );
+            if (MockServerLogger.isEnabled(WARN)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(WARN)
+                        .setMessageFormat(throwable.getMessage())
+                        .setThrowable(throwable)
+                );
+            }
         }
     }
 

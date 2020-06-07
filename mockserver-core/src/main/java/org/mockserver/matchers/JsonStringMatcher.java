@@ -77,45 +77,51 @@ public class JsonStringMatcher extends BodyMatcher<String> {
                         )
                         .similar();
                 } catch (Throwable throwable) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setLogLevel(DEBUG)
-                            .setMatchDifference(context)
-                            .setMessageFormat("exception while perform json  match failed expected:{}found:{}")
-                            .setArguments(this.matcher, matched)
-                            .setThrowable(throwable)
-                    );
+                    if (context != null) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(DEBUG)
+                                .setMatchDifference(context)
+                                .setMessageFormat("exception while perform json  match failed expected:{}found:{}")
+                                .setArguments(this.matcher, matched)
+                                .setThrowable(throwable)
+                        );
+                    }
                 }
 
                 if (!result) {
-                    if (diffListener.differences.isEmpty()) {
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setLogLevel(DEBUG)
-                                .setMatchDifference(context)
-                                .setMessageFormat("json match failed expected:{}found:{}")
-                                .setArguments(this.matcher, matched)
-                        );
-                    } else {
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setLogLevel(DEBUG)
-                                .setMatchDifference(context)
-                                .setMessageFormat("json match failed expected:{}found:{}failed because:{}")
-                                .setArguments(this.matcher, matched, Joiner.on("," + NEW_LINE).join(diffListener.differences))
-                        );
+                    if (context != null) {
+                        if (diffListener.differences.isEmpty()) {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setLogLevel(DEBUG)
+                                    .setMatchDifference(context)
+                                    .setMessageFormat("json match failed expected:{}found:{}")
+                                    .setArguments(this.matcher, matched)
+                            );
+                        } else {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setLogLevel(DEBUG)
+                                    .setMatchDifference(context)
+                                    .setMessageFormat("json match failed expected:{}found:{}failed because:{}")
+                                    .setArguments(this.matcher, matched, Joiner.on("," + NEW_LINE).join(diffListener.differences))
+                            );
+                        }
                     }
                 }
             }
         } catch (Exception e) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(DEBUG)
-                    .setMatchDifference(context)
-                    .setMessageFormat("json match failed expected:{}found:{}failed because:{}")
-                    .setArguments(this.matcher, matched, e.getMessage())
-                    .setThrowable(e)
-            );
+            if (context != null) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(DEBUG)
+                        .setMatchDifference(context)
+                        .setMessageFormat("json match failed expected:{}found:{}failed because:{}")
+                        .setArguments(this.matcher, matched, e.getMessage())
+                        .setThrowable(e)
+                );
+            }
         }
 
         return not != result;

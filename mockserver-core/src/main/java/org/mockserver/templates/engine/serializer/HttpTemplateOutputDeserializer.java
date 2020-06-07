@@ -47,7 +47,6 @@ public class HttpTemplateOutputDeserializer {
             } else {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setHttpRequest(request)
                         .setMessageFormat("validation failed:{}" + uncapitalize(dtoClass.getSimpleName()) + ":{}")
@@ -57,7 +56,6 @@ public class HttpTemplateOutputDeserializer {
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(request)
                     .setMessageFormat("exception transforming json:{}")

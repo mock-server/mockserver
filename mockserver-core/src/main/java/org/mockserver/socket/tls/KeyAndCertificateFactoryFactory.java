@@ -28,7 +28,6 @@ public class KeyAndCertificateFactoryFactory {
             if (bouncyCastleProvider == null || bouncyCastleX509Holder == null) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setMessageFormat("Failed to instantiate the BouncyCastle KeyAndCertificateFactory because BouncyCastle library is not available in classpath please ensure the following dependencies are available")
                         .setArguments("<dependency>\n" +
@@ -51,7 +50,6 @@ public class KeyAndCertificateFactoryFactory {
             } catch (Throwable throwable) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setMessageFormat("Failed to instantiate the BouncyCastle KeyAndCertificateFactory")
                         .setThrowable(throwable)

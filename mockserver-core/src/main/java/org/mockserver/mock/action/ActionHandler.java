@@ -190,12 +190,14 @@ public class ActionHandler {
 
             if (request.getHeaders() != null && request.getHeaders().containsEntry(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue())) {
 
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(TRACE)
-                        .setMessageFormat("received \"x-forwarded-by\" header caused by exploratory HTTP proxy or proxy loop - falling back to no proxy:{}")
-                        .setArguments(request)
-                );
+                if (MockServerLogger.isEnabled(TRACE)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(TRACE)
+                            .setMessageFormat("received \"x-forwarded-by\" header caused by exploratory HTTP proxy or proxy loop - falling back to no proxy:{}")
+                            .setArguments(request)
+                    );
+                }
                 returnNotFound(responseWriter, request, null);
 
             } else {
@@ -237,17 +239,18 @@ public class ActionHandler {
                         returnNotFound(responseWriter, request, sce.getMessage());
                     } catch (Throwable throwable) {
                         if (potentiallyHttpProxy && connectionException(throwable)) {
-                            mockServerLogger.logEvent(
-                                new LogEntry()
-                                    .setLogLevel(TRACE)
-                                    .setMessageFormat("failed to connect to proxied socket due to exploratory HTTP proxy for:{}due to:{}falling back to no proxy")
-                                    .setArguments(request, throwable.getCause())
-                            );
+                            if (MockServerLogger.isEnabled(TRACE)) {
+                                mockServerLogger.logEvent(
+                                    new LogEntry()
+                                        .setLogLevel(TRACE)
+                                        .setMessageFormat("failed to connect to proxied socket due to exploratory HTTP proxy for:{}due to:{}falling back to no proxy")
+                                        .setArguments(request, throwable.getCause())
+                                );
+                            }
                             returnNotFound(responseWriter, request, null);
                         } else if (sslHandshakeException(throwable)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
-                                    .setType(LogEntry.LogMessageType.EXCEPTION)
                                     .setLogLevel(Level.ERROR)
                                     .setHttpRequest(request)
                                     .setMessageFormat("TLS handshake exception while proxying request{}to remote address{}with channel" + (ctx != null ? String.valueOf(ctx.channel()) : ""))
@@ -339,18 +342,19 @@ public class ActionHandler {
 
     void handleExceptionDuringForwardingRequest(Action action, HttpRequest request, ResponseWriter responseWriter, Throwable exception) {
         if (connectionException(exception)) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(TRACE)
-                    .setMessageFormat("failed to connect to remote socket while forwarding request{}for action{}")
-                    .setArguments(request, action)
-                    .setThrowable(exception)
-            );
+            if (MockServerLogger.isEnabled(TRACE)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(TRACE)
+                        .setMessageFormat("failed to connect to remote socket while forwarding request{}for action{}")
+                        .setArguments(request, action)
+                        .setThrowable(exception)
+                );
+            }
             returnNotFound(responseWriter, request, "failed to connect to remote socket while forwarding request");
         } else if (sslHandshakeException(exception)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(request)
                     .setMessageFormat("TLS handshake exception while forwarding request{}for action{}")
@@ -400,13 +404,15 @@ public class ActionHandler {
         HttpResponse response = notFoundResponse();
         if (request.getHeaders().containsEntry(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue())) {
             response.withHeader(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue());
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(TRACE)
-                    .setHttpRequest(request)
-                    .setMessageFormat("no expectation for:{}returning response:{}")
-                    .setArguments(request, notFoundResponse())
-            );
+            if (MockServerLogger.isEnabled(TRACE)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(TRACE)
+                        .setHttpRequest(request)
+                        .setMessageFormat("no expectation for:{}returning response:{}")
+                        .setArguments(request, notFoundResponse())
+                );
+            }
         } else if (isNotBlank(error)) {
             mockServerLogger.logEvent(
                 new LogEntry()

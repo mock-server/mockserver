@@ -84,13 +84,14 @@ public class BinaryProxyIntegrationTest {
                 assertThat(ByteBufUtil.hexDump(binaryResponse.getBytes()), is(ByteBufUtil.hexDump(randomResponseBytes)));
             }
         } catch (java.net.SocketException se) {
-            new MockServerLogger().logEvent(
-                new LogEntry()
-                    .setLogLevel(ERROR)
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
-                    .setMessageFormat("Exception sending bytes")
-                    .setThrowable(se)
-            );
+            if (MockServerLogger.isEnabled(ERROR)) {
+                new MockServerLogger().logEvent(
+                    new LogEntry()
+                        .setLogLevel(ERROR)
+                        .setMessageFormat("Exception sending bytes")
+                        .setThrowable(se)
+                );
+            }
             throw se;
         }
     }
@@ -138,13 +139,14 @@ public class BinaryProxyIntegrationTest {
                 assertThat(ByteBufUtil.hexDump(binaryResponse.getBytes()), is(ByteBufUtil.hexDump(randomResponseBytes)));
             }
         } catch (java.net.SocketException se) {
-            new MockServerLogger().logEvent(
-                new LogEntry()
-                    .setLogLevel(ERROR)
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
-                    .setMessageFormat("Exception sending bytes")
-                    .setThrowable(se)
-            );
+            if (MockServerLogger.isEnabled(ERROR)) {
+                new MockServerLogger().logEvent(
+                    new LogEntry()
+                        .setLogLevel(ERROR)
+                        .setMessageFormat("Exception sending bytes")
+                        .setThrowable(se)
+                );
+            }
             throw se;
         }
     }

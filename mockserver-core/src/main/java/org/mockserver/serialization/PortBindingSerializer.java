@@ -25,7 +25,6 @@ public class PortBindingSerializer implements Serializer<PortBinding> {
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception while serializing portBinding to JSON with value " + portBinding)
                     .setThrowable(e)
@@ -42,7 +41,6 @@ public class PortBindingSerializer implements Serializer<PortBinding> {
             } catch (Exception e) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setMessageFormat("exception while parsing{}for PortBinding")
                         .setArguments(jsonPortBinding)

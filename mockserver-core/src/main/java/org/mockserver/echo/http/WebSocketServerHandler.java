@@ -124,7 +124,6 @@ public class WebSocketServerHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         mockServerLogger.logEvent(
             new LogEntry()
-                .setType(LogEntry.LogMessageType.EXCEPTION)
                 .setLogLevel(Level.ERROR)
                 .setMessageFormat("echo server server caught exception")
                 .setThrowable(cause)

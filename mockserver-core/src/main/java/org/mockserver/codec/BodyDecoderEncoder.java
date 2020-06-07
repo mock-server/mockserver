@@ -109,7 +109,6 @@ public class BodyDecoderEncoder {
             } catch (Throwable throwable) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setMessageFormat("exception while reading HttpServletRequest input stream")
                         .setThrowable(throwable)

@@ -96,7 +96,6 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
         } catch (Throwable throwable) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception creating scheduler " + throwable.getMessage())
                     .setThrowable(throwable)
@@ -233,7 +232,6 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
                 } catch (JsonProcessingException jpe) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
                             .setMessageFormat("exception will serialising UI data " + jpe.getMessage())
                             .setThrowable(jpe)
@@ -248,7 +246,6 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
         if (connectionClosedException(cause)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("web socket server caught exception")
                     .setThrowable(cause)

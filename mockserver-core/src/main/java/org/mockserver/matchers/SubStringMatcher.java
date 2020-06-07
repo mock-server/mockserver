@@ -49,7 +49,7 @@ public class SubStringMatcher extends BodyMatcher<NottableString> {
             result = true;
         }
 
-        if (!result) {
+        if (!result && context != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(DEBUG)

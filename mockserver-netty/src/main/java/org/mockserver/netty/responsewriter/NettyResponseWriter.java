@@ -113,20 +113,25 @@ public class NettyResponseWriter extends ResponseWriter {
                             .close()
                             .addListener(closeFuture -> {
                                 if (disconnectFuture.isSuccess()) {
-                                    mockServerLogger
-                                        .logEvent(new LogEntry()
-                                            .setLogLevel(DEBUG)
-                                            .setMessageFormat("disconnected and closed socket " + future.channel().localAddress())
-                                        );
+                                    if (MockServerLogger.isEnabled(DEBUG)) {
+                                        mockServerLogger
+                                            .logEvent(new LogEntry()
+                                                .setLogLevel(DEBUG)
+                                                .setMessageFormat("disconnected and closed socket " + future.channel().localAddress())
+                                            );
+                                    }
                                 } else {
-                                    mockServerLogger
-                                        .logEvent(new LogEntry()
-                                            .setLogLevel(WARN)
-                                            .setMessageFormat("exception closing socket " + future.channel().localAddress())
-                                            .setThrowable(disconnectFuture.cause()));
+                                    if (MockServerLogger.isEnabled(WARN)) {
+                                        mockServerLogger
+                                            .logEvent(new LogEntry()
+                                                .setLogLevel(WARN)
+                                                .setMessageFormat("exception closing socket " + future.channel().localAddress())
+                                                .setThrowable(disconnectFuture.cause())
+                                            );
+                                    }
                                 }
                             });
-                    } else {
+                    } else if (MockServerLogger.isEnabled(WARN)) {
                         mockServerLogger
                             .logEvent(new LogEntry()
                                 .setLogLevel(WARN)

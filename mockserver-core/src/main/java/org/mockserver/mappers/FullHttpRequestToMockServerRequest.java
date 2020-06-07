@@ -54,7 +54,6 @@ public class FullHttpRequestToMockServerRequest {
         } catch (Throwable throwable) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception decoding request{}")
                     .setArguments(fullHttpRequest)
@@ -80,7 +79,6 @@ public class FullHttpRequestToMockServerRequest {
         } catch (IllegalArgumentException iae) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(httpRequest)
                     .setMessageFormat("exception while parsing query string")

@@ -48,7 +48,6 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
             } catch (Throwable throwable) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setMessageFormat("exception creating persisted expectations file " + filePath.toString())
                         .setThrowable(throwable)
@@ -56,12 +55,14 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
             }
             this.initializationPathMatchesPersistencePath = ConfigurationProperties.initializationJsonPath().equals(ConfigurationProperties.persistedExpectationsPath());
             requestMatchers.registerListener(this);
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(INFO)
-                    .setMessageFormat("created expectation file system persistence for{}")
-                    .setArguments(ConfigurationProperties.persistedExpectationsPath())
-            );
+            if (MockServerLogger.isEnabled(INFO)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(INFO)
+                        .setMessageFormat("created expectation file system persistence for{}")
+                        .setArguments(ConfigurationProperties.persistedExpectationsPath())
+                );
+            }
         } else {
             this.mockServerLogger = null;
             this.requestMatchers = null;
@@ -112,7 +113,6 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
                 } catch (Throwable throwable) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
                             .setMessageFormat("exception while persisting expectations to " + filePath.toString())
                             .setThrowable(throwable)
@@ -140,7 +140,6 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception while serializing expectation to JSON with value " + Arrays.asList(expectations))
                     .setThrowable(e)

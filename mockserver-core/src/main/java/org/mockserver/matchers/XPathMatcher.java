@@ -12,7 +12,6 @@ import javax.xml.xpath.XPathFactory;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.slf4j.event.Level.DEBUG;
-import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -30,13 +29,15 @@ public class XPathMatcher extends BodyMatcher<String> {
         if (isNotBlank(matcher)) {
             try {
                 xpathExpression = XPathFactory.newInstance().newXPath().compile(matcher);
-            } catch (XPathExpressionException e) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(TRACE)
-                        .setMessageFormat("error while creating xpath expression for [" + matcher + "] assuming matcher not xpath - " + e.getMessage())
-                        .setArguments(e)
-                );
+            } catch (XPathExpressionException xpee) {
+                if (MockServerLogger.isEnabled(DEBUG)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(DEBUG)
+                            .setMessageFormat("error while creating xpath expression for [" + matcher + "] assuming matcher not xpath - " + xpee.getMessage())
+                            .setArguments(xpee)
+                    );
+                }
             }
         }
     }
@@ -46,40 +47,48 @@ public class XPathMatcher extends BodyMatcher<String> {
         boolean alreadyLoggedMatchFailure = false;
 
         if (xpathExpression == null) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(DEBUG)
-                    .setMatchDifference(context)
-                    .setMessageFormat("xpath match failed expected:{}found:{}failed because:{}")
-                    .setArguments("null", matched, "xpath matcher was null")
-            );
-            alreadyLoggedMatchFailure = true;
-        } else if (matcher.equals(matched)) {
-            result = true;
-        } else if (matched != null) {
-            try {
-                result = (Boolean) xpathExpression.evaluate(stringToXmlDocumentParser.buildDocument(matched, (matchedInException, exception) -> mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(DEBUG)
-                        .setMatchDifference(context)
-                        .setMessageFormat("xpath match failed expected:{}found:{}failed because:{}")
-                        .setArguments(matcher, matched, exception.getMessage())
-                        .setThrowable(exception)
-                )), XPathConstants.BOOLEAN);
-            } catch (Throwable throwable) {
+            if (context != null) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(DEBUG)
                         .setMatchDifference(context)
                         .setMessageFormat("xpath match failed expected:{}found:{}failed because:{}")
-                        .setArguments(matcher, matched, throwable.getMessage())
-                        .setThrowable(throwable)
+                        .setArguments("null", matched, "xpath matcher was null")
                 );
                 alreadyLoggedMatchFailure = true;
             }
+        } else if (matcher.equals(matched)) {
+            result = true;
+        } else if (matched != null) {
+            try {
+                result = (Boolean) xpathExpression.evaluate(stringToXmlDocumentParser.buildDocument(matched, (matchedInException, exception) -> {
+                    if (context != null) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(DEBUG)
+                                .setMatchDifference(context)
+                                .setMessageFormat("xpath match failed expected:{}found:{}failed because:{}")
+                                .setArguments(matcher, matched, exception.getMessage())
+                                .setThrowable(exception)
+                        );
+                    }
+                }), XPathConstants.BOOLEAN);
+            } catch (Throwable throwable) {
+                if (context != null) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(DEBUG)
+                            .setMatchDifference(context)
+                            .setMessageFormat("xpath match failed expected:{}found:{}failed because:{}")
+                            .setArguments(matcher, matched, throwable.getMessage())
+                            .setThrowable(throwable)
+                    );
+                    alreadyLoggedMatchFailure = true;
+                }
+            }
         }
 
-        if (!result && !alreadyLoggedMatchFailure) {
+        if (!result && !alreadyLoggedMatchFailure && context != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(DEBUG)

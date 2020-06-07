@@ -54,6 +54,7 @@ import static org.mockserver.netty.MockServerHandler.LOCAL_HOST_HEADERS;
 import static org.mockserver.netty.MockServerHandler.PROXYING;
 import static org.mockserver.netty.proxy.relay.RelayConnectHandler.*;
 import static org.slf4j.event.Level.TRACE;
+import static org.slf4j.event.Level.WARN;
 
 /**
  * @author jamesdbloom
@@ -152,7 +153,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(Level.DEBUG)
-                    .setMessageFormat(" for channel: " + message + ctx.channel() + "pipeline: " + ctx.pipeline().names())
+                    .setMessageFormat(message + " for channel: " + ctx.channel() + "pipeline: " + ctx.pipeline().names())
             );
         }
     }
@@ -342,23 +343,23 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         if (connectionClosedException(throwable)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception caught by port unification handler -> closing pipeline " + ctx.channel())
                     .setThrowable(throwable)
             );
         } else if (sslHandshakeException(throwable)) {
             if (throwable.getMessage().contains("certificate_unknown")) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(Level.WARN)
-                        .setMessageFormat("TSL handshake failure:" + NEW_LINE + NEW_LINE + " Client does not trust MockServer Certificate Authority for:{}See http://mock-server.com/mock_server/HTTPS_TLS.html to enable the client to trust MocksServer Certificate Authority." + NEW_LINE)
-                        .setArguments(ctx.channel())
-                );
+                if (MockServerLogger.isEnabled(WARN)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(Level.WARN)
+                            .setMessageFormat("TSL handshake failure:" + NEW_LINE + NEW_LINE + " Client does not trust MockServer Certificate Authority for:{}See http://mock-server.com/mock_server/HTTPS_TLS.html to enable the client to trust MocksServer Certificate Authority." + NEW_LINE)
+                            .setArguments(ctx.channel())
+                    );
+                }
             } else if (!throwable.getMessage().contains("close_notify during handshake")) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setMessageFormat("TSL handshake failure while a client attempted to connect to " + ctx.channel())
                         .setThrowable(throwable)

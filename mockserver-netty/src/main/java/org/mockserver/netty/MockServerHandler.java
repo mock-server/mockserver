@@ -151,7 +151,6 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                     } catch (Throwable throwable) {
                         mockServerLogger.logEvent(
                             new LogEntry()
-                                .setType(LogEntry.LogMessageType.EXCEPTION)
                                 .setLogLevel(Level.ERROR)
                                 .setHttpRequest(request)
                                 .setMessageFormat("exception processing:{}")
@@ -165,7 +164,6 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         } catch (IllegalArgumentException iae) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(request)
                     .setMessageFormat("exception processing:{}error:{}")
@@ -176,7 +174,6 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         } catch (Exception ex) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(request)
                     .setMessageFormat("exception processing " + request)
@@ -196,7 +193,6 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         if (connectionClosedException(cause)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception caught by " + server.getClass() + " handler -> closing pipeline " + ctx.channel())
                     .setThrowable(cause)

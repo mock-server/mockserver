@@ -55,7 +55,6 @@ public abstract class SocksProxyHandler<T> extends SimpleChannelInboundHandler<T
         if (connectionClosedException(cause)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception caught by SOCKS proxy handler -> closing pipeline " + ctx.channel())
                     .setThrowable(cause)

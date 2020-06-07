@@ -30,7 +30,7 @@ public class BooleanMatcher extends ObjectWithReflectiveEqualsHashCodeToString i
             result = matched == matcher;
         }
 
-        if (!result) {
+        if (!result && context != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(DEBUG)

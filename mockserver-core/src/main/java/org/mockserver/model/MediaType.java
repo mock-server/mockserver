@@ -14,7 +14,7 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.*;
-import static org.slf4j.event.Level.TRACE;
+import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.WARN;
 
 @SuppressWarnings("unused")
@@ -98,7 +98,7 @@ public class MediaType extends ObjectWithJsonToString {
             String parameters = mediaTypeHeader.substring(typeEndIndex).trim().toLowerCase().replaceAll("\"", "");
             Map<String, String> parameterMap = null;
             if (isNotBlank(parameters)) {
-//                try {
+                try {
                     parameterMap = Splitter.on(';').trimResults().omitEmptyStrings().withKeyValueSeparator('=').split(parameters);
                     if (parameterMap.size() > 1) {
                         // sort if multiple entries to ensure equals and hashcode is consistent
@@ -111,15 +111,15 @@ public class MediaType extends ObjectWithJsonToString {
                                 (oldValue, newValue) -> oldValue, LinkedHashMap::new
                             ));
                     }
-//                } catch (Throwable throwable) {
-//                    MOCK_SERVER_LOGGER.logEvent(
-//                        new LogEntry()
-//                            .setLogLevel(WARN)
-//                            .setMessageFormat("invalid parameters format \"" + parameters + "\", expected{}see:{}")
-//                            .setArguments("Content-Type := type \"/\" subtype *[\";\" parameter]\nparameter := attribute \"=\" value", "https://www.w3.org/Protocols/rfc1341/4_Content-Type.html")
-//                            .setThrowable(throwable)
-//                    );
-//                }
+                } catch (Throwable throwable) {
+                    MOCK_SERVER_LOGGER.logEvent(
+                        new LogEntry()
+                            .setLogLevel(WARN)
+                            .setMessageFormat("invalid parameters format \"" + parameters + "\", expected{}see:{}")
+                            .setArguments("Content-Type := type \"/\" subtype *[\";\" parameter]\nparameter := attribute \"=\" value", "https://www.w3.org/Protocols/rfc1341/4_Content-Type.html")
+                            .setThrowable(throwable)
+                    );
+                }
             }
             return new MediaType(type, subType, parameterMap);
         } else {
@@ -158,12 +158,14 @@ public class MediaType extends ObjectWithJsonToString {
             try {
                 parsedCharset = Charset.forName(charset);
             } catch (Throwable throwable) {
-                MOCK_SERVER_LOGGER.logEvent(
-                    new LogEntry()
-                        .setLogLevel(TRACE)
-                        .setMessageFormat("ignoring unsupported charset with value \"" + charset + "\"")
-                        .setThrowable(throwable)
-                );
+                if (MockServerLogger.isEnabled(DEBUG)) {
+                    MOCK_SERVER_LOGGER.logEvent(
+                        new LogEntry()
+                            .setLogLevel(DEBUG)
+                            .setMessageFormat("ignoring unsupported charset with value \"" + charset + "\"")
+                            .setThrowable(throwable)
+                    );
+                }
             }
         } else {
             try {
@@ -171,12 +173,14 @@ public class MediaType extends ObjectWithJsonToString {
                     parsedCharset = Charset.forName(parameters.get(CHARSET_PARAMETER));
                 }
             } catch (Throwable throwable) {
-                MOCK_SERVER_LOGGER.logEvent(
-                    new LogEntry()
-                        .setLogLevel(TRACE)
-                        .setMessageFormat("ignoring unsupported charset with value \"" + charset + "\"")
-                        .setThrowable(throwable)
-                );
+                if (MockServerLogger.isEnabled(DEBUG)) {
+                    MOCK_SERVER_LOGGER.logEvent(
+                        new LogEntry()
+                            .setLogLevel(DEBUG)
+                            .setMessageFormat("ignoring unsupported charset with value \"" + charset + "\"")
+                            .setThrowable(throwable)
+                    );
+                }
             }
         }
         this.charset = parsedCharset;

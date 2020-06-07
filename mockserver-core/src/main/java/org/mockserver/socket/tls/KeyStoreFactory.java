@@ -126,21 +126,26 @@ public class KeyStoreFactory {
 
     private SSLContext getSSLContextInstance() throws NoSuchAlgorithmException {
         try {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(SERVER_CONFIGURATION)
-                    .setLogLevel(DEBUG)
-                    .setMessageFormat("using protocol{}")
-                    .setArguments(SSL_CONTEXT_PROTOCOL)
-            );
+            if (MockServerLogger.isEnabled(DEBUG)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(SERVER_CONFIGURATION)
+                        .setLogLevel(DEBUG)
+                        .setMessageFormat("using protocol{}")
+                        .setArguments(SSL_CONTEXT_PROTOCOL)
+                );
+            }
             return SSLContext.getInstance(SSL_CONTEXT_PROTOCOL);
-        } catch (NoSuchAlgorithmException e) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(WARN)
-                    .setMessageFormat("protocol{}not available, falling back to{}")
-                    .setArguments(SSL_CONTEXT_PROTOCOL, SSL_CONTEXT_FALLBACK_PROTOCOL)
-            );
+        } catch (NoSuchAlgorithmException nsae) {
+            if (MockServerLogger.isEnabled(WARN)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(WARN)
+                        .setMessageFormat("protocol{}not available, falling back to{}")
+                        .setArguments(SSL_CONTEXT_PROTOCOL, SSL_CONTEXT_FALLBACK_PROTOCOL)
+                        .setThrowable(nsae)
+                );
+            }
             return SSLContext.getInstance(SSL_CONTEXT_FALLBACK_PROTOCOL);
         }
     }
@@ -176,11 +181,13 @@ public class KeyStoreFactory {
             String keyStoreFileAbsolutePath = new File(keyStoreFileName).getAbsolutePath();
             try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreFileAbsolutePath)) {
                 keyStore.store(fileOutputStream, keyStorePassword);
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(TRACE)
-                        .setMessageFormat("saving key store to file [" + keyStoreFileAbsolutePath + "]")
-                );
+                if (MockServerLogger.isEnabled(TRACE)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(TRACE)
+                            .setMessageFormat("saving key store to file [" + keyStoreFileAbsolutePath + "]")
+                    );
+                }
             }
             new File(keyStoreFileAbsolutePath).deleteOnExit();
             return keyStore;

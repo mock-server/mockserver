@@ -39,7 +39,6 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("error while creating xml string matcher for [" + matcher + "]" + e.getMessage())
                     .setThrowable(e)
@@ -59,7 +58,7 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
                 Diff diff = diffBuilder.withTest(Input.fromString(matched.getValue())).withDifferenceEvaluator(new PlaceholderDifferenceEvaluator()).build();
                 result = !diff.hasDifferences();
 
-                if (!result) {
+                if (!result && context != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(DEBUG)
@@ -70,13 +69,15 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
                 }
 
             } catch (Exception e) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(DEBUG)
-                        .setMatchDifference(context)
-                        .setMessageFormat("xml match failed expected:{}found:{}failed because:{}")
-                        .setArguments(this.matcher, matched, e.getMessage())
-                );
+                if (context != null) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(DEBUG)
+                            .setMatchDifference(context)
+                            .setMessageFormat("xml match failed expected:{}found:{}failed because:{}")
+                            .setArguments(this.matcher, matched, e.getMessage())
+                    );
+                }
             }
         }
 

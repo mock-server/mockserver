@@ -143,7 +143,6 @@ public class NettySslContextFactory {
             } catch (Throwable throwable) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setMessageFormat("Exception creating SSL context for server" + throwable.getMessage())
                         .setThrowable(throwable)

@@ -55,7 +55,6 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
             } catch (Exception e) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setMessageFormat("exception while generating certificate authority private key and X509 certificate")
                         .setThrowable(e)
@@ -65,12 +64,14 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
     }
 
     private void saveCertificateAuthorityPEMToFile(String pem, String absolutePath, String type) throws IOException {
-        mockServerLogger.logEvent(
-            new LogEntry()
-                .setLogLevel(DEBUG)
-                .setMessageFormat("created dynamic Certificate Authority " + type + " PEM file at{}")
-                .setArguments(absolutePath)
-        );
+        if (MockServerLogger.isEnabled(DEBUG)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(DEBUG)
+                    .setMessageFormat("created dynamic Certificate Authority " + type + " PEM file at{}")
+                    .setArguments(absolutePath)
+            );
+        }
         try (FileWriter fileWriter = new FileWriter(createFileIfNotExists(type, new File(absolutePath)))) {
             fileWriter.write(pem);
         }
@@ -81,21 +82,25 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
             try {
                 createParentDirs(file);
                 if (!file.createNewFile()) {
+                    if (MockServerLogger.isEnabled(ERROR)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(ERROR)
+                                .setMessageFormat("failed to create the file{}while attempting to save Certificate Authority " + type + " PEM file")
+                                .setArguments(file.getAbsolutePath())
+                        );
+                    }
+                }
+            } catch (Throwable throwable) {
+                if (MockServerLogger.isEnabled(ERROR)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(ERROR)
                             .setMessageFormat("failed to create the file{}while attempting to save Certificate Authority " + type + " PEM file")
                             .setArguments(file.getAbsolutePath())
+                            .setThrowable(throwable)
                     );
                 }
-            } catch (Throwable throwable) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(ERROR)
-                        .setMessageFormat("failed to create the file{}while attempting to save Certificate Authority " + type + " PEM file")
-                        .setArguments(file.getAbsolutePath())
-                        .setThrowable(throwable)
-                );
             }
         }
         return file;
@@ -204,10 +209,10 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
                     caPrivateKey,
                     certificateAuthorityX509Certificate
                 );
-                if (MockServerLogger.isEnabled(DEBUG)) {
+                if (MockServerLogger.isEnabled(TRACE)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setLogLevel(DEBUG)
+                            .setLogLevel(TRACE)
                             .setMessageFormat("created new X509{}with SAN Domain Names{}and IPs{}")
                             .setArguments(x509Certificate(), Arrays.toString(ConfigurationProperties.sslSubjectAlternativeNameDomains()), Arrays.toString(ConfigurationProperties.sslSubjectAlternativeNameIps()))
                     );
@@ -219,7 +224,6 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
             } catch (Exception e) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setMessageFormat("exception while generating private key and X509 certificate")
                         .setThrowable(e)

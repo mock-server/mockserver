@@ -136,7 +136,6 @@ public class ProxyServlet extends HttpServlet implements ServletContextListener 
         } catch (IllegalArgumentException iae) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(request)
                     .setMessageFormat("exception processing:{}error:{}")
@@ -147,7 +146,6 @@ public class ProxyServlet extends HttpServlet implements ServletContextListener 
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(request)
                     .setMessageFormat("exception processing " + request)

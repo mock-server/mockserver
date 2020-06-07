@@ -81,7 +81,6 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception loading JSON Schema for Exceptions")
                     .setThrowable(e)
@@ -113,7 +112,6 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
             } catch (Exception e) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setMessageFormat("exception validating JSON")
                         .setThrowable(e)

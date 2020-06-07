@@ -30,7 +30,6 @@ public class IntegerStringListParser {
             } catch (NumberFormatException nfe) {
                 MOCK_SERVER_LOGGER.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setMessageFormat("NumberFormatException converting " + integer + " to integer")
                         .setThrowable(nfe)

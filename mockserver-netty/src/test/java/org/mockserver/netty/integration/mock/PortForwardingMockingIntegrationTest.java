@@ -408,16 +408,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                         " because:" + NEW_LINE +
                         NEW_LINE +
                         "  method matched" + NEW_LINE +
-                        "  path didn't match: " + NEW_LINE +
-                        "  " + NEW_LINE +
-                        "    string or regex match failed expected:" + NEW_LINE +
-                        "  " + NEW_LINE +
-                        "      /some_path.*" + NEW_LINE +
-                        "  " + NEW_LINE +
-                        "     found:" + NEW_LINE +
-                        "  " + NEW_LINE +
-                        "      /not_found" + NEW_LINE +
-                        NEW_LINE
+                        "  path didn't match" + NEW_LINE
                 },
                 new String[]{
                     "no expectation for:" + NEW_LINE +

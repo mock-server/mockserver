@@ -8,10 +8,8 @@ import org.mockserver.model.NottableString;
 
 import java.util.regex.PatternSyntaxException;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.model.NottableString.string;
 import static org.slf4j.event.Level.DEBUG;
-import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -46,7 +44,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
             result = true;
         }
 
-        if (!result) {
+        if (!result && context != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(DEBUG)
@@ -84,11 +82,14 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                     return true;
                 }
             } catch (PatternSyntaxException pse) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(TRACE)
-                        .setMessageFormat("error while matching regex [" + matcher + "] for string [" + matched + "] " + pse.getMessage())
-                );
+                if (MockServerLogger.isEnabled(DEBUG)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(DEBUG)
+                            .setMessageFormat("error while matching regex [" + matcher + "] for string [" + matched + "] " + pse.getMessage())
+                            .setThrowable(pse)
+                    );
+                }
             }
             // match as regex - matched -> matcher (control plane only)
             try {
@@ -96,11 +97,14 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                     return true;
                 }
             } catch (PatternSyntaxException pse) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(TRACE)
-                        .setMessageFormat("error while matching regex [" + matched + "] for string [" + matcher + "] " + pse.getMessage())
-                );
+                if (MockServerLogger.isEnabled(DEBUG)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(DEBUG)
+                            .setMessageFormat("error while matching regex [" + matched + "] for string [" + matcher + "] " + pse.getMessage())
+                            .setThrowable(pse)
+                    );
+                }
             }
             // case insensitive comparison is mainly to improve matching in web containers like Tomcat that convert header names to lower case
             if (ignoreCase) {
@@ -114,11 +118,14 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                         return true;
                     }
                 } catch (PatternSyntaxException pse) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setLogLevel(TRACE)
-                            .setMessageFormat("error while matching regex [" + matcher.toLowerCase() + "] for string [" + matched.toLowerCase() + "] " + pse.getMessage())
-                    );
+                    if (MockServerLogger.isEnabled(DEBUG)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(DEBUG)
+                                .setMessageFormat("error while matching regex [" + matcher.toLowerCase() + "] for string [" + matched.toLowerCase() + "] " + pse.getMessage())
+                                .setThrowable(pse)
+                        );
+                    }
                 }
                 // match as regex - matched -> matcher (control plane only)
                 try {
@@ -126,11 +133,14 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                         return true;
                     }
                 } catch (PatternSyntaxException pse) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setLogLevel(TRACE)
-                            .setMessageFormat("error while matching regex [" + matched.toLowerCase() + "] for string [" + matcher.toLowerCase() + "] " + pse.getMessage())
-                    );
+                    if (MockServerLogger.isEnabled(DEBUG)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(DEBUG)
+                                .setMessageFormat("error while matching regex [" + matched.toLowerCase() + "] for string [" + matcher.toLowerCase() + "] " + pse.getMessage())
+                                .setThrowable(pse)
+                        );
+                    }
                 }
             }
         }

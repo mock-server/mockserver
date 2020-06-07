@@ -39,25 +39,29 @@ public class HttpResponseObjectCallbackActionHandler {
     }
 
     private void handleLocally(ActionHandler actionHandler, HttpObjectCallback httpObjectCallback, HttpRequest request, ResponseWriter responseWriter, boolean synchronous, String clientId) {
-        mockServerLogger.logEvent(
-            new LogEntry()
-                .setLogLevel(TRACE)
-                .setHttpRequest(request)
-                .setMessageFormat("locally sending request{}to client " + clientId)
-                .setArguments(request)
-        );
+        if (MockServerLogger.isEnabled(TRACE)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(TRACE)
+                    .setHttpRequest(request)
+                    .setMessageFormat("locally sending request{}to client " + clientId)
+                    .setArguments(request)
+            );
+        }
         try {
             HttpResponse callbackResponse = LocalCallbackRegistry.retrieveResponseCallback(clientId).handle(request);
             actionHandler.writeResponseActionResponse(callbackResponse, responseWriter, request, httpObjectCallback, synchronous);
         } catch (Throwable throwable) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(WARN)
-                    .setHttpRequest(request)
-                    .setMessageFormat("returning{}because client " + clientId + " response callback throw an exception")
-                    .setArguments(notFoundResponse())
-                    .setThrowable(throwable)
-            );
+            if (MockServerLogger.isEnabled(WARN)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(WARN)
+                        .setHttpRequest(request)
+                        .setMessageFormat("returning{}because client " + clientId + " response callback throw an exception")
+                        .setArguments(notFoundResponse())
+                        .setThrowable(throwable)
+                );
+            }
             actionHandler.writeResponseActionResponse(notFoundResponse(), responseWriter, request, httpObjectCallback, synchronous);
         }
     }
@@ -81,13 +85,15 @@ public class HttpResponseObjectCallbackActionHandler {
             actionHandler.writeResponseActionResponse(response.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME), responseWriter, request, httpObjectCallback, synchronous);
         });
         if (!webSocketClientRegistry.sendClientMessage(clientId, request.clone().withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId), null)) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(WARN)
-                    .setHttpRequest(request)
-                    .setMessageFormat("returning{}because client " + clientId + " has closed web socket connection")
-                    .setArguments(notFoundResponse())
-            );
+            if (MockServerLogger.isEnabled(WARN)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(WARN)
+                        .setHttpRequest(request)
+                        .setMessageFormat("returning{}because client " + clientId + " has closed web socket connection")
+                        .setArguments(notFoundResponse())
+                );
+            }
             actionHandler.writeResponseActionResponse(notFoundResponse(), responseWriter, request, httpObjectCallback, synchronous);
         } else if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(

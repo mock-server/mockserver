@@ -136,7 +136,6 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
         } catch (IllegalArgumentException iae) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(request)
                     .setMessageFormat("exception processing:{}error:{}")
@@ -147,7 +146,6 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(request)
                     .setMessageFormat("exception processing " + request)

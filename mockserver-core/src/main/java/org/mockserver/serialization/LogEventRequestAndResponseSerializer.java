@@ -43,7 +43,6 @@ public class LogEventRequestAndResponseSerializer {
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception while serializing HttpRequestAndHttpResponse to JSON with value " + httpRequestAndHttpResponse)
                     .setThrowable(e)
@@ -70,7 +69,6 @@ public class LogEventRequestAndResponseSerializer {
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception while serializing HttpRequestAndHttpResponse to JSON with value " + Arrays.asList(httpRequestAndHttpResponses))
                     .setThrowable(e)
@@ -92,7 +90,6 @@ public class LogEventRequestAndResponseSerializer {
             } catch (Exception e) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setMessageFormat("exception while parsing{}for HttpRequestAndHttpResponse")
                         .setArguments(jsonHttpRequestAndHttpResponse)

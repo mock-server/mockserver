@@ -25,6 +25,7 @@ import static org.mockserver.configuration.ConfigurationProperties.maxExpectatio
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.matchers.HttpRequestMatcher.EXPECTATION_PRIORITY_COMPARATOR;
 import static org.mockserver.metrics.Metrics.Name.*;
+import static org.slf4j.event.Level.DEBUG;
 
 /**
  * @author jamesdbloom
@@ -169,7 +170,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         Expectation matchingExpectation = null;
         for (HttpRequestMatcher httpRequestMatcher : getHttpRequestMatchersCopy()) {
             boolean remainingMatchesDecremented = false;
-            if (httpRequestMatcher.matches(new MatchDifference(httpRequest), httpRequest)) {
+            if (httpRequestMatcher.matches(MockServerLogger.isEnabled(DEBUG) ? new MatchDifference(httpRequest) : null, httpRequest)) {
                 matchingExpectation = httpRequestMatcher.getExpectation();
                 httpRequestMatcher.setResponseInProgress(true);
                 if (matchingExpectation.decrementRemainingMatches()) {

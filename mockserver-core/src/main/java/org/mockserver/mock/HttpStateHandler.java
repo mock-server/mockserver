@@ -447,13 +447,15 @@ public class HttpStateHandler {
 
     public boolean handle(HttpRequest request, ResponseWriter responseWriter, boolean warDeployment) {
 
-        mockServerLogger.logEvent(
-            new LogEntry()
-                .setLogLevel(TRACE)
-                .setHttpRequest(request)
-                .setMessageFormat("received request:{}")
-                .setArguments(request)
-        );
+        if (MockServerLogger.isEnabled(TRACE)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(TRACE)
+                    .setHttpRequest(request)
+                    .setMessageFormat("received request:{}")
+                    .setArguments(request)
+            );
+        }
 
         if (request.matches("PUT")) {
 

@@ -51,7 +51,6 @@ public class TimeToLiveDTODeserializer extends StdDeserializer<TimeToLiveDTO> {
                 } catch (IllegalArgumentException iae) {
                     MOCK_SERVER_LOGGER.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.TRACE)
                             .setMessageFormat("exception parsing TimeToLiveDTO timeUnit")
                             .setThrowable(iae)

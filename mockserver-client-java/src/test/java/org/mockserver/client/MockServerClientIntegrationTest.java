@@ -5,6 +5,7 @@ import io.netty.channel.ChannelOutboundInvoker;
 import org.hamcrest.core.IsNot;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
@@ -1165,6 +1166,7 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSendClearRequest() {
         // given
+        ConfigurationProperties.disableSystemOut(false);
         echoServerOne.withNextResponse(response().withStatusCode(201));
 
         // when

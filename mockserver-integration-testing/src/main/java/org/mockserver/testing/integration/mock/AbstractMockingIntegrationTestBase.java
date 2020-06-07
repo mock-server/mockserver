@@ -92,12 +92,14 @@ public abstract class AbstractMockingIntegrationTestBase {
         try {
             mockServerClient.reset();
         } catch (Throwable throwable) {
-            MOCK_SERVER_LOGGER.logEvent(
-                new LogEntry()
-                    .setLogLevel(WARN)
-                    .setMessageFormat("exception while resetting - " + throwable.getMessage())
-                    .setThrowable(throwable)
-            );
+            if (MockServerLogger.isEnabled(WARN)) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setLogLevel(WARN)
+                        .setMessageFormat("exception while resetting - " + throwable.getMessage())
+                        .setThrowable(throwable)
+                );
+            }
         }
     }
 

@@ -70,7 +70,6 @@ public class MockServerHttpResponseToFullHttpResponse {
         } catch (Throwable throwable) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception encoding response{}")
                     .setArguments(httpResponse)

@@ -18,6 +18,7 @@ import static org.mockserver.socket.tls.KeyAndCertificateFactory.KEY_GENERATION_
 import static org.mockserver.socket.tls.KeyAndCertificateFactory.SIGNING_ALGORITHM;
 import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.*;
 import static org.slf4j.event.Level.ERROR;
+import static org.slf4j.event.Level.WARN;
 
 public class UniqueCertificateChainSSLContextBuilder {
 
@@ -59,13 +60,14 @@ public class UniqueCertificateChainSSLContextBuilder {
                     X509Generator.x509FromPEM(certificateAuthorityX509AndPrivateKey.getCert())
                 );
             } catch (Throwable throwable) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
-                        .setLogLevel(ERROR)
-                        .setMessageFormat("exception create fake certificates and private keys")
-                        .setThrowable(throwable)
-                );
+                if (MockServerLogger.isEnabled(ERROR)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(ERROR)
+                            .setMessageFormat("exception create fake certificates and private keys")
+                            .setThrowable(throwable)
+                    );
+                }
             }
         }
 

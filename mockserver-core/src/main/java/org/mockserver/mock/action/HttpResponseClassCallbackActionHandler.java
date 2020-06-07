@@ -36,7 +36,6 @@ public class HttpResponseClassCallbackActionHandler {
             } else {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setHttpRequest(null)
                         .setMessageFormat(httpClassCallback.getCallbackClass() + " does not implement " + ExpectationResponseCallback.class.getName() + " required for responses using class callback")
@@ -45,7 +44,6 @@ public class HttpResponseClassCallbackActionHandler {
         } catch (ClassNotFoundException e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("ClassNotFoundException - while trying to instantiate ExpectationResponseCallback class \"" + httpClassCallback.getCallbackClass() + "\"")
                     .setThrowable(e)
@@ -53,7 +51,6 @@ public class HttpResponseClassCallbackActionHandler {
         } catch (NoSuchMethodException e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("NoSuchMethodException - while trying to create default constructor on ExpectationResponseCallback class \"" + httpClassCallback.getCallbackClass() + "\"")
                     .setThrowable(e)
@@ -61,7 +58,6 @@ public class HttpResponseClassCallbackActionHandler {
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("InvocationTargetException - while trying to execute default constructor on ExpectationResponseCallback class \"" + httpClassCallback.getCallbackClass() + "\"")
                     .setThrowable(e)
@@ -79,7 +75,6 @@ public class HttpResponseClassCallbackActionHandler {
                 } catch (Throwable throwable) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
                             .setHttpRequest(httpRequest)
                             .setMessageFormat(httpClassCallback.getCallbackClass() + " throw exception while executing handle callback method - " + throwable.getMessage())

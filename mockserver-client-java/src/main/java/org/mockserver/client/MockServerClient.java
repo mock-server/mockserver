@@ -250,12 +250,14 @@ public class MockServerClient implements Stoppable {
                 return isRunning(attempts - 1, timeout, timeUnit);
             }
         } catch (SocketConnectionException | IllegalStateException sce) {
-            MOCK_SERVER_LOGGER.logEvent(
-                new LogEntry()
-                    .setLogLevel(TRACE)
-                    .setMessageFormat("exception while checking if MockServer is running - " + sce.getMessage() + " if MockServer was stopped this exception is expected")
-                    .setThrowable(sce)
-            );
+            if (MockServerLogger.isEnabled(TRACE)) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setLogLevel(TRACE)
+                        .setMessageFormat("exception while checking if MockServer is running - " + sce.getMessage() + " if MockServer was stopped this exception is expected")
+                        .setThrowable(sce)
+                );
+            }
             return false;
         }
     }
@@ -324,12 +326,14 @@ public class MockServerClient implements Stoppable {
             }
         } catch (SocketConnectionException | IllegalStateException sce) {
             if (attempts <= 0) {
-                MOCK_SERVER_LOGGER.logEvent(
-                    new LogEntry()
-                        .setLogLevel(DEBUG)
-                        .setMessageFormat("exception while checking if MockServer has started - " + sce.getMessage())
-                        .setThrowable(sce)
-                );
+                if (MockServerLogger.isEnabled(DEBUG)) {
+                    MOCK_SERVER_LOGGER.logEvent(
+                        new LogEntry()
+                            .setLogLevel(DEBUG)
+                            .setMessageFormat("exception while checking if MockServer has started - " + sce.getMessage())
+                            .setThrowable(sce)
+                    );
+                }
                 return false;
             } else {
                 try {
@@ -364,12 +368,14 @@ public class MockServerClient implements Stoppable {
         try {
             stopAsync().get(10, SECONDS);
         } catch (Throwable throwable) {
-            MOCK_SERVER_LOGGER.logEvent(
-                new LogEntry()
-                    .setLogLevel(DEBUG)
-                    .setMessageFormat("exception while stopping - " + throwable.getMessage())
-                    .setThrowable(throwable)
-            );
+            if (MockServerLogger.isEnabled(DEBUG)) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setLogLevel(DEBUG)
+                        .setMessageFormat("exception while stopping - " + throwable.getMessage())
+                        .setThrowable(throwable)
+                );
+            }
         }
     }
 
@@ -389,13 +395,16 @@ public class MockServerClient implements Stoppable {
                     }
                 }
             } catch (RejectedExecutionException ree) {
-                MOCK_SERVER_LOGGER.logEvent(
-                    new LogEntry()
-                        .setLogLevel(TRACE)
-                        .setMessageFormat("request rejected while closing down, logging in case due other error " + ree)
-                );
+                if (!ignoreFailure && MockServerLogger.isEnabled(TRACE)) {
+                    MOCK_SERVER_LOGGER.logEvent(
+                        new LogEntry()
+                            .setLogLevel(TRACE)
+                            .setMessageFormat("request rejected while closing down, logging in case due other error " + ree)
+                            .setThrowable(ree)
+                    );
+                }
             } catch (Exception e) {
-                if (!ignoreFailure) {
+                if (!ignoreFailure && MockServerLogger.isEnabled(WARN)) {
                     MOCK_SERVER_LOGGER.logEvent(
                         new LogEntry()
                             .setLogLevel(WARN)
@@ -898,8 +907,8 @@ public class MockServerClient implements Stoppable {
      * </pre>
      *
      * @param expectations one or more expectations
-     * @deprecated this is deprecated due to unclear naming, use method upsert(Expectation... expectations) instead
      * @return added or updated expectations
+     * @deprecated this is deprecated due to unclear naming, use method upsert(Expectation... expectations) instead
      */
     @Deprecated
     public Expectation[] sendExpectation(Expectation... expectations) {

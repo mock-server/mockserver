@@ -52,7 +52,6 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception while serializing HttpRequest to JSON with value " + httpRequest)
                     .setThrowable(e)
@@ -99,7 +98,6 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception while serializing HttpRequest to JSON with value " + Arrays.asList(httpRequests))
                     .setThrowable(e)
@@ -126,7 +124,6 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                 } catch (Exception e) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
                             .setMessageFormat("exception while parsing{}for HttpRequest")
                             .setArguments(jsonHttpRequest)
@@ -146,7 +143,6 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                 } catch (Exception e) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
                             .setMessageFormat("exception while parsing{}for HttpRequest")
                             .setArguments(jsonHttpRequest)
@@ -158,7 +154,6 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
             } else {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setHttpRequest(null)
                         .setMessageFormat("validation failed:{}request:{}")

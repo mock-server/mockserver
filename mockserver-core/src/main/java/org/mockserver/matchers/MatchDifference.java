@@ -16,7 +16,6 @@ public class MatchDifference {
     private final HttpRequest httpRequest;
     private final Map<String, List<String>> differences = new ConcurrentHashMap<>();
     private String fieldName;
-    private Integer failures = 0;
 
     public MatchDifference(HttpRequest httpRequest) {
         this.httpRequest = httpRequest;
@@ -34,7 +33,6 @@ public class MatchDifference {
         return this;
     }
 
-
     public HttpRequest getHttpRequest() {
         return httpRequest;
     }
@@ -49,13 +47,4 @@ public class MatchDifference {
         return differences.get(fieldName);
     }
 
-    @SuppressWarnings("UnusedReturnValue")
-    public MatchDifference incrementFailures() {
-        this.failures++;
-        return this;
-    }
-
-    public Integer getFailures() {
-        return failures;
-    }
 }

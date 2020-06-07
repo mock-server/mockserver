@@ -22,6 +22,7 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.junit.*;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -386,7 +387,6 @@ public class NettyHttpProxySOCKSIntegrationTest {
                 public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
                     MOCK_SERVER_LOGGER.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
                             .setMessageFormat("connection could not be established to proxy at socket [" + sa + "]")
                             .setThrowable(ioe)
@@ -449,8 +449,8 @@ public class NettyHttpProxySOCKSIntegrationTest {
     @Test
     @Ignore
     public void shouldProxyRequestsUsingSecureSocketViaSOCKSToSecureServerPort() throws Exception {
-//        ConfigurationProperties.logLevel("TRACE");
-//        ConfigurationProperties.disableSystemOut(false);
+        ConfigurationProperties.logLevel("DEBUG");
+        ConfigurationProperties.disableSystemOut(false);
         proxyRequestsUsingSocketViaSOCKS5(
             secureEchoServer,
             sslSocketFactory().wrapSocket(new Socket("localhost", mockServerPort))
@@ -460,8 +460,8 @@ public class NettyHttpProxySOCKSIntegrationTest {
     @Test
     @Ignore
     public void shouldProxyRequestsUsingSecureSocketViaSOCKSToServerPort() throws Exception {
-//        ConfigurationProperties.logLevel("TRACE");
-//        ConfigurationProperties.disableSystemOut(false);
+        ConfigurationProperties.logLevel("TRACE");
+        ConfigurationProperties.disableSystemOut(false);
         proxyRequestsUsingSocketViaSOCKS5(
             insecureEchoServer,
             sslSocketFactory().wrapSocket(new Socket("localhost", mockServerPort))

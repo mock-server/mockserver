@@ -500,14 +500,14 @@ public class ConfigurationProperties {
      * <p>
      * When enabling this setting the following dependencies must be provided on the classpath (they are not included with MockServer)
      * <dependency>
-     *     <groupId>org.bouncycastle</groupId>
-     *     <artifactId>bcprov-jdk15on</artifactId>
-     *     <version>1.65</version>
+     * <groupId>org.bouncycastle</groupId>
+     * <artifactId>bcprov-jdk15on</artifactId>
+     * <version>1.65</version>
      * </dependency>
      * <dependency>
-     *     <groupId>org.bouncycastle</groupId>
-     *     <artifactId>bcpkix-jdk15on</artifactId>
-     *     <version>1.65</version>
+     * <groupId>org.bouncycastle</groupId>
+     * <artifactId>bcpkix-jdk15on</artifactId>
+     * <version>1.65</version>
      * </dependency>
      * </p>
      *
@@ -1114,7 +1114,6 @@ public class ConfigurationProperties {
                 } catch (NumberFormatException nfe) {
                     MOCK_SERVER_LOGGER.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
                             .setMessageFormat("NumberFormatException converting value \"" + proxyParts[1] + "\" into an integer")
                             .setThrowable(nfe)
@@ -1132,7 +1131,6 @@ public class ConfigurationProperties {
         } catch (NumberFormatException nfe) {
             MOCK_SERVER_LOGGER.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("NumberFormatException converting " + key + " with value [" + readPropertyHierarchically(key, environmentVariableKey, "" + defaultValue) + "]")
                     .setThrowable(nfe)
@@ -1147,7 +1145,6 @@ public class ConfigurationProperties {
         } catch (NumberFormatException nfe) {
             MOCK_SERVER_LOGGER.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("NumberFormatException converting " + key + " with value [" + readPropertyHierarchically(key, environmentVariableKey, "" + defaultValue) + "]")
                     .setThrowable(nfe)
@@ -1162,7 +1159,6 @@ public class ConfigurationProperties {
         } catch (NumberFormatException nfe) {
             MOCK_SERVER_LOGGER.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("NumberFormatException converting " + key + " with value [" + readPropertyHierarchically(key, environmentVariableKey, "" + defaultValue) + "]")
                     .setThrowable(nfe)
@@ -1185,7 +1181,6 @@ public class ConfigurationProperties {
                     if (MOCK_SERVER_LOGGER != null) {
                         MOCK_SERVER_LOGGER.logEvent(
                             new LogEntry()
-                                .setType(LogEntry.LogMessageType.EXCEPTION)
                                 .setLogLevel(Level.ERROR)
                                 .setMessageFormat("exception loading property file [" + propertyFile() + "]")
                                 .setThrowable(e)
@@ -1193,7 +1188,7 @@ public class ConfigurationProperties {
                     }
                 }
             } else {
-                if (MOCK_SERVER_LOGGER != null) {
+                if (MOCK_SERVER_LOGGER != null && MockServerLogger.isEnabled(DEBUG)) {
                     MOCK_SERVER_LOGGER.logEvent(
                         new LogEntry()
                             .setType(SERVER_CONFIGURATION)
@@ -1204,7 +1199,7 @@ public class ConfigurationProperties {
                 try {
                     properties.load(new FileInputStream(propertyFile()));
                 } catch (FileNotFoundException e) {
-                    if (MOCK_SERVER_LOGGER != null) {
+                    if (MOCK_SERVER_LOGGER != null && MockServerLogger.isEnabled(DEBUG)) {
                         MOCK_SERVER_LOGGER.logEvent(
                             new LogEntry()
                                 .setType(SERVER_CONFIGURATION)
@@ -1217,7 +1212,6 @@ public class ConfigurationProperties {
                     if (MOCK_SERVER_LOGGER != null) {
                         MOCK_SERVER_LOGGER.logEvent(
                             new LogEntry()
-                                .setType(LogEntry.LogMessageType.EXCEPTION)
                                 .setLogLevel(Level.ERROR)
                                 .setMessageFormat("exception loading property file [" + propertyFile() + "]")
                                 .setThrowable(e)

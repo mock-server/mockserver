@@ -35,7 +35,6 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception while serializing verificationSequence to JSON with value " + verificationSequence)
                     .setThrowable(e)
@@ -64,7 +63,6 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
                 } catch (Exception e) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
                             .setMessageFormat("exception while parsing{}for VerificationSequence")
                             .setArguments(jsonVerificationSequence)

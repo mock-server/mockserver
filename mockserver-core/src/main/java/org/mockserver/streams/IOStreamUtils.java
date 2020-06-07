@@ -56,7 +56,6 @@ public class IOStreamUtils {
         } catch (IOException ioe) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("IOException while reading HttpServletRequest input stream")
                     .setThrowable(ioe)
@@ -73,7 +72,6 @@ public class IOStreamUtils {
         } catch (IOException ioe) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("IOException while writing [" + new String(data) + "] to HttpServletResponse output stream")
                     .setThrowable(ioe)

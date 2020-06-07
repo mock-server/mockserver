@@ -39,13 +39,15 @@ public class HashMapMatcher extends NotMatcher<KeysAndValues> {
         } else if (values.toCaseInsensitiveRegexMultiMap(mockServerLogger, controlPlaneMatcher).containsAll(matcher)) {
             result = true;
         } else {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(DEBUG)
-                    .setMatchDifference(context)
-                    .setMessageFormat("map subset match failed expected:{}found:{}failed because:{}")
-                    .setArguments(keysAndValues, values, "map is not a subset")
-            );
+            if (context != null) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(DEBUG)
+                        .setMatchDifference(context)
+                        .setMessageFormat("map subset match failed expected:{}found:{}failed because:{}")
+                        .setArguments(keysAndValues, values, "map is not a subset")
+                );
+            }
             result = false;
         }
 

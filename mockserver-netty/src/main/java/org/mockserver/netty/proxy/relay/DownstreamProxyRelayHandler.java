@@ -39,7 +39,6 @@ public class DownstreamProxyRelayHandler extends SimpleChannelInboundHandler<Ful
                 if (isNotSocketClosedException(future.cause())) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
                             .setMessageFormat("exception while returning writing " + response)
                             .setThrowable(future.cause())
@@ -64,7 +63,6 @@ public class DownstreamProxyRelayHandler extends SimpleChannelInboundHandler<Ful
         if (connectionClosedException(cause)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception caught by downstream relay handler -> closing pipeline " + ctx.channel())
                     .setThrowable(cause)

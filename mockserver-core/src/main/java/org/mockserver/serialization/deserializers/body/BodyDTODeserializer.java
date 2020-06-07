@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.TRACE;
 
 /**
@@ -74,11 +75,14 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         try {
                             type = Body.Type.valueOf(String.valueOf(entry.getValue()));
                         } catch (IllegalArgumentException iae) {
-                            MOCK_SERVER_LOGGER.logEvent(
-                                new LogEntry()
-                                    .setLogLevel(TRACE)
-                                    .setMessageFormat("ignoring invalid value for \"type\" field of \"" + entry.getValue() + "\"")
-                            );
+                            if (MockServerLogger.isEnabled(DEBUG)) {
+                                MOCK_SERVER_LOGGER.logEvent(
+                                    new LogEntry()
+                                        .setLogLevel(DEBUG)
+                                        .setMessageFormat("ignoring invalid value for \"type\" field of \"" + entry.getValue() + "\"")
+                                        .setThrowable(iae)
+                                );
+                            }
                         }
                     }
                     if (containsIgnoreCase(key, "string", "regex", "json", "jsonSchema", "jsonPath", "xml", "xmlSchema", "xpath", "base64Bytes") && type != Body.Type.PARAMETERS) {
@@ -101,11 +105,14 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                             try {
                                 rawBytes = BASE64_DECODER.decode((String) entry.getValue());
                             } catch (Throwable throwable) {
-                                MOCK_SERVER_LOGGER.logEvent(
-                                    new LogEntry()
-                                        .setLogLevel(TRACE)
-                                        .setMessageFormat("invalid base64 encoded rawBytes with value \"" + entry.getValue() + "\"")
-                                );
+                                if (MockServerLogger.isEnabled(DEBUG)) {
+                                    MOCK_SERVER_LOGGER.logEvent(
+                                        new LogEntry()
+                                            .setLogLevel(DEBUG)
+                                            .setMessageFormat("invalid base64 encoded rawBytes with value \"" + entry.getValue() + "\"")
+                                            .setThrowable(throwable)
+                                    );
+                                }
                             }
                         }
                     }
@@ -116,53 +123,71 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         try {
                             matchType = MatchType.valueOf(String.valueOf(entry.getValue()));
                         } catch (IllegalArgumentException iae) {
-                            MOCK_SERVER_LOGGER.logEvent(
-                                new LogEntry()
-                                    .setLogLevel(TRACE)
-                                    .setMessageFormat("ignoring incorrect JsonBodyMatchType with value \"" + entry.getValue() + "\"")
-                            );
+                            if (MockServerLogger.isEnabled(DEBUG)) {
+                                MOCK_SERVER_LOGGER.logEvent(
+                                    new LogEntry()
+                                        .setLogLevel(DEBUG)
+                                        .setMessageFormat("ignoring incorrect JsonBodyMatchType with value \"" + entry.getValue() + "\"")
+                                        .setThrowable(iae)
+                                );
+                            }
                         }
                     }
                     if (key.equalsIgnoreCase("subString")) {
                         try {
                             subString = Boolean.parseBoolean(String.valueOf(entry.getValue()));
                         } catch (IllegalArgumentException uce) {
-                            MOCK_SERVER_LOGGER.logEvent(
-                                new LogEntry()
-                                    .setLogLevel(TRACE)
-                                    .setMessageFormat("ignoring unsupported boolean with value \"" + entry.getValue() + "\"")
-                            );
+                            if (MockServerLogger.isEnabled(DEBUG)) {
+                                MOCK_SERVER_LOGGER.logEvent(
+                                    new LogEntry()
+                                        .setLogLevel(DEBUG)
+                                        .setMessageFormat("ignoring unsupported boolean with value \"" + entry.getValue() + "\"")
+                                        .setThrowable(uce)
+                                );
+                            }
                         }
                     }
                     if (key.equalsIgnoreCase("contentType")) {
                         try {
                             String mediaTypeHeader = String.valueOf(entry.getValue());
                             if (isNotBlank(mediaTypeHeader)) {
-                                contentType = MediaType.parse(mediaTypeHeader);
+                                MediaType parsedMediaTypeHeader = MediaType.parse(mediaTypeHeader);
+                                if (isNotBlank(parsedMediaTypeHeader.toString())) {
+                                    contentType = parsedMediaTypeHeader;
+                                }
                             }
                         } catch (IllegalArgumentException uce) {
-                            MOCK_SERVER_LOGGER.logEvent(
-                                new LogEntry()
-                                    .setLogLevel(TRACE)
-                                    .setMessageFormat("ignoring unsupported MediaType with value \"" + entry.getValue() + "\"")
-                            );
+                            if (MockServerLogger.isEnabled(DEBUG)) {
+                                MOCK_SERVER_LOGGER.logEvent(
+                                    new LogEntry()
+                                        .setLogLevel(DEBUG)
+                                        .setMessageFormat("ignoring unsupported MediaType with value \"" + entry.getValue() + "\"")
+                                        .setThrowable(uce)
+                                );
+                            }
                         }
                     }
                     if (key.equalsIgnoreCase("charset")) {
                         try {
                             charset = Charset.forName(String.valueOf(entry.getValue()));
                         } catch (UnsupportedCharsetException uce) {
-                            MOCK_SERVER_LOGGER.logEvent(
-                                new LogEntry()
-                                    .setLogLevel(TRACE)
-                                    .setMessageFormat("ignoring unsupported Charset with value \"" + entry.getValue() + "\"")
-                            );
+                            if (MockServerLogger.isEnabled(DEBUG)) {
+                                MOCK_SERVER_LOGGER.logEvent(
+                                    new LogEntry()
+                                        .setLogLevel(DEBUG)
+                                        .setMessageFormat("ignoring unsupported Charset with value \"" + entry.getValue() + "\"")
+                                        .setThrowable(uce)
+                                );
+                            }
                         } catch (IllegalCharsetNameException icne) {
-                            MOCK_SERVER_LOGGER.logEvent(
-                                new LogEntry()
-                                    .setLogLevel(TRACE)
-                                    .setMessageFormat("ignoring invalid Charset with value \"" + entry.getValue() + "\"")
-                            );
+                            if (MockServerLogger.isEnabled(DEBUG)) {
+                                MOCK_SERVER_LOGGER.logEvent(
+                                    new LogEntry()
+                                        .setLogLevel(DEBUG)
+                                        .setMessageFormat("ignoring invalid Charset with value \"" + entry.getValue() + "\"")
+                                        .setThrowable(icne)
+                                );
+                            }
                         }
                     }
                     if (key.equalsIgnoreCase("parameters")) {

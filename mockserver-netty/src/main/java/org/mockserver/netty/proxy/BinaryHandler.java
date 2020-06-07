@@ -103,7 +103,6 @@ public class BinaryHandler extends SimpleChannelInboundHandler<ByteBuf> {
         if (connectionClosedException(cause)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception caught by " + this.getClass() + " handler -> closing pipeline " + ctx.channel())
                     .setThrowable(cause)

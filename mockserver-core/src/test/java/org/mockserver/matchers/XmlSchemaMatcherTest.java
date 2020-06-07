@@ -17,6 +17,7 @@ import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.logLevel;
+import static org.mockserver.model.HttpRequest.request;
 
 /**
  * @author jamesdbloom
@@ -94,7 +95,7 @@ public class XmlSchemaMatcherTest {
             when(mockXmlSchemaValidator.isValid(xml)).thenReturn("validator_error");
 
             // when
-            assertFalse(xmlSchemaMatcher.matches(null, xml));
+            assertFalse(xmlSchemaMatcher.matches(new MatchDifference(request()), xml));
 
             // then
             verify(logger).debug("xml schema match failed expected:" + NEW_LINE +
@@ -144,7 +145,7 @@ public class XmlSchemaMatcherTest {
             when(mockXmlSchemaValidator.isValid(xml)).thenThrow(new RuntimeException("TEST_EXCEPTION"));
 
             // when
-            assertFalse(xmlSchemaMatcher.matches(null, xml));
+            assertFalse(xmlSchemaMatcher.matches(new MatchDifference(request()), xml));
 
             // then
             verify(logger).debug("xml schema match failed expected:" + NEW_LINE +

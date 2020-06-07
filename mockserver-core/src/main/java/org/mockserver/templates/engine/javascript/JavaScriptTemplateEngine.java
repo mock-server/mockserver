@@ -62,7 +62,6 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
             } else {
                 logFormatter.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setHttpRequest(request)
                         .setMessageFormat(

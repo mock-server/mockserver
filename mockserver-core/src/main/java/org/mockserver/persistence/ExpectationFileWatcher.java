@@ -40,29 +40,32 @@ public class ExpectationFileWatcher {
                     }
                     addExpectationsFromInitializer();
                 }, throwable -> {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setLogLevel(WARN)
-                            .setMessageFormat("exception while processing expectation file update " + throwable.getMessage())
-                            .setThrowable(throwable)
-                    );
+                    if (MockServerLogger.isEnabled(WARN)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(WARN)
+                                .setMessageFormat("exception while processing expectation file update " + throwable.getMessage())
+                                .setThrowable(throwable)
+                        );
+                    }
                 });
             } catch (Throwable throwable) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setMessageFormat("exception creating file watcher for{}")
                         .setArguments(ConfigurationProperties.initializationJsonPath())
                         .setThrowable(throwable)
                 );
             }
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(INFO)
-                    .setMessageFormat("created expectation file watcher for{}")
-                    .setArguments(ConfigurationProperties.initializationJsonPath())
-            );
+            if (MockServerLogger.isEnabled(INFO)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(INFO)
+                        .setMessageFormat("created expectation file watcher for{}")
+                        .setArguments(ConfigurationProperties.initializationJsonPath())
+                );
+            }
         } else {
             this.expectationSerializer = null;
             this.mockServerLogger = null;
@@ -94,13 +97,15 @@ public class ExpectationFileWatcher {
                     return new Expectation[0];
                 }
             } catch (Throwable throwable) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setType(SERVER_CONFIGURATION)
-                        .setLogLevel(WARN)
-                        .setMessageFormat("exception while loading JSON initialization file with file watcher, ignoring file")
-                        .setThrowable(throwable)
-                );
+                if (MockServerLogger.isEnabled(WARN)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(SERVER_CONFIGURATION)
+                            .setLogLevel(WARN)
+                            .setMessageFormat("exception while loading JSON initialization file with file watcher, ignoring file")
+                            .setThrowable(throwable)
+                    );
+                }
             }
         }
         return new Expectation[0];

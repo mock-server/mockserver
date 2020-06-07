@@ -35,8 +35,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 import static org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
-import static org.slf4j.event.Level.TRACE;
-import static org.slf4j.event.Level.WARN;
+import static org.slf4j.event.Level.*;
 
 /**
  * @author jamesdbloom
@@ -147,7 +146,6 @@ public class WebSocketClient<T extends HttpMessage> {
                     } catch (Throwable throwable) {
                         mockServerLogger.logEvent(
                             new LogEntry()
-                                .setType(LogEntry.LogMessageType.EXCEPTION)
                                 .setLogLevel(Level.ERROR)
                                 .setHttpRequest(request)
                                 .setMessageFormat("exception thrown while handling callback for request - " + throwable.getMessage())
@@ -191,7 +189,6 @@ public class WebSocketClient<T extends HttpMessage> {
                     } catch (Throwable throwable) {
                         mockServerLogger.logEvent(
                             new LogEntry()
-                                .setType(LogEntry.LogMessageType.EXCEPTION)
                                 .setLogLevel(Level.ERROR)
                                 .setHttpRequest(httpRequest)
                                 .setMessageFormat("exception thrown while handling callback for request and response - " + throwable.getMessage())
@@ -205,19 +202,23 @@ public class WebSocketClient<T extends HttpMessage> {
                     }
                 }
             } else if (deserializedMessage instanceof WebSocketClientIdDTO) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(TRACE)
-                        .setMessageFormat("received client id{}")
-                        .setArguments(deserializedMessage)
-                );
+                if (MockServerLogger.isEnabled(TRACE)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(TRACE)
+                            .setMessageFormat("received client id{}")
+                            .setArguments(deserializedMessage)
+                    );
+                }
             } else {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(WARN)
-                        .setMessageFormat("web socket client received a message that isn't HttpRequest or HttpRequestAndHttpResponse{} which has been deserialized as{}")
-                        .setArguments(textWebSocketFrame.text(), deserializedMessage)
-                );
+                if (MockServerLogger.isEnabled(WARN)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(WARN)
+                            .setMessageFormat("web socket client received a message that isn't HttpRequest or HttpRequestAndHttpResponse{} which has been deserialized as{}")
+                            .setArguments(textWebSocketFrame.text(), deserializedMessage)
+                    );
+                }
                 throw new WebSocketException("Unsupported web socket message " + textWebSocketFrame.text());
             }
         } catch (Exception e) {

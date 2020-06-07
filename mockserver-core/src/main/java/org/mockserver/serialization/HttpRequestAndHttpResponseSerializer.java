@@ -42,7 +42,6 @@ public class HttpRequestAndHttpResponseSerializer implements Serializer<HttpRequ
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception while serializing HttpRequestAndHttpResponse to JSON with value " + httpRequestAndHttpResponse)
                     .setThrowable(e)
@@ -71,7 +70,6 @@ public class HttpRequestAndHttpResponseSerializer implements Serializer<HttpRequ
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception while serializing HttpRequestAndHttpResponse to JSON with value " + Arrays.asList(httpRequests))
                     .setThrowable(e)
@@ -98,7 +96,6 @@ public class HttpRequestAndHttpResponseSerializer implements Serializer<HttpRequ
                 } catch (Exception e) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
                             .setMessageFormat("exception while parsing{}for HttpRequestAndHttpResponse")
                             .setArguments(jsonHttpRequest)
@@ -118,7 +115,6 @@ public class HttpRequestAndHttpResponseSerializer implements Serializer<HttpRequ
                 } catch (Exception e) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
                             .setMessageFormat("exception while parsing{}for HttpRequestAndHttpResponse")
                             .setArguments(jsonHttpRequest)
@@ -130,7 +126,6 @@ public class HttpRequestAndHttpResponseSerializer implements Serializer<HttpRequ
             } else {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setHttpRequest(null)
                         .setMessageFormat("validation failed:{}request:{}")

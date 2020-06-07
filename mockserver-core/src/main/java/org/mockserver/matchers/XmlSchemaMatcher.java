@@ -36,7 +36,7 @@ public class XmlSchemaMatcher extends BodyMatcher<String> {
 
             result = validation.isEmpty();
 
-            if (!result) {
+            if (!result && context != null) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(DEBUG)
@@ -46,13 +46,15 @@ public class XmlSchemaMatcher extends BodyMatcher<String> {
                 );
             }
         } catch (Exception e) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(DEBUG)
-                    .setMatchDifference(context)
-                    .setMessageFormat("xml schema match failed expected:{}found:{}failed because:{}")
-                    .setArguments(this.matcher, matched, e.getMessage())
-            );
+            if (context != null) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(DEBUG)
+                        .setMatchDifference(context)
+                        .setMessageFormat("xml schema match failed expected:{}found:{}failed because:{}")
+                        .setArguments(this.matcher, matched, e.getMessage())
+                );
+            }
         }
 
         return not != result;

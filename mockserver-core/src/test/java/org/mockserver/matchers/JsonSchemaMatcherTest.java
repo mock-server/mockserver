@@ -17,6 +17,7 @@ import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.logLevel;
+import static org.mockserver.model.HttpRequest.request;
 
 /**
  * @author jamesdbloom
@@ -110,7 +111,7 @@ public class JsonSchemaMatcherTest {
             when(mockJsonSchemaValidator.isValid(json, false)).thenReturn("validator_error");
 
             // when
-            assertFalse(jsonSchemaMatcher.matches(null, json));
+            assertFalse(jsonSchemaMatcher.matches(new MatchDifference(request()), json));
 
             // then
             verify(logger).debug("json schema match failed expected:" + NEW_LINE +
@@ -176,7 +177,7 @@ public class JsonSchemaMatcherTest {
             when(mockJsonSchemaValidator.isValid(json, false)).thenThrow(new RuntimeException("TEST_EXCEPTION"));
 
             // when
-            assertFalse(jsonSchemaMatcher.matches(null, json));
+            assertFalse(jsonSchemaMatcher.matches(new MatchDifference(request()), json));
 
             // then
             verify(logger).debug("json schema match failed expected:" + NEW_LINE +

@@ -75,12 +75,14 @@ public abstract class LifeCycle implements Stoppable {
         try {
             stopAsync().get(10, SECONDS);
         } catch (Throwable throwable) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(DEBUG)
-                    .setMessageFormat("exception while stopping - " + throwable.getMessage())
-                    .setArguments(throwable)
-            );
+            if (MockServerLogger.isEnabled(DEBUG)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(DEBUG)
+                        .setMessageFormat("exception while stopping - " + throwable.getMessage())
+                        .setArguments(throwable)
+                );
+            }
         }
     }
 
@@ -122,12 +124,14 @@ public abstract class LifeCycle implements Stoppable {
             try {
                 return ((InetSocketAddress) channelOpened.get(15, SECONDS).localAddress()).getPort();
             } catch (Throwable throwable) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(WARN)
-                        .setMessageFormat("exception while retrieving port from channel future, ignoring port for this channel - " + throwable.getMessage())
-                        .setArguments(throwable)
-                );
+                if (MockServerLogger.isEnabled(WARN)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(WARN)
+                            .setMessageFormat("exception while retrieving port from channel future, ignoring port for this channel - " + throwable.getMessage())
+                            .setArguments(throwable)
+                    );
+                }
             }
         }
         return -1;
@@ -139,12 +143,14 @@ public abstract class LifeCycle implements Stoppable {
             try {
                 ports.add(((InetSocketAddress) channelOpened.get(3, SECONDS).localAddress()).getPort());
             } catch (Exception e) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(TRACE)
-                        .setMessageFormat("exception while retrieving port from channel future, ignoring port for this channel")
-                        .setArguments(e)
-                );
+                if (MockServerLogger.isEnabled(DEBUG)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(DEBUG)
+                            .setMessageFormat("exception while retrieving port from channel future, ignoring port for this channel")
+                            .setArguments(e)
+                    );
+                }
             }
         }
         return ports;
@@ -195,13 +201,15 @@ public abstract class LifeCycle implements Stoppable {
 
     protected void startedServer(List<Integer> ports) {
         final String message = "started on port" + (ports.size() == 1 ? ": " + ports.get(0) : "s: " + ports);
-        mockServerLogger.logEvent(
-            new LogEntry()
-                .setType(SERVER_CONFIGURATION)
-                .setLogLevel(INFO)
-                .setHttpRequest(request())
-                .setMessageFormat(message)
-        );
+        if (MockServerLogger.isEnabled(INFO)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(SERVER_CONFIGURATION)
+                    .setLogLevel(INFO)
+                    .setHttpRequest(request())
+                    .setMessageFormat(message)
+            );
+        }
     }
 
 }

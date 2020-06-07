@@ -106,7 +106,6 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
             } catch (Throwable throwable) {
                 new MockServerLogger().logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setMessageFormat("exception waiting for counter " + i)
                         .setArguments(throwable)
