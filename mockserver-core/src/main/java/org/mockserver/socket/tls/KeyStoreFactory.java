@@ -57,7 +57,9 @@ public class KeyStoreFactory {
 
     @SuppressWarnings("InfiniteRecursion")
     public synchronized SSLContext sslContext() {
-        keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
+        if (keyAndCertificateFactory.certificateNotYetCreated()) {
+            keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
+        }
         return sslContext(
             keyAndCertificateFactory.privateKey(),
             keyAndCertificateFactory.x509Certificate(),
@@ -90,7 +92,9 @@ public class KeyStoreFactory {
 
     @SuppressWarnings({"InfiniteRecursion", "UnusedReturnValue"})
     public KeyStore loadOrCreateKeyStore() {
-        keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
+        if (keyAndCertificateFactory.certificateNotYetCreated()) {
+            keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
+        }
         return loadOrCreateKeyStore(
             keyAndCertificateFactory.privateKey(),
             keyAndCertificateFactory.x509Certificate(),
