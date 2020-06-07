@@ -40,6 +40,7 @@ import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -447,23 +448,9 @@ public class NettyHttpProxySOCKSIntegrationTest {
     }
 
     @Test
-    @Ignore
     public void shouldProxyRequestsUsingSecureSocketViaSOCKSToSecureServerPort() throws Exception {
-        ConfigurationProperties.logLevel("DEBUG");
-        ConfigurationProperties.disableSystemOut(false);
         proxyRequestsUsingSocketViaSOCKS5(
             secureEchoServer,
-            sslSocketFactory().wrapSocket(new Socket("localhost", mockServerPort))
-        );
-    }
-
-    @Test
-    @Ignore
-    public void shouldProxyRequestsUsingSecureSocketViaSOCKSToServerPort() throws Exception {
-        ConfigurationProperties.logLevel("TRACE");
-        ConfigurationProperties.disableSystemOut(false);
-        proxyRequestsUsingSocketViaSOCKS5(
-            insecureEchoServer,
             sslSocketFactory().wrapSocket(new Socket("localhost", mockServerPort))
         );
     }

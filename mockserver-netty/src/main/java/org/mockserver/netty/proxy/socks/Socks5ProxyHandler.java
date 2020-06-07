@@ -4,9 +4,12 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.socksx.v5.*;
+import io.netty.handler.ssl.SslHandler;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.MockServerLogger;
+
+import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabledUpstream;
 
 @ChannelHandler.Sharable
 public class Socks5ProxyHandler extends SocksProxyHandler<Socks5Message> {
@@ -58,7 +61,11 @@ public class Socks5ProxyHandler extends SocksProxyHandler<Socks5Message> {
             .filter(authMethod -> authMethod.equals(requiredAuthMethod))
             .findFirst()
             .map(authMethod -> {
-                ctx.pipeline().addFirst(nextRequestDecoder);
+                if (isSslEnabledUpstream(ctx.channel())) {
+                    ctx.pipeline().addAfter(SslHandler.class.getName(), null, nextRequestDecoder);
+                } else {
+                    ctx.pipeline().addFirst(nextRequestDecoder);
+                }
                 return new DefaultSocks5InitialResponse(requiredAuthMethod);
             })
             .orElse(new DefaultSocks5InitialResponse(Socks5AuthMethod.UNACCEPTED))
@@ -72,16 +79,15 @@ public class Socks5ProxyHandler extends SocksProxyHandler<Socks5Message> {
         // we need the null-check again here, in case the properties got unset between init and auth request
         if (!username.isEmpty() && !password.isEmpty()
             && username.equals(passwordAuthRequest.username()) && password.equals(passwordAuthRequest.password())) {
-
             ctx.pipeline().replace(Socks5PasswordAuthRequestDecoder.class, null, new Socks5CommandRequestDecoder());
-            ctx.write(new DefaultSocks5PasswordAuthResponse(Socks5PasswordAuthStatus.SUCCESS));
+            ctx.writeAndFlush(new DefaultSocks5PasswordAuthResponse(Socks5PasswordAuthStatus.SUCCESS)).awaitUninterruptibly();
         } else {
             ctx.writeAndFlush(new DefaultSocks5PasswordAuthResponse(Socks5PasswordAuthStatus.FAILURE)).addListener(ChannelFutureListener.CLOSE);
         }
     }
 
     private void handleCommandRequest(ChannelHandlerContext ctx, final Socks5CommandRequest commandRequest) {
-        if (commandRequest.type().equals(Socks5CommandType.CONNECT)) {
+        if (commandRequest.type().equals(Socks5CommandType.CONNECT)) { // IN HERE
             forwardConnection(ctx, new Socks5ConnectHandler(server, mockServerLogger, commandRequest.dstAddr(), commandRequest.dstPort()), commandRequest.dstAddr(), commandRequest.dstPort());
             ctx.fireChannelRead(commandRequest);
         } else {

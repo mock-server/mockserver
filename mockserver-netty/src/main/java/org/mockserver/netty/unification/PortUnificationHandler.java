@@ -145,7 +145,12 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
             switchToBinary(ctx, msg);
         }
 
-        addLoggingHandler(ctx);
+        if (isEnabled(TRACE)) {
+            loggingHandlerFirst.addLoggingHandler(ctx);
+        }
+        if (isEnabled(TRACE)) {
+            ctx.pipeline().addLast(loggingHandlerLast);
+        }
     }
 
     private void logStage(ChannelHandlerContext ctx, String message) {
@@ -158,25 +163,25 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         }
     }
 
-    private void addLoggingHandler(ChannelHandlerContext ctx) {
-        if (isEnabled(TRACE)) {
-            loggingHandlerFirst.addLoggingHandler(ctx);
-        }
-    }
-
     private void enableSocks4(ChannelHandlerContext ctx, ByteBuf msg) {
-        enableSocks(ctx, msg, new Socks4ProxyHandler(server, mockServerLogger), Socks4ServerEncoder.INSTANCE, new Socks4ServerDecoder());
+        enableSocks(ctx, msg, new Socks4ServerDecoder(), new Socks4ProxyHandler(server, mockServerLogger), Socks4ServerEncoder.INSTANCE);
     }
 
     private void enableSocks5(ChannelHandlerContext ctx, ByteBuf msg) {
-        enableSocks(ctx, msg, new Socks5ProxyHandler(server, mockServerLogger), Socks5ServerEncoder.DEFAULT, new Socks5InitialRequestDecoder());
+        enableSocks(ctx, msg, new Socks5InitialRequestDecoder(), new Socks5ProxyHandler(server, mockServerLogger), Socks5ServerEncoder.DEFAULT);
     }
 
-    private void enableSocks(ChannelHandlerContext ctx, ByteBuf msg, ChannelHandler... channelHandlers) {
+    private void enableSocks(ChannelHandlerContext ctx, ByteBuf msg, ReplayingDecoder<?> socksInitialRequestDecoder, ChannelHandler... channelHandlers) {
         ChannelPipeline pipeline = ctx.pipeline();
         for (ChannelHandler channelHandler : channelHandlers) {
-            pipeline.addFirst(channelHandler);
+            if (isSslEnabledUpstream(ctx.channel())) {
+                pipeline.addAfter(SslHandler.class.getName(), null, channelHandler);
+            } else {
+                pipeline.addFirst(channelHandler);
+            }
         }
+        pipeline.addFirst(socksInitialRequestDecoder);
+
         ctx.channel().attr(PROXYING).set(Boolean.TRUE);
 
         // re-unify (with SOCKS5 enabled)
@@ -220,9 +225,6 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         addLastIfNotPresent(pipeline, new HttpContentDecompressor());
         addLastIfNotPresent(pipeline, httpContentLengthRemover);
         addLastIfNotPresent(pipeline, new HttpObjectAggregator(Integer.MAX_VALUE));
-        if (isEnabled(TRACE)) {
-            addLastIfNotPresent(pipeline, loggingHandlerLast);
-        }
         if (tlsMutualAuthenticationRequired() && !isSslEnabledUpstream(ctx.channel())) {
             HttpResponse httpResponse = response()
                 .withStatusCode(426)

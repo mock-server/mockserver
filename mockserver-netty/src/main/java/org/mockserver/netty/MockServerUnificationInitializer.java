@@ -3,11 +3,11 @@ package org.mockserver.netty;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
-import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.mock.HttpStateHandler;
-import org.mockserver.socket.tls.NettySslContextFactory;
+import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.netty.unification.PortUnificationHandler;
+import org.mockserver.socket.tls.NettySslContextFactory;
 
 @ChannelHandler.Sharable
 public class MockServerUnificationInitializer extends ChannelHandlerAdapter {
