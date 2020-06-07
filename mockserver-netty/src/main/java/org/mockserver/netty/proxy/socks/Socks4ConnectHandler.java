@@ -22,10 +22,10 @@ public final class Socks4ConnectHandler extends SocksConnectHandler<Socks4Comman
     }
 
     protected Object successResponse(Object request) {
-        return new DefaultSocks4CommandResponse(Socks4CommandStatus.SUCCESS);
+        return new DefaultSocks4CommandResponse(Socks4CommandStatus.SUCCESS, host, port);
     }
 
     protected Object failureResponse(Object request) {
-        return new DefaultSocks4CommandResponse(Socks4CommandStatus.REJECTED_OR_FAILED);
+        return new DefaultSocks4CommandResponse(Socks4CommandStatus.REJECTED_OR_FAILED, host, port);
     }
 }

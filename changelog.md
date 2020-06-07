@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - improved parsing of invalid content-type header parameters by handling error gracefully and outputting a clear error message
 - improved performance through multiple minor tweaks around handling of expectations
 - added version to log output to improve resolution of github issues with logs attached
+- improved logic around proxies to make HTTP CONNECT, SOCKS4 and SOCKS5 more reliable and faster  
 
 ### Fixed
 - fixed but with environment vairable configuration for long, integer and integer list values

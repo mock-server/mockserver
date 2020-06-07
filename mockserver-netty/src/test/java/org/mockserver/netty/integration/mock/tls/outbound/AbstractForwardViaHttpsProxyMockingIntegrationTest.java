@@ -104,7 +104,7 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
     }
 
     @Test
-    public void shouldReceiveRequestInHTTPSForwardRequestInHTTP() throws Exception {
+    public void shouldReceiveRequestInHTTPSForForwardRequestInHTTP() throws Exception {
         // when
         mockServerClient
             .when(
@@ -162,7 +162,7 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
     }
 
     @Test
-    public void shouldReceiveRequestInHTTPForwardRequestInHTTPS() throws Exception {
+    public void shouldReceiveRequestInHTTPForForwardRequestInHTTPS() throws Exception {
         // when
         mockServerClient
             .when(

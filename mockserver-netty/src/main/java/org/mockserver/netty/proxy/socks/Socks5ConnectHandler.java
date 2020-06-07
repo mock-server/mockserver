@@ -19,20 +19,10 @@ public final class Socks5ConnectHandler extends SocksConnectHandler<Socks5Comman
     }
 
     protected Object successResponse(Object request) {
-        if (request instanceof Socks5CommandRequest) {
-            Socks5CommandRequest defaultSocks5CommandResponse = (Socks5CommandRequest) request;
-            return new DefaultSocks5CommandResponse(Socks5CommandStatus.SUCCESS, Socks5AddressType.DOMAIN, defaultSocks5CommandResponse.dstAddr(), defaultSocks5CommandResponse.dstPort());
-        } else {
-            return new DefaultSocks5CommandResponse(Socks5CommandStatus.SUCCESS, Socks5AddressType.DOMAIN);
-        }
+        return new DefaultSocks5CommandResponse(Socks5CommandStatus.SUCCESS, Socks5AddressType.DOMAIN, host, port);
     }
 
     protected Object failureResponse(Object request) {
-        if (request instanceof Socks5CommandRequest) {
-            Socks5CommandRequest defaultSocks5CommandResponse = (Socks5CommandRequest) request;
-            return new DefaultSocks5CommandResponse(Socks5CommandStatus.FAILURE, Socks5AddressType.DOMAIN, defaultSocks5CommandResponse.dstAddr(), defaultSocks5CommandResponse.dstPort());
-        } else {
-            return new DefaultSocks5CommandResponse(Socks5CommandStatus.FAILURE, Socks5AddressType.DOMAIN);
-        }
+        return new DefaultSocks5CommandResponse(Socks5CommandStatus.FAILURE, Socks5AddressType.DOMAIN, host, port);
     }
 }

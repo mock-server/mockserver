@@ -3,21 +3,7 @@ package org.mockserver.netty.proxy.socks;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.socksx.v5.DefaultSocks5CommandResponse;
-import io.netty.handler.codec.socksx.v5.DefaultSocks5InitialResponse;
-import io.netty.handler.codec.socksx.v5.DefaultSocks5PasswordAuthResponse;
-import io.netty.handler.codec.socksx.v5.Socks5AddressType;
-import io.netty.handler.codec.socksx.v5.Socks5AuthMethod;
-import io.netty.handler.codec.socksx.v5.Socks5CommandRequest;
-import io.netty.handler.codec.socksx.v5.Socks5CommandRequestDecoder;
-import io.netty.handler.codec.socksx.v5.Socks5CommandStatus;
-import io.netty.handler.codec.socksx.v5.Socks5CommandType;
-import io.netty.handler.codec.socksx.v5.Socks5InitialRequest;
-import io.netty.handler.codec.socksx.v5.Socks5InitialRequestDecoder;
-import io.netty.handler.codec.socksx.v5.Socks5Message;
-import io.netty.handler.codec.socksx.v5.Socks5PasswordAuthRequest;
-import io.netty.handler.codec.socksx.v5.Socks5PasswordAuthRequestDecoder;
-import io.netty.handler.codec.socksx.v5.Socks5PasswordAuthStatus;
+import io.netty.handler.codec.socksx.v5.*;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.MockServerLogger;
@@ -47,9 +33,17 @@ public class Socks5ProxyHandler extends SocksProxyHandler<Socks5Message> {
         String password = ConfigurationProperties.proxyAuthenticationPassword();
         Socks5AuthMethod requiredAuthMethod;
         ChannelHandler nextRequestDecoder;
-        if (!username.isEmpty() && !password.isEmpty()) {
-            requiredAuthMethod = Socks5AuthMethod.PASSWORD;
-            nextRequestDecoder = new Socks5PasswordAuthRequestDecoder();
+        if (initialRequest.authMethods().contains(Socks5AuthMethod.NO_AUTH)) {
+            requiredAuthMethod = Socks5AuthMethod.NO_AUTH;
+            nextRequestDecoder = new Socks5CommandRequestDecoder();
+        } else if (initialRequest.authMethods().contains(Socks5AuthMethod.PASSWORD)) {
+            if (!username.isEmpty() && !password.isEmpty()) {
+                requiredAuthMethod = Socks5AuthMethod.PASSWORD;
+                nextRequestDecoder = new Socks5PasswordAuthRequestDecoder();
+            } else {
+                requiredAuthMethod = Socks5AuthMethod.NO_AUTH;
+                nextRequestDecoder = new Socks5CommandRequestDecoder();
+            }
         } else {
             requiredAuthMethod = Socks5AuthMethod.NO_AUTH;
             nextRequestDecoder = new Socks5CommandRequestDecoder();
@@ -58,15 +52,18 @@ public class Socks5ProxyHandler extends SocksProxyHandler<Socks5Message> {
     }
 
     private void answerInitialRequest(ChannelHandlerContext ctx, Socks5InitialRequest initialRequest, Socks5AuthMethod requiredAuthMethod, ChannelHandler nextRequestDecoder) {
-        ctx.pipeline().remove(Socks5InitialRequestDecoder.class);
-        for (Socks5AuthMethod authMethod : initialRequest.authMethods()) {
-            if (requiredAuthMethod.equals(authMethod)) {
+        ctx.writeAndFlush(initialRequest
+            .authMethods()
+            .stream()
+            .filter(authMethod -> authMethod.equals(requiredAuthMethod))
+            .findFirst()
+            .map(authMethod -> {
                 ctx.pipeline().addFirst(nextRequestDecoder);
-                ctx.write(new DefaultSocks5InitialResponse(requiredAuthMethod));
-                return;
-            }
-        }
-        ctx.write(new DefaultSocks5InitialResponse(Socks5AuthMethod.UNACCEPTED));
+                return new DefaultSocks5InitialResponse(requiredAuthMethod);
+            })
+            .orElse(new DefaultSocks5InitialResponse(Socks5AuthMethod.UNACCEPTED))
+        );
+        ctx.pipeline().remove(Socks5InitialRequestDecoder.class);
     }
 
     private void handlePasswordAuthRequest(ChannelHandlerContext ctx, Socks5PasswordAuthRequest passwordAuthRequest) {

@@ -67,10 +67,19 @@ public class NettyHttpProxySOCKSIntegrationTest {
     private static MockServerClient mockServerClient;
 
     @BeforeClass
-    public static void setupFixture() {
+    public static void setupEchoServer() {
         insecureEchoServer = new EchoServer(false);
         secureEchoServer = new EchoServer(true);
+    }
 
+    @AfterClass
+    public static void shutdownEchoServer() {
+        stopQuietly(insecureEchoServer);
+        stopQuietly(secureEchoServer);
+    }
+
+    @Before
+    public void setupMockServer() {
         mockServerPort = new MockServer().getLocalPort();
 
         System.setProperty("http.proxyHost", "127.0.0.1");
@@ -79,11 +88,8 @@ public class NettyHttpProxySOCKSIntegrationTest {
         mockServerClient = new MockServerClient("localhost", mockServerPort);
     }
 
-    @AfterClass
-    public static void shutdownFixture() {
-        stopQuietly(insecureEchoServer);
-        stopQuietly(secureEchoServer);
-
+    @After
+    public void shutdownMockServer() {
         System.clearProperty("http.proxyHost");
         System.clearProperty("http.proxyPort");
 
@@ -342,27 +348,28 @@ public class NettyHttpProxySOCKSIntegrationTest {
     }
 
     @Test
-    public void shouldProxyRequestsUsingRawSocketViaSOCKS() throws Exception {
-        try {
-            proxyRequestsUsingRawSocketViaSOCKS(false);
-        } catch (Throwable ignore) {
-            // handle slightly flaky JDK socket handling of ProxySelector
-            proxyRequestsUsingRawSocketViaSOCKS(false);
-        }
-    }
-
-    @Test
-    public void shouldProxyRequestsUsingRawSecureSocketViaSOCKSToSecureServerPort() throws Exception {
+    public void shouldProxyRequestsUsingSocketWithWithProxySelectorViaSOCKS() throws Exception {
         assumeThat("SOCKS5 is broken in JRE <9", System.getProperty("java.version"), not(anyOf(
             startsWith("1.7."), equalTo("1.7"),
             startsWith("7."), equalTo("7"),
             startsWith("1.8."), equalTo("1.8"),
             startsWith("8."), equalTo("8"))));
 
-        proxyRequestsUsingRawSocketViaSOCKS(true);
+        proxyRequestsUsingSocketViaSOCKSWithProxySelector(false);
     }
 
-    private void proxyRequestsUsingRawSocketViaSOCKS(boolean useTLS) throws Exception {
+    @Test
+    public void shouldProxyRequestsUsingSecureSocketWithProxySelectorViaSOCKSToSecureServerPort() throws Exception {
+        assumeThat("SOCKS5 is broken in JRE <9", System.getProperty("java.version"), not(anyOf(
+            startsWith("1.7."), equalTo("1.7"),
+            startsWith("7."), equalTo("7"),
+            startsWith("1.8."), equalTo("1.8"),
+            startsWith("8."), equalTo("8"))));
+
+        proxyRequestsUsingSocketViaSOCKSWithProxySelector(true);
+    }
+
+    private void proxyRequestsUsingSocketViaSOCKSWithProxySelector(boolean useTLS) throws Exception {
         Socket socket = null;
         ProxySelector proxySelector = ProxySelector.getDefault();
 
@@ -432,13 +439,40 @@ public class NettyHttpProxySOCKSIntegrationTest {
     }
 
     @Test
-    @Ignore("need to finish implementing test - fix port and id address")
-    public void shouldHandleSOCKS5Connection() throws Exception {
+    public void shouldProxyRequestsUsingSocketViaSOCKS() throws Exception {
+        proxyRequestsUsingSocketViaSOCKS5(
+            insecureEchoServer,
+            new Socket("localhost", mockServerPort)
+        );
+    }
+
+    @Test
+    @Ignore
+    public void shouldProxyRequestsUsingSecureSocketViaSOCKSToSecureServerPort() throws Exception {
+//        ConfigurationProperties.logLevel("TRACE");
+//        ConfigurationProperties.disableSystemOut(false);
+        proxyRequestsUsingSocketViaSOCKS5(
+            secureEchoServer,
+            sslSocketFactory().wrapSocket(new Socket("localhost", mockServerPort))
+        );
+    }
+
+    @Test
+    @Ignore
+    public void shouldProxyRequestsUsingSecureSocketViaSOCKSToServerPort() throws Exception {
+//        ConfigurationProperties.logLevel("TRACE");
+//        ConfigurationProperties.disableSystemOut(false);
+        proxyRequestsUsingSocketViaSOCKS5(
+            insecureEchoServer,
+            sslSocketFactory().wrapSocket(new Socket("localhost", mockServerPort))
+        );
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private void proxyRequestsUsingSocketViaSOCKS5(EchoServer echoServer, Socket socket) throws Exception {
         // given
-        int localPort = secureEchoServer.getPort();
-        secureEchoServer.clearNextResponse();
-        Socket socket = new Socket("localhost", mockServerPort);
-//        Socket sslSocket = sslSocketFactory().wrapSocket(socket);
+        int echoServerPort = echoServer.getPort();
+        echoServer.clearNextResponse();
         OutputStream outputStream = socket.getOutputStream();
         InputStream inputStream = socket.getInputStream();
 
@@ -468,7 +502,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
                 (byte) 0x01                                         // address type IPv4
             },
             NetUtil.createByteArrayFromIpAddressString("127.0.0.1"),// ip address
-            Hex.decodeHex(BigInteger.valueOf(localPort).toString(16)) // port
+            Hex.decodeHex(BigInteger.valueOf(echoServerPort).toString(16)) // port
         );
         outputStream.write(connectRequest);
         outputStream.flush();
@@ -483,7 +517,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
                 (byte) 0x03,                                        // address type domain
             },
             BigInteger.valueOf(domainBytes.length).toByteArray(), new BigInteger(domainBytes).toByteArray(), // ip address
-            Hex.decodeHex(BigInteger.valueOf(localPort).toString(16))// port
+            Hex.decodeHex(BigInteger.valueOf(echoServerPort).toString(16))// port
         );
         byte[] connectResponse = new byte[expectedResponse.length];
         inputStream.read(connectResponse);
@@ -496,17 +530,27 @@ public class NettyHttpProxySOCKSIntegrationTest {
         ).getBytes(StandardCharsets.UTF_8));
         outputStream.flush();
 
-        System.out.println("localPort = " + localPort);
-        SECONDS.sleep(10);
+        byte[] echoServerResponse = new byte[95];
+        inputStream.read(echoServerResponse);
+        assertThat(new String(echoServerResponse, StandardCharsets.UTF_8), startsWith("" +
+            "HTTP/1.1 200 OK\r\n" +
+            "accept-encoding: gzip,deflate\r\n" +
+            "content-length: 0\r\n" +
+            "connection: keep-alive\r\n" +
+            "\r\n"
+        ));
 
         // then - request is received
         assertThat(
-            secureEchoServer.mockServerEventLog().verify(verification().withRequest(
-                request()
-                    .withMethod("GET")
-                    .withPath("/some_path")
-            ))
-                .get(20, SECONDS),
+            echoServer
+                .mockServerEventLog()
+                .verify(verification()
+                    .withRequest(
+                        request()
+                            .withMethod("GET")
+                            .withPath("/some_path")
+                    ))
+                .get(5, SECONDS),
             is("")
         );
     }

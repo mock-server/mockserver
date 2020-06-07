@@ -84,7 +84,7 @@ public class ActionHandler {
         }
         final Expectation expectation = httpStateHandler.firstMatchingExpectation(request);
         Runnable expectationPostProcessor = () -> httpStateHandler.postProcess(expectation);
-        final boolean potentiallyHttpProxy = attemptToProxyIfNoMatchingExpectation() && !isEmpty(request.getFirstHeader(HOST.toString())) && !localAddresses.contains(request.getFirstHeader(HOST.toString()));
+        final boolean potentiallyHttpProxy = !proxyingRequest && attemptToProxyIfNoMatchingExpectation() && !isEmpty(request.getFirstHeader(HOST.toString())) && !localAddresses.contains(request.getFirstHeader(HOST.toString()));
 
         if (expectation != null && expectation.getAction() != null) {
 

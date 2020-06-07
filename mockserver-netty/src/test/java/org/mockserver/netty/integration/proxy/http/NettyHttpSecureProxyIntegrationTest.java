@@ -24,11 +24,11 @@ import org.mockserver.echo.http.EchoServer;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpStatusCode;
+import org.mockserver.netty.MockServer;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.socket.tls.KeyStoreFactory;
 import org.mockserver.streams.IOStreamUtils;
-import org.mockserver.netty.MockServer;
 
 import javax.net.ssl.SSLSocket;
 import java.io.OutputStream;
@@ -43,7 +43,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertThat;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.proxyconfiguration.ProxyConfiguration.proxyConfiguration;
 import static org.mockserver.stop.Stop.stopQuietly;
@@ -274,7 +273,7 @@ public class NettyHttpSecureProxyIntegrationTest {
             // when
             // - send CONNECT request
             output.write(("" +
-                "CONNECT 127.0.0.1:443 HTTP/1.1\r\n" +
+                "CONNECT 127.0.0.1:" + secureEchoServer.getPort() + " HTTP/1.1\r\n" +
                 "Host: 127.0.0.1:" + secureEchoServer.getPort() + "\r\n" +
                 "\r\n"
             ).getBytes(UTF_8));
@@ -342,7 +341,7 @@ public class NettyHttpSecureProxyIntegrationTest {
                 // when
                 // - send CONNECT request
                 output.write(("" +
-                    "CONNECT 127.0.0.1:443 HTTP/1.1\r\n" +
+                    "CONNECT 127.0.0.1:" + secureEchoServer.getPort() + " HTTP/1.1\r\n" +
                     "Host: 127.0.0.1:" + secureEchoServer.getPort() + "\r\n" +
                     "\r\n"
                 ).getBytes(UTF_8));

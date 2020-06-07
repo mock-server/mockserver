@@ -1,6 +1,7 @@
 package org.mockserver.netty.unification;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.handler.codec.ReplayingDecoder;
 import io.netty.handler.codec.http.HttpContentDecompressor;
@@ -12,6 +13,7 @@ import io.netty.handler.codec.socksx.v5.Socks5InitialRequestDecoder;
 import io.netty.handler.codec.socksx.v5.Socks5ServerEncoder;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.closurecallback.websocketregistry.CallbackWebSocketServerHandler;
 import org.mockserver.codec.MockServerServerCodec;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -24,8 +26,8 @@ import org.mockserver.mappers.MockServerHttpResponseToFullHttpResponse;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.netty.proxy.BinaryHandler;
 import org.mockserver.netty.MockServerHandler;
+import org.mockserver.netty.proxy.BinaryHandler;
 import org.mockserver.netty.proxy.socks.Socks4ProxyHandler;
 import org.mockserver.netty.proxy.socks.Socks5ProxyHandler;
 import org.mockserver.netty.proxy.socks.SocksDetector;
@@ -45,8 +47,12 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.tlsMutualAuthenticationRequired;
 import static org.mockserver.exception.ExceptionHandling.*;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED_RESPONSE;
+import static org.mockserver.logging.MockServerLogger.isEnabled;
+import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.netty.MockServerHandler.LOCAL_HOST_HEADERS;
+import static org.mockserver.netty.MockServerHandler.PROXYING;
+import static org.mockserver.netty.proxy.relay.RelayConnectHandler.*;
 import static org.slf4j.event.Level.TRACE;
 
 /**
@@ -119,41 +125,42 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) {
         ctx.channel().attr(NETTY_SSL_CONTEXT_FACTORY).set(nettySslContextFactory);
         if (SocksDetector.isSocks4(msg, actualReadableBytes())) {
+            logStage(ctx, "adding SOCKS4 decoders");
             enableSocks4(ctx, msg);
         } else if (SocksDetector.isSocks5(msg, actualReadableBytes())) {
+            logStage(ctx, "adding SOCKS5 decoders");
             enableSocks5(ctx, msg);
-        } else if (isSsl(msg)) {
-            enableSsl(ctx, msg);
+        } else if (isTls(msg)) {
+            logStage(ctx, "adding TLS decoders");
+            enableTls(ctx, msg);
         } else if (isHttp(msg)) {
+            logStage(ctx, "adding HTTP decoders");
             switchToHttp(ctx, msg);
+        } else if (isProxyConnected(msg)) {
+            logStage(ctx, "setting proxy connected");
+            switchToProxyConnected(ctx, msg);
         } else {
+            logStage(ctx, "adding binary decoder");
             switchToBinary(ctx, msg);
         }
 
         addLoggingHandler(ctx);
     }
 
-    private void addLoggingHandler(ChannelHandlerContext ctx) {
-        if (MockServerLogger.isEnabled(TRACE)) {
-            loggingHandlerFirst.addLoggingHandler(ctx);
+    private void logStage(ChannelHandlerContext ctx, String message) {
+        if (isEnabled(Level.DEBUG)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(Level.DEBUG)
+                    .setMessageFormat(" for channel: " + message + ctx.channel() + "pipeline: " + ctx.pipeline().names())
+            );
         }
     }
 
-    private boolean isSsl(ByteBuf buf) {
-        return SslHandler.isEncrypted(buf);
-    }
-
-    private boolean isHttp(ByteBuf msg) {
-        String method = msg.toString(msg.readerIndex(), 8, StandardCharsets.US_ASCII);
-        return method.startsWith("GET ") ||
-            method.startsWith("POST ") ||
-            method.startsWith("PUT ") ||
-            method.startsWith("HEAD ") ||
-            method.startsWith("OPTIONS ") ||
-            method.startsWith("PATCH ") ||
-            method.startsWith("DELETE ") ||
-            method.startsWith("TRACE ") ||
-            method.startsWith("CONNECT ");
+    private void addLoggingHandler(ChannelHandlerContext ctx) {
+        if (isEnabled(TRACE)) {
+            loggingHandlerFirst.addLoggingHandler(ctx);
+        }
     }
 
     private void enableSocks4(ChannelHandlerContext ctx, ByteBuf msg) {
@@ -169,18 +176,36 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         for (ChannelHandler channelHandler : channelHandlers) {
             pipeline.addFirst(channelHandler);
         }
+        ctx.channel().attr(PROXYING).set(Boolean.TRUE);
 
         // re-unify (with SOCKS5 enabled)
         ctx.pipeline().fireChannelRead(msg.readBytes(actualReadableBytes()));
     }
 
-    private void enableSsl(ChannelHandlerContext ctx, ByteBuf msg) {
+    private boolean isTls(ByteBuf buf) {
+        return SslHandler.isEncrypted(buf);
+    }
+
+    private void enableTls(ChannelHandlerContext ctx, ByteBuf msg) {
         ChannelPipeline pipeline = ctx.pipeline();
         pipeline.addFirst(new SniHandler(nettySslContextFactory));
         enableSslUpstreamAndDownstream(ctx.channel());
 
         // re-unify (with SSL enabled)
         ctx.pipeline().fireChannelRead(msg.readBytes(actualReadableBytes()));
+    }
+
+    private boolean isHttp(ByteBuf msg) {
+        String method = msg.toString(msg.readerIndex(), 8, StandardCharsets.US_ASCII);
+        return method.startsWith("GET ") ||
+            method.startsWith("POST ") ||
+            method.startsWith("PUT ") ||
+            method.startsWith("HEAD ") ||
+            method.startsWith("OPTIONS ") ||
+            method.startsWith("PATCH ") ||
+            method.startsWith("DELETE ") ||
+            method.startsWith("TRACE ") ||
+            method.startsWith("CONNECT ");
     }
 
     private void switchToHttp(ChannelHandlerContext ctx, ByteBuf msg) {
@@ -194,7 +219,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         addLastIfNotPresent(pipeline, new HttpContentDecompressor());
         addLastIfNotPresent(pipeline, httpContentLengthRemover);
         addLastIfNotPresent(pipeline, new HttpObjectAggregator(Integer.MAX_VALUE));
-        if (MockServerLogger.isEnabled(TRACE)) {
+        if (isEnabled(TRACE)) {
             addLastIfNotPresent(pipeline, loggingHandlerLast);
         }
         if (tlsMutualAuthenticationRequired() && !isSslEnabledUpstream(ctx.channel())) {
@@ -230,6 +255,35 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
             // fire message back through pipeline
             ctx.fireChannelRead(msg.readBytes(actualReadableBytes()));
         }
+    }
+
+    private boolean isProxyConnected(ByteBuf msg) {
+        return msg.toString(msg.readerIndex(), 8, StandardCharsets.US_ASCII).startsWith(PROXIED);
+    }
+
+    private void switchToProxyConnected(ChannelHandlerContext ctx, ByteBuf msg) {
+        String message = readMessage(msg);
+        if (message.startsWith(PROXIED_SECURE)) {
+            String[] hostParts = StringUtils.substringAfter(message, PROXIED_SECURE).split(":");
+            int port = hostParts.length > 1 ? Integer.parseInt(hostParts[1]) : 443;
+            ctx.channel().attr(PROXYING).set(Boolean.TRUE);
+            ctx.channel().attr(REMOTE_SOCKET).set(new InetSocketAddress(hostParts[0], port));
+            enableSslUpstreamAndDownstream(ctx.channel());
+            ctx.channel().attr(PROXYING).set(Boolean.TRUE);
+            ctx.channel().attr(REMOTE_SOCKET).set(new InetSocketAddress(hostParts[0], port));
+        } else if (message.startsWith(PROXIED)) {
+            String[] hostParts = StringUtils.substringAfter(message, PROXIED).split(":");
+            int port = hostParts.length > 1 ? Integer.parseInt(hostParts[1]) : 80;
+            ctx.channel().attr(PROXYING).set(Boolean.TRUE);
+            ctx.channel().attr(REMOTE_SOCKET).set(new InetSocketAddress(hostParts[0], port));
+        }
+        ctx.writeAndFlush(Unpooled.copiedBuffer((PROXIED_RESPONSE + message).getBytes(StandardCharsets.UTF_8))).awaitUninterruptibly();
+    }
+
+    private String readMessage(ByteBuf msg) {
+        byte[] bytes = new byte[actualReadableBytes()];
+        msg.readBytes(bytes);
+        return new String(bytes, StandardCharsets.US_ASCII);
     }
 
     private void switchToBinary(ChannelHandlerContext ctx, ByteBuf msg) {

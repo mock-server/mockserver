@@ -1,6 +1,8 @@
 package org.mockserver.netty.proxy.relay;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -17,21 +19,23 @@ import org.mockserver.logging.MockServerLogger;
 import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
-import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
 import static org.mockserver.mock.action.ActionHandler.getRemoteAddress;
-import static org.mockserver.netty.MockServerHandler.PROXYING;
 import static org.mockserver.netty.unification.PortUnificationHandler.*;
 import static org.slf4j.event.Level.DEBUG;
 
 @ChannelHandler.Sharable
 public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler<T> {
 
+    public static final String PROXIED = "PROXIED_";
+    public static final String PROXIED_SECURE = PROXIED + "SECURE_";
+    public static final String PROXIED_RESPONSE = "PROXIED_RESPONSE_";
     private final LifeCycle server;
     private final MockServerLogger mockServerLogger;
-    private final String host;
-    private final int port;
+    protected final String host;
+    protected final int port;
 
     public RelayConnectHandler(LifeCycle server, MockServerLogger mockServerLogger, String host, int port) {
         this.server = server;
@@ -41,71 +45,86 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
     }
 
     @Override
-    public void channelRead0(final ChannelHandlerContext serverCtx, final T request) {
+    public void channelRead0(final ChannelHandlerContext proxyClientCtx, final T request) {
         Bootstrap bootstrap = new Bootstrap()
-            .group(serverCtx.channel().eventLoop())
+            .group(proxyClientCtx.channel().eventLoop())
             .channel(NioSocketChannel.class)
             .handler(new ChannelInboundHandlerAdapter() {
                 @Override
-                public void channelActive(final ChannelHandlerContext clientCtx) {
-                    serverCtx.channel()
-                        .writeAndFlush(successResponse(request))
-                        .addListener((ChannelFutureListener) channelFuture -> {
-                            removeCodecSupport(serverCtx);
-                            serverCtx.channel().attr(PROXYING).set(Boolean.TRUE);
+                public void channelActive(final ChannelHandlerContext mockServerCtx) {
+                    if (isSslEnabledUpstream(proxyClientCtx.channel())) {
+                        mockServerCtx.writeAndFlush(Unpooled.copiedBuffer((PROXIED_SECURE + host + ":" + port).getBytes(StandardCharsets.UTF_8))).awaitUninterruptibly();
+                    } else {
+                        mockServerCtx.writeAndFlush(Unpooled.copiedBuffer((PROXIED + host + ":" + port).getBytes(StandardCharsets.UTF_8))).awaitUninterruptibly();
+                    }
+                }
 
-                            // downstream
-                            ChannelPipeline downstreamPipeline = clientCtx.channel().pipeline();
+                @Override
+                public void channelRead(ChannelHandlerContext mockServerCtx, Object msg) {
+                    if (msg instanceof ByteBuf) {
+                        byte[] bytes = ByteBufUtil.getBytes((ByteBuf) msg);
+                        if (new String(bytes, StandardCharsets.UTF_8).startsWith(PROXIED_RESPONSE)) {
+                            proxyClientCtx
+                                .writeAndFlush(successResponse(request))
+                                .addListener((ChannelFutureListener) channelFuture -> {
+                                    removeCodecSupport(proxyClientCtx);
 
-                            if (isSslEnabledDownstream(serverCtx.channel())) {
-                                downstreamPipeline.addLast(nettySslContextFactory(serverCtx.channel()).createClientSslContext(true).newHandler(clientCtx.alloc(), host, port));
-                            }
+                                    // downstream (to MockServer)
+                                    ChannelPipeline pipelineToMockServer = mockServerCtx.channel().pipeline();
 
-                            if (MockServerLogger.isEnabled(Level.TRACE)) {
-                                downstreamPipeline.addLast(new LoggingHandler("downstream                -->"));
-                            }
+                                    if (isSslEnabledDownstream(proxyClientCtx.channel())) {
+                                        pipelineToMockServer.addLast(nettySslContextFactory(proxyClientCtx.channel()).createClientSslContext(true).newHandler(mockServerCtx.alloc(), host, port));
+                                    }
 
-                            downstreamPipeline.addLast(new HttpClientCodec(ConfigurationProperties.maxInitialLineLength(), ConfigurationProperties.maxHeaderSize(), ConfigurationProperties.maxChunkSize()));
+                                    if (MockServerLogger.isEnabled(Level.TRACE)) {
+                                        pipelineToMockServer.addLast(new LoggingHandler("downstream                -->"));
+                                    }
 
-                            downstreamPipeline.addLast(new HttpContentDecompressor());
+                                    pipelineToMockServer.addLast(new HttpClientCodec(ConfigurationProperties.maxInitialLineLength(), ConfigurationProperties.maxHeaderSize(), ConfigurationProperties.maxChunkSize()));
 
-                            downstreamPipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
+                                    pipelineToMockServer.addLast(new HttpContentDecompressor());
 
-                            downstreamPipeline.addLast(new DownstreamProxyRelayHandler(mockServerLogger, serverCtx.channel()));
+                                    pipelineToMockServer.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
 
-                            // upstream
-                            ChannelPipeline upstreamPipeline = serverCtx.channel().pipeline();
+                                    pipelineToMockServer.addLast(new DownstreamProxyRelayHandler(mockServerLogger, proxyClientCtx.channel()));
 
-                            if (isSslEnabledUpstream(serverCtx.channel()) && upstreamPipeline.get(SslHandler.class) == null) {
-                                upstreamPipeline.addLast(nettySslContextFactory(serverCtx.channel()).createServerSslContext().newHandler(serverCtx.alloc()));
-                            }
+                                    // upstream (to proxy client)
+                                    ChannelPipeline pipelineToProxyClient = proxyClientCtx.channel().pipeline();
 
-                            if (MockServerLogger.isEnabled(Level.TRACE)) {
-                                upstreamPipeline.addLast(new LoggingHandler("upstream <-- "));
-                            }
+                                    if (isSslEnabledUpstream(proxyClientCtx.channel()) && pipelineToProxyClient.get(SslHandler.class) == null) {
+                                        pipelineToProxyClient.addLast(nettySslContextFactory(proxyClientCtx.channel()).createServerSslContext().newHandler(proxyClientCtx.alloc()));
+                                    }
 
-                            upstreamPipeline.addLast(new HttpServerCodec(ConfigurationProperties.maxInitialLineLength(), ConfigurationProperties.maxHeaderSize(), ConfigurationProperties.maxChunkSize()));
+                                    if (MockServerLogger.isEnabled(Level.TRACE)) {
+                                        pipelineToProxyClient.addLast(new LoggingHandler("upstream <-- "));
+                                    }
 
-                            upstreamPipeline.addLast(new HttpContentDecompressor());
+                                    pipelineToProxyClient.addLast(new HttpServerCodec(ConfigurationProperties.maxInitialLineLength(), ConfigurationProperties.maxHeaderSize(), ConfigurationProperties.maxChunkSize()));
 
-                            upstreamPipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
+                                    pipelineToProxyClient.addLast(new HttpContentDecompressor());
 
-                            upstreamPipeline.addLast(new UpstreamProxyRelayHandler(mockServerLogger, serverCtx.channel(), clientCtx.channel()));
-                        });
+                                    pipelineToProxyClient.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
+
+                                    pipelineToProxyClient.addLast(new UpstreamProxyRelayHandler(mockServerLogger, proxyClientCtx.channel(), mockServerCtx.channel()));
+                                });
+                        } else {
+                            mockServerCtx.fireChannelRead(Unpooled.copiedBuffer(bytes));
+                        }
+                    }
                 }
             });
 
-        final InetSocketAddress remoteSocket = getDownstreamSocket(serverCtx);
+        final InetSocketAddress remoteSocket = getDownstreamSocket(proxyClientCtx);
         bootstrap.connect(remoteSocket).addListener((ChannelFutureListener) future -> {
-            if (!future.isSuccess()) {
-                failure("Connection failed to " + remoteSocket, future.cause(), serverCtx, failureResponse(request));
-            } else {
+            if (future.isSuccess()) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(DEBUG)
                         .setMessageFormat("connected to{}")
                         .setArguments(remoteSocket)
                 );
+            } else {
+                failure("Connection failed to " + remoteSocket, future.cause(), proxyClientCtx, failureResponse(request));
             }
         });
     }

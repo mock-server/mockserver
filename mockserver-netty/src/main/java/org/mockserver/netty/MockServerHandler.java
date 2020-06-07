@@ -39,7 +39,7 @@ import static org.mockserver.exception.ExceptionHandling.connectionClosedExcepti
 import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
-import static org.mockserver.netty.unification.PortUnificationHandler.enableSslUpstreamAndDownstream;
+import static org.mockserver.netty.unification.PortUnificationHandler.*;
 
 /**
  * @author jamesdbloom
@@ -137,7 +137,9 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                         if (isNotBlank(request.getPath().getValue())) {
                             server.getScheduler().submit(() -> addSubjectAlternativeName(request.getPath().getValue()));
                         }
-                        ctx.pipeline().addLast(new HttpConnectHandler(server, mockServerLogger, request.getPath().getValue(), -1));
+                        String[] hostParts = request.getPath().getValue().split(":");
+                        int port = hostParts.length > 1 ? Integer.parseInt(hostParts[1]) : isSslEnabledUpstream(ctx.channel()) ? 443 : 80;
+                        ctx.pipeline().addLast(new HttpConnectHandler(server, mockServerLogger, hostParts[0], port));
                         ctx.pipeline().remove(this);
                         ctx.fireChannelRead(request);
                     }
