@@ -315,7 +315,6 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         String portExtension;
         if (((inetSocketAddress.getPort() == 443) && sslEnabledUpstream)
             || ((inetSocketAddress.getPort() == 80) && !sslEnabledUpstream)) {
-
             portExtension = "";
         } else {
             portExtension = ":" + inetSocketAddress.getPort();
