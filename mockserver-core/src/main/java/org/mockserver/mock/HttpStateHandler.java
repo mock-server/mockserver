@@ -98,8 +98,8 @@ public class HttpStateHandler {
             requestMatcher = getHttpRequestSerializer().deserialize(request.getBodyAsString());
         }
         try {
-            ClearType retrieveType = ClearType.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "ALL"));
-            switch (retrieveType) {
+            ClearType type = ClearType.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "ALL"));
+            switch (type) {
                 case LOG:
                     mockServerLog.clear(requestMatcher);
                     mockServerLogger.logEvent(
@@ -202,8 +202,8 @@ public class HttpStateHandler {
             try {
                 final HttpRequest httpRequest = isNotBlank(request.getBodyAsString()) ? getHttpRequestSerializer().deserialize(request.getBodyAsString()) : null;
                 Format format = Format.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("format").toUpperCase(), "JSON"));
-                RetrieveType retrieveType = RetrieveType.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "REQUESTS"));
-                switch (retrieveType) {
+                RetrieveType type = RetrieveType.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "REQUESTS"));
+                switch (type) {
                     case LOGS: {
                         final Object[] arguments = new Object[]{(httpRequest == null ? request() : httpRequest)};
                         mockServerLogger.logEvent(
