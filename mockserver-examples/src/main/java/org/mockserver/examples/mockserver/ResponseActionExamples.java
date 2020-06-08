@@ -19,6 +19,7 @@ import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpTemplate.template;
+import static org.mockserver.model.JsonBody.json;
 
 /**
  * @author jamesdbloom
@@ -50,6 +51,19 @@ public class ResponseActionExamples {
                         MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16).toString()
                     )
                     .withBody("我说中国话".getBytes(StandardCharsets.UTF_16))
+            );
+    }
+
+    public void jsonResponseWithUTF8Body() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withMethod("GET")
+                    .withPath("/farsi_body")
+            )
+            .respond(
+                response()
+                    .withBody(json("سلام", MediaType.APPLICATION_JSON_UTF_8))
             );
     }
 

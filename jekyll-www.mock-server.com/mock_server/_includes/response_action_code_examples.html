@@ -101,6 +101,70 @@ curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
+<button id="button_response_json_UTF8_body" class="accordion">json response with UTF8 body</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withMethod("GET")
+            .withPath("/farsi_body")
+    )
+    .respond(
+        response()
+            .withBody(json("سلام", MediaType.APPLICATION_JSON_UTF_8))
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "method": "GET",
+        "path": "/simple"
+    },
+    "httpResponse": {
+        "body": {
+            "type": "STRING",
+            "string": "سلام",
+            "contentType": "text/plain; charset=utf-8"
+         }
+    },
+    "times": {
+        "unlimited": true
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT http://localhost:1080/mockserver/expectation -H "Content-Type: application/json; charset=utf-8" --data '{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/simple"
+    },
+    "httpResponse": {
+        "body": {
+            "type": "STRING",
+            "string": "سلام",
+            "contentType": "text/plain; charset=utf-8"
+         }
+    },
+    "times": {
+        "unlimited": true
+    }
+}'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 <button id="button_response_literal_status_code_and_reason_phrase" class="accordion">literal response with status code and reason phrase</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
