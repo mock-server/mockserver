@@ -22,7 +22,7 @@ public class FullHttpResponseToMockServerResponse {
 
     public FullHttpResponseToMockServerResponse(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-        this.bodyDecoderEncoder = new BodyDecoderEncoder(mockServerLogger);
+        this.bodyDecoderEncoder = new BodyDecoderEncoder();
     }
 
     public HttpResponse mapFullHttpResponseToMockServerResponse(FullHttpResponse fullHttpResponse) {

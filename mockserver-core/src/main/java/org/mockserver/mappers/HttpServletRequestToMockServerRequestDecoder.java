@@ -4,6 +4,7 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.mockserver.codec.BodyDecoderEncoder;
+import org.mockserver.codec.BodyServletDecoderEncoder;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 
@@ -19,10 +20,10 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
  */
 public class HttpServletRequestToMockServerRequestDecoder {
 
-    private final BodyDecoderEncoder bodyDecoderEncoder;
+    private final BodyServletDecoderEncoder bodyDecoderEncoder;
 
     public HttpServletRequestToMockServerRequestDecoder(MockServerLogger mockServerLogger) {
-        bodyDecoderEncoder = new BodyDecoderEncoder(mockServerLogger);
+        bodyDecoderEncoder = new BodyServletDecoderEncoder(mockServerLogger);
     }
 
     public HttpRequest mapHttpServletRequestToMockServerRequest(HttpServletRequest httpServletRequest) {

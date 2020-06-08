@@ -31,7 +31,7 @@ public class MockServerHttpResponseToFullHttpResponse {
 
     public MockServerHttpResponseToFullHttpResponse(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-        this.bodyDecoderEncoder = new BodyDecoderEncoder(mockServerLogger);
+        this.bodyDecoderEncoder = new BodyDecoderEncoder();
     }
 
     public List<DefaultHttpObject>  mapMockServerResponseToNettyResponse(HttpResponse httpResponse) {

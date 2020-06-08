@@ -3,6 +3,7 @@ package org.mockserver.mappers;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import org.mockserver.codec.BodyDecoderEncoder;
+import org.mockserver.codec.BodyServletDecoderEncoder;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
@@ -18,10 +19,10 @@ import static io.netty.handler.codec.http.HttpHeaderNames.*;
  */
 public class MockServerResponseToHttpServletResponseEncoder {
 
-    private final BodyDecoderEncoder bodyDecoderEncoder;
+    private final BodyServletDecoderEncoder bodyDecoderEncoder;
 
     public MockServerResponseToHttpServletResponseEncoder(MockServerLogger mockServerLogger) {
-        bodyDecoderEncoder = new BodyDecoderEncoder(mockServerLogger);
+        bodyDecoderEncoder = new BodyServletDecoderEncoder(mockServerLogger);
     }
 
     public void mapMockServerResponseToHttpServletResponse(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {

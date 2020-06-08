@@ -30,7 +30,7 @@ public class MockServerHttpRequestToFullHttpRequest {
 
     public MockServerHttpRequestToFullHttpRequest(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-        this.bodyDecoderEncoder = new BodyDecoderEncoder(mockServerLogger);
+        this.bodyDecoderEncoder = new BodyDecoderEncoder();
     }
 
     public FullHttpRequest mapMockServerRequestToNettyRequest(HttpRequest httpRequest) {

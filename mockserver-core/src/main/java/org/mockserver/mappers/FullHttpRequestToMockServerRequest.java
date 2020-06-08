@@ -1,7 +1,6 @@
 package org.mockserver.mappers;
 
 import io.netty.handler.codec.http.*;
-import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import org.mockserver.codec.BodyDecoderEncoder;
@@ -29,7 +28,7 @@ public class FullHttpRequestToMockServerRequest {
 
     public FullHttpRequestToMockServerRequest(MockServerLogger mockServerLogger, boolean isSecure) {
         this.mockServerLogger = mockServerLogger;
-        this.bodyDecoderEncoder = new BodyDecoderEncoder(mockServerLogger);
+        this.bodyDecoderEncoder = new BodyDecoderEncoder();
         this.isSecure = isSecure;
     }
 
