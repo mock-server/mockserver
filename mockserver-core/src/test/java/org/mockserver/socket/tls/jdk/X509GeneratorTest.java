@@ -115,10 +115,10 @@ public class X509GeneratorTest {
         X509AndPrivateKey keyPair = x509Generator.generateRootX509AndPrivateKey(csr);
 
         // then - validate pem decoding/encoding of the private key
-        assertEquals(keyPair.getPrivateKey(), x509Generator.privateKeyToPEM(x509Generator.privateKeyBytesFromPEM(keyPair.getPrivateKey())));
+        assertEquals(keyPair.getPrivateKey(), X509Generator.privateKeyToPEM(X509Generator.privateKeyBytesFromPEM(keyPair.getPrivateKey())));
 
         // and - validate pem decoding/encoding of the cert
-        assertEquals(keyPair.getCert(), x509Generator.certToPEM(certFromPem(keyPair.getCert())));
+        assertEquals(keyPair.getCert(), X509Generator.certToPEM(certFromPem(keyPair.getCert())));
     }
 
     @Test
@@ -172,6 +172,68 @@ public class X509GeneratorTest {
         // then - the no SANs should be present
         Collection<List<?>> subjectAlternativeNames = x509Certificate.getSubjectAlternativeNames();
         assertNull(subjectAlternativeNames);
+    }
+
+    @Test
+    public void shouldCreateClientCertificateWithWildcardSANs() throws Exception {
+        // given
+        X509Generator x509Generator = new X509Generator(new MockServerLogger());
+        String[] domainNames = {"*.57bob.com", "*.23foo.com", "127.0.0.1"};
+
+        // and - a certificate siging request with SANs
+        CertificateSigningRequest csr = new CertificateSigningRequest()
+            .setCommonName(ROOT_COMMON_NAME)
+            .setKeyPairSize(KEY_SIZE);
+        csr.addSubjectAlternativeNames(domainNames);
+
+        // and - and a root keypair
+        X509AndPrivateKey pemRootKeyPair = x509Generator.generateRootX509AndPrivateKey(csr);
+
+        // when - a certificate has been successfully generated
+        X509AndPrivateKey keyPair = x509Generator.generateLeafX509AndPrivateKey(csr, buildDistinguishedName(ROOT_COMMON_NAME), pemRootKeyPair.getPrivateKey(), X509Generator.x509FromPEM(pemRootKeyPair.getCert()));
+        X509Certificate x509Certificate = x509FromPEM(keyPair.getCert());
+
+        // then - the correct number of SANs should be present
+        Collection<List<?>> subjectAlternativeNames = x509Certificate.getSubjectAlternativeNames();
+        assertEquals(3, subjectAlternativeNames.size());
+
+        // and - the correct values are contained in the correct order
+        List<?> collect = subjectAlternativeNames
+            .stream()
+            .map(subjectAlternativeName -> subjectAlternativeName.get(1))
+            .collect(Collectors.toList());
+        assertThat(collect, contains(domainNames));
+    }
+
+    @Test
+    public void shouldCreateClientCertificateWithDomainsComponentsWithNumbersInSANs() throws Exception {
+        // given
+        X509Generator x509Generator = new X509Generator(new MockServerLogger());
+        String[] domainNames = {"57bob.com", "bob57.com", "localhost.23foo.com", "127.0.0.1"};
+
+        // and - a certificate siging request with SANs
+        CertificateSigningRequest csr = new CertificateSigningRequest()
+            .setCommonName(ROOT_COMMON_NAME)
+            .setKeyPairSize(KEY_SIZE);
+        csr.addSubjectAlternativeNames(domainNames);
+
+        // and - and a root keypair
+        X509AndPrivateKey pemRootKeyPair = x509Generator.generateRootX509AndPrivateKey(csr);
+
+        // when - a certificate has been successfully generated
+        X509AndPrivateKey keyPair = x509Generator.generateLeafX509AndPrivateKey(csr, buildDistinguishedName(ROOT_COMMON_NAME), pemRootKeyPair.getPrivateKey(), X509Generator.x509FromPEM(pemRootKeyPair.getCert()));
+        X509Certificate x509Certificate = x509FromPEM(keyPair.getCert());
+
+        // then - the correct number of SANs should be present
+        Collection<List<?>> subjectAlternativeNames = x509Certificate.getSubjectAlternativeNames();
+        assertEquals(4, subjectAlternativeNames.size());
+
+        // and - the correct values are contained in the correct order
+        List<?> collect = subjectAlternativeNames
+            .stream()
+            .map(subjectAlternativeName -> subjectAlternativeName.get(1))
+            .collect(Collectors.toList());
+        assertThat(collect, contains(domainNames));
     }
 
     @Test
