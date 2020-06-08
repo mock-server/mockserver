@@ -33,7 +33,7 @@ public class XmlBodyTest {
         assertThat(xmlBody.getType(), is(Body.Type.XML));
         assertThat(xmlBody.getContentType(), is(XmlBody.DEFAULT_CONTENT_TYPE.toString()));
         assertThat(xmlBody.getCharset(StandardCharsets.UTF_8), is(StandardCharsets.UTF_8));
-        assertThat(xmlBody.getContentType(), is(MediaType.create("application", "xml").toString()));
+        assertThat(xmlBody.getContentType(), is(MediaType.create("application", "xml").withCharset("utf-8").toString()));
     }
 
     @Test
@@ -59,7 +59,7 @@ public class XmlBodyTest {
         assertThat(xmlBody.getType(), is(Body.Type.XML));
         assertThat(xmlBody.getContentType(), is(XmlBody.DEFAULT_CONTENT_TYPE.toString()));
         assertThat(xmlBody.getCharset(StandardCharsets.UTF_8), is(StandardCharsets.UTF_8));
-        assertThat(xmlBody.getContentType(), is(MediaType.create("application", "xml").toString()));
+        assertThat(xmlBody.getContentType(), is(MediaType.create("application", "xml").withCharset("utf-8").toString()));
     }
 
     @Test

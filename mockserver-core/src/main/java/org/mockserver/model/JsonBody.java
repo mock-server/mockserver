@@ -14,7 +14,8 @@ import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
 public class JsonBody extends BodyWithContentType<String> {
 
     public static final MatchType DEFAULT_MATCH_TYPE = MatchType.ONLY_MATCHING_FIELDS;
-    public static final MediaType DEFAULT_CONTENT_TYPE = MediaType.create("application", "json");
+    // setting default to UTF8 as per https://tools.ietf.org/html/rfc8259#section-8.1
+    public static final MediaType DEFAULT_CONTENT_TYPE = MediaType.APPLICATION_JSON_UTF_8;
     private final String json;
     private final MatchType matchType;
     private final byte[] rawBytes;

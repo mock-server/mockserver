@@ -1211,11 +1211,11 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
-    public void shouldReturnResponseByMatchingBodyWithXml() {
+    public void shouldReturnResponseByMatchingBodyWithXmlWithSpecialCharactersDefaultingToUTF8() {
         // when
         mockServerClient.when(request().withBody(xml("" +
             "<bookstore>" + NEW_LINE +
-            "  <book nationality=\"ITALIAN\" category=\"COOKING\"><title lang=\"en\">Everyday Italian</title><author>Giada De Laurentiis</author><year>2005</year><price>30.00</price></book>" + NEW_LINE +
+            "  <book nationality=\"ITALIAN\" category=\"COOKING\"><title lang=\"en\">Everyday Italian</title><author>ÄÑçîüÏ</author><year>2005</year><price>30.00</price></book>" + NEW_LINE +
             "</bookstore>")), exactly(2)).respond(response().withBody("some_body"));
 
         // then
@@ -1233,7 +1233,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "<bookstore>" + NEW_LINE +
                         "  <book category=\"COOKING\" nationality=\"ITALIAN\">" + NEW_LINE +
                         "    <title lang=\"en\">Everyday Italian</title>" + NEW_LINE +
-                        "    <author>Giada De Laurentiis</author>" + NEW_LINE +
+                        "    <author>ÄÑçîüÏ</author>" + NEW_LINE +
                         "    <year>2005</year>" + NEW_LINE +
                         "    <price>30.00</price>" + NEW_LINE +
                         "  </book>" + NEW_LINE +
@@ -1243,7 +1243,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
-    public void shouldReturnResponseByMatchingBodyWithXmlWithSpecialCharacters() {
+    public void shouldReturnResponseByMatchingBodyWithXmlWithSpecialCharactersAndCharset() {
 
         // when
         mockServerClient
@@ -1335,14 +1335,62 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
-    public void shouldReturnResponseByMatchingBodyWithJson() {
+    public void shouldReturnXmlResponseWithUTF8() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withBody("some_body"),
+                exactly(2)
+            )
+            .respond(
+                response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                    .withBody(xml("" +
+                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + NEW_LINE +
+                        "<bookstore>" + NEW_LINE +
+                        "  <book category=\"COOKING\" nationality=\"ITALIAN\">" + NEW_LINE +
+                        "    <title>Everyday Italian</title>" + NEW_LINE +
+                        "    <author>ÄÑçîüÏ</author>" + NEW_LINE +
+                        "  </book>" + NEW_LINE +
+                        "</bookstore>")
+                    )
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withHeader("content-type", "application/xml; charset=utf-8")
+                .withBody(xml("" +
+                    "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + NEW_LINE +
+                    "<bookstore>" + NEW_LINE +
+                    "  <book category=\"COOKING\" nationality=\"ITALIAN\">" + NEW_LINE +
+                    "    <title>Everyday Italian</title>" + NEW_LINE +
+                    "    <author>ÄÑçîüÏ</author>" + NEW_LINE +
+                    "  </book>" + NEW_LINE +
+                    "</bookstore>")
+                ),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST")
+                    .withBody("some_body"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingBodyWithJsonWithSpecialCharactersDefaultingToUTF8() {
         // when
         mockServerClient
             .when(
                 request()
                     .withBody(json("{" + NEW_LINE +
                         "    \"id\": 1," + NEW_LINE +
-                        "    \"name\": \"A green door\"," + NEW_LINE +
+                        "    \"name\": \"A σπίτι door\"," + NEW_LINE +
                         "    \"price\": 12.50," + NEW_LINE +
                         "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                         "}")),
@@ -1365,13 +1413,13 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST")
-                    .withBody("{" + NEW_LINE +
+                    .withBody(json("{" + NEW_LINE +
                         "    \"id\": 1," + NEW_LINE +
                         "    \"extra ignored field\": \"some value\"," + NEW_LINE +
-                        "    \"name\": \"A green door\"," + NEW_LINE +
+                        "    \"name\": \"A σπίτι door\"," + NEW_LINE +
                         "    \"price\": 12.50," + NEW_LINE +
                         "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
-                        "}"),
+                        "}")),
                 headersToIgnore)
         );
     }
@@ -1408,7 +1456,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             response()
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeader(CONTENT_TYPE.toString(), MediaType.create("application", "json").toString())
+                .withHeader(CONTENT_TYPE.toString(), MediaType.APPLICATION_JSON_UTF_8.toString())
                 .withBody(json("{\"id\":1,\"name\":\"A green door\",\"price\":12.5,\"tags\":[\"home\",\"green\"]}", MediaType.create("application", "json"))),
             makeRequest(
                 request()
@@ -1425,7 +1473,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
-    public void shouldReturnResponseByMatchingBodyWithJsonWithCharsetUTF8() {
+    public void shouldReturnResponseByMatchingBodyWithJsonWithCharsetUTF16() {
         // when
         mockServerClient
             .when(
@@ -1467,7 +1515,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
-    public void shouldReturnResponseByMatchingBodyWithJsonWithContentTypeHeader() {
+    public void shouldReturnResponseByMatchingBodyWithJsonWithContentTypeHeaderAndCharsetUTF16() {
         // when
         mockServerClient
             .when(
@@ -1504,7 +1552,134 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
                         "    \"τιμή\": 12.50," + NEW_LINE +
                         "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
+                        "}", StandardCharsets.UTF_16)),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingBodyWithJsonWithUTF8() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withBody(json("{" + NEW_LINE +
+                        "    \"ταυτότητα\": 1," + NEW_LINE +
+                        "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
+                        "    \"τιμή\": 12.50," + NEW_LINE +
+                        "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
+                        "}", MatchType.ONLY_MATCHING_FIELDS)),
+                exactly(2)
+            )
+            .respond(
+                response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                    .withBody("some_body")
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST")
+                    .withBody(json("{" + NEW_LINE +
+                        "    \"ταυτότητα\": 1," + NEW_LINE +
+                        "    \"επιπλέον αγνοούνται τομέα\": \"κάποια αξία\"," + NEW_LINE +
+                        "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
+                        "    \"τιμή\": 12.50," + NEW_LINE +
+                        "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
+                        "}", StandardCharsets.UTF_8)),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingBodyWithJsonWithNoCharset() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withBody(json("{" + NEW_LINE +
+                        "    \"ταυτότητα\": 1," + NEW_LINE +
+                        "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
+                        "    \"τιμή\": 12.50," + NEW_LINE +
+                        "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
+                        "}", MatchType.ONLY_MATCHING_FIELDS)),
+                exactly(2)
+            )
+            .respond(
+                response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                    .withBody("some_body")
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST")
+                    .withBody(json("{" + NEW_LINE +
+                        "    \"ταυτότητα\": 1," + NEW_LINE +
+                        "    \"επιπλέον αγνοούνται τομέα\": \"κάποια αξία\"," + NEW_LINE +
+                        "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
+                        "    \"τιμή\": 12.50," + NEW_LINE +
+                        "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
                         "}")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnJsonResponseWithJsonWithUTF8() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withBody("some_body"),
+                exactly(2)
+            )
+            .respond(
+                response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                    .withBody(json("{" + NEW_LINE +
+                        "    \"ταυτότητα\": 1," + NEW_LINE +
+                        "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
+                        "    \"τιμή\": 12.50," + NEW_LINE +
+                        "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
+                        "}")
+                    )
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withHeader("content-type", "application/json; charset=utf-8")
+                .withBody(json("{" + NEW_LINE +
+                    "    \"ταυτότητα\": 1," + NEW_LINE +
+                    "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
+                    "    \"τιμή\": 12.50," + NEW_LINE +
+                    "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
+                    "}")),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST")
+                    .withBody("some_body"),
                 headersToIgnore)
         );
     }

@@ -243,7 +243,7 @@ public class MockServerToNettyRequestEncoderContentTypeTest {
 
         // then
         FullHttpRequest fullHttpResponse = (FullHttpRequest) output.get(0);
-        assertThat(fullHttpResponse.headers().getAll("Content-Type"), containsInAnyOrder("application/json"));
+        assertThat(fullHttpResponse.headers().getAll("Content-Type"), containsInAnyOrder("application/json; charset=utf-8"));
     }
 
     @Test
@@ -295,7 +295,7 @@ public class MockServerToNettyRequestEncoderContentTypeTest {
 
         // then
         FullHttpRequest fullHttpResponse = (FullHttpRequest) output.get(0);
-        assertThat(fullHttpResponse.headers().getAll("Content-Type"), containsInAnyOrder("application/xml"));
+        assertThat(fullHttpResponse.headers().getAll("Content-Type"), containsInAnyOrder("application/xml; charset=utf-8"));
     }
 
     @Test

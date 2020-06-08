@@ -9,7 +9,8 @@ import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
  */
 public class XmlBody extends BodyWithContentType<String> {
 
-    public static final MediaType DEFAULT_CONTENT_TYPE = MediaType.create("application", "xml");
+    // setting default to UTF8 as per https://tools.ietf.org/html/rfc3470#section-5.1
+    public static final MediaType DEFAULT_CONTENT_TYPE = MediaType.APPLICATION_XML_UTF_8;
     private final String xml;
     private final byte[] rawBytes;
 

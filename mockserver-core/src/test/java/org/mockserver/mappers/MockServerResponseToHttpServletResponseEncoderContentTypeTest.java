@@ -84,7 +84,7 @@ public class MockServerResponseToHttpServletResponseEncoderContentTypeTest {
         new MockServerResponseToHttpServletResponseEncoder(new MockServerLogger()).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
 
         // then
-        assertThat(httpServletResponse.getHeader("Content-Type"), is("application/json"));
+        assertThat(httpServletResponse.getHeader("Content-Type"), is("application/json; charset=utf-8"));
     }
 
     @Test

@@ -2168,7 +2168,11 @@ public class ExpectationSerializerIntegrationTest {
             "    }" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"httpResponse\" : {" + NEW_LINE +
-            "    \"body\" : \"{fieldOne: \\\"valueOne\\\", \\\"fieldTwo\\\": \\\"valueTwo\\\"}\"" + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"JSON\"," + NEW_LINE +
+            "      \"json\" : \"{fieldOne: \\\"valueOne\\\", \\\"fieldTwo\\\": \\\"valueTwo\\\"}\"," + NEW_LINE +
+            "      \"rawBytes\" : \"e2ZpZWxkT25lOiAidmFsdWVPbmUiLCAiZmllbGRUd28iOiAidmFsdWVUd28ifQ==\"" + NEW_LINE +
+            "    }" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"times\" : {" + NEW_LINE +
             "    \"remainingTimes\" : 5" + NEW_LINE +
@@ -2230,7 +2234,11 @@ public class ExpectationSerializerIntegrationTest {
             "    }" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"httpResponse\" : {" + NEW_LINE +
-            "    \"body\" : \"{fieldOne: \\\"valueOne\\\", \\\"fieldTwo\\\": \\\"valueTwo\\\"}\"" + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"JSON\"," + NEW_LINE +
+            "      \"json\" : \"{fieldOne: \\\"valueOne\\\", \\\"fieldTwo\\\": \\\"valueTwo\\\"}\"," + NEW_LINE +
+            "      \"rawBytes\" : \"e2ZpZWxkT25lOiAidmFsdWVPbmUiLCAiZmllbGRUd28iOiAidmFsdWVUd28ifQ==\"" + NEW_LINE +
+            "    }" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"times\" : {" + NEW_LINE +
             "    \"remainingTimes\" : 5" + NEW_LINE +
@@ -2275,7 +2283,11 @@ public class ExpectationSerializerIntegrationTest {
             "    }" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"httpResponse\" : {" + NEW_LINE +
-            "    \"body\" : \"" + StringEscapeUtils.escapeJava(jsonBody) + "\"" + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"JSON\"," + NEW_LINE +
+            "      \"json\" : \"{fieldOne: \\\"valueOne\\\", \\\"fieldTwo\\\": \\\"valueTwo\\\"}\"," + NEW_LINE +
+            "      \"rawBytes\" : \"e2ZpZWxkT25lOiAidmFsdWVPbmUiLCAiZmllbGRUd28iOiAidmFsdWVUd28ifQ==\"" + NEW_LINE +
+            "    }" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"times\" : {" + NEW_LINE +
             "    \"remainingTimes\" : 5" + NEW_LINE +

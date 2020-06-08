@@ -26,7 +26,7 @@ public class XmlBodyDTOTest {
         // then
         assertThat(xmlBody.getXml(), is("some_body"));
         assertThat(xmlBody.getType(), is(Body.Type.XML));
-        assertThat(xmlBody.getMediaType(), is(MediaType.create("application", "xml")));
+        assertThat(xmlBody.getMediaType(), is(MediaType.create("application", "xml").withCharset("utf-8")));
     }
 
     @Test
@@ -74,7 +74,7 @@ public class XmlBodyDTOTest {
         // then
         assertThat(xmlBody.getValue(), is("some_body"));
         assertThat(xmlBody.getType(), is(Body.Type.XML));
-        assertThat(xmlBody.getContentType(), is("application/xml"));
+        assertThat(xmlBody.getContentType(), is("application/xml; charset=utf-8"));
         assertThat(xmlBody.getRawBytes(), is("some_body".getBytes(StandardCharsets.UTF_8)));
     }
 

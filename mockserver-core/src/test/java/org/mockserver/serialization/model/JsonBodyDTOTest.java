@@ -28,7 +28,7 @@ public class JsonBodyDTOTest {
         assertThat(jsonBody.getJson(), is("some_body"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(ONLY_MATCHING_FIELDS));
-        assertThat(jsonBody.getContentType(), is("application/json"));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-8"));
     }
 
     @Test
@@ -40,7 +40,7 @@ public class JsonBodyDTOTest {
         assertThat(jsonBody.getJson(), is("some_body"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(STRICT));
-        assertThat(jsonBody.getContentType(), is("application/json"));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-8"));
     }
 
     @Test
@@ -92,7 +92,7 @@ public class JsonBodyDTOTest {
         assertThat(jsonBody.getValue(), is("some_body"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(ONLY_MATCHING_FIELDS));
-        assertThat(jsonBody.getContentType(), is("application/json"));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-8"));
         assertThat(jsonBody.getRawBytes(), is("some_body".getBytes(StandardCharsets.UTF_8)));
     }
 
@@ -105,7 +105,7 @@ public class JsonBodyDTOTest {
         assertThat(jsonBody.getValue(), is("some_body"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(STRICT));
-        assertThat(jsonBody.getContentType(), is("application/json"));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-8"));
         assertThat(jsonBody.getRawBytes(), is("some_body".getBytes(StandardCharsets.UTF_8)));
     }
 

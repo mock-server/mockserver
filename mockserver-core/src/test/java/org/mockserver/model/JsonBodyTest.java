@@ -25,7 +25,7 @@ public class JsonBodyTest {
         assertThat(jsonBody.getValue(), is("some_body"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(MatchType.ONLY_MATCHING_FIELDS));
-        assertThat(jsonBody.getContentType(), is("application/json"));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-8"));
     }
 
     @Test
@@ -37,7 +37,7 @@ public class JsonBodyTest {
         assertThat(jsonBody.getValue(), is("some_body"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(MatchType.STRICT));
-        assertThat(jsonBody.getContentType(), is("application/json"));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-8"));
     }
 
     @Test
@@ -74,7 +74,7 @@ public class JsonBodyTest {
         assertThat(jsonBody.getValue(), is("some_body"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(ONLY_MATCHING_FIELDS));
-        assertThat(jsonBody.getContentType(), is("application/json"));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-8"));
     }
 
     @Test
@@ -86,7 +86,7 @@ public class JsonBodyTest {
         assertThat(jsonBody.getValue(), is("some_body"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(STRICT));
-        assertThat(jsonBody.getContentType(), is("application/json"));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-8"));
     }
 
     @Test
@@ -104,13 +104,13 @@ public class JsonBodyTest {
     @Test
     public void shouldReturnValuesFromStaticBuilderWithMediaTypeAndMatchType() {
         // when
-        JsonBody jsonBody = json("some_body", MediaType.JSON_UTF_8, STRICT);
+        JsonBody jsonBody = json("some_body", MediaType.parse("application/json; charset=utf-16"), STRICT);
 
         // then
         assertThat(jsonBody.getValue(), is("some_body"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(STRICT));
-        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-8"));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-16"));
     }
 
     @Test
@@ -134,7 +134,7 @@ public class JsonBodyTest {
         assertThat(jsonBody.getValue(), is("{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(ONLY_MATCHING_FIELDS));
-        assertThat(jsonBody.getContentType(), is("application/json"));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-8"));
     }
 
     @Test
@@ -146,7 +146,7 @@ public class JsonBodyTest {
         assertThat(jsonBody.getValue(), is("{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(STRICT));
-        assertThat(jsonBody.getContentType(), is("application/json"));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-8"));
     }
 
     @Test
@@ -164,13 +164,13 @@ public class JsonBodyTest {
     @Test
     public void shouldReturnValuesFromStaticObjectBuilderWithMediaTypeAndMatchType() {
         // when
-        JsonBody jsonBody = json(new TestObject(), MediaType.JSON_UTF_8, STRICT);
+        JsonBody jsonBody = json(new TestObject(), MediaType.parse("application/json; charset=utf-16"), STRICT);
 
         // then
         assertThat(jsonBody.getValue(), is("{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}"));
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(STRICT));
-        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-8"));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-16"));
     }
 
     @Test
