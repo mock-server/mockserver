@@ -25,7 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - improved performance through multiple minor tweaks around handling of expectations
 - added version to log output to improve resolution of github issues with logs attached
 - improved logic around proxies to make HTTP CONNECT, SOCKS4 and SOCKS5 more reliable and faster
-- reduced object creation (and therefore GCs) for log especially during request matching  
+- reduced object creation (and therefore GCs) for log especially during request matching
+- print logs timestamp with milliseconds  
 
 ### Fixed
 - fixed but with environment vairable configuration for long, integer and integer list values

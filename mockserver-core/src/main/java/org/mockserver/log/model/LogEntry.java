@@ -36,7 +36,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     };
     private String id;
     private Level logLevel = Level.INFO;
-    public static final DateFormat LOG_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    public static final DateFormat LOG_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     private long epochTime = TimeService.currentTimeMillis();
     private String timestamp;
     private LogEntry.LogMessageType type;
