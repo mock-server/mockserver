@@ -38,7 +38,7 @@ public class CertificateSigningRequest {
      * <p>
      * Hundred years in the future from starting the proxy should be enough.
      */
-    public static final Date NOT_AFTER = new Date(System.currentTimeMillis() + 86400000L * 365 * 5);
+    public static final Date NOT_AFTER = new Date(System.currentTimeMillis() + 86400000L * 365);
     // distinguishing name
     public static final String ROOT_COMMON_NAME = "www.mockserver.com";
     public static final String ORGANISATION = "MockServer";
