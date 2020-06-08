@@ -111,7 +111,7 @@ public class StopIntegrationTest {
 
         // then
         assertTrue(mockServerClient.hasStarted());
-        assertTrue(mockServerClient.hasStarted(10, 1000, TimeUnit.MILLISECONDS));
+        assertTrue(mockServerClient.hasStarted(20, 1000, TimeUnit.MILLISECONDS));
 
         // clean-up
         mockServerClient.stop();
