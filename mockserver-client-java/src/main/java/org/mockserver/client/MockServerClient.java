@@ -2,6 +2,7 @@ package org.mockserver.client;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.Version;
 import org.mockserver.client.MockServerEventBus.EventType;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -194,8 +195,8 @@ public class MockServerClient implements Stoppable {
                 }
                 String serverVersion = response.getFirstHeader("version");
                 String clientVersion = Version.getVersion();
-                if (isNotBlank(serverVersion) && isNotBlank(clientVersion) && !clientVersion.equals(serverVersion)) {
-                    throw new ClientException("Client version \"" + clientVersion + "\" does not match server version \"" + serverVersion + "\"");
+                if (!Version.matchesMajorMinorVersion(serverVersion)) {
+                    throw new ClientException("Client version \"" + clientVersion + "\" major and minor versions do not match server version \"" + serverVersion + "\"");
                 }
             }
 

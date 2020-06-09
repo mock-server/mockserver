@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - print logs timestamp with milliseconds  
 - reduced expiry of certification to one year to avoid errors from modern systems that don't like long lived certificates (such as Chrome or VMWare)
 - defaulted charset for XML and JSON to UTF8 as per rfc3470 and rfc8259
+- version matching logic for client now only matches on major and minor version and not bug fix version
 
 ### Fixed
 - fixed but with environment vairable configuration for long, integer and integer list values

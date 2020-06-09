@@ -1,5 +1,6 @@
 package org.mockserver.client;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -148,16 +149,16 @@ public class MockServerClientTest {
     @Test
     public void shouldHandleNonMatchingServerVersion() {
         try {
-            System.setProperty("MOCKSERVER_VERSION", "some_version");
+            System.setProperty("MOCKSERVER_VERSION", "1.2.3");
 
             // then
             exception.expect(ClientException.class);
-            exception.expectMessage(containsString("Client version \"" + Version.getVersion() + "\" does not match server version \"another_non_matching_version\""));
+            exception.expectMessage(containsString("Client version \"" + Version.getVersion() + "\" major and minor versions do not match server version \"1.3.2\""));
 
             // given
             when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean()))
                 .thenReturn(response()
-                    .withHeader("version", "another_non_matching_version")
+                    .withHeader("version", "1.3.2")
                     .withStatusCode(CREATED.code())
                 );
 
@@ -174,7 +175,7 @@ public class MockServerClientTest {
         try {
             // given
             System.setProperty("MOCKSERVER_VERSION", "same_version");
-            when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class)))
+            when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean()))
                 .thenReturn(response()
                     .withHeader("version", Version.getVersion())
                     .withStatusCode(CREATED.code())
@@ -189,8 +190,28 @@ public class MockServerClientTest {
         } finally {
             System.clearProperty("MOCKSERVER_VERSION");
         }
+    }
 
+    @Test
+    public void shouldHandleMatchingMajorAndMinorServerVersion() {
+        try {
+            // given
+            System.setProperty("MOCKSERVER_VERSION", "1.2.3");
+            when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean()))
+                .thenReturn(response()
+                    .withHeader("version", StringUtils.substringBeforeLast(Version.getVersion(), ".") + ".100")
+                    .withStatusCode(CREATED.code())
+                );
 
+            // when
+            ForwardChainExpectation forwardChainExpectation = mockServerClient.when(request());
+            forwardChainExpectation.respond(response());
+        } catch (Throwable t) {
+            // then - no exception should be thrown
+            fail();
+        } finally {
+            System.clearProperty("MOCKSERVER_VERSION");
+        }
     }
 
     @Test
