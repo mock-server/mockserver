@@ -1,5 +1,6 @@
 package org.mockserver.mock;
 
+import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -7,27 +8,35 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.file.FileReader;
+import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.TimeService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.MediaType;
+import org.mockserver.model.RetrieveType;
+import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.serialization.ExpectationSerializer;
-import org.mockserver.serialization.HttpRequestSerializer;
-import org.mockserver.serialization.LogEntrySerializer;
+import org.mockserver.serialization.*;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
+import org.mockserver.verify.Verification;
+import org.mockserver.verify.VerificationSequence;
 import org.slf4j.event.Level;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.concurrent.CompletableFuture;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static junit.framework.TestCase.fail;
+import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
@@ -43,6 +52,7 @@ import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.PortBinding.portBinding;
 import static org.mockserver.model.RetrieveType.REQUEST_RESPONSES;
 import static org.slf4j.event.Level.INFO;
 
@@ -55,8 +65,12 @@ public class HttpStateHandlerTest {
     public final ExpectedException exception = ExpectedException.none();
     private final HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
     private final HttpRequestToJavaSerializer httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
-    private final ExpectationSerializer httpExpectationSerializer = new ExpectationSerializer(new MockServerLogger());
-    private final ExpectationToJavaSerializer httpExpectationToJavaSerializer = new ExpectationToJavaSerializer();
+    private final ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
+    private final ExpectationToJavaSerializer expectationToJavaSerializer = new ExpectationToJavaSerializer();
+    private final PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
+    private final VerificationSerializer verificationSerializer = new VerificationSerializer(new MockServerLogger());
+    private final VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer(new MockServerLogger());
+
     @InjectMocks
     private HttpStateHandler httpStateHandler;
 
@@ -70,6 +84,501 @@ public class HttpStateHandlerTest {
         Scheduler scheduler = mock(Scheduler.class);
         httpStateHandler = new HttpStateHandler(new MockServerLogger(), scheduler);
         initMocks(this);
+    }
+
+    private static class FakeResponseWriter extends ResponseWriter {
+        public HttpResponse response;
+
+        @Override
+        public void sendResponse(HttpRequest request, HttpResponse response) {
+            this.response = response;
+        }
+    }
+
+    @Test
+    public void shouldHandleRetrieveRequestsRequest() {
+        // given
+        httpStateHandler.log(
+            new LogEntry()
+                .setHttpRequest(request("request_one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        HttpRequest expectationRetrieveRequestsRequest = request("/mockserver/retrieve")
+            .withMethod("PUT")
+            .withBody(
+                httpRequestSerializer.serialize(request("request_one"))
+            );
+        boolean handle = httpStateHandler.handle(expectationRetrieveRequestsRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(200));
+        assertThat(responseWriter.response.getBodyAsString(), is(httpRequestSerializer.serialize(Collections.singletonList(
+            request("request_one")
+        ))));
+    }
+
+    @Test
+    public void shouldHandleClearRequest() {
+        // given
+        httpStateHandler.add(new Expectation(request("request_one")).thenRespond(response("response_one")));
+        httpStateHandler.log(
+            new LogEntry()
+                .setHttpRequest(request("request_one"))
+                .setType(EXPECTATION_MATCHED)
+        );
+        HttpRequest clearRequest = request("/mockserver/clear")
+            .withMethod("PUT")
+            .withBody(
+                httpRequestSerializer.serialize(request("request_one"))
+            );
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpStateHandler.handle(clearRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(200));
+        assertThat(responseWriter.response.getBodyAsString(), is(""));
+        assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), is(nullValue()));
+        assertThat(httpStateHandler.retrieve(request("/mockserver/retrieve")
+            .withMethod("PUT")
+            .withBody(
+                httpRequestSerializer.serialize(request("request_one"))
+            )), is(response().withBody("[]", MediaType.JSON_UTF_8).withStatusCode(200)));
+    }
+
+    @Test
+    public void shouldHandleReturnStatusRequest() {
+        // given
+        HttpRequest statusRequest = request("/mockserver/status").withMethod("PUT");
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpStateHandler.handle(statusRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(false));
+        assertThat(responseWriter.response, is(nullValue()));
+    }
+
+    @Test
+    public void shouldHandleBindNewPortsRequest() {
+        // given
+        HttpRequest statusRequest = request("/mockserver/bind")
+            .withMethod("PUT")
+            .withBody(portBindingSerializer.serialize(
+                portBinding(1080, 1090)
+            ));
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpStateHandler.handle(statusRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(false));
+        assertThat(responseWriter.response, is(nullValue()));
+    }
+
+    @Test
+    public void shouldHandleStopRequest() {
+        // given
+        HttpRequest statusRequest = request("/mockserver/stop")
+            .withMethod("PUT");
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpStateHandler.handle(statusRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(false));
+        assertThat(responseWriter.response, is(nullValue()));
+    }
+
+    @Test
+    public void shouldHandleRetrieveRecordedExpectationsRequest() {
+        // given
+        httpStateHandler.log(
+            new LogEntry()
+                .setType(FORWARDED_REQUEST)
+                .setHttpRequest(request("request_one"))
+                .setHttpResponse(response("response_one"))
+                .setExpectation(new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited(), 0).withId("key_one").thenRespond(response("response_one")))
+        );
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        HttpRequest expectationRetrieveExpectationsRequest = request("/mockserver/retrieve")
+            .withMethod("PUT")
+            .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
+            .withBody(
+                httpRequestSerializer.serialize(request("request_one"))
+            );
+        boolean handle = httpStateHandler.handle(expectationRetrieveExpectationsRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(200));
+        assertThat(responseWriter.response.getBodyAsString(), is(expectationSerializer.serialize(Collections.singletonList(
+            new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited(), 0).withId("key_one").thenRespond(response("response_one"))
+        ))));
+    }
+
+    @Test
+    public void shouldHandleRetrieveLogMessagesRequest() {
+        Level originalLevel = ConfigurationProperties.logLevel();
+        try {
+            // given
+            ConfigurationProperties.logLevel("INFO");
+            httpStateHandler.add(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_one")));
+            FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+            // when
+            HttpRequest retrieveLogRequest = request("/mockserver/retrieve")
+                .withMethod("PUT")
+                .withQueryStringParameter("type", RetrieveType.LOGS.name())
+                .withBody(
+                    httpRequestSerializer.serialize(request("request_one"))
+                );
+            boolean handle = httpStateHandler.handle(retrieveLogRequest, responseWriter, false);
+
+            // then
+            assertThat(handle, is(true));
+            assertThat(responseWriter.response.getStatusCode(), is(200));
+            assertThat(
+                responseWriter.response.getBodyAsString(),
+                is(endsWith(LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
+                    NEW_LINE +
+                    "  {" + NEW_LINE +
+                    "    \"id\" : \"key_one\"," + NEW_LINE +
+                    "    \"priority\" : 0," + NEW_LINE +
+                    "    \"httpRequest\" : {" + NEW_LINE +
+                    "      \"path\" : \"request_one\"" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"times\" : {" + NEW_LINE +
+                    "      \"unlimited\" : true" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"timeToLive\" : {" + NEW_LINE +
+                    "      \"unlimited\" : true" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"httpResponse\" : {" + NEW_LINE +
+                    "      \"statusCode\" : 200," + NEW_LINE +
+                    "      \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                    "      \"body\" : \"response_one\"" + NEW_LINE +
+                    "    }" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    NEW_LINE +
+                    "------------------------------------" + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
+                    "" + NEW_LINE +
+                    "  {" + NEW_LINE +
+                    "    \"path\" : \"request_one\"" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    NEW_LINE))
+            );
+        } finally {
+            ConfigurationProperties.logLevel(originalLevel.name());
+        }
+    }
+
+    @Test
+    public void shouldHandleAddExpectationRequest() {
+        // given
+        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
+        HttpRequest request = request("/mockserver/expectation").withMethod("PUT").withBody(
+            expectationSerializer.serialize(expectationOne)
+        );
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpStateHandler.handle(request, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(201));
+        assertThat(responseWriter.response.getBodyAsString(), CoreMatchers.containsString("[ {" + NEW_LINE +
+            "  \"id\" : \""));
+        assertThat(responseWriter.response.getBodyAsString(), CoreMatchers.containsString("\"," + NEW_LINE +
+            "  \"priority\" : 0," + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"path\" : \"request_one\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"statusCode\" : 200," + NEW_LINE +
+            "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+            "    \"body\" : \"response_one\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "} ]"));
+        assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), is(expectationOne));
+    }
+
+    @Test
+    public void shouldHandleAddOpenAPIJsonRequest() {
+        // given
+        HttpRequest request = request("/mockserver/openapi").withMethod("PUT").withBody(
+            FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")
+        );
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpStateHandler.handle(request, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(201));
+        // TODO add expectations created
+        assertThat(responseWriter.response.getBodyAsString(), is("[]"));
+        // TODO add assertion on expectations in state
+    }
+
+    @Test
+    public void shouldHandleInvalidOpenAPIJsonRequest() {
+        // given
+        HttpRequest request = request("/mockserver/openapi").withMethod("PUT").withBody(
+            FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json").substring(0, 100)
+        );
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpStateHandler.handle(request, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(400));
+        assertThat(responseWriter.response.getBodyAsString(), is("Error parsing OpenAPI specification:\n\n  Unexpected end-of-input in field name\n   at [Source: (String)\"{\n    \"openapi\": \"3.0.0\",\n    \"info\": {\n      \"version\": \"1.0.0\",\n      \"title\": \"Swagger Petstore\",\n      \"li\"; line: 6, column: 8]\n"));
+    }
+
+
+    @Test
+    public void shouldHandleAddOpenAPIYamlRequest() {
+        // given
+        HttpRequest request = request("/mockserver/openapi").withMethod("PUT").withBody(
+            FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.yaml")
+        );
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpStateHandler.handle(request, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(201));
+        // TODO add expectations created
+        assertThat(responseWriter.response.getBodyAsString(), is("[]"));
+        // TODO add assertion on expectations in state
+    }
+
+    @Test
+    public void shouldHandleInvalidOpenAPIYamlRequest() {
+        // given
+        HttpRequest request = request("/mockserver/openapi").withMethod("PUT").withBody(
+            FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.yaml").substring(0, 100)
+        );
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpStateHandler.handle(request, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(400));
+        assertThat(responseWriter.response.getBodyAsString(), is("Errors parsing OpenAPI specification:\n\n  attribute servers is not of type `array`\n  attribute paths is missing\n"));
+    }
+
+    @Test
+    public void shouldHandleRetrieveActiveExpectationsRequest() {
+        // given
+        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
+        httpStateHandler.add(expectationOne);
+        HttpRequest expectationRetrieveExpectationsRequest = request("/mockserver/retrieve")
+            .withMethod("PUT")
+            .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
+            .withBody(
+                httpRequestSerializer.serialize(request("request_one"))
+            );
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpStateHandler.handle(expectationRetrieveExpectationsRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(200));
+        assertThat(responseWriter.response.getBodyAsString(), is(expectationSerializer.serialize(Collections.singletonList(
+            expectationOne
+        ))));
+    }
+
+    @Test
+    public void shouldHandleVerifyRequest() {
+        // given
+        MockServerEventLog mockServerEventLog = httpStateHandler.getMockServerLog();
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("two"))
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("three"))
+                .setType(RECEIVED_REQUEST)
+        );
+        HttpRequest expectationRetrieveExpectationsRequest = request("/mockserver/verify")
+            .withMethod("PUT")
+            .withBody(
+                verificationSerializer.serialize(
+                    new Verification()
+                        .withRequest(request("two"))
+                )
+            );
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpStateHandler.handle(expectationRetrieveExpectationsRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(202));
+        assertThat(responseWriter.response.getBodyAsString(), is(""));
+    }
+
+    @Test
+    public void shouldHandleVerifyFailureRequest() {
+        // given
+        MockServerEventLog mockServerEventLog = httpStateHandler.getMockServerLog();
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        HttpRequest expectationRetrieveExpectationsRequest = request("/mockserver/verify")
+            .withMethod("PUT")
+            .withBody(
+                verificationSerializer.serialize(
+                    new Verification()
+                        .withRequest(request("two"))
+                )
+            );
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpStateHandler.handle(expectationRetrieveExpectationsRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(406));
+        assertThat(responseWriter.response.getBodyAsString(), is("Request not found at least once, expected:<{" + NEW_LINE +
+            "  \"path\" : \"two\"" + NEW_LINE +
+            "}> but was:<{" + NEW_LINE +
+            "  \"path\" : \"one\"" + NEW_LINE +
+            "}>"));
+    }
+
+    @Test
+    public void shouldHandleVerifySequenceRequest() {
+        // given
+        MockServerEventLog mockServerEventLog = httpStateHandler.getMockServerLog();
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("two"))
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("three"))
+                .setType(RECEIVED_REQUEST)
+        );
+        HttpRequest expectationRetrieveExpectationsRequest = request("/mockserver/verifySequence")
+            .withMethod("PUT")
+            .withBody(
+                verificationSequenceSerializer.serialize(
+                    new VerificationSequence()
+                        .withRequests(
+                            request("one"),
+                            request("three")
+                        )
+                )
+            );
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpStateHandler.handle(expectationRetrieveExpectationsRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(202));
+        assertThat(responseWriter.response.getBodyAsString(), is(""));
+    }
+
+    @Test
+    public void shouldHandleVerifySequenceFailureRequest() {
+        // given
+        MockServerEventLog mockServerEventLog = httpStateHandler.getMockServerLog();
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("two"))
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("three"))
+                .setType(RECEIVED_REQUEST)
+        );
+        HttpRequest expectationRetrieveExpectationsRequest = request("/mockserver/verifySequence")
+            .withMethod("PUT")
+            .withBody(
+                verificationSequenceSerializer.serialize(
+                    new VerificationSequence()
+                        .withRequests(
+                            request("three"),
+                            request("one")
+                        )
+                )
+            );
+        FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+        // when
+        boolean handle = httpStateHandler.handle(expectationRetrieveExpectationsRequest, responseWriter, false);
+
+        // then
+        assertThat(handle, is(true));
+        assertThat(responseWriter.response.getStatusCode(), is(406));
+        assertThat(responseWriter.response.getBodyAsString(), is("Request sequence not found, expected:<[ {" + NEW_LINE +
+            "  \"path\" : \"three\"" + NEW_LINE +
+            "}, {" + NEW_LINE +
+            "  \"path\" : \"one\"" + NEW_LINE +
+            "} ]> but was:<[ {" + NEW_LINE +
+            "  \"path\" : \"one\"" + NEW_LINE +
+            "}, {" + NEW_LINE +
+            "  \"path\" : \"two\"" + NEW_LINE +
+            "}, {" + NEW_LINE +
+            "  \"path\" : \"three\"" + NEW_LINE +
+            "} ]>"));
     }
 
     @Test
@@ -1127,7 +1636,7 @@ public class HttpStateHandlerTest {
 
         // then
         assertThat(response,
-            is(response().withBody(httpExpectationSerializer.serialize(Arrays.asList(
+            is(response().withBody(expectationSerializer.serialize(Arrays.asList(
                 new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited(), 0).withId("key_one").thenRespond(response("response_one")),
                 new Expectation(request("request_two"), Times.once(), TimeToLive.unlimited(), 0).withId("key_two").thenRespond(response("response_two"))
             )), MediaType.JSON_UTF_8).withStatusCode(200))
@@ -1164,7 +1673,7 @@ public class HttpStateHandlerTest {
 
         // then
         assertThat(response,
-            is(response().withBody(httpExpectationToJavaSerializer.serialize(Arrays.asList(
+            is(response().withBody(expectationToJavaSerializer.serialize(Arrays.asList(
                 new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited(), 0).thenRespond(response("response_one")),
                 new Expectation(request("request_two"), Times.once(), TimeToLive.unlimited(), 0).thenRespond(response("response_two"))
             )), MediaType.create("application", "java").withCharset(UTF_8)).withStatusCode(200))
@@ -1202,7 +1711,7 @@ public class HttpStateHandlerTest {
 
         // then
         assertThat(response,
-            is(response().withBody(httpExpectationToJavaSerializer.serialize(Collections.singletonList(
+            is(response().withBody(expectationToJavaSerializer.serialize(Collections.singletonList(
                 new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited(), 0).thenRespond(response("response_one"))
             )), MediaType.create("application", "java").withCharset(UTF_8)).withStatusCode(200))
         );
@@ -1228,7 +1737,7 @@ public class HttpStateHandlerTest {
 
         // then
         assertThat(response,
-            is(response().withBody(httpExpectationSerializer.serialize(Arrays.asList(
+            is(response().withBody(expectationSerializer.serialize(Arrays.asList(
                 expectationOne,
                 expectationThree
             )), MediaType.JSON_UTF_8).withStatusCode(200))
@@ -1256,7 +1765,7 @@ public class HttpStateHandlerTest {
 
         // then
         assertThat(response,
-            is(response().withBody(httpExpectationToJavaSerializer.serialize(Arrays.asList(
+            is(response().withBody(expectationToJavaSerializer.serialize(Arrays.asList(
                 expectationOne,
                 expectationThree
             )), MediaType.create("application", "java").withCharset(UTF_8)).withStatusCode(200))
@@ -1314,6 +1823,207 @@ public class HttpStateHandlerTest {
         } finally {
             ConfigurationProperties.logLevel(originalLevel.name());
         }
+    }
+
+    @Test
+    public void shouldVerifyWithFuture() throws Exception {
+        // given
+        MockServerEventLog mockServerEventLog = httpStateHandler.getMockServerLog();
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("two"))
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("three"))
+                .setType(RECEIVED_REQUEST)
+        );
+
+        // when
+        String result = httpStateHandler.verify(
+            new Verification()
+                .withRequest(request("two"))
+        ).get(5, SECONDS);
+
+        // then
+        assertThat(result, is(""));
+    }
+
+    @Test
+    public void shouldVerifyWithCallback() throws Exception {
+        // given
+        MockServerEventLog mockServerEventLog = httpStateHandler.getMockServerLog();
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("two"))
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("three"))
+                .setType(RECEIVED_REQUEST)
+        );
+        CompletableFuture<String> verificationResult = new CompletableFuture<>();
+
+        // when
+        httpStateHandler.verify(
+            new Verification()
+                .withRequest(request("two")),
+            verificationResult::complete
+        );
+
+        // then
+        assertThat(verificationResult.get(5, SECONDS), is(""));
+    }
+
+    @Test
+    public void shouldVerifyFailureWithCallback() throws Exception {
+        // given
+        MockServerEventLog mockServerEventLog = httpStateHandler.getMockServerLog();
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        CompletableFuture<String> verificationResult = new CompletableFuture<>();
+
+        // when
+        httpStateHandler.verify(
+            new Verification()
+                .withRequest(request("two")),
+            verificationResult::complete
+        );
+
+        // then
+        assertThat(verificationResult.get(5, SECONDS), is("Request not found at least once, expected:<{" + NEW_LINE +
+            "  \"path\" : \"two\"" + NEW_LINE +
+            "}> but was:<{" + NEW_LINE +
+            "  \"path\" : \"one\"" + NEW_LINE +
+            "}>"));
+    }
+
+    @Test
+    public void shouldVerifySequenceWithFuture() throws Exception {
+        // given
+        MockServerEventLog mockServerEventLog = httpStateHandler.getMockServerLog();
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("two"))
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("three"))
+                .setType(RECEIVED_REQUEST)
+        );
+
+        // when
+        String result = httpStateHandler.verify(
+            new VerificationSequence()
+                .withRequests(
+                    request("one"),
+                    request("three")
+                )
+        ).get(5, SECONDS);
+
+        // then
+        assertThat(result, is(""));
+    }
+
+    @Test
+    public void shouldVerifySequenceWithCallback() throws Exception {
+        // given
+        MockServerEventLog mockServerEventLog = httpStateHandler.getMockServerLog();
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("two"))
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("three"))
+                .setType(RECEIVED_REQUEST)
+        );
+        CompletableFuture<String> verificationResult = new CompletableFuture<>();
+
+        // when
+        httpStateHandler.verify(
+            new VerificationSequence()
+                .withRequests(
+                    request("one"),
+                    request("three")
+                ),
+            verificationResult::complete
+        );
+
+        // then
+        assertThat(verificationResult.get(5, SECONDS), is(""));
+    }
+
+    @Test
+    public void shouldVerifySequenceFailureWithCallback() throws Exception {
+        // given
+        MockServerEventLog mockServerEventLog = httpStateHandler.getMockServerLog();
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("two"))
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("three"))
+                .setType(RECEIVED_REQUEST)
+        );
+        CompletableFuture<String> verificationResult = new CompletableFuture<>();
+
+        // when
+        httpStateHandler.verify(
+            new VerificationSequence()
+                .withRequests(
+                    request("three"),
+                    request("one")
+                ),
+            verificationResult::complete
+        );
+
+        // then
+        assertThat(verificationResult.get(5, SECONDS), is("Request sequence not found, expected:<[ {" + NEW_LINE +
+            "  \"path\" : \"three\"" + NEW_LINE +
+            "}, {" + NEW_LINE +
+            "  \"path\" : \"one\"" + NEW_LINE +
+            "} ]> but was:<[ {" + NEW_LINE +
+            "  \"path\" : \"one\"" + NEW_LINE +
+            "}, {" + NEW_LINE +
+            "  \"path\" : \"two\"" + NEW_LINE +
+            "}, {" + NEW_LINE +
+            "  \"path\" : \"three\"" + NEW_LINE +
+            "} ]>"));
     }
 
 }

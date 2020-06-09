@@ -340,7 +340,6 @@ public class MockServerHandlerTest {
             "    \"unlimited\" : true" + NEW_LINE +
             "  }" + NEW_LINE +
             "} ]"));
-        assertThat(httpResponse.getBodyAsString(), containsString(""));
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), is(expectationOne));
     }
 

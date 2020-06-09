@@ -1,7 +1,12 @@
 package org.mockserver.mock;
 
+import com.google.common.base.Joiner;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.parser.OpenAPIV3Parser;
+import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.formatting.StringFormatter;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -71,6 +76,7 @@ public class HttpStateHandler {
     private VerificationSequenceSerializer verificationSequenceSerializer;
     private LogEntrySerializer logEntrySerializer;
     private MemoryMonitoring memoryMonitoring;
+    private OpenAPIV3Parser openAPIV3Parser = new OpenAPIV3Parser();
 
     public HttpStateHandler(MockServerLogger mockServerLogger, Scheduler scheduler) {
         this.mockServerLogger = mockServerLogger.setHttpStateHandler(this);
@@ -161,6 +167,10 @@ public class HttpStateHandler {
                 ie.printStackTrace();
             }
         });
+    }
+
+    public List<Expectation> add(OpenAPI openAPI) {
+        return new ArrayList<>();
     }
 
     public List<Expectation> add(Expectation... expectations) {
@@ -475,6 +485,20 @@ public class HttpStateHandler {
                     .withBody(getExpectationSerializer().serialize(upsertedExpectations), MediaType.JSON_UTF_8), true);
                 canHandle.complete(true);
 
+            } else if (request.matches("PUT", PATH_PREFIX + "/openapi", "/openapi")) {
+
+                SwaggerParseResult swaggerParseResult = getOpenAPIV3Parser().readContents(request.getBodyAsString());
+                if (swaggerParseResult.getMessages().isEmpty()) {
+                    List<Expectation> upsertedExpectations = new ArrayList<>(add(swaggerParseResult.getOpenAPI()));
+                    responseWriter.writeResponse(request, response()
+                        .withStatusCode(CREATED.code())
+                        .withBody(getExpectationSerializer().serialize(upsertedExpectations), MediaType.JSON_UTF_8), true);
+                } else {
+                    String errorMessage = StringFormatter.formatLogMessage("Error" + (swaggerParseResult.getMessages().size() > 1 ? "s" : "") + " parsing OpenAPI specification:{}", Joiner.on("\n").join(swaggerParseResult.getMessages()));
+                    responseWriter.writeResponse(request, BAD_REQUEST, errorMessage, MediaType.create("text", "plain").toString());
+                }
+                canHandle.complete(true);
+
             } else if (request.matches("PUT", PATH_PREFIX + "/clear", "/clear")) {
 
                 clear(request);
@@ -657,5 +681,12 @@ public class HttpStateHandler {
             this.logEntrySerializer = new LogEntrySerializer(mockServerLogger);
         }
         return logEntrySerializer;
+    }
+
+    private OpenAPIV3Parser getOpenAPIV3Parser() {
+        if (this.openAPIV3Parser == null) {
+            this.openAPIV3Parser = new OpenAPIV3Parser();
+        }
+        return openAPIV3Parser;
     }
 }

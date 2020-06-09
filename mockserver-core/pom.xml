@@ -140,6 +140,12 @@
             <artifactId>json-path</artifactId>
         </dependency>
 
+        <!-- swagger -->
+        <dependency>
+            <groupId>io.swagger.parser.v3</groupId>
+            <artifactId>swagger-parser</artifactId>
+        </dependency>
+
         <!-- xml -->
         <dependency>
             <groupId>javax.xml.bind</groupId>
