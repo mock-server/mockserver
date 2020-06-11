@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### In Progress
+- request matcher using OpenAPI or Swagger specification
+- create expectation using OpenAPI or Swagger specification
+- clear log or expectations using OpenAPI or Swagger specification
+
 ### Added
 - added basic support to proxy binary requests that are not HTTP
 - dynamic maximum log events and maximum expectations based on available memory
