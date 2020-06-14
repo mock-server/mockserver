@@ -2,6 +2,9 @@ package org.mockserver.serialization.java;
 
 import com.google.common.base.Strings;
 import org.mockserver.mock.Expectation;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.OpenAPIDefinition;
+import org.mockserver.model.RequestDefinition;
 
 import java.util.List;
 
@@ -30,7 +33,12 @@ public class ExpectationToJavaSerializer implements ToJavaSerializer<Expectation
         if (expectation != null) {
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append("new MockServerClient(\"localhost\", 1080)");
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".when(");
-            output.append(new HttpRequestToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getHttpRequest()));
+            RequestDefinition requestDefinition = expectation.getHttpRequest();
+            if (requestDefinition instanceof HttpRequest) {
+                output.append(new HttpRequestToJavaSerializer().serialize(numberOfSpacesToIndent + 1, (HttpRequest) requestDefinition));
+            } else if (requestDefinition instanceof OpenAPIDefinition) {
+                output.append(new OpenAPIMatcherToJavaSerializer().serialize(numberOfSpacesToIndent + 1, (OpenAPIDefinition) requestDefinition));
+            }
             output.append(",");
             if (expectation.getTimes() != null) {
                 output.append(new TimesToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getTimes()));

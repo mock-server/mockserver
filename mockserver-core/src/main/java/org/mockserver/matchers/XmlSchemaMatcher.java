@@ -1,11 +1,8 @@
 package org.mockserver.matchers;
 
 import org.apache.commons.lang3.StringUtils;
-import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.validator.xmlschema.XmlSchemaValidator;
-
-import static org.slf4j.event.Level.DEBUG;
 
 /**
  * See http://xml-schema.org/
@@ -37,23 +34,11 @@ public class XmlSchemaMatcher extends BodyMatcher<String> {
             result = validation.isEmpty();
 
             if (!result && context != null) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(DEBUG)
-                        .setMatchDifference(context)
-                        .setMessageFormat("xml schema match failed expected:{}found:{}failed because:{}")
-                        .setArguments(this.matcher, matched, validation)
-                );
+                context.addDifference(mockServerLogger, "xml schema match failed expected:{}found:{}failed because:{}", this.matcher, matched, validation);
             }
-        } catch (Exception e) {
+        } catch (Throwable throwable) {
             if (context != null) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(DEBUG)
-                        .setMatchDifference(context)
-                        .setMessageFormat("xml schema match failed expected:{}found:{}failed because:{}")
-                        .setArguments(this.matcher, matched, e.getMessage())
-                );
+                context.addDifference(mockServerLogger, throwable, "xml schema match failed expected:{}found:{}failed because:{}", this.matcher, matched, throwable.getMessage());
             }
         }
 

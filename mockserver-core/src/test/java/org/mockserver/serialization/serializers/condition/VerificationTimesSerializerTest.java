@@ -17,8 +17,7 @@ public class VerificationTimesSerializerTest {
     @Test
     public void shouldSerializeBetween() throws JsonProcessingException {
         assertThat(ObjectMapperFactory
-                .createObjectMapper()
-                .writerWithDefaultPrettyPrinter()
+                .createObjectMapper(true)
                 .writeValueAsString(
                     between(1, 2)
                 ),
@@ -31,8 +30,7 @@ public class VerificationTimesSerializerTest {
     @Test
     public void shouldSerializeOnce() throws JsonProcessingException {
         assertThat(ObjectMapperFactory
-                .createObjectMapper()
-                .writerWithDefaultPrettyPrinter()
+                .createObjectMapper(true)
                 .writeValueAsString(
                     once()
                 ),
@@ -45,8 +43,7 @@ public class VerificationTimesSerializerTest {
     @Test
     public void shouldSerializeExact() throws JsonProcessingException {
         assertThat(ObjectMapperFactory
-                .createObjectMapper()
-                .writerWithDefaultPrettyPrinter()
+                .createObjectMapper(true)
                 .writeValueAsString(
                     exactly(2)
                 ),
@@ -59,8 +56,7 @@ public class VerificationTimesSerializerTest {
     @Test
     public void shouldSerializeAtLeast() throws JsonProcessingException {
         assertThat(ObjectMapperFactory
-                .createObjectMapper()
-                .writerWithDefaultPrettyPrinter()
+                .createObjectMapper(true)
                 .writeValueAsString(
                     atLeast(2)
                 ),
@@ -72,8 +68,7 @@ public class VerificationTimesSerializerTest {
     @Test
     public void shouldSerializeAtMost() throws JsonProcessingException {
         assertThat(ObjectMapperFactory
-                .createObjectMapper()
-                .writerWithDefaultPrettyPrinter()
+                .createObjectMapper(true)
                 .writeValueAsString(
                     atMost(2)
                 ),

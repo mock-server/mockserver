@@ -12,6 +12,7 @@ import org.mockserver.metrics.Metrics;
 import org.mockserver.model.Action;
 import org.mockserver.model.HttpObjectCallback;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.RequestDefinition;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.ui.MockServerMatcherNotifier;
 import org.slf4j.event.Level;
@@ -198,9 +199,9 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         return matchingExpectation;
     }
 
-    public void clear(HttpRequest httpRequest) {
-        if (httpRequest != null) {
-            HttpRequestMatcher clearHttpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
+    public void clear(RequestDefinition requestDefinition) {
+        if (requestDefinition != null) {
+            HttpRequestMatcher clearHttpRequestMatcher = matcherBuilder.transformsToMatcher(requestDefinition);
             for (HttpRequestMatcher httpRequestMatcher : getHttpRequestMatchersCopy()) {
                 if (clearHttpRequestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest())) {
                     removeHttpRequestMatcher(httpRequestMatcher);
@@ -258,12 +259,12 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         }
     }
 
-    public List<Expectation> retrieveActiveExpectations(HttpRequest httpRequest) {
-        if (httpRequest == null) {
+    public List<Expectation> retrieveActiveExpectations(RequestDefinition requestDefinition) {
+        if (requestDefinition == null) {
             return httpRequestMatchers.stream().map(HttpRequestMatcher::getExpectation).collect(Collectors.toList());
         } else {
             List<Expectation> expectations = new ArrayList<>();
-            HttpRequestMatcher requestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
+            HttpRequestMatcher requestMatcher = matcherBuilder.transformsToMatcher(requestDefinition);
             for (HttpRequestMatcher httpRequestMatcher : getHttpRequestMatchersCopy()) {
                 if (requestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest())) {
                     expectations.add(httpRequestMatcher.getExpectation());

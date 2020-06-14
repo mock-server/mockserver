@@ -46,13 +46,7 @@ public class JsonPathMatcher extends BodyMatcher<String> {
 
         if (jsonPath == null) {
             if (context != null) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(DEBUG)
-                        .setMatchDifference(context)
-                        .setMessageFormat("json path match failed expected:{}found:{}failed because:{}")
-                        .setArguments("null", matched, "json path matcher was null")
-                );
+                context.addDifference(mockServerLogger, "json path match failed expected:{}found:{}failed because:{}", "null", matched, "json path matcher was null");
                 alreadyLoggedMatchFailure = true;
             }
         } else if (matcher.equals(matched)) {
@@ -62,27 +56,14 @@ public class JsonPathMatcher extends BodyMatcher<String> {
                 result = !jsonPath.<JSONArray>read(matched).isEmpty();
             } catch (Throwable throwable) {
                 if (context != null) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setLogLevel(DEBUG)
-                            .setMatchDifference(context)
-                            .setMessageFormat("json path match failed expected:{}found:{}failed because:{}")
-                            .setArguments(matcher, matched, throwable.getMessage())
-                            .setThrowable(throwable)
-                    );
+                    context.addDifference(mockServerLogger, throwable, "json path match failed expected:{}found:{}failed because:{}", matcher, matched, throwable.getMessage());
                     alreadyLoggedMatchFailure = true;
                 }
             }
         }
 
         if (!result && !alreadyLoggedMatchFailure && context != null) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(DEBUG)
-                    .setMatchDifference(context)
-                    .setMessageFormat("json path match failed expected:{}found:{}failed because:{}")
-                    .setArguments(matcher, matched, "json path did not evaluate to truthy")
-            );
+            context.addDifference(mockServerLogger, "json path match failed expected:{}found:{}failed because:{}", matcher, matched, "json path did not evaluate to truthy");
         }
 
         return not != result;

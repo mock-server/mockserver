@@ -439,7 +439,7 @@ public class ExpectationDTOTest {
     @Test
     public void shouldBuildObjectWithNulls() {
         // when
-        Expectation expectation = new ExpectationDTO(new Expectation(null, null, null, null).thenRespond((HttpResponse)null).thenForward((HttpForward)null).thenError(null).thenRespond((HttpClassCallback)null).thenRespond((HttpObjectCallback)null)).buildObject();
+        Expectation expectation = new ExpectationDTO(new Expectation(null, null, null, null).thenRespond((HttpResponse) null).thenForward((HttpForward) null).thenError(null).thenRespond((HttpClassCallback) null).thenRespond((HttpObjectCallback) null)).buildObject();
 
         // then
         assertThat(expectation.getTimes(), is(Times.unlimited()));

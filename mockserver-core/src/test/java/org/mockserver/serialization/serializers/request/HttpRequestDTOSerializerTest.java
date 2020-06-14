@@ -1,6 +1,7 @@
 package org.mockserver.serialization.serializers.request;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import org.junit.Test;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
@@ -25,9 +26,11 @@ import static org.mockserver.model.XmlSchemaBody.xmlSchema;
 
 public class HttpRequestDTOSerializerTest {
 
+    private final ObjectWriter objectMapper = ObjectMapperFactory.createObjectMapper(true);
+
     @Test
-    public void shouldReturnFormattedRequestWithNoFieldsSet() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
+    public void shouldReturnJsonWithNoFieldsSet() throws JsonProcessingException {
+        assertThat(objectMapper.writeValueAsString(
             new HttpRequestDTO(
                 request()
             )),
@@ -35,8 +38,8 @@ public class HttpRequestDTOSerializerTest {
     }
 
     @Test
-    public void shouldReturnFormattedRequestWithAllFieldsSet() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
+    public void shouldReturnJsonWithAllFieldsSet() throws JsonProcessingException {
+        assertThat(objectMapper.writeValueAsString(
             new HttpRequestDTO(
                 request()
                     .withMethod("GET")
@@ -68,8 +71,8 @@ public class HttpRequestDTOSerializerTest {
     }
 
     @Test
-    public void shouldReturnFormattedRequestWithJsonBodyInToString() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
+    public void shouldReturnJsonWithJsonBodyInToString() throws JsonProcessingException {
+        assertThat(objectMapper.writeValueAsString(
             new HttpRequestDTO(
                 request()
                     .withMethod("GET")
@@ -101,14 +104,14 @@ public class HttpRequestDTOSerializerTest {
     }
 
     @Test
-    public void shouldReturnFormattedRequestWithJsonSchemaBodyInToString() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(new JsonSchemaBody("{\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"integer\"}}, \"required\": [\"id\"]}")),
+    public void shouldReturnJsonWithJsonSchemaBodyInToString() throws JsonProcessingException {
+        assertThat(objectMapper.writeValueAsString(new JsonSchemaBody("{\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"integer\"}}, \"required\": [\"id\"]}")),
             is("{" + NEW_LINE +
                 "  \"type\" : \"JSON_SCHEMA\"," + NEW_LINE +
                 "  \"jsonSchema\" : \"{\\\"type\\\": \\\"object\\\", \\\"properties\\\": {\\\"id\\\": {\\\"type\\\": \\\"integer\\\"}}, \\\"required\\\": [\\\"id\\\"]}\"" + NEW_LINE +
                 "}"));
 
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
+        assertThat(objectMapper.writeValueAsString(
             new HttpRequestDTO(
                 request()
                     .withMethod("GET")
@@ -139,8 +142,8 @@ public class HttpRequestDTOSerializerTest {
     }
 
     @Test
-    public void shouldReturnFormattedRequestWithJsonPathBodyInToString() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
+    public void shouldReturnJsonWithJsonPathBodyInToString() throws JsonProcessingException {
+        assertThat(objectMapper.writeValueAsString(
             new HttpRequestDTO(
                 request()
                     .withMethod("GET")
@@ -172,8 +175,8 @@ public class HttpRequestDTOSerializerTest {
     }
 
     @Test
-    public void shouldReturnFormattedRequestWithXmlBodyInToString() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
+    public void shouldReturnJsonWithXmlBodyInToString() throws JsonProcessingException {
+        assertThat(objectMapper.writeValueAsString(
             new HttpRequestDTO(
                 request()
                     .withMethod("GET")
@@ -206,14 +209,14 @@ public class HttpRequestDTOSerializerTest {
     }
 
     @Test
-    public void shouldReturnFormattedRequestWithXmlSchemaBodyInToString() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(new XmlSchemaBody("{\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"integer\"}}, \"required\": [\"id\"]}")),
+    public void shouldReturnJsonWithXmlSchemaBodyInToString() throws JsonProcessingException {
+        assertThat(objectMapper.writeValueAsString(new XmlSchemaBody("{\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"integer\"}}, \"required\": [\"id\"]}")),
             is("{" + NEW_LINE +
                 "  \"type\" : \"XML_SCHEMA\"," + NEW_LINE +
                 "  \"xmlSchema\" : \"{\\\"type\\\": \\\"object\\\", \\\"properties\\\": {\\\"id\\\": {\\\"type\\\": \\\"integer\\\"}}, \\\"required\\\": [\\\"id\\\"]}\"" + NEW_LINE +
                 "}"));
 
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
+        assertThat(objectMapper.writeValueAsString(
             new HttpRequestDTO(
                 request()
                     .withMethod("GET")
@@ -244,8 +247,8 @@ public class HttpRequestDTOSerializerTest {
     }
 
     @Test
-    public void shouldReturnFormattedRequestWithXPathBodyInToString() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
+    public void shouldReturnJsonWithXPathBodyInToString() throws JsonProcessingException {
+        assertThat(objectMapper.writeValueAsString(
             new HttpRequestDTO(
                 request()
                     .withMethod("GET")
@@ -277,8 +280,8 @@ public class HttpRequestDTOSerializerTest {
     }
 
     @Test
-    public void shouldReturnFormattedRequestWithRegexBodyInToString() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
+    public void shouldReturnJsonWithRegexBodyInToString() throws JsonProcessingException {
+        assertThat(objectMapper.writeValueAsString(
             new HttpRequestDTO(
                 request()
                     .withMethod("GET")
@@ -310,8 +313,8 @@ public class HttpRequestDTOSerializerTest {
     }
 
     @Test
-    public void shouldReturnFormattedRequestWithParameterBodyInToString() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
+    public void shouldReturnJsonWithParameterBodyInToString() throws JsonProcessingException {
+        assertThat(objectMapper.writeValueAsString(
             new HttpRequestDTO(
                 request()
                     .withMethod("GET")

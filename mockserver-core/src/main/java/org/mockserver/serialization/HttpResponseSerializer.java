@@ -2,6 +2,7 @@ package org.mockserver.serialization;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Joiner;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -24,6 +25,7 @@ import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_S
  */
 public class HttpResponseSerializer implements Serializer<HttpResponse> {
     private final MockServerLogger mockServerLogger;
+    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
     private JsonSchemaHttpResponseValidator httpResponseValidator;
@@ -35,9 +37,7 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
 
     public String serialize(HttpResponse httpResponse) {
         try {
-            return objectMapper
-                .writerWithDefaultPrettyPrinter()
-                .writeValueAsString(new HttpResponseDTO(httpResponse));
+            return objectWriter.writeValueAsString(new HttpResponseDTO(httpResponse));
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -60,9 +60,7 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                 for (int i = 0; i < httpResponses.length; i++) {
                     httpResponseDTOs[i] = new HttpResponseDTO(httpResponses[i]);
                 }
-                return objectMapper
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(httpResponseDTOs);
+                return objectWriter.writeValueAsString(httpResponseDTOs);
             } else {
                 return "[]";
             }

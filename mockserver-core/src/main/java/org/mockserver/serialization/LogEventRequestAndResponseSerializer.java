@@ -62,7 +62,9 @@ public class LogEventRequestAndResponseSerializer {
                 for (int i = 0; i < httpRequestAndHttpResponses.length; i++) {
                     httpRequestAndHttpResponseDTOS[i] = new LogEventRequestAndResponseDTO(httpRequestAndHttpResponses[i]);
                 }
-                return objectWriter.writeValueAsString(httpRequestAndHttpResponseDTOS);
+                return objectWriter
+                    .withDefaultPrettyPrinter()
+                    .writeValueAsString(httpRequestAndHttpResponseDTOS);
             } else {
                 return "[]";
             }

@@ -10,6 +10,8 @@ import java.util.Comparator;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.mockserver.model.OpenAPIDefinition.openAPI;
+
 /**
  * @author jamesdbloom
  */
@@ -24,7 +26,7 @@ public class Expectation extends ObjectWithJsonToString {
     @JsonIgnore
     private long created;
     private final Integer priority;
-    private final HttpRequest httpRequest;
+    private final RequestDefinition httpRequest;
     private final Times times;
     private final TimeToLive timeToLive;
     private HttpResponse httpResponse;
@@ -42,31 +44,213 @@ public class Expectation extends ObjectWithJsonToString {
         .comparing(Expectation::getPriority, Comparator.nullsLast(Comparator.reverseOrder()))
         .thenComparing(Expectation::getCreated, Comparator.nullsLast(Comparator.naturalOrder()));
 
+    /**
+     * Specify the OpenAPI / Swagger and operationId to match against by URL or payload and string as follows:
+     * <p><pre>
+     *   // Create from a publicly hosted HTTP location (json or yaml)
+     *   when("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById")
+     *
+     *   // Create from a file on the local filesystem (json or yaml)
+     *   when("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/mock/openapi_petstore_example.json", "showPetById");
+     *
+     *   // Create from a classpath resource in the /api package (json or yaml)
+     *   when("org/mockserver/mock/openapi_petstore_example.json", "showPetById");
+     *
+     *   // Create from an OpenAPI / Swagger payload (json or yaml)
+     *   when("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById")
+     * </pre><p>
+     *
+     * @param specUrlOrPayload the OpenAPI / Swagger to match against by URL or payload
+     * @param operationId      operationId from the OpenAPI / Swagger to match against i.e. "showPetById"
+     * @return the Expectation
+     */
+    public static Expectation when(String specUrlOrPayload, String operationId) {
+        return new Expectation(openAPI(specUrlOrPayload, operationId));
+    }
+
+    /**
+     * Specify the OpenAPI / Swagger and operationId to match against by URL or payload and string with a match priority as follows:
+     * <p><pre>
+     *   // Create from a publicly hosted HTTP location (json or yaml)
+     *   when("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById", 10)
+     *
+     *   // Create from a file on the local filesystem (json or yaml)
+     *   when("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/mock/openapi_petstore_example.json", "showPetById", 10);
+     *
+     *   // Create from a classpath resource in the /api package (json or yaml)
+     *   when("org/mockserver/mock/openapi_petstore_example.json", "showPetById", 10);
+     *
+     *   // Create from an OpenAPI / Swagger payload (json or yaml)
+     *   when("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById", 10)
+     * </pre><p>
+     *
+     * @param specUrlOrPayload the OpenAPI / Swagger to match against by URL or payload
+     * @param operationId      operationId from the OpenAPI / Swagger to match against i.e. "showPetById"
+     * @param priority         the priority with which this expectation is used to match requests compared to other expectations (high first)
+     * @return the Expectation
+     */
+    public static Expectation when(String specUrlOrPayload, String operationId, Integer priority) {
+        return new Expectation(openAPI(specUrlOrPayload, operationId), Times.unlimited(), TimeToLive.unlimited(), priority);
+    }
+
+    /**
+     * Specify the OpenAPI / Swagger and operationId to match against by URL or payload and string for a limit number of times or time as follows:
+     * <p><pre>
+     *   // Create from a publicly hosted HTTP location (json or yaml)
+     *   when("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById", 5, exactly(TimeUnit.SECONDS, 90))
+     *
+     *   // Create from a file on the local filesystem (json or yaml)
+     *   when("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/mock/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
+     *
+     *   // Create from a classpath resource in the /api package (json or yaml)
+     *   when("org/mockserver/mock/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
+     *
+     *   // Create from an OpenAPI / Swagger payload (json or yaml)
+     *   when("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById", 5, exactly(TimeUnit.SECONDS, 90))
+     * </pre><p>
+     *
+     * @param specUrlOrPayload the OpenAPI / Swagger to match against by URL or payload
+     * @param operationId      operationId from the OpenAPI / Swagger to match against i.e. "showPetById"
+     * @param times            the number of times to use this expectation to match requests
+     * @param timeToLive       the time this expectation should be used to match requests
+     * @return the Expectation
+     */
+    public static Expectation when(String specUrlOrPayload, String operationId, Times times, TimeToLive timeToLive) {
+        return new Expectation(openAPI(specUrlOrPayload, operationId), times, timeToLive, 0);
+    }
+
+    /**
+     * Specify the OpenAPI / Swagger and operationId to match against by URL or payload and string for a limit number of times or time and a match priority as follows:
+     * <p><pre>
+     *   // Create from a publicly hosted HTTP location (json or yaml)
+     *   when("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById", 5, exactly(TimeUnit.SECONDS, 90))
+     *
+     *   // Create from a file on the local filesystem (json or yaml)
+     *   when("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/mock/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
+     *
+     *   // Create from a classpath resource in the /api package (json or yaml)
+     *   when("org/mockserver/mock/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
+     *
+     *   // Create from an OpenAPI / Swagger payload (json or yaml)
+     *   when("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById", 5, exactly(TimeUnit.SECONDS, 90))
+     * </pre><p>
+     *
+     * @param specUrlOrPayload the OpenAPI / Swagger to match against by URL or payload
+     * @param operationId      operationId from the OpenAPI / Swagger to match against i.e. "showPetById"
+     * @param times            the number of times to use this expectation to match requests
+     * @param timeToLive       the time this expectation should be used to match requests
+     * @param priority         the priority with which this expectation is used to match requests compared to other expectations (high first)
+     * @return the Expectation
+     */
+    public static Expectation when(String specUrlOrPayload, String operationId, Times times, TimeToLive timeToLive, Integer priority) {
+        return new Expectation(openAPI(specUrlOrPayload, operationId), times, timeToLive, priority);
+    }
+
+    /**
+     * Specify the HttpRequest to match against as follows:
+     * <p><pre>
+     *     when(
+     *         request()
+     *             .withMethod("GET")
+     *             .withPath("/some/path")
+     *     ).thenRespond(
+     *         response()
+     *             .withContentType(APPLICATION_JSON_UTF_8)
+     *             .withBody("{\"some\": \"body\"}")
+     *     );
+     * </pre><p>
+     *
+     * @param httpRequest the HttpRequest to match against
+     * @return the Expectation
+     */
     public static Expectation when(HttpRequest httpRequest) {
         return new Expectation(httpRequest);
     }
 
+    /**
+     * Specify the HttpRequest to match against with a match priority as follows:
+     * <p><pre>
+     *     when(
+     *         request()
+     *             .withMethod("GET")
+     *             .withPath("/some/path"),
+     *         10
+     *     ).thenRespond(
+     *         response()
+     *             .withContentType(APPLICATION_JSON_UTF_8)
+     *             .withBody("{\"some\": \"body\"}")
+     *     );
+     * </pre><p>
+     *
+     * @param httpRequest the HttpRequest to match against
+     * @param priority    the priority with which this expectation is used to match requests compared to other expectations (high first)
+     * @return the Expectation
+     */
     public static Expectation when(HttpRequest httpRequest, Integer priority) {
         return new Expectation(httpRequest, Times.unlimited(), TimeToLive.unlimited(), priority);
     }
 
+    /**
+     * Specify the HttpRequest to match against for a limit number of times or time as follows:
+     * <p><pre>
+     *     when(
+     *         request()
+     *             .withMethod("GET")
+     *             .withPath("/some/path"),
+     *         5,
+     *         exactly(TimeUnit.SECONDS, 90)
+     *     ).thenRespond(
+     *         response()
+     *             .withContentType(APPLICATION_JSON_UTF_8)
+     *             .withBody("{\"some\": \"body\"}")
+     *     );
+     * </pre><p>
+     *
+     * @param httpRequest the HttpRequest to match against
+     * @param times       the number of times to use this expectation to match requests
+     * @param timeToLive  the time this expectation should be used to match requests
+     * @return the Expectation
+     */
     public static Expectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
         return new Expectation(httpRequest, times, timeToLive, 0);
     }
 
+    /**
+     * Specify the HttpRequest to match against for a limit number of times or time and a match priority as follows:
+     * <p><pre>
+     *     when(
+     *         request()
+     *             .withMethod("GET")
+     *             .withPath("/some/path"),
+     *         5,
+     *         exactly(TimeUnit.SECONDS, 90),
+     *         10
+     *     ).thenRespond(
+     *         response()
+     *             .withContentType(APPLICATION_JSON_UTF_8)
+     *             .withBody("{\"some\": \"body\"}")
+     *     );
+     * </pre><p>
+     *
+     * @param httpRequest the HttpRequest to match against
+     * @param times       the number of times to use this expectation to match requests
+     * @param timeToLive  the time this expectation should be used to match requests
+     * @param priority    the priority with which this expectation is used to match requests compared to other expectations (high first)
+     * @return the Expectation
+     */
     public static Expectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive, Integer priority) {
         return new Expectation(httpRequest, times, timeToLive, priority);
     }
 
-    public Expectation(HttpRequest httpRequest) {
-        this(httpRequest, Times.unlimited(), TimeToLive.unlimited(), 0);
+    public Expectation(RequestDefinition requestDefinition) {
+        this(requestDefinition, Times.unlimited(), TimeToLive.unlimited(), 0);
     }
 
-    public Expectation(HttpRequest httpRequest, Times times, TimeToLive timeToLive, Integer priority) {
+    public Expectation(RequestDefinition requestDefinition, Times times, TimeToLive timeToLive, Integer priority) {
         // ensure created enforces insertion order by relying on system time, and a counter
         EXPECTATION_COUNTER.compareAndSet(Integer.MAX_VALUE, 0);
         this.created = System.currentTimeMillis() - START_TIME + EXPECTATION_COUNTER.incrementAndGet();
-        this.httpRequest = httpRequest;
+        this.httpRequest = requestDefinition;
         this.times = times;
         this.timeToLive = timeToLive;
         this.priority = priority;
@@ -97,7 +281,7 @@ public class Expectation extends ObjectWithJsonToString {
         return created;
     }
 
-    public HttpRequest getHttpRequest() {
+    public RequestDefinition getHttpRequest() {
         return httpRequest;
     }
 

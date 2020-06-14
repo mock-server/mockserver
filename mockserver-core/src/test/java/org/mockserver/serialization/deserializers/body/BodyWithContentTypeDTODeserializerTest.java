@@ -147,7 +147,7 @@ public class BodyWithContentTypeDTODeserializerTest {
         // then
         assertEquals(new ExpectationDTO()
             .setHttpResponse(
-                new HttpResponseDTO().setBody(BodyWithContentTypeDTO.createDTO(exact("some_value")))
+                new HttpResponseDTO().setBody(BodyWithContentTypeDTO.createWithContentTypeDTO(exact("some_value")))
             ), expectationDTO);
     }
 

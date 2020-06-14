@@ -11,7 +11,7 @@ public class RegexBodyDTO extends BodyDTO {
     private final String regex;
 
     public RegexBodyDTO(RegexBody regexBody) {
-        this(regexBody, false);
+        this(regexBody, null);
     }
 
     public RegexBodyDTO(RegexBody regexBody, Boolean not) {

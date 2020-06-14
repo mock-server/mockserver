@@ -11,7 +11,7 @@ public class XPathBodyDTO extends BodyDTO {
     private final String xpath;
 
     public XPathBodyDTO(XPathBody xPathBody) {
-        this(xPathBody, false);
+        this(xPathBody, null);
     }
 
     public XPathBodyDTO(XPathBody xPathBody, Boolean not) {

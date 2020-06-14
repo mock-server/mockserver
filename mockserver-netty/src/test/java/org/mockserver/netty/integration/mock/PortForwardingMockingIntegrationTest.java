@@ -17,6 +17,7 @@ import java.util.Arrays;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.Times.exactly;
@@ -28,6 +29,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.OK_200;
+import static org.mockserver.model.OpenAPIDefinition.openAPI;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.StringBody.exact;
@@ -302,8 +304,8 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
             String[] actualLogMessages = mockServerClient.retrieveLogMessagesArray(request().withPath(calculatePath(".*")));
 
             Object[] expectedLogMessages = new Object[]{
-                "resetting all expectations and request logs",
-                "creating expectation:" + NEW_LINE +
+                "resetting all expectations and request logs",  // 0
+                "creating expectation:" + NEW_LINE +  // 1
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
@@ -321,7 +323,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     "      \"body\" : \"some_body\"" + NEW_LINE +
                     "    }" + NEW_LINE +
                     "  }" + NEW_LINE,
-                new String[]{
+                new String[]{  // 2
                     "received request:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
@@ -329,7 +331,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                         "    \"path\" : \"/some_path_one\"," + NEW_LINE +
                         "    \"headers\" : {"
                 },
-                new String[]{
+                new String[]{  // 3
                     "request:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
@@ -354,7 +356,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                         "    }" + NEW_LINE +
                         "  }"
                 },
-                new String[]{
+                new String[]{ // 4
                     "returning response:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
@@ -372,7 +374,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                         "    \"body\" : \"some_body\"" + NEW_LINE +
                         "  }" + NEW_LINE
                 },
-                new String[]{
+                new String[]{ // 5
                     "received request:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
@@ -380,7 +382,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                         "    \"path\" : \"/not_found\"," + NEW_LINE +
                         "    \"headers\" : {"
                 },
-                new String[]{
+                new String[]{ // 6
                     "request:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
@@ -410,7 +412,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                         "  method matched" + NEW_LINE +
                         "  path didn't match" + NEW_LINE
                 },
-                new String[]{
+                new String[]{ // 7
                     "no expectation for:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
@@ -420,10 +422,9 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"statusCode\" : 404," + NEW_LINE +
-                        "    \"reasonPhrase\" : \"Not Found\"" + NEW_LINE +
-                        "  }"
+                        "    \"reasonPhrase\" : \"Not Found\""
                 },
-                new String[]{
+                new String[]{ // 8
                     "received request:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
@@ -431,7 +432,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                         "    \"path\" : \"/some_path_three\"," + NEW_LINE +
                         "    \"headers\" : {"
                 },
-                new String[]{
+                new String[]{ // 9
                     "request:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
@@ -456,7 +457,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                         "    }" + NEW_LINE +
                         "  }"
                 },
-                new String[]{
+                new String[]{ // 10
                     "returning response:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
@@ -674,5 +675,35 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     .withCookies(cookie("cookieName", "cookieValue")),
                 headersToIgnore)
         );
+    }
+
+    @Test
+    @Override
+    public void shouldNotReturnResponseForNonMatchingOpenAPI() {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .when(openAPI(
+                "org/mockserver/mock/openapi_petstore_example.json",
+                "listPets"
+            ))
+            .respond(response().withBody("some_body"));
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(HttpStatusCode.OK_200.code())
+                .withReasonPhrase(HttpStatusCode.OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withMethod("PUT")
+                    .withPath("/pets")
+                    .withQueryStringParameter("limit", "10"),
+                headersToIgnore)
+        );
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(new Expectation(openAPI(
+            "org/mockserver/mock/openapi_petstore_example.json",
+            "listPets"
+        )).thenRespond(response().withBody("some_body"))));
     }
 }

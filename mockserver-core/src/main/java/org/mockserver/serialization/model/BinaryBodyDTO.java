@@ -10,7 +10,7 @@ public class BinaryBodyDTO extends BodyWithContentTypeDTO {
     private final byte[] base64Bytes;
 
     public BinaryBodyDTO(BinaryBody binaryBody) {
-        this(binaryBody, false);
+        this(binaryBody, null);
     }
 
     public BinaryBodyDTO(BinaryBody binaryBody, Boolean not) {

@@ -20,7 +20,7 @@ public class HttpRequestAndHttpResponseDTO extends ObjectWithJsonToString implem
         if (httpRequestAndHttpResponse != null) {
             HttpRequest httpRequest = httpRequestAndHttpResponse.getHttpRequest();
             if (httpRequest != null) {
-                this.httpRequest = new HttpRequestDTO(httpRequest, httpRequest.getNot());
+                this.httpRequest = new HttpRequestDTO(httpRequest);
             }
             HttpResponse httpResponse = httpRequestAndHttpResponse.getHttpResponse();
             if (httpResponse != null) {

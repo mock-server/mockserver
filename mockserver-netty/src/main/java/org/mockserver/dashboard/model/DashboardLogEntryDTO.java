@@ -3,14 +3,12 @@ package org.mockserver.dashboard.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.HttpError;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
-import org.mockserver.model.ObjectWithJsonToString;
+import org.mockserver.model.*;
 import org.slf4j.event.Level;
 
 import static org.mockserver.model.HttpRequest.request;
 
+@SuppressWarnings({"UnusedReturnValue", "unused"})
 public class DashboardLogEntryDTO extends ObjectWithJsonToString {
 
     private static final String[] EXCLUDED_FIELDS = {
@@ -24,7 +22,7 @@ public class DashboardLogEntryDTO extends ObjectWithJsonToString {
     private long epochTime;
     private String timestamp;
     private LogEntry.LogMessageType type;
-    private HttpRequest[] httpRequests;
+    private RequestDefinition[] httpRequests;
     private HttpResponse httpResponse;
     private HttpError httpError;
     private Expectation expectation;
@@ -94,11 +92,11 @@ public class DashboardLogEntryDTO extends ObjectWithJsonToString {
     }
 
     @JsonIgnore
-    public HttpRequest[] getHttpRequests() {
+    public RequestDefinition[] getHttpRequests() {
         return httpRequests;
     }
 
-    public DashboardLogEntryDTO setHttpRequests(HttpRequest[] httpRequests) {
+    public DashboardLogEntryDTO setHttpRequests(RequestDefinition[] httpRequests) {
         this.httpRequests = httpRequests;
         return this;
     }
@@ -112,7 +110,7 @@ public class DashboardLogEntryDTO extends ObjectWithJsonToString {
         return this;
     }
 
-    public HttpRequest getHttpRequest() {
+    public RequestDefinition getHttpRequest() {
         if (httpRequests != null && httpRequests.length > 0) {
             return httpRequests[0];
         } else {

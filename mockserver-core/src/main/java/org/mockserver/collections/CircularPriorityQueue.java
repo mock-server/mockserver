@@ -62,7 +62,7 @@ public class CircularPriorityQueue<K, V> extends PriorityBlockingQueue<V> {
 
     @Override
     public boolean remove(Object elementToRemove) {
-        if (elementToRemove.getClass().isAssignableFrom(valueType)) {
+        if (valueType.isAssignableFrom(elementToRemove.getClass())) {
             byKey.remove(keyFunction.apply(valueType.cast(elementToRemove)));
             insertionOrderQueue.remove(elementToRemove);
             return super.remove(elementToRemove);

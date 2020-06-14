@@ -8,9 +8,9 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.serialization.model.HttpResponseDTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.serialization.model.HttpResponseDTO;
 
 import java.io.IOException;
 
@@ -33,8 +33,6 @@ public class HttpResponseSerializationErrorsTest {
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
     @Mock
-    private ObjectMapper objectMapper;
-    @Mock
     private ObjectWriter objectWriter;
     @InjectMocks
     private HttpResponseSerializer httpResponseSerializer;
@@ -53,7 +51,6 @@ public class HttpResponseSerializationErrorsTest {
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("Exception while serializing httpResponse to JSON with value { }");
         // and
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
         when(objectWriter.writeValueAsString(any(HttpResponseDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
         // when
@@ -66,7 +63,6 @@ public class HttpResponseSerializationErrorsTest {
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("Exception while serializing HttpResponse to JSON with value [{ }]");
         // and
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
         when(objectWriter.writeValueAsString(any(HttpResponseDTO[].class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
         // when
@@ -112,7 +108,7 @@ public class HttpResponseSerializationErrorsTest {
         // given
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("1 error:" + NEW_LINE +
-                " - a response or response array is required but value was \"\"");
+            " - a response or response array is required but value was \"\"");
 
         // when
         assertArrayEquals(new HttpResponse[]{}, httpResponseSerializer.deserializeArray(""));

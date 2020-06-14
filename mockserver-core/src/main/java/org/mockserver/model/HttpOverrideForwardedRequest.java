@@ -87,6 +87,9 @@ public class HttpOverrideForwardedRequest extends Action<HttpOverrideForwardedRe
         if (hashCode() != o.hashCode()) {
             return false;
         }
+        if (!super.equals(o)) {
+            return false;
+        }
         HttpOverrideForwardedRequest that = (HttpOverrideForwardedRequest) o;
         return Objects.equals(httpRequest, that.httpRequest) &&
             Objects.equals(httpResponse, that.httpResponse);

@@ -69,14 +69,10 @@ public class PortBindingSerializerTest {
 
     @Test
     public void serialize() throws IOException {
-        // given
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-
         // when
         portBindingSerializer.serialize(fullPortBinding);
 
         // then
-        verify(objectMapper).writerWithDefaultPrettyPrinter();
         verify(objectWriter).writeValueAsString(fullPortBinding);
     }
 
@@ -86,7 +82,6 @@ public class PortBindingSerializerTest {
         thrown.expect(RuntimeException.class);
         thrown.expectMessage(containsString("Exception while serializing portBinding to JSON with value"));
         // and
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
         when(objectWriter.writeValueAsString(any(PortBinding.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
         // when

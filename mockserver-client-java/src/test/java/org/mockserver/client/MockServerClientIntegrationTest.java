@@ -3,7 +3,10 @@ package org.mockserver.client;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOutboundInvoker;
 import org.hamcrest.core.IsNot;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.http.EchoServer;
@@ -78,8 +81,8 @@ public class MockServerClientIntegrationTest {
         stopQuietly(mockServerClientOne);
     }
 
-    private List<HttpRequest> retrieveRequests(HttpRequest httpRequest) {
-        CompletableFuture<List<HttpRequest>> result = new CompletableFuture<>();
+    private List<RequestDefinition> retrieveRequests(HttpRequest httpRequest) {
+        CompletableFuture<List<RequestDefinition>> result = new CompletableFuture<>();
         echoServerOne.mockServerEventLog().retrieveRequests(httpRequest, result::complete);
         try {
             return result.get(10, SECONDS);
@@ -1284,7 +1287,7 @@ public class MockServerClientIntegrationTest {
         );
 
         // when
-        HttpRequest[] actualResponse = mockServerClientOne.retrieveRecordedRequests(
+        RequestDefinition[] actualResponse = mockServerClientOne.retrieveRecordedRequests(
             request()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body"))
@@ -1334,7 +1337,7 @@ public class MockServerClientIntegrationTest {
         );
 
         // when
-        HttpRequest[] actualResponse = mockServerClientOne.retrieveRecordedRequests(null);
+        RequestDefinition[] actualResponse = mockServerClientOne.retrieveRecordedRequests(null);
 
         // then
         assertThat(Arrays.asList(actualResponse), hasItems(

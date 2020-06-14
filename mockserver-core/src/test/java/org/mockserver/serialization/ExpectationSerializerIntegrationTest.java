@@ -87,9 +87,11 @@ public class ExpectationSerializerIntegrationTest {
             fail("expected exception to be thrown");
         } catch (Throwable throwable) {
             assertThat(throwable, instanceOf(IllegalArgumentException.class));
-            assertThat(throwable.getMessage(), is("" +
-                "2 errors:" + NEW_LINE +
-                " - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpRequest\"" + NEW_LINE +
+            assertThat(throwable.getMessage(), is("5 errors:" + NEW_LINE +
+                " - object instance has properties which are not allowed by the schema: [\"extra_field\"] for schema \"requestDefinition/oneOf/0\" for field \"/httpRequest\"" + NEW_LINE +
+                " - object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"] for schema \"requestDefinition/oneOf/1\" for field \"/httpRequest\"" + NEW_LINE +
+                " - object has missing required properties ([\"specUrlOrPayload\"]) for schema \"requestDefinition/oneOf/1\" for field \"/httpRequest\"" + NEW_LINE +
+                " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequest\"" + NEW_LINE +
                 " - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"" + NEW_LINE +
                 NEW_LINE +
                 OPEN_API_SPECIFICATION_URL));
@@ -198,22 +200,30 @@ public class ExpectationSerializerIntegrationTest {
             fail("expected exception to be thrown");
         } catch (Throwable throwable) {
             assertThat(throwable, instanceOf(IllegalArgumentException.class));
-            assertThat(throwable.getMessage(), is("" +
-                "[" + NEW_LINE +
-                "  2 errors:" + NEW_LINE +
-                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpRequest\"" + NEW_LINE +
+            assertThat(throwable.getMessage(), is("[" + NEW_LINE +
+                "  5 errors:" + NEW_LINE +
+                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for schema \"requestDefinition/oneOf/0\" for field \"/httpRequest\"" + NEW_LINE +
+                "   - object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"] for schema \"requestDefinition/oneOf/1\" for field \"/httpRequest\"" + NEW_LINE +
+                "   - object has missing required properties ([\"specUrlOrPayload\"]) for schema \"requestDefinition/oneOf/1\" for field \"/httpRequest\"" + NEW_LINE +
+                "   - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequest\"" + NEW_LINE +
                 "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"" + NEW_LINE +
-                "  " + NEW_LINE +
+                "  " + NEW_LINE  +
                 "  " + OPEN_API_SPECIFICATION_URL + "," + NEW_LINE +
-                "  2 errors:" + NEW_LINE +
-                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpRequest\"" + NEW_LINE +
+                "  5 errors:" + NEW_LINE +
+                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for schema \"requestDefinition/oneOf/0\" for field \"/httpRequest\"" + NEW_LINE +
+                "   - object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"] for schema \"requestDefinition/oneOf/1\" for field \"/httpRequest\"" + NEW_LINE +
+                "   - object has missing required properties ([\"specUrlOrPayload\"]) for schema \"requestDefinition/oneOf/1\" for field \"/httpRequest\"" + NEW_LINE +
+                "   - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequest\"" + NEW_LINE +
                 "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"" + NEW_LINE +
-                "  " + NEW_LINE +
+                "  " + NEW_LINE  +
                 "  " + OPEN_API_SPECIFICATION_URL + "," + NEW_LINE +
-                "  2 errors:" + NEW_LINE +
-                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpRequest\"" + NEW_LINE +
+                "  5 errors:" + NEW_LINE +
+                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for schema \"requestDefinition/oneOf/0\" for field \"/httpRequest\"" + NEW_LINE +
+                "   - object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"] for schema \"requestDefinition/oneOf/1\" for field \"/httpRequest\"" + NEW_LINE +
+                "   - object has missing required properties ([\"specUrlOrPayload\"]) for schema \"requestDefinition/oneOf/1\" for field \"/httpRequest\"" + NEW_LINE +
+                "   - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequest\"" + NEW_LINE +
                 "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"" + NEW_LINE +
-                "  " + NEW_LINE +
+                "  " + NEW_LINE  +
                 "  " + OPEN_API_SPECIFICATION_URL + NEW_LINE +
                 "]"));
         }

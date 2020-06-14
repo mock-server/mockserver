@@ -11,7 +11,7 @@ public class JsonPathBodyDTO extends BodyDTO {
     private final String jsonPath;
 
     public JsonPathBodyDTO(JsonPathBody jsonPathBody) {
-        this(jsonPathBody, false);
+        this(jsonPathBody, null);
     }
 
     public JsonPathBodyDTO(JsonPathBody jsonPathBody, Boolean not) {

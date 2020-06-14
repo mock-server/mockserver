@@ -534,7 +534,380 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
     }
 
     @Test
-    public void shouldValidateInvalidCompleteExpectationMissingAction() {
+    public void shouldValidateInvalidExpectationWithErrorsInHttpRequestBodyAndHttpResponseBody() {
+        // when
+        assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"WRONG\"," + NEW_LINE +
+            "      \"string\" : \"someBody\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"statusCode\" : 304," + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"WRONG\"," + NEW_LINE +
+            "      \"string\" : \"someBody\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}"), is(""));
+    }
+
+    @Test
+    public void shouldValidateInvalidExpectationWithErrorsInOpenAPIDefinitionAndHttpResponseBody() {
+        // when
+        assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"specUrlOrPayload\" : \"someMethod\"," + NEW_LINE +
+            "    \"operationId\" : 10" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"statusCode\" : 304," + NEW_LINE +
+            "    \"body\" : 50" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}"), is("4 errors:" + NEW_LINE +
+            " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for schema \"requestDefinition/oneOf/1\" for field \"/httpRequest/operationId\"" + NEW_LINE +
+            " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequest\"" + NEW_LINE +
+            " - for field \"/httpResponse/body\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
+            "   {" + NEW_LINE +
+            "     \"type\": \"BINARY\"," + NEW_LINE +
+            "     \"base64Bytes\": \"\"," + NEW_LINE +
+            "     \"contentType\": \"\"" + NEW_LINE +
+            "   }, " + NEW_LINE +
+            "   {" + NEW_LINE +
+            "     \"type\": \"JSON\"," + NEW_LINE +
+            "     \"json\": \"\"," + NEW_LINE +
+            "     \"contentType\": \"\"" + NEW_LINE +
+            "   }," + NEW_LINE +
+            "   {" + NEW_LINE +
+            "     \"type\": \"PARAMETERS\"," + NEW_LINE +
+            "     \"parameters\": {\"name\": \"value\"}" + NEW_LINE +
+            "   }," + NEW_LINE +
+            "   {" + NEW_LINE +
+            "     \"type\": \"STRING\"," + NEW_LINE +
+            "     \"string\": \"\"" + NEW_LINE +
+            "   }," + NEW_LINE +
+            "   {" + NEW_LINE +
+            "     \"type\": \"XML\"," + NEW_LINE +
+            "     \"xml\": \"\"," + NEW_LINE +
+            "     \"contentType\": \"\"" + NEW_LINE +
+            "   }" + NEW_LINE +
+            " - instance failed to match at least one required schema among 8 for field \"/httpResponse/body\"" + NEW_LINE +
+            NEW_LINE +
+            OPEN_API_SPECIFICATION_URL));
+    }
+
+    @Test
+    public void shouldValidateInvalidExpectationWithErrorsInHttpRequestHeadersAndHttpResponseHeaders() {
+        // when
+        assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"body\" : \"someBody\"," + NEW_LINE +
+            "    \"headers\" : [ {" + NEW_LINE +
+            "      \"name\" : 10," + NEW_LINE +
+            "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"socketAddress\" : {" + NEW_LINE +
+            "      \"host\" : \"someHost\"," + NEW_LINE +
+            "      \"port\" : 1234," + NEW_LINE +
+            "      \"scheme\" : \"HTTPS\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"statusCode\" : 304," + NEW_LINE +
+            "    \"body\" : \"someBody\"," + NEW_LINE +
+            "    \"headers\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+            "      \"values\" : [ 10 ]" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}"), is("7 errors:" + NEW_LINE +
+            " - for field \"/httpRequest/headers\" only one of the following example formats is allowed: " + NEW_LINE +
+            NEW_LINE +
+            "    {" + NEW_LINE +
+            "        \"exampleHeaderName\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
+            "        \"exampleMultiValuedHeaderName\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
+            "    }" + NEW_LINE +
+            NEW_LINE +
+            "   or:" + NEW_LINE +
+            NEW_LINE +
+            "    [" + NEW_LINE +
+            "        {" + NEW_LINE +
+            "            \"name\" : \"exampleHeaderName\"," + NEW_LINE +
+            "            \"values\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        {" + NEW_LINE +
+            "            \"name\" : \"exampleMultiValuedHeaderName\"," + NEW_LINE +
+            "            \"values\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    ]" + NEW_LINE +
+            " - instance failed to match exactly one schema (matched 0 out of 2) for schema \"requestDefinition/oneOf/0\" for field \"/httpRequest/headers\"" + NEW_LINE +
+            " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequest\"" + NEW_LINE +
+            " - for field \"/httpResponse/headers\" only one of the following example formats is allowed: " + NEW_LINE +
+            NEW_LINE +
+            "    {" + NEW_LINE +
+            "        \"exampleHeaderName\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
+            "        \"exampleMultiValuedHeaderName\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
+            "    }" + NEW_LINE +
+            NEW_LINE +
+            "   or:" + NEW_LINE +
+            NEW_LINE +
+            "    [" + NEW_LINE +
+            "        {" + NEW_LINE +
+            "            \"name\" : \"exampleHeaderName\"," + NEW_LINE +
+            "            \"values\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        {" + NEW_LINE +
+            "            \"name\" : \"exampleMultiValuedHeaderName\"," + NEW_LINE +
+            "            \"values\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    ]" + NEW_LINE +
+            " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for schema \"keyToMultiValue/oneOf/0\" for field \"/httpResponse/headers/0/values/0\"" + NEW_LINE +
+            " - instance type (array) does not match any allowed primitive type (allowed: [\"object\"]) for schema \"keyToMultiValue/oneOf/1\" for field \"/httpResponse/headers\"" + NEW_LINE +
+            " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpResponse/headers\"" + NEW_LINE +
+            NEW_LINE +
+            OPEN_API_SPECIFICATION_URL));
+    }
+
+    @Test
+    public void shouldValidateInvalidExpectationWithErrorsInHttpRequestCookiesAndHttpResponseCookies() {
+        // when
+        assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"body\" : \"someBody\"," + NEW_LINE +
+            "    \"cookies\" : [ {" + NEW_LINE +
+            "      \"name\" : 10," + NEW_LINE +
+            "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"statusCode\" : 304," + NEW_LINE +
+            "    \"body\" : \"someBody\"," + NEW_LINE +
+            "    \"cookies\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someCookieName\"," + NEW_LINE +
+            "      \"value\" : 10" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}"), is("7 errors:" + NEW_LINE +
+            " - for field \"/httpRequest/cookies\" only one of the following example formats is allowed: " + NEW_LINE +
+            NEW_LINE +
+            "    {" + NEW_LINE +
+            "        \"exampleCookieNameOne\" : \"exampleCookieValueOne\"" + NEW_LINE +
+            "        \"exampleCookieNameTwo\" : \"exampleCookieValueTwo\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            NEW_LINE +
+            "   or:" + NEW_LINE +
+            NEW_LINE +
+            "    [" + NEW_LINE +
+            "        {" + NEW_LINE +
+            "            \"name\" : \"exampleCookieNameOne\"," + NEW_LINE +
+            "            \"values\" : \"exampleCookieValueOne\"" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        {" + NEW_LINE +
+            "            \"name\" : \"exampleCookieNameTwo\"," + NEW_LINE +
+            "            \"values\" : \"exampleCookieValueTwo\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    ]" + NEW_LINE +
+            " - instance failed to match exactly one schema (matched 0 out of 2) for schema \"requestDefinition/oneOf/0\" for field \"/httpRequest/cookies\"" + NEW_LINE +
+            " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequest\"" + NEW_LINE +
+            " - for field \"/httpResponse/cookies\" only one of the following example formats is allowed: " + NEW_LINE +
+            NEW_LINE +
+            "    {" + NEW_LINE +
+            "        \"exampleCookieNameOne\" : \"exampleCookieValueOne\"" + NEW_LINE +
+            "        \"exampleCookieNameTwo\" : \"exampleCookieValueTwo\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            NEW_LINE +
+            "   or:" + NEW_LINE +
+            NEW_LINE +
+            "    [" + NEW_LINE +
+            "        {" + NEW_LINE +
+            "            \"name\" : \"exampleCookieNameOne\"," + NEW_LINE +
+            "            \"values\" : \"exampleCookieValueOne\"" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        {" + NEW_LINE +
+            "            \"name\" : \"exampleCookieNameTwo\"," + NEW_LINE +
+            "            \"values\" : \"exampleCookieValueTwo\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    ]" + NEW_LINE +
+            " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for schema \"keyToValue/oneOf/0\" for field \"/httpResponse/cookies/0/value\"" + NEW_LINE +
+            " - instance type (array) does not match any allowed primitive type (allowed: [\"object\"]) for schema \"keyToValue/oneOf/1\" for field \"/httpResponse/cookies\"" + NEW_LINE +
+            " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpResponse/cookies\"" + NEW_LINE +
+            NEW_LINE +
+            OPEN_API_SPECIFICATION_URL));
+    }
+
+    @Test
+    public void shouldValidateInvalidExpectationWithErrorsInHttpRequestQueryParametersAndHttpResponseBody() {
+        // when
+        assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : [ {" + NEW_LINE +
+            "      \"name\" : 10," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"statusCode\" : 304," + NEW_LINE +
+            "    \"body\" : 50," + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}"), is("5 errors:" + NEW_LINE +
+            " - for field \"/httpRequest/queryStringParameters\" only one of the following example formats is allowed: " + NEW_LINE +
+            NEW_LINE +
+            "    {" + NEW_LINE +
+            "        \"exampleParameterName\" : [ \"exampleParameterValue\" ]" + NEW_LINE +
+            "        \"exampleMultiValuedParameterName\" : [ \"exampleParameterValueOne\", \"exampleParameterValueTwo\" ]" + NEW_LINE +
+            "    }" + NEW_LINE +
+            NEW_LINE +
+            "   or:" + NEW_LINE +
+            NEW_LINE +
+            "    [" + NEW_LINE +
+            "        {" + NEW_LINE +
+            "            \"name\" : \"exampleParameterName\"," + NEW_LINE +
+            "            \"values\" : [ \"exampleParameterValue\" ]" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        {" + NEW_LINE +
+            "            \"name\" : \"exampleMultiValuedParameterName\"," + NEW_LINE +
+            "            \"values\" : [ \"exampleParameterValueOne\", \"exampleParameterValueTwo\" ]" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    ]" + NEW_LINE +
+            " - instance failed to match exactly one schema (matched 0 out of 2) for schema \"requestDefinition/oneOf/0\" for field \"/httpRequest/queryStringParameters\"" + NEW_LINE +
+            " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequest\"" + NEW_LINE +
+            " - for field \"/httpResponse/body\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
+            "   {" + NEW_LINE +
+            "     \"type\": \"BINARY\"," + NEW_LINE +
+            "     \"base64Bytes\": \"\"," + NEW_LINE +
+            "     \"contentType\": \"\"" + NEW_LINE +
+            "   }, " + NEW_LINE +
+            "   {" + NEW_LINE +
+            "     \"type\": \"JSON\"," + NEW_LINE +
+            "     \"json\": \"\"," + NEW_LINE +
+            "     \"contentType\": \"\"" + NEW_LINE +
+            "   }," + NEW_LINE +
+            "   {" + NEW_LINE +
+            "     \"type\": \"PARAMETERS\"," + NEW_LINE +
+            "     \"parameters\": {\"name\": \"value\"}" + NEW_LINE +
+            "   }," + NEW_LINE +
+            "   {" + NEW_LINE +
+            "     \"type\": \"STRING\"," + NEW_LINE +
+            "     \"string\": \"\"" + NEW_LINE +
+            "   }," + NEW_LINE +
+            "   {" + NEW_LINE +
+            "     \"type\": \"XML\"," + NEW_LINE +
+            "     \"xml\": \"\"," + NEW_LINE +
+            "     \"contentType\": \"\"" + NEW_LINE +
+            "   }" + NEW_LINE +
+            " - instance failed to match at least one required schema among 8 for field \"/httpResponse/body\"" + NEW_LINE +
+            NEW_LINE +
+            OPEN_API_SPECIFICATION_URL));
+    }
+
+    @Test
+    public void shouldValidateInvalidExpectationWithErrorsInHttpRequestQueryParametersAndHeaderAndHttpResponseCookies() {
+        // when
+        assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : [ {" + NEW_LINE +
+            "      \"name\" : 10," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"headers\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+            "      \"values\" : [ 10 ]" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"statusCode\" : 304," + NEW_LINE +
+            "    \"cookies\" : [ {" + NEW_LINE +
+            "      \"name\" : 10," + NEW_LINE +
+            "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}"), is("9 errors:" + NEW_LINE +
+            " - for field \"/httpRequest/headers\" only one of the following example formats is allowed: " + NEW_LINE +
+            NEW_LINE +
+            "    {" + NEW_LINE +
+            "        \"exampleHeaderName\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
+            "        \"exampleMultiValuedHeaderName\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
+            "    }" + NEW_LINE +
+            NEW_LINE +
+            "   or:" + NEW_LINE +
+            NEW_LINE +
+            "    [" + NEW_LINE +
+            "        {" + NEW_LINE +
+            "            \"name\" : \"exampleHeaderName\"," + NEW_LINE +
+            "            \"values\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        {" + NEW_LINE +
+            "            \"name\" : \"exampleMultiValuedHeaderName\"," + NEW_LINE +
+            "            \"values\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    ]" + NEW_LINE +
+            " - for field \"/httpRequest/queryStringParameters\" only one of the following example formats is allowed: " + NEW_LINE +
+            NEW_LINE +
+            "    {" + NEW_LINE +
+            "        \"exampleParameterName\" : [ \"exampleParameterValue\" ]" + NEW_LINE +
+            "        \"exampleMultiValuedParameterName\" : [ \"exampleParameterValueOne\", \"exampleParameterValueTwo\" ]" + NEW_LINE +
+            "    }" + NEW_LINE +
+            NEW_LINE +
+            "   or:" + NEW_LINE +
+            NEW_LINE +
+            "    [" + NEW_LINE +
+            "        {" + NEW_LINE +
+            "            \"name\" : \"exampleParameterName\"," + NEW_LINE +
+            "            \"values\" : [ \"exampleParameterValue\" ]" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        {" + NEW_LINE +
+            "            \"name\" : \"exampleMultiValuedParameterName\"," + NEW_LINE +
+            "            \"values\" : [ \"exampleParameterValueOne\", \"exampleParameterValueTwo\" ]" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    ]" + NEW_LINE +
+            " - instance failed to match exactly one schema (matched 0 out of 2) for schema \"requestDefinition/oneOf/0\" for field \"/httpRequest/headers\"" + NEW_LINE +
+            " - instance failed to match exactly one schema (matched 0 out of 2) for schema \"requestDefinition/oneOf/0\" for field \"/httpRequest/queryStringParameters\"" + NEW_LINE +
+            " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequest\"" + NEW_LINE +
+            " - for field \"/httpResponse/cookies\" only one of the following example formats is allowed: " + NEW_LINE +
+            NEW_LINE +
+            "    {" + NEW_LINE +
+            "        \"exampleCookieNameOne\" : \"exampleCookieValueOne\"" + NEW_LINE +
+            "        \"exampleCookieNameTwo\" : \"exampleCookieValueTwo\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            NEW_LINE +
+            "   or:" + NEW_LINE +
+            NEW_LINE +
+            "    [" + NEW_LINE +
+            "        {" + NEW_LINE +
+            "            \"name\" : \"exampleCookieNameOne\"," + NEW_LINE +
+            "            \"values\" : \"exampleCookieValueOne\"" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        {" + NEW_LINE +
+            "            \"name\" : \"exampleCookieNameTwo\"," + NEW_LINE +
+            "            \"values\" : \"exampleCookieValueTwo\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    ]" + NEW_LINE +
+            " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for schema \"keyToValue/oneOf/0\" for field \"/httpResponse/cookies/0/name\"" + NEW_LINE +
+            " - instance type (array) does not match any allowed primitive type (allowed: [\"object\"]) for schema \"keyToValue/oneOf/1\" for field \"/httpResponse/cookies\"" + NEW_LINE +
+            " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpResponse/cookies\"" + NEW_LINE +
+            NEW_LINE +
+            OPEN_API_SPECIFICATION_URL));
+    }
+
+    @Test
+    public void shouldValidateInvalidExpectationMissingAction() {
         // when
         assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
@@ -566,8 +939,9 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                 "  }" + NEW_LINE +
                 "}"),
             is(
-                "1 error:" + NEW_LINE +
-                    " - oneOf of the following must be specified [\"httpResponse\", \"httpResponseTemplate\", \"httpResponseObjectCallback\", \"httpResponseClassCallback\", \"httpForward\", \"httpForwardTemplate\", \"httpForwardObjectCallback\", \"httpForwardClassCallback\", \"httpOverrideForwardedRequest\", \"httpError\"] but 0 found" + NEW_LINE +
+                "2 errors:" + NEW_LINE +
+                    " - oneOf of the following must be specified [\"httpResponse\", \"httpResponseTemplate\", \"httpResponseObjectCallback\", \"httpResponseClassCallback\", \"httpForward\", \"httpForwardTemplate\", \"httpForwardObjectCallback\", \"httpForwardClassCallback\", \"httpOverrideForwardedRequest\", \"httpError\"] but found 0 without errors" + NEW_LINE +
+                    " - instance failed to match exactly one schema (matched 0 out of 10)" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));
@@ -580,9 +954,10 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                 "    \"invalidField\" : \"randomValue\"" + NEW_LINE +
                 "  }"),
             is(
-                "2 errors:" + NEW_LINE +
+                "3 errors:" + NEW_LINE +
                     " - object instance has properties which are not allowed by the schema: [\"invalidField\"]" + NEW_LINE +
-                    " - oneOf of the following must be specified [\"httpResponse\", \"httpResponseTemplate\", \"httpResponseObjectCallback\", \"httpResponseClassCallback\", \"httpForward\", \"httpForwardTemplate\", \"httpForwardObjectCallback\", \"httpForwardClassCallback\", \"httpOverrideForwardedRequest\", \"httpError\"] but 0 found" + NEW_LINE +
+                    " - oneOf of the following must be specified [\"httpResponse\", \"httpResponseTemplate\", \"httpResponseObjectCallback\", \"httpResponseClassCallback\", \"httpForward\", \"httpForwardTemplate\", \"httpForwardObjectCallback\", \"httpForwardClassCallback\", \"httpOverrideForwardedRequest\", \"httpError\"] but found 0 without errors" + NEW_LINE +
+                    " - instance failed to match exactly one schema (matched 0 out of 10)" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));
@@ -596,8 +971,10 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                 "    \"httpResponse\" : false" + NEW_LINE +
                 "  }"),
             is(
-                "2 errors:" + NEW_LINE +
-                    " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for field \"/httpRequest\"" + NEW_LINE +
+                "4 errors:" + NEW_LINE +
+                    " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for schema \"requestDefinition/oneOf/0\" for field \"/httpRequest\"" + NEW_LINE +
+                    " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for schema \"requestDefinition/oneOf/1\" for field \"/httpRequest\"" + NEW_LINE +
+                    " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequest\"" + NEW_LINE +
                     " - instance type (boolean) does not match any allowed primitive type (allowed: [\"object\"]) for field \"/httpResponse\"" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
@@ -654,17 +1031,17 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                 "  }" + NEW_LINE +
                 "}"),
             is(
-                "2 errors:" + NEW_LINE +
+                "8 errors:" + NEW_LINE +
                     " - for field \"/httpRequest/headers\" only one of the following example formats is allowed: " + NEW_LINE +
                     NEW_LINE +
-                    "    \"/httpRequest/headers\" : {" + NEW_LINE +
+                    "    {" + NEW_LINE +
                     "        \"exampleHeaderName\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
                     "        \"exampleMultiValuedHeaderName\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
                     "    }" + NEW_LINE +
                     NEW_LINE +
                     "   or:" + NEW_LINE +
                     NEW_LINE +
-                    "    \"/httpRequest/headers\" : [" + NEW_LINE +
+                    "    [" + NEW_LINE +
                     "        {" + NEW_LINE +
                     "            \"name\" : \"exampleHeaderName\"," + NEW_LINE +
                     "            \"values\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
@@ -674,16 +1051,18 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                     "            \"values\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
                     "        }" + NEW_LINE +
                     "    ]" + NEW_LINE +
+                    " - instance failed to match exactly one schema (matched 0 out of 2) for schema \"requestDefinition/oneOf/0\" for field \"/httpRequest/headers\"" + NEW_LINE +
+                    " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequest\"" + NEW_LINE +
                     " - for field \"/httpResponse/headers\" only one of the following example formats is allowed: " + NEW_LINE +
                     NEW_LINE +
-                    "    \"/httpResponse/headers\" : {" + NEW_LINE +
+                    "    {" + NEW_LINE +
                     "        \"exampleHeaderName\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
                     "        \"exampleMultiValuedHeaderName\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
                     "    }" + NEW_LINE +
                     NEW_LINE +
                     "   or:" + NEW_LINE +
                     NEW_LINE +
-                    "    \"/httpResponse/headers\" : [" + NEW_LINE +
+                    "    [" + NEW_LINE +
                     "        {" + NEW_LINE +
                     "            \"name\" : \"exampleHeaderName\"," + NEW_LINE +
                     "            \"values\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
@@ -693,6 +1072,10 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                     "            \"values\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
                     "        }" + NEW_LINE +
                     "    ]" + NEW_LINE +
+                    " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for schema \"keyToMultiValue/oneOf/0\" for field \"/httpResponse/headers/0\"" + NEW_LINE +
+                    " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for schema \"keyToMultiValue/oneOf/0\" for field \"/httpResponse/headers/1\"" + NEW_LINE +
+                    " - instance type (array) does not match any allowed primitive type (allowed: [\"object\"]) for schema \"keyToMultiValue/oneOf/1\" for field \"/httpResponse/headers\"" + NEW_LINE +
+                    " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpResponse/headers\"" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));

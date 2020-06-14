@@ -1,6 +1,7 @@
 package org.mockserver.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.PortBinding;
@@ -11,6 +12,7 @@ import org.slf4j.event.Level;
  */
 public class PortBindingSerializer implements Serializer<PortBinding> {
     private final MockServerLogger mockServerLogger;
+    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
     public PortBindingSerializer(MockServerLogger mockServerLogger) {
@@ -19,9 +21,7 @@ public class PortBindingSerializer implements Serializer<PortBinding> {
 
     public String serialize(PortBinding portBinding) {
         try {
-            return objectMapper
-                .writerWithDefaultPrettyPrinter()
-                .writeValueAsString(portBinding);
+            return objectWriter.writeValueAsString(portBinding);
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()

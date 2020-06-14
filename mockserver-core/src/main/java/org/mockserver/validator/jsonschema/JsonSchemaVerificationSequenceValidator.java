@@ -12,7 +12,9 @@ public class JsonSchemaVerificationSequenceValidator extends JsonSchemaValidator
             mockServerLogger,
             "org/mockserver/model/schema/",
             "verificationSequence",
+            "requestDefinition",
             "httpRequest",
+            "openAPIDefinition",
             "body",
             "keyToMultiValue",
             "keyToValue"

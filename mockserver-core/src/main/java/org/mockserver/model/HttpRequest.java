@@ -21,7 +21,7 @@ import static org.mockserver.model.NottableString.string;
  * @author jamesdbloom
  */
 @SuppressWarnings("rawtypes")
-public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
+public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRequest, Body> {
     private int hashCode;
     private NottableString method = string("");
     private NottableString path = string("");
@@ -783,6 +783,9 @@ public class HttpRequest extends Not implements HttpMessage<HttpRequest, Body> {
             return false;
         }
         if (hashCode() != o.hashCode()) {
+            return false;
+        }
+        if (!super.equals(o)) {
             return false;
         }
         HttpRequest that = (HttpRequest) o;

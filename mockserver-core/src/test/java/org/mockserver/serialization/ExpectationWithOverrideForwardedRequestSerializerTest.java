@@ -120,28 +120,20 @@ public class ExpectationWithOverrideForwardedRequestSerializerTest {
 
     @Test
     public void shouldSerializeObject() throws IOException {
-        // given
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-
         // when
         expectationSerializer.serialize(fullExpectation);
 
         // then
-        verify(objectMapper).writerWithDefaultPrettyPrinter();
         verify(objectWriter).writeValueAsString(fullExpectationDTO);
     }
 
     @Test
     @SuppressWarnings("RedundantArrayCreation")
     public void shouldSerializeArray() throws IOException {
-        // given
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-
         // when
         expectationSerializer.serialize(new Expectation[]{fullExpectation, fullExpectation});
 
         // then
-        verify(objectMapper).writerWithDefaultPrettyPrinter();
         verify(objectWriter).writeValueAsString(new ExpectationDTO[]{fullExpectationDTO, fullExpectationDTO});
     }
 

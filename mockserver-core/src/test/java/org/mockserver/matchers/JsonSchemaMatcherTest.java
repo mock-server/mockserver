@@ -174,7 +174,8 @@ public class JsonSchemaMatcherTest {
             // given
             logLevel("TRACE");
             String json = "some_json";
-            when(mockJsonSchemaValidator.isValid(json, false)).thenThrow(new RuntimeException("TEST_EXCEPTION"));
+            RuntimeException test_exception = new RuntimeException("TEST_EXCEPTION");
+            when(mockJsonSchemaValidator.isValid(json, false)).thenThrow(test_exception);
 
             // when
             assertFalse(jsonSchemaMatcher.matches(new MatchDifference(request()), json));
@@ -227,7 +228,7 @@ public class JsonSchemaMatcherTest {
                     " failed because:" + NEW_LINE +
                     "" + NEW_LINE +
                     "  TEST_EXCEPTION" + NEW_LINE,
-                (Throwable) null);
+                test_exception);
         } finally {
             logLevel(originalLevel.toString());
         }

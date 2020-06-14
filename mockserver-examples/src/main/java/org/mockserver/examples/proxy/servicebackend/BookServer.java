@@ -1,6 +1,6 @@
 package org.mockserver.examples.proxy.servicebackend;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
@@ -8,7 +8,6 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.*;
-import org.mockserver.examples.proxy.json.ObjectMapperFactory;
 import org.mockserver.examples.proxy.model.Book;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.scheduler.Scheduler;
@@ -34,7 +33,7 @@ public class BookServer {
 
     private static ServerBootstrap serverBootstrap;
     private final Map<String, Book> booksDB = createBookData();
-    private final ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+    private final ObjectWriter objectWriter = org.mockserver.serialization.ObjectMapperFactory.createObjectMapper(true);
     private final int httpPort;
     private final boolean secure;
     private final NettySslContextFactory nettySslContextFactory;
@@ -113,9 +112,7 @@ public class BookServer {
             if (request.uri().startsWith("/get_books")) {
                 response = new DefaultFullHttpResponse(HTTP_1_1, OK,
                     Unpooled.wrappedBuffer(
-                        objectMapper
-                            .writerWithDefaultPrettyPrinter()
-                            .writeValueAsBytes(booksDB.values())
+                        objectWriter.writeValueAsBytes(booksDB.values())
                     )
                 );
                 response.headers().set(CONTENT_TYPE, "application/json");
@@ -127,9 +124,7 @@ public class BookServer {
                     if (book != null) {
                         response = new DefaultFullHttpResponse(HTTP_1_1, OK,
                             Unpooled.wrappedBuffer(
-                                objectMapper
-                                    .writerWithDefaultPrettyPrinter()
-                                    .writeValueAsBytes(book)
+                                objectWriter.writeValueAsBytes(book)
                             )
                         );
                         response.headers().set(CONTENT_TYPE, "application/json");

@@ -18,7 +18,8 @@ import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -48,7 +49,6 @@ public class HttpRequestAndHttpResponseSerializationErrorsTest {
     @Test
     public void shouldHandleExceptionWhileSerializingObject() throws IOException {
         // given
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
         when(objectWriter.writeValueAsString(any(HttpRequestAndHttpResponseDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
         try {
@@ -65,7 +65,6 @@ public class HttpRequestAndHttpResponseSerializationErrorsTest {
     @Test
     public void shouldHandleExceptionWhileSerializingArray() throws IOException {
         // given
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
         when(objectWriter.writeValueAsString(any(HttpRequestAndHttpResponseDTO[].class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
         try {

@@ -1,9 +1,10 @@
 package org.mockserver.serialization.deserializers.collections;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import org.junit.Test;
-import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.model.Parameters;
+import org.mockserver.serialization.ObjectMapperFactory;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -20,13 +21,13 @@ import static org.mockserver.model.Parameter.param;
  */
 public class ParametersDeserializerTest {
 
-    private final ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
+    private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
     @Test
     public void shouldSerializeThenDeserializer() throws IOException {
         // given
-        String serializedParameters = objectMapper
-            .writerWithDefaultPrettyPrinter()
+        String serializedParameters = objectWriter
             .writeValueAsString(new Parameters().withEntries(
                 param(string("some_name"), Arrays.asList(string("some_value"), string("some_other_value"))),
                 param(string("some_other_name"), string("some_value")),

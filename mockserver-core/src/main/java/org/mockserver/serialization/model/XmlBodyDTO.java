@@ -12,7 +12,7 @@ public class XmlBodyDTO extends BodyWithContentTypeDTO {
     private final byte[] rawBytes;
 
     public XmlBodyDTO(XmlBody xmlBody) {
-        this(xmlBody, false);
+        this(xmlBody, null);
     }
 
     public XmlBodyDTO(XmlBody xmlBody, Boolean not) {

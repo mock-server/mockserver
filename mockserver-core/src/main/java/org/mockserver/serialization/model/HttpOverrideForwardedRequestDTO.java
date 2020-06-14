@@ -18,7 +18,7 @@ public class HttpOverrideForwardedRequestDTO extends ObjectWithReflectiveEqualsH
         if (httpOverrideForwardedRequest != null) {
             HttpRequest httpRequest = httpOverrideForwardedRequest.getHttpRequest();
             if (httpRequest != null) {
-                this.httpRequest = new HttpRequestDTO(httpRequest, httpRequest.getNot());
+                this.httpRequest = new HttpRequestDTO(httpRequest);
             }
             HttpResponse httpResponse = httpOverrideForwardedRequest.getHttpResponse();
             if (httpResponse != null) {

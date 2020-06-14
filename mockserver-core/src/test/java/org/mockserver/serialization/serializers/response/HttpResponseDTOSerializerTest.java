@@ -2,11 +2,11 @@ package org.mockserver.serialization.serializers.response;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.Test;
-import org.mockserver.serialization.ObjectMapperFactory;
-import org.mockserver.serialization.model.HttpResponseDTO;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Delay;
 import org.mockserver.model.Header;
+import org.mockserver.serialization.ObjectMapperFactory;
+import org.mockserver.serialization.model.HttpResponseDTO;
 
 import java.util.concurrent.TimeUnit;
 
@@ -22,7 +22,7 @@ public class HttpResponseDTOSerializerTest {
 
     @Test
     public void shouldReturnFormattedResponseWithNoFieldsSet() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
+        assertThat(ObjectMapperFactory.createObjectMapper(true).writeValueAsString(
             new HttpResponseDTO(
                 response()
             )
@@ -32,7 +32,7 @@ public class HttpResponseDTOSerializerTest {
 
     @Test
     public void shouldReturnFormattedResponseWithAllFieldsSet() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
+        assertThat(ObjectMapperFactory.createObjectMapper(true).writeValueAsString(
             new HttpResponseDTO(
                 response()
                     .withStatusCode(302)
@@ -84,7 +84,7 @@ public class HttpResponseDTOSerializerTest {
 
     @Test
     public void shouldReturnFormattedResponseWithJsonBodyInToString() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
+        assertThat(ObjectMapperFactory.createObjectMapper(true).writeValueAsString(
             new HttpResponseDTO(
                 response()
                     .withStatusCode(302)
@@ -111,7 +111,7 @@ public class HttpResponseDTOSerializerTest {
 
     @Test
     public void shouldReturnFormattedResponseWithDefaultStatusCode() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
+        assertThat(ObjectMapperFactory.createObjectMapper(true).writeValueAsString(
             new HttpResponseDTO(
                 response()
                     .withStatusCode(200)

@@ -2,11 +2,8 @@ package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
-import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.KeysToMultiValues;
-
-import static org.slf4j.event.Level.DEBUG;
 
 /**
  * @author jamesdbloom
@@ -41,13 +38,7 @@ public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues> {
             result = true;
         } else {
             if (context != null) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(DEBUG)
-                        .setMatchDifference(context)
-                        .setMessageFormat("multimap subset match failed expected:{}found:{}failed because:{}")
-                        .setArguments(keysToMultiValues, values, "multimap is not a subset")
-                );
+                context.addDifference(mockServerLogger, "multimap subset match failed expected:{}found:{}failed because:{}", keysToMultiValues, values, "multimap is not a subset");
             }
             result = false;
         }

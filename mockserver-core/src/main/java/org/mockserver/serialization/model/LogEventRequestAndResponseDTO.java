@@ -1,9 +1,6 @@
 package org.mockserver.serialization.model;
 
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
-import org.mockserver.model.LogEventRequestAndResponse;
-import org.mockserver.model.ObjectWithJsonToString;
+import org.mockserver.model.*;
 
 /**
  * @author jamesdbloom
@@ -11,7 +8,7 @@ import org.mockserver.model.ObjectWithJsonToString;
 public class LogEventRequestAndResponseDTO extends ObjectWithJsonToString implements DTO<LogEventRequestAndResponse> {
 
     private String timestamp;
-    private HttpRequestDTO httpRequest;
+    private RequestDefinitionDTO httpRequest;
     private HttpResponseDTO httpResponse;
 
     public LogEventRequestAndResponseDTO() {
@@ -19,9 +16,11 @@ public class LogEventRequestAndResponseDTO extends ObjectWithJsonToString implem
 
     public LogEventRequestAndResponseDTO(LogEventRequestAndResponse httpRequestAndHttpResponse) {
         if (httpRequestAndHttpResponse != null) {
-            HttpRequest httpRequest = httpRequestAndHttpResponse.getHttpRequest();
-            if (httpRequest != null) {
-                this.httpRequest = new HttpRequestDTO(httpRequest, httpRequest.getNot());
+            RequestDefinition httpRequest = httpRequestAndHttpResponse.getHttpRequest();
+            if (httpRequest instanceof HttpRequest) {
+                this.httpRequest = new HttpRequestDTO((HttpRequest) httpRequest);
+            } else if (httpRequest instanceof OpenAPIDefinition) {
+                this.httpRequest = new OpenAPIDefinitionDTO((OpenAPIDefinition) httpRequest);
             }
             HttpResponse httpResponse = httpRequestAndHttpResponse.getHttpResponse();
             if (httpResponse != null) {
@@ -33,7 +32,7 @@ public class LogEventRequestAndResponseDTO extends ObjectWithJsonToString implem
 
     @Override
     public LogEventRequestAndResponse buildObject() {
-        HttpRequest httpRequest = null;
+        RequestDefinition httpRequest = null;
         HttpResponse httpResponse = null;
         if (this.httpRequest != null) {
             httpRequest = this.httpRequest.buildObject();
@@ -55,7 +54,7 @@ public class LogEventRequestAndResponseDTO extends ObjectWithJsonToString implem
         this.timestamp = timestamp;
     }
 
-    public HttpRequestDTO getHttpRequest() {
+    public RequestDefinitionDTO getHttpRequest() {
         return httpRequest;
     }
 

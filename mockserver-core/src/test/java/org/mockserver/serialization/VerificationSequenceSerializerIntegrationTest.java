@@ -2,6 +2,7 @@ package org.mockserver.serialization;
 
 import org.junit.Test;
 import org.mockserver.serialization.model.HttpRequestDTO;
+import org.mockserver.serialization.model.RequestDefinitionDTO;
 import org.mockserver.serialization.model.VerificationSequenceDTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.verify.VerificationSequence;
@@ -64,7 +65,7 @@ public class VerificationSequenceSerializerIntegrationTest {
 
         // then
         assertEquals(new VerificationSequenceDTO()
-                .setHttpRequests(Collections.<HttpRequestDTO>emptyList())
+                .setHttpRequests(Collections.emptyList())
                 .buildObject(), verificationSequence);
     }
 
@@ -145,7 +146,7 @@ public class VerificationSequenceSerializerIntegrationTest {
         // when
         String jsonExpectation = new VerificationSequenceSerializer(new MockServerLogger()).serialize(
                 new VerificationSequenceDTO()
-                        .setHttpRequests(Collections.<HttpRequestDTO>emptyList())
+                        .setHttpRequests(Collections.emptyList())
                         .buildObject()
         );
 

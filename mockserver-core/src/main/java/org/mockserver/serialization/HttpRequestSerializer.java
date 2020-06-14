@@ -2,6 +2,7 @@ package org.mockserver.serialization;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Joiner;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -25,6 +26,7 @@ import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_S
  */
 public class HttpRequestSerializer implements Serializer<HttpRequest> {
     private final MockServerLogger mockServerLogger;
+    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
     private JsonSchemaHttpRequestValidator httpRequestValidator;
@@ -41,13 +43,9 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
     public String serialize(boolean prettyPrint, HttpRequest httpRequest) {
         try {
             if (prettyPrint) {
-                return objectMapper
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(new HttpRequestTemplateObject(httpRequest));
+                return objectWriter.writeValueAsString(new HttpRequestTemplateObject(httpRequest));
             } else {
-                return objectMapper
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(new HttpRequestDTO(httpRequest));
+                return objectWriter.writeValueAsString(new HttpRequestDTO(httpRequest));
             }
         } catch (Exception e) {
             mockServerLogger.logEvent(
@@ -80,17 +78,13 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                     for (int i = 0; i < httpRequests.length; i++) {
                         httpRequestTemplateObjects[i] = new HttpRequestTemplateObject(httpRequests[i]);
                     }
-                    return objectMapper
-                        .writerWithDefaultPrettyPrinter()
-                        .writeValueAsString(httpRequestTemplateObjects);
+                    return objectWriter.writeValueAsString(httpRequestTemplateObjects);
                 } else {
                     HttpRequestDTO[] httpRequestDTOs = new HttpRequestDTO[httpRequests.length];
                     for (int i = 0; i < httpRequests.length; i++) {
                         httpRequestDTOs[i] = new HttpRequestDTO(httpRequests[i]);
                     }
-                    return objectMapper
-                        .writerWithDefaultPrettyPrinter()
-                        .writeValueAsString(httpRequestDTOs);
+                    return objectWriter.writeValueAsString(httpRequestDTOs);
                 }
             } else {
                 return "[]";

@@ -74,6 +74,9 @@ public class HttpTemplate extends Action<HttpTemplate> {
         if (hashCode() != o.hashCode()) {
             return false;
         }
+        if (!super.equals(o)) {
+            return false;
+        }
         HttpTemplate that = (HttpTemplate) o;
         return templateType == that.templateType &&
             Objects.equals(template, that.template) &&

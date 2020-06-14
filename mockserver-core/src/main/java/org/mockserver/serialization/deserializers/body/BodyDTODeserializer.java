@@ -23,7 +23,6 @@ import java.util.Map;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.slf4j.event.Level.DEBUG;
-import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -60,7 +59,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
         String valueJsonValue = "";
         byte[] rawBytes = null;
         Body.Type type = null;
-        boolean not = false;
+        Boolean not = null;
         MediaType contentType = null;
         Charset charset = null;
         boolean subString = false;
@@ -247,13 +246,13 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                 if (jsonBodyObjectMapper == null) {
                     jsonBodyObjectMapper = new ObjectMapper();
                 }
-                return new JsonBodyDTO(new JsonBody(jsonBodyObjectMapper.writeValueAsString(body), JsonBody.DEFAULT_MATCH_TYPE), false);
+                return new JsonBodyDTO(new JsonBody(jsonBodyObjectMapper.writeValueAsString(body), JsonBody.DEFAULT_MATCH_TYPE), null);
             }
         } else if (currentToken == JsonToken.START_ARRAY) {
             if (jsonBodyObjectMapper == null) {
                 jsonBodyObjectMapper = new ObjectMapper();
             }
-            return new JsonBodyDTO(new JsonBody(jsonBodyObjectMapper.writeValueAsString(ctxt.readValue(jsonParser, List.class)), JsonBody.DEFAULT_MATCH_TYPE), false);
+            return new JsonBodyDTO(new JsonBody(jsonBodyObjectMapper.writeValueAsString(ctxt.readValue(jsonParser, List.class)), JsonBody.DEFAULT_MATCH_TYPE), null);
         } else if (currentToken == JsonToken.VALUE_STRING) {
             return new StringBodyDTO(new StringBody(jsonParser.getText()));
         }

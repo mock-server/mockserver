@@ -87,6 +87,9 @@ public class HttpForward extends Action<HttpForward> {
         if (hashCode() != o.hashCode()) {
             return false;
         }
+        if (!super.equals(o)) {
+            return false;
+        }
         HttpForward that = (HttpForward) o;
         return Objects.equals(host, that.host) &&
             Objects.equals(port, that.port) &&

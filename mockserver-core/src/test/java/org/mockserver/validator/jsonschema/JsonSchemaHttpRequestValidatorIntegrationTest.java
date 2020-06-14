@@ -286,7 +286,7 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
                 "    \"body\" : 1" + NEW_LINE +
                 "  }"),
             is(
-                "1 error:" + NEW_LINE +
+                "2 errors:" + NEW_LINE +
                     " - for field \"/body\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
                     "   {" + NEW_LINE +
                     "     \"not\": false," + NEW_LINE +
@@ -342,6 +342,7 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
                     "     \"type\": \"XPATH\"," + NEW_LINE +
                     "     \"xpath\": \"\"" + NEW_LINE +
                     "   }" + NEW_LINE +
+                    " - instance failed to match at least one required schema among 13 for field \"/body\"" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));
@@ -387,17 +388,17 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
                 "    \"headers\" : [ \"invalidValueOne\", \"invalidValueTwo\" ]" + NEW_LINE +
                 "  }"),
             is(
-                "1 error:" + NEW_LINE +
+                "5 errors:" + NEW_LINE +
                     " - for field \"/headers\" only one of the following example formats is allowed: " + NEW_LINE +
                     NEW_LINE +
-                    "    \"/headers\" : {" + NEW_LINE +
+                    "    {" + NEW_LINE +
                     "        \"exampleHeaderName\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
                     "        \"exampleMultiValuedHeaderName\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
                     "    }" + NEW_LINE +
                     NEW_LINE +
                     "   or:" + NEW_LINE +
                     NEW_LINE +
-                    "    \"/headers\" : [" + NEW_LINE +
+                    "    [" + NEW_LINE +
                     "        {" + NEW_LINE +
                     "            \"name\" : \"exampleHeaderName\"," + NEW_LINE +
                     "            \"values\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
@@ -407,6 +408,10 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
                     "            \"values\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
                     "        }" + NEW_LINE +
                     "    ]" + NEW_LINE +
+                    " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for schema \"keyToMultiValue/oneOf/0\" for field \"/headers/0\"" + NEW_LINE +
+                    " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for schema \"keyToMultiValue/oneOf/0\" for field \"/headers/1\"" + NEW_LINE +
+                    " - instance type (array) does not match any allowed primitive type (allowed: [\"object\"]) for schema \"keyToMultiValue/oneOf/1\" for field \"/headers\"" + NEW_LINE +
+                    " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/headers\"" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));

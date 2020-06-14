@@ -568,6 +568,9 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
         if (hashCode() != o.hashCode()) {
             return false;
         }
+        if (!super.equals(o)) {
+            return false;
+        }
         HttpResponse that = (HttpResponse) o;
         return Objects.equals(statusCode, that.statusCode) &&
             Objects.equals(reasonPhrase, that.reasonPhrase) &&

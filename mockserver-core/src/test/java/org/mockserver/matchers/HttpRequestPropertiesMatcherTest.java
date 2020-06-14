@@ -3,7 +3,6 @@ package org.mockserver.matchers;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.*;
 import org.mockserver.serialization.model.*;
 
@@ -13,7 +12,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.NotMatcher.not;
 import static org.mockserver.model.BinaryBody.binary;
@@ -32,219 +30,230 @@ import static org.mockserver.model.XmlSchemaBody.xmlSchema;
 /**
  * @author jamesdbloom
  */
-public class HttpRequestMatcherTest {
+public class HttpRequestPropertiesMatcherTest {
 
-    private final HttpStateHandler httpStateHandler = mock(HttpStateHandler.class);
-    private final MockServerLogger mockServerLogger = new MockServerLogger(httpStateHandler);
+    private final MockServerLogger mockServerLogger = new MockServerLogger(HttpRequestPropertiesMatcherTest.class);
+
+    HttpRequestPropertiesMatcher update(RequestDefinition requestDefinition) {
+        HttpRequestPropertiesMatcher httpRequestPropertiesMatcher = new HttpRequestPropertiesMatcher(mockServerLogger);
+        httpRequestPropertiesMatcher.update(requestDefinition);
+        return httpRequestPropertiesMatcher;
+    }
+
+    HttpRequestPropertiesMatcher update(Expectation expectation) {
+        HttpRequestPropertiesMatcher httpRequestPropertiesMatcher = new HttpRequestPropertiesMatcher(mockServerLogger);
+        httpRequestPropertiesMatcher.update(expectation);
+        return httpRequestPropertiesMatcher;
+    }
 
     @Test
     public void shouldAllowUseOfNotWithMatchingRequests() {
         // requests match - matcher HttpRequest notted
-        assertFalse(new HttpRequestMatcher(mockServerLogger, org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))).matches(null, new HttpRequest().withMethod("HEAD")));
+        assertFalse(update(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))).matches(null, new HttpRequest().withMethod("HEAD")));
 
         // requests match - matched HttpRequest notted
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withMethod("HEAD")).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))));
+        assertFalse(update(new HttpRequest().withMethod("HEAD")).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))));
 
         // requests match - matcher HttpRequest notted & HttpRequestMatch notted
-        assertTrue(not(new HttpRequestMatcher(mockServerLogger, org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD")))).matches(null, new HttpRequest().withMethod("HEAD")));
+        assertTrue(not(update(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD")))).matches(null, new HttpRequest().withMethod("HEAD")));
 
         // requests match - matched HttpRequest notted & HttpRequestMatch notted
-        assertTrue(not(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withMethod("HEAD"))).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))));
+        assertTrue(not(update(new HttpRequest().withMethod("HEAD"))).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))));
 
         // requests match - matcher HttpRequest notted & matched HttpRequest notted & HttpRequestMatch notted
-        assertFalse(not(new HttpRequestMatcher(mockServerLogger, org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD")))).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))));
+        assertFalse(not(update(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD")))).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))));
     }
 
     @Test
     public void shouldAllowUseOfNotWithNonMatchingRequests() {
         // requests don't match - matcher HttpRequest notted
-        assertTrue(new HttpRequestMatcher(mockServerLogger, org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))).matches(null, new HttpRequest().withMethod("OPTIONS")));
+        assertTrue(update(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))).matches(null, new HttpRequest().withMethod("OPTIONS")));
 
         // requests don't match - matched HttpRequest notted
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withMethod("HEAD")).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("OPTIONS"))));
+        assertTrue(update(new HttpRequest().withMethod("HEAD")).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("OPTIONS"))));
 
         // requests don't match - matcher HttpRequest notted & HttpRequestMatch notted
-        assertFalse(not(new HttpRequestMatcher(mockServerLogger, org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD")))).matches(null, new HttpRequest().withMethod("OPTIONS")));
+        assertFalse(not(update(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD")))).matches(null, new HttpRequest().withMethod("OPTIONS")));
 
         // requests don't match - matched HttpRequest notted & HttpRequestMatch notted
-        assertFalse(not(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withMethod("HEAD"))).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("OPTIONS"))));
+        assertFalse(not(update(new HttpRequest().withMethod("HEAD"))).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("OPTIONS"))));
 
         // requests don't match - matcher HttpRequest notted & matched HttpRequest notted & HttpRequestMatch notted
-        assertTrue(not(new HttpRequestMatcher(mockServerLogger, org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD")))).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("OPTIONS"))));
+        assertTrue(not(update(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD")))).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("OPTIONS"))));
     }
 
     @Test
     public void matchesMatchingKeepAlive() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withKeepAlive(true)).matches(null, new HttpRequest().withKeepAlive(true)));
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withKeepAlive(false)).matches(null, new HttpRequest().withKeepAlive(false)));
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withKeepAlive(null)).matches(null, new HttpRequest().withKeepAlive(null)));
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withKeepAlive(null)).matches(null, new HttpRequest().withKeepAlive(false)));
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withKeepAlive(null)).matches(null, new HttpRequest()));
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest()).matches(null, new HttpRequest().withKeepAlive(null)));
+        assertTrue(update(new HttpRequest().withKeepAlive(true)).matches(null, new HttpRequest().withKeepAlive(true)));
+        assertTrue(update(new HttpRequest().withKeepAlive(false)).matches(null, new HttpRequest().withKeepAlive(false)));
+        assertTrue(update(new HttpRequest().withKeepAlive(null)).matches(null, new HttpRequest().withKeepAlive(null)));
+        assertTrue(update(new HttpRequest().withKeepAlive(null)).matches(null, new HttpRequest().withKeepAlive(false)));
+        assertTrue(update(new HttpRequest().withKeepAlive(null)).matches(null, new HttpRequest()));
+        assertTrue(update(new HttpRequest()).matches(null, new HttpRequest().withKeepAlive(null)));
     }
 
     @Test
     public void doesNotMatchIncorrectKeepAlive() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withKeepAlive(true)).matches(null, new HttpRequest().withKeepAlive(false)));
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withKeepAlive(false)).matches(null, new HttpRequest().withKeepAlive(true)));
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withKeepAlive(true)).matches(null, new HttpRequest().withKeepAlive(null)));
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withKeepAlive(false)).matches(null, new HttpRequest().withKeepAlive(null)));
+        assertFalse(update(new HttpRequest().withKeepAlive(true)).matches(null, new HttpRequest().withKeepAlive(false)));
+        assertFalse(update(new HttpRequest().withKeepAlive(false)).matches(null, new HttpRequest().withKeepAlive(true)));
+        assertFalse(update(new HttpRequest().withKeepAlive(true)).matches(null, new HttpRequest().withKeepAlive(null)));
+        assertFalse(update(new HttpRequest().withKeepAlive(false)).matches(null, new HttpRequest().withKeepAlive(null)));
     }
 
     @Test
     public void matchesMatchingSsl() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withSecure(true)).matches(null, new HttpRequest().withSecure(true)));
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withSecure(false)).matches(null, new HttpRequest().withSecure(false)));
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withSecure(null)).matches(null, new HttpRequest().withSecure(null)));
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withSecure(null)).matches(null, new HttpRequest().withSecure(false)));
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withSecure(null)).matches(null, new HttpRequest()));
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest()).matches(null, new HttpRequest().withSecure(null)));
+        assertTrue(update(new HttpRequest().withSecure(true)).matches(null, new HttpRequest().withSecure(true)));
+        assertTrue(update(new HttpRequest().withSecure(false)).matches(null, new HttpRequest().withSecure(false)));
+        assertTrue(update(new HttpRequest().withSecure(null)).matches(null, new HttpRequest().withSecure(null)));
+        assertTrue(update(new HttpRequest().withSecure(null)).matches(null, new HttpRequest().withSecure(false)));
+        assertTrue(update(new HttpRequest().withSecure(null)).matches(null, new HttpRequest()));
+        assertTrue(update(new HttpRequest()).matches(null, new HttpRequest().withSecure(null)));
     }
 
     @Test
     public void doesNotMatchIncorrectSsl() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withSecure(true)).matches(null, new HttpRequest().withSecure(false)));
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withSecure(false)).matches(null, new HttpRequest().withSecure(true)));
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withSecure(true)).matches(null, new HttpRequest().withSecure(null)));
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withSecure(false)).matches(null, new HttpRequest().withSecure(null)));
+        assertFalse(update(new HttpRequest().withSecure(true)).matches(null, new HttpRequest().withSecure(false)));
+        assertFalse(update(new HttpRequest().withSecure(false)).matches(null, new HttpRequest().withSecure(true)));
+        assertFalse(update(new HttpRequest().withSecure(true)).matches(null, new HttpRequest().withSecure(null)));
+        assertFalse(update(new HttpRequest().withSecure(false)).matches(null, new HttpRequest().withSecure(null)));
     }
 
     @Test
     public void matchesMatchingMethod() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withMethod("HEAD")).matches(null, new HttpRequest().withMethod("HEAD")));
+        assertTrue(update(new HttpRequest().withMethod("HEAD")).matches(null, new HttpRequest().withMethod("HEAD")));
     }
 
     @Test
     public void matchesMatchingMethodRegex() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withMethod("P[A-Z]{2}")).matches(null, new HttpRequest().withMethod("PUT")));
+        assertTrue(update(new HttpRequest().withMethod("P[A-Z]{2}")).matches(null, new HttpRequest().withMethod("PUT")));
     }
 
     @Test
     public void doesNotMatchIncorrectMethod() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withMethod("HEAD")).matches(null, new HttpRequest().withMethod("OPTIONS")));
+        assertFalse(update(new HttpRequest().withMethod("HEAD")).matches(null, new HttpRequest().withMethod("OPTIONS")));
     }
 
     @Test
     public void doesNotMatchIncorrectMethodRegex() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withMethod("P[A-Z]{2}")).matches(null, new HttpRequest().withMethod("POST")));
+        assertFalse(update(new HttpRequest().withMethod("P[A-Z]{2}")).matches(null, new HttpRequest().withMethod("POST")));
     }
 
     @Test
     public void matchesMatchingPath() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withPath("somePath")).matches(null, new HttpRequest().withPath("somePath")));
+        assertTrue(update(new HttpRequest().withPath("somePath")).matches(null, new HttpRequest().withPath("somePath")));
     }
 
     @Test
     public void doesNotMatchEncodedMatcherPath() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withPath("/dWM%2FdWM+ZA==")).matches(null, new HttpRequest().withPath("/dWM/dWM+ZA==")));
+        assertFalse(update(new HttpRequest().withPath("/dWM%2FdWM+ZA==")).matches(null, new HttpRequest().withPath("/dWM/dWM+ZA==")));
     }
 
     @Test
     public void doesNotMatchEncodedRequestPath() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withPath("/dWM/dWM+ZA==")).matches(null, new HttpRequest().withPath("/dWM%2FdWM+ZA==")));
+        assertFalse(update(new HttpRequest().withPath("/dWM/dWM+ZA==")).matches(null, new HttpRequest().withPath("/dWM%2FdWM+ZA==")));
     }
 
     @Test
     public void matchesMatchingEncodedMatcherAndRequestPath() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withPath("/dWM%2FdWM+ZA==")).matches(null, new HttpRequest().withPath("/dWM%2FdWM+ZA==")));
+        assertTrue(update(new HttpRequest().withPath("/dWM%2FdWM+ZA==")).matches(null, new HttpRequest().withPath("/dWM%2FdWM+ZA==")));
     }
 
     @Test
     public void matchesMatchingPathRegex() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withPath("someP[a-z]{3}")).matches(null, new HttpRequest().withPath("somePath")));
+        assertTrue(update(new HttpRequest().withPath("someP[a-z]{3}")).matches(null, new HttpRequest().withPath("somePath")));
     }
 
     @Test
     public void doesNotMatchIncorrectPath() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withPath("somepath")).matches(null, new HttpRequest().withPath("pathsome")));
+        assertFalse(update(new HttpRequest().withPath("somepath")).matches(null, new HttpRequest().withPath("pathsome")));
     }
 
     @Test
     public void doesNotMatchIncorrectPathRegex() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withPath("someP[a-z]{2}")).matches(null, new HttpRequest().withPath("somePath")));
+        assertFalse(update(new HttpRequest().withPath("someP[a-z]{2}")).matches(null, new HttpRequest().withPath("somePath")));
     }
 
     @Test
     public void matchesMatchingQueryString() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withQueryStringParameters(new Parameter("someKey", "someValue"))).matches(null, new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someValue"))));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(new Parameter("someKey", "someValue"))).matches(null, new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someValue"))));
     }
 
     @Test
     public void matchesMatchingQueryStringRegexKeyAndValue() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withQueryStringParameters(new Parameter("someK[a-z]{2}", "someV[a-z]{4}"))).matches(null, new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someValue"))));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(new Parameter("someK[a-z]{2}", "someV[a-z]{4}"))).matches(null, new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someValue"))));
     }
 
     @Test
     public void matchesMatchingQueryStringRegexKey() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withQueryStringParameters(new Parameter("someK[a-z]{2}", "someValue"))).matches(null, new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someValue"))));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(new Parameter("someK[a-z]{2}", "someValue"))).matches(null, new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someValue"))));
     }
 
     @Test
     public void matchesMatchingQueryStringRegexValue() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withQueryStringParameters(new Parameter("someKey", "someV[a-z]{4}"))).matches(null, new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someValue"))));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(new Parameter("someKey", "someV[a-z]{4}"))).matches(null, new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someValue"))));
     }
 
     @Test
     public void doesNotMatchIncorrectQueryStringName() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withQueryStringParameters(new Parameter("someKey", "someValue"))).matches(null, new HttpRequest().withQueryStringParameter(new Parameter("someOtherKey", "someValue"))));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(new Parameter("someKey", "someValue"))).matches(null, new HttpRequest().withQueryStringParameter(new Parameter("someOtherKey", "someValue"))));
     }
 
     @Test
     public void doesNotMatchIncorrectQueryStringValue() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withQueryStringParameters(new Parameter("someKey", "someValue"))).matches(null, new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someOtherValue"))));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(new Parameter("someKey", "someValue"))).matches(null, new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someOtherValue"))));
     }
 
     @Test
     public void doesNotMatchIncorrectQueryStringRegexKeyAndValue() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withQueryStringParameters(new Parameter("someK[a-z]{5}", "someV[a-z]{2}"))).matches(null, new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someValue"))));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(new Parameter("someK[a-z]{5}", "someV[a-z]{2}"))).matches(null, new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someValue"))));
     }
 
     @Test
     public void doesNotMatchIncorrectQueryStringRegexKey() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withQueryStringParameters(new Parameter("someK[a-z]{5}", "someValue"))).matches(null, new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someValue"))));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(new Parameter("someK[a-z]{5}", "someValue"))).matches(null, new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someValue"))));
     }
 
     @Test
     public void doesNotMatchIncorrectQueryStringRegexValue() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withQueryStringParameters(new Parameter("someKey", "someV[a-z]{2}"))).matches(null, new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someValue"))));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(new Parameter("someKey", "someV[a-z]{2}"))).matches(null, new HttpRequest().withQueryStringParameter(new Parameter("someKey", "someValue"))));
     }
 
     @Test
     public void matchesMatchingQueryStringParameters() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withQueryStringParameters(new Parameter("name", "value"))).matches(null, new HttpRequest().withQueryStringParameters(new Parameter("name", "value"))));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(new Parameter("name", "value"))).matches(null, new HttpRequest().withQueryStringParameters(new Parameter("name", "value"))));
     }
 
     @Test
     public void matchesMatchingQueryStringParametersWithRegex() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withQueryStringParameters(new Parameter("name", "v[a-z]{4}"))).matches(null, new HttpRequest().withQueryStringParameters(new Parameter("name", "value"))));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(new Parameter("name", "v[a-z]{4}"))).matches(null, new HttpRequest().withQueryStringParameters(new Parameter("name", "value"))));
     }
 
     @Test
     public void queryStringParametersMatchesMatchingQueryString() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withQueryStringParameters(new Parameter("nameOne", "valueOne"))).matches(null, new HttpRequest().withQueryStringParameters(
+        assertTrue(update(new HttpRequest().withQueryStringParameters(new Parameter("nameOne", "valueOne"))).matches(null, new HttpRequest().withQueryStringParameters(
             new Parameter("nameOne", "valueOne"),
             new Parameter("nameTwo", "valueTwo")
         )));
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withQueryStringParameters(new Parameter("nameTwo", "valueTwo"))).matches(null, new HttpRequest().withQueryStringParameters(
+        assertTrue(update(new HttpRequest().withQueryStringParameters(new Parameter("nameTwo", "valueTwo"))).matches(null, new HttpRequest().withQueryStringParameters(
             new Parameter("nameOne", "valueOne"),
             new Parameter("nameTwo", "valueTwo")
         )));
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withQueryStringParameters(new Parameter("nameTwo", "valueTwo", "valueThree"))).matches(null, new HttpRequest().withQueryStringParameters(
+        assertTrue(update(new HttpRequest().withQueryStringParameters(new Parameter("nameTwo", "valueTwo", "valueThree"))).matches(null, new HttpRequest().withQueryStringParameters(
             new Parameter("nameOne", "valueOne"),
             new Parameter("nameTwo", "valueTwo"),
             new Parameter("nameTwo", "valueThree")
         )));
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withQueryStringParameters(new Parameter("nameTwo", "valueTwo"))).matches(null, new HttpRequest().withQueryStringParameters(
+        assertTrue(update(new HttpRequest().withQueryStringParameters(new Parameter("nameTwo", "valueTwo"))).matches(null, new HttpRequest().withQueryStringParameters(
             new Parameter("nameOne", "valueOne"),
             new Parameter("nameTwo", "valueTwo"),
             new Parameter("nameTwo", "valueThree")
         )));
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withQueryStringParameters(new Parameter("nameTwo", "valueThree"))).matches(null, new HttpRequest().withQueryStringParameters(
+        assertTrue(update(new HttpRequest().withQueryStringParameters(new Parameter("nameTwo", "valueThree"))).matches(null, new HttpRequest().withQueryStringParameters(
             new Parameter("nameOne", "valueOne"),
             new Parameter("nameTwo", "valueTwo"),
             new Parameter("nameTwo", "valueThree")
         )));
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withQueryStringParameters(new Parameter("nameTwo", "valueT[a-z]{0,10}"))).matches(null, new HttpRequest().withQueryStringParameters(
+        assertTrue(update(new HttpRequest().withQueryStringParameters(new Parameter("nameTwo", "valueT[a-z]{0,10}"))).matches(null, new HttpRequest().withQueryStringParameters(
             new Parameter("nameOne", "valueOne"),
             new Parameter("nameTwo", "valueTwo"),
             new Parameter("nameTwo", "valueThree")
@@ -253,30 +262,30 @@ public class HttpRequestMatcherTest {
 
     @Test
     public void bodyMatchesMatchingBodyParameters() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(params(new Parameter("nameOne", "valueOne")))).matches(null, new HttpRequest().withBody(new ParameterBody(
+        assertTrue(update(new HttpRequest().withBody(params(new Parameter("nameOne", "valueOne")))).matches(null, new HttpRequest().withBody(new ParameterBody(
             new Parameter("nameOne", "valueOne"),
             new Parameter("nameTwo", "valueTwo")
         ))));
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(new ParameterBody(new Parameter("nameTwo", "valueTwo")))).matches(null, new HttpRequest().withBody(new ParameterBody(
+        assertTrue(update(new HttpRequest().withBody(new ParameterBody(new Parameter("nameTwo", "valueTwo")))).matches(null, new HttpRequest().withBody(new ParameterBody(
             new Parameter("nameOne", "valueOne"),
             new Parameter("nameTwo", "valueTwo")
         ))));
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(params(new Parameter("nameTwo", "valueTwo", "valueThree")))).matches(null, new HttpRequest().withBody(new ParameterBody(
+        assertTrue(update(new HttpRequest().withBody(params(new Parameter("nameTwo", "valueTwo", "valueThree")))).matches(null, new HttpRequest().withBody(new ParameterBody(
             new Parameter("nameOne", "valueOne"),
             new Parameter("nameTwo", "valueTwo"),
             new Parameter("nameTwo", "valueThree")
         ))));
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(new ParameterBody(new Parameter("nameTwo", "valueTwo")))).matches(null, new HttpRequest().withBody(new ParameterBody(
+        assertTrue(update(new HttpRequest().withBody(new ParameterBody(new Parameter("nameTwo", "valueTwo")))).matches(null, new HttpRequest().withBody(new ParameterBody(
             new Parameter("nameOne", "valueOne"),
             new Parameter("nameTwo", "valueTwo"),
             new Parameter("nameTwo", "valueThree")
         ))));
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(params(new Parameter("nameTwo", "valueThree")))).matches(null, new HttpRequest().withBody(new ParameterBody(
+        assertTrue(update(new HttpRequest().withBody(params(new Parameter("nameTwo", "valueThree")))).matches(null, new HttpRequest().withBody(new ParameterBody(
             new Parameter("nameOne", "valueOne"),
             new Parameter("nameTwo", "valueTwo"),
             new Parameter("nameTwo", "valueThree")
         ))));
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(new ParameterBody(new Parameter("nameTwo", "valueT[a-z]{0,10}")))).matches(null, new HttpRequest().withBody(new ParameterBody(
+        assertTrue(update(new HttpRequest().withBody(new ParameterBody(new Parameter("nameTwo", "valueT[a-z]{0,10}")))).matches(null, new HttpRequest().withBody(new ParameterBody(
             new Parameter("nameOne", "valueOne"),
             new Parameter("nameTwo", "valueTwo"),
             new Parameter("nameTwo", "valueThree")
@@ -286,40 +295,39 @@ public class HttpRequestMatcherTest {
     @Test
     public void bodyMatchesMatchingUrlEncodedBodyParameters() {
         // pass exact match
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(params(param("name one", "value one"), param("nameTwo", "valueTwo"))))
+        assertTrue(update(new HttpRequest().withBody(params(param("name one", "value one"), param("nameTwo", "valueTwo"))))
             .matches(null, new HttpRequest().withBody("name+one=value+one&nameTwo=valueTwo")));
 
         // ignore extra parameters
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(params(param("name one", "value one"))))
+        assertTrue(update(new HttpRequest().withBody(params(param("name one", "value one"))))
             .matches(null, new HttpRequest().withBody("name+one=value+one&nameTwo=valueTwo")));
 
         // matches multi-value parameters
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(params(param("name one", "value one one", "value one two"))))
+        assertTrue(update(new HttpRequest().withBody(params(param("name one", "value one one", "value one two"))))
             .matches(null, new HttpRequest().withBody("name+one=value+one+one&name+one=value+one+two")));
 
         // matches multi-value parameters (ignore extra values)
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(params(param("name one", "value one one"))))
+        assertTrue(update(new HttpRequest().withBody(params(param("name one", "value one one"))))
             .matches(null, new HttpRequest().withBody("name+one=value+one+one&name+one=value+one+two")));
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(params(param("name one", "value one two"))))
+        assertTrue(update(new HttpRequest().withBody(params(param("name one", "value one two"))))
             .matches(null, new HttpRequest().withBody("name+one=value+one+one&name+one=value+one+two")));
 
         // matches using regex
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(params(param("name one", "value [a-z]{0,10}"), param("nameTwo", "valueT[a-z]{0,10}"))))
+        assertTrue(update(new HttpRequest().withBody(params(param("name one", "value [a-z]{0,10}"), param("nameTwo", "valueT[a-z]{0,10}"))))
             .matches(null, new HttpRequest().withBody("name+one=value+one&nameTwo=valueTwo")));
 
         // fail no match
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(params(param("name one", "value one"))))
+        assertFalse(update(new HttpRequest().withBody(params(param("name one", "value one"))))
             .matches(null, new HttpRequest().withBody("name+one=value+two")));
     }
 
     @Test
     public void bodyMatchesParameterBodyDTO() {
-        assertTrue(new HttpRequestMatcher(
-            mockServerLogger, new HttpRequest()
-                .withBody(params(
-                    new Parameter("nameOne", "valueOne"),
-                    new Parameter("nameTwo", "valueTwo")
-                ))
+        assertTrue(update(new HttpRequest()
+            .withBody(params(
+                new Parameter("nameOne", "valueOne"),
+                new Parameter("nameTwo", "valueTwo")
+            ))
         )
             .matches(
                 null, new HttpRequest()
@@ -333,67 +341,67 @@ public class HttpRequestMatcherTest {
 
     @Test
     public void doesNotMatchIncorrectParameterName() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value")))).matches(null, new HttpRequest().withBody(new ParameterBody(new Parameter("name1", "value")))));
+        assertFalse(update(new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value")))).matches(null, new HttpRequest().withBody(new ParameterBody(new Parameter("name1", "value")))));
     }
 
     @Test
     public void doesNotMatchIncorrectParameterValue() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value")))).matches(null, new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value1")))));
+        assertFalse(update(new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value")))).matches(null, new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value1")))));
     }
 
     @Test
     public void doesNotMatchIncorrectParameterValueRegex() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(new ParameterBody(new Parameter("name", "va[0-9]{1}ue")))).matches(null, new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value1")))));
+        assertFalse(update(new HttpRequest().withBody(new ParameterBody(new Parameter("name", "va[0-9]{1}ue")))).matches(null, new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value1")))));
     }
 
     @Test
     public void matchesMatchingBody() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(new StringBody("somebody"))).matches(null, new HttpRequest().withBody("somebody")));
+        assertTrue(update(new HttpRequest().withBody(new StringBody("somebody"))).matches(null, new HttpRequest().withBody("somebody")));
     }
 
     @Test
     public void jsonBodyThatIsNotValidDTODoesNotThrowException() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(new StringBody("somebody"))).matches(null, new HttpRequest().withBody("{\"method\":\"any\",\"service\":\"any_service\", \"parameters\": { \"applicationName\":\"name\",\"password\":\"pwd\",\"username\":\"user\" } }")));
+        assertFalse(update(new HttpRequest().withBody(new StringBody("somebody"))).matches(null, new HttpRequest().withBody("{\"method\":\"any\",\"service\":\"any_service\", \"parameters\": { \"applicationName\":\"name\",\"password\":\"pwd\",\"username\":\"user\" } }")));
     }
 
     @Test
     public void matchesMatchingBodyWithCharset() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(new StringBody("我说中国话", StandardCharsets.UTF_16))).matches(null, new HttpRequest().withBody("我说中国话", StandardCharsets.UTF_16)));
+        assertTrue(update(new HttpRequest().withBody(new StringBody("我说中国话", StandardCharsets.UTF_16))).matches(null, new HttpRequest().withBody("我说中国话", StandardCharsets.UTF_16)));
     }
 
     @Test
     public void doesNotMatchIncorrectBody() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(exact("somebody"))).matches(null, new HttpRequest().withBody("bodysome")));
+        assertFalse(update(new HttpRequest().withBody(exact("somebody"))).matches(null, new HttpRequest().withBody("bodysome")));
     }
 
     @Test
     public void doesNotMatchEmptyBodyAgainstMatcherWithStringBody() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new Expectation(new HttpRequest().withBody(exact("somebody")))).matches(null, new HttpRequest()));
+        assertFalse(update(new Expectation(new HttpRequest().withBody(exact("somebody")))).matches(null, new HttpRequest()));
     }
 
     @Test
     public void matchesStringBodyAgainstMatcherWithEmptyBody() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new Expectation(new HttpRequest())).matches(null, new HttpRequest().withBody(exact("somebody"))));
+        assertTrue(update(new Expectation(new HttpRequest())).matches(null, new HttpRequest().withBody(exact("somebody"))));
     }
 
     @Test
     public void matchesEmptyBodyAgainstMatcherWithStringBodyForControlPlane() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(exact("somebody"))).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(exact("somebody"))).matches(null, new HttpRequest()));
     }
 
     @Test
     public void doesNotMatchStringBodyAgainstMatcherWithEmptyBodyForControlPlane() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest()).matches(null, new HttpRequest().withBody(exact("somebody"))));
+        assertTrue(update(new HttpRequest()).matches(null, new HttpRequest().withBody(exact("somebody"))));
     }
 
     @Test
     public void matchesMatchingBodyRegex() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(regex("some[a-z]{4}"))).matches(null, new HttpRequest().withBody("somebody")));
+        assertTrue(update(new HttpRequest().withBody(regex("some[a-z]{4}"))).matches(null, new HttpRequest().withBody("somebody")));
     }
 
     @Test
     public void doesNotMatchIncorrectBodyRegex() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(regex("some[a-z]{3}"))).matches(null, new HttpRequest().withBody("bodysome")));
+        assertFalse(update(new HttpRequest().withBody(regex("some[a-z]{3}"))).matches(null, new HttpRequest().withBody("bodysome")));
     }
 
     @Test
@@ -404,9 +412,8 @@ public class HttpRequestMatcherTest {
             "   <value>some_value</value>" +
             "</element>";
         assertTrue(
-            new HttpRequestMatcher(
-                mockServerLogger, new HttpRequest()
-                    .withBody(xpath("/element[key = 'some_key' and value = 'some_value']"))
+            update(new HttpRequest()
+                .withBody(xpath("/element[key = 'some_key' and value = 'some_value']"))
             )
                 .matches(
                     null, new HttpRequest()
@@ -418,9 +425,8 @@ public class HttpRequestMatcherTest {
 
     @Test
     public void matchesMatchingBodyXPathBodyDTO() {
-        assertTrue(new HttpRequestMatcher(
-                mockServerLogger, new HttpRequest()
-                    .withBody(xpath("/element[key = 'some_key' and value = 'some_value']"))
+        assertTrue(update(new HttpRequest()
+                .withBody(xpath("/element[key = 'some_key' and value = 'some_value']"))
             )
                 .matches(
                     null, new HttpRequest()
@@ -436,15 +442,14 @@ public class HttpRequestMatcherTest {
             "<element>" +
             "   <key>some_key</key>" +
             "</element>";
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(xpath("/element[key = 'some_key' and value = 'some_value']"))).matches(null, new HttpRequest().withBody(matched)));
+        assertFalse(update(new HttpRequest().withBody(xpath("/element[key = 'some_key' and value = 'some_value']"))).matches(null, new HttpRequest().withBody(matched)));
     }
 
     @Test
     public void doesNotMatchIncorrectBodyXPathBodyDTO() {
-        assertFalse(new HttpRequestMatcher(
-                mockServerLogger, new HttpRequest().withBody(
-                    xpath("/element[key = 'some_key' and value = 'some_value']")
-                )
+        assertFalse(update(new HttpRequest().withBody(
+            xpath("/element[key = 'some_key' and value = 'some_value']")
+            )
             ).matches(
             null, new HttpRequest().withBody(
                 new XPathBodyDTO(xpath("/element[key = 'some_other_key' and value = 'some_value']")).toString()
@@ -460,7 +465,7 @@ public class HttpRequestMatcherTest {
             "   <key>some_key</key>" +
             "   <value>some_value</value>" +
             "</element>";
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(xml("" +
+        assertTrue(update(new HttpRequest().withBody(xml("" +
             "<element attributeTwo=\"two\" attributeOne=\"one\">" +
             "   <key>some_key</key>" +
             "   <value>some_value</value>" +
@@ -469,13 +474,12 @@ public class HttpRequestMatcherTest {
 
     @Test
     public void matchesMatchingBodyXmlBodyDTO() {
-        assertTrue(new HttpRequestMatcher(
-                mockServerLogger, new HttpRequest()
-                    .withBody(xml("" +
-                        "<element attributeOne=\"one\" attributeTwo=\"two\">" +
-                        "   <key>some_key</key>" +
-                        "   <value>some_value</value>" +
-                        "</element>"))
+        assertTrue(update(new HttpRequest()
+                .withBody(xml("" +
+                    "<element attributeOne=\"one\" attributeTwo=\"two\">" +
+                    "   <key>some_key</key>" +
+                    "   <value>some_value</value>" +
+                    "</element>"))
             )
                 .matches(
                     null, new HttpRequest()
@@ -495,7 +499,7 @@ public class HttpRequestMatcherTest {
             "<element>" +
             "   <key>some_key</key>" +
             "</element>";
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(xml("" +
+        assertFalse(update(new HttpRequest().withBody(xml("" +
             "<element>" +
             "   <key>some_key</key>" +
             "   <value>some_value</value>" +
@@ -504,11 +508,10 @@ public class HttpRequestMatcherTest {
 
     @Test
     public void doesNotMatchIncorrectBodyXmlBodyDTO() {
-        assertFalse(new HttpRequestMatcher(
-                mockServerLogger, new HttpRequest().withBody(xml("" +
-                    "<element>" +
-                    "   <key>some_key</key>" +
-                    "</element>"))
+        assertFalse(update(new HttpRequest().withBody(xml("" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "</element>"))
             ).matches(
             null, new HttpRequest().withBody(new XmlBodyDTO(xml("" +
                 "<element>" +
@@ -542,7 +545,7 @@ public class HttpRequestMatcherTest {
             "        </xs:complexType>" + NEW_LINE +
             "    </xs:element>" + NEW_LINE +
             "</xs:schema>";
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(xmlSchema(matcher))).matches(null, new HttpRequest().withBody("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+        assertTrue(update(new HttpRequest().withBody(xmlSchema(matcher))).matches(null, new HttpRequest().withBody("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
             "<notes>" + NEW_LINE +
             "    <note>" + NEW_LINE +
             "        <to>Bob</to>" + NEW_LINE +
@@ -582,7 +585,7 @@ public class HttpRequestMatcherTest {
             "        </xs:complexType>" + NEW_LINE +
             "    </xs:element>" + NEW_LINE +
             "</xs:schema>";
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(xmlSchema(matcher))).matches(null, new HttpRequest().withBody(xml("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+        assertTrue(update(new HttpRequest().withBody(xmlSchema(matcher))).matches(null, new HttpRequest().withBody(xml("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
             "<notes>" + NEW_LINE +
             "    <note>" + NEW_LINE +
             "        <to>Bob</to>" + NEW_LINE +
@@ -622,7 +625,7 @@ public class HttpRequestMatcherTest {
             "        </xs:complexType>" + NEW_LINE +
             "    </xs:element>" + NEW_LINE +
             "</xs:schema>";
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(xmlSchema(matcher))).matches(null, new HttpRequest().withBody("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+        assertFalse(update(new HttpRequest().withBody(xmlSchema(matcher))).matches(null, new HttpRequest().withBody("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
             "<notes>" + NEW_LINE +
             "    <note>" + NEW_LINE +
             "        <to>Bob</to>" + NEW_LINE +
@@ -661,7 +664,7 @@ public class HttpRequestMatcherTest {
             "        </xs:complexType>" + NEW_LINE +
             "    </xs:element>" + NEW_LINE +
             "</xs:schema>";
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(xmlSchema(matcher))).matches(null, new HttpRequest().withBody(xml("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+        assertFalse(update(new HttpRequest().withBody(xmlSchema(matcher))).matches(null, new HttpRequest().withBody(xml("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
             "<notes>" + NEW_LINE +
             "    <note>" + NEW_LINE +
             "        <to>Bob</to>" + NEW_LINE +
@@ -687,9 +690,8 @@ public class HttpRequestMatcherTest {
             "   \"some_other_field\": \"some_other_value\" " +
             "}";
         assertTrue(
-            new HttpRequestMatcher(
-                mockServerLogger, new HttpRequest()
-                    .withBody(json("{ \"some_field\": \"some_value\" }"))
+            update(new HttpRequest()
+                .withBody(json("{ \"some_field\": \"some_value\" }"))
             )
                 .matches(
                     null, new HttpRequest()
@@ -707,9 +709,8 @@ public class HttpRequestMatcherTest {
             "   \"some_other_field\": \"some_other_value\" " +
             "}";
         assertTrue(
-            new HttpRequestMatcher(
-                mockServerLogger, new HttpRequest()
-                    .withBody(json("{ \"some_field\": \"我说中国话\" }", StandardCharsets.UTF_16, MatchType.ONLY_MATCHING_FIELDS))
+            update(new HttpRequest()
+                .withBody(json("{ \"some_field\": \"我说中国话\" }", StandardCharsets.UTF_16, MatchType.ONLY_MATCHING_FIELDS))
             )
                 .matches(
                     null, new HttpRequest()
@@ -722,9 +723,8 @@ public class HttpRequestMatcherTest {
     @Test
     public void matchesMatchingJSONBodyDTO() {
         assertTrue(
-            new HttpRequestMatcher(
-                mockServerLogger, new HttpRequest()
-                    .withBody(json("{ \"some_field\": \"some_value\" }"))
+            update(new HttpRequest()
+                .withBody(json("{ \"some_field\": \"some_value\" }"))
             )
                 .matches(
                     null, new HttpRequest()
@@ -741,14 +741,13 @@ public class HttpRequestMatcherTest {
             "   \"some_incorrect_field\": \"some_value\", " +
             "   \"some_other_field\": \"some_other_value\" " +
             "}";
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(json("{ \"some_field\": \"some_value\" }"))).matches(null, new HttpRequest().withBody(matched)));
+        assertFalse(update(new HttpRequest().withBody(json("{ \"some_field\": \"some_value\" }"))).matches(null, new HttpRequest().withBody(matched)));
     }
 
     @Test
     public void doesNotMatchIncorrectJSONBodyDTO() {
-        assertFalse(new HttpRequestMatcher(
-                mockServerLogger, new HttpRequest().withBody(
-                json("{ \"some_field\": \"some_value\" }")
+        assertFalse(update(new HttpRequest().withBody(
+            json("{ \"some_field\": \"some_value\" }")
             )
             ).matches(
             null, new HttpRequest().withBody(
@@ -766,7 +765,7 @@ public class HttpRequestMatcherTest {
             "    \"price\": 12.50," + NEW_LINE +
             "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
             "}";
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(jsonSchema("{" + NEW_LINE +
+        assertTrue(update(new HttpRequest().withBody(jsonSchema("{" + NEW_LINE +
             "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
             "    \"title\": \"Product\"," + NEW_LINE +
             "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
@@ -831,9 +830,8 @@ public class HttpRequestMatcherTest {
             "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
             "}");
         assertTrue(
-            new HttpRequestMatcher(
-                mockServerLogger, new HttpRequest()
-                    .withBody(jsonSchemaBody)
+            update(new HttpRequest()
+                .withBody(jsonSchemaBody)
             )
                 .matches(
                     null, new HttpRequest()
@@ -852,7 +850,7 @@ public class HttpRequestMatcherTest {
             "    \"price\": 12.50," + NEW_LINE +
             "    \"tags\": []" + NEW_LINE +
             "}";
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(jsonSchema("{" + NEW_LINE +
+        assertFalse(update(new HttpRequest().withBody(jsonSchema("{" + NEW_LINE +
             "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
             "    \"title\": \"Product\"," + NEW_LINE +
             "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
@@ -912,9 +910,8 @@ public class HttpRequestMatcherTest {
             "    \"expensive\": 10" + NEW_LINE +
             "}";
         assertTrue(
-            new HttpRequestMatcher(
-                mockServerLogger, new HttpRequest()
-                    .withBody(jsonPath("$..book[?(@.price <= $['expensive'])]"))
+            update(new HttpRequest()
+                .withBody(jsonPath("$..book[?(@.price <= $['expensive'])]"))
             )
                 .matches(
                     null, new HttpRequest()
@@ -926,9 +923,8 @@ public class HttpRequestMatcherTest {
 
     @Test
     public void matchesMatchingBodyJsonPathBodyDTO() {
-        assertTrue(new HttpRequestMatcher(
-                mockServerLogger, new HttpRequest()
-                    .withBody(jsonPath("$..book[?(@.price > $['expensive'])]"))
+        assertTrue(update(new HttpRequest()
+                .withBody(jsonPath("$..book[?(@.price > $['expensive'])]"))
             )
                 .matches(
                     null, new HttpRequest()
@@ -965,15 +961,14 @@ public class HttpRequestMatcherTest {
             "    }," + NEW_LINE +
             "    \"expensive\": 10" + NEW_LINE +
             "}";
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(jsonPath("$..book[?(@.price > $['expensive'])]"))).matches(null, new HttpRequest().withBody(matched)));
+        assertFalse(update(new HttpRequest().withBody(jsonPath("$..book[?(@.price > $['expensive'])]"))).matches(null, new HttpRequest().withBody(matched)));
     }
 
     @Test
     public void doesNotMatchIncorrectBodyJsonPathBodyDTO() {
-        assertFalse(new HttpRequestMatcher(
-                mockServerLogger, new HttpRequest().withBody(
-                    xpath("$..book[?(@.price > $['expensive'])]")
-                )
+        assertFalse(update(new HttpRequest().withBody(
+            xpath("$..book[?(@.price > $['expensive'])]")
+            )
             ).matches(
             null, new HttpRequest().withBody(
                 new JsonPathBodyDTO(jsonPath("$..book[?(@.price <= $['expensive'])]")).toString()
@@ -985,18 +980,18 @@ public class HttpRequestMatcherTest {
     @Test
     public void matchesMatchingBinaryBody() {
         byte[] matched = "some binary value".getBytes(UTF_8);
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(binary("some binary value".getBytes(UTF_8)))).matches(null, new HttpRequest().withBody(binary(matched))));
+        assertTrue(update(new HttpRequest().withBody(binary("some binary value".getBytes(UTF_8)))).matches(null, new HttpRequest().withBody(binary(matched))));
     }
 
     @Test
     public void matchesMatchingBinaryBodyDTO() {
-        assertTrue(
-            new HttpRequestMatcher(
-                mockServerLogger, new HttpRequest()
-                    .withBody(binary("some binary value".getBytes(UTF_8)))
+        assertTrue(update(
+            new HttpRequest()
+                .withBody(binary("some binary value".getBytes(UTF_8)))
             )
                 .matches(
-                    null, new HttpRequest()
+                    null,
+                    new HttpRequest()
                         .withMethod("PUT")
                         .withBody(new BinaryBodyDTO(binary("some binary value".getBytes(UTF_8))).toString())
                 )
@@ -1006,13 +1001,12 @@ public class HttpRequestMatcherTest {
     @Test
     public void doesNotMatchIncorrectBinaryBody() {
         byte[] matched = "some other binary value".getBytes(UTF_8);
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(binary("some binary value".getBytes(UTF_8)))).matches(null, new HttpRequest().withBody(binary(matched))));
+        assertFalse(update(new HttpRequest().withBody(binary("some binary value".getBytes(UTF_8)))).matches(null, new HttpRequest().withBody(binary(matched))));
     }
 
     @Test
     public void doesNotMatchIncorrectBinaryBodyDTO() {
-        assertFalse(new HttpRequestMatcher(
-                mockServerLogger, new HttpRequest().withBody(binary("some binary value".getBytes(UTF_8)))
+        assertFalse(update(new HttpRequest().withBody(binary("some binary value".getBytes(UTF_8)))
             ).matches(
             null, new HttpRequest().withBody(new BinaryBodyDTO(binary("some other binary value".getBytes(UTF_8))).toString()))
         );
@@ -1020,52 +1014,52 @@ public class HttpRequestMatcherTest {
 
     @Test
     public void matchesMatchingHeaders() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withHeaders(new Header("name", "value"))).matches(null, new HttpRequest().withHeaders(new Header("name", "value"))));
+        assertTrue(update(new HttpRequest().withHeaders(new Header("name", "value"))).matches(null, new HttpRequest().withHeaders(new Header("name", "value"))));
     }
 
     @Test
     public void matchesMatchingHeadersWithRegex() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withHeaders(new Header("name", ".*"))).matches(null, new HttpRequest().withHeaders(new Header("name", "value"))));
+        assertTrue(update(new HttpRequest().withHeaders(new Header("name", ".*"))).matches(null, new HttpRequest().withHeaders(new Header("name", "value"))));
     }
 
     @Test
     public void doesNotMatchIncorrectHeaderName() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withHeaders(new Header("name", "value"))).matches(null, new HttpRequest().withHeaders(new Header("name1", "value"))));
+        assertFalse(update(new HttpRequest().withHeaders(new Header("name", "value"))).matches(null, new HttpRequest().withHeaders(new Header("name1", "value"))));
     }
 
     @Test
     public void doesNotMatchIncorrectHeaderValue() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withHeaders(new Header("name", "value"))).matches(null, new HttpRequest().withHeaders(new Header("name", "value1"))));
+        assertFalse(update(new HttpRequest().withHeaders(new Header("name", "value"))).matches(null, new HttpRequest().withHeaders(new Header("name", "value1"))));
     }
 
     @Test
     public void doesNotMatchIncorrectHeaderValueRegex() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withHeaders(new Header("name", "[0-9]{0,100}"))).matches(null, new HttpRequest().withHeaders(new Header("name", "value1"))));
+        assertFalse(update(new HttpRequest().withHeaders(new Header("name", "[0-9]{0,100}"))).matches(null, new HttpRequest().withHeaders(new Header("name", "value1"))));
     }
 
     @Test
     public void matchesMatchingCookies() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withCookies(new Cookie("name", "value"))).matches(null, new HttpRequest().withCookies(new Cookie("name", "value"))));
+        assertTrue(update(new HttpRequest().withCookies(new Cookie("name", "value"))).matches(null, new HttpRequest().withCookies(new Cookie("name", "value"))));
     }
 
     @Test
     public void matchesMatchingCookiesWithRegex() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withCookies(new Cookie("name", "[a-z]{0,20}lue"))).matches(null, new HttpRequest().withCookies(new Cookie("name", "value"))));
+        assertTrue(update(new HttpRequest().withCookies(new Cookie("name", "[a-z]{0,20}lue"))).matches(null, new HttpRequest().withCookies(new Cookie("name", "value"))));
     }
 
     @Test
     public void doesNotMatchIncorrectCookieName() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withCookies(new Cookie("name", "value"))).matches(null, new HttpRequest().withCookies(new Cookie("name1", "value"))));
+        assertFalse(update(new HttpRequest().withCookies(new Cookie("name", "value"))).matches(null, new HttpRequest().withCookies(new Cookie("name1", "value"))));
     }
 
     @Test
     public void doesNotMatchIncorrectCookieValue() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withCookies(new Cookie("name", "value"))).matches(null, new HttpRequest().withCookies(new Cookie("name", "value1"))));
+        assertFalse(update(new HttpRequest().withCookies(new Cookie("name", "value"))).matches(null, new HttpRequest().withCookies(new Cookie("name", "value1"))));
     }
 
     @Test
     public void doesNotMatchIncorrectCookieValueRegex() {
-        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withCookies(new Cookie("name", "[A-Z]{0,10}"))).matches(null, new HttpRequest().withCookies(new Cookie("name", "value1"))));
+        assertFalse(update(new HttpRequest().withCookies(new Cookie("name", "[A-Z]{0,10}"))).matches(null, new HttpRequest().withCookies(new Cookie("name", "value1"))));
     }
 
     @Test
@@ -1084,14 +1078,13 @@ public class HttpRequestMatcherTest {
                 "  }," + NEW_LINE +
                 "  \"body\" : \"some_body\"" + NEW_LINE +
                 "}",
-            new HttpRequestMatcher(
-                mockServerLogger, request()
-                    .withMethod("GET")
-                    .withPath("/some/path")
-                    .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
-                    .withBody("some_body")
-                    .withHeaders(new Header("name", "value"))
-                    .withCookies(new Cookie("name", "[A-Z]{0,10}"))
+            update(request()
+                .withMethod("GET")
+                .withPath("/some/path")
+                .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
+                .withBody("some_body")
+                .withHeaders(new Header("name", "value"))
+                .withCookies(new Cookie("name", "[A-Z]{0,10}"))
             ).toString()
         );
     }
@@ -1099,13 +1092,13 @@ public class HttpRequestMatcherTest {
     @Test
     public void shouldUpdateMatchingPath() {
         // given
-        HttpRequestMatcher httpRequestMatcher = new HttpRequestMatcher(mockServerLogger, new HttpRequest().withPath("somePath"));
+        HttpRequestPropertiesMatcher httpRequestMatcher = update(new HttpRequest().withPath("somePath"));
 
         // then
         assertFalse(httpRequestMatcher.matches(null, new HttpRequest().withPath("someOtherPath")));
 
         // when
-        httpRequestMatcher.update(new HttpRequest().withPath("someOtherPath"));
+        httpRequestMatcher.update(new Expectation(new HttpRequest().withPath("someOtherPath")));
 
         // then
         assertTrue(httpRequestMatcher.matches(null, new HttpRequest().withPath("someOtherPath")));
@@ -1114,13 +1107,13 @@ public class HttpRequestMatcherTest {
     @Test
     public void shouldUpdateMatchingHeaders() {
         // given
-        HttpRequestMatcher httpRequestMatcher = new HttpRequestMatcher(mockServerLogger, new HttpRequest().withHeaders(new Header("name", "value")));
+        HttpRequestPropertiesMatcher httpRequestMatcher = update(new HttpRequest().withHeaders(new Header("name", "value")));
 
         // then
         assertFalse(httpRequestMatcher.matches(null, new HttpRequest().withHeaders(new Header("name", "otherValue"))));
 
         // when
-        httpRequestMatcher.update(new HttpRequest().withHeaders(new Header("name", "otherValue")));
+        httpRequestMatcher.update(new Expectation(new HttpRequest().withHeaders(new Header("name", "otherValue"))));
 
         // then
         assertTrue(httpRequestMatcher.matches(null, new HttpRequest().withHeaders(new Header("name", "otherValue"))));

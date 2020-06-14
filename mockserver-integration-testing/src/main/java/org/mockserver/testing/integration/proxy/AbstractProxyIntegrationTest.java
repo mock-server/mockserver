@@ -899,11 +899,13 @@ public abstract class AbstractProxyIntegrationTest {
         ).get(10, TimeUnit.SECONDS);
 
         // then
-        assertThat(httpResponse.getStatusCode(), Is.is(400));
-        assertThat(httpResponse.getBodyAsString(), Is.is("3 errors:" + NEW_LINE +
-            " - instance type (string) does not match any allowed primitive type (allowed: [\"boolean\"]) for field \"/keepAlive\"" + NEW_LINE +
-            " - instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/method\"" + NEW_LINE +
-            " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/path\"" + NEW_LINE +
+        assertThat(httpResponse.getStatusCode(), is(400));
+        assertThat(httpResponse.getBodyAsString(), is("5 errors:" + NEW_LINE +
+            " - oneOf of the following must be specified [\"httpRequest\", \"openAPIDefinition\"] but found 0 without errors" + NEW_LINE +
+            " - instance type (string) does not match any allowed primitive type (allowed: [\"boolean\"]) for schema \"httpRequest/properties/keepAlive\" for field \"/keepAlive\"" + NEW_LINE +
+            " - instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"]) for schema \"httpRequest/properties/method\" for field \"/method\"" + NEW_LINE +
+            " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for schema \"httpRequest/properties/path\" for field \"/path\"" + NEW_LINE +
+            " - instance failed to match exactly one schema (matched 0 out of 2)" + NEW_LINE +
             NEW_LINE +
             OPEN_API_SPECIFICATION_URL));
     }
@@ -925,8 +927,8 @@ public abstract class AbstractProxyIntegrationTest {
         ).get(10, TimeUnit.SECONDS);
 
         // then
-        assertThat(httpResponse.getStatusCode(), Is.is(400));
-        assertThat(httpResponse.getBodyAsString(), Is.is("1 error:" + NEW_LINE +
+        assertThat(httpResponse.getStatusCode(), is(400));
+        assertThat(httpResponse.getBodyAsString(), is("1 error:" + NEW_LINE +
             " - instance type (integer) does not match any allowed primitive type (allowed: [\"object\"]) for field \"/times\"" + NEW_LINE +
             NEW_LINE +
             OPEN_API_SPECIFICATION_URL));
@@ -951,8 +953,8 @@ public abstract class AbstractProxyIntegrationTest {
         ).get(10, TimeUnit.SECONDS);
 
         // then
-        assertThat(httpResponse.getStatusCode(), Is.is(400));
-        assertThat(httpResponse.getBodyAsString(), Is.is("1 error:" + NEW_LINE +
+        assertThat(httpResponse.getStatusCode(), is(400));
+        assertThat(httpResponse.getBodyAsString(), is("1 error:" + NEW_LINE +
             " - object instance has properties which are not allowed by the schema: [\"httpRequest\"]" + NEW_LINE +
             NEW_LINE +
             OPEN_API_SPECIFICATION_URL));

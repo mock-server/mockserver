@@ -45,13 +45,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
         }
 
         if (!result && context != null) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(DEBUG)
-                    .setMatchDifference(context)
-                    .setMessageFormat("string or regex match failed expected:{}found:{}")
-                    .setArguments(this.matcher, matched)
-            );
+            context.addDifference(mockServerLogger, "string or regex match failed expected:{}found:{}", this.matcher, matched);
         }
 
         return matched.isNot() == (matcher.isNot() == (not != result));

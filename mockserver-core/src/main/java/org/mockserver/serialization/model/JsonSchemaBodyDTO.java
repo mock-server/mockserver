@@ -11,7 +11,7 @@ public class JsonSchemaBodyDTO extends BodyDTO {
     private final String jsonSchema;
 
     public JsonSchemaBodyDTO(JsonSchemaBody jsonSchemaBody) {
-        this(jsonSchemaBody, false);
+        this(jsonSchemaBody, null);
     }
 
     public JsonSchemaBodyDTO(JsonSchemaBody jsonSchemaBody, Boolean not) {

@@ -1,6 +1,7 @@
 package org.mockserver.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.slf4j.event.Level;
@@ -13,6 +14,7 @@ import java.util.List;
  */
 public class LogEventJsonSerializer implements Serializer<LogEntry> {
     private final MockServerLogger mockServerLogger;
+    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
     public LogEventJsonSerializer(MockServerLogger mockServerLogger) {
@@ -21,9 +23,7 @@ public class LogEventJsonSerializer implements Serializer<LogEntry> {
 
     public String serialize(LogEntry messageLogEntry) {
         try {
-            return objectMapper
-                .writerWithDefaultPrettyPrinter()
-                .writeValueAsString(messageLogEntry);
+            return objectWriter.writeValueAsString(messageLogEntry);
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -42,9 +42,7 @@ public class LogEventJsonSerializer implements Serializer<LogEntry> {
     public String serialize(LogEntry... messageLogEntries) {
         try {
             if (messageLogEntries != null && messageLogEntries.length > 0) {
-                return objectMapper
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(messageLogEntries);
+                return objectWriter.writeValueAsString(messageLogEntries);
             } else {
                 return "[]";
             }

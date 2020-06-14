@@ -65,6 +65,9 @@ public class HttpObjectCallback extends Action<HttpObjectCallback> {
         if (hashCode() != o.hashCode()) {
             return false;
         }
+        if (!super.equals(o)) {
+            return false;
+        }
         HttpObjectCallback that = (HttpObjectCallback) o;
         return Objects.equals(clientId, that.clientId) &&
             Objects.equals(responseCallback, that.responseCallback) &&

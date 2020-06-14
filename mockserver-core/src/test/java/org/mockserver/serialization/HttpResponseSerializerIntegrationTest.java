@@ -34,7 +34,7 @@ import static org.mockserver.model.XmlBody.xml;
  */
 public class HttpResponseSerializerIntegrationTest {
 
-    private static final ObjectWriter OBJECT_WRITER = ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter();
+    private static final ObjectWriter OBJECT_WRITER = ObjectMapperFactory.createObjectMapper(true);
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
@@ -91,7 +91,7 @@ public class HttpResponseSerializerIntegrationTest {
         // then
         assertEquals(new HttpResponseDTO()
             .setStatusCode(123)
-            .setBody(BodyWithContentTypeDTO.createDTO(exact("somebody")))
+            .setBody(BodyWithContentTypeDTO.createWithContentTypeDTO(exact("somebody")))
             .setHeaders(new Headers().withEntries(
                 header("someHeaderName", "someHeaderValue")
             ))
@@ -124,7 +124,7 @@ public class HttpResponseSerializerIntegrationTest {
 
         // then
         assertEquals(new HttpResponseDTO()
-            .setBody(BodyWithContentTypeDTO.createDTO(exact("somebody")))
+            .setBody(BodyWithContentTypeDTO.createWithContentTypeDTO(exact("somebody")))
             .buildObject(), httpResponse);
     }
 
@@ -143,7 +143,7 @@ public class HttpResponseSerializerIntegrationTest {
 
         // then
         assertEquals(new HttpResponseDTO()
-            .setBody(BodyWithContentTypeDTO.createDTO(exact("somebody")))
+            .setBody(BodyWithContentTypeDTO.createWithContentTypeDTO(exact("somebody")))
             .buildObject(), httpResponse);
     }
 
@@ -162,7 +162,7 @@ public class HttpResponseSerializerIntegrationTest {
 
         // then
         HttpResponse expected = new HttpResponseDTO()
-            .setBody(BodyWithContentTypeDTO.createDTO(json("{ \"key\": \"value\" }")))
+            .setBody(BodyWithContentTypeDTO.createWithContentTypeDTO(json("{ \"key\": \"value\" }")))
             .buildObject();
         assertEquals(expected, httpResponse);
     }
@@ -182,7 +182,7 @@ public class HttpResponseSerializerIntegrationTest {
 
         // then
         assertEquals(new HttpResponseDTO()
-            .setBody(BodyWithContentTypeDTO.createDTO(binary(IOUtils.toByteArray(openStreamToFileFromClassPathOrPath("org/mockserver/serialization/forkme_right_red.png")))))
+            .setBody(BodyWithContentTypeDTO.createWithContentTypeDTO(binary(IOUtils.toByteArray(openStreamToFileFromClassPathOrPath("org/mockserver/serialization/forkme_right_red.png")))))
             .buildObject(), httpResponse);
     }
 
@@ -231,7 +231,7 @@ public class HttpResponseSerializerIntegrationTest {
         String jsonHttpResponse = new HttpResponseSerializer(new MockServerLogger()).serialize(
             new HttpResponseDTO()
                 .setStatusCode(123)
-                .setBody(BodyWithContentTypeDTO.createDTO(exact("somebody")))
+                .setBody(BodyWithContentTypeDTO.createWithContentTypeDTO(exact("somebody")))
                 .setHeaders(new Headers().withEntries(
                     header("someHeaderName", "someHeaderValue")
                 ))
@@ -289,7 +289,7 @@ public class HttpResponseSerializerIntegrationTest {
             new HttpResponse[]{
                 new HttpResponseDTO()
                     .setStatusCode(123)
-                    .setBody(BodyWithContentTypeDTO.createDTO(exact("somebody_one")))
+                    .setBody(BodyWithContentTypeDTO.createWithContentTypeDTO(exact("somebody_one")))
                     .setHeaders(new Headers().withEntries(
                         header("someHeaderName", "someHeaderValue")
                     ))
@@ -300,7 +300,7 @@ public class HttpResponseSerializerIntegrationTest {
                     .buildObject(),
                 new HttpResponseDTO()
                     .setStatusCode(456)
-                    .setBody(BodyWithContentTypeDTO.createDTO(exact("somebody_two")))
+                    .setBody(BodyWithContentTypeDTO.createWithContentTypeDTO(exact("somebody_two")))
                     .setHeaders(new Headers().withEntries(
                         header("someHeaderName", "someHeaderValue")
                     ))
@@ -349,7 +349,7 @@ public class HttpResponseSerializerIntegrationTest {
             Arrays.asList(
                 new HttpResponseDTO()
                     .setStatusCode(123)
-                    .setBody(BodyWithContentTypeDTO.createDTO(exact("somebody_one")))
+                    .setBody(BodyWithContentTypeDTO.createWithContentTypeDTO(exact("somebody_one")))
                     .setHeaders(new Headers().withEntries(
                         header("someHeaderName", "someHeaderValue")
                     ))
@@ -360,7 +360,7 @@ public class HttpResponseSerializerIntegrationTest {
                     .buildObject(),
                 new HttpResponseDTO()
                     .setStatusCode(456)
-                    .setBody(BodyWithContentTypeDTO.createDTO(exact("somebody_two")))
+                    .setBody(BodyWithContentTypeDTO.createWithContentTypeDTO(exact("somebody_two")))
                     .setHeaders(new Headers().withEntries(
                         header("someHeaderName", "someHeaderValue")
                     ))
@@ -407,7 +407,7 @@ public class HttpResponseSerializerIntegrationTest {
         // when
         String jsonHttpResponse = new HttpResponseSerializer(new MockServerLogger()).serialize(
             new HttpResponseDTO()
-                .setBody(BodyWithContentTypeDTO.createDTO(exact("somebody")))
+                .setBody(BodyWithContentTypeDTO.createWithContentTypeDTO(exact("somebody")))
                 .buildObject()
         );
 
@@ -422,7 +422,7 @@ public class HttpResponseSerializerIntegrationTest {
         // when
         String jsonHttpResponse = new HttpResponseSerializer(new MockServerLogger()).serialize(
             new HttpResponseDTO()
-                .setBody(BodyWithContentTypeDTO.createDTO(json("{ \"key\": \"value\" }")))
+                .setBody(BodyWithContentTypeDTO.createWithContentTypeDTO(json("{ \"key\": \"value\" }")))
                 .buildObject()
         );
 
@@ -441,7 +441,7 @@ public class HttpResponseSerializerIntegrationTest {
         // when
         String jsonHttpResponse = new HttpResponseSerializer(new MockServerLogger()).serialize(
             new HttpResponseDTO()
-                .setBody(BodyWithContentTypeDTO.createDTO(xml("<some><xml></xml></some>")))
+                .setBody(BodyWithContentTypeDTO.createWithContentTypeDTO(xml("<some><xml></xml></some>")))
                 .buildObject()
         );
 
@@ -460,7 +460,7 @@ public class HttpResponseSerializerIntegrationTest {
         // when
         String jsonHttpResponse = new HttpResponseSerializer(new MockServerLogger()).serialize(
             new HttpResponseDTO()
-                .setBody(BodyWithContentTypeDTO.createDTO(binary(IOUtils.toByteArray(openStreamToFileFromClassPathOrPath("org/mockserver/serialization/forkme_right_red.png")))))
+                .setBody(BodyWithContentTypeDTO.createWithContentTypeDTO(binary(IOUtils.toByteArray(openStreamToFileFromClassPathOrPath("org/mockserver/serialization/forkme_right_red.png")))))
                 .buildObject()
         );
 

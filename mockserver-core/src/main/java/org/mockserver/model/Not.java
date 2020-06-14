@@ -37,6 +37,12 @@ public class Not extends ObjectWithJsonToString {
         this.hashCode = 0;
     }
 
+    public Not withNot(Boolean not) {
+        this.not = not;
+        this.hashCode = 0;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

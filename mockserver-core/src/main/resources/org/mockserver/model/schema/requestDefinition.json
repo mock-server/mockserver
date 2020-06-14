@@ -1,0 +1,13 @@
+{
+  "title": "request definition",
+  "oneOf": [
+    {
+      "$ref": "#/definitions/httpRequest"
+    },
+    {
+      "$ref": "#/definitions/openAPIDefinition"
+    }
+  ],
+  "definitions": {
+  }
+}

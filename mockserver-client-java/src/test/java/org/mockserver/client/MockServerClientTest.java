@@ -37,7 +37,6 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockserver.client.MockServerClientIntegrationTest.MOCK_SERVER_LOGGER;
 import static org.mockserver.matchers.Times.unlimited;
 import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;
 import static org.mockserver.model.HttpRequest.request;
@@ -60,7 +59,7 @@ public class MockServerClientTest {
     @Mock
     private ExpectationSerializer mockExpectationSerializer;
     @Mock
-    private HttpRequestSerializer mockHttpRequestSerializer;
+    private RequestDefinitionSerializer mockRequestDefinitionSerializer;
     @Mock
     private LogEventRequestAndResponseSerializer httpRequestResponseSerializer;
     @Mock
@@ -821,7 +820,7 @@ public class MockServerClientTest {
         HttpRequest someRequestMatcher = new HttpRequest()
             .withPath("/some_path")
             .withBody(new StringBody("some_request_body"));
-        when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
+        when(mockRequestDefinitionSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
 
         // when
         mockServerClient.clear(someRequestMatcher);
@@ -846,7 +845,7 @@ public class MockServerClientTest {
         HttpRequest someRequestMatcher = new HttpRequest()
             .withPath("/some_path")
             .withBody(new StringBody("some_request_body"));
-        when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
+        when(mockRequestDefinitionSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
 
         // when
         mockServerClient.clear(someRequestMatcher, ClearType.LOG);
@@ -892,14 +891,14 @@ public class MockServerClientTest {
         HttpRequest someRequestMatcher = new HttpRequest()
             .withPath("/some_path")
             .withBody(new StringBody("some_request_body"));
-        when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
+        when(mockRequestDefinitionSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
 
         // and - a client
         when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean())).thenReturn(response().withBody("body"));
 
         // and - a response
         HttpRequest[] httpRequests = {};
-        when(mockHttpRequestSerializer.deserializeArray("body")).thenReturn(httpRequests);
+        when(mockRequestDefinitionSerializer.deserializeArray("body")).thenReturn(httpRequests);
 
         // when
         assertSame(httpRequests, mockServerClient.retrieveRecordedRequests(someRequestMatcher));
@@ -917,7 +916,7 @@ public class MockServerClientTest {
             20000,
             TimeUnit.MILLISECONDS,
             false);
-        verify(mockHttpRequestSerializer).deserializeArray("body");
+        verify(mockRequestDefinitionSerializer).deserializeArray("body");
     }
 
     @Test
@@ -925,7 +924,7 @@ public class MockServerClientTest {
         // given
         HttpRequest[] httpRequests = {};
         when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean())).thenReturn(response().withBody("body"));
-        when(mockHttpRequestSerializer.deserializeArray("body")).thenReturn(httpRequests);
+        when(mockRequestDefinitionSerializer.deserializeArray("body")).thenReturn(httpRequests);
 
         // when
         assertSame(httpRequests, mockServerClient.retrieveRecordedRequests(null));
@@ -944,7 +943,7 @@ public class MockServerClientTest {
             TimeUnit.MILLISECONDS,
             false
         );
-        verify(mockHttpRequestSerializer).deserializeArray("body");
+        verify(mockRequestDefinitionSerializer).deserializeArray("body");
     }
 
     @Test
@@ -953,7 +952,7 @@ public class MockServerClientTest {
         HttpRequest someRequestMatcher = new HttpRequest()
             .withPath("/some_path")
             .withBody(new StringBody("some_request_body"));
-        when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
+        when(mockRequestDefinitionSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
 
         // and - a client
         when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean())).thenReturn(response().withBody("body"));
@@ -1015,7 +1014,7 @@ public class MockServerClientTest {
         HttpRequest someRequestMatcher = new HttpRequest()
             .withPath("/some_path")
             .withBody(new StringBody("some_request_body"));
-        when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
+        when(mockRequestDefinitionSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
 
         // and - a client
         when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean())).thenReturn(response().withBody("body"));
@@ -1077,7 +1076,7 @@ public class MockServerClientTest {
         HttpRequest someRequestMatcher = new HttpRequest()
             .withPath("/some_path")
             .withBody(new StringBody("some_request_body"));
-        when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
+        when(mockRequestDefinitionSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
 
         // and - a client
         when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean())).thenReturn(response().withBody("body"));
@@ -1294,7 +1293,7 @@ public class MockServerClientTest {
     public void shouldHandleNullHttpRequest() {
         // then
         exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("verify(HttpRequest, VerificationTimes) requires a non null HttpRequest object"));
+        exception.expectMessage(containsString("verify(RequestDefinition, VerificationTimes) requires a non null RequestDefinition object"));
 
         // when
         mockServerClient.verify(null, VerificationTimes.exactly(2));
@@ -1304,7 +1303,7 @@ public class MockServerClientTest {
     public void shouldHandleNullVerificationTimes() {
         // then
         exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("verify(HttpRequest, VerificationTimes) requires a non null VerificationTimes object"));
+        exception.expectMessage(containsString("verify(RequestDefinition, VerificationTimes) requires a non null VerificationTimes object"));
 
         // when
         mockServerClient.verify(request(), null);
@@ -1314,7 +1313,7 @@ public class MockServerClientTest {
     public void shouldHandleNullHttpRequestSequence() {
         // then
         exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("verify(HttpRequest...) requires a non null non empty array of HttpRequest objects"));
+        exception.expectMessage(containsString("verify(RequestDefinition...) requires a non-null non-empty array of RequestDefinition objects"));
 
         // when
         mockServerClient.verify((HttpRequest) null);
@@ -1324,7 +1323,7 @@ public class MockServerClientTest {
     public void shouldHandleEmptyHttpRequestSequence() {
         // then
         exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("verify(HttpRequest...) requires a non null non empty array of HttpRequest objects"));
+        exception.expectMessage(containsString("verify(RequestDefinition...) requires a non-null non-empty array of RequestDefinition objects"));
 
         // when
         mockServerClient.verify();

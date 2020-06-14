@@ -64,6 +64,9 @@ public class HttpError extends Action<HttpError> {
         if (hashCode() != o.hashCode()) {
             return false;
         }
+        if (!super.equals(o)) {
+            return false;
+        }
         HttpError httpError = (HttpError) o;
         return Objects.equals(dropConnection, httpError.dropConnection) &&
             Arrays.equals(responseBytes, httpError.responseBytes);

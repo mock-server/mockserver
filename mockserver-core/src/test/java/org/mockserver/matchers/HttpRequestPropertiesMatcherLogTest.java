@@ -37,9 +37,9 @@ import static org.mockserver.model.XmlSchemaBody.xmlSchema;
 /**
  * @author jamesdbloom
  */
-public class HttpRequestMatcherLogTest {
+public class HttpRequestPropertiesMatcherLogTest {
 
-    private final MockServerLogger mockServerLogger = new MockServerLogger(HttpRequestMatcherLogTest.class);
+    private final MockServerLogger mockServerLogger = new MockServerLogger(HttpRequestPropertiesMatcherLogTest.class);
     private final HttpStateHandler httpStateHandler = new HttpStateHandler(mockServerLogger, new Scheduler(mockServerLogger));
     private static Level originalLevel;
 
@@ -59,11 +59,15 @@ public class HttpRequestMatcherLogTest {
     }
 
     private boolean match(HttpRequest matcher, HttpRequest matched) {
-        return new HttpRequestMatcher(mockServerLogger, matcher).withControlPlaneMatcher(false).matches(new MatchDifference(matched), matched);
+        HttpRequestPropertiesMatcher httpRequestPropertiesMatcher = new HttpRequestPropertiesMatcher(mockServerLogger);
+        httpRequestPropertiesMatcher.update(matcher);
+        return httpRequestPropertiesMatcher.withControlPlaneMatcher(false).matches(new MatchDifference(matched), matched);
     }
 
     private boolean match(Expectation matcher, HttpRequest matched) {
-        return new HttpRequestMatcher(mockServerLogger, matcher).matches(new MatchDifference(matched), matched);
+        HttpRequestPropertiesMatcher httpRequestPropertiesMatcher = new HttpRequestPropertiesMatcher(mockServerLogger);
+        httpRequestPropertiesMatcher.update(matcher);
+        return httpRequestPropertiesMatcher.matches(new MatchDifference(matched), matched);
     }
 
     @Test

@@ -922,11 +922,12 @@ public class BodyDTODeserializerTest {
         ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
 
         // then
-        assertEquals(new ExpectationDTO()
+        ExpectationDTO expected = new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setBody(new JsonBodyDTO(new JsonBody("{\"emptyArray\":\"[]\"}")))
-            ), expectationDTO);
+            );
+        assertEquals(expected, expectationDTO);
     }
 
     @Test

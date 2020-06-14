@@ -1,11 +1,8 @@
 package org.mockserver.matchers;
 
 import org.mockserver.collections.CaseInsensitiveRegexHashMap;
-import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.KeysAndValues;
-
-import static org.slf4j.event.Level.DEBUG;
 
 /**
  * @author jamesdbloom
@@ -40,13 +37,7 @@ public class HashMapMatcher extends NotMatcher<KeysAndValues> {
             result = true;
         } else {
             if (context != null) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(DEBUG)
-                        .setMatchDifference(context)
-                        .setMessageFormat("map subset match failed expected:{}found:{}failed because:{}")
-                        .setArguments(keysAndValues, values, "map is not a subset")
-                );
+                context.addDifference(mockServerLogger, "map subset match failed expected:{}found:{}failed because:{}", keysAndValues, values, "map is not a subset");
             }
             result = false;
         }

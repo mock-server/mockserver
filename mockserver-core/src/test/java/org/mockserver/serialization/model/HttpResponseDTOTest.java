@@ -1,6 +1,5 @@
 package org.mockserver.serialization.model;
 
-import org.hamcrest.core.Is;
 import org.junit.Test;
 import org.mockserver.model.*;
 
@@ -69,7 +68,7 @@ public class HttpResponseDTOTest {
         HttpResponse builtHttpResponse = new HttpResponseDTO(httpResponse).buildObject();
 
         // then
-        assertThat(builtHttpResponse.getBody(), Is.<org.mockserver.model.Body>is(exact(body)));
+        assertThat(builtHttpResponse.getBody(), is(exact(body)));
         assertThat(builtHttpResponse.getCookieList(), containsInAnyOrder(cookie));
         assertThat(builtHttpResponse.getHeaderList(), containsInAnyOrder(header));
         assertThat(builtHttpResponse.getStatusCode(), is(statusCode));
@@ -80,7 +79,7 @@ public class HttpResponseDTOTest {
     @Test
     public void shouldReturnValuesSetInSetter() {
         // given
-        BodyWithContentTypeDTO body = BodyWithContentTypeDTO.createDTO(exact("body"));
+        BodyWithContentTypeDTO body = BodyWithContentTypeDTO.createWithContentTypeDTO(exact("body"));
         Cookies cookies = new Cookies().withEntries(cookie("name", "value"));
         Headers headers = new Headers().withEntries(header("name", "value"));
         Integer statusCode = 200;

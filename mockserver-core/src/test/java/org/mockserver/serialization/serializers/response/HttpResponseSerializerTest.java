@@ -2,12 +2,12 @@ package org.mockserver.serialization.serializers.response;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.Test;
-import org.mockserver.serialization.ObjectMapperFactory;
-import org.mockserver.serialization.model.HttpResponseDTO;
 import org.mockserver.model.ConnectionOptions;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Delay;
 import org.mockserver.model.Header;
+import org.mockserver.serialization.ObjectMapperFactory;
+import org.mockserver.serialization.model.HttpResponseDTO;
 
 import java.util.concurrent.TimeUnit;
 
@@ -22,13 +22,13 @@ public class HttpResponseSerializerTest {
 
     @Test
     public void shouldReturnFormattedResponseWithNoFieldsSet() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(new HttpResponseDTO(response())),
+        assertThat(ObjectMapperFactory.createObjectMapper(true).writeValueAsString(new HttpResponseDTO(response())),
             is("{ }"));
     }
 
     @Test
     public void shouldReturnFormattedResponseWithAllFieldsSet() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
+        assertThat(ObjectMapperFactory.createObjectMapper(true).writeValueAsString(
             response()
                 .withStatusCode(302)
                 .withReasonPhrase("randomReason")
@@ -78,7 +78,7 @@ public class HttpResponseSerializerTest {
 
     @Test
     public void shouldReturnFormattedResponseWithJsonBodyInToString() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
+        assertThat(ObjectMapperFactory.createObjectMapper(true).writeValueAsString(
             response()
                 .withStatusCode(302)
                 .withBody(json("{ \"key\": \"some_value\" }"))
@@ -102,7 +102,7 @@ public class HttpResponseSerializerTest {
 
     @Test
     public void shouldReturnFormattedResponseWithDefaultStatusCode() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
+        assertThat(ObjectMapperFactory.createObjectMapper(true).writeValueAsString(
             response()
                 .withStatusCode(200)
                 .withHeaders(new Header("header_name", "header_value"))

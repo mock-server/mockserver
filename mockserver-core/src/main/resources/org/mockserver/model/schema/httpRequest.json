@@ -1,5 +1,5 @@
 {
-    "title": "request matcher",
+    "title": "request properties matcher",
     "type": "object",
     "additionalProperties": false,
     "properties": {

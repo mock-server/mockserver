@@ -220,7 +220,7 @@ public class ActionHandler {
                                     .setHttpRequest(request)
                                     .setHttpResponse(notFoundResponse())
                                     .setMessageFormat("no expectation for:{}returning response:{}")
-                                    .setArguments(request, notFoundResponse())
+                                    .setArguments(request, response)
                             );
                         } else {
                             mockServerLogger.logEvent(

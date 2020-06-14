@@ -8,12 +8,12 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.serialization.model.*;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
+import org.mockserver.serialization.model.*;
 import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
 
 import java.io.IOException;
@@ -102,28 +102,20 @@ public class ExpectationWithResponseClassCallbackSerializerTest {
 
     @Test
     public void shouldSerializeObject() throws IOException {
-        // given
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-
         // when
         expectationSerializer.serialize(fullExpectation);
 
         // then
-        verify(objectMapper).writerWithDefaultPrettyPrinter();
         verify(objectWriter).writeValueAsString(fullExpectationDTO);
     }
 
     @Test
     @SuppressWarnings("RedundantArrayCreation")
     public void shouldSerializeArray() throws IOException {
-        // given
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-
         // when
         expectationSerializer.serialize(new Expectation[]{fullExpectation, fullExpectation});
 
         // then
-        verify(objectMapper).writerWithDefaultPrettyPrinter();
         verify(objectWriter).writeValueAsString(new ExpectationDTO[]{fullExpectationDTO, fullExpectationDTO});
     }
 

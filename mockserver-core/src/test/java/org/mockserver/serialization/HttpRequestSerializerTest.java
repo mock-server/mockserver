@@ -101,29 +101,20 @@ public class HttpRequestSerializerTest {
 
     @Test
     public void serialize() throws IOException {
-        // given
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-
         // when
         httpRequestSerializer.serialize(fullHttpRequest);
 
         // then
-        verify(objectMapper).writerWithDefaultPrettyPrinter();
         verify(objectWriter).writeValueAsString(fullHttpRequestDTO);
     }
 
     @Test
     @SuppressWarnings("RedundantArrayCreation")
     public void shouldSerializeArray() throws IOException {
-        // given
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-
-
         // when
         httpRequestSerializer.serialize(new HttpRequest[]{fullHttpRequest, fullHttpRequest});
 
         // then
-        verify(objectMapper).writerWithDefaultPrettyPrinter();
         verify(objectWriter).writeValueAsString(new HttpRequestDTO[]{fullHttpRequestDTO, fullHttpRequestDTO});
     }
 

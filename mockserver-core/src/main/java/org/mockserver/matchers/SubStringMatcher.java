@@ -1,13 +1,11 @@
 package org.mockserver.matchers;
 
 import org.apache.commons.lang3.StringUtils;
-import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.NottableString;
 
 import static org.apache.commons.lang3.StringUtils.*;
 import static org.mockserver.model.NottableString.string;
-import static org.slf4j.event.Level.DEBUG;
 
 /**
  * @author jamesdbloom
@@ -50,13 +48,7 @@ public class SubStringMatcher extends BodyMatcher<NottableString> {
         }
 
         if (!result && context != null) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(DEBUG)
-                    .setMatchDifference(context)
-                    .setMessageFormat("substring match failed expected:{}found:{}")
-                    .setArguments(this.matcher, matched)
-            );
+            context.addDifference(mockServerLogger, "substring match failed expected:{}found:{}", this.matcher, matched);
         }
 
         return matched.isNot() == (matcher.isNot() == (not != result));

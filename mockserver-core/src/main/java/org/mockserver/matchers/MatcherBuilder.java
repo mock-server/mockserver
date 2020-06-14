@@ -2,7 +2,8 @@ package org.mockserver.matchers;
 
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.HttpRequest;
+import org.mockserver.model.OpenAPIDefinition;
+import org.mockserver.model.RequestDefinition;
 
 /**
  * @author jamesdbloom
@@ -15,12 +16,26 @@ public class MatcherBuilder {
         this.mockServerLogger = mockServerLogger;
     }
 
-    public HttpRequestMatcher transformsToMatcher(HttpRequest httpRequest) {
-        return new HttpRequestMatcher(mockServerLogger, httpRequest);
+    public HttpRequestMatcher transformsToMatcher(RequestDefinition requestDefinition) {
+        HttpRequestMatcher httpRequestMatcher = null;
+        if (requestDefinition instanceof OpenAPIDefinition) {
+            httpRequestMatcher = new OpenAPIMatcher(mockServerLogger);
+        } else {
+            httpRequestMatcher = new HttpRequestPropertiesMatcher(mockServerLogger);
+        }
+        httpRequestMatcher.update(requestDefinition);
+        return httpRequestMatcher;
     }
 
     public HttpRequestMatcher transformsToMatcher(Expectation expectation) {
-        return new HttpRequestMatcher(mockServerLogger, expectation);
+        HttpRequestMatcher httpRequestMatcher = null;
+        if (expectation.getHttpRequest() instanceof OpenAPIDefinition) {
+            httpRequestMatcher = new OpenAPIMatcher(mockServerLogger);
+        } else {
+            httpRequestMatcher = new HttpRequestPropertiesMatcher(mockServerLogger);
+        }
+        httpRequestMatcher.update(expectation);
+        return httpRequestMatcher;
     }
 
 }

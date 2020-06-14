@@ -1,9 +1,10 @@
 package org.mockserver.serialization.deserializers.collections;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import org.junit.Test;
-import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.model.Cookies;
+import org.mockserver.serialization.ObjectMapperFactory;
 
 import java.io.IOException;
 
@@ -19,13 +20,13 @@ import static org.mockserver.model.NottableString.string;
  */
 public class CookiesDeserializerTest {
 
+    private final ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
     private final ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
     @Test
     public void shouldSerializeThenDeserializer() throws IOException {
         // given
-        String serializedHeaders = objectMapper
-            .writerWithDefaultPrettyPrinter()
+        String serializedHeaders = objectWriter
             .writeValueAsString(new Cookies().withEntries(
                 cookie(string("some_name"), string("some_value")),
                 cookie(string("some_other_name"), not("some_other_value"))

@@ -8,9 +8,9 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.serialization.model.HttpRequestDTO;
 
 import java.io.IOException;
 
@@ -31,8 +31,6 @@ public class HttpRequestSerializationErrorsTest {
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
     @Mock
-    private ObjectMapper objectMapper;
-    @Mock
     private ObjectWriter objectWriter;
     @InjectMocks
     private HttpRequestSerializer httpRequestSerializer;
@@ -51,7 +49,6 @@ public class HttpRequestSerializationErrorsTest {
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("Exception while serializing HttpRequest to JSON with value { }");
         // and
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
         when(objectWriter.writeValueAsString(any(HttpRequestDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
         // when
@@ -64,7 +61,6 @@ public class HttpRequestSerializationErrorsTest {
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("Exception while serializing HttpRequest to JSON with value [{ }]");
         // and
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
         when(objectWriter.writeValueAsString(any(HttpRequestDTO[].class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
         // when
@@ -110,7 +106,7 @@ public class HttpRequestSerializationErrorsTest {
         // given
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("1 error:" + NEW_LINE +
-                " - a request or request array is required but value was \"\"");
+            " - a request or request array is required but value was \"\"");
 
         // when
         assertArrayEquals(new HttpRequest[]{}, httpRequestSerializer.deserializeArray(""));

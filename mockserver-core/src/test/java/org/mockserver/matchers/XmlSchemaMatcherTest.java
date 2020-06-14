@@ -142,7 +142,8 @@ public class XmlSchemaMatcherTest {
             // given
             logLevel("TRACE");
             String xml = "some_xml";
-            when(mockXmlSchemaValidator.isValid(xml)).thenThrow(new RuntimeException("TEST_EXCEPTION"));
+            RuntimeException test_exception = new RuntimeException("TEST_EXCEPTION");
+            when(mockXmlSchemaValidator.isValid(xml)).thenThrow(test_exception);
 
             // when
             assertFalse(xmlSchemaMatcher.matches(new MatchDifference(request()), xml));
@@ -179,7 +180,7 @@ public class XmlSchemaMatcherTest {
                     " failed because:" + NEW_LINE +
                     "" + NEW_LINE +
                     "  TEST_EXCEPTION" + NEW_LINE,
-                (Throwable) null);
+                test_exception);
         } finally {
             logLevel(originalLevel.toString());
         }

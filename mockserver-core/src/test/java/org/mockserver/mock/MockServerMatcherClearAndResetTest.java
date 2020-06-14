@@ -3,6 +3,7 @@ package org.mockserver.mock;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
+import org.mockserver.file.FileReader;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
@@ -19,7 +20,6 @@ import java.util.List;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -27,6 +27,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockserver.matchers.TimeToLive.unlimited;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.OpenAPIDefinition.openAPI;
 import static org.mockserver.ui.MockServerMatcherNotifier.Cause.API;
 
 /**
@@ -48,14 +49,14 @@ public class MockServerMatcherClearAndResetTest {
     public void shouldRemoveExpectationWhenNoMoreTimes() {
         // given
         Expectation expectation = new Expectation(
-            request()
-                .withPath("somepath"),
+            request().withPath("somepath"),
             Times.exactly(2),
             unlimited(),
-                0).thenRespond(
-            response()
-                .withBody("somebody")
-        );
+            0)
+            .thenRespond(
+                response()
+                    .withBody("somebody")
+            );
 
         // when
         requestMatchers.add(expectation, API);
@@ -75,24 +76,8 @@ public class MockServerMatcherClearAndResetTest {
         // given
         String pathToMatchOn = "somePath";
         Expectation[] expectation = {
-            new Expectation(
-                request()
-                    .withPath(pathToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
-                response()
-                    .withBody("somebody")
-            ),
-            new Expectation(
-                request()
-                    .withPath(pathToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
-                response()
-                    .withBody("somebody")
-            )
+            new Expectation(request().withPath(pathToMatchOn)).thenRespond(response().withBody("somebody")),
+            new Expectation(request().withPath(pathToMatchOn)).thenRespond(response().withBody("somebody"))
         };
         requestMatchers.add(expectation[0], API);
         requestMatchers.add(expectation[1], API);
@@ -108,24 +93,8 @@ public class MockServerMatcherClearAndResetTest {
     public void shouldResetAllExpectationsWhenHttpRequestNull() {
         // given
         Expectation[] expectation = {
-            new Expectation(
-                request()
-                    .withPath("abc"),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
-                response()
-                    .withBody("somebody")
-            ),
-            new Expectation(
-                request()
-                    .withPath("def"),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
-                response()
-                    .withBody("somebody")
-            )
+            new Expectation(request().withPath("abc")).thenRespond(response().withBody("somebody")),
+            new Expectation(request().withPath("def")).thenRespond(response().withBody("somebody"))
         };
         requestMatchers.add(expectation[0], API);
         requestMatchers.add(expectation[1], API);
@@ -141,24 +110,8 @@ public class MockServerMatcherClearAndResetTest {
     public void shouldResetAllExpectations() {
         // given
         Expectation[] expectation = {
-            new Expectation(
-                request()
-                    .withPath("abc"),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
-                response()
-                    .withBody("somebody")
-            ),
-            new Expectation(
-                request()
-                    .withPath("def"),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
-                response()
-                    .withBody("somebody")
-            )
+            new Expectation(request().withPath("abc")).thenRespond(response().withBody("somebody")),
+            new Expectation(request().withPath("def")).thenRespond(response().withBody("somebody"))
         };
         requestMatchers.add(expectation[0], API);
         requestMatchers.add(expectation[1], API);
@@ -171,28 +124,122 @@ public class MockServerMatcherClearAndResetTest {
     }
 
     @Test
+    public void shouldClearMatchingExpectationsByOpenAPIUrlWithOperationId() {
+        // given
+        Expectation[] expectation = {
+            new Expectation(
+                request()
+                    .withMethod("GET")
+                    .withPath("/pets")
+                    .withQueryStringParameter("limit", "10")
+            ),
+            new Expectation(request().withPath("def")).thenRespond(response().withBody("somebody"))
+        };
+        requestMatchers.add(expectation[0], API);
+        requestMatchers.add(expectation[1], API);
+
+        // then
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(2));
+
+        // when
+        requestMatchers.clear(openAPI(
+            "org/mockserver/mock/openapi_petstore_example.json",
+            "listPets"
+        ));
+
+        // then
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
+        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(mockServerLogger).transformsToMatcher(expectation[1])));
+    }
+
+    @Test
+    public void shouldClearMatchingExpectationsByOpenAPIUrlWithoutOperationId() {
+        // given
+        Expectation[] expectation = {
+            new Expectation(
+                request()
+                    .withMethod("GET")
+                    .withPath("/pets")
+                    .withQueryStringParameter("limit", "10")
+            ),
+            new Expectation(request().withPath("def")).thenRespond(response().withBody("somebody"))
+        };
+        requestMatchers.add(expectation[0], API);
+        requestMatchers.add(expectation[1], API);
+
+        // then
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(2));
+
+        // when
+        requestMatchers.clear(openAPI().withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json"));
+
+        // then
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
+        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(mockServerLogger).transformsToMatcher(expectation[1])));
+    }
+
+    @Test
+    public void shouldClearMatchingExpectationsByOpenAPISpecWithOperationId() {
+        // given
+        Expectation[] expectation = {
+            new Expectation(
+                request()
+                    .withMethod("GET")
+                    .withPath("/pets")
+                    .withQueryStringParameter("limit", "10")
+            ),
+            new Expectation(request().withPath("def")).thenRespond(response().withBody("somebody"))
+        };
+        requestMatchers.add(expectation[0], API);
+        requestMatchers.add(expectation[1], API);
+
+        // then
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(2));
+
+        // when
+        requestMatchers.clear(openAPI()
+            .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json"))
+            .withOperationId("listPets")
+        );
+
+        // then
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
+        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(mockServerLogger).transformsToMatcher(expectation[1])));
+    }
+
+    @Test
+    public void shouldClearMatchingExpectationsByOpenAPISpecWithoutOperationId() {
+        // given
+        Expectation[] expectation = {
+            new Expectation(
+                request()
+                    .withMethod("GET")
+                    .withPath("/pets")
+                    .withQueryStringParameter("limit", "10")
+            ),
+            new Expectation(request().withPath("def")).thenRespond(response().withBody("somebody"))
+        };
+        requestMatchers.add(expectation[0], API);
+        requestMatchers.add(expectation[1], API);
+
+        // then
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(2));
+
+        // when
+        requestMatchers.clear(openAPI().withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")));
+
+        // then
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
+        assertThat(requestMatchers.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(mockServerLogger).transformsToMatcher(expectation[1])));
+    }
+
+    @Test
     public void shouldClearMatchingExpectationsByPathOnly() {
         // given
         String pathToMatchOn = "abc";
         Expectation[] expectation = {
-            new Expectation(
-                request()
-                    .withPath(pathToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
-                response()
-                    .withBody("somebody")
-            ),
-            new Expectation(
-                request()
-                    .withPath("def"),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
-                response()
-                    .withBody("somebody")
-            )
+            new Expectation(request().withPath(pathToMatchOn)).thenRespond(response().withBody("somebody")),
+            new Expectation(request().withPath("def")).thenRespond(response().withBody("somebody"))
         };
         requestMatchers.add(expectation[0], API);
         requestMatchers.add(expectation[1], API);
@@ -213,30 +260,24 @@ public class MockServerMatcherClearAndResetTest {
             new Expectation(
                 request()
                     .withMethod(methodToMatchOn)
-                    .withPath("abc"),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withPath("abc"))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
             new Expectation(
                 request()
                     .withMethod(methodToMatchOn)
-                    .withPath("def"),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withPath("def"))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
             new Expectation(
                 request()
                     .withMethod("POST")
-                    .withPath("def"),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withPath("def"))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             )
@@ -262,10 +303,8 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("GET")
                     .withPath("abc")
-                    .withHeader(headerToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withHeader(headerToMatchOn))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -273,20 +312,16 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("PUT")
                     .withPath("def")
-                    .withHeaders(headerToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withHeaders(headerToMatchOn))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
             new Expectation(
                 request()
                     .withMethod("POST")
-                    .withPath("def"),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withPath("def"))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             )
@@ -312,10 +347,8 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("GET")
                     .withPath("abc")
-                    .withHeader(headerToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withHeader(headerToMatchOn))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -323,10 +356,8 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("PUT")
                     .withPath("def")
-                    .withHeaders(headerToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withHeaders(headerToMatchOn))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -334,10 +365,8 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("POST")
                     .withPath("def")
-                    .withHeaders(new Header("headerOneName", "headerOneValue")),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withHeaders(new Header("headerOneName", "headerOneValue")))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             )
@@ -363,10 +392,8 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("GET")
                     .withPath("abc")
-                    .withHeader(headerToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withHeader(headerToMatchOn))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -374,20 +401,16 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("GET")
                     .withPath("abc")
-                    .withHeader(headerToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withHeader(headerToMatchOn))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
             new Expectation(
                 request()
                     .withMethod("POST")
-                    .withPath("def"),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withPath("def"))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             )
@@ -415,10 +438,8 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("GET")
                     .withPath("abc")
-                    .withHeaders(headersToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withHeaders(headersToMatchOn))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -426,10 +447,8 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("PUT")
                     .withPath("def")
-                    .withHeaders(headersToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withHeaders(headersToMatchOn))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -439,10 +458,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("def")
                     .withHeaders(
                         new Header("headerOneName", "headerOneValue")
-                    ),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    ))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             )
@@ -471,10 +488,8 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("GET")
                     .withPath("abc")
-                    .withHeaders(headersToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withHeaders(headersToMatchOn))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -482,10 +497,8 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("GET")
                     .withPath("abc")
-                    .withHeaders(headersToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withHeaders(headersToMatchOn))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -495,10 +508,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withPath("def")
                     .withHeaders(
                         new Header("headerTwoName", "headerTwoName")
-                    ),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    ))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             )
@@ -526,10 +537,8 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("GET")
                     .withPath("abc")
-                    .withHeaders(headersToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withHeaders(headersToMatchOn))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -537,10 +546,8 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("PUT")
                     .withPath("def")
-                    .withHeaders(headersToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withHeaders(headersToMatchOn))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -551,10 +558,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withHeaders(
                         new Header("headerOneName", "headerOneValue"),
                         new Header("headerTwoName", "headerTwoName")
-                    ),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    ))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             )
@@ -583,10 +588,8 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("GET")
                     .withPath("abc")
-                    .withHeaders(headersToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withHeaders(headersToMatchOn))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -594,20 +597,16 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("GET")
                     .withPath("abc")
-                    .withHeaders(headersToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withHeaders(headersToMatchOn))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
             new Expectation(
                 request()
                     .withMethod("POST")
-                    .withPath("def"),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withPath("def"))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             )
@@ -635,10 +634,8 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("GET")
                     .withPath("abc")
-                    .withCookies(cookiesToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withCookies(cookiesToMatchOn))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -646,10 +643,8 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("PUT")
                     .withPath("def")
-                    .withCookies(cookiesToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withCookies(cookiesToMatchOn))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -660,10 +655,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withCookies(
                         new Cookie("cookieOneName", "cookieOneValue"),
                         new Cookie("cookieTwoName", "cookieTwoName")
-                    ),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    ))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             )
@@ -692,10 +685,8 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("GET")
                     .withPath("abc")
-                    .withCookies(cookiesToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withCookies(cookiesToMatchOn))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -703,20 +694,16 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("GET")
                     .withPath("abc")
-                    .withCookies(cookiesToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withCookies(cookiesToMatchOn))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
             new Expectation(
                 request()
                     .withMethod("POST")
-                    .withPath("def"),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withPath("def"))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             )
@@ -744,10 +731,8 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("GET")
                     .withPath("abc")
-                    .withQueryStringParameters(parametersToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withQueryStringParameters(parametersToMatchOn))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -755,10 +740,8 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("PUT")
                     .withPath("def")
-                    .withQueryStringParameters(parametersToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withQueryStringParameters(parametersToMatchOn))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -769,10 +752,8 @@ public class MockServerMatcherClearAndResetTest {
                     .withQueryStringParameters(
                         new Parameter("parameterOneName", "parameterOneValue"),
                         new Parameter("parameterTwoName", "parameterTwoName")
-                    ),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    ))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             )
@@ -801,10 +782,8 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("GET")
                     .withPath("abc")
-                    .withQueryStringParameters(parametersToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withQueryStringParameters(parametersToMatchOn))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
@@ -812,20 +791,16 @@ public class MockServerMatcherClearAndResetTest {
                 request()
                     .withMethod("GET")
                     .withPath("abc")
-                    .withQueryStringParameters(parametersToMatchOn),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withQueryStringParameters(parametersToMatchOn))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             ),
             new Expectation(
                 request()
                     .withMethod("POST")
-                    .withPath("def"),
-                Times.unlimited(),
-                unlimited(),
-                    0).thenRespond(
+                    .withPath("def"))
+                .thenRespond(
                 response()
                     .withBody("somebody")
             )
@@ -846,8 +821,8 @@ public class MockServerMatcherClearAndResetTest {
         // given
         HttpResponse httpResponse = response().withBody("somebody");
         Expectation[] expectations = new Expectation[]{
-            new Expectation(request().withPath("somepath"), Times.unlimited(), unlimited(), 0).thenRespond(httpResponse),
-            new Expectation(request().withPath("somepath"), Times.unlimited(), unlimited(), 0).thenRespond(httpResponse)
+            new Expectation(request().withPath("somepath")).thenRespond(httpResponse),
+            new Expectation(request().withPath("somepath")).thenRespond(httpResponse)
         };
         for (Expectation expectation : expectations) {
             requestMatchers.add(expectation, API);

@@ -5,7 +5,7 @@ import org.mockserver.model.*;
 /**
  * @author jamesdbloom
  */
-public abstract class BodyDTO extends NotDTO implements DTO<Body> {
+public abstract class BodyDTO extends NotDTO implements DTO<Body<?>> {
 
     private final Body.Type type;
 
@@ -14,7 +14,7 @@ public abstract class BodyDTO extends NotDTO implements DTO<Body> {
         this.type = type;
     }
 
-    public static BodyDTO createDTO(Body body) {
+    public static BodyDTO createDTO(Body<?> body) {
         BodyDTO result = null;
 
         if (body instanceof BinaryBody) {
@@ -56,6 +56,6 @@ public abstract class BodyDTO extends NotDTO implements DTO<Body> {
         return type;
     }
 
-    public abstract Body buildObject();
+    public abstract Body<?> buildObject();
 
 }

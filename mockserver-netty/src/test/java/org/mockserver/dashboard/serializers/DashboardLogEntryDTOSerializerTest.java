@@ -1,7 +1,7 @@
 package org.mockserver.dashboard.serializers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import org.junit.Test;
 import org.mockserver.dashboard.model.DashboardLogEntryDTO;
 import org.mockserver.log.model.LogEntry;
@@ -22,7 +22,7 @@ import static org.mockserver.model.JsonBody.json;
 
 public class DashboardLogEntryDTOSerializerTest {
 
-    final ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper(
+    final ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true,
         new DashboardLogEntryDTOSerializer(),
         new ThrowableSerializer()
     );
@@ -43,9 +43,7 @@ public class DashboardLogEntryDTOSerializerTest {
             .setThrowable(new RuntimeException("TEST_EXCEPTION"));
 
         // when
-        String json = objectMapper
-            .writerWithDefaultPrettyPrinter()
-            .writeValueAsString(new DashboardLogEntryDTO(logEntry));
+        String json = objectWriter.writeValueAsString(new DashboardLogEntryDTO(logEntry));
 
         // then
         assertThat(json, containsString("{" + NEW_LINE +
@@ -117,9 +115,7 @@ public class DashboardLogEntryDTOSerializerTest {
             );
 
         // when
-        String json = objectMapper
-            .writerWithDefaultPrettyPrinter()
-            .writeValueAsString(new DashboardLogEntryDTO(logEntry));
+        String json = objectWriter.writeValueAsString(new DashboardLogEntryDTO(logEntry));
 
         // then
         assertThat(json, containsString("{" + NEW_LINE +

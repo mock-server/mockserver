@@ -71,7 +71,7 @@ public class JsonSchemaHttpRequestAndHttpResponseValidatorIntegrationTest {
                 "  }" + NEW_LINE +
                 "}"),
             is(
-                "1 error:" + NEW_LINE +
+                "2 errors:" + NEW_LINE +
                     " - for field \"/httpRequest/body\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
                     "   {" + NEW_LINE +
                     "     \"not\": false," + NEW_LINE +
@@ -127,6 +127,7 @@ public class JsonSchemaHttpRequestAndHttpResponseValidatorIntegrationTest {
                     "     \"type\": \"XPATH\"," + NEW_LINE +
                     "     \"xpath\": \"\"" + NEW_LINE +
                     "   }" + NEW_LINE +
+                    " - instance failed to match at least one required schema among 13 for field \"/httpRequest/body\"" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));
@@ -160,7 +161,7 @@ public class JsonSchemaHttpRequestAndHttpResponseValidatorIntegrationTest {
                 "  \"path\" : false" + NEW_LINE +
                 "  }"),
             is(
-                "2 errors:" + NEW_LINE +
+                "3 errors:" + NEW_LINE +
                     " - object instance has properties which are not allowed by the schema: [\"method\",\"path\"]" + NEW_LINE +
                     " - for field \"/httpRequest/body\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
                     "   {" + NEW_LINE +
@@ -217,6 +218,7 @@ public class JsonSchemaHttpRequestAndHttpResponseValidatorIntegrationTest {
                     "     \"type\": \"XPATH\"," + NEW_LINE +
                     "     \"xpath\": \"\"" + NEW_LINE +
                     "   }" + NEW_LINE +
+                    " - instance failed to match at least one required schema among 13 for field \"/httpRequest/body\"" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));

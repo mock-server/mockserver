@@ -10,7 +10,7 @@ import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
-import org.mockserver.model.HttpRequest;
+import org.mockserver.model.RequestDefinition;
 import org.mockserver.scheduler.Scheduler;
 import org.slf4j.event.Level;
 
@@ -47,7 +47,7 @@ public class MockServerEventLogTest {
         mockServerEventLog = httpStateHandler.getMockServerLog();
     }
 
-    private List<LogEntry> retrieveMessageLogEntries(HttpRequest httpRequest) {
+    private List<LogEntry> retrieveMessageLogEntries(RequestDefinition httpRequest) {
         CompletableFuture<List<LogEntry>> future = new CompletableFuture<>();
         mockServerEventLog.retrieveMessageLogEntries(httpRequest, future::complete);
         try {
@@ -58,8 +58,8 @@ public class MockServerEventLogTest {
         }
     }
 
-    private List<HttpRequest> retrieveRequests(HttpRequest httpRequest) {
-        CompletableFuture<List<HttpRequest>> result = new CompletableFuture<>();
+    private List<RequestDefinition> retrieveRequests(RequestDefinition httpRequest) {
+        CompletableFuture<List<RequestDefinition>> result = new CompletableFuture<>();
         mockServerEventLog.retrieveRequests(httpRequest, result::complete);
         try {
             return result.get(60, SECONDS);
@@ -80,7 +80,7 @@ public class MockServerEventLogTest {
         }
     }
 
-    private List<LogEntry> retrieveRequestResponseMessageLogEntries(HttpRequest httpRequest) {
+    private List<LogEntry> retrieveRequestResponseMessageLogEntries(RequestDefinition httpRequest) {
         CompletableFuture<List<LogEntry>> future = new CompletableFuture<>();
         mockServerEventLog.retrieveRequestResponseMessageLogEntries(httpRequest, future::complete);
         try {
@@ -91,7 +91,7 @@ public class MockServerEventLogTest {
         }
     }
 
-    private List<Expectation> retrieveRecordedExpectations(HttpRequest httpRequest) {
+    private List<Expectation> retrieveRecordedExpectations(RequestDefinition httpRequest) {
         CompletableFuture<List<Expectation>> future = new CompletableFuture<>();
         mockServerEventLog.retrieveRecordedExpectations(httpRequest, future::complete);
         try {
@@ -143,15 +143,15 @@ public class MockServerEventLogTest {
                 new LogEntry()
                     .setLogLevel(INFO)
                     .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
-                    .setHttpRequests(new HttpRequest[0]),
+                    .setHttpRequests(new RequestDefinition[0]),
                 new LogEntry()
                     .setLogLevel(INFO)
                     .setType(EXPECTATION_RESPONSE)
-                    .setHttpRequests(new HttpRequest[0]),
+                    .setHttpRequests(new RequestDefinition[0]),
                 new LogEntry()
                     .setLogLevel(INFO)
                     .setType(FORWARDED_REQUEST)
-                    .setHttpRequests(new HttpRequest[0])
+                    .setHttpRequests(new RequestDefinition[0])
             ));
             assertThat(retrieveRecordedExpectations(null), empty());
         } finally {
@@ -186,7 +186,7 @@ public class MockServerEventLogTest {
                 new LogEntry()
                     .setLogLevel(INFO)
                     .setType(RECEIVED_REQUEST)
-                    .setHttpRequests(new HttpRequest[]{request("request_two"), request("request_three")})
+                    .setHttpRequests(new RequestDefinition[]{request("request_two"), request("request_three")})
                     .setMessageFormat("received request:{}")
                     .setArguments(request("request_two"))
             );
@@ -276,7 +276,7 @@ public class MockServerEventLogTest {
                 new LogEntry()
                     .setLogLevel(INFO)
                     .setType(RECEIVED_REQUEST)
-                    .setHttpRequests(new HttpRequest[]{request("request_two"), request("request_three")})
+                    .setHttpRequests(new RequestDefinition[]{request("request_two"), request("request_three")})
                     .setMessageFormat("received request:{}")
                     .setArguments(request("request_two")),
                 new LogEntry()
@@ -378,7 +378,7 @@ public class MockServerEventLogTest {
             );
 
             // then
-            HttpRequest requestMatcher = request("request_one");
+            RequestDefinition requestMatcher = request("request_one");
             assertThat(retrieveRequests(requestMatcher), contains(
                 request("request_one")
             ));

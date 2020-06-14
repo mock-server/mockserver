@@ -1,13 +1,13 @@
 package org.mockserver.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Joiner;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.serialization.model.ExpectationDTO;
 import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
-import org.mockserver.validator.jsonschema.JsonSchemaValidator;
 import org.slf4j.event.Level;
 
 import java.util.ArrayList;
@@ -24,6 +24,7 @@ import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_S
  */
 public class ExpectationSerializer implements Serializer<Expectation> {
     private final MockServerLogger mockServerLogger;
+    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
     private JsonSchemaExpectationValidator expectationValidator;
@@ -36,8 +37,7 @@ public class ExpectationSerializer implements Serializer<Expectation> {
     public String serialize(Expectation expectation) {
         if (expectation != null) {
             try {
-                return objectMapper
-                    .writerWithDefaultPrettyPrinter()
+                return objectWriter
                     .writeValueAsString(new ExpectationDTO(expectation));
             } catch (Exception e) {
                 mockServerLogger.logEvent(
@@ -64,8 +64,7 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                 for (int i = 0; i < expectations.length; i++) {
                     expectationDTOs[i] = new ExpectationDTO(expectations[i]);
                 }
-                return objectMapper
-                    .writerWithDefaultPrettyPrinter()
+                return objectWriter
                     .writeValueAsString(expectationDTOs);
             } else {
                 return "[]";

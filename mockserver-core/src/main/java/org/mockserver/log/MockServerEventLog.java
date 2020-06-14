@@ -11,8 +11,9 @@ import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.LogEventRequestAndResponse;
+import org.mockserver.model.RequestDefinition;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.serialization.HttpRequestSerializer;
+import org.mockserver.serialization.RequestDefinitionSerializer;
 import org.mockserver.ui.MockServerEventLogNotifier;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
@@ -50,7 +51,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         || input.getType() == FORWARDED_REQUEST;
     private static final Predicate<LogEntry> recordedExpectationLogPredicate = input
         -> input.getType() == FORWARDED_REQUEST;
-    private static final Function<LogEntry, HttpRequest[]> logEntryToRequest = LogEntry::getHttpRequests;
+    private static final Function<LogEntry, RequestDefinition[]> logEntryToRequest = LogEntry::getHttpRequests;
     private static final Function<LogEntry, Expectation> logEntryToExpectation = LogEntry::getExpectation;
     private static final Function<LogEntry, LogEventRequestAndResponse> logEntryToHttpRequestAndHttpResponse =
         logEntry -> new LogEventRequestAndResponse()
@@ -61,7 +62,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     private MockServerLogger mockServerLogger;
     private CircularConcurrentLinkedDeque<LogEntry> eventLog = new CircularConcurrentLinkedDeque<>(ConfigurationProperties.maxLogEntries(), LogEntry::clear);
     private MatcherBuilder matcherBuilder;
-    private HttpRequestSerializer httpRequestSerializer;
+    private RequestDefinitionSerializer requestDefinitionSerializer;
     private final boolean asynchronousEventProcessing;
     private Disruptor<LogEntry> disruptor;
 
@@ -69,7 +70,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         super(scheduler);
         this.mockServerLogger = mockServerLogger;
         this.matcherBuilder = new MatcherBuilder(mockServerLogger);
-        this.httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
+        this.requestDefinitionSerializer = new RequestDefinitionSerializer(mockServerLogger);
         this.asynchronousEventProcessing = asynchronousEventProcessing;
         startRingBuffer();
     }
@@ -163,7 +164,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         }
     }
 
-    public void clear(HttpRequest httpRequest) {
+    public void clear(RequestDefinition httpRequest) {
         CompletableFuture<String> future = new CompletableFuture<>();
         disruptor.publishEvent(new LogEntry()
             .setType(RUNNABLE)
@@ -171,10 +172,10 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                 if (httpRequest != null) {
                     HttpRequestMatcher requestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
                     for (LogEntry logEntry : new LinkedList<>(eventLog)) {
-                        HttpRequest[] requests = logEntry.getHttpRequests();
+                        RequestDefinition[] requests = logEntry.getHttpRequests();
                         boolean matches = false;
                         if (requests != null) {
-                            for (HttpRequest request : requests) {
+                            for (RequestDefinition request : requests) {
                                 if (requestMatcher.matches(request)) {
                                     matches = true;
                                 }
@@ -199,25 +200,25 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         }
     }
 
-    public void retrieveMessageLogEntries(HttpRequest httpRequest, Consumer<List<LogEntry>> listConsumer) {
+    public void retrieveMessageLogEntries(RequestDefinition requestDefinition, Consumer<List<LogEntry>> listConsumer) {
         retrieveLogEntries(
-            httpRequest,
+            requestDefinition,
             logEntry -> true,
             (Stream<LogEntry> logEventStream) -> listConsumer.accept(logEventStream.filter(Objects::nonNull).collect(Collectors.toList()))
         );
     }
 
-    public void retrieveRequestLogEntries(HttpRequest httpRequest, Consumer<List<LogEntry>> listConsumer) {
+    public void retrieveRequestLogEntries(RequestDefinition requestDefinition, Consumer<List<LogEntry>> listConsumer) {
         retrieveLogEntries(
-            httpRequest,
+            requestDefinition,
             requestLogPredicate,
             (Stream<LogEntry> logEventStream) -> listConsumer.accept(logEventStream.filter(Objects::nonNull).collect(Collectors.toList()))
         );
     }
 
-    public void retrieveRequests(HttpRequest httpRequest, Consumer<List<HttpRequest>> listConsumer) {
+    public void retrieveRequests(RequestDefinition requestDefinition, Consumer<List<RequestDefinition>> listConsumer) {
         retrieveLogEntries(
-            httpRequest,
+            requestDefinition,
             requestLogPredicate,
             logEntryToRequest,
             logEventStream -> listConsumer.accept(
@@ -229,45 +230,45 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         );
     }
 
-    public void retrieveRequestResponseMessageLogEntries(HttpRequest httpRequest, Consumer<List<LogEntry>> listConsumer) {
+    public void retrieveRequestResponseMessageLogEntries(RequestDefinition requestDefinition, Consumer<List<LogEntry>> listConsumer) {
         retrieveLogEntries(
-            httpRequest,
+            requestDefinition,
             requestResponseLogPredicate,
             (Stream<LogEntry> logEventStream) -> listConsumer.accept(logEventStream.filter(Objects::nonNull).collect(Collectors.toList()))
         );
     }
 
-    public void retrieveRequestResponses(HttpRequest httpRequest, Consumer<List<LogEventRequestAndResponse>> listConsumer) {
+    public void retrieveRequestResponses(RequestDefinition requestDefinition, Consumer<List<LogEventRequestAndResponse>> listConsumer) {
         retrieveLogEntries(
-            httpRequest,
+            requestDefinition,
             requestResponseLogPredicate,
             logEntryToHttpRequestAndHttpResponse,
             logEventStream -> listConsumer.accept(logEventStream.filter(Objects::nonNull).collect(Collectors.toList()))
         );
     }
 
-    public void retrieveRecordedExpectationLogEntries(HttpRequest httpRequest, Consumer<List<LogEntry>> listConsumer) {
+    public void retrieveRecordedExpectationLogEntries(RequestDefinition requestDefinition, Consumer<List<LogEntry>> listConsumer) {
         retrieveLogEntries(
-            httpRequest,
+            requestDefinition,
             recordedExpectationLogPredicate,
             (Stream<LogEntry> logEventStream) -> listConsumer.accept(logEventStream.filter(Objects::nonNull).collect(Collectors.toList()))
         );
     }
 
-    public void retrieveRecordedExpectations(HttpRequest httpRequest, Consumer<List<Expectation>> listConsumer) {
+    public void retrieveRecordedExpectations(RequestDefinition requestDefinition, Consumer<List<Expectation>> listConsumer) {
         retrieveLogEntries(
-            httpRequest,
+            requestDefinition,
             recordedExpectationLogPredicate,
             logEntryToExpectation,
             logEventStream -> listConsumer.accept(logEventStream.filter(Objects::nonNull).collect(Collectors.toList()))
         );
     }
 
-    private void retrieveLogEntries(HttpRequest httpRequest, Predicate<LogEntry> logEntryPredicate, Consumer<Stream<LogEntry>> consumer) {
+    private void retrieveLogEntries(RequestDefinition requestDefinition, Predicate<LogEntry> logEntryPredicate, Consumer<Stream<LogEntry>> consumer) {
         disruptor.publishEvent(new LogEntry()
             .setType(RUNNABLE)
             .setConsumer(() -> {
-                HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
+                HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(requestDefinition);
                 consumer.accept(this.eventLog
                     .stream()
                     .filter(logItem -> logItem.matches(httpRequestMatcher))
@@ -277,11 +278,11 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         );
     }
 
-    private <T> void retrieveLogEntries(HttpRequest httpRequest, Predicate<LogEntry> logEntryPredicate, Function<LogEntry, T> logEntryMapper, Consumer<Stream<T>> consumer) {
+    private <T> void retrieveLogEntries(RequestDefinition requestDefinition, Predicate<LogEntry> logEntryPredicate, Function<LogEntry, T> logEntryMapper, Consumer<Stream<T>> consumer) {
         disruptor.publishEvent(new LogEntry()
             .setType(RUNNABLE)
             .setConsumer(() -> {
-                HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
+                HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(requestDefinition);
                 consumer.accept(this.eventLog
                     .stream()
                     .filter(logItem -> logItem.matches(httpRequestMatcher))
@@ -320,8 +321,8 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                 if (!verification.getTimes().matches(httpRequests.size())) {
                     retrieveRequests(null, allRequests -> {
                         String failureMessage;
-                        String serializedRequestToBeVerified = httpRequestSerializer.serialize(true, verification.getHttpRequest());
-                        String serializedAllRequestInLog = allRequests.size() == 1 ? httpRequestSerializer.serialize(true, allRequests.get(0)) : httpRequestSerializer.serialize(true, allRequests);
+                        String serializedRequestToBeVerified = requestDefinitionSerializer.serialize(true, verification.getHttpRequest());
+                        String serializedAllRequestInLog = allRequests.size() == 1 ? requestDefinitionSerializer.serialize(true, allRequests.get(0)) : requestDefinitionSerializer.serialize(true, allRequests);
                         failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
                         final Object[] arguments = new Object[]{verification.getHttpRequest(), allRequests.size() == 1 ? allRequests.get(0) : allRequests};
                         mockServerLogger.logEvent(
@@ -354,7 +355,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             String failureMessage = "";
             if (verificationSequence != null) {
                 int requestLogCounter = 0;
-                for (HttpRequest verificationHttpRequest : verificationSequence.getHttpRequests()) {
+                for (RequestDefinition verificationHttpRequest : verificationSequence.getHttpRequests()) {
                     if (verificationHttpRequest != null) {
                         HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(verificationHttpRequest);
                         boolean foundRequest = false;
@@ -365,15 +366,15 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                             }
                         }
                         if (!foundRequest) {
-                            String serializedRequestToBeVerified = httpRequestSerializer.serialize(true, verificationSequence.getHttpRequests());
-                            String serializedAllRequestInLog = allRequests.size() == 1 ? httpRequestSerializer.serialize(true, allRequests.get(0)) : httpRequestSerializer.serialize(true, allRequests);
+                            String serializedRequestToBeVerified = requestDefinitionSerializer.serialize(true, verificationSequence.getHttpRequests());
+                            String serializedAllRequestInLog = allRequests.size() == 1 ? requestDefinitionSerializer.serialize(true, allRequests.get(0)) : requestDefinitionSerializer.serialize(true, allRequests);
                             failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
                             final Object[] arguments = new Object[]{verificationSequence.getHttpRequests(), allRequests.size() == 1 ? allRequests.get(0) : allRequests};
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setType(VERIFICATION_FAILED)
                                     .setLogLevel(Level.INFO)
-                                    .setHttpRequests(verificationSequence.getHttpRequests().toArray(new HttpRequest[0]))
+                                    .setHttpRequests(verificationSequence.getHttpRequests().toArray(new RequestDefinition[0]))
                                     .setMessageFormat("request sequence not found, expected:{}but was:{}")
                                     .setArguments(arguments)
                             );

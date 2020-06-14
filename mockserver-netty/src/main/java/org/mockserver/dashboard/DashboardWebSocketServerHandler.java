@@ -25,6 +25,7 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.RequestMatchers;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.RequestDefinition;
 import org.mockserver.serialization.HttpRequestSerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.ui.MockServerLogListener;
@@ -304,7 +305,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
                             }
                             if (requestLogPredicate.test(logEntryDTO)
                                 && recordedRequests.size() < UI_UPDATE_ITEM_LIMIT) {
-                                HttpRequest[] httpRequests = logEntryDTO.getHttpRequests();
+                                RequestDefinition[] httpRequests = logEntryDTO.getHttpRequests();
                                 for (int i = 0; i < httpRequests.length; i++) {
                                     recordedRequests.add(ImmutableMap.of(
                                         "key", logEntryDTO.getId() + i,

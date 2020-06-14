@@ -6,7 +6,7 @@ package org.mockserver.model;
 public class LogEventRequestAndResponse extends ObjectWithJsonToString {
 
     private String timestamp;
-    private HttpRequest httpRequest;
+    private RequestDefinition httpRequest;
     private HttpResponse httpResponse;
 
     public String getTimestamp() {
@@ -18,11 +18,11 @@ public class LogEventRequestAndResponse extends ObjectWithJsonToString {
         return this;
     }
 
-    public HttpRequest getHttpRequest() {
+    public RequestDefinition getHttpRequest() {
         return httpRequest;
     }
 
-    public LogEventRequestAndResponse withHttpRequest(HttpRequest httpRequest) {
+    public LogEventRequestAndResponse withHttpRequest(RequestDefinition httpRequest) {
         this.httpRequest = httpRequest;
         return this;
     }

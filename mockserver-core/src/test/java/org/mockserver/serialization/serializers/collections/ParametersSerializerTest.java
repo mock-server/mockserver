@@ -1,9 +1,9 @@
 package org.mockserver.serialization.serializers.collections;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import org.junit.Test;
-import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.model.Parameters;
+import org.mockserver.serialization.ObjectMapperFactory;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -20,7 +20,7 @@ import static org.mockserver.model.Parameter.param;
  */
 public class ParametersSerializerTest {
 
-    private final ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
 
     @Test
     public void shouldAllowSingleObjectForArray() throws IOException {
@@ -31,8 +31,7 @@ public class ParametersSerializerTest {
             "}";
 
         // when
-        String actualString = objectMapper
-            .writerWithDefaultPrettyPrinter()
+        String actualString = objectWriter
             .writeValueAsString(new Parameters().withEntries(
                 param(string("some_name"), Arrays.asList(string("some_value"), string("some_other_value"))),
                 param(string("some_other_name"), string("some_value")),

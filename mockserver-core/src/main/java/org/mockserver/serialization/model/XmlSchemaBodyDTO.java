@@ -11,7 +11,7 @@ public class XmlSchemaBodyDTO extends BodyDTO {
     private final String xmlSchema;
 
     public XmlSchemaBodyDTO(XmlSchemaBody xmlSchemaBody) {
-        this(xmlSchemaBody, false);
+        this(xmlSchemaBody, null);
     }
 
     public XmlSchemaBodyDTO(XmlSchemaBody xmlSchemaBody, Boolean not) {

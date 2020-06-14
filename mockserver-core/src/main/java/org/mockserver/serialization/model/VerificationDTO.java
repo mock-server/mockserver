@@ -1,6 +1,8 @@
 package org.mockserver.serialization.model;
 
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.ObjectWithJsonToString;
+import org.mockserver.model.OpenAPIDefinition;
 import org.mockserver.verify.Verification;
 
 import static org.mockserver.model.HttpRequest.request;
@@ -11,12 +13,16 @@ import static org.mockserver.verify.VerificationTimes.once;
  * @author jamesdbloom
  */
 public class VerificationDTO extends ObjectWithJsonToString implements DTO<Verification> {
-    private HttpRequestDTO httpRequest;
+    private RequestDefinitionDTO httpRequest;
     private VerificationTimesDTO times;
 
     public VerificationDTO(Verification verification) {
         if (verification != null) {
-            httpRequest = new HttpRequestDTO(verification.getHttpRequest());
+            if (verification.getHttpRequest() instanceof HttpRequest) {
+                httpRequest = new HttpRequestDTO((HttpRequest) verification.getHttpRequest());
+            } else if (verification.getHttpRequest() instanceof OpenAPIDefinition) {
+                httpRequest = new OpenAPIDefinitionDTO((OpenAPIDefinition) verification.getHttpRequest());
+            }
             times = new VerificationTimesDTO(verification.getTimes());
         }
     }
@@ -30,7 +36,7 @@ public class VerificationDTO extends ObjectWithJsonToString implements DTO<Verif
             .withTimes((times != null ? times.buildObject() : once()));
     }
 
-    public HttpRequestDTO getHttpRequest() {
+    public RequestDefinitionDTO getHttpRequest() {
         return httpRequest;
     }
 

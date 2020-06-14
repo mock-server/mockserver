@@ -24,7 +24,7 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
         if (httpResponse != null) {
             statusCode = httpResponse.getStatusCode();
             reasonPhrase = httpResponse.getReasonPhrase();
-            body = BodyWithContentTypeDTO.createDTO(httpResponse.getBody());
+            body = BodyWithContentTypeDTO.createWithContentTypeDTO(httpResponse.getBody());
             headers = httpResponse.getHeaders();
             cookies = httpResponse.getCookies();
             delay = (httpResponse.getDelay() != null ? new DelayDTO(httpResponse.getDelay()) : null);

@@ -3,6 +3,7 @@ package org.mockserver.examples.mockserver;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.model.Format;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.RequestDefinition;
 
 import static org.mockserver.model.HttpRequest.request;
 
@@ -12,14 +13,14 @@ import static org.mockserver.model.HttpRequest.request;
 public class RetrieveRecordedRequestsExample {
 
     public void retrieveAllRecordedRequests() {
-        HttpRequest[] recordedRequests = new MockServerClient("localhost", 1080)
+        RequestDefinition[] recordedRequests = new MockServerClient("localhost", 1080)
             .retrieveRecordedRequests(
                 request()
             );
     }
 
     public void retrieveRecordedRequestsUsingRequestMatcher() {
-        HttpRequest[] recordedRequests = new MockServerClient("localhost", 1080)
+        RequestDefinition[] recordedRequests = new MockServerClient("localhost", 1080)
             .retrieveRecordedRequests(
                 request()
                     .withPath("/some/path")

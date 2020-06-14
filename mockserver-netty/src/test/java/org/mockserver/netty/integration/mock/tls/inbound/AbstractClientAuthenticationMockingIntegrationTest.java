@@ -150,7 +150,8 @@ public abstract class AbstractClientAuthenticationMockingIntegrationTest extends
                 anyOf(
                     containsString("Received fatal alert: certificate_unknown"),
                     containsString("readHandshakeRecord"),
-                    containsString("Broken pipe")
+                    containsString("Broken pipe"),
+                    containsString("wrong type for socket")
                 )
             );
         }

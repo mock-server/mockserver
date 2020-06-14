@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 /**
  * @author jamesdbloom
  */
-public class HttpRequestTemplateObject extends ObjectWithJsonToString {
+public class HttpRequestTemplateObject extends RequestDefinition {
     private String method = "";
     private String path = "";
     private Map<String, List<String>> queryStringParameters = new HashMap<>();
@@ -37,6 +37,7 @@ public class HttpRequestTemplateObject extends ObjectWithJsonToString {
             body = BodyDTO.createDTO(httpRequest.getBody());
             keepAlive = httpRequest.isKeepAlive();
             secure = httpRequest.isSecure();
+            setNot(httpRequest.getNot());
         }
     }
 

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.mock-server</groupId>
@@ -26,8 +27,8 @@
         <url>https://github.com/jamesdbloom/mockservice.git</url>
         <connection>scm:git:https://github.com/jamesdbloom/mockservice.git</connection>
         <developerConnection>scm:git:git@github.com:jamesdbloom/mockservice.git</developerConnection>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
 
     <distributionManagement>
         <snapshotRepository>
@@ -54,19 +55,20 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
-        <jetty.version>9.4.25.v20191220</jetty.version>
+        <jetty.version>9.4.29.v20200521</jetty.version>
         <slf4j.version>1.7.30</slf4j.version>
-        <jackson.version>2.10.1</jackson.version>
-        <velocity.version>2.1</velocity.version>
-        <netty.version>4.1.47.Final</netty.version>
+        <jackson.version>2.10.4</jackson.version>
+        <velocity.version>2.2</velocity.version>
+        <netty.version>4.1.50.Final</netty.version>
         <httpcomponents.version>4.4.1</httpcomponents.version>
         <boucycastle.verion>1.65</boucycastle.verion>
-        <spring.version>5.2.2.RELEASE</spring.version>
-        <mockito.version>3.2.4</mockito.version>
+        <spring.version>5.2.7.RELEASE</spring.version>
+        <mockito.version>3.3.3</mockito.version>
+        <xmlunit.version>2.7.0</xmlunit.version>
         <skipTests>false</skipTests>
         <skipAssembly>false</skipAssembly>
-        <release.arguments />
-        <javadoc.additional.parameters />
+        <release.arguments/>
+        <javadoc.additional.parameters/>
     </properties>
 
     <modules>
@@ -161,7 +163,7 @@
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-core</artifactId>
-                <version>9.0.35</version>
+                <version>9.0.36</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
@@ -191,7 +193,7 @@
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
-                <version>4.5.10</version>
+                <version>4.5.12</version>
             </dependency>
 
             <!-- Netty -->
@@ -295,17 +297,7 @@
             <dependency>
                 <groupId>com.github.java-json-tools</groupId>
                 <artifactId>json-schema-validator</artifactId>
-                <version>2.2.11</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.fasterxml.jackson.core</groupId>
-                        <artifactId>jackson-databind</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>com.google.guava</groupId>
-                        <artifactId>guava</artifactId>
-                    </exclusion>
-                </exclusions>
+                <version>2.2.14</version>
             </dependency>
             <dependency>
                 <groupId>com.jayway.jsonpath</groupId>
@@ -319,6 +311,11 @@
                 <artifactId>swagger-parser</artifactId>
                 <version>2.0.20</version>
             </dependency>
+            <dependency>
+                <groupId>com.atlassian.oai</groupId>
+                <artifactId>swagger-request-validator-core</artifactId>
+                <version>2.10.0</version>
+            </dependency>
 
             <!-- xml -->
             <dependency>
@@ -329,19 +326,19 @@
             <dependency>
                 <groupId>org.xmlunit</groupId>
                 <artifactId>xmlunit-core</artifactId>
-                <version>2.6.4</version>
+                <version>${xmlunit.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.xmlunit</groupId>
                 <artifactId>xmlunit-placeholders</artifactId>
-                <version>2.6.4</version>
+                <version>${xmlunit.version}</version>
             </dependency>
 
             <!-- commons & guava -->
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
-                <version>3.9</version>
+                <version>3.10</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -361,7 +358,7 @@
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <version>28.2-jre</version>
+                <version>28.2-android</version>
             </dependency>
 
             <!-- logging -->
@@ -387,7 +384,7 @@
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-engine</artifactId>
-                <version>5.5.2</version>
+                <version>5.6.2</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -513,8 +510,10 @@
                                 </goals>
                                 <phase>site</phase>
                                 <configuration>
-                                    <excludePackageNames>org.mockserver.examples:org.mockserver.examples.*</excludePackageNames>
-                                    <reportOutputDirectory>${basedir}/jekyll-www.mock-server.com/_site</reportOutputDirectory>
+                                    <excludePackageNames>org.mockserver.examples:org.mockserver.examples.*
+                                    </excludePackageNames>
+                                    <reportOutputDirectory>${basedir}/jekyll-www.mock-server.com/_site
+                                    </reportOutputDirectory>
                                     <destDir>apidocs</destDir>
                                 </configuration>
                             </execution>
@@ -698,7 +697,8 @@
                         <mockserver.logLevel>ERROR</mockserver.logLevel>
                         <mockserver.disableSystemOut>true</mockserver.disableSystemOut>
                         <mockserver.nioEventLoopThreadCount>20</mockserver.nioEventLoopThreadCount>
-                        <mockserver.webSocketClientEventLoopThreadCount>5</mockserver.webSocketClientEventLoopThreadCount>
+                        <mockserver.webSocketClientEventLoopThreadCount>5
+                        </mockserver.webSocketClientEventLoopThreadCount>
                     </systemProperties>
                     <argLine>-Duser.language=en -Duser.country=GB</argLine>
                     <disableXmlReport>true</disableXmlReport>

@@ -11,7 +11,7 @@ public class LogEventBodyDTO extends BodyWithContentTypeDTO {
     private final Object value;
 
     public LogEventBodyDTO(LogEventBody logEventBody) {
-        super(Body.Type.STRING, false, null);
+        super(Body.Type.STRING, null, null);
         value = logEventBody.getValue();
     }
 

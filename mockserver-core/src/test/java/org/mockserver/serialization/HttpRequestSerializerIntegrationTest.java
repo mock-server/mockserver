@@ -2,9 +2,7 @@ package org.mockserver.serialization;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.text.StringEscapeUtils;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.mockserver.serialization.model.*;
@@ -13,7 +11,10 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Base64;
 
+import static com.jayway.jsonpath.internal.path.PathCompiler.fail;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.file.FileReader.openStreamToFileFromClassPathOrPath;
@@ -31,14 +32,12 @@ import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.XPathBody.xpath;
 import static org.mockserver.model.XmlBody.xml;
 import static org.mockserver.model.XmlSchemaBody.xmlSchema;
+import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 
 /**
  * @author jamesdbloom
  */
 public class HttpRequestSerializerIntegrationTest {
-
-    @Rule
-    public final ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void shouldValidateHeaderValueIsList() {
@@ -50,18 +49,17 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // then
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("1 error:" + NEW_LINE +
+        throwCorrectError(requestBytes, "4 errors:" + NEW_LINE +
             " - for field \"/headers\" only one of the following example formats is allowed: " + NEW_LINE +
             NEW_LINE +
-            "    \"/headers\" : {" + NEW_LINE +
+            "    {" + NEW_LINE +
             "        \"exampleHeaderName\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
             "        \"exampleMultiValuedHeaderName\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
             "    }" + NEW_LINE +
             NEW_LINE +
             "   or:" + NEW_LINE +
             NEW_LINE +
-            "    \"/headers\" : [" + NEW_LINE +
+            "    [" + NEW_LINE +
             "        {" + NEW_LINE +
             "            \"name\" : \"exampleHeaderName\"," + NEW_LINE +
             "            \"values\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
@@ -70,10 +68,12 @@ public class HttpRequestSerializerIntegrationTest {
             "            \"name\" : \"exampleMultiValuedHeaderName\"," + NEW_LINE +
             "            \"values\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
             "        }" + NEW_LINE +
-            "    ]");
-
-        // when
-        new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
+            "    ]" + NEW_LINE +
+            " - instance type (object) does not match any allowed primitive type (allowed: [\"array\"]) for schema \"keyToMultiValue/oneOf/0\" for field \"/headers\"" + NEW_LINE +
+            " - instance type (string) does not match any allowed primitive type (allowed: [\"array\"]) for schema \"keyToMultiValue/oneOf/1\" for field \"/headers/someHeaderName\"" + NEW_LINE +
+            " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/headers\"" + NEW_LINE +
+            NEW_LINE +
+            OPEN_API_SPECIFICATION_URL);
     }
 
     @Test
@@ -86,18 +86,17 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // then
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("1 error:" + NEW_LINE +
+        throwCorrectError(requestBytes, "3 errors:" + NEW_LINE +
             " - for field \"/headers\" only one of the following example formats is allowed: " + NEW_LINE +
             NEW_LINE +
-            "    \"/headers\" : {" + NEW_LINE +
+            "    {" + NEW_LINE +
             "        \"exampleHeaderName\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
             "        \"exampleMultiValuedHeaderName\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
             "    }" + NEW_LINE +
             NEW_LINE +
             "   or:" + NEW_LINE +
             NEW_LINE +
-            "    \"/headers\" : [" + NEW_LINE +
+            "    [" + NEW_LINE +
             "        {" + NEW_LINE +
             "            \"name\" : \"exampleHeaderName\"," + NEW_LINE +
             "            \"values\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
@@ -106,10 +105,11 @@ public class HttpRequestSerializerIntegrationTest {
             "            \"name\" : \"exampleMultiValuedHeaderName\"," + NEW_LINE +
             "            \"values\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
             "        }" + NEW_LINE +
-            "    ]");
-
-        // when
-        new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
+            "    ]" + NEW_LINE +
+            " - instance type (object) does not match any allowed primitive type (allowed: [\"array\"]) for schema \"keyToMultiValue/oneOf/0\" for field \"/headers\"" + NEW_LINE +
+            " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/headers\"" + NEW_LINE +
+            NEW_LINE +
+            OPEN_API_SPECIFICATION_URL);
     }
 
     @Test
@@ -122,18 +122,17 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // then
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("1 error:" + NEW_LINE +
+        throwCorrectError(requestBytes, "4 errors:" + NEW_LINE +
             " - for field \"/queryStringParameters\" only one of the following example formats is allowed: " + NEW_LINE +
             NEW_LINE +
-            "    \"/queryStringParameters\" : {" + NEW_LINE +
+            "    {" + NEW_LINE +
             "        \"exampleParameterName\" : [ \"exampleParameterValue\" ]" + NEW_LINE +
             "        \"exampleMultiValuedParameterName\" : [ \"exampleParameterValueOne\", \"exampleParameterValueTwo\" ]" + NEW_LINE +
             "    }" + NEW_LINE +
             NEW_LINE +
             "   or:" + NEW_LINE +
             NEW_LINE +
-            "    \"/queryStringParameters\" : [" + NEW_LINE +
+            "    [" + NEW_LINE +
             "        {" + NEW_LINE +
             "            \"name\" : \"exampleParameterName\"," + NEW_LINE +
             "            \"values\" : [ \"exampleParameterValue\" ]" + NEW_LINE +
@@ -142,10 +141,12 @@ public class HttpRequestSerializerIntegrationTest {
             "            \"name\" : \"exampleMultiValuedParameterName\"," + NEW_LINE +
             "            \"values\" : [ \"exampleParameterValueOne\", \"exampleParameterValueTwo\" ]" + NEW_LINE +
             "        }" + NEW_LINE +
-            "    ]");
-
-        // when
-        new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
+            "    ]" + NEW_LINE +
+            " - instance type (object) does not match any allowed primitive type (allowed: [\"array\"]) for schema \"keyToMultiValue/oneOf/0\" for field \"/queryStringParameters\"" + NEW_LINE +
+            " - instance type (string) does not match any allowed primitive type (allowed: [\"array\"]) for schema \"keyToMultiValue/oneOf/1\" for field \"/queryStringParameters/someParameterName\"" + NEW_LINE +
+            " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/queryStringParameters\"" + NEW_LINE +
+            NEW_LINE +
+            OPEN_API_SPECIFICATION_URL);
     }
 
     @Test
@@ -158,18 +159,17 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // then
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("1 error:" + NEW_LINE +
+        throwCorrectError(requestBytes, "3 errors:" + NEW_LINE +
             " - for field \"/queryStringParameters\" only one of the following example formats is allowed: " + NEW_LINE +
             NEW_LINE +
-            "    \"/queryStringParameters\" : {" + NEW_LINE +
+            "    {" + NEW_LINE +
             "        \"exampleParameterName\" : [ \"exampleParameterValue\" ]" + NEW_LINE +
             "        \"exampleMultiValuedParameterName\" : [ \"exampleParameterValueOne\", \"exampleParameterValueTwo\" ]" + NEW_LINE +
             "    }" + NEW_LINE +
             NEW_LINE +
             "   or:" + NEW_LINE +
             NEW_LINE +
-            "    \"/queryStringParameters\" : [" + NEW_LINE +
+            "    [" + NEW_LINE +
             "        {" + NEW_LINE +
             "            \"name\" : \"exampleParameterName\"," + NEW_LINE +
             "            \"values\" : [ \"exampleParameterValue\" ]" + NEW_LINE +
@@ -178,10 +178,11 @@ public class HttpRequestSerializerIntegrationTest {
             "            \"name\" : \"exampleMultiValuedParameterName\"," + NEW_LINE +
             "            \"values\" : [ \"exampleParameterValueOne\", \"exampleParameterValueTwo\" ]" + NEW_LINE +
             "        }" + NEW_LINE +
-            "    ]");
-
-        // when
-        new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
+            "    ]" + NEW_LINE +
+            " - instance type (object) does not match any allowed primitive type (allowed: [\"array\"]) for schema \"keyToMultiValue/oneOf/0\" for field \"/queryStringParameters\"" + NEW_LINE +
+            " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/queryStringParameters\"" + NEW_LINE +
+            NEW_LINE +
+            OPEN_API_SPECIFICATION_URL);
     }
 
     @Test
@@ -194,18 +195,17 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // then
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("1 error:" + NEW_LINE +
+        throwCorrectError(requestBytes, "3 errors:" + NEW_LINE +
             " - for field \"/cookies\" only one of the following example formats is allowed: " + NEW_LINE +
             NEW_LINE +
-            "    \"/cookies\" : {" + NEW_LINE +
+            "    {" + NEW_LINE +
             "        \"exampleCookieNameOne\" : \"exampleCookieValueOne\"" + NEW_LINE +
             "        \"exampleCookieNameTwo\" : \"exampleCookieValueTwo\"" + NEW_LINE +
             "    }" + NEW_LINE +
             NEW_LINE +
             "   or:" + NEW_LINE +
             NEW_LINE +
-            "    \"/cookies\" : [" + NEW_LINE +
+            "    [" + NEW_LINE +
             "        {" + NEW_LINE +
             "            \"name\" : \"exampleCookieNameOne\"," + NEW_LINE +
             "            \"values\" : \"exampleCookieValueOne\"" + NEW_LINE +
@@ -214,10 +214,11 @@ public class HttpRequestSerializerIntegrationTest {
             "            \"name\" : \"exampleCookieNameTwo\"," + NEW_LINE +
             "            \"values\" : \"exampleCookieValueTwo\"" + NEW_LINE +
             "        }" + NEW_LINE +
-            "    ]");
-
-        // when
-        new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
+            "    ]" + NEW_LINE +
+            " - instance type (object) does not match any allowed primitive type (allowed: [\"array\"]) for schema \"keyToValue/oneOf/0\" for field \"/cookies\"" + NEW_LINE +
+            " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/cookies\"" + NEW_LINE +
+            NEW_LINE +
+            OPEN_API_SPECIFICATION_URL);
     }
 
     @Test
@@ -229,12 +230,11 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // then
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("1 error:" + NEW_LINE +
-            " - object instance has properties which are not allowed by the schema: [\"extra_field\"]");
-
-        // when
-        new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
+        throwCorrectError(requestBytes, "1 error:" + NEW_LINE +
+            " - object instance has properties which are not allowed by the schema: [\"extra_field\"]"
+            + NEW_LINE
+            + NEW_LINE
+            + OPEN_API_SPECIFICATION_URL);
     }
 
     @Test
@@ -530,7 +530,7 @@ public class HttpRequestSerializerIntegrationTest {
 
         // then
         assertEquals(new HttpRequestDTO()
-            .setBody(BodyWithContentTypeDTO.createDTO(binary(IOUtils.toByteArray(openStreamToFileFromClassPathOrPath("org/mockserver/serialization/forkme_right_red.png")))))
+            .setBody(BodyWithContentTypeDTO.createWithContentTypeDTO(binary(IOUtils.toByteArray(openStreamToFileFromClassPathOrPath("org/mockserver/serialization/forkme_right_red.png")))))
             .buildObject(), httpRequest);
     }
 
@@ -895,7 +895,7 @@ public class HttpRequestSerializerIntegrationTest {
         // when
         String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
             new HttpRequestDTO()
-                .setBody(BodyWithContentTypeDTO.createDTO(binary(IOUtils.toByteArray(openStreamToFileFromClassPathOrPath("org/mockserver/serialization/forkme_right_red.png")))))
+                .setBody(BodyWithContentTypeDTO.createWithContentTypeDTO(binary(IOUtils.toByteArray(openStreamToFileFromClassPathOrPath("org/mockserver/serialization/forkme_right_red.png")))))
                 .buildObject()
         );
 
@@ -920,5 +920,17 @@ public class HttpRequestSerializerIntegrationTest {
         assertEquals("{" + NEW_LINE +
             "  \"path\" : \"somePath\"" + NEW_LINE +
             "}", jsonHttpRequest);
+    }
+
+    private void throwCorrectError(String requestBytes, String errorMessage) {
+        try {
+            // when
+            new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
+
+            // then
+            fail("expected exception");
+        } catch (IllegalArgumentException iae) {
+            assertThat(iae.getMessage(), is(errorMessage));
+        }
     }
 }

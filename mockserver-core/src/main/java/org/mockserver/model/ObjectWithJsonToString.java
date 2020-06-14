@@ -13,8 +13,7 @@ public abstract class ObjectWithJsonToString extends ObjectWithReflectiveEqualsH
     public String toString() {
         try {
             String valueAsString = ObjectMapperFactory
-                .createObjectMapper()
-                .writerWithDefaultPrettyPrinter()
+                .createObjectMapper(true)
                 .writeValueAsString(this);
             if (valueAsString.startsWith(ESCAPED_QUOTE) && valueAsString.endsWith(ESCAPED_QUOTE)) {
                 valueAsString = valueAsString.substring(1, valueAsString.length() - 1);

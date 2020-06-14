@@ -25,6 +25,7 @@ import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_S
  */
 public class HttpRequestAndHttpResponseSerializer implements Serializer<HttpRequestAndHttpResponse> {
     private final MockServerLogger mockServerLogger;
+    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
     private JsonSchemaHttpRequestAndHttpResponseValidator jsonSchemaHttpRequestAndHttpResponseValidator;
@@ -36,9 +37,7 @@ public class HttpRequestAndHttpResponseSerializer implements Serializer<HttpRequ
 
     public String serialize(HttpRequestAndHttpResponse httpRequestAndHttpResponse) {
         try {
-            return objectMapper
-                .writerWithDefaultPrettyPrinter()
-                .writeValueAsString(new HttpRequestAndHttpResponseDTO(httpRequestAndHttpResponse));
+            return objectWriter.writeValueAsString(new HttpRequestAndHttpResponseDTO(httpRequestAndHttpResponse));
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -61,9 +60,7 @@ public class HttpRequestAndHttpResponseSerializer implements Serializer<HttpRequ
                 for (int i = 0; i < httpRequests.length; i++) {
                     httpRequestDTOs[i] = new HttpRequestAndHttpResponseDTO(httpRequests[i]);
                 }
-                return objectMapper
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(httpRequestDTOs);
+                return objectWriter.writeValueAsString(httpRequestDTOs);
             } else {
                 return "[]";
             }

@@ -3,7 +3,6 @@ package org.mockserver.examples.proxy.web.configuration;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.cache.MultiTemplateLoader;
 import freemarker.cache.TemplateLoader;
-import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 import org.mockserver.model.MediaType;
 import org.springframework.context.annotation.Bean;
@@ -16,8 +15,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfig;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver;
-
-import java.io.IOException;
 
 /**
  * @author jamesdbloom
@@ -37,9 +34,9 @@ public class WebMvcConfiguration extends WebMvcConfigurerAdapter {
         FreeMarkerConfigurer freeMarkerConfigurer = new FreeMarkerConfigurer();
         freeMarkerConfigurer.setConfiguration(new freemarker.template.Configuration(freemarker.template.Configuration.VERSION_2_3_22) {{
             setTemplateLoader(new MultiTemplateLoader(
-                    new TemplateLoader[]{
-                            new ClassTemplateLoader(FreeMarkerConfig.class, "/")
-                    }
+                new TemplateLoader[]{
+                    new ClassTemplateLoader(FreeMarkerConfig.class, "/")
+                }
             ));
             setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
             setWhitespaceStripping(true);

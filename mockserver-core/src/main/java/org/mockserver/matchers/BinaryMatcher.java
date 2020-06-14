@@ -1,16 +1,10 @@
 package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.netty.buffer.ByteBuf;
-import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.BinaryArrayFormatter;
 import org.mockserver.logging.MockServerLogger;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-
-import static org.mockserver.character.Character.NEW_LINE;
-import static org.slf4j.event.Level.DEBUG;
 
 /**
  * @author jamesdbloom
@@ -33,13 +27,7 @@ public class BinaryMatcher extends BodyMatcher<byte[]> {
         }
 
         if (!result && context != null) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(DEBUG)
-                    .setMatchDifference(context)
-                    .setMessageFormat("binary match failed expected:{}found:{}")
-                    .setArguments(BinaryArrayFormatter.byteArrayToString(this.matcher), BinaryArrayFormatter.byteArrayToString(matched))
-            );
+            context.addDifference(mockServerLogger, "binary match failed expected:{}found:{}", BinaryArrayFormatter.byteArrayToString(this.matcher), BinaryArrayFormatter.byteArrayToString(matched));
         }
 
         return not != result;

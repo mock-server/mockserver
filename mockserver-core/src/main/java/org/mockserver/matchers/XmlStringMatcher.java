@@ -12,7 +12,6 @@ import org.xmlunit.diff.Diff;
 import org.xmlunit.placeholder.PlaceholderDifferenceEvaluator;
 
 import static org.mockserver.model.NottableString.string;
-import static org.slf4j.event.Level.DEBUG;
 
 /**
  * @author jamesdbloom
@@ -59,24 +58,12 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
                 result = !diff.hasDifferences();
 
                 if (!result && context != null) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setLogLevel(DEBUG)
-                            .setMatchDifference(context)
-                            .setMessageFormat("xml match failed expected:{}found:{}failed because:{}")
-                            .setArguments(this.matcher, matched, diff.toString())
-                    );
+                    context.addDifference(mockServerLogger, "xml match failed expected:{}found:{}failed because:{}", this.matcher, matched, diff.toString());
                 }
 
-            } catch (Exception e) {
+            } catch (Throwable throwable) {
                 if (context != null) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setLogLevel(DEBUG)
-                            .setMatchDifference(context)
-                            .setMessageFormat("xml match failed expected:{}found:{}failed because:{}")
-                            .setArguments(this.matcher, matched, e.getMessage())
-                    );
+                    context.addDifference(mockServerLogger, throwable, "xml match failed expected:{}found:{}failed because:{}", this.matcher, matched, throwable.getMessage());
                 }
             }
         }

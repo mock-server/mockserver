@@ -18,8 +18,7 @@ public class VerificationTimesDTOSerializerTest {
     @Test
     public void shouldSerializeBetween() throws JsonProcessingException {
         assertThat(ObjectMapperFactory
-                .createObjectMapper()
-                .writerWithDefaultPrettyPrinter()
+                .createObjectMapper(true)
                 .writeValueAsString(
                     new VerificationTimesDTO(
                         between(1, 2)
@@ -34,8 +33,7 @@ public class VerificationTimesDTOSerializerTest {
     @Test
     public void shouldSerializeOnce() throws JsonProcessingException {
         assertThat(ObjectMapperFactory
-                .createObjectMapper()
-                .writerWithDefaultPrettyPrinter()
+                .createObjectMapper(true)
                 .writeValueAsString(
                     new VerificationTimesDTO(
                         once()
@@ -50,8 +48,7 @@ public class VerificationTimesDTOSerializerTest {
     @Test
     public void shouldSerializeExact() throws JsonProcessingException {
         assertThat(ObjectMapperFactory
-                .createObjectMapper()
-                .writerWithDefaultPrettyPrinter()
+                .createObjectMapper(true)
                 .writeValueAsString(
                     new VerificationTimesDTO(
                         exactly(2)
@@ -66,8 +63,7 @@ public class VerificationTimesDTOSerializerTest {
     @Test
     public void shouldSerializeAtLeast() throws JsonProcessingException {
         assertThat(ObjectMapperFactory
-                .createObjectMapper()
-                .writerWithDefaultPrettyPrinter()
+                .createObjectMapper(true)
                 .writeValueAsString(
                     new VerificationTimesDTO(
                         atLeast(2)
@@ -81,8 +77,7 @@ public class VerificationTimesDTOSerializerTest {
     @Test
     public void shouldSerializeAtMost() throws JsonProcessingException {
         assertThat(ObjectMapperFactory
-                .createObjectMapper()
-                .writerWithDefaultPrettyPrinter()
+                .createObjectMapper(true)
                 .writeValueAsString(
                     new VerificationTimesDTO(
                         atMost(2)

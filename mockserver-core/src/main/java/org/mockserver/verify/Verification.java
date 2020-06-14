@@ -1,7 +1,7 @@
 package org.mockserver.verify;
 
-import org.mockserver.model.HttpRequest;
 import org.mockserver.model.ObjectWithJsonToString;
+import org.mockserver.model.RequestDefinition;
 
 import static org.mockserver.model.HttpRequest.request;
 
@@ -9,19 +9,19 @@ import static org.mockserver.model.HttpRequest.request;
  * @author jamesdbloom
  */
 public class Verification extends ObjectWithJsonToString {
-    private HttpRequest httpRequest = request();
+    private RequestDefinition httpRequest = request();
     private VerificationTimes times = VerificationTimes.atLeast(1);
 
     public static Verification verification() {
         return new Verification();
     }
 
-    public Verification withRequest(HttpRequest httpRequest) {
-        this.httpRequest = httpRequest;
+    public Verification withRequest(RequestDefinition requestDefinition) {
+        this.httpRequest = requestDefinition;
         return this;
     }
 
-    public HttpRequest getHttpRequest() {
+    public RequestDefinition getHttpRequest() {
         return httpRequest;
     }
 

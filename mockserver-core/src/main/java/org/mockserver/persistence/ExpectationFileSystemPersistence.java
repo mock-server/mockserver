@@ -1,6 +1,6 @@
 package org.mockserver.persistence;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -29,7 +29,7 @@ import static org.slf4j.event.Level.*;
 
 public class ExpectationFileSystemPersistence implements MockServerMatcherListener {
 
-    private final ObjectMapper objectMapper;
+    private final ObjectWriter objectWriter;
     private final MockServerLogger mockServerLogger;
     private final Path filePath;
     private final boolean initializationPathMatchesPersistencePath;
@@ -40,7 +40,7 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
         if (ConfigurationProperties.persistExpectations()) {
             this.mockServerLogger = mockServerLogger;
             this.requestMatchers = requestMatchers;
-            this.objectMapper = createObjectMapper(new TimeToLiveSerializer());
+            this.objectWriter = createObjectMapper(true, new TimeToLiveSerializer());
             this.filePath = Paths.get(ConfigurationProperties.persistedExpectationsPath());
             try {
                 Files.createFile(filePath);
@@ -66,7 +66,7 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
         } else {
             this.mockServerLogger = null;
             this.requestMatchers = null;
-            this.objectMapper = null;
+            this.objectWriter = null;
             this.filePath = null;
             this.initializationPathMatchesPersistencePath = true;
         }
@@ -131,9 +131,7 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
     public String serialize(Expectation... expectations) {
         try {
             if (expectations != null && expectations.length > 0) {
-                return objectMapper
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(expectations);
+                return objectWriter.writeValueAsString(expectations);
             } else {
                 return "[]";
             }

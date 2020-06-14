@@ -14,7 +14,7 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
     private static final String[] excludedFields = {"id"};
     private String id;
     private Integer priority;
-    private HttpRequestDTO httpRequest;
+    private RequestDefinitionDTO httpRequest;
     private HttpResponseDTO httpResponse;
     private HttpTemplateDTO httpResponseTemplate;
     private HttpClassCallbackDTO httpResponseClassCallback;
@@ -35,9 +35,11 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
             if (priority != null) {
                 this.priority = expectation.getPriority();
             }
-            HttpRequest httpRequest = expectation.getHttpRequest();
-            if (httpRequest != null) {
-                this.httpRequest = new HttpRequestDTO(httpRequest, httpRequest.getNot());
+            RequestDefinition requestMatcher = expectation.getHttpRequest();
+            if (requestMatcher instanceof HttpRequest) {
+                this.httpRequest = new HttpRequestDTO((HttpRequest) requestMatcher);
+            } else if (requestMatcher instanceof OpenAPIDefinition) {
+                this.httpRequest = new OpenAPIDefinitionDTO((OpenAPIDefinition) requestMatcher);
             }
             HttpResponse httpResponse = expectation.getHttpResponse();
             if (httpResponse != null) {
@@ -94,7 +96,7 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
     }
 
     public Expectation buildObject() {
-        HttpRequest httpRequest = null;
+        RequestDefinition httpRequest = null;
         HttpResponse httpResponse = null;
         HttpTemplate httpResponseTemplate = null;
         HttpClassCallback httpResponseClassCallback = null;
@@ -188,11 +190,11 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
         return this;
     }
 
-    public HttpRequestDTO getHttpRequest() {
+    public RequestDefinitionDTO getHttpRequest() {
         return httpRequest;
     }
 
-    public ExpectationDTO setHttpRequest(HttpRequestDTO httpRequest) {
+    public ExpectationDTO setHttpRequest(RequestDefinitionDTO httpRequest) {
         this.httpRequest = httpRequest;
         return this;
     }

@@ -1,0 +1,26 @@
+{
+  "title": "open api or swagger request matcher",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "specUrlOrPayload": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object"
+        }
+      ]
+    },
+    "operationsAndResponses": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "specUrlOrPayload"
+  ]
+}

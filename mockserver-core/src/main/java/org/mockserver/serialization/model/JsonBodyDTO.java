@@ -14,7 +14,7 @@ public class JsonBodyDTO extends BodyWithContentTypeDTO {
     private final byte[] rawBytes;
 
     public JsonBodyDTO(JsonBody jsonBody) {
-        this(jsonBody, false);
+        this(jsonBody, null);
     }
 
     public JsonBodyDTO(JsonBody jsonBody, Boolean not) {

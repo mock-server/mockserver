@@ -1,6 +1,7 @@
 package org.mockserver.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.serialization.model.VerificationDTO;
@@ -19,6 +20,7 @@ import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_S
  */
 public class VerificationSerializer implements Serializer<Verification> {
     private final MockServerLogger mockServerLogger;
+    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private JsonSchemaVerificationValidator verificationValidator;
 
@@ -29,9 +31,7 @@ public class VerificationSerializer implements Serializer<Verification> {
 
     public String serialize(Verification verification) {
         try {
-            return objectMapper
-                .writerWithDefaultPrettyPrinter()
-                .writeValueAsString(new VerificationDTO(verification));
+            return objectWriter.writeValueAsString(new VerificationDTO(verification));
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()

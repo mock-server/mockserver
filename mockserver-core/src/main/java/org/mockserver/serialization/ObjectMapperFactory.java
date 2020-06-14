@@ -11,6 +11,8 @@ import org.mockserver.serialization.deserializers.collections.HeadersDeserialize
 import org.mockserver.serialization.deserializers.collections.ParametersDeserializer;
 import org.mockserver.serialization.deserializers.condition.TimeToLiveDTODeserializer;
 import org.mockserver.serialization.deserializers.condition.VerificationTimesDTODeserializer;
+import org.mockserver.serialization.deserializers.expectation.OpenAPIExpectationDTODeserializer;
+import org.mockserver.serialization.deserializers.request.RequestDefinitionDTODeserializer;
 import org.mockserver.serialization.deserializers.string.NottableStringDeserializer;
 import org.mockserver.serialization.serializers.body.*;
 import org.mockserver.serialization.serializers.collections.CookiesSerializer;
@@ -18,7 +20,11 @@ import org.mockserver.serialization.serializers.collections.HeadersSerializer;
 import org.mockserver.serialization.serializers.collections.ParametersSerializer;
 import org.mockserver.serialization.serializers.condition.VerificationTimesDTOSerializer;
 import org.mockserver.serialization.serializers.condition.VerificationTimesSerializer;
+import org.mockserver.serialization.serializers.expectation.OpenAPIExpectationDTOSerializer;
+import org.mockserver.serialization.serializers.expectation.OpenAPIExpectationSerializer;
 import org.mockserver.serialization.serializers.request.HttpRequestDTOSerializer;
+import org.mockserver.serialization.serializers.request.OpenAPIDefinitionDTOSerializer;
+import org.mockserver.serialization.serializers.request.OpenAPIDefinitionSerializer;
 import org.mockserver.serialization.serializers.response.HttpResponseSerializer;
 import org.mockserver.serialization.serializers.response.*;
 import org.mockserver.serialization.serializers.string.NottableStringSerializer;
@@ -37,6 +43,8 @@ import static org.mockserver.exception.ExceptionHandling.swallowThrowable;
 public class ObjectMapperFactory {
 
     private static ObjectMapper objectMapper = buildObjectMapper();
+    private static ObjectWriter prettyPrintWriter = buildObjectMapper().writerWithDefaultPrettyPrinter();
+    private static ObjectWriter writer = buildObjectMapper().writer();
 
     public static ObjectMapper createObjectMapper(JsonSerializer... additionJsonSerializers) {
         if (additionJsonSerializers == null || additionJsonSerializers.length == 0) {
@@ -46,6 +54,22 @@ public class ObjectMapperFactory {
             return objectMapper;
         } else {
             return buildObjectMapper(additionJsonSerializers);
+        }
+    }
+
+    public static ObjectWriter createObjectMapper(boolean pretty, JsonSerializer... additionJsonSerializers) {
+        if (additionJsonSerializers == null || additionJsonSerializers.length == 0) {
+            if (pretty) {
+                return prettyPrintWriter;
+            } else {
+                return writer;
+            }
+        } else {
+            if (pretty) {
+                return buildObjectMapper(additionJsonSerializers).writerWithDefaultPrettyPrinter();
+            } else {
+                return buildObjectMapper(additionJsonSerializers).writer();
+            }
         }
     }
 
@@ -94,6 +118,10 @@ public class ObjectMapperFactory {
 
     private static void addDeserializers(SimpleModule module) {
         List<JsonDeserializer> jsonDeserializers = Arrays.asList(
+            // expectation
+            new OpenAPIExpectationDTODeserializer(),
+            // request
+            new RequestDefinitionDTODeserializer(),
             // times
             new TimeToLiveDTODeserializer(),
             // request body
@@ -116,13 +144,19 @@ public class ObjectMapperFactory {
 
     private static void addSerializers(SimpleModule module, JsonSerializer[] additionJsonSerializers) {
         List<JsonSerializer> jsonSerializers = Arrays.asList(
+            // expectation
+            new OpenAPIExpectationSerializer(),
+            new OpenAPIExpectationDTOSerializer(),
             // times
             new TimesSerializer(),
             new TimesDTOSerializer(),
+            new TimeToLiveSerializer(),
             new TimeToLiveDTOSerializer(),
             // request
             new org.mockserver.serialization.serializers.request.HttpRequestSerializer(),
             new HttpRequestDTOSerializer(),
+            new OpenAPIDefinitionSerializer(),
+            new OpenAPIDefinitionDTOSerializer(),
             // request body
             new BinaryBodySerializer(),
             new BinaryBodyDTOSerializer(),

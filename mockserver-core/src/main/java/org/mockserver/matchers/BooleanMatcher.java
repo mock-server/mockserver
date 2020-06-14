@@ -1,11 +1,8 @@
 package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
-
-import static org.slf4j.event.Level.DEBUG;
 
 /**
  * @author jamesdbloom
@@ -31,13 +28,7 @@ public class BooleanMatcher extends ObjectWithReflectiveEqualsHashCodeToString i
         }
 
         if (!result && context != null) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(DEBUG)
-                    .setMatchDifference(context)
-                    .setMessageFormat("boolean match failed expected:{}found:{}")
-                    .setArguments(this.matcher, matched)
-            );
+            context.addDifference(mockServerLogger, "boolean match failed expected:{}found:{}", this.matcher, matched);
         }
 
         return result;

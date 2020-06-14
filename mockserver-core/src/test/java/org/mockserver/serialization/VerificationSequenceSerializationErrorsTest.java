@@ -31,8 +31,6 @@ public class VerificationSequenceSerializationErrorsTest {
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
     @Mock
-    private ObjectMapper objectMapper;
-    @Mock
     private ObjectWriter objectWriter;
     @InjectMocks
     private VerificationSequenceSerializer verificationSequenceSerializer;
@@ -51,7 +49,6 @@ public class VerificationSequenceSerializationErrorsTest {
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("Exception while serializing verificationSequence to JSON with value { }");
         // and
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
         when(objectWriter.writeValueAsString(any(VerificationSequenceDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
         // when

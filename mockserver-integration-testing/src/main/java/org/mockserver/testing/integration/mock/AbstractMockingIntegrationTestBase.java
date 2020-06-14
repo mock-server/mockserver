@@ -13,7 +13,7 @@ import org.mockserver.client.NettyHttpClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.matchers.HttpRequestMatcher;
+import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.model.*;
 import org.mockserver.scheduler.Scheduler;
 
@@ -121,6 +121,7 @@ public abstract class AbstractMockingIntegrationTestBase {
         clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
     }
 
+    @SuppressWarnings("DuplicatedCode")
     String addContextToPath(String path) {
         String cleanedPath = path;
         if (isNotBlank(servletContext)) {
@@ -133,13 +134,13 @@ public abstract class AbstractMockingIntegrationTestBase {
         return (!cleanedPath.startsWith("/") ? "/" : "") + cleanedPath;
     }
 
-    protected void verifyRequestsMatches(HttpRequest[] httpRequests, HttpRequest... httpRequestMatchers) {
-        if (httpRequests.length != httpRequestMatchers.length) {
-            throw new AssertionError("Number of request matchers does not match number of requests, expected:<" + httpRequestMatchers.length + "> but was:<" + httpRequests.length + ">");
+    protected void verifyRequestsMatches(RequestDefinition[] requestDefinitions, HttpRequest... httpRequestMatchers) {
+        if (requestDefinitions.length != httpRequestMatchers.length) {
+            throw new AssertionError("Number of request matchers does not match number of requests, expected:<" + httpRequestMatchers.length + "> but was:<" + requestDefinitions.length + ">");
         } else {
             for (int i = 0; i < httpRequestMatchers.length; i++) {
-                if (!new HttpRequestMatcher(MOCK_SERVER_LOGGER, httpRequestMatchers[i]).matches(null, httpRequests[i])) {
-                    throw new AssertionError("Request does not match request matcher, expected <" + httpRequestMatchers[i] + "> but was:<" + httpRequests[i] + ">, full list requests is: " + Arrays.toString(httpRequestMatchers));
+                if (!new MatcherBuilder(MOCK_SERVER_LOGGER).transformsToMatcher(httpRequestMatchers[i]).matches(null, requestDefinitions[i])) {
+                    throw new AssertionError("Request does not match request matcher, expected <" + httpRequestMatchers[i] + "> but was:<" + requestDefinitions[i] + ">, full list requests is: " + Arrays.toString(httpRequestMatchers));
                 }
             }
         }

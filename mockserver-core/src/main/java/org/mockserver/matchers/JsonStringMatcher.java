@@ -11,7 +11,6 @@ import net.javacrumbs.jsonunit.core.internal.Options;
 import net.javacrumbs.jsonunit.core.listener.DifferenceContext;
 import net.javacrumbs.jsonunit.core.listener.DifferenceListener;
 import org.apache.commons.lang3.StringUtils;
-import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.serialization.ObjectMapperFactory;
 
@@ -19,16 +18,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static net.javacrumbs.jsonunit.core.Option.*;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.slf4j.event.Level.DEBUG;
 
 /**
  * @author jamesdbloom
  */
 public class JsonStringMatcher extends BodyMatcher<String> {
     private static final String[] EXCLUDED_FIELDS = {"mockServerLogger"};
-    private static final ObjectWriter PRETTY_PRINTER = ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter();
+    private static final ObjectWriter PRETTY_PRINTER = ObjectMapperFactory.createObjectMapper(true);
     private final MockServerLogger mockServerLogger;
     private final String matcher;
     private JsonNode matcherJsonNode;
@@ -78,49 +75,23 @@ public class JsonStringMatcher extends BodyMatcher<String> {
                         .similar();
                 } catch (Throwable throwable) {
                     if (context != null) {
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setLogLevel(DEBUG)
-                                .setMatchDifference(context)
-                                .setMessageFormat("exception while perform json  match failed expected:{}found:{}")
-                                .setArguments(this.matcher, matched)
-                                .setThrowable(throwable)
-                        );
+                        context.addDifference(mockServerLogger, throwable, "exception while perform json  match failed expected:{}found:{}", this.matcher, matched);
                     }
                 }
 
                 if (!result) {
                     if (context != null) {
                         if (diffListener.differences.isEmpty()) {
-                            mockServerLogger.logEvent(
-                                new LogEntry()
-                                    .setLogLevel(DEBUG)
-                                    .setMatchDifference(context)
-                                    .setMessageFormat("json match failed expected:{}found:{}")
-                                    .setArguments(this.matcher, matched)
-                            );
+                            context.addDifference(mockServerLogger, "json match failed expected:{}found:{}", this.matcher, matched);
                         } else {
-                            mockServerLogger.logEvent(
-                                new LogEntry()
-                                    .setLogLevel(DEBUG)
-                                    .setMatchDifference(context)
-                                    .setMessageFormat("json match failed expected:{}found:{}failed because:{}")
-                                    .setArguments(this.matcher, matched, Joiner.on("," + NEW_LINE).join(diffListener.differences))
-                            );
+                            context.addDifference(mockServerLogger, "json match failed expected:{}found:{}failed because:{}", this.matcher, matched, Joiner.on("," + NEW_LINE).join(diffListener.differences));
                         }
                     }
                 }
             }
-        } catch (Exception e) {
+        } catch (Throwable throwable) {
             if (context != null) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(DEBUG)
-                        .setMatchDifference(context)
-                        .setMessageFormat("json match failed expected:{}found:{}failed because:{}")
-                        .setArguments(this.matcher, matched, e.getMessage())
-                        .setThrowable(e)
-                );
+                context.addDifference(mockServerLogger, throwable, "json match failed expected:{}found:{}failed because:{}", this.matcher, matched, throwable.getMessage());
             }
         }
 

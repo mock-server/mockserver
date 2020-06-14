@@ -2,11 +2,8 @@ package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
-import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.validator.jsonschema.JsonSchemaValidator;
-
-import static org.slf4j.event.Level.DEBUG;
 
 /**
  * See http://json-schema.org/
@@ -34,23 +31,11 @@ public class JsonSchemaMatcher extends BodyMatcher<String> {
             result = validation.isEmpty();
 
             if (!result && context != null) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(DEBUG)
-                        .setMatchDifference(context)
-                        .setMessageFormat("json schema match failed expected:{}found:{}failed because:{}")
-                        .setArguments(this.matcher, matched, validation)
-                );
+                context.addDifference(mockServerLogger, "json schema match failed expected:{}found:{}failed because:{}", this.matcher, matched, validation);
             }
-        } catch (Exception e) {
+        } catch (Throwable throwable) {
             if (context != null) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(DEBUG)
-                        .setMatchDifference(context)
-                        .setMessageFormat("json schema match failed expected:{}found:{}failed because:{}")
-                        .setArguments(this.matcher, matched, e.getMessage())
-                );
+                context.addDifference(mockServerLogger, throwable, "json schema match failed expected:{}found:{}failed because:{}", this.matcher, matched, throwable.getMessage());
             }
         }
 

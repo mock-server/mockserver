@@ -1,24 +1,20 @@
 package org.mockserver.mock;
 
-import com.google.common.base.Joiner;
-import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.parser.OpenAPIV3Parser;
-import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.formatting.StringFormatter;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.memory.MemoryMonitoring;
 import org.mockserver.model.*;
+import org.mockserver.openapi.OpenAPIConverter;
 import org.mockserver.persistence.ExpectationFileSystemPersistence;
 import org.mockserver.persistence.ExpectationFileWatcher;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.*;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
-import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.server.initialize.ExpectationInitializerLoader;
 import org.mockserver.ui.MockServerMatcherNotifier.Cause;
 import org.mockserver.verify.Verification;
@@ -46,9 +42,9 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.addSubjectAlternativeName;
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
+import static org.mockserver.matchers.OpenAPIMatcher.OPEN_API_LOAD_ERROR;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
-import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -68,15 +64,17 @@ public class HttpStateHandler {
     private WebSocketClientRegistry webSocketClientRegistry;
     // serializers
     private HttpRequestSerializer httpRequestSerializer;
+    private RequestDefinitionSerializer requestDefinitionSerializer;
     private LogEventRequestAndResponseSerializer httpRequestResponseSerializer;
     private ExpectationSerializer expectationSerializer;
-    private HttpRequestToJavaSerializer httpRequestToJavaSerializer;
+    private OpenAPIExpectationSerializer openAPIExpectationSerializer;
     private ExpectationToJavaSerializer expectationToJavaSerializer;
     private VerificationSerializer verificationSerializer;
     private VerificationSequenceSerializer verificationSequenceSerializer;
     private LogEntrySerializer logEntrySerializer;
     private MemoryMonitoring memoryMonitoring;
-    private OpenAPIV3Parser openAPIV3Parser = new OpenAPIV3Parser();
+    private OpenAPIV3Parser openAPIV3Parser;
+    private OpenAPIConverter openAPIConverter;
 
     public HttpStateHandler(MockServerLogger mockServerLogger, Scheduler scheduler) {
         this.mockServerLogger = mockServerLogger.setHttpStateHandler(this);
@@ -99,45 +97,45 @@ public class HttpStateHandler {
     }
 
     public void clear(HttpRequest request) {
-        HttpRequest requestMatcher = null;
+        RequestDefinition requestDefinition = null;
         if (isNotBlank(request.getBodyAsString())) {
-            requestMatcher = getHttpRequestSerializer().deserialize(request.getBodyAsString());
+            requestDefinition = getRequestDefinitionSerializer().deserialize(request.getBodyAsString());
         }
         try {
             ClearType type = ClearType.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "ALL"));
             switch (type) {
                 case LOG:
-                    mockServerLog.clear(requestMatcher);
+                    mockServerLog.clear(requestDefinition);
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setType(CLEARED)
                             .setLogLevel(Level.INFO)
-                            .setHttpRequest(requestMatcher)
+                            .setHttpRequest(requestDefinition)
                             .setMessageFormat("clearing logs that match:{}")
-                            .setArguments((requestMatcher == null ? "{}" : requestMatcher))
+                            .setArguments((requestDefinition == null ? "{}" : requestDefinition))
                     );
                     break;
                 case EXPECTATIONS:
-                    requestMatchers.clear(requestMatcher);
+                    requestMatchers.clear(requestDefinition);
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setType(CLEARED)
                             .setLogLevel(Level.INFO)
-                            .setHttpRequest(requestMatcher)
+                            .setHttpRequest(requestDefinition)
                             .setMessageFormat("clearing expectations that match:{}")
-                            .setArguments((requestMatcher == null ? "{}" : requestMatcher))
+                            .setArguments((requestDefinition == null ? "{}" : requestDefinition))
                     );
                     break;
                 case ALL:
-                    mockServerLog.clear(requestMatcher);
-                    requestMatchers.clear(requestMatcher);
+                    mockServerLog.clear(requestDefinition);
+                    requestMatchers.clear(requestDefinition);
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setType(CLEARED)
                             .setLogLevel(Level.INFO)
-                            .setHttpRequest(requestMatcher)
+                            .setHttpRequest(requestDefinition)
                             .setMessageFormat("clearing expectations and logs that match:{}")
-                            .setArguments((requestMatcher == null ? "{}" : requestMatcher))
+                            .setArguments((requestDefinition == null ? "{}" : requestDefinition))
                     );
                     break;
             }
@@ -169,15 +167,16 @@ public class HttpStateHandler {
         });
     }
 
-    public List<Expectation> add(OpenAPI openAPI) {
-        return new ArrayList<>();
+    public List<Expectation> add(OpenAPIExpectation openAPIExpectation) {
+        return getOpenAPIConverter().buildExpectations(openAPIExpectation.getSpecUrlOrPayload(), openAPIExpectation.getOperationsAndResponses()).stream().map(this::add).flatMap(List::stream).collect(Collectors.toList());
     }
 
     public List<Expectation> add(Expectation... expectations) {
         List<Expectation> upsertedExpectations = new ArrayList<>();
         for (Expectation expectation : expectations) {
-            if (expectation.getHttpRequest() != null) {
-                final String hostHeader = expectation.getHttpRequest().getFirstHeader(HOST.toString());
+            RequestDefinition requestDefinition = expectation.getHttpRequest();
+            if (requestDefinition instanceof HttpRequest) {
+                final String hostHeader = ((HttpRequest) requestDefinition).getFirstHeader(HOST.toString());
                 if (isNotBlank(hostHeader)) {
                     scheduler.submit(() -> addSubjectAlternativeName(hostHeader));
                 }
@@ -210,21 +209,21 @@ public class HttpStateHandler {
         HttpResponse response = response().withStatusCode(OK.code());
         if (request != null) {
             try {
-                final HttpRequest httpRequest = isNotBlank(request.getBodyAsString()) ? getHttpRequestSerializer().deserialize(request.getBodyAsString()) : null;
+                final RequestDefinition requestDefinition = isNotBlank(request.getBodyAsString()) ? getRequestDefinitionSerializer().deserialize(request.getBodyAsString()) : null;
                 Format format = Format.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("format").toUpperCase(), "JSON"));
                 RetrieveType type = RetrieveType.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "REQUESTS"));
                 switch (type) {
                     case LOGS: {
-                        final Object[] arguments = new Object[]{(httpRequest == null ? request() : httpRequest)};
+                        final Object[] arguments = new Object[]{(requestDefinition == null ? request() : requestDefinition)};
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setType(RETRIEVED)
                                 .setLogLevel(Level.INFO)
-                                .setHttpRequest(httpRequest)
+                                .setHttpRequest(requestDefinition)
                                 .setMessageFormat("retrieving logs that match:{}")
                                 .setArguments(arguments)
                         );
-                        mockServerLog.retrieveMessageLogEntries(httpRequest, (List<LogEntry> logEntries) -> {
+                        mockServerLog.retrieveMessageLogEntries(requestDefinition, (List<LogEntry> logEntries) -> {
                             StringBuilder stringBuffer = new StringBuilder();
                             for (int i = 0; i < logEntries.size(); i++) {
                                 LogEntry messageLogEntry = logEntries.get(i);
@@ -243,12 +242,12 @@ public class HttpStateHandler {
                         break;
                     }
                     case REQUESTS: {
-                        final Object[] arguments = new Object[]{(httpRequest == null ? request() : httpRequest)};
+                        final Object[] arguments = new Object[]{(requestDefinition == null ? request() : requestDefinition)};
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setType(RETRIEVED)
                                 .setLogLevel(Level.INFO)
-                                .setHttpRequest(httpRequest)
+                                .setHttpRequest(requestDefinition)
                                 .setMessageFormat("retrieving requests in " + format.name().toLowerCase() + " that match:{}")
                                 .setArguments(arguments)
                         );
@@ -256,10 +255,10 @@ public class HttpStateHandler {
                             case JAVA:
                                 mockServerLog
                                     .retrieveRequests(
-                                        httpRequest,
+                                        requestDefinition,
                                         requests -> {
                                             response.withBody(
-                                                getHttpRequestToJavaSerializer().serialize(requests),
+                                                getRequestDefinitionSerializer().serialize(requests),
                                                 MediaType.create("application", "java").withCharset(UTF_8)
                                             );
                                             httpResponseFuture.complete(response);
@@ -269,10 +268,10 @@ public class HttpStateHandler {
                             case JSON:
                                 mockServerLog
                                     .retrieveRequests(
-                                        httpRequest,
+                                        requestDefinition,
                                         requests -> {
                                             response.withBody(
-                                                getHttpRequestSerializer().serialize(requests),
+                                                getRequestDefinitionSerializer().serialize(true, requests),
                                                 MediaType.JSON_UTF_8
                                             );
                                             httpResponseFuture.complete(response);
@@ -282,7 +281,7 @@ public class HttpStateHandler {
                             case LOG_ENTRIES:
                                 mockServerLog
                                     .retrieveRequestLogEntries(
-                                        httpRequest,
+                                        requestDefinition,
                                         logEntries -> {
                                             response.withBody(
                                                 getLogEntrySerializer().serialize(logEntries),
@@ -296,12 +295,12 @@ public class HttpStateHandler {
                         break;
                     }
                     case REQUEST_RESPONSES: {
-                        final Object[] arguments = new Object[]{(httpRequest == null ? request() : httpRequest)};
+                        final Object[] arguments = new Object[]{(requestDefinition == null ? request() : requestDefinition)};
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setType(RETRIEVED)
                                 .setLogLevel(Level.INFO)
-                                .setHttpRequest(httpRequest)
+                                .setHttpRequest(requestDefinition)
                                 .setMessageFormat("retrieving requests and responses in " + format.name().toLowerCase() + " that match:{}")
                                 .setArguments(arguments)
                         );
@@ -313,7 +312,7 @@ public class HttpStateHandler {
                             case JSON:
                                 mockServerLog
                                     .retrieveRequestResponses(
-                                        httpRequest,
+                                        requestDefinition,
                                         httpRequestAndHttpResponses -> {
                                             response.withBody(
                                                 getHttpRequestResponseSerializer().serialize(httpRequestAndHttpResponses),
@@ -326,7 +325,7 @@ public class HttpStateHandler {
                             case LOG_ENTRIES:
                                 mockServerLog
                                     .retrieveRequestResponseMessageLogEntries(
-                                        httpRequest,
+                                        requestDefinition,
                                         logEntries -> {
                                             response.withBody(
                                                 getLogEntrySerializer().serialize(logEntries),
@@ -340,12 +339,12 @@ public class HttpStateHandler {
                         break;
                     }
                     case RECORDED_EXPECTATIONS: {
-                        final Object[] arguments = new Object[]{(httpRequest == null ? request() : httpRequest)};
+                        final Object[] arguments = new Object[]{(requestDefinition == null ? request() : requestDefinition)};
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setType(RETRIEVED)
                                 .setLogLevel(Level.INFO)
-                                .setHttpRequest(httpRequest)
+                                .setHttpRequest(requestDefinition)
                                 .setMessageFormat("retrieving recorded expectations in " + format.name().toLowerCase() + " that match:{}")
                                 .setArguments(arguments)
                         );
@@ -353,7 +352,7 @@ public class HttpStateHandler {
                             case JAVA:
                                 mockServerLog
                                     .retrieveRecordedExpectations(
-                                        httpRequest,
+                                        requestDefinition,
                                         requests -> {
                                             response.withBody(
                                                 getExpectationToJavaSerializer().serialize(requests),
@@ -366,7 +365,7 @@ public class HttpStateHandler {
                             case JSON:
                                 mockServerLog
                                     .retrieveRecordedExpectations(
-                                        httpRequest,
+                                        requestDefinition,
                                         requests -> {
                                             response.withBody(
                                                 getExpectationSerializer().serialize(requests),
@@ -379,7 +378,7 @@ public class HttpStateHandler {
                             case LOG_ENTRIES:
                                 mockServerLog
                                     .retrieveRecordedExpectationLogEntries(
-                                        httpRequest,
+                                        requestDefinition,
                                         logEntries -> {
                                             response.withBody(
                                                 getLogEntrySerializer().serialize(logEntries),
@@ -397,11 +396,11 @@ public class HttpStateHandler {
                             new LogEntry()
                                 .setType(RETRIEVED)
                                 .setLogLevel(Level.INFO)
-                                .setHttpRequest(httpRequest)
+                                .setHttpRequest(requestDefinition)
                                 .setMessageFormat("retrieving active expectations in " + format.name().toLowerCase() + " that match:{}")
-                                .setArguments(httpRequest == null ? request() : httpRequest)
+                                .setArguments(requestDefinition == null ? request() : requestDefinition)
                         );
-                        List<Expectation> expectations = requestMatchers.retrieveActiveExpectations(httpRequest);
+                        List<Expectation> expectations = requestMatchers.retrieveActiveExpectations(requestDefinition);
                         switch (format) {
                             case JAVA:
                                 response.withBody(getExpectationToJavaSerializer().serialize(expectations), MediaType.create("application", "java").withCharset(UTF_8));
@@ -457,10 +456,10 @@ public class HttpStateHandler {
 
     public boolean handle(HttpRequest request, ResponseWriter responseWriter, boolean warDeployment) {
 
-        if (MockServerLogger.isEnabled(TRACE)) {
+        if (MockServerLogger.isEnabled(Level.TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setLogLevel(TRACE)
+                    .setLogLevel(Level.TRACE)
                     .setHttpRequest(request)
                     .setMessageFormat("received request:{}")
                     .setArguments(request)
@@ -487,15 +486,21 @@ public class HttpStateHandler {
 
             } else if (request.matches("PUT", PATH_PREFIX + "/openapi", "/openapi")) {
 
-                SwaggerParseResult swaggerParseResult = getOpenAPIV3Parser().readContents(request.getBodyAsString());
-                if (swaggerParseResult.getMessages().isEmpty()) {
-                    List<Expectation> upsertedExpectations = new ArrayList<>(add(swaggerParseResult.getOpenAPI()));
+                try {
+                    List<Expectation> upsertedExpectations = new ArrayList<>();
+                    for (OpenAPIExpectation openAPIExpectation : getOpenAPIExpectationSerializer().deserializeArray(request.getBodyAsString(), false)) {
+                        upsertedExpectations.addAll(add(openAPIExpectation));
+                    }
                     responseWriter.writeResponse(request, response()
                         .withStatusCode(CREATED.code())
                         .withBody(getExpectationSerializer().serialize(upsertedExpectations), MediaType.JSON_UTF_8), true);
-                } else {
-                    String errorMessage = StringFormatter.formatLogMessage("Error" + (swaggerParseResult.getMessages().size() > 1 ? "s" : "") + " parsing OpenAPI specification:{}", Joiner.on("\n").join(swaggerParseResult.getMessages()));
-                    responseWriter.writeResponse(request, BAD_REQUEST, errorMessage, MediaType.create("text", "plain").toString());
+                } catch (IllegalArgumentException iae) {
+                    responseWriter.writeResponse(
+                        request,
+                        BAD_REQUEST,
+                        OPEN_API_LOAD_ERROR + iae.getMessage(),
+                        MediaType.create("text", "plain").toString()
+                    );
                 }
                 canHandle.complete(true);
 
@@ -634,6 +639,13 @@ public class HttpStateHandler {
         return httpRequestSerializer;
     }
 
+    private RequestDefinitionSerializer getRequestDefinitionSerializer() {
+        if (this.requestDefinitionSerializer == null) {
+            this.requestDefinitionSerializer = new RequestDefinitionSerializer(mockServerLogger);
+        }
+        return requestDefinitionSerializer;
+    }
+
     private LogEventRequestAndResponseSerializer getHttpRequestResponseSerializer() {
         if (this.httpRequestResponseSerializer == null) {
             this.httpRequestResponseSerializer = new LogEventRequestAndResponseSerializer(mockServerLogger);
@@ -648,11 +660,11 @@ public class HttpStateHandler {
         return expectationSerializer;
     }
 
-    private HttpRequestToJavaSerializer getHttpRequestToJavaSerializer() {
-        if (this.httpRequestToJavaSerializer == null) {
-            this.httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
+    private OpenAPIExpectationSerializer getOpenAPIExpectationSerializer() {
+        if (this.openAPIExpectationSerializer == null) {
+            this.openAPIExpectationSerializer = new OpenAPIExpectationSerializer(mockServerLogger);
         }
-        return httpRequestToJavaSerializer;
+        return openAPIExpectationSerializer;
     }
 
     private ExpectationToJavaSerializer getExpectationToJavaSerializer() {
@@ -688,5 +700,12 @@ public class HttpStateHandler {
             this.openAPIV3Parser = new OpenAPIV3Parser();
         }
         return openAPIV3Parser;
+    }
+
+    private OpenAPIConverter getOpenAPIConverter() {
+        if (this.openAPIConverter == null) {
+            this.openAPIConverter = new OpenAPIConverter(mockServerLog);
+        }
+        return openAPIConverter;
     }
 }

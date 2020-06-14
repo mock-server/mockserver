@@ -1,10 +1,16 @@
 package org.mockserver.file;
 
 import com.google.common.io.ByteStreams;
+import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.MockServerLogger;
 
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.slf4j.event.Level.ERROR;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -32,5 +38,21 @@ public class FileReader {
         return new InputStreamReader(openStreamToFileFromClassPathOrPath(filename));
     }
 
+    public static URL getURL(String filepath) {
+        File file = new File(filepath);
+        if (file.exists()) {
+            try {
+                return file.toURI().toURL();
+            } catch (MalformedURLException murle) {
+                new MockServerLogger(FileReader.class).logEvent(
+                    new LogEntry()
+                        .setLogLevel(ERROR)
+                        .setMessageFormat("exception while build file URL " + murle.getMessage())
+                        .setThrowable(murle)
+                );
+            }
+        }
+        return FileReader.class.getClassLoader().getResource(filepath);
+    }
 
 }

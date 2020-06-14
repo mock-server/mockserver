@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lmax.disruptor.EventTranslator;
 import org.mockserver.log.TimeService;
 import org.mockserver.matchers.HttpRequestMatcher;
-import org.mockserver.matchers.MatchDifference;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
@@ -40,15 +39,14 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     private long epochTime = TimeService.currentTimeMillis();
     private String timestamp;
     private LogEntry.LogMessageType type;
-    private HttpRequest[] httpRequests;
-    private HttpRequest[] httpUpdatedRequests;
+    private RequestDefinition[] httpRequests;
+    private RequestDefinition[] httpUpdatedRequests;
     private HttpResponse httpResponse;
     private HttpResponse httpUpdatedResponse;
     private HttpError httpError;
     private Expectation expectation;
     private Throwable throwable;
     private Runnable consumer;
-    private MatchDifference matchDifference;
 
     private String messageFormat;
     private Object[] arguments;
@@ -120,23 +118,23 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     }
 
     @JsonIgnore
-    public HttpRequest[] getHttpRequests() {
+    public RequestDefinition[] getHttpRequests() {
         if (httpRequests == null) {
-            return new HttpRequest[0];
+            return new RequestDefinition[0];
         } else {
             return httpRequests;
         }
     }
 
     @JsonIgnore
-    public HttpRequest[] getHttpUpdatedRequests() {
+    public RequestDefinition[] getHttpUpdatedRequests() {
         if (httpRequests == null) {
-            return new HttpRequest[0];
+            return new RequestDefinition[0];
         } else if (httpUpdatedRequests == null) {
             httpUpdatedRequests = Arrays
                 .stream(httpRequests)
                 .map(this::updateBody)
-                .toArray(HttpRequest[]::new);
+                .toArray(RequestDefinition[]::new);
             return httpUpdatedRequests;
         } else {
             return httpUpdatedRequests;
@@ -151,7 +149,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         if (httpRequests == null || httpRequests.length == 0) {
             return true;
         }
-        for (HttpRequest httpRequest : httpRequests) {
+        for (RequestDefinition httpRequest : httpRequests) {
             if (matcher.matches(httpRequest)) {
                 return true;
             }
@@ -159,12 +157,12 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         return false;
     }
 
-    public LogEntry setHttpRequests(HttpRequest[] httpRequests) {
+    public LogEntry setHttpRequests(RequestDefinition[] httpRequests) {
         this.httpRequests = httpRequests;
         return this;
     }
 
-    public HttpRequest getHttpRequest() {
+    public RequestDefinition getHttpRequest() {
         if (httpRequests != null && httpRequests.length > 0) {
             return httpRequests[0];
         } else {
@@ -172,11 +170,11 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         }
     }
 
-    public LogEntry setHttpRequest(HttpRequest httpRequest) {
+    public LogEntry setHttpRequest(RequestDefinition httpRequest) {
         if (httpRequest != null) {
-            this.httpRequests = new HttpRequest[]{httpRequest};
+            this.httpRequests = new RequestDefinition[]{httpRequest};
         } else {
-            this.httpRequests = new HttpRequest[]{request()};
+            this.httpRequests = new RequestDefinition[]{request()};
         }
         return this;
     }
@@ -219,7 +217,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         return this;
     }
 
-    public LogEntry setExpectation(HttpRequest httpRequest, HttpResponse httpResponse) {
+    public LogEntry setExpectation(RequestDefinition httpRequest, HttpResponse httpResponse) {
         this.expectation = new Expectation(httpRequest, Times.once(), TimeToLive.unlimited(), 0).thenRespond(httpResponse);
         return this;
     }
@@ -272,9 +270,6 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         } else {
             this.arguments = null;
         }
-        if (matchDifference != null) {
-            matchDifference.addDifference(messageFormat, arguments);
-        }
         return this;
     }
 
@@ -290,16 +285,9 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         return message;
     }
 
-    public LogEntry setMatchDifference(MatchDifference matchDifference) {
-        this.matchDifference = matchDifference;
-        if (matchDifference != null) {
-            setHttpRequest(matchDifference.getHttpRequest());
-        }
-        return this;
-    }
-
-    private HttpRequest updateBody(HttpRequest httpRequest) {
-        if (httpRequest != null) {
+    private RequestDefinition updateBody(RequestDefinition requestDefinition) {
+        if (requestDefinition instanceof HttpRequest) {
+            HttpRequest httpRequest = (HttpRequest) requestDefinition;
             Body<?> body = httpRequest.getBody();
             if (body instanceof JsonBody) {
                 try {

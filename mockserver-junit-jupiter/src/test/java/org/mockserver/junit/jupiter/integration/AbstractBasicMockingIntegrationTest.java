@@ -1,5 +1,6 @@
 package org.mockserver.junit.jupiter.integration;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
@@ -1407,7 +1408,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         Expectation[] recordedExpectations = mockServerClient.retrieveRecordedExpectations(request().withPath(calculatePath("some_path_one")));
         assertThat(recordedExpectations.length, is(1));
         verifyRequestsMatches(
-            new HttpRequest[]{
+            new RequestDefinition[]{
                 recordedExpectations[0].getHttpRequest()
             },
             request(calculatePath("some_path_one")).withBody("some_body_one")
@@ -1417,7 +1418,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         recordedExpectations = mockServerClient.retrieveRecordedExpectations(request());
         assertThat(recordedExpectations.length, is(2));
         verifyRequestsMatches(
-            new HttpRequest[]{
+            new RequestDefinition[]{
                 recordedExpectations[0].getHttpRequest(),
                 recordedExpectations[1].getHttpRequest()
             },
@@ -1430,7 +1431,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         recordedExpectations = mockServerClient.retrieveRecordedExpectations(null);
         assertThat(recordedExpectations.length, is(2));
         verifyRequestsMatches(
-            new HttpRequest[]{
+            new RequestDefinition[]{
                 recordedExpectations[0].getHttpRequest(),
                 recordedExpectations[1].getHttpRequest()
             },
@@ -1852,9 +1853,10 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
 
         // then
         assertThat(httpResponse.getStatusCode(), is(400));
-        assertThat(httpResponse.getBodyAsString(), is("2 errors:" + NEW_LINE +
+        assertThat(httpResponse.getBodyAsString(), is("3 errors:" + NEW_LINE +
             " - object instance has properties which are not allowed by the schema: [\"incorrectField\"]" + NEW_LINE +
-            " - oneOf of the following must be specified [\"httpResponse\", \"httpResponseTemplate\", \"httpResponseObjectCallback\", \"httpResponseClassCallback\", \"httpForward\", \"httpForwardTemplate\", \"httpForwardObjectCallback\", \"httpForwardClassCallback\", \"httpOverrideForwardedRequest\", \"httpError\"] but 0 found" + NEW_LINE +
+            " - oneOf of the following must be specified [\"httpResponse\", \"httpResponseTemplate\", \"httpResponseObjectCallback\", \"httpResponseClassCallback\", \"httpForward\", \"httpForwardTemplate\", \"httpForwardObjectCallback\", \"httpForwardClassCallback\", \"httpOverrideForwardedRequest\", \"httpError\"] but found 0 without errors" + NEW_LINE +
+            " - instance failed to match exactly one schema (matched 0 out of 10)" + NEW_LINE +
             NEW_LINE +
             OPEN_API_SPECIFICATION_URL));
     }
@@ -1876,10 +1878,12 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
 
         // then
         assertThat(httpResponse.getStatusCode(), is(400));
-        assertThat(httpResponse.getBodyAsString(), is("3 errors:" + NEW_LINE +
-            " - instance type (string) does not match any allowed primitive type (allowed: [\"boolean\"]) for field \"/keepAlive\"" + NEW_LINE +
-            " - instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/method\"" + NEW_LINE +
-            " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/path\"" + NEW_LINE +
+        assertThat(httpResponse.getBodyAsString(), Matchers.is("5 errors:" + NEW_LINE +
+            " - oneOf of the following must be specified [\"httpRequest\", \"openAPIDefinition\"] but found 0 without errors" + NEW_LINE +
+            " - instance type (string) does not match any allowed primitive type (allowed: [\"boolean\"]) for schema \"httpRequest/properties/keepAlive\" for field \"/keepAlive\"" + NEW_LINE +
+            " - instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"]) for schema \"httpRequest/properties/method\" for field \"/method\"" + NEW_LINE +
+            " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for schema \"httpRequest/properties/path\" for field \"/path\"" + NEW_LINE +
+            " - instance failed to match exactly one schema (matched 0 out of 2)" + NEW_LINE +
             NEW_LINE +
             OPEN_API_SPECIFICATION_URL));
     }

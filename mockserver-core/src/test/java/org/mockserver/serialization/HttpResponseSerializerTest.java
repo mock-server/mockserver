@@ -8,11 +8,14 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.Cookies;
+import org.mockserver.model.Delay;
+import org.mockserver.model.Headers;
+import org.mockserver.model.HttpResponse;
 import org.mockserver.serialization.model.BodyWithContentTypeDTO;
 import org.mockserver.serialization.model.DelayDTO;
 import org.mockserver.serialization.model.HttpResponseDTO;
-import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.*;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpResponseValidator;
 
 import java.io.IOException;
@@ -42,7 +45,7 @@ public class HttpResponseSerializerTest {
         new HttpResponseDTO()
             .setStatusCode(123)
             .setReasonPhrase("randomPhrase")
-            .setBody(BodyWithContentTypeDTO.createDTO(exact("somebody")))
+            .setBody(BodyWithContentTypeDTO.createWithContentTypeDTO(exact("somebody")))
             .setHeaders(new Headers().withEntries(
                 header("headerName", "headerValue")
             ))
@@ -84,14 +87,10 @@ public class HttpResponseSerializerTest {
 
     @Test
     public void serialize() throws IOException {
-        // given
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-
         // when
         httpResponseSerializer.serialize(fullHttpResponse);
 
         // then
-        verify(objectMapper).writerWithDefaultPrettyPrinter();
         verify(objectWriter).writeValueAsString(fullHttpResponseDTO);
     }
 
@@ -99,15 +98,10 @@ public class HttpResponseSerializerTest {
     @Test
     @SuppressWarnings("RedundantArrayCreation")
     public void shouldSerializeArray() throws IOException {
-        // given
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-
-
         // when
         httpResponseSerializer.serialize(new HttpResponse[]{fullHttpResponse, fullHttpResponse});
 
         // then
-        verify(objectMapper).writerWithDefaultPrettyPrinter();
         verify(objectWriter).writeValueAsString(new HttpResponseDTO[]{fullHttpResponseDTO, fullHttpResponseDTO});
     }
 

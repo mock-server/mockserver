@@ -2,7 +2,6 @@ package org.mockserver.client;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import org.apache.commons.lang3.StringUtils;
 import org.mockserver.Version;
 import org.mockserver.client.MockServerEventBus.EventType;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -11,6 +10,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
+import org.mockserver.mock.OpenAPIExpectation;
 import org.mockserver.model.*;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.*;
@@ -57,10 +57,11 @@ public class MockServerClient implements Stoppable {
     private Integer port;
     private NettyHttpClient nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, null, false, new NettySslContextFactory(MOCK_SERVER_LOGGER));
     private HttpRequest requestOverride;
-    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(MOCK_SERVER_LOGGER);
+    private RequestDefinitionSerializer requestDefinitionSerializer = new RequestDefinitionSerializer(MOCK_SERVER_LOGGER);
     private LogEventRequestAndResponseSerializer httpRequestResponseSerializer = new LogEventRequestAndResponseSerializer(MOCK_SERVER_LOGGER);
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(MOCK_SERVER_LOGGER);
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer(MOCK_SERVER_LOGGER);
+    private OpenAPIExpectationSerializer openAPIExpectationSerializer = new OpenAPIExpectationSerializer(MOCK_SERVER_LOGGER);
     private VerificationSerializer verificationSerializer = new VerificationSerializer(MOCK_SERVER_LOGGER);
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer(MOCK_SERVER_LOGGER);
 
@@ -161,6 +162,7 @@ public class MockServerClient implements Stoppable {
         return contextPath;
     }
 
+    @SuppressWarnings("DuplicatedCode")
     private String calculatePath(String path) {
         String cleanedPath = "/mockserver/" + path;
         if (isNotBlank(contextPath)) {
@@ -222,7 +224,7 @@ public class MockServerClient implements Stoppable {
      * @deprecated use hasStopped() or hasStarted() instead
      */
     @Deprecated
-    @SuppressWarnings("DeprecatedIsStillUsed")
+    @SuppressWarnings({"DeprecatedIsStillUsed", "RedundantSuppression"})
     public boolean isRunning() {
         return isRunning(10, 500, TimeUnit.MILLISECONDS);
     }
@@ -301,7 +303,7 @@ public class MockServerClient implements Stoppable {
 
     /**
      * Returns whether MockServer has started, if called after MockServer has been stopped
-     * this method will block for 5 seconds while confirming that MockServer is not starting
+     * this method will block for 5 seconds while confirming MockServer is not starting
      */
     public boolean hasStarted() {
         return hasStarted(10, 500, TimeUnit.MILLISECONDS);
@@ -442,15 +444,15 @@ public class MockServerClient implements Stoppable {
     /**
      * Clear all expectations and logs that match the http
      *
-     * @param httpRequest the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
+     * @param requestDefinition the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
      */
-    public MockServerClient clear(HttpRequest httpRequest) {
+    public MockServerClient clear(RequestDefinition requestDefinition) {
         sendRequest(
             request()
                 .withMethod("PUT")
                 .withContentType(APPLICATION_JSON_UTF_8)
                 .withPath(calculatePath("clear"))
-                .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", StandardCharsets.UTF_8)
+                .withBody(requestDefinition != null ? requestDefinitionSerializer.serialize(requestDefinition) : "", StandardCharsets.UTF_8)
         );
         return clientClass.cast(this);
     }
@@ -458,16 +460,16 @@ public class MockServerClient implements Stoppable {
     /**
      * Clear expectations, logs or both that match the http
      *
-     * @param httpRequest the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
-     * @param type        the type to clear, EXPECTATION, LOG or BOTH
+     * @param requestDefinition the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
+     * @param type              the type to clear, EXPECTATION, LOG or BOTH
      */
-    public MockServerClient clear(HttpRequest httpRequest, ClearType type) {
+    public MockServerClient clear(RequestDefinition requestDefinition, ClearType type) {
         sendRequest(
             request()
                 .withMethod("PUT")
                 .withContentType(APPLICATION_JSON_UTF_8)
                 .withPath(calculatePath("clear"))
-                .withQueryStringParameter("type", type.name().toLowerCase()).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", StandardCharsets.UTF_8)
+                .withQueryStringParameter("type", type.name().toLowerCase()).withBody(requestDefinition != null ? requestDefinitionSerializer.serialize(requestDefinition) : "", StandardCharsets.UTF_8)
         );
         return clientClass.cast(this);
     }
@@ -486,15 +488,15 @@ public class MockServerClient implements Stoppable {
      *  );
      * </pre>
      *
-     * @param httpRequests the http requests that must be matched for this verification to pass
+     * @param requestDefinitions the http requests that must be matched for this verification to pass
      * @throws AssertionError if the request has not been found
      */
-    public MockServerClient verify(HttpRequest... httpRequests) throws AssertionError {
-        if (httpRequests == null || httpRequests.length == 0 || httpRequests[0] == null) {
-            throw new IllegalArgumentException("verify(HttpRequest...) requires a non null non empty array of HttpRequest objects");
+    public MockServerClient verify(RequestDefinition... requestDefinitions) throws AssertionError {
+        if (requestDefinitions == null || requestDefinitions.length == 0 || requestDefinitions[0] == null) {
+            throw new IllegalArgumentException("verify(RequestDefinition...) requires a non-null non-empty array of RequestDefinition objects");
         }
 
-        VerificationSequence verificationSequence = new VerificationSequence().withRequests(httpRequests);
+        VerificationSequence verificationSequence = new VerificationSequence().withRequests(requestDefinitions);
         String result = sendRequest(
             request()
                 .withMethod("PUT")
@@ -526,20 +528,20 @@ public class MockServerClient implements Stoppable {
      * exactly(n)  - verify the request was only received exactly n times
      * atLeast(n)  - verify the request was only received at least n times
      *
-     * @param httpRequest the http request that must be matched for this verification to pass
-     * @param times       the number of times this request must be matched
+     * @param requestDefinition the http request that must be matched for this verification to pass
+     * @param times             the number of times this request must be matched
      * @throws AssertionError if the request has not been found
      */
     @SuppressWarnings("DuplicatedCode")
-    public MockServerClient verify(HttpRequest httpRequest, VerificationTimes times) throws AssertionError {
-        if (httpRequest == null) {
-            throw new IllegalArgumentException("verify(HttpRequest, VerificationTimes) requires a non null HttpRequest object");
+    public MockServerClient verify(RequestDefinition requestDefinition, VerificationTimes times) throws AssertionError {
+        if (requestDefinition == null) {
+            throw new IllegalArgumentException("verify(RequestDefinition, VerificationTimes) requires a non null RequestDefinition object");
         }
         if (times == null) {
-            throw new IllegalArgumentException("verify(HttpRequest, VerificationTimes) requires a non null VerificationTimes object");
+            throw new IllegalArgumentException("verify(RequestDefinition, VerificationTimes) requires a non null VerificationTimes object");
         }
 
-        Verification verification = verification().withRequest(httpRequest).withTimes(times);
+        Verification verification = verification().withRequest(requestDefinition).withTimes(times);
         String result = sendRequest(
             request()
                 .withMethod("PUT")
@@ -579,26 +581,26 @@ public class MockServerClient implements Stoppable {
     /**
      * Retrieve the recorded requests that match the httpRequest parameter, use null for the parameter to retrieve all requests
      *
-     * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
+     * @param requestDefinition the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
      * @return an array of all requests that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
      */
-    public HttpRequest[] retrieveRecordedRequests(HttpRequest httpRequest) {
-        String recordedRequests = retrieveRecordedRequests(httpRequest, Format.JSON);
+    public RequestDefinition[] retrieveRecordedRequests(RequestDefinition requestDefinition) {
+        String recordedRequests = retrieveRecordedRequests(requestDefinition, Format.JSON);
         if (isNotEmpty(recordedRequests) && !recordedRequests.equals("[]")) {
-            return httpRequestSerializer.deserializeArray(recordedRequests);
+            return requestDefinitionSerializer.deserializeArray(recordedRequests);
         } else {
-            return new HttpRequest[0];
+            return new RequestDefinition[0];
         }
     }
 
     /**
      * Retrieve the recorded requests that match the httpRequest parameter, use null for the parameter to retrieve all requests
      *
-     * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
-     * @param format      the format to retrieve the expectations, either JAVA or JSON
+     * @param requestDefinition the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
+     * @param format            the format to retrieve the expectations, either JAVA or JSON
      * @return an array of all requests that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
      */
-    public String retrieveRecordedRequests(HttpRequest httpRequest, Format format) {
+    public String retrieveRecordedRequests(RequestDefinition requestDefinition, Format format) {
         HttpResponse httpResponse = sendRequest(
             request()
                 .withMethod("PUT")
@@ -606,7 +608,7 @@ public class MockServerClient implements Stoppable {
                 .withPath(calculatePath("retrieve"))
                 .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
                 .withQueryStringParameter("format", format.name())
-                .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", StandardCharsets.UTF_8)
+                .withBody(requestDefinition != null ? requestDefinitionSerializer.serialize(requestDefinition) : "", StandardCharsets.UTF_8)
         );
         return httpResponse.getBodyAsString();
     }
@@ -614,11 +616,11 @@ public class MockServerClient implements Stoppable {
     /**
      * Retrieve the recorded requests and responses that match the httpRequest parameter, use null for the parameter to retrieve all requests and responses
      *
-     * @param httpRequest the http request that is matched against when deciding whether to return each request (and its corresponding response), use null for the parameter to retrieve for all requests
+     * @param requestDefinition the http request that is matched against when deciding whether to return each request (and its corresponding response), use null for the parameter to retrieve for all requests
      * @return an array of all requests and responses that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
      */
-    public LogEventRequestAndResponse[] retrieveRecordedRequestsAndResponses(HttpRequest httpRequest) {
-        String recordedRequests = retrieveRecordedRequestsAndResponses(httpRequest, Format.JSON);
+    public LogEventRequestAndResponse[] retrieveRecordedRequestsAndResponses(RequestDefinition requestDefinition) {
+        String recordedRequests = retrieveRecordedRequestsAndResponses(requestDefinition, Format.JSON);
         if (isNotEmpty(recordedRequests) && !recordedRequests.equals("[]")) {
             return httpRequestResponseSerializer.deserializeArray(recordedRequests);
         } else {
@@ -629,11 +631,11 @@ public class MockServerClient implements Stoppable {
     /**
      * Retrieve the recorded requests that match the httpRequest parameter, use null for the parameter to retrieve all requests
      *
-     * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
-     * @param format      the format to retrieve the expectations, either JAVA or JSON
+     * @param requestDefinition the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
+     * @param format            the format to retrieve the expectations, either JAVA or JSON
      * @return an array of all requests that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
      */
-    public String retrieveRecordedRequestsAndResponses(HttpRequest httpRequest, Format format) {
+    public String retrieveRecordedRequestsAndResponses(RequestDefinition requestDefinition, Format format) {
         HttpResponse httpResponse = sendRequest(
             request()
                 .withMethod("PUT")
@@ -641,7 +643,7 @@ public class MockServerClient implements Stoppable {
                 .withPath(calculatePath("retrieve"))
                 .withQueryStringParameter("type", RetrieveType.REQUEST_RESPONSES.name())
                 .withQueryStringParameter("format", format.name())
-                .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", StandardCharsets.UTF_8)
+                .withBody(requestDefinition != null ? requestDefinitionSerializer.serialize(requestDefinition) : "", StandardCharsets.UTF_8)
         );
         return httpResponse.getBodyAsString();
     }
@@ -649,11 +651,11 @@ public class MockServerClient implements Stoppable {
     /**
      * Retrieve the request-response combinations that have been recorded as a list of expectations, only those that match the httpRequest parameter are returned, use null to retrieve all requests
      *
-     * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
+     * @param requestDefinition the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
      * @return an array of all expectations that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
      */
-    public Expectation[] retrieveRecordedExpectations(HttpRequest httpRequest) {
-        String recordedExpectations = retrieveRecordedExpectations(httpRequest, Format.JSON);
+    public Expectation[] retrieveRecordedExpectations(RequestDefinition requestDefinition) {
+        String recordedExpectations = retrieveRecordedExpectations(requestDefinition, Format.JSON);
         if (isNotBlank(recordedExpectations) && !recordedExpectations.equals("[]")) {
             return expectationSerializer.deserializeArray(recordedExpectations, true);
         } else {
@@ -664,11 +666,11 @@ public class MockServerClient implements Stoppable {
     /**
      * Retrieve the request-response combinations that have been recorded as a list of expectations, only those that match the httpRequest parameter are returned, use null to retrieve all requests
      *
-     * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
-     * @param format      the format to retrieve the expectations, either JAVA or JSON
+     * @param requestDefinition the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
+     * @param format            the format to retrieve the expectations, either JAVA or JSON
      * @return an array of all expectations that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
      */
-    public String retrieveRecordedExpectations(HttpRequest httpRequest, Format format) {
+    public String retrieveRecordedExpectations(RequestDefinition requestDefinition, Format format) {
         HttpResponse httpResponse = sendRequest(
             request()
                 .withMethod("PUT")
@@ -676,7 +678,7 @@ public class MockServerClient implements Stoppable {
                 .withPath(calculatePath("retrieve"))
                 .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
                 .withQueryStringParameter("format", format.name())
-                .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", StandardCharsets.UTF_8)
+                .withBody(requestDefinition != null ? requestDefinitionSerializer.serialize(requestDefinition) : "", StandardCharsets.UTF_8)
         );
         return httpResponse.getBodyAsString();
     }
@@ -684,17 +686,17 @@ public class MockServerClient implements Stoppable {
     /**
      * Retrieve the logs associated to a specific requests, this shows all logs for expectation matching, verification, clearing, etc
      *
-     * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
+     * @param requestDefinition the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
      * @return all log messages recorded by the MockServer when creating expectations, matching expectations, performing verification, clearing logs, etc
      */
-    public String retrieveLogMessages(HttpRequest httpRequest) {
+    public String retrieveLogMessages(RequestDefinition requestDefinition) {
         HttpResponse httpResponse = sendRequest(
             request()
                 .withMethod("PUT")
                 .withContentType(APPLICATION_JSON_UTF_8)
                 .withPath(calculatePath("retrieve"))
                 .withQueryStringParameter("type", RetrieveType.LOGS.name())
-                .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", StandardCharsets.UTF_8)
+                .withBody(requestDefinition != null ? requestDefinitionSerializer.serialize(requestDefinition) : "", StandardCharsets.UTF_8)
         );
         return httpResponse.getBodyAsString();
     }
@@ -702,11 +704,11 @@ public class MockServerClient implements Stoppable {
     /**
      * Retrieve the logs associated to a specific requests, this shows all logs for expectation matching, verification, clearing, etc
      *
-     * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
+     * @param requestDefinition the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
      * @return an array of all log messages recorded by the MockServer when creating expectations, matching expectations, performing verification, clearing logs, etc
      */
-    public String[] retrieveLogMessagesArray(HttpRequest httpRequest) {
-        return retrieveLogMessages(httpRequest).split(LOG_SEPARATOR);
+    public String[] retrieveLogMessagesArray(RequestDefinition requestDefinition) {
+        return retrieveLogMessages(requestDefinition).split(LOG_SEPARATOR);
     }
 
     /**
@@ -726,11 +728,11 @@ public class MockServerClient implements Stoppable {
      *  )
      * </pre>
      *
-     * @param httpRequest the http request that must be matched for this expectation to respond
+     * @param requestDefinition the http request that must be matched for this expectation to respond
      * @return an Expectation object that can be used to specify the response
      */
-    public ForwardChainExpectation when(HttpRequest httpRequest) {
-        return when(httpRequest, Times.unlimited());
+    public ForwardChainExpectation when(RequestDefinition requestDefinition) {
+        return when(requestDefinition, Times.unlimited());
     }
 
     /**
@@ -752,12 +754,12 @@ public class MockServerClient implements Stoppable {
      *  )
      * </pre>
      *
-     * @param httpRequest the http request that must be matched for this expectation to respond
-     * @param times       the number of times to respond when this http is matched
+     * @param requestDefinition the http request that must be matched for this expectation to respond
+     * @param times             the number of times to respond when this http is matched
      * @return an Expectation object that can be used to specify the response
      */
-    public ForwardChainExpectation when(HttpRequest httpRequest, Times times) {
-        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(httpRequest, times, TimeToLive.unlimited(), 0));
+    public ForwardChainExpectation when(RequestDefinition requestDefinition, Times times) {
+        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(requestDefinition, times, TimeToLive.unlimited(), 0));
     }
 
     /**
@@ -780,13 +782,13 @@ public class MockServerClient implements Stoppable {
      *  )
      * </pre>
      *
-     * @param httpRequest the http request that must be matched for this expectation to respond
-     * @param times       the number of times to respond when this http is matched
-     * @param timeToLive  the length of time from when the server receives the expectation that the expectation should be active
+     * @param requestDefinition the http request that must be matched for this expectation to respond
+     * @param times             the number of times to respond when this http is matched
+     * @param timeToLive        the length of time from when the server receives the expectation that the expectation should be active
      * @return an Expectation object that can be used to specify the response
      */
-    public ForwardChainExpectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
-        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(httpRequest, times, timeToLive, 0));
+    public ForwardChainExpectation when(RequestDefinition requestDefinition, Times times, TimeToLive timeToLive) {
+        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(requestDefinition, times, timeToLive, 0));
     }
 
     /**
@@ -814,14 +816,55 @@ public class MockServerClient implements Stoppable {
      *  )
      * </pre>
      *
-     * @param httpRequest the http request that must be matched for this expectation to respond
-     * @param times       the number of times to respond when this http is matched
-     * @param timeToLive  the length of time from when the server receives the expectation that the expectation should be active
-     * @param priority    the priority for the expectation when matching, higher priority expectation will be matched first, identical priority expectations will be match in the order they were submitted
+     * @param requestDefinition the http request that must be matched for this expectation to respond
+     * @param times             the number of times to respond when this http is matched
+     * @param timeToLive        the length of time from when the server receives the expectation that the expectation should be active
+     * @param priority          the priority for the expectation when matching, higher priority expectation will be matched first, identical priority expectations will be match in the order they were submitted
      * @return an Expectation object that can be used to specify the response
      */
-    public ForwardChainExpectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive, Integer priority) {
-        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(httpRequest, times, timeToLive, priority));
+    public ForwardChainExpectation when(RequestDefinition requestDefinition, Times times, TimeToLive timeToLive, Integer priority) {
+        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(requestDefinition, times, timeToLive, priority));
+    }
+
+    /**
+     * Specify OpenAPI / Swagger and operations and responses to create matchers and example responses
+     *
+     * @param openAPIExpectations the OpenAPI / Swagger and operations and responses to create matchers and example responses
+     * @return upserted expectations
+     */
+    public Expectation[] upsert(OpenAPIExpectation... openAPIExpectations) {
+        if (openAPIExpectations != null) {
+            HttpResponse httpResponse = null;
+            if (openAPIExpectations.length == 1) {
+                httpResponse =
+                    sendRequest(
+                        request()
+                            .withMethod("PUT")
+                            .withContentType(APPLICATION_JSON_UTF_8)
+                            .withPath(calculatePath("openapi"))
+                            .withBody(openAPIExpectationSerializer.serialize(openAPIExpectations[0]), StandardCharsets.UTF_8)
+                    );
+                if (httpResponse != null && httpResponse.getStatusCode() != 201) {
+                    throw new ClientException(formatLogMessage("error:{}while submitted OpenAPI expectation:{}", httpResponse.getBody(), openAPIExpectations[0]));
+                }
+            } else if (openAPIExpectations.length > 1) {
+                httpResponse =
+                    sendRequest(
+                        request()
+                            .withMethod("PUT")
+                            .withContentType(APPLICATION_JSON_UTF_8)
+                            .withPath(calculatePath("openapi"))
+                            .withBody(openAPIExpectationSerializer.serialize(openAPIExpectations), StandardCharsets.UTF_8)
+                    );
+                if (httpResponse != null && httpResponse.getStatusCode() != 201) {
+                    throw new ClientException(formatLogMessage("error:{}while submitted OpenAPI expectations:{}", httpResponse.getBody(), openAPIExpectations));
+                }
+            }
+            if (httpResponse != null && isNotBlank(httpResponse.getBodyAsString())) {
+                return expectationSerializer.deserializeArray(httpResponse.getBodyAsString(), true);
+            }
+        }
+        return new Expectation[0];
     }
 
     /**
@@ -919,11 +962,11 @@ public class MockServerClient implements Stoppable {
     /**
      * Retrieve the active expectations match the httpRequest parameter, use null for the parameter to retrieve all expectations
      *
-     * @param httpRequest the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
+     * @param requestDefinition the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
      * @return an array of all expectations that have been setup and have not expired
      */
-    public Expectation[] retrieveActiveExpectations(HttpRequest httpRequest) {
-        String activeExpectations = retrieveActiveExpectations(httpRequest, Format.JSON);
+    public Expectation[] retrieveActiveExpectations(RequestDefinition requestDefinition) {
+        String activeExpectations = retrieveActiveExpectations(requestDefinition, Format.JSON);
         if (isNotBlank(activeExpectations) && !activeExpectations.equals("[]")) {
             return expectationSerializer.deserializeArray(activeExpectations, true);
         } else {
@@ -934,11 +977,11 @@ public class MockServerClient implements Stoppable {
     /**
      * Retrieve the active expectations match the httpRequest parameter, use null for the parameter to retrieve all expectations
      *
-     * @param httpRequest the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
-     * @param format      the format to retrieve the expectations, either JAVA or JSON
+     * @param requestDefinition the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
+     * @param format            the format to retrieve the expectations, either JAVA or JSON
      * @return an array of all expectations that have been setup and have not expired
      */
-    public String retrieveActiveExpectations(HttpRequest httpRequest, Format format) {
+    public String retrieveActiveExpectations(RequestDefinition requestDefinition, Format format) {
         HttpResponse httpResponse = sendRequest(
             request()
                 .withMethod("PUT")
@@ -946,7 +989,7 @@ public class MockServerClient implements Stoppable {
                 .withPath(calculatePath("retrieve"))
                 .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
                 .withQueryStringParameter("format", format.name())
-                .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", StandardCharsets.UTF_8)
+                .withBody(requestDefinition != null ? requestDefinitionSerializer.serialize(requestDefinition) : "", StandardCharsets.UTF_8)
         );
         return httpResponse.getBodyAsString();
     }

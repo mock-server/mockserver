@@ -1,9 +1,10 @@
 package org.mockserver.serialization.deserializers.collections;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import org.junit.Test;
-import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.model.Headers;
+import org.mockserver.serialization.ObjectMapperFactory;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -20,13 +21,13 @@ import static org.mockserver.model.NottableString.string;
  */
 public class HeadersDeserializerTest {
 
-    private final ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
+    private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
     @Test
     public void shouldSerializeThenDeserializer() throws IOException {
         // given
-        String serializedHeaders = objectMapper
-            .writerWithDefaultPrettyPrinter()
+        String serializedHeaders = objectWriter
             .writeValueAsString(new Headers().withEntries(
                 header(string("some_name"), Arrays.asList(string("some_value"), string("some_other_value"))),
                 header(string("some_other_name"), string("some_value")),

@@ -116,6 +116,9 @@ public class HttpClassCallback extends Action<HttpClassCallback> {
         if (hashCode() != o.hashCode()) {
             return false;
         }
+        if (!super.equals(o)) {
+            return false;
+        }
         HttpClassCallback that = (HttpClassCallback) o;
         return Objects.equals(callbackClass, that.callbackClass) &&
             actionType == that.actionType;

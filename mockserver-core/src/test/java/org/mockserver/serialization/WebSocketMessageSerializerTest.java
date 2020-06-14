@@ -2,12 +2,12 @@ package org.mockserver.serialization;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
-import org.mockserver.model.SocketAddress;
-import org.mockserver.serialization.model.*;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Cookies;
 import org.mockserver.model.Headers;
 import org.mockserver.model.Parameters;
+import org.mockserver.model.SocketAddress;
+import org.mockserver.serialization.model.*;
 
 import java.io.IOException;
 
@@ -55,7 +55,7 @@ public class WebSocketMessageSerializerTest {
         // then
         assertEquals(new HttpResponseDTO()
             .setStatusCode(123)
-            .setBody(BodyWithContentTypeDTO.createDTO(exact("somebody")))
+            .setBody(BodyWithContentTypeDTO.createWithContentTypeDTO(exact("somebody")))
             .setHeaders(new Headers().withEntries(
                 header("someHeaderName", "someHeaderValue")
             ))
@@ -72,7 +72,7 @@ public class WebSocketMessageSerializerTest {
         String jsonHttpResponse = new WebSocketMessageSerializer(new MockServerLogger()).serialize(
             new HttpResponseDTO()
                 .setStatusCode(123)
-                .setBody(BodyWithContentTypeDTO.createDTO(exact("somebody")))
+                .setBody(BodyWithContentTypeDTO.createWithContentTypeDTO(exact("somebody")))
                 .setHeaders(new Headers().withEntries(
                     header("someHeaderName", "someHeaderValue")
                 ))

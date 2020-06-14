@@ -53,7 +53,7 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
         String valueJsonValue = "";
         byte[] rawBytes = null;
         Body.Type type = null;
-        boolean not = false;
+        Boolean not = null;
         MediaType contentType = null;
         Charset charset = null;
         if (currentToken == JsonToken.START_OBJECT) {
@@ -188,13 +188,13 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                 if (jsonBodyObjectMapper == null) {
                     jsonBodyObjectMapper = new ObjectMapper();
                 }
-                return new JsonBodyDTO(new JsonBody(jsonBodyObjectMapper.writeValueAsString(body), JsonBody.DEFAULT_MATCH_TYPE), false);
+                return new JsonBodyDTO(new JsonBody(jsonBodyObjectMapper.writeValueAsString(body), JsonBody.DEFAULT_MATCH_TYPE), null);
             }
         } else if (currentToken == JsonToken.START_ARRAY) {
             if (jsonBodyObjectMapper == null) {
                 jsonBodyObjectMapper = new ObjectMapper();
             }
-            return new JsonBodyDTO(new JsonBody(jsonBodyObjectMapper.writeValueAsString(ctxt.readValue(jsonParser, List.class)), JsonBody.DEFAULT_MATCH_TYPE), false);
+            return new JsonBodyDTO(new JsonBody(jsonBodyObjectMapper.writeValueAsString(ctxt.readValue(jsonParser, List.class)), JsonBody.DEFAULT_MATCH_TYPE), null);
         } else if (currentToken == JsonToken.VALUE_STRING) {
             return new StringBodyDTO(new StringBody(jsonParser.getText()));
         }

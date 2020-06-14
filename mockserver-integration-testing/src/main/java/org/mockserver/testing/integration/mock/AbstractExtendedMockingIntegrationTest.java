@@ -4741,7 +4741,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         );
         assertThat(recordedExpectations.length, is(1));
         verifyRequestsMatches(
-            new HttpRequest[]{
+            new RequestDefinition[]{
                 recordedExpectations[0].getHttpRequest()
             },
             request(calculatePath("some_path_one")).withBody("some_body_one")
@@ -4754,7 +4754,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         );
         assertThat(recordedExpectations.length, is(2));
         verifyRequestsMatches(
-            new HttpRequest[]{
+            new RequestDefinition[]{
                 recordedExpectations[0].getHttpRequest(),
                 recordedExpectations[1].getHttpRequest()
             },
@@ -4770,7 +4770,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         );
         assertThat(recordedExpectations.length, is(2));
         verifyRequestsMatches(
-            new HttpRequest[]{
+            new RequestDefinition[]{
                 recordedExpectations[0].getHttpRequest(),
                 recordedExpectations[1].getHttpRequest()
             },

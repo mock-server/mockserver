@@ -56,7 +56,6 @@ public class VerificationSerializationErrorsTest {
             "  }" + NEW_LINE +
             "}");
         // and
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
         when(objectWriter.writeValueAsString(any(VerificationDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
         // when

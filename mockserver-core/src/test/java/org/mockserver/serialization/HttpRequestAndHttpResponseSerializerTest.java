@@ -86,7 +86,7 @@ public class HttpRequestAndHttpResponseSerializerTest {
                 new HttpResponseDTO()
                     .setStatusCode(123)
                     .setReasonPhrase("randomPhrase")
-                    .setBody(BodyWithContentTypeDTO.createDTO(exact("somebody")))
+                    .setBody(BodyWithContentTypeDTO.createWithContentTypeDTO(exact("somebody")))
                     .setHeaders(new Headers().withEntries(
                         header("headerName", "headerValue")
                     ))
@@ -129,29 +129,20 @@ public class HttpRequestAndHttpResponseSerializerTest {
 
     @Test
     public void serialize() throws IOException {
-        // given
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-
         // when
         httpRequestAndHttpResponseSerializer.serialize(fullHttpRequestAndHttpResponse);
 
         // then
-        verify(objectMapper).writerWithDefaultPrettyPrinter();
         verify(objectWriter).writeValueAsString(fullHttpRequestAndHttpResponseDTO);
     }
 
     @Test
     @SuppressWarnings("RedundantArrayCreation")
     public void shouldSerializeArray() throws IOException {
-        // given
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-
-
         // when
         httpRequestAndHttpResponseSerializer.serialize(new HttpRequestAndHttpResponse[]{fullHttpRequestAndHttpResponse, fullHttpRequestAndHttpResponse});
 
         // then
-        verify(objectMapper).writerWithDefaultPrettyPrinter();
         verify(objectWriter).writeValueAsString(new HttpRequestAndHttpResponseDTO[]{fullHttpRequestAndHttpResponseDTO, fullHttpRequestAndHttpResponseDTO});
     }
 
