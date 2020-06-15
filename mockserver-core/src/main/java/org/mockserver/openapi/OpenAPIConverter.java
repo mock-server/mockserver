@@ -3,15 +3,14 @@ package org.mockserver.openapi;
 import com.atlassian.oai.validator.util.ContentTypeUtils;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.headers.Header;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.parser.OpenAPIResolver;
 import io.swagger.v3.parser.OpenAPIV3Parser;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import io.swagger.v3.parser.util.ResolverFully;
-import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.openapi.examples.ExampleBuilder;
@@ -36,10 +35,10 @@ import static org.slf4j.event.Level.ERROR;
 public class OpenAPIConverter {
 
     private static final ObjectWriter OBJECT_WRITER = ObjectMapperFactory.createObjectMapper(new JsonNodeExampleSerializer()).writerWithDefaultPrettyPrinter();
-    private final MockServerEventLog mockServerLog;
+    private final MockServerLogger mockServerLogger;
 
-    public OpenAPIConverter(MockServerEventLog mockServerLog) {
-        this.mockServerLog = mockServerLog;
+    public OpenAPIConverter(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
     }
 
     public List<Expectation> buildExpectations(String specUrlOrPayload, Map<String, String> operationsAndResponses) {
@@ -59,21 +58,7 @@ public class OpenAPIConverter {
             .collect(Collectors.toList());
     }
 
-    public static Optional<Operation> retrieveOperation(String specUrlOrPayload, String operationId) {
-        OpenAPI openAPI = buildOpenAPI(specUrlOrPayload);
-        return openAPI
-            .getPaths()
-            .values()
-            .stream()
-            .flatMap(pathItem -> pathItem
-                .readOperations()
-                .stream()
-            )
-            .filter(operation -> operationId == null || operation.getOperationId().equals(operationId))
-            .findFirst();
-    }
-
-    public static OpenAPI buildOpenAPI(String specUrlOrPayload) {
+    public OpenAPI buildOpenAPI(String specUrlOrPayload) {
         if (specUrlOrPayload.endsWith(".json") || specUrlOrPayload.endsWith(".yaml")) {
             try {
                 return resolve(new OpenAPIV3Parser().read(specUrlOrPayload));
@@ -90,7 +75,7 @@ public class OpenAPIConverter {
         }
     }
 
-    private static OpenAPI resolve(OpenAPI openAPI) {
+    private OpenAPI resolve(OpenAPI openAPI) {
         openAPI = new OpenAPIResolver(openAPI).resolve();
         new ResolverFully().resolveFully(openAPI);
         return openAPI;
@@ -153,7 +138,7 @@ public class OpenAPIConverter {
         try {
             return OBJECT_WRITER.writeValueAsString(example);
         } catch (Throwable throwable) {
-            mockServerLog.add(
+            mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(ERROR)
                     .setMessageFormat("Exception while serialising " + example.getClass() + " {}")

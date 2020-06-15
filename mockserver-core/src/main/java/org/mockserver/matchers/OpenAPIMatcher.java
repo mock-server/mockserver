@@ -5,19 +5,18 @@ import com.atlassian.oai.validator.model.SimpleRequest;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import io.swagger.v3.oas.models.Operation;
+import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
+import org.mockserver.openapi.OpenAPISerialiser;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.slf4j.event.Level;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -26,16 +25,13 @@ import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_MATCH
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED;
 import static org.mockserver.matchers.OperationIdValidator.OPERATION_NO_MATCH_KEY;
 import static org.mockserver.model.NottableString.serialiseNottableString;
-import static org.mockserver.openapi.OpenAPIConverter.buildOpenAPI;
-import static org.mockserver.openapi.OpenAPIConverter.retrieveOperation;
 import static org.slf4j.event.Level.DEBUG;
-import static org.slf4j.event.Level.ERROR;
 
 public class OpenAPIMatcher extends AbstractHttpRequestMatcher {
 
-    public static final ObjectWriter OBJECT_WRITER = ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter();
     public static final String OPEN_API_LOAD_ERROR = "Unable to load API spec from provided URL or payload because ";
     private static final String MATCHED = " matched ";
+    private static OpenAPISerialiser openAPISerialiser;
     private int hashCode;
     private OpenAPIDefinition openAPIDefinition;
     private OpenApiInteractionValidator openApiInteractionValidator;
@@ -89,28 +85,6 @@ public class OpenAPIMatcher extends AbstractHttpRequestMatcher {
             builder.withCustomRequestValidation(new OperationIdValidator(this.openAPIDefinition.getOperationId()));
         }
         return builder;
-    }
-
-    private String asString(OpenAPIDefinition openAPIDefinition) {
-        try {
-            if (StringUtils.isBlank(openAPIDefinition.getOperationId())) {
-                return OBJECT_WRITER.writeValueAsString(buildOpenAPI(openAPIDefinition.getSpecUrlOrPayload()));
-            } else {
-                Optional<Operation> operation = retrieveOperation(openAPIDefinition.getSpecUrlOrPayload(), openAPIDefinition.getOperationId());
-                if (operation.isPresent()) {
-                    return openAPIDefinition.getOperationId() + ": " + OBJECT_WRITER.writeValueAsString(operation.get());
-                }
-            }
-        } catch (Throwable throwable) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(ERROR)
-                    .setMessageFormat("Exception while serialising specification for OpenAPIDefinition{}")
-                    .setArguments(openAPIDefinition)
-                    .setThrowable(throwable)
-            );
-        }
-        return "";
     }
 
     private boolean isJsonOrYaml(String specUrlOrPayload) {
@@ -183,14 +157,16 @@ public class OpenAPIMatcher extends AbstractHttpRequestMatcher {
                 operationMatch = false;
             } else {
                 if (context != null) {
-                    context.addDifference(MatchDifference.Field.SPECIFICATION, messageFormat, message.getAdditionalInfo().toArray());
+                    context.addDifference(MatchDifference.Field.OPENAPI, messageFormat, message.getAdditionalInfo().toArray());
                 }
                 overallMatch = false;
                 specificationMatch = false;
             }
         }
-        fieldBecauseBuild(MatchDifference.Field.OPERATION, operationMatch, becauseBuilder, context);
-        fieldBecauseBuild(MatchDifference.Field.SPECIFICATION, specificationMatch, becauseBuilder, context);
+        if (isNotBlank(this.openAPIDefinition.getOperationId())) {
+            fieldBecauseBuild(MatchDifference.Field.OPERATION, operationMatch, becauseBuilder, context);
+        }
+        fieldBecauseBuild(MatchDifference.Field.OPENAPI, specificationMatch, becauseBuilder, context);
         return overallMatch;
     }
 
@@ -202,22 +178,28 @@ public class OpenAPIMatcher extends AbstractHttpRequestMatcher {
         if (context != null) {
             List<String> differences = context.getDifferences(operation);
             if (differences != null && !differences.isEmpty()) {
-                becauseBuilder.append(COLON_NEW_LINE);
-                for (String difference : differences) {
-                    becauseBuilder.append(NEW_LINE).append(difference);
-                }
+                becauseBuilder
+                    .append(COLON_NEW_LINE)
+                    .append(Joiner.on(", and" + NEW_LINE).join(differences));
             }
-            if (operation == MatchDifference.Field.SPECIFICATION) {
-                becauseBuilder.append(NEW_LINE).append(formatLogMessage(1, "for:{}", definitionAsString()));
+            if (operation == MatchDifference.Field.OPENAPI) {
+                becauseBuilder.append(formatLogMessage(1, "; for:{}", definitionAsString()).substring(2));
             }
         }
     }
 
     public String definitionAsString() {
         if (definitionAsString == null) {
-            definitionAsString = asString(openAPIDefinition);
+            definitionAsString = openAPISerialiser().asString(openAPIDefinition);
         }
         return definitionAsString;
+    }
+
+    private OpenAPISerialiser openAPISerialiser() {
+        if (openAPISerialiser == null) {
+            openAPISerialiser = new OpenAPISerialiser(mockServerLogger);
+        }
+        return openAPISerialiser;
     }
 
     private ValidationReport matchesOpenAPI(HttpRequest request) {

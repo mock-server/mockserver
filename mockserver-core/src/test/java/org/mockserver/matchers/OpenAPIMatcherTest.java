@@ -235,7 +235,7 @@ public class OpenAPIMatcherTest {
     }
 
     @Test
-    public void shouldNotMatchRequestInOpenAPIWithWrongOperationId() {
+    public void shouldNotMatchRequestWithWrongOperationIdInOpenAPI() {
         // given
         OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
         openAPIMatcher.update(new Expectation(
@@ -269,11 +269,11 @@ public class OpenAPIMatcherTest {
             "   but request matched operation" + NEW_LINE +
             NEW_LINE +
             "    listPets" + NEW_LINE));
-        assertThat(matchDifference.getDifferences(SPECIFICATION), nullValue());
+        assertThat(matchDifference.getDifferences(OPENAPI), nullValue());
     }
 
     @Test
-    public void shouldNotMatchRequestInOpenAPIWithWrongOperationIdWithNullContext() {
+    public void shouldNotMatchRequestWithWrongOperationIdWithNullContextInOpenAPI() {
         // given
         OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
         openAPIMatcher.update(new Expectation(
@@ -295,7 +295,7 @@ public class OpenAPIMatcherTest {
     }
 
     @Test
-    public void shouldNotMatchRequestInOpenAPIWithMethodMismatch() {
+    public void shouldNotMatchRequestWithMethodMismatchInOpenAPI() {
         ConfigurationProperties.logLevel("DEBUG");
 
         // given
@@ -325,11 +325,11 @@ public class OpenAPIMatcherTest {
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
         assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(SPECIFICATION), containsInAnyOrder("  PUT operation not allowed on path '/pets'"));
+        assertThat(matchDifference.getDifferences(OPENAPI), containsInAnyOrder("  PUT operation not allowed on path '/pets'"));
     }
 
     @Test
-    public void shouldNotMatchRequestInOpenAPIWithPathMismatch() {
+    public void shouldNotMatchRequestWithPathMismatchInOpenAPI() {
         // given
         OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
         openAPIMatcher.update(new Expectation(
@@ -357,11 +357,11 @@ public class OpenAPIMatcherTest {
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
         assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(SPECIFICATION), containsInAnyOrder("  No API path found that matches request '/wrong'"));
+        assertThat(matchDifference.getDifferences(OPENAPI), containsInAnyOrder("  No API path found that matches request '/wrong'"));
     }
 
     @Test
-    public void shouldNotMatchRequestInOpenAPIWithHeaderMismatch() {
+    public void shouldNotMatchRequestWithHeaderMismatchInOpenAPI() {
         // given
         OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
         openAPIMatcher.update(new Expectation(
@@ -389,11 +389,11 @@ public class OpenAPIMatcherTest {
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
         assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(SPECIFICATION), containsInAnyOrder("  Header parameter 'X-Request-ID' is required on path '/some/path' but not found in request"));
+        assertThat(matchDifference.getDifferences(OPENAPI), containsInAnyOrder("  Header parameter 'X-Request-ID' is required on path '/some/path' but not found in request"));
     }
 
     @Test
-    public void shouldNotMatchRequestInOpenAPIWithHeaderAndQueryParameterMismatch() {
+    public void shouldNotMatchRequestWithHeaderAndQueryParameterMismatchInOpenAPI() {
         // given
         OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
         openAPIMatcher.update(new Expectation(
@@ -421,14 +421,48 @@ public class OpenAPIMatcherTest {
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
         assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(SPECIFICATION), containsInAnyOrder(
+        assertThat(matchDifference.getDifferences(OPENAPI), containsInAnyOrder(
             "  Header parameter 'X-Request-ID' is required on path '/some/path' but not found in request",
             "  Instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])"
         ));
     }
 
     @Test
-    public void shouldNotMatchRequestInOpenAPIWithBodyMismatchWithContentType() {
+    public void shouldNotMatchRequestWithHeaderAndQueryParameterMismatchInOpenAPIWithoutOperationId() {
+        // given
+        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
+        openAPIMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+        ));
+        HttpRequest httpRequest = request()
+            .withMethod("GET")
+            .withPath("/some/path")
+            .withQueryStringParameter("limit", "not_a_number");
+        MatchDifference matchDifference = new MatchDifference(httpRequest);
+
+        // when
+        boolean matches = openAPIMatcher.matches(matchDifference, httpRequest);
+
+        // then
+        assertThat(matches, is(false));
+        assertThat(matchDifference.getDifferences(METHOD), nullValue());
+        assertThat(matchDifference.getDifferences(PATH), nullValue());
+        assertThat(matchDifference.getDifferences(QUERY), nullValue());
+        assertThat(matchDifference.getDifferences(COOKIES), nullValue());
+        assertThat(matchDifference.getDifferences(HEADERS), nullValue());
+        assertThat(matchDifference.getDifferences(BODY), nullValue());
+        assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
+        assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
+        assertThat(matchDifference.getDifferences(OPERATION), nullValue());
+        assertThat(matchDifference.getDifferences(OPENAPI), containsInAnyOrder(
+            "  Header parameter 'X-Request-ID' is required on path '/some/path' but not found in request",
+            "  Instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])"
+        ));
+    }
+
+    @Test
+    public void shouldNotMatchRequestWithBodyMismatchWithContentTypeInOpenAPI() {
         // given
         OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
         openAPIMatcher.update(new Expectation(
@@ -461,7 +495,45 @@ public class OpenAPIMatcherTest {
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
         assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(SPECIFICATION), containsInAnyOrder(
+        assertThat(matchDifference.getDifferences(OPENAPI), containsInAnyOrder(
+            "  [Path '/id'] Instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])"
+        ));
+    }
+
+    @Test
+    public void shouldNotMatchRequestWithBodyMismatchWithContentTypeInOpenAPIWithoutOperationID() {
+        // given
+        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
+        openAPIMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+        ));
+        HttpRequest httpRequest = request()
+            .withMethod("POST")
+            .withPath("/pets")
+            .withHeader("content-type", "application/json")
+            .withBody(json("{\n" +
+                "    \"id\": \"invalid_id_format\", \n" +
+                "    \"name\": \"scruffles\", \n" +
+                "    \"tag\": \"dog\"\n" +
+                "}"));
+        MatchDifference matchDifference = new MatchDifference(httpRequest);
+
+        // when
+        boolean matches = openAPIMatcher.matches(matchDifference, httpRequest);
+
+        // then
+        assertThat(matches, is(false));
+        assertThat(matchDifference.getDifferences(METHOD), nullValue());
+        assertThat(matchDifference.getDifferences(PATH), nullValue());
+        assertThat(matchDifference.getDifferences(QUERY), nullValue());
+        assertThat(matchDifference.getDifferences(COOKIES), nullValue());
+        assertThat(matchDifference.getDifferences(HEADERS), nullValue());
+        assertThat(matchDifference.getDifferences(BODY), nullValue());
+        assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
+        assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
+        assertThat(matchDifference.getDifferences(OPERATION), nullValue());
+        assertThat(matchDifference.getDifferences(OPENAPI), containsInAnyOrder(
             "  [Path '/id'] Instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])"
         ));
     }
@@ -500,7 +572,7 @@ public class OpenAPIMatcherTest {
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
         assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(SPECIFICATION), containsInAnyOrder(
+        assertThat(matchDifference.getDifferences(OPENAPI), containsInAnyOrder(
             "  [Path '/id'] Instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])"
         ));
     }
@@ -516,7 +588,7 @@ public class OpenAPIMatcherTest {
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
         assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(SPECIFICATION), nullValue());
+        assertThat(matchDifference.getDifferences(OPENAPI), nullValue());
     }
 
 }

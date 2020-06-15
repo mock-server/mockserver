@@ -26,7 +26,7 @@ public class MatchDifference {
         SSL_MATCHES("sslMatches"),
         KEEP_ALIVE("keep-alive"),
         OPERATION("operation"),
-        SPECIFICATION("specification");
+        OPENAPI("openapi");
 
         private final String name;
 

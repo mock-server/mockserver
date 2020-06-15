@@ -687,7 +687,7 @@ public class HttpStateHandler {
 
     private OpenAPIConverter getOpenAPIConverter() {
         if (this.openAPIConverter == null) {
-            this.openAPIConverter = new OpenAPIConverter(mockServerLog);
+            this.openAPIConverter = new OpenAPIConverter(mockServerLogger);
         }
         return openAPIConverter;
     }
