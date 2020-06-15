@@ -32,7 +32,7 @@ paths:
       summary: create expectation
       responses:
         '201':
-          description: expectation created
+          description: expectations created
           content:
             application/json:
               schema:
@@ -50,7 +50,34 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/Expectations"
-        description: expectation to create
+        description: expectation(s) to create
+        required: true
+  /openapi:
+    put:
+      tags:
+        - expectation
+      summary: create expectations from OpenAPI or Swagger
+      responses:
+        '201':
+          description: expectations created
+          content:
+            application/json:
+              schema:
+                title: list of upserted expectations
+                type: array
+                additionalProperties: false
+                items:
+                  $ref: "#/components/schemas/Expectation"
+        '400':
+          description: incorrect request format
+        '406':
+          description: invalid expectation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpenAPIExpectations"
+        description: expectation(s) to create
         required: true
   /clear:
     put:
@@ -293,6 +320,29 @@ components:
             - httpOverrideForwardedRequest
         - required:
             - httpError
+    OpenAPIExpectations:
+      title: "list of open api expectations"
+      oneOf:
+        - $ref: "#/components/schemas/OpenAPIExpectation"
+        - type: array
+          additionalProperties: false
+          items:
+            $ref: "#/components/schemas/OpenAPIExpectation"
+    OpenAPIExpectation:
+      title: "open api or swagger expectation"
+      type: object
+      additionalProperties: false
+      properties:
+        specUrlOrPayload:
+          anyOf:
+            - type: string
+            - type: object
+        operationsAndResponses:
+          type: object
+          additionalProperties:
+            type: string
+      required:
+        - specUrlOrPayload
     RequestDefinition:
       title: "request definition"
       oneOf:
