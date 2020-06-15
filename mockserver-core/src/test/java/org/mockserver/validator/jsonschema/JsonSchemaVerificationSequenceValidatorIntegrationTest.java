@@ -79,7 +79,7 @@ public class JsonSchemaVerificationSequenceValidatorIntegrationTest {
                 "  }" + NEW_LINE +
                 "]}"),
             is(
-                "2 errors:" + NEW_LINE +
+                "3 errors:" + NEW_LINE +
                     " - for field \"/httpRequests/0/body\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
                     "   {" + NEW_LINE +
                     "     \"not\": false," + NEW_LINE +
@@ -135,7 +135,8 @@ public class JsonSchemaVerificationSequenceValidatorIntegrationTest {
                     "     \"type\": \"XPATH\"," + NEW_LINE +
                     "     \"xpath\": \"\"" + NEW_LINE +
                     "   }" + NEW_LINE +
-                    " - instance failed to match at least one required schema among 13 for field \"/httpRequests/0/body\"" + NEW_LINE +
+                    " - instance failed to match at least one required schema among 13 for schema \"requestDefinition/oneOf/0\" for field \"/httpRequests/0/body\"" + NEW_LINE +
+                    " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequests/0\"" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));
@@ -153,8 +154,11 @@ public class JsonSchemaVerificationSequenceValidatorIntegrationTest {
                 "  }" + NEW_LINE +
                 "]}"),
             is(
-                "1 error:" + NEW_LINE +
-                    " - object instance has properties which are not allowed by the schema: [\"invalidField\"] for field \"/httpRequests/0\"" + NEW_LINE +
+                "4 errors:" + NEW_LINE +
+                    " - object instance has properties which are not allowed by the schema: [\"invalidField\"] for schema \"requestDefinition/oneOf/0\" for field \"/httpRequests/0\"" + NEW_LINE +
+                    " - object instance has properties which are not allowed by the schema: [\"invalidField\"] for schema \"requestDefinition/oneOf/1\" for field \"/httpRequests/0\"" + NEW_LINE +
+                    " - object has missing required properties ([\"specUrlOrPayload\"]) for schema \"requestDefinition/oneOf/1\" for field \"/httpRequests/0\"" + NEW_LINE +
+                    " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequests/0\"" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));
@@ -170,9 +174,10 @@ public class JsonSchemaVerificationSequenceValidatorIntegrationTest {
                 "  }" + NEW_LINE +
                 "]}"),
             is(
-                "2 errors:" + NEW_LINE +
-                    " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/httpRequests/0/method\"" + NEW_LINE +
-                    " - instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/httpRequests/0/path\"" + NEW_LINE +
+                "3 errors:" + NEW_LINE +
+                    " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for schema \"requestDefinition/oneOf/0\" for field \"/httpRequests/0/method\"" + NEW_LINE +
+                    " - instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"]) for schema \"requestDefinition/oneOf/0\" for field \"/httpRequests/0/path\"" + NEW_LINE +
+                    " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequests/0\"" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));
@@ -187,16 +192,16 @@ public class JsonSchemaVerificationSequenceValidatorIntegrationTest {
                 "  }" + NEW_LINE +
                 "]}"),
             is(
-                "5 errors:" + NEW_LINE +
+                "3 errors:" + NEW_LINE +
                     " - for field \"/httpRequests/0/headers\" only one of the following example formats is allowed: " + NEW_LINE +
-                    NEW_LINE +
+                    "" + NEW_LINE +
                     "    {" + NEW_LINE +
                     "        \"exampleHeaderName\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
                     "        \"exampleMultiValuedHeaderName\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
                     "    }" + NEW_LINE +
-                    NEW_LINE +
+                    "" + NEW_LINE +
                     "   or:" + NEW_LINE +
-                    NEW_LINE +
+                    "" + NEW_LINE +
                     "    [" + NEW_LINE +
                     "        {" + NEW_LINE +
                     "            \"name\" : \"exampleHeaderName\"," + NEW_LINE +
@@ -207,10 +212,8 @@ public class JsonSchemaVerificationSequenceValidatorIntegrationTest {
                     "            \"values\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
                     "        }" + NEW_LINE +
                     "    ]" + NEW_LINE +
-                    " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for schema \"keyToMultiValue/oneOf/0\" for field \"/httpRequests/0/headers/0\"" + NEW_LINE +
-                    " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for schema \"keyToMultiValue/oneOf/0\" for field \"/httpRequests/0/headers/1\"" + NEW_LINE +
-                    " - instance type (array) does not match any allowed primitive type (allowed: [\"object\"]) for schema \"keyToMultiValue/oneOf/1\" for field \"/httpRequests/0/headers\"" + NEW_LINE +
-                    " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequests/0/headers\"" + NEW_LINE +
+                    " - instance failed to match exactly one schema (matched 0 out of 2) for schema \"requestDefinition/oneOf/0\" for field \"/httpRequests/0/headers\"" + NEW_LINE +
+                    " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequests/0\"" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));

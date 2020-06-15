@@ -348,14 +348,14 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
 
     private boolean isErrorForField(JsonNode reports, String fieldPointer, String fieldName) {
         return fieldPointer.endsWith(fieldName) // http response
-            || (fieldPointer.endsWith("/httpRequest") && reports.has("/definitions/requestDefinition/oneOf/0") && stream(reports.get("/definitions/requestDefinition/oneOf/0").iterator()).anyMatch(jsonNode -> pointerValue(jsonNode.get("instance")).endsWith(fieldName))); // http request
+            || (fieldPointer.contains("/httpRequest") && reports.has("/definitions/requestDefinition/oneOf/0") && stream(reports.get("/definitions/requestDefinition/oneOf/0").iterator()).anyMatch(jsonNode -> pointerValue(jsonNode.get("instance")).endsWith(fieldName))); // http request(s)
     }
 
     private String deepFieldName(JsonNode reports, String fieldPointer, String fieldName) {
         if (fieldPointer.endsWith(fieldName)) {
             // http response
             return fieldPointer;
-        } else if (fieldPointer.endsWith("/httpRequest") && reports.has("/definitions/requestDefinition/oneOf/0") && stream(reports.get("/definitions/requestDefinition/oneOf/0").iterator()).anyMatch(jsonNode -> pointerValue(jsonNode.get("instance")).endsWith(fieldName))) {
+        } else if (fieldPointer.contains("/httpRequest") && reports.has("/definitions/requestDefinition/oneOf/0") && stream(reports.get("/definitions/requestDefinition/oneOf/0").iterator()).anyMatch(jsonNode -> pointerValue(jsonNode.get("instance")).endsWith(fieldName))) {
             // http request
             return stream(reports.get("/definitions/requestDefinition/oneOf/0").iterator()).filter(jsonNode -> pointerValue(jsonNode.get("instance")).endsWith(fieldName)).findFirst().map(instanceNode -> pointerValue(instanceNode.get("instance"))).orElse("");
         } else {
