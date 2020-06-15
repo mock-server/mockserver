@@ -11,8 +11,8 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.HttpStateHandler;
-import org.mockserver.mock.action.ActionHandler;
+import org.mockserver.mock.HttpState;
+import org.mockserver.mock.action.http.HttpActionHandler;
 import org.mockserver.model.MediaType;
 import org.mockserver.model.RetrieveType;
 import org.mockserver.scheduler.Scheduler;
@@ -51,8 +51,8 @@ public class MockServerServletTest {
     private final ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
     private final PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
 
-    private HttpStateHandler httpStateHandler;
-    private ActionHandler mockActionHandler;
+    private HttpState httpStateHandler;
+    private HttpActionHandler mockActionHandler;
 
     @InjectMocks
     private MockServerServlet mockServerServlet;
@@ -61,9 +61,9 @@ public class MockServerServletTest {
 
     @Before
     public void setupFixture() {
-        mockActionHandler = mock(ActionHandler.class);
+        mockActionHandler = mock(HttpActionHandler.class);
         Scheduler scheduler = mock(Scheduler.class);
-        httpStateHandler = spy(new HttpStateHandler(new MockServerLogger(), scheduler));
+        httpStateHandler = spy(new HttpState(new MockServerLogger(), scheduler));
         response = new MockHttpServletResponse();
         mockServerServlet = new MockServerServlet();
 

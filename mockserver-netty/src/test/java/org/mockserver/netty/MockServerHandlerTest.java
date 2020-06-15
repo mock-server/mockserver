@@ -17,8 +17,8 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.HttpStateHandler;
-import org.mockserver.mock.action.ActionHandler;
+import org.mockserver.mock.HttpState;
+import org.mockserver.mock.action.http.HttpActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.MediaType;
@@ -46,9 +46,9 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LOG_DATE_FORMAT;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
-import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
-import static org.mockserver.netty.MockServerHandler.LOCAL_HOST_HEADERS;
-import static org.mockserver.netty.MockServerHandler.PROXYING;
+import static org.mockserver.mock.action.http.HttpActionHandler.REMOTE_SOCKET;
+import static org.mockserver.netty.HttpRequestHandler.LOCAL_HOST_HEADERS;
+import static org.mockserver.netty.HttpRequestHandler.PROXYING;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
@@ -60,12 +60,12 @@ public class MockServerHandlerTest {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
-    private HttpStateHandler httpStateHandler;
+    private HttpState httpStateHandler;
     protected LifeCycle server;
-    private ActionHandler mockActionHandler;
+    private HttpActionHandler mockActionHandler;
     private EmbeddedChannel embeddedChannel;
     @InjectMocks
-    private MockServerHandler mockServerHandler;
+    private HttpRequestHandler mockServerHandler;
     private final HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
     private final ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
     private final PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
@@ -79,10 +79,10 @@ public class MockServerHandlerTest {
     public void setupFixture() {
         server = mock(MockServer.class);
         when(server.getScheduler()).thenReturn(mock(Scheduler.class));
-        mockActionHandler = mock(ActionHandler.class);
+        mockActionHandler = mock(HttpActionHandler.class);
 
-        httpStateHandler = new HttpStateHandler(new MockServerLogger(), mock(Scheduler.class));
-        mockServerHandler = new MockServerHandler(server, httpStateHandler, null);
+        httpStateHandler = new HttpState(new MockServerLogger(), mock(Scheduler.class));
+        mockServerHandler = new HttpRequestHandler(server, httpStateHandler, null);
 
         initMocks(this);
 

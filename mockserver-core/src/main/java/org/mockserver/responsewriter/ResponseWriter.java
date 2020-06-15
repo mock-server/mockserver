@@ -13,7 +13,7 @@ import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
 import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
-import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
+import static org.mockserver.mock.HttpState.PATH_PREFIX;
 import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;

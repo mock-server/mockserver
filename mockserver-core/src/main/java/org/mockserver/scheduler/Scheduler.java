@@ -5,7 +5,7 @@ import org.mockserver.client.SocketCommunicationException;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mock.action.HttpForwardActionResult;
+import org.mockserver.mock.action.http.HttpForwardActionResult;
 import org.mockserver.model.BinaryMessage;
 import org.mockserver.model.Delay;
 import org.mockserver.model.HttpResponse;

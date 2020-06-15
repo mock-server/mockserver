@@ -1,8 +1,9 @@
-package org.mockserver.mock.action;
+package org.mockserver.mock.action.http;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.mock.action.http.HttpResponseTemplateActionHandler;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpTemplate;
 

@@ -9,7 +9,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.HttpStateHandler;
+import org.mockserver.mock.HttpState;
 import org.mockserver.model.RequestDefinition;
 import org.mockserver.scheduler.Scheduler;
 import org.slf4j.event.Level;
@@ -42,7 +42,7 @@ public class MockServerEventLogTest {
     @Before
     public void setupTestFixture() {
         Scheduler scheduler = mock(Scheduler.class);
-        HttpStateHandler httpStateHandler = new HttpStateHandler(new MockServerLogger(), scheduler);
+        HttpState httpStateHandler = new HttpState(new MockServerLogger(), scheduler);
         mockServerLogger = httpStateHandler.getMockServerLogger();
         mockServerEventLog = httpStateHandler.getMockServerLog();
     }

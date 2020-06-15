@@ -1,9 +1,10 @@
-package org.mockserver.mock.action;
+package org.mockserver.mock.action.http;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.mock.action.http.HttpForwardTemplateActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpTemplate;

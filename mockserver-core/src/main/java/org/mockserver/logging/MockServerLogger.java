@@ -4,7 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import org.mockserver.Version;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
-import org.mockserver.mock.HttpStateHandler;
+import org.mockserver.mock.HttpState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
@@ -55,7 +55,7 @@ public class MockServerLogger {
     }
 
     private final Logger logger;
-    private HttpStateHandler httpStateHandler;
+    private HttpState httpStateHandler;
 
     @VisibleForTesting
     public MockServerLogger() {
@@ -73,12 +73,12 @@ public class MockServerLogger {
         this.httpStateHandler = null;
     }
 
-    public MockServerLogger(final @Nullable HttpStateHandler httpStateHandler) {
+    public MockServerLogger(final @Nullable HttpState httpStateHandler) {
         this.logger = null;
         this.httpStateHandler = httpStateHandler;
     }
 
-    public MockServerLogger setHttpStateHandler(HttpStateHandler httpStateHandler) {
+    public MockServerLogger setHttpStateHandler(HttpState httpStateHandler) {
         this.httpStateHandler = httpStateHandler;
         return this;
     }

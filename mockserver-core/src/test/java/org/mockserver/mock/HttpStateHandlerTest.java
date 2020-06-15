@@ -80,7 +80,7 @@ public class HttpStateHandlerTest {
     private final VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer(new MockServerLogger());
 
     @InjectMocks
-    private HttpStateHandler httpStateHandler;
+    private HttpState httpStateHandler;
 
     @BeforeClass
     public static void fixTime() {
@@ -90,7 +90,7 @@ public class HttpStateHandlerTest {
     @Before
     public void prepareTestFixture() {
         Scheduler scheduler = mock(Scheduler.class);
-        httpStateHandler = new HttpStateHandler(new MockServerLogger(), scheduler);
+        httpStateHandler = new HttpState(new MockServerLogger(), scheduler);
         initMocks(this);
     }
 

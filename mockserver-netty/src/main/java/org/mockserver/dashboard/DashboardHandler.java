@@ -17,7 +17,7 @@ import java.util.Map;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringAfterLast;
-import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
+import static org.mockserver.mock.HttpState.PATH_PREFIX;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 

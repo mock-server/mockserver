@@ -1,8 +1,11 @@
-package org.mockserver.mock.action;
+package org.mockserver.mock.action.http;
 
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.mock.action.ExpectationCallback;
+import org.mockserver.mock.action.ExpectationForwardAndResponseCallback;
+import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.model.HttpClassCallback;
 import org.mockserver.model.HttpRequest;
 import org.slf4j.event.Level;

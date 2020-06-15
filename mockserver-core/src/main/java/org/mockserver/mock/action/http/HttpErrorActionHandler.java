@@ -1,4 +1,4 @@
-package org.mockserver.mock.action;
+package org.mockserver.mock.action.http;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;

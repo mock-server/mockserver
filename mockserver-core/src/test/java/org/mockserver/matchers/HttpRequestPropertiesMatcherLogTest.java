@@ -7,7 +7,7 @@ import org.junit.Test;
 import org.mockserver.log.TimeService;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.HttpStateHandler;
+import org.mockserver.mock.HttpState;
 import org.mockserver.model.*;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.uuid.UUIDService;
@@ -40,7 +40,7 @@ import static org.mockserver.model.XmlSchemaBody.xmlSchema;
 public class HttpRequestPropertiesMatcherLogTest {
 
     private final MockServerLogger mockServerLogger = new MockServerLogger(HttpRequestPropertiesMatcherLogTest.class);
-    private final HttpStateHandler httpStateHandler = new HttpStateHandler(mockServerLogger, new Scheduler(mockServerLogger));
+    private final HttpState httpStateHandler = new HttpState(mockServerLogger, new Scheduler(mockServerLogger));
     private static Level originalLevel;
 
     @BeforeClass

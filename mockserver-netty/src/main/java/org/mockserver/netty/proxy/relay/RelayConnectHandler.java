@@ -22,7 +22,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
-import static org.mockserver.mock.action.ActionHandler.getRemoteAddress;
+import static org.mockserver.mock.action.http.HttpActionHandler.getRemoteAddress;
 import static org.mockserver.netty.unification.PortUnificationHandler.*;
 import static org.slf4j.event.Level.DEBUG;
 

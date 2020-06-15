@@ -1,4 +1,4 @@
-package org.mockserver.mock.action;
+package org.mockserver.mock.action.http;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -15,10 +15,8 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.TimeService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.matchers.TimeToLive;
-import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.HttpStateHandler;
+import org.mockserver.mock.HttpState;
 import org.mockserver.model.*;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
@@ -34,7 +32,7 @@ import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
-import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
+import static org.mockserver.mock.action.http.HttpActionHandler.REMOTE_SOCKET;
 import static org.mockserver.model.Delay.milliseconds;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpError.error;
@@ -79,7 +77,7 @@ public class ActionHandlerTest {
     private HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer(mockServerLogger);
     @Mock
     private NettyHttpClient mockNettyHttpClient;
-    private HttpStateHandler mockHttpStateHandler;
+    private HttpState mockHttpStateHandler;
     private HttpRequest request;
     private HttpResponse response;
     private CompletableFuture<HttpResponse> responseFuture;
@@ -87,7 +85,7 @@ public class ActionHandlerTest {
     private HttpForwardActionResult httpForwardActionResult;
     private Expectation expectation;
     @InjectMocks
-    private ActionHandler actionHandler;
+    private HttpActionHandler actionHandler;
 
     @BeforeClass
     public static void fixTime() {
@@ -101,11 +99,11 @@ public class ActionHandlerTest {
 
     @Before
     public void setupMocks() {
-        mockHttpStateHandler = mock(HttpStateHandler.class);
+        mockHttpStateHandler = mock(HttpState.class);
         scheduler = spy(new Scheduler(mockServerLogger));
         when(mockHttpStateHandler.getScheduler()).thenReturn(scheduler);
         when(mockHttpStateHandler.getUniqueLoopPreventionHeaderValue()).thenReturn("MockServer_" + UUID.randomUUID().toString());
-        actionHandler = new ActionHandler(null, mockHttpStateHandler, null, null);
+        actionHandler = new HttpActionHandler(null, mockHttpStateHandler, null, null);
 
         initMocks(this);
         request = request("some_path");
@@ -282,7 +280,7 @@ public class ActionHandlerTest {
         actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
 
         // then
-        verify(mockHttpResponseObjectCallbackActionHandler).handle(any(ActionHandler.class), same(callback), same(request), same(mockResponseWriter), eq(true), any(Runnable.class));
+        verify(mockHttpResponseObjectCallbackActionHandler).handle(any(HttpActionHandler.class), same(callback), same(request), same(mockResponseWriter), eq(true), any(Runnable.class));
         verify(mockServerLogger).logEvent(
             new LogEntry()
                 .setType(RECEIVED_REQUEST)
@@ -454,7 +452,7 @@ public class ActionHandlerTest {
         actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
 
         // then
-        verify(mockHttpForwardObjectCallbackActionHandler).handle(any(ActionHandler.class), same(callback), same(request), same(mockResponseWriter), eq(true), any(Runnable.class));
+        verify(mockHttpForwardObjectCallbackActionHandler).handle(any(HttpActionHandler.class), same(callback), same(request), same(mockResponseWriter), eq(true), any(Runnable.class));
         verify(mockServerLogger).logEvent(
             new LogEntry()
                 .setType(RECEIVED_REQUEST)

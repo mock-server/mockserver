@@ -24,7 +24,7 @@ import static org.mockserver.exception.ExceptionHandling.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
 import static org.mockserver.log.model.LogEntry.LogMessageType.FORWARDED_REQUEST;
 import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
-import static org.mockserver.mock.action.ActionHandler.getRemoteAddress;
+import static org.mockserver.mock.action.http.HttpActionHandler.getRemoteAddress;
 import static org.mockserver.model.BinaryMessage.bytes;
 import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabledUpstream;
 

@@ -1,7 +1,9 @@
-package org.mockserver.mock.action;
+package org.mockserver.mock.action.http;
 
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.mock.action.ExpectationResponseCallback;
+import org.mockserver.mock.action.http.HttpResponseClassCallbackActionHandler;
 import org.mockserver.model.HttpClassCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -33,7 +35,7 @@ public class HttpResponseClassCallbackActionHandlerTest {
     @Test
     public void shouldHandleValidLocalClass() {
         // given
-        HttpClassCallback httpClassCallback = callback("org.mockserver.mock.action.HttpResponseClassCallbackActionHandlerTest$TestCallback");
+        HttpClassCallback httpClassCallback = callback("org.mockserver.mock.action.http.HttpResponseClassCallbackActionHandlerTest$TestCallback");
 
         // when
         HttpResponse actualHttpResponse = new HttpResponseClassCallbackActionHandler(new MockServerLogger()).handle(httpClassCallback, request().withBody("some_body"));

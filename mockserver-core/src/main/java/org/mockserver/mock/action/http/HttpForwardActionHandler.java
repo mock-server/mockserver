@@ -1,4 +1,4 @@
-package org.mockserver.mock.action;
+package org.mockserver.mock.action.http;
 
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.logging.MockServerLogger;

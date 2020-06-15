@@ -8,8 +8,8 @@ import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
-import org.mockserver.mock.HttpStateHandler;
-import org.mockserver.mock.action.ActionHandler;
+import org.mockserver.mock.HttpState;
+import org.mockserver.mock.action.http.HttpActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.MediaType;
 import org.mockserver.responsewriter.ResponseWriter;
@@ -32,7 +32,7 @@ import static io.netty.handler.codec.rtsp.RtspResponseStatuses.NOT_IMPLEMENTED;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.addSubjectAlternativeName;
-import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
+import static org.mockserver.mock.HttpState.PATH_PREFIX;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
 
@@ -43,14 +43,14 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
 
     private MockServerLogger mockServerLogger;
     // generic handling
-    private HttpStateHandler httpStateHandler;
+    private HttpState httpStateHandler;
     private Scheduler scheduler;
     // serializers
     private PortBindingSerializer portBindingSerializer;
     // mappers
     private HttpServletRequestToMockServerRequestDecoder httpServletRequestToMockServerRequestDecoder;
     // mockserver
-    private ActionHandler actionHandler;
+    private HttpActionHandler actionHandler;
     private EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop"));
 
     @SuppressWarnings("WeakerAccess")
@@ -58,10 +58,10 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
         this.mockServerLogger = new MockServerLogger(MockServerEventLog.class);
         this.httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerRequestDecoder(this.mockServerLogger);
         this.scheduler = new Scheduler(mockServerLogger);
-        this.httpStateHandler = new HttpStateHandler(this.mockServerLogger, this.scheduler);
+        this.httpStateHandler = new HttpState(this.mockServerLogger, this.scheduler);
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
-        this.actionHandler = new ActionHandler(workerGroup, httpStateHandler, null, new NettySslContextFactory(mockServerLogger));
+        this.actionHandler = new HttpActionHandler(workerGroup, httpStateHandler, null, new NettySslContextFactory(mockServerLogger));
     }
 
     @Override

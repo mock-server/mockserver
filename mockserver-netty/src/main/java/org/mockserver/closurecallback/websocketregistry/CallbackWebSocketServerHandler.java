@@ -12,8 +12,8 @@ import org.mockserver.codec.MockServerServerCodec;
 import org.mockserver.dashboard.DashboardWebSocketServerHandler;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mock.HttpStateHandler;
-import org.mockserver.netty.MockServerHandler;
+import org.mockserver.mock.HttpState;
+import org.mockserver.netty.HttpRequestHandler;
 import org.slf4j.event.Level;
 
 import java.util.UUID;
@@ -35,7 +35,7 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
     private WebSocketServerHandshaker handshaker;
     private final WebSocketClientRegistry webSocketClientRegistry;
 
-    public CallbackWebSocketServerHandler(HttpStateHandler httpStateHandler) {
+    public CallbackWebSocketServerHandler(HttpState httpStateHandler) {
         webSocketClientRegistry = httpStateHandler.getWebSocketClientRegistry();
         mockServerLogger = httpStateHandler.getMockServerLogger();
     }
@@ -95,7 +95,7 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
                     .addListener((ChannelFutureListener) future -> {
                         ctx.pipeline().remove(DashboardWebSocketServerHandler.class);
                         ctx.pipeline().remove(MockServerServerCodec.class);
-                        ctx.pipeline().remove(MockServerHandler.class);
+                        ctx.pipeline().remove(HttpRequestHandler.class);
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(Level.TRACE)

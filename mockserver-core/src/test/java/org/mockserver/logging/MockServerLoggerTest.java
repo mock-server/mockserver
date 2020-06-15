@@ -6,7 +6,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
-import org.mockserver.mock.HttpStateHandler;
+import org.mockserver.mock.HttpState;
 import org.mockserver.model.HttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.event.Level;
@@ -41,7 +41,7 @@ public class MockServerLoggerTest {
         try {
             // given
             logLevel("INFO");
-            HttpStateHandler mockHttpStateHandler = mock(HttpStateHandler.class);
+            HttpState mockHttpStateHandler = mock(HttpState.class);
             MockServerLogger logFormatter = new MockServerLogger(mockHttpStateHandler);
             HttpRequest request = request("some_path");
 

@@ -1,4 +1,4 @@
-package org.mockserver.mock.action;
+package org.mockserver.mock.action.http;
 
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.closurecallback.websocketregistry.LocalCallbackRegistry;
@@ -6,7 +6,9 @@ import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.closurecallback.websocketregistry.WebSocketRequestCallback;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mock.HttpStateHandler;
+import org.mockserver.mock.HttpState;
+import org.mockserver.mock.action.ExpectationForwardAndResponseCallback;
+import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.model.HttpObjectCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpRequestAndHttpResponse;
@@ -28,12 +30,12 @@ import static org.slf4j.event.Level.*;
 public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
     private WebSocketClientRegistry webSocketClientRegistry;
 
-    public HttpForwardObjectCallbackActionHandler(HttpStateHandler httpStateHandler, NettyHttpClient httpClient) {
+    public HttpForwardObjectCallbackActionHandler(HttpState httpStateHandler, NettyHttpClient httpClient) {
         super(httpStateHandler.getMockServerLogger(), httpClient);
         this.webSocketClientRegistry = httpStateHandler.getWebSocketClientRegistry();
     }
 
-    public void handle(final ActionHandler actionHandler, final HttpObjectCallback httpObjectCallback, final HttpRequest request, final ResponseWriter responseWriter, final boolean synchronous, Runnable expectationPostProcessor) {
+    public void handle(final HttpActionHandler actionHandler, final HttpObjectCallback httpObjectCallback, final HttpRequest request, final ResponseWriter responseWriter, final boolean synchronous, Runnable expectationPostProcessor) {
         final String clientId = httpObjectCallback.getClientId();
         if (LocalCallbackRegistry.forwardClientExists(clientId)) {
             handleLocally(actionHandler, httpObjectCallback, request, responseWriter, synchronous, clientId);
@@ -42,7 +44,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
         }
     }
 
-    private void handleLocally(ActionHandler actionHandler, HttpObjectCallback httpObjectCallback, HttpRequest request, ResponseWriter responseWriter, boolean synchronous, String clientId) {
+    private void handleLocally(HttpActionHandler actionHandler, HttpObjectCallback httpObjectCallback, HttpRequest request, ResponseWriter responseWriter, boolean synchronous, String clientId) {
         if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -102,7 +104,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
         }
     }
 
-    private void handleViaWebSocket(ActionHandler actionHandler, HttpObjectCallback httpObjectCallback, HttpRequest request, ResponseWriter responseWriter, boolean synchronous, Runnable expectationPostProcessor, String clientId) {
+    private void handleViaWebSocket(HttpActionHandler actionHandler, HttpObjectCallback httpObjectCallback, HttpRequest request, ResponseWriter responseWriter, boolean synchronous, Runnable expectationPostProcessor, String clientId) {
         final String webSocketCorrelationId = UUID.randomUUID().toString();
         webSocketClientRegistry.registerForwardCallbackHandler(webSocketCorrelationId, new WebSocketRequestCallback() {
             @Override
@@ -177,7 +179,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
         }
     }
 
-    private void handleResponseViaWebSocket(HttpRequest request, HttpForwardActionResult responseFuture, ActionHandler actionHandler, String webSocketCorrelationId, String clientId, Runnable expectationPostProcessor, ResponseWriter responseWriter, HttpObjectCallback httpObjectCallback, boolean synchronous) {
+    private void handleResponseViaWebSocket(HttpRequest request, HttpForwardActionResult responseFuture, HttpActionHandler actionHandler, String webSocketCorrelationId, String clientId, Runnable expectationPostProcessor, ResponseWriter responseWriter, HttpObjectCallback httpObjectCallback, boolean synchronous) {
         actionHandler.executeAfterForwardActionResponse(responseFuture, (httpResponse, exception) -> {
             if (httpResponse != null) {
                 // register callback for overridden response

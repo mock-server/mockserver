@@ -10,7 +10,7 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mock.HttpStateHandler;
+import org.mockserver.mock.HttpState;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.stop.Stoppable;
 
@@ -36,7 +36,7 @@ public abstract class LifeCycle implements Stoppable {
     protected final MockServerLogger mockServerLogger;
     protected EventLoopGroup bossGroup = new NioEventLoopGroup(5, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-bossEventLoop"));
     protected EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-workerEventLoop"));
-    protected HttpStateHandler httpStateHandler;
+    protected HttpState httpStateHandler;
     protected ServerBootstrap serverServerBootstrap;
     private List<Future<Channel>> serverChannelFutures = new ArrayList<>();
     private Scheduler scheduler;
@@ -44,7 +44,7 @@ public abstract class LifeCycle implements Stoppable {
     protected LifeCycle() {
         this.mockServerLogger = new MockServerLogger(MockServerEventLog.class);
         this.scheduler = new Scheduler(this.mockServerLogger);
-        this.httpStateHandler = new HttpStateHandler(this.mockServerLogger, this.scheduler);
+        this.httpStateHandler = new HttpState(this.mockServerLogger, this.scheduler);
     }
 
     public Future<String> stopAsync() {

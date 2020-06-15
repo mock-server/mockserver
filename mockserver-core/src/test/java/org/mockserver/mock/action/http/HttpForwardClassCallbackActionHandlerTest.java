@@ -1,9 +1,10 @@
-package org.mockserver.mock.action;
+package org.mockserver.mock.action.http;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.model.HttpClassCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -61,7 +62,7 @@ public class HttpForwardClassCallbackActionHandlerTest {
         httpResponse.complete(response("some_response_body"));
         when(mockHttpClient.sendRequest(any(HttpRequest.class), isNull(InetSocketAddress.class))).thenReturn(httpResponse);
 
-        HttpClassCallback httpClassCallback = callback(HttpForwardClassCallbackActionHandlerTest.TestCallback.class);
+        HttpClassCallback httpClassCallback = HttpClassCallback.callback(HttpForwardClassCallbackActionHandlerTest.TestCallback.class);
 
         // when
         CompletableFuture<HttpResponse> actualHttpResponse = httpForwardClassCallbackActionHandler

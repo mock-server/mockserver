@@ -48,7 +48,7 @@ import static org.mockserver.model.HttpResponse.response;
 /**
  * @author jamesdbloom
  */
-public class HttpStateHandler {
+public class HttpState {
 
     public static final String LOG_SEPARATOR = NEW_LINE + "------------------------------------" + NEW_LINE;
     public static final String PATH_PREFIX = "/mockserver";
@@ -73,7 +73,7 @@ public class HttpStateHandler {
     private MemoryMonitoring memoryMonitoring;
     private OpenAPIConverter openAPIConverter;
 
-    public HttpStateHandler(MockServerLogger mockServerLogger, Scheduler scheduler) {
+    public HttpState(MockServerLogger mockServerLogger, Scheduler scheduler) {
         this.mockServerLogger = mockServerLogger.setHttpStateHandler(this);
         this.scheduler = scheduler;
         this.webSocketClientRegistry = new WebSocketClientRegistry(mockServerLogger);

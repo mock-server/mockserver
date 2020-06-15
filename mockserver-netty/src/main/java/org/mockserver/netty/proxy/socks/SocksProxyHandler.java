@@ -12,7 +12,7 @@ import org.slf4j.event.Level;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.addSubjectAlternativeName;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
-import static org.mockserver.netty.MockServerHandler.PROXYING;
+import static org.mockserver.netty.HttpRequestHandler.PROXYING;
 import static org.mockserver.netty.unification.PortUnificationHandler.disableSslDownstream;
 import static org.mockserver.netty.unification.PortUnificationHandler.enableSslDownstream;
 

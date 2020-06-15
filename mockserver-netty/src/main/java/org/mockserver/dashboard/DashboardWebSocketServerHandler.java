@@ -22,7 +22,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.HttpStateHandler;
+import org.mockserver.mock.HttpState;
 import org.mockserver.mock.RequestMatchers;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.RequestDefinition;
@@ -66,7 +66,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     private static ObjectMapper objectMapper;
     private final MockServerLogger mockServerLogger;
     private final boolean sslEnabledUpstream;
-    private final HttpStateHandler httpStateHandler;
+    private final HttpState httpStateHandler;
     private HttpRequestSerializer httpRequestSerializer;
     private WebSocketServerHandshaker handshaker;
     private final Map<ChannelHandlerContext, HttpRequest> clientRegistry = new CircularHashMap<>(100);
@@ -76,7 +76,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     private ScheduledExecutorService throttleExecutorService;
     private Semaphore semaphore;
 
-    public DashboardWebSocketServerHandler(HttpStateHandler httpStateHandler, boolean sslEnabledUpstream) {
+    public DashboardWebSocketServerHandler(HttpState httpStateHandler, boolean sslEnabledUpstream) {
         this.httpStateHandler = httpStateHandler;
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.sslEnabledUpstream = sslEnabledUpstream;

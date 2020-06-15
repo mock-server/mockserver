@@ -14,8 +14,8 @@ import org.apache.commons.codec.binary.Hex;
 import org.junit.Test;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mock.HttpStateHandler;
-import org.mockserver.mock.action.ActionHandler;
+import org.mockserver.mock.HttpState;
+import org.mockserver.mock.action.http.HttpActionHandler;
 import org.mockserver.netty.MockServerUnificationInitializer;
 import org.mockserver.netty.proxy.socks.Socks5ProxyHandler;
 import org.mockserver.scheduler.Scheduler;
@@ -32,7 +32,7 @@ public class HttpProxyUnificationInitializerTest {
     @Test
     public void shouldSwitchToSsl() {
         // given
-        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new MockServerUnificationInitializer(mock(LifeCycle.class), new HttpStateHandler(new MockServerLogger(), mock(Scheduler.class)), mock(ActionHandler.class), null));
+        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new MockServerUnificationInitializer(mock(LifeCycle.class), new HttpState(new MockServerLogger(), mock(Scheduler.class)), mock(HttpActionHandler.class), null));
 
         // and - no SSL handler
         assertThat(embeddedChannel.pipeline().get(SslHandler.class), is(nullValue()));
@@ -57,7 +57,7 @@ public class HttpProxyUnificationInitializerTest {
     @Test
     public void shouldSwitchToSOCKS() {
         // given - embedded channel
-        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new MockServerUnificationInitializer(mock(LifeCycle.class), new HttpStateHandler(new MockServerLogger(), mock(Scheduler.class)), mock(ActionHandler.class), null));
+        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new MockServerUnificationInitializer(mock(LifeCycle.class), new HttpState(new MockServerLogger(), mock(Scheduler.class)), mock(HttpActionHandler.class), null));
 
         // and - no SOCKS handlers
         assertThat(embeddedChannel.pipeline().get(Socks5ProxyHandler.class), is(nullValue()));
@@ -93,7 +93,7 @@ public class HttpProxyUnificationInitializerTest {
     public void shouldSwitchToHttp() {
         // given
         EmbeddedChannel embeddedChannel = new EmbeddedChannel();
-        embeddedChannel.pipeline().addLast(new MockServerUnificationInitializer(mock(LifeCycle.class), new HttpStateHandler(new MockServerLogger(), mock(Scheduler.class)), mock(ActionHandler.class), null));
+        embeddedChannel.pipeline().addLast(new MockServerUnificationInitializer(mock(LifeCycle.class), new HttpState(new MockServerLogger(), mock(Scheduler.class)), mock(HttpActionHandler.class), null));
 
         // and - no HTTP handlers
         assertThat(embeddedChannel.pipeline().get(HttpServerCodec.class), is(nullValue()));
@@ -112,7 +112,7 @@ public class HttpProxyUnificationInitializerTest {
             "CallbackWebSocketServerHandler#0",
             "DashboardWebSocketServerHandler#0",
             "MockServerServerCodec#0",
-            "MockServerHandler#0",
+            "HttpRequestHandler#0",
             "DefaultChannelPipeline$TailContext#0"
         ));
     }
@@ -120,7 +120,7 @@ public class HttpProxyUnificationInitializerTest {
     @Test
     public void shouldSupportUnknownProtocol() {
         // given
-        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new MockServerUnificationInitializer(mock(LifeCycle.class), new HttpStateHandler(new MockServerLogger(), mock(Scheduler.class)), mock(ActionHandler.class), null));
+        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new MockServerUnificationInitializer(mock(LifeCycle.class), new HttpState(new MockServerLogger(), mock(Scheduler.class)), mock(HttpActionHandler.class), null));
 
         // and - channel open
         assertThat(embeddedChannel.isOpen(), is(true));

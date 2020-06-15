@@ -33,7 +33,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.*;
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
-import static org.mockserver.mock.HttpStateHandler.LOG_SEPARATOR;
+import static org.mockserver.mock.HttpState.LOG_SEPARATOR;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.MediaType.APPLICATION_JSON_UTF_8;
 import static org.mockserver.model.PortBinding.portBinding;

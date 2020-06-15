@@ -12,9 +12,8 @@ import org.mockserver.dashboard.DashboardHandler;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.memory.MemoryMonitoring;
-import org.mockserver.mock.HttpStateHandler;
-import org.mockserver.mock.action.ActionHandler;
+import org.mockserver.mock.HttpState;
+import org.mockserver.mock.action.http.HttpActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.MediaType;
 import org.mockserver.model.PortBinding;
@@ -36,7 +35,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.addSubjectAlternativeName;
 import static org.mockserver.exception.ExceptionHandling.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
-import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
+import static org.mockserver.mock.HttpState.PATH_PREFIX;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
 import static org.mockserver.netty.unification.PortUnificationHandler.*;
@@ -45,24 +44,24 @@ import static org.mockserver.netty.unification.PortUnificationHandler.*;
  * @author jamesdbloom
  */
 @ChannelHandler.Sharable
-public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> {
+public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
     public static final AttributeKey<Boolean> PROXYING = AttributeKey.valueOf("PROXYING");
     public static final AttributeKey<Set<String>> LOCAL_HOST_HEADERS = AttributeKey.valueOf("LOCAL_HOST_HEADERS");
     private MockServerLogger mockServerLogger;
-    private HttpStateHandler httpStateHandler;
+    private HttpState httpState;
     private PortBindingSerializer portBindingSerializer;
     private LifeCycle server;
-    private ActionHandler actionHandler;
+    private HttpActionHandler httpActionHandler;
     private DashboardHandler dashboardHandler = new DashboardHandler();
 
-    public MockServerHandler(LifeCycle server, HttpStateHandler httpStateHandler, ActionHandler actionHandler) {
+    public HttpRequestHandler(LifeCycle server, HttpState httpState, HttpActionHandler httpActionHandler) {
         super(false);
         this.server = server;
-        this.httpStateHandler = httpStateHandler;
-        this.mockServerLogger = httpStateHandler.getMockServerLogger();
+        this.httpState = httpState;
+        this.mockServerLogger = httpState.getMockServerLogger();
         this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
-        this.actionHandler = actionHandler;
+        this.httpActionHandler = httpActionHandler;
     }
 
     private static boolean isProxyingRequest(ChannelHandlerContext ctx) {
@@ -84,11 +83,11 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     @Override
     protected void channelRead0(final ChannelHandlerContext ctx, final HttpRequest request) {
 
-        ResponseWriter responseWriter = new NettyResponseWriter(mockServerLogger, ctx, httpStateHandler.getScheduler());
+        ResponseWriter responseWriter = new NettyResponseWriter(mockServerLogger, ctx, httpState.getScheduler());
         try {
             addSubjectAlternativeName(request.getFirstHeader(HOST.toString()));
 
-            if (!httpStateHandler.handle(request, responseWriter, false)) {
+            if (!httpState.handle(request, responseWriter, false)) {
 
                 if (request.matches("PUT", PATH_PREFIX + "/status", "/status") ||
                     isNotBlank(ConfigurationProperties.livenessHttpGetPath()) && request.matches("GET", ConfigurationProperties.livenessHttpGetPath())) {
@@ -147,7 +146,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 } else {
 
                     try {
-                        actionHandler.processAction(request, responseWriter, ctx, getLocalAddresses(ctx), isProxyingRequest(ctx), false);
+                        httpActionHandler.processAction(request, responseWriter, ctx, getLocalAddresses(ctx), isProxyingRequest(ctx), false);
                     } catch (Throwable throwable) {
                         mockServerLogger.logEvent(
                             new LogEntry()

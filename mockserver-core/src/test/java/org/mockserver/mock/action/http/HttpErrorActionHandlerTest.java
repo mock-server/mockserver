@@ -1,4 +1,4 @@
-package org.mockserver.mock.action;
+package org.mockserver.mock.action.http;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -7,6 +7,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.HttpServerCodec;
 import org.junit.Test;
+import org.mockserver.mock.action.http.HttpErrorActionHandler;
 import org.mockserver.model.HttpError;
 
 import static org.mockito.Mockito.*;

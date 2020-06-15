@@ -1,6 +1,7 @@
-package org.mockserver.mock.action;
+package org.mockserver.mock.action.http;
 
 import org.junit.Test;
+import org.mockserver.mock.action.http.HttpResponseActionHandler;
 import org.mockserver.model.HttpResponse;
 
 import static org.mockito.Mockito.*;

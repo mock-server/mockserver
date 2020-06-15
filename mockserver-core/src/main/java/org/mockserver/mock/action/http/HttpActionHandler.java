@@ -1,4 +1,4 @@
-package org.mockserver.mock.action;
+package org.mockserver.mock.action.http;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.EventLoopGroup;
@@ -10,7 +10,7 @@ import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.HttpStateHandler;
+import org.mockserver.mock.HttpState;
 import org.mockserver.model.*;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.responsewriter.ResponseWriter;
@@ -40,11 +40,11 @@ import static org.slf4j.event.Level.TRACE;
  * @author jamesdbloom
  */
 @SuppressWarnings("rawtypes")
-public class ActionHandler {
+public class HttpActionHandler {
 
     public static final AttributeKey<InetSocketAddress> REMOTE_SOCKET = AttributeKey.valueOf("REMOTE_SOCKET");
 
-    private final HttpStateHandler httpStateHandler;
+    private final HttpState httpStateHandler;
     private final Scheduler scheduler;
     private MockServerLogger mockServerLogger;
     private HttpResponseActionHandler httpResponseActionHandler;
@@ -63,7 +63,7 @@ public class ActionHandler {
     private HopByHopHeaderFilter hopByHopHeaderFilter = new HopByHopHeaderFilter();
     private HttpRequestToCurlSerializer httpRequestToCurlSerializer;
 
-    public ActionHandler(EventLoopGroup eventLoopGroup, HttpStateHandler httpStateHandler, ProxyConfiguration proxyConfiguration, NettySslContextFactory nettySslContextFactory) {
+    public HttpActionHandler(EventLoopGroup eventLoopGroup, HttpState httpStateHandler, ProxyConfiguration proxyConfiguration, NettySslContextFactory nettySslContextFactory) {
         this.httpStateHandler = httpStateHandler;
         this.scheduler = httpStateHandler.getScheduler();
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
@@ -116,7 +116,7 @@ public class ActionHandler {
                 }
                 case RESPONSE_OBJECT_CALLBACK: {
                     scheduler.schedule(() ->
-                            getHttpResponseObjectCallbackActionHandler().handle(ActionHandler.this, (HttpObjectCallback) action, request, responseWriter, synchronous, expectationPostProcessor),
+                            getHttpResponseObjectCallbackActionHandler().handle(HttpActionHandler.this, (HttpObjectCallback) action, request, responseWriter, synchronous, expectationPostProcessor),
                         synchronous, action.getDelay());
                     break;
                 }
@@ -146,7 +146,7 @@ public class ActionHandler {
                 }
                 case FORWARD_OBJECT_CALLBACK: {
                     scheduler.schedule(() ->
-                            getHttpForwardObjectCallbackActionHandler().handle(ActionHandler.this, (HttpObjectCallback) action, request, responseWriter, synchronous, expectationPostProcessor),
+                            getHttpForwardObjectCallbackActionHandler().handle(HttpActionHandler.this, (HttpObjectCallback) action, request, responseWriter, synchronous, expectationPostProcessor),
                         synchronous, action.getDelay());
                     break;
                 }

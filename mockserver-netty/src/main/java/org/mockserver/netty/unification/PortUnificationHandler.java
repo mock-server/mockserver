@@ -23,10 +23,10 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.MockServerHttpResponseToFullHttpResponse;
-import org.mockserver.mock.HttpStateHandler;
-import org.mockserver.mock.action.ActionHandler;
+import org.mockserver.mock.HttpState;
+import org.mockserver.mock.action.http.HttpActionHandler;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.netty.MockServerHandler;
+import org.mockserver.netty.HttpRequestHandler;
 import org.mockserver.netty.proxy.BinaryHandler;
 import org.mockserver.netty.proxy.socks.Socks4ProxyHandler;
 import org.mockserver.netty.proxy.socks.Socks5ProxyHandler;
@@ -48,10 +48,10 @@ import static org.mockserver.configuration.ConfigurationProperties.tlsMutualAuth
 import static org.mockserver.exception.ExceptionHandling.*;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED_RESPONSE;
 import static org.mockserver.logging.MockServerLogger.isEnabled;
-import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
+import static org.mockserver.mock.action.http.HttpActionHandler.REMOTE_SOCKET;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.netty.MockServerHandler.LOCAL_HOST_HEADERS;
-import static org.mockserver.netty.MockServerHandler.PROXYING;
+import static org.mockserver.netty.HttpRequestHandler.LOCAL_HOST_HEADERS;
+import static org.mockserver.netty.HttpRequestHandler.PROXYING;
 import static org.mockserver.netty.proxy.relay.RelayConnectHandler.*;
 import static org.slf4j.event.Level.TRACE;
 import static org.slf4j.event.Level.WARN;
@@ -71,12 +71,12 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     private final LoggingHandler loggingHandlerLast = new LoggingHandler(PortUnificationHandler.class.getSimpleName() + "-last");
     private final HttpContentLengthRemover httpContentLengthRemover = new HttpContentLengthRemover();
     private final LifeCycle server;
-    private final HttpStateHandler httpStateHandler;
-    private final ActionHandler actionHandler;
+    private final HttpState httpStateHandler;
+    private final HttpActionHandler actionHandler;
     private final NettySslContextFactory nettySslContextFactory;
     private final MockServerHttpResponseToFullHttpResponse mockServerHttpResponseToFullHttpResponse;
 
-    public PortUnificationHandler(LifeCycle server, HttpStateHandler httpStateHandler, ActionHandler actionHandler, NettySslContextFactory nettySslContextFactory) {
+    public PortUnificationHandler(LifeCycle server, HttpState httpStateHandler, HttpActionHandler actionHandler, NettySslContextFactory nettySslContextFactory) {
         this.server = server;
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.httpStateHandler = httpStateHandler;
@@ -250,7 +250,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
             addLastIfNotPresent(pipeline, new CallbackWebSocketServerHandler(httpStateHandler));
             addLastIfNotPresent(pipeline, new DashboardWebSocketServerHandler(httpStateHandler, isSslEnabledUpstream(ctx.channel())));
             addLastIfNotPresent(pipeline, new MockServerServerCodec(mockServerLogger, isSslEnabledUpstream(ctx.channel())));
-            addLastIfNotPresent(pipeline, new MockServerHandler(server, httpStateHandler, actionHandler));
+            addLastIfNotPresent(pipeline, new HttpRequestHandler(server, httpStateHandler, actionHandler));
             pipeline.remove(this);
 
             ctx.channel().attr(LOCAL_HOST_HEADERS).set(getLocalAddresses(ctx));
