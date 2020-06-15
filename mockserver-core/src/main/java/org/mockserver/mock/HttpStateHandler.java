@@ -1,6 +1,5 @@
 package org.mockserver.mock;
 
-import io.swagger.v3.parser.OpenAPIV3Parser;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.MockServerEventLog;
@@ -63,7 +62,6 @@ public class HttpStateHandler {
     private MockServerLogger mockServerLogger;
     private WebSocketClientRegistry webSocketClientRegistry;
     // serializers
-    private HttpRequestSerializer httpRequestSerializer;
     private RequestDefinitionSerializer requestDefinitionSerializer;
     private LogEventRequestAndResponseSerializer httpRequestResponseSerializer;
     private ExpectationSerializer expectationSerializer;
@@ -73,7 +71,6 @@ public class HttpStateHandler {
     private VerificationSequenceSerializer verificationSequenceSerializer;
     private LogEntrySerializer logEntrySerializer;
     private MemoryMonitoring memoryMonitoring;
-    private OpenAPIV3Parser openAPIV3Parser;
     private OpenAPIConverter openAPIConverter;
 
     public HttpStateHandler(MockServerLogger mockServerLogger, Scheduler scheduler) {
@@ -549,7 +546,7 @@ public class HttpStateHandler {
                     new LogEntry()
                         .setType(VERIFICATION)
                         .setLogLevel(Level.INFO)
-                        .setHttpRequests(verificationSequence.getHttpRequests().toArray(new HttpRequest[0]))
+                        .setHttpRequests(verificationSequence.getHttpRequests().toArray(new RequestDefinition[0]))
                         .setMessageFormat("verifying sequence that match:{}")
                         .setArguments(verificationSequence)
                 );
@@ -632,13 +629,6 @@ public class HttpStateHandler {
         getMockServerLog().stop();
     }
 
-    private HttpRequestSerializer getHttpRequestSerializer() {
-        if (this.httpRequestSerializer == null) {
-            this.httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
-        }
-        return httpRequestSerializer;
-    }
-
     private RequestDefinitionSerializer getRequestDefinitionSerializer() {
         if (this.requestDefinitionSerializer == null) {
             this.requestDefinitionSerializer = new RequestDefinitionSerializer(mockServerLogger);
@@ -693,13 +683,6 @@ public class HttpStateHandler {
             this.logEntrySerializer = new LogEntrySerializer(mockServerLogger);
         }
         return logEntrySerializer;
-    }
-
-    private OpenAPIV3Parser getOpenAPIV3Parser() {
-        if (this.openAPIV3Parser == null) {
-            this.openAPIV3Parser = new OpenAPIV3Parser();
-        }
-        return openAPIV3Parser;
     }
 
     private OpenAPIConverter getOpenAPIConverter() {

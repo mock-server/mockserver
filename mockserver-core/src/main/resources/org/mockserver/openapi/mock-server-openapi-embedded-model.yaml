@@ -66,7 +66,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/HttpRequest"
+              $ref: "#/components/schemas/RequestDefinition"
         description: request used to match expectations and recored requests to clear
   /reset:
     put:
@@ -123,7 +123,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/HttpRequest"
+              $ref: "#/components/schemas/RequestDefinition"
         description: >-
           request used to match which recorded requests, expectations or log messages to return, an empty body matches all requests, expectations or log messages
   /verify:
@@ -245,7 +245,7 @@ components:
         priority:
           type: integer
         httpRequest:
-          $ref: "#/components/schemas/HttpRequest"
+          $ref: "#/components/schemas/RequestDefinition"
         openAPIDefinition:
           $ref: "#/components/schemas/OpenAPIDefinition"
         httpResponse:
@@ -293,8 +293,13 @@ components:
             - httpOverrideForwardedRequest
         - required:
             - httpError
+    RequestDefinition:
+      title: "request definition"
+      oneOf:
+        - "$ref": "#/components/schemas/HttpRequest"
+        - "$ref": "#/components/schemas/OpenAPIDefinition"
     HttpRequest:
-      title: "request matcher"
+      title: "request properties matcher"
       type: object
       additionalProperties: false
       properties:
@@ -317,7 +322,7 @@ components:
         socketAddress:
           $ref: "#/components/schemas/SocketAddress"
     OpenAPIDefinition:
-      title: open api or swagger request matcher
+      title: "open api or swagger request matcher"
       type: object
       additionalProperties: false
       properties:
@@ -716,7 +721,7 @@ components:
       additionalProperties: false
       properties:
         httpRequest:
-          $ref: "#/components/schemas/HttpRequest"
+          $ref: "#/components/schemas/RequestDefinition"
         times:
           $ref: "#/components/schemas/VerificationTimes"
     VerificationTimes:
@@ -736,7 +741,7 @@ components:
         httpRequests:
           type: array
           items:
-            $ref: "#/components/schemas/HttpRequest"
+            $ref: "#/components/schemas/RequestDefinition"
     Ports:
       description: "list of ports"
       type: object

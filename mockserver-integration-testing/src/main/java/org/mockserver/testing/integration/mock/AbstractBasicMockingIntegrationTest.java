@@ -1067,6 +1067,51 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
+    public void shouldVerifyNotEnoughRequestsReceivedWithOpenAPI() {
+        // when
+        mockServerClient
+            .when(openAPI().withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json"), exactly(4))
+            .respond(response().withBody("some_body"));
+
+        // and
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath(calculatePath("/pets"))
+                    .withQueryStringParameter("limit", "10"),
+                headersToIgnore
+            )
+        );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("/pets"))
+                    .withHeader("content-type", "application/json")
+                    .withBody(json("" +
+                        "{" + NEW_LINE +
+                        "    \"id\": 50, " + NEW_LINE +
+                        "    \"name\": \"scruffles\", " + NEW_LINE +
+                        "    \"tag\": \"dog\"" + NEW_LINE +
+                        "}"
+                    )),
+                headersToIgnore
+            )
+        );
+
+        // then
+        mockServerClient
+            .verify(
+                openAPI()
+                    .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json"),
+                VerificationTimes.atLeast(2)
+            );
+    }
+
+    @Test
     public void shouldVerifyNoRequestsReceived() {
         // when
         mockServerClient.reset();
@@ -1102,6 +1147,76 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
         mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")));
         mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")), request(calculatePath("some_path_three")));
+    }
+
+    @Test
+    public void shouldVerifySequenceOfRequestsReceivedByOpenAPI() {
+        // when
+        mockServerClient
+            .when(openAPI().withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json"), exactly(4))
+            .respond(response().withBody("some_body"));
+
+        // and
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath(calculatePath("/pets"))
+                    .withQueryStringParameter("limit", "10"),
+                headersToIgnore
+            )
+        );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("/pets"))
+                    .withHeader("content-type", "application/json")
+                    .withBody(json("" +
+                        "{" + NEW_LINE +
+                        "    \"id\": 50, " + NEW_LINE +
+                        "    \"name\": \"scruffles\", " + NEW_LINE +
+                        "    \"tag\": \"dog\"" + NEW_LINE +
+                        "}"
+                    )),
+                headersToIgnore
+            )
+        );
+
+        // then
+        try {
+            mockServerClient
+                .verify(
+                    openAPI()
+                        .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                        .withOperationId("createPets"),
+                    openAPI()
+                        .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                        .withOperationId("listPets")
+                );
+            fail("expected exception to be thrown");
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + NEW_LINE +
+                "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_petstore_example.json\"," + NEW_LINE +
+                "  \"operationId\" : \"createPets\"" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_petstore_example.json\"," + NEW_LINE +
+                "  \"operationId\" : \"listPets\"" + NEW_LINE +
+                "} ]> but was:<[ {" + NEW_LINE +
+                "  \"method\" : \"GET\"," + NEW_LINE +
+                "  \"path\" : \"/pets\","));
+        }
+        mockServerClient
+            .verify(
+                openAPI()
+                    .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                    .withOperationId("listPets"),
+                openAPI()
+                    .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                    .withOperationId("createPets")
+            );
     }
 
     @Test
@@ -1158,6 +1273,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         mockServerClient
             .when(openAPI().withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json"), exactly(4))
             .respond(response().withBody("some_body"));
+
+        // and
         assertEquals(
             response("some_body"),
             makeRequest(
@@ -1666,6 +1783,110 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path1")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldClearExpectationsAndLogsByOpenAPI() {
+        // when
+        mockServerClient
+            .when(openAPI().withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json"), exactly(4))
+            .respond(response().withBody("some_body"));
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path2"))
+            )
+            .respond(
+                response()
+                    .withBody("some_body2")
+            );
+
+        // and
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath(calculatePath("/pets"))
+                    .withQueryStringParameter("limit", "10"),
+                headersToIgnore
+            )
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request().withPath(calculatePath("not_found")),
+                headersToIgnore
+            )
+        );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("/pets"))
+                    .withHeader("content-type", "application/json")
+                    .withBody(json("" +
+                        "{" + NEW_LINE +
+                        "    \"id\": 50, " + NEW_LINE +
+                        "    \"name\": \"scruffles\", " + NEW_LINE +
+                        "    \"tag\": \"dog\"" + NEW_LINE +
+                        "}"
+                    )),
+                headersToIgnore
+            )
+        );
+
+        // when
+        mockServerClient
+            .clear(
+                openAPI()
+                    .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+            );
+
+
+        // and then - request log cleared
+        verifyRequestsMatches(
+            mockServerClient.retrieveRecordedRequests(null),
+            request(calculatePath("not_found"))
+        );
+
+        // then - expectations cleared
+        assertThat(
+            mockServerClient.retrieveActiveExpectations(null),
+            arrayContaining(
+                new Expectation(request()
+                    .withPath(calculatePath("some_path2")))
+                    .thenRespond(
+                        response()
+                            .withBody("some_body2")
+                    )
+            )
+        );
+        assertEquals(
+            response()
+                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
+                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath(calculatePath("/pets"))
+                    .withQueryStringParameter("limit", "10"),
+                headersToIgnore
+            )
+        );
+
+        // and then - remaining expectations not cleared
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body2"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path2")),
                 headersToIgnore)
         );
     }

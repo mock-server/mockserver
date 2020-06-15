@@ -14,6 +14,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.VERIFICATION_FAILED;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
+import static org.mockserver.validator.jsonschema.JsonSchemaVerificationValidator.jsonSchemaVerificationValidator;
 
 /**
  * @author jamesdbloom
@@ -26,7 +27,7 @@ public class VerificationSerializer implements Serializer<Verification> {
 
     public VerificationSerializer(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-        verificationValidator = new JsonSchemaVerificationValidator(mockServerLogger);
+        verificationValidator = jsonSchemaVerificationValidator(mockServerLogger);
     }
 
     public String serialize(Verification verification) {

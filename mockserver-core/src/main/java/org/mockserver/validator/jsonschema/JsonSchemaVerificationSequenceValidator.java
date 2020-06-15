@@ -7,7 +7,7 @@ import org.mockserver.logging.MockServerLogger;
  */
 public class JsonSchemaVerificationSequenceValidator extends JsonSchemaValidator {
 
-    public JsonSchemaVerificationSequenceValidator(MockServerLogger mockServerLogger) {
+    private JsonSchemaVerificationSequenceValidator(MockServerLogger mockServerLogger) {
         super(
             mockServerLogger,
             "org/mockserver/model/schema/",

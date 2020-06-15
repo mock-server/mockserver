@@ -7,7 +7,7 @@
             "type": "array",
             "additionalProperties": false,
             "items": {
-                "$ref": "#/definitions/httpRequest"
+                "$ref": "#/definitions/requestDefinition"
             }
         }
     },

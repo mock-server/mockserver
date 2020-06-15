@@ -1,13 +1,16 @@
 package org.mockserver.junit.jupiter.integration;
 
-import org.hamcrest.Matchers;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Test;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.file.FileReader;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.serialization.ExpectationSerializer;
+import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequest;
 import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequestAndResponse;
 import org.mockserver.uuid.UUIDService;
@@ -15,6 +18,7 @@ import org.mockserver.verify.VerificationTimes;
 import org.slf4j.event.Level;
 
 import java.util.Arrays;
+import java.util.UUID;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -28,6 +32,8 @@ import static org.junit.Assert.fail;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.once;
+import static org.mockserver.mock.Expectation.when;
+import static org.mockserver.mock.OpenAPIExpectation.openAPIExpectation;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpClassCallback.callback;
@@ -38,6 +44,8 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.*;
 import static org.mockserver.model.HttpTemplate.template;
+import static org.mockserver.model.JsonBody.json;
+import static org.mockserver.model.OpenAPIDefinition.openAPI;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.StringBody.exact;
@@ -49,697 +57,9 @@ import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_S
 public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockingIntegrationTestBase {
 
     @Test
-    public void shouldForwardRequestInHTTP() {
-        // when
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("echo"))
-            )
-            .forward(
-                forward()
-                    .withHost("127.0.0.1")
-                    .withPort(insecureEchoServer.getPort())
-            );
-
-        // then
-        // - in http
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header("x-test", "test_headers_and_body")
-                )
-                .withBody("an_example_body_http"),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("echo"))
-                    .withMethod("POST")
-                    .withHeaders(
-                        header("x-test", "test_headers_and_body")
-                    )
-                    .withBody("an_example_body_http"),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header("x-test", "test_headers_and_body")
-                )
-                .withBody("an_example_body_https"),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("echo"))
-                    .withMethod("POST")
-                    .withHeaders(
-                        header("x-test", "test_headers_and_body")
-                    )
-                    .withBody("an_example_body_https"),
-                headersToIgnore)
-        );
-    }
-
-    @Test
-    public void shouldForwardRequestInHTTPS() {
-        // when
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("echo"))
-            )
-            .forward(
-                forward()
-                    .withHost("127.0.0.1")
-                    .withPort(secureEchoServer.getPort())
-                    .withScheme(HttpForward.Scheme.HTTPS)
-            );
-
-        // then
-        // - in http
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header("x-test", "test_headers_and_body")
-                )
-                .withBody("an_example_body_http"),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("echo"))
-                    .withMethod("POST")
-                    .withHeaders(
-                        header("x-test", "test_headers_and_body")
-                    )
-                    .withBody("an_example_body_http"),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header("x-test", "test_headers_and_body")
-                )
-                .withBody("an_example_body_https"),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("echo"))
-                    .withMethod("POST")
-                    .withHeaders(
-                        header("x-test", "test_headers_and_body")
-                    )
-                    .withBody("an_example_body_https"),
-                headersToIgnore)
-        );
-    }
-
-    @Test
-    public void shouldForwardOverriddenRequest() {
-        // when
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("echo"))
-                    .withSecure(false)
-            )
-            .forward(
-                forwardOverriddenRequest(
-                    request()
-                        .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
-                        .withBody("some_overridden_body")
-                ).withDelay(MILLISECONDS, 10)
-            );
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("echo"))
-                    .withSecure(true)
-            )
-            .forward(
-                forwardOverriddenRequest(
-                    request()
-                        .withHeader("Host", "localhost:" + secureEchoServer.getPort())
-                        .withBody("some_overridden_body")
-                ).withDelay(MILLISECONDS, 10)
-            );
-
-        // then
-        // - in http
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header("x-test", "test_headers_and_body")
-                )
-                .withBody("some_overridden_body"),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("echo"))
-                    .withMethod("POST")
-                    .withHeaders(
-                        header("x-test", "test_headers_and_body")
-                    )
-                    .withBody("an_example_body_http"),
-                headersToIgnore
-
-            )
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header("x-test", "test_headers_and_body_https")
-                )
-                .withBody("some_overridden_body"),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("echo"))
-                    .withMethod("POST")
-                    .withHeaders(
-                        header("x-test", "test_headers_and_body_https")
-                    )
-                    .withBody("an_example_body_https"),
-                headersToIgnore)
-        );
-    }
-
-    @Test
-    public void shouldForwardOverriddenRequestWithOverriddenResponse() {
-        // when
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("echo"))
-                    .withSecure(false)
-            )
-            .forward(
-                forwardOverriddenRequest(
-                    request()
-                        .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
-                        .withBody("some_overridden_body"),
-                    response()
-                        .withHeader("extra_header", "some_value")
-                        .withHeader("content-length", "29")
-                        .withBody("some_overridden_response_body")
-                ).withDelay(MILLISECONDS, 10)
-            );
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("echo"))
-                    .withSecure(true)
-            )
-            .forward(
-                forwardOverriddenRequest(
-                    request()
-                        .withHeader("Host", "localhost:" + secureEchoServer.getPort())
-                        .withBody("some_overridden_body"),
-                    response()
-                        .withHeader("extra_header", "some_value")
-                        .withHeader("content-length", "29")
-                        .withBody("some_overridden_response_body")
-                ).withDelay(MILLISECONDS, 10)
-            );
-
-        // then
-        // - in http
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header("x-test", "test_headers_and_body"),
-                    header("extra_header", "some_value")
-                )
-                .withBody("some_overridden_response_body"),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("echo"))
-                    .withMethod("POST")
-                    .withHeaders(
-                        header("x-test", "test_headers_and_body")
-                    )
-                    .withBody("an_example_body_http"),
-                headersToIgnore
-
-            )
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header("x-test", "test_headers_and_body_https"),
-                    header("extra_header", "some_value")
-                )
-                .withBody("some_overridden_response_body"),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("echo"))
-                    .withMethod("POST")
-                    .withHeaders(
-                        header("x-test", "test_headers_and_body_https")
-                    )
-                    .withBody("an_example_body_https"),
-                headersToIgnore)
-        );
-    }
-
-    @Test
-    public void shouldForwardOverriddenRequestWithSocketAddress() {
-        // when
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("echo"))
-                    .withSecure(false)
-            )
-            .forward(
-                forwardOverriddenRequest(
-                    request()
-                        .withHeader("Host", "incorrect_host:1234")
-                        .withBody("some_overridden_body")
-                        .withSocketAddress(
-                            "localhost",
-                            insecureEchoServer.getPort(),
-                            SocketAddress.Scheme.HTTP
-                        )
-                ).withDelay(MILLISECONDS, 10)
-            );
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("echo"))
-                    .withSecure(true)
-            )
-            .forward(
-                forwardOverriddenRequest(
-                    request()
-                        .withHeader("Host", "incorrect_host:1234")
-                        .withBody("some_overridden_body")
-                        .withSocketAddress(
-                            "localhost",
-                            secureEchoServer.getPort(),
-                            SocketAddress.Scheme.HTTPS
-                        )
-                ).withDelay(MILLISECONDS, 10)
-            );
-
-        // then
-        // - in http
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header("x-test", "test_headers_and_body")
-                )
-                .withBody("some_overridden_body"),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("echo"))
-                    .withMethod("POST")
-                    .withHeaders(
-                        header("x-test", "test_headers_and_body")
-                    )
-                    .withBody("an_example_body_http"),
-                headersToIgnore
-
-            )
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header("x-test", "test_headers_and_body_https")
-                )
-                .withBody("some_overridden_body"),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("echo"))
-                    .withMethod("POST")
-                    .withHeaders(
-                        header("x-test", "test_headers_and_body_https")
-                    )
-                    .withBody("an_example_body_https"),
-                headersToIgnore)
-        );
-    }
-
-    @Test
-    public void shouldCallbackForwardCallbackToOverrideRequestInTestClasspath() {
-        // when
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("echo"))
-            )
-            .forward(
-                callback()
-                    .withCallbackClass(PrecannedTestExpectationForwardCallbackRequest.class)
-            );
-
-        // then
-        // - in http
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header("x-test", "test_headers_and_body")
-                )
-                .withBody("some_overridden_body"),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("echo"))
-                    .withMethod("POST")
-                    .withHeaders(
-                        header("x-test", "test_headers_and_body"),
-                        header("x-echo-server-port", insecureEchoServer.getPort())
-                    )
-                    .withBody("an_example_body_http"),
-                headersToIgnore
-            )
-        );
-
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header("x-test", "test_headers_and_body")
-                )
-                .withBody("some_overridden_body"),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("echo"))
-                    .withMethod("POST")
-                    .withHeaders(
-                        header("x-test", "test_headers_and_body"),
-                        header("x-echo-server-port", secureEchoServer.getPort())
-                    )
-                    .withBody("an_example_body_https"),
-                headersToIgnore
-            )
-        );
-    }
-
-    @Test
-    public void shouldCallbackForwardCallbackToOverrideRequestAndResponseInTestClasspath() {
-        // when
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("echo"))
-            )
-            .forward(
-                callback()
-                    .withCallbackClass(PrecannedTestExpectationForwardCallbackRequestAndResponse.class)
-            );
-
-        // then
-        // - in http
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header("x-response-test", "x-response-test"),
-                    header("x-test", "test_headers_and_body")
-                )
-                .withBody("some_overidden_response_body"),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("echo"))
-                    .withMethod("POST")
-                    .withHeaders(
-                        header("x-test", "test_headers_and_body"),
-                        header("x-echo-server-port", insecureEchoServer.getPort())
-                    )
-                    .withBody("an_example_body_http"),
-                headersToIgnore
-            )
-        );
-
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header("x-response-test", "x-response-test"),
-                    header("x-test", "test_headers_and_body")
-                )
-                .withBody("some_overidden_response_body"),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("echo"))
-                    .withMethod("POST")
-                    .withHeaders(
-                        header("x-test", "test_headers_and_body"),
-                        header("x-echo-server-port", secureEchoServer.getPort())
-                    )
-                    .withBody("an_example_body_https"),
-                headersToIgnore
-            )
-        );
-    }
-
-    @Test
-    public void shouldForwardTemplateInVelocity() {
-        // when
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("echo"))
-            )
-            .forward(
-                template(HttpTemplate.TemplateType.VELOCITY,
-                    "{" + NEW_LINE +
-                        "    'path' : \"/somePath\"," + NEW_LINE +
-                        "    'headers' : [ {" + NEW_LINE +
-                        "        'name' : \"Host\"," + NEW_LINE +
-                        "        'values' : [ \"127.0.0.1:" + insecureEchoServer.getPort() + "\" ]" + NEW_LINE +
-                        "    }, {" + NEW_LINE +
-                        "        'name' : \"x-test\"," + NEW_LINE +
-                        "        'values' : [ \"$!request.headers['x-test'][0]\" ]" + NEW_LINE +
-                        "    } ]," + NEW_LINE +
-                        "    'body': \"{'name': 'value'}\"" + NEW_LINE +
-                        "}")
-                    .withDelay(MILLISECONDS, 10)
-            );
-
-        // then
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header("x-test", "test_headers_and_body")
-                )
-                .withBody("{'name': 'value'}"),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("echo"))
-                    .withMethod("POST")
-                    .withHeaders(
-                        header("x-test", "test_headers_and_body")
-                    )
-                    .withBody("an_example_body_http"),
-                headersToIgnore
-            )
-        );
-    }
-
-    @Test
-    public void shouldAllowSimultaneousForwardAndResponseExpectations() {
-        // when
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("echo")),
-                once()
-            )
-            .forward(
-                forward()
-                    .withHost("127.0.0.1")
-                    .withPort(insecureEchoServer.getPort())
-            );
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("test_headers_and_body")),
-                once()
-            )
-            .respond(
-                response()
-                    .withBody("some_body")
-            );
-
-        // then
-        // - forward
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header("x-test", "test_headers_and_body")
-                )
-                .withBody("an_example_body"),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("echo"))
-                    .withMethod("POST")
-                    .withHeaders(
-                        header("x-test", "test_headers_and_body")
-                    )
-                    .withBody("an_example_body"),
-                headersToIgnore)
-        );
-        // - respond
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body"),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("test_headers_and_body")),
-                headersToIgnore)
-        );
-        // - no response or forward
-        assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("test_headers_and_body")),
-                headersToIgnore)
-        );
-    }
-
-    @Test
-    public void shouldCallbackForResponseToSpecifiedClassWithPrecannedResponse() {
-        // when
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("callback"))
-            )
-            .respond(
-                callback()
-                    .withCallbackClass("org.mockserver.testing.integration.callback.PrecannedTestExpectationResponseCallback")
-            );
-
-        // then
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withHeaders(
-                    header("x-callback", "test_callback_header")
-                )
-                .withBody("a_callback_response"),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("callback"))
-                    .withMethod("POST")
-                    .withHeaders(
-                        header("x-test", "test_headers_and_body")
-                    )
-                    .withBody("an_example_body_http"),
-                headersToIgnore
-            )
-        );
-    }
-
-    @Test
-    public void shouldSupportBatchedExpectations() throws Exception {
-        // when
-        httpClient.sendRequest(
-            request()
-                .withMethod("PUT")
-                .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
-                .withPath(addContextToPath("mockserver/expectation"))
-                .withBody("" +
-                    "[" +
-                    new ExpectationSerializer(new MockServerLogger())
-                        .serialize(
-                            new Expectation(request("/path_one"), once(), TimeToLive.unlimited(), 0)
-                                .thenRespond(response().withBody("some_body_one"))
-                        ) + "," +
-                    new ExpectationSerializer(new MockServerLogger())
-                        .serialize(
-                            new Expectation(request("/path_two"), once(), TimeToLive.unlimited(), 0)
-                                .thenRespond(response().withBody("some_body_two"))
-                        ) + "," +
-                    new ExpectationSerializer(new MockServerLogger())
-                        .serialize(
-                            new Expectation(request("/path_three"), once(), TimeToLive.unlimited(), 0)
-                                .thenRespond(response().withBody("some_body_three"))
-                        ) +
-                    "]"
-                )
-        ).get(10, SECONDS);
-
-        // then
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body_one"),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("/path_one")),
-                headersToIgnore)
-        );
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body_two"),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("/path_two")),
-                headersToIgnore)
-        );
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body_three"),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("/path_three")),
-                headersToIgnore)
-        );
-    }
-
-    @Test
     public void shouldReturnResponseWithOnlyBody() {
         // when
-        mockServerClient.when(request()).respond(response().withBody("some_body"));
+        Expectation[] upsertedExpectations = mockServerClient.when(request()).respond(response().withBody("some_body"));
 
         // then
         assertEquals(
@@ -752,6 +72,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withPath(calculatePath("")),
                 headersToIgnore)
         );
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(new Expectation(request()).thenRespond(response().withBody("some_body"))));
     }
 
     @Test
@@ -973,6 +295,501 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
+    public void shouldReturnResponseForExpectationWithDelay() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path1"))
+            )
+            .respond(
+                response()
+                    .withBody("some_body1")
+                    .withDelay(new Delay(SECONDS, 2))
+            );
+
+        // then
+        long timeBeforeRequest = System.currentTimeMillis();
+        HttpResponse httpResponse = makeRequest(
+            request()
+                .withPath(calculatePath("some_path1")),
+            headersToIgnore
+        );
+        long timeAfterRequest = System.currentTimeMillis();
+
+        // and
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body1"),
+            httpResponse
+        );
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(MILLISECONDS.toMillis(1900)));
+        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(4)));
+    }
+
+    @Test
+    public void shouldReturnResponseForCallbackClassWithDelay() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("callback"))
+            )
+            .respond(
+                callback()
+                    .withCallbackClass("org.mockserver.testing.integration.callback.PrecannedTestExpectationResponseCallback")
+                    .withDelay(new Delay(SECONDS, 2))
+            );
+
+        // then
+        long timeBeforeRequest = System.currentTimeMillis();
+        HttpResponse httpResponse = makeRequest(
+            request()
+                .withPath(calculatePath("callback"))
+                .withMethod("POST")
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("an_example_body_http"),
+            headersToIgnore
+        );
+        long timeAfterRequest = System.currentTimeMillis();
+
+        // and
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withHeaders(
+                    header("x-callback", "test_callback_header")
+                )
+                .withBody("a_callback_response"),
+            httpResponse
+        );
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(MILLISECONDS.toMillis(1900)));
+        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(4)));
+    }
+
+    @Test
+    public void shouldReturnResponseForCallbackToSpecifiedClassWithPrecannedResponse() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("callback"))
+            )
+            .respond(
+                callback()
+                    .withCallbackClass("org.mockserver.testing.integration.callback.PrecannedTestExpectationResponseCallback")
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withHeaders(
+                    header("x-callback", "test_callback_header")
+                )
+                .withBody("a_callback_response"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("callback"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore
+            )
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingOpenAPIUrlWithOperationId() {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .when(openAPI(
+                "org/mockserver/mock/openapi_petstore_example.json",
+                "listPets"
+            ))
+            .respond(response().withBody("some_body"));
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath("/pets")
+                    .withQueryStringParameter("limit", "10"),
+                headersToIgnore)
+        );
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(new Expectation(openAPI(
+            "org/mockserver/mock/openapi_petstore_example.json",
+            "listPets"
+        )).thenRespond(response().withBody("some_body"))));
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingOpenAPISpecWithOperationId() throws JsonProcessingException {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .when(openAPI(
+                FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json"),
+                "listPets"
+            ))
+            .respond(response().withBody("some_body"));
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath("/pets")
+                    .withQueryStringParameter("limit", "10"),
+                headersToIgnore)
+        );
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(new Expectation(openAPI(
+            ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")).toPrettyString(),
+            "listPets"
+        )).thenRespond(response().withBody("some_body"))));
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingOpenAPIUrlWithoutOperationId() {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .when(openAPI().withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json"))
+            .respond(response().withBody("some_body"));
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath("/pets")
+                    .withQueryStringParameter("limit", "10"),
+                headersToIgnore)
+        );
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(new Expectation(
+            openAPI()
+                .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+        ).thenRespond(response().withBody("some_body"))));
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingOpenAPIExpectationWithUrl() {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .upsert(openAPIExpectation(
+                "org/mockserver/mock/openapi_petstore_example.json"
+            ));
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader("x-next", "some_string_value")
+                .withHeader("content-type", "application/json")
+                .withBody(json("[ {" + NEW_LINE +
+                    "  \"id\" : 0," + NEW_LINE +
+                    "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                    "  \"tag\" : \"some_string_value\"" + NEW_LINE +
+                    "} ]")),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath("/pets")
+                    .withQueryStringParameter("limit", "10"),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(CREATED_201.code())
+                .withReasonPhrase(CREATED_201.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath("/pets")
+                    .withBody(json("{" + NEW_LINE +
+                        "  \"id\" : 0," + NEW_LINE +
+                        "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                        "  \"tag\" : \"some_string_value\"" + NEW_LINE +
+                        "}")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader("content-type", "application/json")
+                .withBody(json("{" + NEW_LINE +
+                    "  \"id\" : 0," + NEW_LINE +
+                    "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                    "  \"tag\" : \"some_string_value\"" + NEW_LINE +
+                    "}")),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath("/pets/12345")
+                    .withHeader("x-request-id", UUID.randomUUID().toString()),
+                headersToIgnore)
+        );
+
+        // and
+        assertThat(upsertedExpectations.length, is(4));
+        assertThat(upsertedExpectations[0], is(
+            when("org/mockserver/mock/openapi_petstore_example.json", "listPets")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("x-next", "some_string_value")
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("[ {" + NEW_LINE +
+                            "  \"id\" : 0," + NEW_LINE +
+                            "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                            "  \"tag\" : \"some_string_value\"" + NEW_LINE +
+                            "} ]"))
+                )
+        ));
+        assertThat(upsertedExpectations[1], is(
+            when("org/mockserver/mock/openapi_petstore_example.json", "createPets")
+                .thenRespond(
+                    response()
+                        .withStatusCode(201)
+                )
+        ));
+        assertThat(upsertedExpectations[2], is(
+            when("org/mockserver/mock/openapi_petstore_example.json", "showPetById")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("[ {" + NEW_LINE +
+                            "  \"id\" : 0," + NEW_LINE +
+                            "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                            "  \"tag\" : \"some_string_value\"" + NEW_LINE +
+                            "} ]"))
+                )
+        ));
+        assertThat(upsertedExpectations[3], is(
+            when("org/mockserver/mock/openapi_petstore_example.json", "somePath")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("[ {" + NEW_LINE +
+                            "  \"id\" : 0," + NEW_LINE +
+                            "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                            "  \"tag\" : \"some_string_value\"" + NEW_LINE +
+                            "} ]"))
+                )
+        ));
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingOpenAPIExpectationWithSpecAndResponse() throws JsonProcessingException {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .upsert(openAPIExpectation(
+                FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json"),
+                ImmutableMap.of(
+                    "listPets", "500",
+                    "createPets", "default",
+                    "showPetById", "200"
+                )
+            ));
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(INTERNAL_SERVER_ERROR_500.code())
+                .withReasonPhrase(INTERNAL_SERVER_ERROR_500.reasonPhrase())
+                .withHeader("content-type", "application/json")
+                .withBody(json("{" + NEW_LINE +
+                    "  \"code\" : 0," + NEW_LINE +
+                    "  \"message\" : \"some_string_value\"" + NEW_LINE +
+                    "}")),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath("/pets")
+                    .withQueryStringParameter("limit", "10"),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader("content-type", "application/json")
+                .withBody(json("{" + NEW_LINE +
+                    "  \"code\" : 0," + NEW_LINE +
+                    "  \"message\" : \"some_string_value\"" + NEW_LINE +
+                    "}")),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath("/pets")
+                    .withBody(json("{" + NEW_LINE +
+                        "  \"id\" : 0," + NEW_LINE +
+                        "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                        "  \"tag\" : \"some_string_value\"" + NEW_LINE +
+                        "}")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader("content-type", "application/json")
+                .withBody(json("{" + NEW_LINE +
+                    "  \"id\" : 0," + NEW_LINE +
+                    "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                    "  \"tag\" : \"some_string_value\"" + NEW_LINE +
+                    "}")),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath("/pets/12345")
+                    .withHeader("x-request-id", UUID.randomUUID().toString()),
+                headersToIgnore)
+        );
+
+        // and
+        assertThat(upsertedExpectations.length, is(3));
+        assertThat(upsertedExpectations[0], is(
+            when(ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")).toPrettyString(), "listPets")
+                .thenRespond(
+                    response()
+                        .withStatusCode(500)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("{" + NEW_LINE +
+                            "  \"code\" : 0," + NEW_LINE +
+                            "  \"message\" : \"some_string_value\"" + NEW_LINE +
+                            "}"))
+                )
+        ));
+        assertThat(upsertedExpectations[1], is(
+            when(ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")).toPrettyString(), "createPets")
+                .thenRespond(
+                    response()
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("{" + NEW_LINE +
+                            "  \"code\" : 0," + NEW_LINE +
+                            "  \"message\" : \"some_string_value\"" + NEW_LINE +
+                            "}"))
+                )
+        ));
+        assertThat(upsertedExpectations[2], is(
+            when(ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")).toPrettyString(), "showPetById")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("[ {" + NEW_LINE +
+                            "  \"id\" : 0," + NEW_LINE +
+                            "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                            "  \"tag\" : \"some_string_value\"" + NEW_LINE +
+                            "} ]"))
+                )
+        ));
+    }
+
+    @Test
+    public void shouldSupportBatchedExpectations() throws Exception {
+        // when
+        HttpResponse httpResponse = httpClient.sendRequest(
+            request()
+                .withMethod("PUT")
+                .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
+                .withPath(addContextToPath("mockserver/expectation"))
+                .withBody("" +
+                    "[" +
+                    new ExpectationSerializer(new MockServerLogger())
+                        .serialize(
+                            new Expectation(request("/path_one"), once(), TimeToLive.unlimited(), 0)
+                                .thenRespond(response().withBody("some_body_one"))
+                        ) + "," +
+                    new ExpectationSerializer(new MockServerLogger())
+                        .serialize(
+                            new Expectation(request("/path_two"), once(), TimeToLive.unlimited(), 0)
+                                .thenRespond(response().withBody("some_body_two"))
+                        ) + "," +
+                    new ExpectationSerializer(new MockServerLogger())
+                        .serialize(
+                            new Expectation(request("/path_three"), once(), TimeToLive.unlimited(), 0)
+                                .thenRespond(response().withBody("some_body_three"))
+                        ) +
+                    "]"
+                )
+        ).get(10, SECONDS);
+
+        // then
+        Expectation[] upsertedExpectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(httpResponse.getBodyAsString(), true);
+        assertThat(upsertedExpectations.length, is(3));
+        assertThat(upsertedExpectations[0], is(
+            new Expectation(request("/path_one"), once(), TimeToLive.unlimited(), 0)
+                .thenRespond(response().withBody("some_body_one"))
+        ));
+        assertThat(upsertedExpectations[1], is(
+            new Expectation(request("/path_two"), once(), TimeToLive.unlimited(), 0)
+                .thenRespond(response().withBody("some_body_two"))
+        ));
+        assertThat(upsertedExpectations[2], is(
+            new Expectation(request("/path_three"), once(), TimeToLive.unlimited(), 0)
+                .thenRespond(response().withBody("some_body_three"))
+        ));
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_one"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("/path_one")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_two"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("/path_two")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_three"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("/path_three")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
     public void shouldNotReturnResponseForNonMatchingBody() {
         // when
         mockServerClient
@@ -1083,6 +900,35 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withCookies(cookie("cookieName", "cookieValue")),
                 headersToIgnore)
         );
+    }
+
+    @Test
+    public void shouldNotReturnResponseForNonMatchingOpenAPI() {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .when(openAPI(
+                "org/mockserver/mock/openapi_petstore_example.json",
+                "listPets"
+            ))
+            .respond(response().withBody("some_body"));
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
+                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withMethod("PUT")
+                    .withPath("/pets")
+                    .withQueryStringParameter("limit", "10"),
+                headersToIgnore)
+        );
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(new Expectation(openAPI(
+            "org/mockserver/mock/openapi_petstore_example.json",
+            "listPets"
+        )).thenRespond(response().withBody("some_body"))));
     }
 
     @Test
@@ -1307,6 +1153,69 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
+    public void shouldRetrieveRecordedRequestsByOpenAPI() {
+        // when
+        mockServerClient
+            .when(openAPI().withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json"), exactly(4))
+            .respond(response().withBody("some_body"));
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath(calculatePath("/pets"))
+                    .withQueryStringParameter("limit", "10"),
+                headersToIgnore
+            )
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request().withPath(calculatePath("not_found")),
+                headersToIgnore
+            )
+        );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("/pets"))
+                    .withHeader("content-type", "application/json")
+                    .withBody(json("" +
+                        "{" + NEW_LINE +
+                        "    \"id\": 50, " + NEW_LINE +
+                        "    \"name\": \"scruffles\", " + NEW_LINE +
+                        "    \"tag\": \"dog\"" + NEW_LINE +
+                        "}"
+                    )),
+                headersToIgnore
+            )
+        );
+
+        // then
+        // TODO(jamesdbloom) why is this path not prefixed with context route?
+        verifyRequestsMatches(
+            mockServerClient.retrieveRecordedRequests(openAPI().withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")),
+            request()
+                .withMethod("GET")
+                .withPath("/pets")
+                .withQueryStringParameter("limit", "10"),
+            request()
+                .withMethod("POST")
+                .withPath("/pets")
+                .withHeader("content-type", "application/json")
+                .withBody(json("" +
+                    "{" + NEW_LINE +
+                    "    \"id\": 50, " + NEW_LINE +
+                    "    \"name\": \"scruffles\", " + NEW_LINE +
+                    "    \"tag\": \"dog\"" + NEW_LINE +
+                    "}"
+                ))
+        );
+    }
+
+    @Test
     public void shouldRetrieveActiveExpectations() {
         // when
         HttpRequest complexRequest = request()
@@ -1448,6 +1357,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         try {
             // given
             ConfigurationProperties.logLevel("INFO");
+
+            // when
             UUIDService.fixedUUID = true;
             mockServerClient.reset();
             mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(response().withBody("some_body"));
@@ -1496,7 +1407,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
 
                 new String[]{
                     "received request:" + NEW_LINE +
-                        "" + NEW_LINE +
+                        NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"method\" : \"GET\"," + NEW_LINE +
                         "    \"path\" : \"/some_path_one\"," + NEW_LINE +
@@ -1547,7 +1458,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 },
                 new String[]{
                     "received request:" + NEW_LINE +
-                        "" + NEW_LINE +
+                        NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"method\" : \"GET\"," + NEW_LINE +
                         "    \"path\" : \"/not_found\"," + NEW_LINE +
@@ -1600,7 +1511,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 },
                 new String[]{
                     "received request:" + NEW_LINE +
-                        "" + NEW_LINE +
+                        NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"method\" : \"GET\"," + NEW_LINE +
                         "    \"path\" : \"/some_path_three\"," + NEW_LINE +
@@ -1828,7 +1739,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
-    public void shouldReturnErrorForInvalidExpectation() throws Exception {
+    public void shouldErrorForInvalidExpectation() throws Exception {
         // when
         HttpResponse httpResponse = httpClient.sendRequest(
             request()
@@ -1862,7 +1773,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
-    public void shouldReturnErrorForInvalidRequest() throws Exception {
+    public void shouldErrorForInvalidRequest() throws Exception {
         // when
         HttpResponse httpResponse = httpClient.sendRequest(
             request()
@@ -1878,7 +1789,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
 
         // then
         assertThat(httpResponse.getStatusCode(), is(400));
-        assertThat(httpResponse.getBodyAsString(), Matchers.is("5 errors:" + NEW_LINE +
+        assertThat(httpResponse.getBodyAsString(), is("5 errors:" + NEW_LINE +
             " - oneOf of the following must be specified [\"httpRequest\", \"openAPIDefinition\"] but found 0 without errors" + NEW_LINE +
             " - instance type (string) does not match any allowed primitive type (allowed: [\"boolean\"]) for schema \"httpRequest/properties/keepAlive\" for field \"/keepAlive\"" + NEW_LINE +
             " - instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"]) for schema \"httpRequest/properties/method\" for field \"/method\"" + NEW_LINE +
@@ -1886,127 +1797,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             " - instance failed to match exactly one schema (matched 0 out of 2)" + NEW_LINE +
             NEW_LINE +
             OPEN_API_SPECIFICATION_URL));
-    }
-
-    @Test
-    public void shouldReturnResponseForExpectationWithDelay() {
-        // when
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("some_path1"))
-            )
-            .respond(
-                response()
-                    .withBody("some_body1")
-                    .withDelay(new Delay(SECONDS, 2))
-            );
-
-        // then
-        long timeBeforeRequest = System.currentTimeMillis();
-        HttpResponse httpResponse = makeRequest(
-            request()
-                .withPath(calculatePath("some_path1")),
-            headersToIgnore
-        );
-        long timeAfterRequest = System.currentTimeMillis();
-
-        // and
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body1"),
-            httpResponse
-        );
-        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(MILLISECONDS.toMillis(1900)));
-        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(4)));
-    }
-
-    @Test
-    public void shouldCallbackClassForResponseForExpectationWithDelay() {
-        // when
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("callback"))
-            )
-            .respond(
-                callback()
-                    .withCallbackClass("org.mockserver.testing.integration.callback.PrecannedTestExpectationResponseCallback")
-                    .withDelay(new Delay(SECONDS, 2))
-            );
-
-        // then
-        long timeBeforeRequest = System.currentTimeMillis();
-        HttpResponse httpResponse = makeRequest(
-            request()
-                .withPath(calculatePath("callback"))
-                .withMethod("POST")
-                .withHeaders(
-                    header("x-test", "test_headers_and_body")
-                )
-                .withBody("an_example_body_http"),
-            headersToIgnore
-        );
-        long timeAfterRequest = System.currentTimeMillis();
-
-        // and
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withHeaders(
-                    header("x-callback", "test_callback_header")
-                )
-                .withBody("a_callback_response"),
-            httpResponse
-        );
-        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(MILLISECONDS.toMillis(1900)));
-        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(4)));
-    }
-
-    @Test
-    public void shouldReturnResponseFromVelocityTemplateWithDelay() {
-        // when
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("some_path"))
-            )
-            .respond(
-                template(HttpTemplate.TemplateType.VELOCITY)
-                    .withTemplate(
-                        "{" + NEW_LINE +
-                            "     \"statusCode\": 200," + NEW_LINE +
-                            "     \"headers\": [ { \"name\": \"name\", \"values\": [ \"$!request.headers['name'][0]\" ] } ]," + NEW_LINE +
-                            "     \"body\": \"$!request.body\"" + NEW_LINE +
-                            "}" + NEW_LINE
-                    )
-                    .withDelay(new Delay(SECONDS, 2))
-            );
-
-        // then
-        long timeBeforeRequest = System.currentTimeMillis();
-        HttpResponse response = makeRequest(
-            request()
-                .withPath(calculatePath("some_path"))
-                .withHeader("name", "value")
-                .withBody("some_request_body"),
-            headersToIgnore);
-        long timeAfterRequest = System.currentTimeMillis();
-
-        // and
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeader("name", "value")
-                .withBody("some_request_body"),
-            response
-        );
-        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(MILLISECONDS.toMillis(1900)));
-        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(4)));
     }
 
     @Test
@@ -2101,12 +1891,256 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
-    public void shouldForwardOverriddenRequestWithOverriddenResponseWithDelay() {
+    public void shouldForwardRequestInHTTP() {
         // when
-        mockServerClient
+        Expectation[] upsertedExpectations = mockServerClient
             .when(
                 request()
                     .withPath(calculatePath("echo"))
+            )
+            .forward(
+                forward()
+                    .withHost("127.0.0.1")
+                    .withPort(insecureEchoServer.getPort())
+            );
+
+        // then
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+                .thenForward(
+                    forward()
+                        .withHost("127.0.0.1")
+                        .withPort(insecureEchoServer.getPort())
+                )
+        ));
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("an_example_body_http"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("an_example_body_https"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_https"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldForwardRequestInHTTPS() {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                forward()
+                    .withHost("127.0.0.1")
+                    .withPort(secureEchoServer.getPort())
+                    .withScheme(HttpForward.Scheme.HTTPS)
+            );
+        // then
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+                .thenForward(
+                    forward()
+                        .withHost("127.0.0.1")
+                        .withPort(secureEchoServer.getPort())
+                        .withScheme(HttpForward.Scheme.HTTPS)
+                )
+        ));
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("an_example_body_http"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("an_example_body_https"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_https"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldForwardOverriddenRequest() {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(false)
+            )
+            .forward(
+                forwardOverriddenRequest(
+                    request()
+                        .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
+                        .withBody("some_overridden_body")
+                ).withDelay(MILLISECONDS, 10)
+            );
+        Expectation[] upsertedSecureExpectations = mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(true)
+            )
+            .forward(
+                forwardOverriddenRequest(
+                    request()
+                        .withHeader("Host", "localhost:" + secureEchoServer.getPort())
+                        .withBody("some_overridden_body")
+                ).withDelay(MILLISECONDS, 10)
+            );
+
+        // then
+        // - in http
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(false)
+            )
+                .thenForward(
+                    forwardOverriddenRequest(
+                        request()
+                            .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
+                            .withBody("some_overridden_body")
+                    ).withDelay(MILLISECONDS, 10)
+                )
+        ));
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore
+
+            )
+        );
+        // - in https
+        assertThat(upsertedSecureExpectations.length, is(1));
+        assertThat(upsertedSecureExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(true)
+            )
+                .thenForward(
+                    forwardOverriddenRequest(
+                        request()
+                            .withHeader("Host", "localhost:" + secureEchoServer.getPort())
+                            .withBody("some_overridden_body")
+                    ).withDelay(MILLISECONDS, 10)
+                )
+        ));
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body_https")
+                )
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body_https")
+                    )
+                    .withBody("an_example_body_https"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldForwardOverriddenRequestWithOverriddenResponse() {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(false)
             )
             .forward(
                 forwardOverriddenRequest(
@@ -2117,24 +2151,28 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         .withHeader("extra_header", "some_value")
                         .withHeader("content-length", "29")
                         .withBody("some_overridden_response_body")
-                ).withDelay(new Delay(SECONDS, 2))
+                ).withDelay(MILLISECONDS, 10)
+            );
+        Expectation[] upsertedSecureExpectations = mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(true)
+            )
+            .forward(
+                forwardOverriddenRequest(
+                    request()
+                        .withHeader("Host", "localhost:" + secureEchoServer.getPort())
+                        .withBody("some_overridden_body"),
+                    response()
+                        .withHeader("extra_header", "some_value")
+                        .withHeader("content-length", "29")
+                        .withBody("some_overridden_response_body")
+                ).withDelay(MILLISECONDS, 10)
             );
 
         // then
-        long timeBeforeRequest = System.currentTimeMillis();
-        HttpResponse response = makeRequest(
-            request()
-                .withPath(calculatePath("echo"))
-                .withMethod("POST")
-                .withHeaders(
-                    header("x-test", "test_headers_and_body")
-                )
-                .withBody("an_example_body_http"),
-            headersToIgnore
-        );
-        long timeAfterRequest = System.currentTimeMillis();
-
-        // and
+        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -2144,14 +2182,273 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     header("extra_header", "some_value")
                 )
                 .withBody("some_overridden_response_body"),
-            response
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore
+
+            )
         );
-        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(MILLISECONDS.toMillis(1900)));
-        assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(4)));
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(false)
+            )
+                .thenForward(
+                    forwardOverriddenRequest(
+                        request()
+                            .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
+                            .withBody("some_overridden_body"),
+                        response()
+                            .withHeader("extra_header", "some_value")
+                            .withHeader("content-length", "29")
+                            .withBody("some_overridden_response_body")
+                    ).withDelay(MILLISECONDS, 10)
+                )
+        ));
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body_https"),
+                    header("extra_header", "some_value")
+                )
+                .withBody("some_overridden_response_body"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body_https")
+                    )
+                    .withBody("an_example_body_https"),
+                headersToIgnore)
+        );
+        assertThat(upsertedSecureExpectations.length, is(1));
+        assertThat(upsertedSecureExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(true)
+            )
+                .thenForward(
+                    forwardOverriddenRequest(
+                        request()
+                            .withHeader("Host", "localhost:" + secureEchoServer.getPort())
+                            .withBody("some_overridden_body"),
+                        response()
+                            .withHeader("extra_header", "some_value")
+                            .withHeader("content-length", "29")
+                            .withBody("some_overridden_response_body")
+                    ).withDelay(MILLISECONDS, 10)
+                )
+        ));
     }
 
     @Test
-    public void shouldCallbackClassForForwardWithDelay() {
+    public void shouldForwardOverriddenRequestWithSocketAddress() {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(false)
+            )
+            .forward(
+                forwardOverriddenRequest(
+                    request()
+                        .withHeader("Host", "incorrect_host:1234")
+                        .withBody("some_overridden_body")
+                        .withSocketAddress(
+                            "localhost",
+                            insecureEchoServer.getPort(),
+                            SocketAddress.Scheme.HTTP
+                        )
+                ).withDelay(MILLISECONDS, 10)
+            );
+        Expectation[] upsertedSecureExpectations = mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(true)
+            )
+            .forward(
+                forwardOverriddenRequest(
+                    request()
+                        .withHeader("Host", "incorrect_host:1234")
+                        .withBody("some_overridden_body")
+                        .withSocketAddress(
+                            "localhost",
+                            secureEchoServer.getPort(),
+                            SocketAddress.Scheme.HTTPS
+                        )
+                ).withDelay(MILLISECONDS, 10)
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore
+
+            )
+        );
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(false)
+            )
+                .thenForward(
+                    forwardOverriddenRequest(
+                        request()
+                            .withHeader("Host", "incorrect_host:1234")
+                            .withBody("some_overridden_body")
+                            .withSocketAddress(
+                                "localhost",
+                                insecureEchoServer.getPort(),
+                                SocketAddress.Scheme.HTTP
+                            )
+                    ).withDelay(MILLISECONDS, 10)
+                )
+        ));
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body_https")
+                )
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body_https")
+                    )
+                    .withBody("an_example_body_https"),
+                headersToIgnore)
+        );
+        assertThat(upsertedSecureExpectations.length, is(1));
+        assertThat(upsertedSecureExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(true)
+            )
+                .thenForward(
+                    forwardOverriddenRequest(
+                        request()
+                            .withHeader("Host", "incorrect_host:1234")
+                            .withBody("some_overridden_body")
+                            .withSocketAddress(
+                                "localhost",
+                                secureEchoServer.getPort(),
+                                SocketAddress.Scheme.HTTPS
+                            )
+                    ).withDelay(MILLISECONDS, 10)
+                )
+        ));
+    }
+
+    @Test
+    public void shouldForwardTemplateInVelocity() {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                template(HttpTemplate.TemplateType.VELOCITY,
+                    "{" + NEW_LINE +
+                        "    'path' : \"/somePath\"," + NEW_LINE +
+                        "    'headers' : [ {" + NEW_LINE +
+                        "        'name' : \"Host\"," + NEW_LINE +
+                        "        'values' : [ \"127.0.0.1:" + insecureEchoServer.getPort() + "\" ]" + NEW_LINE +
+                        "    }, {" + NEW_LINE +
+                        "        'name' : \"x-test\"," + NEW_LINE +
+                        "        'values' : [ \"$!request.headers['x-test'][0]\" ]" + NEW_LINE +
+                        "    } ]," + NEW_LINE +
+                        "    'body': \"{'name': 'value'}\"" + NEW_LINE +
+                        "}")
+                    .withDelay(MILLISECONDS, 10)
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("{'name': 'value'}"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore
+            )
+        );
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+                .thenForward(
+                    template(HttpTemplate.TemplateType.VELOCITY,
+                        "{" + NEW_LINE +
+                            "    'path' : \"/somePath\"," + NEW_LINE +
+                            "    'headers' : [ {" + NEW_LINE +
+                            "        'name' : \"Host\"," + NEW_LINE +
+                            "        'values' : [ \"127.0.0.1:" + insecureEchoServer.getPort() + "\" ]" + NEW_LINE +
+                            "    }, {" + NEW_LINE +
+                            "        'name' : \"x-test\"," + NEW_LINE +
+                            "        'values' : [ \"$!request.headers['x-test'][0]\" ]" + NEW_LINE +
+                            "    } ]," + NEW_LINE +
+                            "    'body': \"{'name': 'value'}\"" + NEW_LINE +
+                            "}")
+                        .withDelay(MILLISECONDS, 10)
+                )
+        ));
+    }
+
+    @Test
+    public void shouldForwardCallbackClassWithDelay() {
         // when
         mockServerClient
             .when(
@@ -2192,5 +2489,217 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         );
         assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(MILLISECONDS.toMillis(1900)));
         assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(4)));
+    }
+
+    @Test
+    public void shouldForwardCallbackClassToOverrideRequestInTestClasspath() {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                callback()
+                    .withCallbackClass(PrecannedTestExpectationForwardCallbackRequest.class)
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body"),
+                        header("x-echo-server-port", insecureEchoServer.getPort())
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore
+            )
+        );
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+                .thenForward(
+                    callback()
+                        .withCallbackClass(PrecannedTestExpectationForwardCallbackRequest.class)
+                )
+        ));
+
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body"),
+                        header("x-echo-server-port", secureEchoServer.getPort())
+                    )
+                    .withBody("an_example_body_https"),
+                headersToIgnore
+            )
+        );
+    }
+
+    @Test
+    public void shouldForwardCallbackClassToOverrideRequestAndResponseInTestClasspath() {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                callback()
+                    .withCallbackClass(PrecannedTestExpectationForwardCallbackRequestAndResponse.class)
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-response-test", "x-response-test"),
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overidden_response_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body"),
+                        header("x-echo-server-port", insecureEchoServer.getPort())
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore
+            )
+        );
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+                .thenForward(
+                    callback()
+                        .withCallbackClass(PrecannedTestExpectationForwardCallbackRequestAndResponse.class)
+                )
+        ));
+
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-response-test", "x-response-test"),
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overidden_response_body"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body"),
+                        header("x-echo-server-port", secureEchoServer.getPort())
+                    )
+                    .withBody("an_example_body_https"),
+                headersToIgnore
+            )
+        );
+    }
+
+    @Test
+    public void shouldAllowSimultaneousForwardAndResponseExpectations() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo")),
+                once()
+            )
+            .forward(
+                forward()
+                    .withHost("127.0.0.1")
+                    .withPort(insecureEchoServer.getPort())
+            );
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("test_headers_and_body")),
+                once()
+            )
+            .respond(
+                response()
+                    .withBody("some_body")
+            );
+
+        // then
+        // - forward
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("an_example_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body"),
+                headersToIgnore)
+        );
+        // - respond
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("test_headers_and_body")),
+                headersToIgnore)
+        );
+        // - no response or forward
+        assertEquals(
+            response()
+                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
+                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("test_headers_and_body")),
+                headersToIgnore)
+        );
     }
 }

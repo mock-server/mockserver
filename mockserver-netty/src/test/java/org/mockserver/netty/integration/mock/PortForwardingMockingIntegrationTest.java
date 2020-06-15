@@ -29,6 +29,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.OK_200;
+import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.OpenAPIDefinition.openAPI;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.RegexBody.regex;
@@ -217,6 +218,112 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path1")),
+                headersToIgnore)
+        );
+    }
+
+
+    @Test
+    @Override
+    public void shouldClearExpectationsAndLogsByOpenAPI() {
+        // when
+        mockServerClient
+            .when(openAPI().withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json"), exactly(4))
+            .respond(response().withBody("some_body"));
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path2"))
+            )
+            .respond(
+                response()
+                    .withBody("some_body2")
+            );
+
+        // and
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath(calculatePath("/pets"))
+                    .withQueryStringParameter("limit", "10"),
+                headersToIgnore
+            )
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request().withPath(calculatePath("not_found")),
+                headersToIgnore
+            )
+        );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("/pets"))
+                    .withHeader("content-type", "application/json")
+                    .withBody(json("" +
+                        "{" + NEW_LINE +
+                        "    \"id\": 50, " + NEW_LINE +
+                        "    \"name\": \"scruffles\", " + NEW_LINE +
+                        "    \"tag\": \"dog\"" + NEW_LINE +
+                        "}"
+                    )),
+                headersToIgnore
+            )
+        );
+
+        // when
+        mockServerClient
+            .clear(
+                openAPI()
+                    .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+            );
+
+
+        // and then - request log cleared
+        verifyRequestsMatches(
+            mockServerClient.retrieveRecordedRequests(null),
+            request(calculatePath("not_found"))
+        );
+
+        // then - expectations cleared
+        assertThat(
+            mockServerClient.retrieveActiveExpectations(null),
+            arrayContaining(
+                new Expectation(request()
+                    .withPath(calculatePath("some_path2")))
+                    .thenRespond(
+                        response()
+                            .withBody("some_body2")
+                    )
+            )
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath(calculatePath("/pets"))
+                    .withQueryStringParameter("limit", "10"),
+                headersToIgnore
+            )
+        );
+
+        // and then - remaining expectations not cleared
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body2"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path2")),
                 headersToIgnore)
         );
     }
