@@ -39,7 +39,7 @@ public class BinaryHandler extends SimpleChannelInboundHandler<ByteBuf> {
     private final NettyHttpClient httpClient;
 
     public BinaryHandler(final MockServerLogger mockServerLogger, final Scheduler scheduler, final NettyHttpClient httpClient) {
-        super(false);
+        super(true);
         this.mockServerLogger = mockServerLogger;
         this.scheduler = scheduler;
         this.httpClient = httpClient;
