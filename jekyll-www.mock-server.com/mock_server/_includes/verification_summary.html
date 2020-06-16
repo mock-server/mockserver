@@ -2,7 +2,7 @@
 <p>Verification can be specified as follows:</p>
 <ul>
     <li>a <a href="/mock_server/getting_started.html#request_matchers"><strong>request matcher</strong></a> and a condition indicating the number of times the request should be matched</li>
-	<li>a sequence of <a href="/mock_server/getting_started.html#request_matchers"><strong>request matchers</strong></a> that is matched in order</li>
+	<li>a sequence of <strong><a href="/mock_server/getting_started.html#request_matchers">request matcher</a>s</strong> that is matched in order</li>
 </ul>
 
 <h3>Verifying Repeating Requests</h3>
@@ -85,12 +85,12 @@ function (error) {
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verify" -d '{
-"httpRequest": {
-    "path": "/simple"
-},
-"times": {
-    "atMost": 2
-}
+    "httpRequest": {
+        "path": "/simple"
+    },
+    "times": {
+        "atMost": 2
+    }
 }'</code></pre>
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
     </div>
@@ -171,12 +171,12 @@ mockServerClient("localhost", 1080)
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verify" -d '{
-"httpRequest": {
-    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json"
-},
-"times": {
-    "atLeast": 2
-}
+    "httpRequest": {
+        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json"
+    },
+    "times": {
+        "atLeast": 2
+    }
 }'</code></pre>
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
     </div>
@@ -216,14 +216,14 @@ mockServerClient("localhost", 1080)
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verify" -d '{
-"httpRequest": {
-    "specUrlOrPayload": "org/mockserver/mock/openapi_petstore_example.json",
-    "operationId": "showPetById"
-},
-"times": {
-    "atLeast": 1,
-    "atMost": 1
-}
+    "httpRequest": {
+        "specUrlOrPayload": "org/mockserver/mock/openapi_petstore_example.json",
+        "operationId": "showPetById"
+    },
+    "times": {
+        "atLeast": 1,
+        "atMost": 1
+    }
 }'</code></pre>
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
     </div>
@@ -386,7 +386,6 @@ mockServerClient("localhost", 1080)
     <div class="panel">
             <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verifySequence" -d '{
    "httpRequests":[
-      {
       {
          "path": "/status"
       },
