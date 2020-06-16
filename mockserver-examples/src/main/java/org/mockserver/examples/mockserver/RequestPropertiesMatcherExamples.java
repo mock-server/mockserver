@@ -1,15 +1,19 @@
 package org.mockserver.examples.mockserver;
 
+import org.apache.commons.io.IOUtils;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
+import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.Not;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
+import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
@@ -32,7 +36,7 @@ import static org.mockserver.model.XmlSchemaBody.xmlSchemaFromResource;
 /**
  * @author jamesdbloom
  */
-public class RequestMatcherExamples {
+public class RequestPropertiesMatcherExamples {
 
     public void matchRequestByPath() {
         new MockServerClient("localhost", 1080)
@@ -536,6 +540,41 @@ public class RequestMatcherExamples {
             .respond(
                 response()
                     .withBody("some_response_body")
+            );
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    public void matchRequestByBodyWithBinaryBody() throws IOException {
+        byte[] pngBytes = IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("org/mockserver/examples/mockserver/test.png"));
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("content-type", "image/png"),
+                        header("content-disposition", "form-data; name=\"test.png\"; filename=\"test.png\"")
+                    )
+                    .withBody(binary(pngBytes))
+            )
+            .respond(
+                response()
+                    .withBody("png_saved_response")
+            );
+    }
+
+    public void updateExpectationById() {
+        new MockServerClient("localhost", 1080)
+            .upsert(
+                new Expectation(
+                    request().withPath("/some/path"),
+                    Times.once(),
+                    TimeToLive.exactly(TimeUnit.SECONDS, 60L),
+                    100)
+                    .withId("some_unique_id")
+                    .thenRespond(
+                        response()
+                            .withBody("some_response_body")
+                    )
             );
     }
 }

@@ -25,14 +25,13 @@ sitemap:
     <li>use a <a href="/mock_server/getting_started.html#request_matchers"><strong>request matchers</strong></a> to clear matching items</li>
 </ul>
 
-<button id="button_client_clear" class="accordion">clear everything that matches request matcher</button>
+<button id="button_client_clear" class="accordion">clear everything that matches request properties matcher</button>
 <div class="panel">
     <button class="accordion inner">Java: MockServerClient</button>
     <div class="panel">
             <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080).clear(
     request()
         .withPath("/some/path")
-        .withMethod("POST")
 );</code></pre>
     </div>
     <button class="accordion inner">JavaScript: mockserver-client</button>
@@ -60,14 +59,51 @@ mockServerClient("localhost", 1080)
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
-<button id="button_client_clear_logs_by_req" class="accordion">clear recorded requests and logs that matches request matcher</button>
+<button id="button_client_opeanapi_clear" class="accordion">clear everything that matches openapi request matcher</button>
+<div class="panel">
+    <button class="accordion inner">Java: MockServerClient</button>
+    <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080).clear(
+    openAPI(
+        "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+        "showPetById"
+    )
+);</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript: mockserver-client</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+    .clear({
+        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+        "operationId": "showPetById"
+    })
+    .then(
+        function () {
+            console.log("cleared state that matches request matcher");
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/clear" -d '{
+        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+        "operationId": "showPetById"
+    }'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+<button id="button_client_clear_logs_by_req" class="accordion">clear recorded requests and logs that matches request properties matcher</button>
 <div class="panel">
     <button class="accordion inner">Java: MockServerClient</button>
     <div class="panel">
             <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080).clear(
     request()
-        .withPath("/some/path")
-        .withMethod("POST"),
+        .withPath("/some/path"),
     ClearType.LOG
 );</code></pre>
     </div>
@@ -96,14 +132,52 @@ mockServerClient("localhost", 1080)
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
+<button id="button_client_clear_logs_by_openapi_req" class="accordion">clear recorded requests and logs that matches openapi request matcher</button>
+<div class="panel">
+    <button class="accordion inner">Java: MockServerClient</button>
+    <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080).clear(
+    openAPI(
+        "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+        "showPetById"
+    ),
+    ClearType.LOG
+);</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript: mockserver-client</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+    .clear({
+        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+        "operationId": "showPetById"
+    }, 'LOG')
+    .then(
+        function () {
+            console.log("cleared state that matches request matcher");
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/clear?type=LOGS" -d '{
+        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+        "operationId": "showPetById"
+    }'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 <button id="button_client_clear_expectations_by_req" class="accordion">clear expectations that matches request matcher</button>
 <div class="panel">
     <button class="accordion inner">Java: MockServerClient</button>
     <div class="panel">
             <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080).clear(
     request()
-        .withPath("/some/path")
-        .withMethod("POST"),
+        .withPath("/some/path"),
     ClearType.EXPECTATIONS
 );</code></pre>
     </div>

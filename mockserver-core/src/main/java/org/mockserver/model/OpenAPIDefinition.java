@@ -17,19 +17,43 @@ public class OpenAPIDefinition extends RequestDefinition {
     }
 
     /**
+     * Specify the OpenAPI / Swagger to match against by URL or payload and string as follows:
+     * <p>
+     * // Create from a publicly hosted HTTP location (json or yaml)
+     * openAPI("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml")
+     * <p>
+     * // Create from a file on the local filesystem (json or yaml)
+     * openAPI("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/mock/openapi_petstore_example.json");
+     * <p>
+     * // Create from a classpath resource in the /api package (json or yaml)
+     * openAPI("org/mockserver/mock/openapi_petstore_example.json");
+     * <p>
+     * // Create from an OpenAPI / Swagger payload (json or yaml)
+     * openAPI("{\"openapi\": \"3.0.0\", \"info\": { ...")
+     * <p>
+     *
+     * @param specUrlOrPayload the OpenAPI / Swagger to match against by URL or payload
+     * @return the OpenAPIMatcher
+     */
+    public static OpenAPIDefinition openAPI(String specUrlOrPayload) {
+        return new OpenAPIDefinition()
+            .withSpecUrlOrPayload(specUrlOrPayload);
+    }
+
+    /**
      * Specify the OpenAPI / Swagger and operationId to match against by URL or payload and string as follows:
      * <p>
      * // Create from a publicly hosted HTTP location (json or yaml)
-     * openAPIMatcher("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById")
+     * openAPI("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById")
      * <p>
      * // Create from a file on the local filesystem (json or yaml)
-     * openAPIMatcher("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/mock/openapi_petstore_example.json", "showPetById");
+     * openAPI("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/mock/openapi_petstore_example.json", "showPetById");
      * <p>
      * // Create from a classpath resource in the /api package (json or yaml)
-     * openAPIMatcher("org/mockserver/mock/openapi_petstore_example.json", "showPetById");
+     * openAPI("org/mockserver/mock/openapi_petstore_example.json", "showPetById");
      * <p>
      * // Create from an OpenAPI / Swagger payload (json or yaml)
-     * openAPIMatcher("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById")
+     * openAPI("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById")
      * <p>
      *
      * @param specUrlOrPayload the OpenAPI / Swagger to match against by URL or payload

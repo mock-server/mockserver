@@ -85,7 +85,15 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 
 <h3>Request Matchers</h3>
 
-<p>A <strong>request matcher</strong> can contain any of the following matchers:</p>
+<p>The are two types of <strong>request matcher</strong>:</p>
+<ul>
+    <li><strong>request properties matcher</strong> - that matches request using HTTP properties such as <strong>method</strong>, <strong>path</strong> or <strong>body</strong></li>
+    <li><strong>OpenApi request matcher</strong> - that matches request using an <a href="https://swagger.io/docs/specification/about/"><strong>OpenAPI</strong></a> or <a href="https://swagger.io/docs/specification/2-0/what-is-swagger/"><strong>Swagger</strong></a> definition</li>
+</ul>
+
+<a id="request_properties_matchers" class="anchor" href="#request_properties_matchers">&nbsp;</a>
+
+<p>A <strong>request properties matcher</strong> can contain any of the following property matchers:</p>
 
 <ul>
     <li><strong>method</strong> - string value as a <a href="#button_match_request_by_cookies_and_query_parameters">plain text</a>, <a href="#button_match_request_by_method_regex">regular expression</a> or <a href="#button_match_request_by_not_matching_method">negated matcher</a></li>
@@ -107,12 +115,34 @@ mockServerClient("localhost", 1080).mockAnyResponse({
             <li><strong><a href="#button_match_request_by_binary_body">binary</a></strong></li>
             <li><strong><a href="#button_match_request_by_not_matching_body_with_xpath">negated matcher</a></strong></li>
         </ul>
+    </li>
     <li><strong>secure</strong> - true if the request was made using HTTPS</li>
 </ul>
 
-<button id="button_request" class="accordion title"><strong>Request Matcher Code Examples</strong></button>
+<button id="button_request" class="accordion title"><strong>Request Properties Matcher Code Examples</strong></button>
 <div class="panel title">
     {% include_subpage _includes/request_matcher_code_examples.html %}
+</div>
+
+<a id="request_openapi_matchers" class="anchor" href="#request_openapi_matchers">&nbsp;</a>
+
+<p>An <strong>OpenApi request matcher</strong> can contain any of the following fields:</p>
+
+<ul>
+    <li><strong>specUrlOrPayload</strong> - mandatory value containing an <a href="https://swagger.io/docs/specification/basic-structure/"><strong>OpenAPI v3</strong></a> or <a href="https://swagger.io/docs/specification/2-0/basic-structure/"><strong>Swagger v2</strong></a> specification in either JSON or YAML format as an:
+        <ul>
+            <li><strong><a href="#button_match_by_openapi_url">HTTP/HTTPS URL</a></strong></li>
+            <li><strong><a href="#button_match_by_openapi_filepath">File URL</a></strong></li>
+            <li><strong><a href="#button_match_by_openapi_classpath">classpath location</a></strong> (without the classpath: scheme)</li>
+            <li><strong><a href="#button_match_by_openapi_string">inline string</a></strong></li>
+        </ul>
+    </li>
+    <li><strong>operationId</strong> - optional value that specifies which <a href="#button_match_by_openapi_url_and_operation">operation</a> to match against, if <a href="#button_match_by_openapi_url">empty or null</a> all operations are matched against</li>
+</ul>
+
+<button id="button_match_by_openapi" class="accordion title"><strong>OpenAPI Request Matcher Code Examples</strong></button>
+<div class="panel title">
+    {% include_subpage _includes/openapi_request_matcher_code_examples.html %}
 </div>
 
 <a id="actions" class="anchor" href="#actions">&nbsp;</a>

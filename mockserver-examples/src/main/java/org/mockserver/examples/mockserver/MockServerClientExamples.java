@@ -3,7 +3,6 @@ package org.mockserver.examples.mockserver;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.ClearType;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.model.LogEventRequestAndResponse;
 import org.mockserver.model.RequestDefinition;
 import org.mockserver.verify.VerificationTimes;
@@ -13,6 +12,7 @@ import java.util.List;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.OpenAPIDefinition.openAPI;
 import static org.mockserver.model.Parameter.param;
 
 public class MockServerClientExamples {
@@ -123,20 +123,45 @@ public class MockServerClientExamples {
             );
     }
 
-    public void clear() {
+    public void clearWithRequestPropertiesMatcher() {
         new MockServerClient("localhost", 1080).clear(
             request()
                 .withPath("/some/path")
-                .withMethod("POST")
         );
     }
 
-    public void clearLogs() {
+    public void clearWithOpenAPIRequestMatcher() {
+        new MockServerClient("localhost", 1080).clear(
+            openAPI(
+                "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+                "showPetById"
+            )
+        );
+    }
+
+    public void clearRequestAndLogsWithRequestPropertiesMatcher() {
         new MockServerClient("localhost", 1080).clear(
             request()
-                .withPath("/some/path")
-                .withMethod("POST"),
+                .withPath("/some/path"),
             ClearType.LOG
+        );
+    }
+
+    public void clearRequestAndLogsWithOpenAPIRequestMatcher() {
+        new MockServerClient("localhost", 1080).clear(
+            openAPI(
+                "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+                "showPetById"
+            ),
+            ClearType.LOG
+        );
+    }
+
+    public void clearExpectationsWithRequestPropertiesMatcher() {
+        new MockServerClient("localhost", 1080).clear(
+            request()
+                .withPath("/some/path"),
+            ClearType.EXPECTATIONS
         );
     }
 

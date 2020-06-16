@@ -72,8 +72,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "body": "some_response_body"
     },
     "times": {
-        "remainingTimes": 2,
-        "unlimited": false
+        "remainingTimes": 2
     },
     "timeToLive": {
         "unlimited": true
@@ -2112,8 +2111,8 @@ new MockServerClient("localhost", 1080)
         request()
             .withMethod("POST")
             .withHeaders(
-                header(CONTENT_TYPE.toString(), MediaType.PNG.toString()),
-                header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.png\"; filename=\"test.png\"")
+                header("content-type", "image/png"),
+                header("content-disposition", "form-data; name=\"test.png\"; filename=\"test.png\"")
             )
             .withBody(binary(pngBytes))
     )
@@ -2178,17 +2177,13 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
     .upsert(
         new Expectation(
-            request()
-                .withPath("/some/path"),
+            request().withPath("/some/path"),
             Times.once(),
             TimeToLive.exactly(TimeUnit.SECONDS, 60L),
             100
         )
         .withId("some_unique_id")
-        .thenRespond(
-            response()
-                .withBody("some_response_body")
-        )
+        .thenRespond(response().withBody("some_response_body"))
     );</code></pre>
     </div>
     <button class="accordion inner">JavaScript</button>

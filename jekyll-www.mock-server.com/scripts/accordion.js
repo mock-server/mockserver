@@ -46,6 +46,8 @@ function locationHashChanged(e) {
             // open title div
             if (elementId.indexOf("client") !== -1) {
                 accordionTitleButton = document.getElementById("button_client");
+            } else if (elementId.indexOf("match_by_openapi") !== -1) {
+                accordionTitleButton = document.getElementById("button_match_by_openapi");
             } else if (elementId.indexOf("request") !== -1) {
                 accordionTitleButton = document.getElementById("button_request");
             } else if (elementId.indexOf("response") !== -1) {
