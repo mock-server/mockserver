@@ -87,8 +87,8 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 
 <p>The are two types of <strong>request matcher</strong>:</p>
 <ul>
-    <li><strong>request properties matcher</strong> - that matches request using HTTP properties such as <strong>method</strong>, <strong>path</strong> or <strong>body</strong></li>
-    <li><strong>OpenApi request matcher</strong> - that matches request using an <a href="https://swagger.io/docs/specification/about/"><strong>OpenAPI</strong></a> or <a href="https://swagger.io/docs/specification/2-0/what-is-swagger/"><strong>Swagger</strong></a> definition</li>
+    <li><strong>request properties matcher</strong> - that match requests using HTTP properties such as <strong>method</strong>, <strong>path</strong> or <strong>body</strong></li>
+    <li><strong>OpenApi request matcher</strong> - that match requests using an <a href="https://swagger.io/docs/specification/about/"><strong>OpenAPI</strong></a> or <a href="https://swagger.io/docs/specification/2-0/what-is-swagger/"><strong>Swagger</strong></a> definition</li>
 </ul>
 
 <a id="request_properties_matchers" class="anchor" href="#request_properties_matchers">&nbsp;</a>
@@ -129,7 +129,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 <p>An <strong>OpenApi request matcher</strong> can contain any of the following fields:</p>
 
 <ul>
-    <li><strong>specUrlOrPayload</strong> - mandatory value containing an <a href="https://swagger.io/docs/specification/basic-structure/"><strong>OpenAPI v3</strong></a> or <a href="https://swagger.io/docs/specification/2-0/basic-structure/"><strong>Swagger v2</strong></a> specification in either JSON or YAML format as an:
+    <li><strong>specUrlOrPayload</strong> - mandatory value containing an <a href="https://swagger.io/docs/specification/basic-structure/"><strong>OpenAPI v3</strong></a> or <a href="https://swagger.io/docs/specification/2-0/basic-structure/"><strong>Swagger v2</strong></a> specifications in either JSON or YAML format as an:
         <ul>
             <li><strong><a href="#button_match_by_openapi_url">HTTP/HTTPS URL</a></strong></li>
             <li><strong><a href="#button_match_by_openapi_filepath">File URL</a></strong></li>

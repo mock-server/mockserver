@@ -95,7 +95,7 @@ function (error) {
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
-<button id="button_verify_req_exact_twice" class="accordion">verify requests received exact twice</button>
+<button id="button_verify_req_exactly_twice" class="accordion">verify requests received exactly twice</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
@@ -134,6 +134,96 @@ mockServerClient("localhost", 1080)
         "atLeast": 2,
         "atMost": 2
     }
+}'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+<button id="button_verify_req_at_least_twice_by_openapi" class="accordion">verify requests received at least twice by openapi</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+    <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .verify(
+        openAPI(
+            "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json"
+        ),
+        VerificationTimes.atLeast(2)
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+    .verify(
+        {
+            'specUrlOrPayload': 'https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json'
+        }, 2)
+    .then(
+        function () {
+            console.log("request found exactly 2 times");
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verify" -d '{
+"httpRequest": {
+    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json"
+},
+"times": {
+    "atLeast": 2
+}
+}'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+<button id="button_verify_req_exactly_once_by_openapi" class="accordion">verify requests received at exactly once by openapi and operation</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+    <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .verify(
+        openAPI(
+            "org/mockserver/mock/openapi_petstore_example.json",
+            "showPetById"
+        ),
+        VerificationTimes.once()
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+    .verify(
+        {
+            'specUrlOrPayload': 'org/mockserver/mock/openapi_petstore_example.json',
+            'operationId': 'showPetById'
+        }, 1, 1)
+    .then(
+        function () {
+            console.log("request found exactly 2 times");
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verify" -d '{
+"httpRequest": {
+    "specUrlOrPayload": "org/mockserver/mock/openapi_petstore_example.json",
+    "operationId": "showPetById"
+},
+"times": {
+    "atLeast": 1,
+    "atMost": 1
+}
 }'</code></pre>
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/verify/put_verify" target="_blank">REST API</a> for full JSON specification</p>
     </div>
@@ -241,6 +331,72 @@ mockServerClient("localhost", 1080)
       },
       {
          "path":"/some/path/three"
+      }
+   ]
+}'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/verify/put_verifySequence" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+<button id="button_verify_sequence_of_reqs_using_openapi" class="accordion">verify request sequence received using openapi</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .verify(
+        request()
+            .withPath("/status"),
+        openAPI(
+            "org/mockserver/mock/openapi_petstore_example.json",
+            "listPets"
+        ),
+        openAPI(
+            "org/mockserver/mock/openapi_petstore_example.json",
+            "showPetById"
+        )
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+    .verifySequence(
+        {
+            'path': '/status'
+        },
+        {
+            'specUrlOrPayload': 'org/mockserver/mock/openapi_petstore_example.json',
+            'operationId': 'listPets'
+        },
+        {
+            'specUrlOrPayload': 'org/mockserver/mock/openapi_petstore_example.json',
+            'operationId': 'showPetById'
+        }
+    )
+    .then(
+        function () {
+            console.log("request sequence found in the order specified");
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/verify/put_verifySequence" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verifySequence" -d '{
+   "httpRequests":[
+      {
+      {
+         "path": "/status"
+      },
+      {
+         "specUrlOrPayload": "org/mockserver/mock/openapi_petstore_example.json",
+         "operationId": "listPets"
+      },
+      {
+         "specUrlOrPayload": "org/mockserver/mock/openapi_petstore_example.json",
+         "operationId": "showPetById"
       }
    ]
 }'</code></pre>
