@@ -22,7 +22,7 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
     private Pattern pattern;
     private Pattern lowercasePattern;
 
-    private NottableString(String value, Boolean not) {
+    NottableString(String value, Boolean not) {
         this.value = value;
         this.isBlank = StringUtils.isBlank(value);
         if (not != null) {
@@ -38,7 +38,7 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
         }
     }
 
-    private NottableString(String value) {
+    NottableString(String value) {
         this.isBlank = StringUtils.isBlank(value);
         if (!this.isBlank && value.charAt(0) == NOT_CHAR) {
             this.value = value.substring(1);
