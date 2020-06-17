@@ -293,7 +293,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         );
     }
 
-    public <T> void retrieveLogEntriesInReverse(HttpRequest httpRequest, Predicate<LogEntry> logEntryPredicate, Function<LogEntry, T> logEntryMapper, Consumer<Stream<T>> consumer) {
+    public <T> void retrieveLogEntriesInReverse(RequestDefinition httpRequest, Predicate<LogEntry> logEntryPredicate, Function<LogEntry, T> logEntryMapper, Consumer<Stream<T>> consumer) {
         disruptor.publishEvent(new LogEntry()
             .setType(RUNNABLE)
             .setConsumer(() -> {

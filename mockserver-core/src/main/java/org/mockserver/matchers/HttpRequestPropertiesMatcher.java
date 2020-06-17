@@ -200,6 +200,10 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                 }
             }
             return overallMatch;
+        } else if (requestDefinition instanceof OpenAPIDefinition) {
+            return true;
+            // TODO(jamesdbloom) control matching of HttpRequest against OpenAPI doesn't handle missing properties such as path or method
+            // return new MatcherBuilder(mockServerLogger).transformsToMatcher(new Expectation(requestDefinition)).matches(new MatchDifference(httpRequest), this.httpRequest);
         } else {
             return requestDefinition == null;
         }

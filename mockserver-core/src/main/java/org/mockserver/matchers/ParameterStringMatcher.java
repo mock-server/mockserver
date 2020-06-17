@@ -2,11 +2,8 @@ package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.netty.handler.codec.http.QueryStringDecoder;
-import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Parameters;
-
-import static org.slf4j.event.Level.DEBUG;
 
 /**
  * @author jamesdbloom

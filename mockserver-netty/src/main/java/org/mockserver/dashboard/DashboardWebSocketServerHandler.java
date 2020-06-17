@@ -280,7 +280,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
         }
     }
 
-    private void sendUpdate(HttpRequest httpRequest, ChannelHandlerContext channelHandlerContext) {
+    private void sendUpdate(RequestDefinition httpRequest, ChannelHandlerContext channelHandlerContext) {
         mockServerEventLog
             .retrieveLogEntriesInReverse(
                 httpRequest,

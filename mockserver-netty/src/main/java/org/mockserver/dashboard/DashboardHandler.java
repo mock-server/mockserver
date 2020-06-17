@@ -27,7 +27,7 @@ import static org.mockserver.model.HttpResponse.response;
 public class DashboardHandler {
 
     private static final Map<String, String> MIME_MAP = new HashMap<>();
-    private static final List<String> IS_TEST = ImmutableList.of(
+    private static final List<String> IS_STRING_CONTENT = ImmutableList.of(
         "css",
         "js",
         "map",
@@ -57,7 +57,7 @@ public class DashboardHandler {
             InputStream contentStream = DashboardHandler.class.getResourceAsStream("/org/mockserver/dashboard" + path);
             if (contentStream != null) {
                 final String extension = substringAfterLast(path, ".");
-                if (IS_TEST.contains(extension)) {
+                if (IS_STRING_CONTENT.contains(extension)) {
                     final String content = new String(ByteStreams.toByteArray(contentStream), UTF_8.name());
                     response =
                         response()
