@@ -16,6 +16,13 @@
 
 package org.mockserver.openapi.examples.models;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.mockserver.openapi.examples.JsonExampleDeserializer;
+
+/**
+ * See: https://github.com/swagger-api/swagger-inflector
+ */
+@JsonDeserialize(using = JsonExampleDeserializer.class)
 public class StringExample extends AbstractExample {
     private String value;
 

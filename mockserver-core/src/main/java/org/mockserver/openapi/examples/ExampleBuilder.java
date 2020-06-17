@@ -29,6 +29,9 @@ import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.util.*;
 
+/**
+ * See: https://github.com/swagger-api/swagger-inflector
+ */
 @SuppressWarnings("rawtypes")
 public class ExampleBuilder {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExampleBuilder.class);

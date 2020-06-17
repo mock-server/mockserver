@@ -24,6 +24,9 @@ import org.mockserver.openapi.examples.models.*;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * See: https://github.com/swagger-api/swagger-inflector
+ */
 public class JsonNodeExampleSerializer extends JsonSerializer<Example> {
 
     @Override

@@ -16,11 +16,18 @@
 
 package org.mockserver.openapi.examples.models;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.mockserver.openapi.examples.JsonExampleDeserializer;
+
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * See: https://github.com/swagger-api/swagger-inflector
+ */
+@JsonDeserialize(using = JsonExampleDeserializer.class)
 public class ObjectExample extends AbstractExample {
     private Map<String, Example> values;
 

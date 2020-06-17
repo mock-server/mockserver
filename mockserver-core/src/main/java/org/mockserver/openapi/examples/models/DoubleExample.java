@@ -16,6 +16,9 @@
 
 package org.mockserver.openapi.examples.models;
 
+/**
+ * See: https://github.com/swagger-api/swagger-inflector
+ */
 public class DoubleExample extends AbstractExample {
     private Double value;
 

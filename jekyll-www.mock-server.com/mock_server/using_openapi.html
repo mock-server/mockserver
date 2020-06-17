@@ -27,8 +27,343 @@ sitemap:
 
 <h2>Generate Expectations From OpenAPI or Swagger</h2>
 
-<p>MockServer can an expectation for each operation in an OpenAPI or Swagger specifications.</p>
-<p>An <a href="/mock_server/creating_expectations.html#response_action"><strong>HttpResponse</strong></a> is added to each expectation using <a href="https://swagger.io/docs/specification/adding-examples/">examples provided in the specification</a>.  If no examples are provided in the specification then the <a href="/mock_server/creating_expectations.html#response_action"><strong>HttpResponse</strong></a> is specified by generating examples from schema definitions for response body and each header.</p>
+<p>MockServer can create an expectation for each operation in an OpenAPI or Swagger specifications.</p>
+<p>Each expectation will use an <a href="/mock_server/getting_started.html#request_openapi_matchers"><strong>OpenAPI request matcher</strong></a> to match requests.</p>
+<p>An <a href="/mock_server/creating_expectations.html#response_action"><strong>HttpResponse</strong></a> action is added to each expectation using <a href="https://swagger.io/docs/specification/adding-examples/">examples provided in the specification</a>.  If no examples are provided in the specification then the <a href="/mock_server/creating_expectations.html#response_action"><strong>HttpResponse</strong></a> is auto-generated examples from schema definitions for response body and headers of the operation.</p>
+<p>If the operation specifies multiple response bodies for different status codes the first status code response body is used by default, however this can be specified by using a <strong>operationsAndResponses</strong> map which lists <strong>operationId</strong> to <strong>statusCode</strong> (such as "200", "400" and "default").</p>
+
+<p>The following OpenAPI will be used to demonstrate what expectations will be created:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">---
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Swagger Petstore
+  license:
+    name: MIT
+servers:
+  - url: http://petstore.swagger.io/v1
+paths:
+  /pets:
+    get:
+      summary: List all pets
+      operationId: listPets
+      tags:
+        - pets
+      parameters:
+        - name: limit
+          in: query
+          description: How many items to return at one time (max 100)
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: A paged array of pets
+          headers:
+            x-next:
+              description: A link to the next page of responses
+              schema:
+                type: string
+              examples:
+                two:
+                  value: "/pets?query=752cd724e0d7&page=2"
+                end:
+                  value: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pets'
+        '500':
+          description: unexpected error
+          headers:
+            x-code:
+              description: The error code
+              schema:
+                type: integer
+                format: int32
+                example: 90
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Create a pet
+      operationId: createPets
+      tags:
+        - pets
+      requestBody:
+        description: a pet
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/Pet'
+      responses:
+        '201':
+          description: Null response
+        '400':
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /pets/{petId}:
+    get:
+      summary: Info for a specific pet
+      operationId: showPetById
+      tags:
+        - pets
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          description: The id of the pet to retrieve
+          schema:
+            type: string
+        - in: header
+          name: X-Request-ID
+          schema:
+            type: string
+            format: uuid
+          required: true
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+              examples:
+                Crumble:
+                  value:
+                    id: 2
+                    name: Crumble
+                    tag: dog
+                Boots:
+                  value:
+                    id: 3
+                    name: Boots
+                    tag: cat
+        '500':
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Pet:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        tag:
+          type: string
+      example:
+        id: 1
+        name: Scruffles
+        tag: dog
+    Pets:
+      type: array
+      items:
+        $ref: '#/components/schemas/Pet'
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string</code></pre>
+
+<p>No operationId to response mapping:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">[ {
+  "id" : "b5efa161-efc0-4ccf-be44-7ba125415c7b",
+  "priority" : 0,
+  "httpRequest" : {
+    "specUrlOrPayload" : "org/mockserver/mock/openapi_petstore_example_with_examples.yaml",
+    "operationId" : "listPets"
+  },
+  "httpResponse" : {
+    "statusCode" : 200,
+    "headers" : {
+      "x-next" : [ "/pets?query=752cd724e0d7&page=2" ],
+      "content-type" : [ "application/json" ]
+    },
+    "body" : {
+      "type" : "JSON",
+      "json" : "[ {\n  \"id\" : 1,\n  \"name\" : \"Scruffles\",\n  \"tag\" : \"dog\"\n} ]",
+      "rawBytes" : "WyB7CiAgImlkIiA6IDEsCiAgIm5hbWUiIDogIlNjcnVmZmxlcyIsCiAgInRhZyIgOiAiZG9nIgp9IF0="
+    }
+  },
+  "times" : {
+    "unlimited" : true
+  },
+  "timeToLive" : {
+    "unlimited" : true
+  }
+}, {
+  "id" : "318c5ece-cb41-4c07-a03e-debc41ed4106",
+  "priority" : 0,
+  "httpRequest" : {
+    "specUrlOrPayload" : "org/mockserver/mock/openapi_petstore_example_with_examples.yaml",
+    "operationId" : "createPets"
+  },
+  "httpResponse" : {
+    "statusCode" : 201
+  },
+  "times" : {
+    "unlimited" : true
+  },
+  "timeToLive" : {
+    "unlimited" : true
+  }
+}, {
+  "id" : "d7b30144-2e6f-4a21-9b92-c80d0942a62a",
+  "priority" : 0,
+  "httpRequest" : {
+    "specUrlOrPayload" : "org/mockserver/mock/openapi_petstore_example_with_examples.yaml",
+    "operationId" : "showPetById"
+  },
+  "httpResponse" : {
+    "statusCode" : 200,
+    "headers" : {
+      "content-type" : [ "application/json" ]
+    },
+    "body" : {
+      "type" : "JSON",
+      "json" : "{\n  \"id\" : 2,\n  \"name\" : \"Crumble\",\n  \"tag\" : \"dog\"\n}",
+      "rawBytes" : "ewogICJpZCIgOiAyLAogICJuYW1lIiA6ICJDcnVtYmxlIiwKICAidGFnIiA6ICJkb2ciCn0="
+    }
+  },
+  "times" : {
+    "unlimited" : true
+  },
+  "timeToLive" : {
+    "unlimited" : true
+  }
+} ]</code></pre>
+
+<p>With operationId to response mapping:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">ImmutableMap.of(
+    "listPets", "500",
+    "createPets", "default",
+    "showPetById", "200"
+)</code></pre>
+
+<pre class="prettyprint lang-java code"><code class="code">[ {
+  "id" : "68231b4f-773a-4ecb-bbe7-fee4a3c223da",
+  "priority" : 0,
+  "httpRequest" : {
+    "specUrlOrPayload" : "org/mockserver/mock/openapi_petstore_example_with_examples.yaml",
+    "operationId" : "listPets"
+  },
+  "httpResponse" : {
+    "statusCode" : 500,
+    "headers" : {
+      "x-code" : [ "90" ],
+      "content-type" : [ "application/json" ]
+    },
+    "body" : {
+      "type" : "JSON",
+      "json" : "{\n  \"code\" : 0,\n  \"message\" : \"some_string_value\"\n}",
+      "rawBytes" : "ewogICJjb2RlIiA6IDAsCiAgIm1lc3NhZ2UiIDogInNvbWVfc3RyaW5nX3ZhbHVlIgp9"
+    }
+  },
+  "times" : {
+    "unlimited" : true
+  },
+  "timeToLive" : {
+    "unlimited" : true
+  }
+}, {
+  "id" : "73f2fe6b-4ede-4e9e-a45a-c727c867dfb4",
+  "priority" : 0,
+  "httpRequest" : {
+    "specUrlOrPayload" : "org/mockserver/mock/openapi_petstore_example_with_examples.yaml",
+    "operationId" : "createPets"
+  },
+  "httpResponse" : {
+    "headers" : {
+      "content-type" : [ "application/json" ]
+    },
+    "body" : {
+      "type" : "JSON",
+      "json" : "{\n  \"code\" : 0,\n  \"message\" : \"some_string_value\"\n}",
+      "rawBytes" : "ewogICJjb2RlIiA6IDAsCiAgIm1lc3NhZ2UiIDogInNvbWVfc3RyaW5nX3ZhbHVlIgp9"
+    }
+  },
+  "times" : {
+    "unlimited" : true
+  },
+  "timeToLive" : {
+    "unlimited" : true
+  }
+}, {
+  "id" : "d0deff7f-3fb0-4dff-a0ed-8659d14aca5f",
+  "priority" : 0,
+  "httpRequest" : {
+    "specUrlOrPayload" : "org/mockserver/mock/openapi_petstore_example_with_examples.yaml",
+    "operationId" : "showPetById"
+  },
+  "httpResponse" : {
+    "statusCode" : 200,
+    "headers" : {
+      "content-type" : [ "application/json" ]
+    },
+    "body" : {
+      "type" : "JSON",
+      "json" : "{\n  \"id\" : 2,\n  \"name\" : \"Crumble\",\n  \"tag\" : \"dog\"\n}",
+      "rawBytes" : "ewogICJpZCIgOiAyLAogICJuYW1lIiA6ICJDcnVtYmxlIiwKICAidGFnIiA6ICJkb2ciCn0="
+    }
+  },
+  "times" : {
+    "unlimited" : true
+  },
+  "timeToLive" : {
+    "unlimited" : true
+  }
+} ]</code></pre>
 
 <!-- status code -->
 <!-- values used for generated examples -->

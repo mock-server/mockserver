@@ -25,6 +25,9 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.ByteArrayOutputStream;
 
+/**
+ * See: https://github.com/swagger-api/swagger-inflector
+ */
 public class XmlExampleSerializer {
     int depth = 0;
 

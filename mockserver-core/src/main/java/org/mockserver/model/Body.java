@@ -3,6 +3,8 @@ package org.mockserver.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.Objects;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -10,7 +12,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * @author jamesdbloom
  */
 public abstract class Body<T> extends Not {
-
+    private int hashCode;
     private final Type type;
 
     public Body(Type type) {
@@ -55,5 +57,31 @@ public abstract class Body<T> extends Not {
         XML_SCHEMA,
         XPATH,
         LOG_EVENT,
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (hashCode() != o.hashCode()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        Body<?> body = (Body<?>) o;
+        return type == body.type;
+    }
+
+    @Override
+    public int hashCode() {
+        if (hashCode == 0) {
+            hashCode = Objects.hash(super.hashCode(), type);
+        }
+        return hashCode;
     }
 }

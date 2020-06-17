@@ -495,7 +495,7 @@ public class HttpState {
                     responseWriter.writeResponse(
                         request,
                         BAD_REQUEST,
-                        OPEN_API_LOAD_ERROR + iae.getMessage(),
+                        (!iae.getMessage().startsWith(OPEN_API_LOAD_ERROR) ? OPEN_API_LOAD_ERROR : "") + iae.getMessage(),
                         MediaType.create("text", "plain").toString()
                     );
                 }

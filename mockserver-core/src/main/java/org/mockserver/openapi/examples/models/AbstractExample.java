@@ -16,6 +16,9 @@
 
 package org.mockserver.openapi.examples.models;
 
+/**
+ * See: https://github.com/swagger-api/swagger-inflector
+ */
 public abstract class AbstractExample implements Example {
     private String name = null;
     private String namespace = null;

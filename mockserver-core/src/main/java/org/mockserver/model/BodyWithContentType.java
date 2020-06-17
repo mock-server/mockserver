@@ -3,12 +3,13 @@ package org.mockserver.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.nio.charset.Charset;
+import java.util.Objects;
 
 /**
  * @author jamesdbloom
  */
 public abstract class BodyWithContentType<T> extends Body<T> {
-
+    private int hashCode;
     protected final MediaType contentType;
 
     public BodyWithContentType(Type type, MediaType contentType) {
@@ -38,4 +39,30 @@ public abstract class BodyWithContentType<T> extends Body<T> {
         return (contentType != null ? contentType.toString() : null);
     }
 
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (hashCode() != o.hashCode()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        BodyWithContentType<?> that = (BodyWithContentType<?>) o;
+        return Objects.equals(contentType, that.contentType);
+    }
+
+    @Override
+    public int hashCode() {
+        if (hashCode == 0) {
+            hashCode = Objects.hash(super.hashCode(), contentType);
+        }
+        return hashCode;
+    }
 }

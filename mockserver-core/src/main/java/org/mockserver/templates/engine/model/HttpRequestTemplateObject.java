@@ -6,12 +6,14 @@ import org.mockserver.serialization.model.BodyDTO;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
  * @author jamesdbloom
  */
 public class HttpRequestTemplateObject extends RequestDefinition {
+    private int hashCode;
     private String method = "";
     private String path = "";
     private Map<String, List<String>> queryStringParameters = new HashMap<>();
@@ -71,5 +73,38 @@ public class HttpRequestTemplateObject extends RequestDefinition {
 
     public Boolean getSecure() {
         return secure;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (hashCode() != o.hashCode()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        HttpRequestTemplateObject that = (HttpRequestTemplateObject) o;
+        return Objects.equals(method, that.method) &&
+            Objects.equals(path, that.path) &&
+            Objects.equals(queryStringParameters, that.queryStringParameters) &&
+            Objects.equals(body, that.body) &&
+            Objects.equals(cookies, that.cookies) &&
+            Objects.equals(headers, that.headers) &&
+            Objects.equals(keepAlive, that.keepAlive) &&
+            Objects.equals(secure, that.secure);
+    }
+
+    @Override
+    public int hashCode() {
+        if (hashCode == 0) {
+            hashCode = Objects.hash(super.hashCode(), method, path, queryStringParameters, body, cookies, headers, keepAlive, secure);
+        }
+        return hashCode;
     }
 }

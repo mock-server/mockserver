@@ -56,7 +56,7 @@ import static org.mockserver.model.PortBinding.portBinding;
 /**
  * @author jamesdbloom
  */
-public class MockServerHandlerTest {
+public class HttpRequestHandlerTest {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();

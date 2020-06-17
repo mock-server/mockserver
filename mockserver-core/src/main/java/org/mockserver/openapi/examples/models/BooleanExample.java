@@ -16,6 +16,9 @@
 
 package org.mockserver.openapi.examples.models;
 
+/**
+ * See: https://github.com/swagger-api/swagger-inflector
+ */
 public class BooleanExample extends AbstractExample {
     private Boolean value;
 

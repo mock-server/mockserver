@@ -1457,7 +1457,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), MediaType.APPLICATION_JSON_UTF_8.toString())
-                .withBody(json("{\"id\":1,\"name\":\"A green door\",\"price\":12.5,\"tags\":[\"home\",\"green\"]}", MediaType.create("application", "json"))),
+                .withBody(json("{\"id\":1,\"name\":\"A green door\",\"price\":12.5,\"tags\":[\"home\",\"green\"]}")),
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path"))

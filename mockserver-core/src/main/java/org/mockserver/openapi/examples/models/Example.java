@@ -18,6 +18,9 @@ package org.mockserver.openapi.examples.models;
 
 import javax.xml.bind.annotation.XmlAttribute;
 
+/**
+ * See: https://github.com/swagger-api/swagger-inflector
+ */
 public interface Example {
     String getName();
 

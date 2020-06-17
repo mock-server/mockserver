@@ -3,7 +3,10 @@ package org.mockserver.openapi;
 import com.atlassian.oai.validator.util.ContentTypeUtils;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.examples.Example;
 import io.swagger.v3.oas.models.headers.Header;
+import io.swagger.v3.oas.models.media.MediaType;
+import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.parser.OpenAPIResolver;
 import io.swagger.v3.parser.OpenAPIV3Parser;
@@ -15,7 +18,6 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.openapi.examples.ExampleBuilder;
 import org.mockserver.openapi.examples.JsonNodeExampleSerializer;
-import org.mockserver.openapi.examples.models.Example;
 import org.mockserver.openapi.examples.models.StringExample;
 import org.mockserver.serialization.ObjectMapperFactory;
 
@@ -52,8 +54,13 @@ public class OpenAPIConverter {
                 .stream()
             )
             .filter(operation -> operationsAndResponses == null || operationsAndResponses.containsKey(operation.getOperationId()))
-            .map(operation -> new Expectation(openAPI(specUrlOrPayload, operation.getOperationId()))
-                .thenRespond(buildHttpResponse(openAPI, operation.getResponses(), operationsAndResponses != null ? operationsAndResponses.get(operation.getOperationId()) : null))
+            .map(operation ->
+                new Expectation(openAPI(specUrlOrPayload, operation.getOperationId()))
+                    .thenRespond(buildHttpResponse(
+                        openAPI,
+                        operation.getResponses(),
+                        operationsAndResponses != null ? operationsAndResponses.get(operation.getOperationId()) : null
+                    ))
             )
             .collect(Collectors.toList());
     }
@@ -97,14 +104,15 @@ public class OpenAPIConverter {
                     .ifPresent(stream -> stream
                         .forEach(entry -> {
                             Header value = entry.getValue();
-                            if (value.getExample() != null) {
-                                response.withHeader(entry.getKey(), String.valueOf(value.getExample()));
+                            Example example = findExample(value);
+                            if (example != null) {
+                                response.withHeader(entry.getKey(), String.valueOf(example.getValue()));
                             } else if (value.getSchema() != null) {
-                                Example example = ExampleBuilder.fromSchema(value.getSchema(), openAPI.getComponents().getSchemas());
-                                if (example instanceof StringExample) {
-                                    response.withHeader(entry.getKey(), ((StringExample) example).getValue());
+                                org.mockserver.openapi.examples.models.Example generatedExample = ExampleBuilder.fromSchema(value.getSchema(), openAPI.getComponents().getSchemas());
+                                if (generatedExample instanceof StringExample) {
+                                    response.withHeader(entry.getKey(), ((StringExample) generatedExample).getValue());
                                 } else {
-                                    response.withHeader(entry.getKey(), serialise(example));
+                                    response.withHeader(entry.getKey(), serialise(generatedExample));
                                 }
                             }
                         })
@@ -120,18 +128,51 @@ public class OpenAPIConverter {
                         response.withHeader("content-type", contentType.getKey());
                         Optional
                             .ofNullable(contentType.getValue())
-                            .flatMap(mediaType -> Optional.ofNullable(mediaType.getSchema()))
-                            .ifPresent(schema -> {
-                                String serialise = serialise(ExampleBuilder.fromSchema(schema, openAPI.getComponents().getSchemas()));
-                                if (ContentTypeUtils.isJsonContentType(contentType.getKey())) {
-                                    response.withBody(json(serialise));
-                                } else {
-                                    response.withBody(serialise);
+                            .ifPresent(mediaType -> {
+                                Example example = findExample(mediaType);
+                                if (example != null) {
+                                    if (ContentTypeUtils.isJsonContentType(contentType.getKey())) {
+                                        response.withBody(json(serialise(example.getValue())));
+                                    } else {
+                                        response.withBody(String.valueOf(example.getValue()));
+                                    }
+                                } else if (mediaType.getSchema() != null) {
+                                    org.mockserver.openapi.examples.models.Example generatedExample = ExampleBuilder.fromSchema(mediaType.getSchema(), openAPI.getComponents().getSchemas());
+                                    if (generatedExample instanceof StringExample) {
+                                        response.withBody(((StringExample) generatedExample).getValue());
+                                    } else {
+                                        String serialise = serialise(ExampleBuilder.fromSchema(mediaType.getSchema(), openAPI.getComponents().getSchemas()));
+                                        if (ContentTypeUtils.isJsonContentType(contentType.getKey())) {
+                                            response.withBody(json(serialise));
+                                        } else {
+                                            response.withBody(serialise);
+                                        }
+                                    }
                                 }
                             });
                     });
             });
         return response;
+    }
+
+    private Example findExample(Header value) {
+        Example example = null;
+        if (value.getExample() instanceof Example) {
+            example = (Example) value.getExample();
+        } else if (value.getExamples() != null && !value.getExamples().isEmpty()) {
+            example = value.getExamples().values().stream().findFirst().orElse(null);
+        }
+        return example;
+    }
+
+    private Example findExample(MediaType mediaType) {
+        Example example = null;
+        if (mediaType.getExample() instanceof Example) {
+            example = (Example) mediaType.getExample();
+        } else if (mediaType.getExamples() != null && !mediaType.getExamples().isEmpty()) {
+            example = mediaType.getExamples().values().stream().findFirst().orElse(null);
+        }
+        return example;
     }
 
     private String serialise(Object example) {

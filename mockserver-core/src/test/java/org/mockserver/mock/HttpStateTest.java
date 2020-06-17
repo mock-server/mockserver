@@ -66,7 +66,7 @@ import static org.slf4j.event.Level.INFO;
 /**
  * @author jamesdbloom
  */
-public class HttpStateHandlerTest {
+public class HttpStateTest {
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();
@@ -80,7 +80,7 @@ public class HttpStateHandlerTest {
     private final VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer(new MockServerLogger());
 
     @InjectMocks
-    private HttpState httpStateHandler;
+    private HttpState httpState;
 
     @BeforeClass
     public static void fixTime() {
@@ -90,7 +90,7 @@ public class HttpStateHandlerTest {
     @Before
     public void prepareTestFixture() {
         Scheduler scheduler = mock(Scheduler.class);
-        httpStateHandler = new HttpState(new MockServerLogger(), scheduler);
+        httpState = new HttpState(new MockServerLogger(), scheduler);
         initMocks(this);
     }
 
@@ -106,7 +106,7 @@ public class HttpStateHandlerTest {
     @Test
     public void shouldHandleRetrieveRequestsRequest() {
         // given
-        httpStateHandler.log(
+        httpState.log(
             new LogEntry()
                 .setHttpRequest(request("request_one"))
                 .setType(RECEIVED_REQUEST)
@@ -119,7 +119,7 @@ public class HttpStateHandlerTest {
             .withBody(
                 httpRequestSerializer.serialize(request("request_one"))
             );
-        boolean handle = httpStateHandler.handle(expectationRetrieveRequestsRequest, responseWriter, false);
+        boolean handle = httpState.handle(expectationRetrieveRequestsRequest, responseWriter, false);
 
         // then
         assertThat(handle, is(true));
@@ -132,8 +132,8 @@ public class HttpStateHandlerTest {
     @Test
     public void shouldHandleClearRequest() {
         // given
-        httpStateHandler.add(new Expectation(request("request_one")).thenRespond(response("response_one")));
-        httpStateHandler.log(
+        httpState.add(new Expectation(request("request_one")).thenRespond(response("response_one")));
+        httpState.log(
             new LogEntry()
                 .setHttpRequest(request("request_one"))
                 .setType(EXPECTATION_MATCHED)
@@ -146,14 +146,14 @@ public class HttpStateHandlerTest {
         FakeResponseWriter responseWriter = new FakeResponseWriter();
 
         // when
-        boolean handle = httpStateHandler.handle(clearRequest, responseWriter, false);
+        boolean handle = httpState.handle(clearRequest, responseWriter, false);
 
         // then
         assertThat(handle, is(true));
         assertThat(responseWriter.response.getStatusCode(), is(200));
         assertThat(responseWriter.response.getBodyAsString(), is(""));
-        assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), is(nullValue()));
-        assertThat(httpStateHandler.retrieve(request("/mockserver/retrieve")
+        assertThat(httpState.firstMatchingExpectation(request("request_one")), is(nullValue()));
+        assertThat(httpState.retrieve(request("/mockserver/retrieve")
             .withMethod("PUT")
             .withBody(
                 httpRequestSerializer.serialize(request("request_one"))
@@ -167,7 +167,7 @@ public class HttpStateHandlerTest {
         FakeResponseWriter responseWriter = new FakeResponseWriter();
 
         // when
-        boolean handle = httpStateHandler.handle(statusRequest, responseWriter, false);
+        boolean handle = httpState.handle(statusRequest, responseWriter, false);
 
         // then
         assertThat(handle, is(false));
@@ -185,7 +185,7 @@ public class HttpStateHandlerTest {
         FakeResponseWriter responseWriter = new FakeResponseWriter();
 
         // when
-        boolean handle = httpStateHandler.handle(statusRequest, responseWriter, false);
+        boolean handle = httpState.handle(statusRequest, responseWriter, false);
 
         // then
         assertThat(handle, is(false));
@@ -200,7 +200,7 @@ public class HttpStateHandlerTest {
         FakeResponseWriter responseWriter = new FakeResponseWriter();
 
         // when
-        boolean handle = httpStateHandler.handle(statusRequest, responseWriter, false);
+        boolean handle = httpState.handle(statusRequest, responseWriter, false);
 
         // then
         assertThat(handle, is(false));
@@ -210,7 +210,7 @@ public class HttpStateHandlerTest {
     @Test
     public void shouldHandleRetrieveRecordedExpectationsRequest() {
         // given
-        httpStateHandler.log(
+        httpState.log(
             new LogEntry()
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_one"))
@@ -226,7 +226,7 @@ public class HttpStateHandlerTest {
             .withBody(
                 httpRequestSerializer.serialize(request("request_one"))
             );
-        boolean handle = httpStateHandler.handle(expectationRetrieveExpectationsRequest, responseWriter, false);
+        boolean handle = httpState.handle(expectationRetrieveExpectationsRequest, responseWriter, false);
 
         // then
         assertThat(handle, is(true));
@@ -242,7 +242,7 @@ public class HttpStateHandlerTest {
         try {
             // given
             ConfigurationProperties.logLevel("INFO");
-            httpStateHandler.add(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_one")));
+            httpState.add(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_one")));
             FakeResponseWriter responseWriter = new FakeResponseWriter();
 
             // when
@@ -252,7 +252,7 @@ public class HttpStateHandlerTest {
                 .withBody(
                     httpRequestSerializer.serialize(request("request_one"))
                 );
-            boolean handle = httpStateHandler.handle(retrieveLogRequest, responseWriter, false);
+            boolean handle = httpState.handle(retrieveLogRequest, responseWriter, false);
 
             // then
             assertThat(handle, is(true));
@@ -303,7 +303,7 @@ public class HttpStateHandlerTest {
         FakeResponseWriter responseWriter = new FakeResponseWriter();
 
         // when
-        boolean handle = httpStateHandler.handle(request, responseWriter, false);
+        boolean handle = httpState.handle(request, responseWriter, false);
 
         // then
         assertThat(handle, is(true));
@@ -327,7 +327,7 @@ public class HttpStateHandlerTest {
             "    \"unlimited\" : true" + NEW_LINE +
             "  }" + NEW_LINE +
             "} ]"));
-        assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), is(expectationOne));
+        assertThat(httpState.firstMatchingExpectation(request("request_one")), is(expectationOne));
     }
 
     @Test
@@ -341,7 +341,7 @@ public class HttpStateHandlerTest {
         FakeResponseWriter responseWriter = new FakeResponseWriter();
 
         // when
-        boolean handle = httpStateHandler.handle(request, responseWriter, false);
+        boolean handle = httpState.handle(request, responseWriter, false);
 
         // then
         assertThat(handle, is(true));
@@ -365,7 +365,7 @@ public class HttpStateHandlerTest {
         FakeResponseWriter responseWriter = new FakeResponseWriter();
 
         // when
-        boolean handle = httpStateHandler.handle(request, responseWriter, false);
+        boolean handle = httpState.handle(request, responseWriter, false);
 
         // then
         assertThat(handle, is(true));
@@ -388,12 +388,12 @@ public class HttpStateHandlerTest {
         FakeResponseWriter responseWriter = new FakeResponseWriter();
 
         // when
-        boolean handle = httpStateHandler.handle(request, responseWriter, false);
+        boolean handle = httpState.handle(request, responseWriter, false);
 
         // then
         assertThat(handle, is(true));
         assertThat(responseWriter.response.getStatusCode(), is(400));
-        assertThat(responseWriter.response.getBodyAsString(), is("Unable to load API spec from provided URL or payload because Unable to load API spec from provided URL or payload because while parsing a block mapping" + NEW_LINE +
+        assertThat(responseWriter.response.getBodyAsString(), is("Unable to load API spec from provided URL or payload because while parsing a block mapping" + NEW_LINE +
             " in 'reader', line 1, column 1:" + NEW_LINE +
             "    \"openapi\": \"3.0.0\"," + NEW_LINE +
             "    ^" + NEW_LINE +
@@ -416,7 +416,7 @@ public class HttpStateHandlerTest {
         FakeResponseWriter responseWriter = new FakeResponseWriter();
 
         // when
-        boolean handle = httpStateHandler.handle(request, responseWriter, false);
+        boolean handle = httpState.handle(request, responseWriter, false);
 
         // then
         assertThat(handle, is(true));
@@ -440,7 +440,7 @@ public class HttpStateHandlerTest {
         FakeResponseWriter responseWriter = new FakeResponseWriter();
 
         // when
-        boolean handle = httpStateHandler.handle(request, responseWriter, false);
+        boolean handle = httpState.handle(request, responseWriter, false);
 
         // then
         assertThat(handle, is(true));
@@ -460,12 +460,12 @@ public class HttpStateHandlerTest {
         FakeResponseWriter responseWriter = new FakeResponseWriter();
 
         // when
-        boolean handle = httpStateHandler.handle(request, responseWriter, false);
+        boolean handle = httpState.handle(request, responseWriter, false);
 
         // then
         assertThat(handle, is(true));
         assertThat(responseWriter.response.getStatusCode(), is(400));
-        assertThat(responseWriter.response.getBodyAsString(), is("Unable to load API spec from provided URL or payload because Unable to load API spec from provided URL or payload because while scanning a simple key" + NEW_LINE +
+        assertThat(responseWriter.response.getBodyAsString(), is("Unable to load API spec from provided URL or payload because while scanning a simple key" + NEW_LINE +
             " in 'reader', line 8, column 1:" + NEW_LINE +
             "    servers" + NEW_LINE +
             "    ^" + NEW_LINE +
@@ -481,7 +481,7 @@ public class HttpStateHandlerTest {
     public void shouldHandleRetrieveActiveExpectationsRequest() {
         // given
         Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
-        httpStateHandler.add(expectationOne);
+        httpState.add(expectationOne);
         HttpRequest expectationRetrieveExpectationsRequest = request("/mockserver/retrieve")
             .withMethod("PUT")
             .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
@@ -491,7 +491,7 @@ public class HttpStateHandlerTest {
         FakeResponseWriter responseWriter = new FakeResponseWriter();
 
         // when
-        boolean handle = httpStateHandler.handle(expectationRetrieveExpectationsRequest, responseWriter, false);
+        boolean handle = httpState.handle(expectationRetrieveExpectationsRequest, responseWriter, false);
 
         // then
         assertThat(handle, is(true));
@@ -504,7 +504,7 @@ public class HttpStateHandlerTest {
     @Test
     public void shouldHandleVerifyRequest() {
         // given
-        MockServerEventLog mockServerEventLog = httpStateHandler.getMockServerLog();
+        MockServerEventLog mockServerEventLog = httpState.getMockServerLog();
         mockServerEventLog.add(
             new LogEntry()
                 .setHttpRequest(request("one"))
@@ -531,7 +531,7 @@ public class HttpStateHandlerTest {
         FakeResponseWriter responseWriter = new FakeResponseWriter();
 
         // when
-        boolean handle = httpStateHandler.handle(expectationRetrieveExpectationsRequest, responseWriter, false);
+        boolean handle = httpState.handle(expectationRetrieveExpectationsRequest, responseWriter, false);
 
         // then
         assertThat(handle, is(true));
@@ -542,7 +542,7 @@ public class HttpStateHandlerTest {
     @Test
     public void shouldHandleVerifyFailureRequest() {
         // given
-        MockServerEventLog mockServerEventLog = httpStateHandler.getMockServerLog();
+        MockServerEventLog mockServerEventLog = httpState.getMockServerLog();
         mockServerEventLog.add(
             new LogEntry()
                 .setHttpRequest(request("one"))
@@ -559,7 +559,7 @@ public class HttpStateHandlerTest {
         FakeResponseWriter responseWriter = new FakeResponseWriter();
 
         // when
-        boolean handle = httpStateHandler.handle(expectationRetrieveExpectationsRequest, responseWriter, false);
+        boolean handle = httpState.handle(expectationRetrieveExpectationsRequest, responseWriter, false);
 
         // then
         assertThat(handle, is(true));
@@ -574,7 +574,7 @@ public class HttpStateHandlerTest {
     @Test
     public void shouldHandleVerifySequenceRequest() {
         // given
-        MockServerEventLog mockServerEventLog = httpStateHandler.getMockServerLog();
+        MockServerEventLog mockServerEventLog = httpState.getMockServerLog();
         mockServerEventLog.add(
             new LogEntry()
                 .setHttpRequest(request("one"))
@@ -604,7 +604,7 @@ public class HttpStateHandlerTest {
         FakeResponseWriter responseWriter = new FakeResponseWriter();
 
         // when
-        boolean handle = httpStateHandler.handle(expectationRetrieveExpectationsRequest, responseWriter, false);
+        boolean handle = httpState.handle(expectationRetrieveExpectationsRequest, responseWriter, false);
 
         // then
         assertThat(handle, is(true));
@@ -615,7 +615,7 @@ public class HttpStateHandlerTest {
     @Test
     public void shouldHandleVerifySequenceFailureRequest() {
         // given
-        MockServerEventLog mockServerEventLog = httpStateHandler.getMockServerLog();
+        MockServerEventLog mockServerEventLog = httpState.getMockServerLog();
         mockServerEventLog.add(
             new LogEntry()
                 .setHttpRequest(request("one"))
@@ -645,7 +645,7 @@ public class HttpStateHandlerTest {
         FakeResponseWriter responseWriter = new FakeResponseWriter();
 
         // when
-        boolean handle = httpStateHandler.handle(expectationRetrieveExpectationsRequest, responseWriter, false);
+        boolean handle = httpState.handle(expectationRetrieveExpectationsRequest, responseWriter, false);
 
         // then
         assertThat(handle, is(true));
@@ -670,22 +670,22 @@ public class HttpStateHandlerTest {
         Expectation expectationTwo = new Expectation(request("request_two")).thenRespond((HttpResponse) null);
 
         // when
-        List<Expectation> actualExpectationsOne = httpStateHandler.add(expectationOne);
-        List<Expectation> actualExpectationsTwo = httpStateHandler.add(expectationTwo);
+        List<Expectation> actualExpectationsOne = httpState.add(expectationOne);
+        List<Expectation> actualExpectationsTwo = httpState.add(expectationTwo);
 
         // then - correct expectations exist
         assertThat(actualExpectationsOne.size(), is(1));
         assertThat(actualExpectationsOne.get(0), is(expectationOne));
         assertThat(actualExpectationsTwo.size(), is(1));
         assertThat(actualExpectationsTwo.get(0), is(expectationTwo));
-        assertThat(httpStateHandler.firstMatchingExpectation(null), is(expectationOne));
-        assertThat(httpStateHandler.firstMatchingExpectation(request("request_two")), is(expectationOne));
+        assertThat(httpState.firstMatchingExpectation(null), is(expectationOne));
+        assertThat(httpState.firstMatchingExpectation(request("request_two")), is(expectationOne));
     }
 
     @Test
     public void shouldAddExceptionViaOpenApiClasspath() {
         // when
-        List<Expectation> actualExpectations = httpStateHandler.add(openAPIExpectation("org/mockserver/mock/openapi_petstore_example.json"));
+        List<Expectation> actualExpectations = httpState.add(openAPIExpectation("org/mockserver/mock/openapi_petstore_example.json"));
 
         // then
         shouldBuildPetStoreExpectations("org/mockserver/mock/openapi_petstore_example.json", actualExpectations);
@@ -697,7 +697,7 @@ public class HttpStateHandlerTest {
         URL schemaUrl = FileReader.getURL("org/mockserver/mock/openapi_petstore_example.json");
 
         // when
-        List<Expectation> actualExpectations = httpStateHandler.add(openAPIExpectation(String.valueOf(schemaUrl)));
+        List<Expectation> actualExpectations = httpState.add(openAPIExpectation(String.valueOf(schemaUrl)));
 
         // then
         shouldBuildPetStoreExpectations(String.valueOf(schemaUrl), actualExpectations);
@@ -709,7 +709,7 @@ public class HttpStateHandlerTest {
         String schema = FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json");
 
         // when
-        List<Expectation> actualExpectations = httpStateHandler.add(openAPIExpectation(schema));
+        List<Expectation> actualExpectations = httpState.add(openAPIExpectation(schema));
 
         // then
         shouldBuildPetStoreExpectations(schema, actualExpectations);
@@ -744,11 +744,11 @@ public class HttpStateHandlerTest {
                     response()
                         .withStatusCode(200)
                         .withHeader("content-type", "application/json")
-                        .withBody(json("[ {" + NEW_LINE +
+                        .withBody(json("{" + NEW_LINE +
                             "  \"id\" : 0," + NEW_LINE +
                             "  \"name\" : \"some_string_value\"," + NEW_LINE +
                             "  \"tag\" : \"some_string_value\"" + NEW_LINE +
-                            "} ]"))
+                            "}"))
                 )
         ));
         assertThat(actualExpectations.get(3), is(
@@ -757,11 +757,11 @@ public class HttpStateHandlerTest {
                     response()
                         .withStatusCode(200)
                         .withHeader("content-type", "application/json")
-                        .withBody(json("[ {" + NEW_LINE +
+                        .withBody(json("{" + NEW_LINE +
                             "  \"id\" : 0," + NEW_LINE +
                             "  \"name\" : \"some_string_value\"," + NEW_LINE +
                             "  \"tag\" : \"some_string_value\"" + NEW_LINE +
-                            "} ]"))
+                            "}"))
                 )
         ));
     }
@@ -769,7 +769,7 @@ public class HttpStateHandlerTest {
     @Test
     public void shouldAddExceptionViaOpenApiClasspathWithSpecificResponses() {
         // when
-        List<Expectation> actualExpectations = httpStateHandler.add(openAPIExpectation("org/mockserver/mock/openapi_petstore_example.json", ImmutableMap.of(
+        List<Expectation> actualExpectations = httpState.add(openAPIExpectation("org/mockserver/mock/openapi_petstore_example.json", ImmutableMap.of(
             "listPets", "500",
             "createPets", "default",
             "showPetById", "200"
@@ -785,7 +785,7 @@ public class HttpStateHandlerTest {
         URL schemaUrl = FileReader.getURL("org/mockserver/mock/openapi_petstore_example.json");
 
         // when
-        List<Expectation> actualExpectations = httpStateHandler.add(openAPIExpectation(String.valueOf(schemaUrl), ImmutableMap.of(
+        List<Expectation> actualExpectations = httpState.add(openAPIExpectation(String.valueOf(schemaUrl), ImmutableMap.of(
             "listPets", "500",
             "createPets", "default",
             "showPetById", "200"
@@ -801,7 +801,7 @@ public class HttpStateHandlerTest {
         String schema = FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json");
 
         // when
-        List<Expectation> actualExpectations = httpStateHandler.add(openAPIExpectation(schema, ImmutableMap.of(
+        List<Expectation> actualExpectations = httpState.add(openAPIExpectation(schema, ImmutableMap.of(
             "listPets", "500",
             "createPets", "default",
             "showPetById", "200"
@@ -842,11 +842,11 @@ public class HttpStateHandlerTest {
                     response()
                         .withStatusCode(200)
                         .withHeader("content-type", "application/json")
-                        .withBody(json("[ {" + NEW_LINE +
+                        .withBody(json("{" + NEW_LINE +
                             "  \"id\" : 0," + NEW_LINE +
                             "  \"name\" : \"some_string_value\"," + NEW_LINE +
                             "  \"tag\" : \"some_string_value\"" + NEW_LINE +
-                            "} ]"))
+                            "}"))
                 )
         ));
     }
@@ -857,13 +857,13 @@ public class HttpStateHandlerTest {
         try {
             // given
             ConfigurationProperties.logLevel("INFO");
-            httpStateHandler.add(
+            httpState.add(
                 new Expectation(request("request_one"))
                     .withId("one")
                     .thenRespond(response("response_one"))
             );
             // given - some log entries
-            httpStateHandler.log(
+            httpState.log(
                 new LogEntry()
                     .setType(TRACE)
                     .setHttpRequest(request("request_four"))
@@ -873,7 +873,7 @@ public class HttpStateHandlerTest {
             );
 
             // when
-            httpStateHandler
+            httpState
                 .clear(
                     request()
                         .withQueryStringParameter("type", "all")
@@ -881,7 +881,7 @@ public class HttpStateHandlerTest {
 
             // then - retrieves correct state
             assertThat(
-                httpStateHandler
+                httpState
                     .retrieve(
                         request()
                             .withQueryStringParameter("type", "logs")
@@ -921,14 +921,14 @@ public class HttpStateHandlerTest {
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
             );
             assertThat(
-                httpStateHandler
+                httpState
                     .retrieve(
                         request()
                             .withQueryStringParameter("type", "active_expectations")
                     ),
                 is(response().withBody("[]", MediaType.JSON_UTF_8).withStatusCode(200))
             );
-            assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
+            assertThat(httpState.firstMatchingExpectation(request("request_one")), nullValue());
         } finally {
             ConfigurationProperties.logLevel(originalLevel.name());
         }
@@ -940,18 +940,18 @@ public class HttpStateHandlerTest {
         try {
             // given
             ConfigurationProperties.logLevel("INFO");
-            httpStateHandler.add(
+            httpState.add(
                 new Expectation(request("request_one"))
                     .withId("key_one")
                     .thenRespond(response("response_one"))
             );
-            httpStateHandler.add(
+            httpState.add(
                 new Expectation(request("request_four"))
                     .withId("key_four")
                     .thenRespond(response("response_four"))
             );
             // given - some log entries
-            httpStateHandler.log(
+            httpState.log(
                 new LogEntry()
                     .setType(TRACE)
                     .setLogLevel(INFO)
@@ -959,7 +959,7 @@ public class HttpStateHandlerTest {
                     .setMessageFormat("some random{}message")
                     .setArguments("argument_one")
             );
-            httpStateHandler.log(
+            httpState.log(
                 new LogEntry()
                     .setType(TRACE)
                     .setLogLevel(INFO)
@@ -969,7 +969,7 @@ public class HttpStateHandlerTest {
             );
 
             // when
-            httpStateHandler
+            httpState
                 .clear(
                     request()
                         .withQueryStringParameter("type", "all")
@@ -978,7 +978,7 @@ public class HttpStateHandlerTest {
 
             // then - retrieves correct state
             assertThat(
-                httpStateHandler
+                httpState
                     .retrieve(
                         request()
                             .withQueryStringParameter("type", "logs")
@@ -1048,7 +1048,7 @@ public class HttpStateHandlerTest {
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
             );
             assertThat(
-                httpStateHandler
+                httpState
                     .retrieve(
                         request()
                             .withQueryStringParameter("type", "active_expectations")
@@ -1075,14 +1075,14 @@ public class HttpStateHandlerTest {
                     MediaType.JSON_UTF_8).withStatusCode(200))
             );
             assertThat(
-                httpStateHandler.firstMatchingExpectation(request("request_one")),
+                httpState.firstMatchingExpectation(request("request_one")),
                 is(
                     new Expectation(request("request_one"))
                         .thenRespond(response("response_one"))
                 )
             );
             assertThat(
-                httpStateHandler.firstMatchingExpectation(request("request_four")),
+                httpState.firstMatchingExpectation(request("request_four")),
                 nullValue()
             );
         } finally {
@@ -1096,13 +1096,13 @@ public class HttpStateHandlerTest {
         try {
             // given
             ConfigurationProperties.logLevel("INFO");
-            httpStateHandler.add(
+            httpState.add(
                 new Expectation(request("request_one"))
                     .withId("key_one")
                     .thenRespond(response("response_one"))
             );
             // given - some log entries
-            httpStateHandler.log(
+            httpState.log(
                 new LogEntry()
                     .setType(TRACE)
                     .setHttpRequest(request("request_four"))
@@ -1112,7 +1112,7 @@ public class HttpStateHandlerTest {
             );
 
             // when
-            httpStateHandler
+            httpState
                 .clear(
                     request()
                         .withQueryStringParameter("type", "log")
@@ -1120,7 +1120,7 @@ public class HttpStateHandlerTest {
 
             // then - retrieves correct state
             assertThat(
-                httpStateHandler
+                httpState
                     .retrieve(
                         request()
                             .withQueryStringParameter("type", "logs")
@@ -1138,7 +1138,7 @@ public class HttpStateHandlerTest {
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
             );
             assertThat(
-                httpStateHandler
+                httpState
                     .retrieve(
                         request()
                             .withQueryStringParameter("type", "active_expectations")
@@ -1165,7 +1165,7 @@ public class HttpStateHandlerTest {
                     MediaType.JSON_UTF_8).withStatusCode(200))
             );
             assertThat(
-                httpStateHandler.firstMatchingExpectation(request("request_one")),
+                httpState.firstMatchingExpectation(request("request_one")),
                 is(
                     new Expectation(request("request_one"))
                         .thenRespond(response("response_one"))
@@ -1179,15 +1179,15 @@ public class HttpStateHandlerTest {
     @Test
     public void shouldClearExpectationsOnly() {
         // given
-        httpStateHandler.add(new Expectation(request("request_one")).thenRespond(response("response_one")));
-        httpStateHandler.add(new Expectation(request("request_two")).thenRespond(response("response_two")));
-        httpStateHandler.log(
+        httpState.add(new Expectation(request("request_one")).thenRespond(response("response_one")));
+        httpState.add(new Expectation(request("request_two")).thenRespond(response("response_two")));
+        httpState.log(
             new LogEntry()
                 .setHttpRequest(request("request_one"))
                 .setHttpResponse(response("response_one"))
                 .setType(EXPECTATION_RESPONSE)
         );
-        httpStateHandler.log(
+        httpState.log(
             new LogEntry()
                 .setHttpRequest(request("request_two"))
                 .setHttpError(error().withResponseBytes("response_two".getBytes(UTF_8)))
@@ -1195,7 +1195,7 @@ public class HttpStateHandlerTest {
         );
 
         // when
-        httpStateHandler
+        httpState
             .clear(
                 request()
                     .withQueryStringParameter("type", "expectations")
@@ -1203,7 +1203,7 @@ public class HttpStateHandlerTest {
             );
 
         // then - correct log entries removed
-        HttpResponse retrieve = httpStateHandler
+        HttpResponse retrieve = httpState
             .retrieve(
                 request()
                     .withQueryStringParameter("type", REQUEST_RESPONSES.name())
@@ -1220,8 +1220,8 @@ public class HttpStateHandlerTest {
             )))
         );
         // then - correct expectations removed
-        assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
-        assertThat(httpStateHandler.firstMatchingExpectation(request("request_two")), is(new Expectation(request("request_two")).thenRespond(response("response_two"))));
+        assertThat(httpState.firstMatchingExpectation(request("request_one")), nullValue());
+        assertThat(httpState.firstMatchingExpectation(request("request_two")), is(new Expectation(request("request_two")).thenRespond(response("response_two"))));
     }
 
     @Test
@@ -1231,30 +1231,30 @@ public class HttpStateHandlerTest {
         exception.expectMessage(containsString("\"invalid\" is not a valid value for \"type\" parameter, only the following values are supported [log, expectations, all]"));
 
         // when
-        httpStateHandler.clear(request().withQueryStringParameter("type", "invalid"));
+        httpState.clear(request().withQueryStringParameter("type", "invalid"));
     }
 
     @Test
     public void shouldRetrieveRecordedRequestsAsJson() {
         // given
-        httpStateHandler.log(
+        httpState.log(
             new LogEntry()
                 .setHttpRequest(request("request_one"))
                 .setType(RECEIVED_REQUEST)
         );
-        httpStateHandler.log(
+        httpState.log(
             new LogEntry()
                 .setHttpRequest(request("request_two"))
                 .setType(RECEIVED_REQUEST)
         );
-        httpStateHandler.log(
+        httpState.log(
             new LogEntry()
                 .setHttpRequest(request("request_one"))
                 .setType(RECEIVED_REQUEST)
         );
 
         // when
-        HttpResponse response = httpStateHandler
+        HttpResponse response = httpState
             .retrieve(
                 request()
                     .withBody(httpRequestSerializer.serialize(request("request_one")))
@@ -1272,7 +1272,7 @@ public class HttpStateHandlerTest {
     @Test
     public void shouldRetrieveRecordedRequestsAsLogEntries() {
         // given
-        httpStateHandler
+        httpState
             .log(
                 new LogEntry()
                     .setType(RECEIVED_REQUEST)
@@ -1281,7 +1281,7 @@ public class HttpStateHandlerTest {
                     .setMessageFormat("received request:{}")
                     .setArguments(request("request_one"))
             );
-        httpStateHandler
+        httpState
             .log(
                 new LogEntry()
                     .setType(RECEIVED_REQUEST)
@@ -1290,7 +1290,7 @@ public class HttpStateHandlerTest {
                     .setMessageFormat("received request:{}")
                     .setArguments(request("request_two"))
             );
-        httpStateHandler
+        httpState
             .log(
                 new LogEntry()
                     .setType(RECEIVED_REQUEST)
@@ -1301,7 +1301,7 @@ public class HttpStateHandlerTest {
             );
 
         // when
-        HttpResponse response = httpStateHandler
+        HttpResponse response = httpState
             .retrieve(
                 request()
                     .withQueryStringParameter("format", "log_entries")
@@ -1330,24 +1330,24 @@ public class HttpStateHandlerTest {
     @Test
     public void shouldRetrieveRecordedRequestsAsJava() {
         // given
-        httpStateHandler.log(
+        httpState.log(
             new LogEntry()
                 .setHttpRequest(request("request_one"))
                 .setType(RECEIVED_REQUEST)
         );
-        httpStateHandler.log(
+        httpState.log(
             new LogEntry()
                 .setHttpRequest(request("request_two"))
                 .setType(RECEIVED_REQUEST)
         );
-        httpStateHandler.log(
+        httpState.log(
             new LogEntry()
                 .setHttpRequest(request("request_one"))
                 .setType(RECEIVED_REQUEST)
         );
 
         // when
-        HttpResponse response = httpStateHandler
+        HttpResponse response = httpState
             .retrieve(
                 request()
                     .withQueryStringParameter("format", "java")
@@ -1356,7 +1356,7 @@ public class HttpStateHandlerTest {
 
         // then
         assertThat(response,
-            is(response().withBody(httpRequestToJavaSerializer.serialize(Arrays.asList(
+            is(response().withBody(httpRequestSerializer.serialize(Arrays.asList(
                 request("request_one"),
                 request("request_one")
             )), MediaType.create("application", "java").withCharset(UTF_8)).withStatusCode(200))
@@ -1366,7 +1366,7 @@ public class HttpStateHandlerTest {
     @Test
     public void shouldRetrieveRecordedRequestResponsesAsJson() {
         // given
-        httpStateHandler.log(
+        httpState.log(
             new LogEntry()
                 .setLogLevel(INFO)
                 .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
@@ -1375,7 +1375,7 @@ public class HttpStateHandlerTest {
                 .setMessageFormat("no expectation for:{}returning response:{}")
                 .setArguments(request("request_one"), notFoundResponse())
         );
-        httpStateHandler.log(
+        httpState.log(
             new LogEntry()
                 .setLogLevel(INFO)
                 .setType(EXPECTATION_RESPONSE)
@@ -1386,7 +1386,7 @@ public class HttpStateHandlerTest {
         );
 
         // when
-        HttpResponse response = httpStateHandler
+        HttpResponse response = httpState
             .retrieve(
                 request()
                     .withQueryStringParameter("type", "request_responses")
@@ -1395,32 +1395,29 @@ public class HttpStateHandlerTest {
 
         // then
         assertThat(response,
-            is(response().withBody("[" + NEW_LINE +
-                "  {" + NEW_LINE +
-                "    \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\"," + NEW_LINE +
-                "    \"httpRequest\" : {" + NEW_LINE +
-                "      \"path\" : \"request_one\"" + NEW_LINE +
-                "    }" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  {" + NEW_LINE +
-                "    \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\"," + NEW_LINE +
-                "    \"httpRequest\" : {" + NEW_LINE +
-                "      \"path\" : \"request_two\"" + NEW_LINE +
-                "    }," + NEW_LINE +
-                "    \"httpResponse\" : {" + NEW_LINE +
-                "      \"statusCode\" : 200," + NEW_LINE +
-                "      \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                "      \"body\" : \"response_two\"" + NEW_LINE +
-                "    }" + NEW_LINE +
+            is(response().withBody("[ {" + NEW_LINE +
+                "  \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\"," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"request_one\"" + NEW_LINE +
                 "  }" + NEW_LINE +
-                "]", MediaType.JSON_UTF_8).withStatusCode(200))
+                "}, {" + NEW_LINE +
+                "  \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\"," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"request_two\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"statusCode\" : 200," + NEW_LINE +
+                "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                "    \"body\" : \"response_two\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "} ]", MediaType.JSON_UTF_8).withStatusCode(200))
         );
     }
 
     @Test
     public void shouldRetrieveRecordedRequestsResponsesAsLogEntries() {
         // given
-        httpStateHandler.log(
+        httpState.log(
             new LogEntry()
                 .setLogLevel(INFO)
                 .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
@@ -1429,7 +1426,7 @@ public class HttpStateHandlerTest {
                 .setMessageFormat("no expectation for:{}returning response:{}")
                 .setArguments(request("request_one"), notFoundResponse())
         );
-        httpStateHandler.log(
+        httpState.log(
             new LogEntry()
                 .setLogLevel(INFO)
                 .setType(EXPECTATION_RESPONSE)
@@ -1440,7 +1437,7 @@ public class HttpStateHandlerTest {
         );
 
         // when
-        HttpResponse response = httpStateHandler
+        HttpResponse response = httpState
             .retrieve(
                 request()
                     .withQueryStringParameter("type", "request_responses")
@@ -1534,7 +1531,7 @@ public class HttpStateHandlerTest {
     @Test
     public void shouldRetrieveRecordedRequestsResponsesAsJava() {
         // when
-        HttpResponse response = httpStateHandler
+        HttpResponse response = httpState
             .retrieve(
                 request()
                     .withQueryStringParameter("format", "java")
@@ -1549,7 +1546,7 @@ public class HttpStateHandlerTest {
     @Test
     public void shouldRetrieveRecordedExpectationsAsJson() {
         // given
-        httpStateHandler.log(
+        httpState.log(
             new LogEntry()
                 .setType(FORWARDED_REQUEST)
                 .setLogLevel(Level.INFO)
@@ -1557,7 +1554,7 @@ public class HttpStateHandlerTest {
                 .setHttpResponse(response("response_one"))
                 .setExpectation(new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited(), 0).withId("key_one").thenRespond(response("response_one")))
         );
-        httpStateHandler.log(
+        httpState.log(
             new LogEntry()
                 .setLogLevel(INFO)
                 .setType(FORWARDED_REQUEST)
@@ -1567,7 +1564,7 @@ public class HttpStateHandlerTest {
         );
 
         // when
-        HttpResponse response = httpStateHandler
+        HttpResponse response = httpState
             .retrieve(
                 request()
                     .withQueryStringParameter("type", "recorded_expectations")
@@ -1586,7 +1583,7 @@ public class HttpStateHandlerTest {
     @Test
     public void shouldRetrieveRecordedExpectationsAsJava() {
         // given
-        httpStateHandler.log(
+        httpState.log(
             new LogEntry()
                 .setType(FORWARDED_REQUEST)
                 .setLogLevel(Level.INFO)
@@ -1594,7 +1591,7 @@ public class HttpStateHandlerTest {
                 .setHttpResponse(response("response_one"))
                 .setExpectation(request("request_one"), response("response_one"))
         );
-        httpStateHandler.log(
+        httpState.log(
             new LogEntry()
                 .setLogLevel(INFO)
                 .setType(FORWARDED_REQUEST)
@@ -1604,7 +1601,7 @@ public class HttpStateHandlerTest {
         );
 
         // when
-        HttpResponse response = httpStateHandler
+        HttpResponse response = httpState
             .retrieve(
                 request()
                     .withQueryStringParameter("type", "recorded_expectations")
@@ -1623,7 +1620,7 @@ public class HttpStateHandlerTest {
     @Test
     public void shouldRetrieveRecordedExpectationsAsJavaWithRequestMatcher() {
         // given
-        httpStateHandler.log(
+        httpState.log(
             new LogEntry()
                 .setType(FORWARDED_REQUEST)
                 .setLogLevel(Level.INFO)
@@ -1631,7 +1628,7 @@ public class HttpStateHandlerTest {
                 .setHttpResponse(response("response_one"))
                 .setExpectation(request("request_one"), response("response_one"))
         );
-        httpStateHandler.log(
+        httpState.log(
             new LogEntry()
                 .setLogLevel(INFO)
                 .setType(FORWARDED_REQUEST)
@@ -1641,7 +1638,7 @@ public class HttpStateHandlerTest {
         );
 
         // when
-        HttpResponse response = httpStateHandler
+        HttpResponse response = httpState
             .retrieve(
                 request()
                     .withQueryStringParameter("type", "recorded_expectations")
@@ -1661,14 +1658,14 @@ public class HttpStateHandlerTest {
     public void shouldRetrieveActiveExpectationsAsJson() {
         // given
         Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
-        httpStateHandler.add(expectationOne);
+        httpState.add(expectationOne);
         Expectation expectationTwo = new Expectation(request("request_two")).thenRespond(response("response_two"));
-        httpStateHandler.add(expectationTwo);
+        httpState.add(expectationTwo);
         Expectation expectationThree = new Expectation(request("request_one")).thenRespond(response("request_three"));
-        httpStateHandler.add(expectationThree);
+        httpState.add(expectationThree);
 
         // when
-        HttpResponse response = httpStateHandler
+        HttpResponse response = httpState
             .retrieve(
                 request()
                     .withQueryStringParameter("type", "active_expectations")
@@ -1688,14 +1685,14 @@ public class HttpStateHandlerTest {
     public void shouldRetrieveActiveExpectationsAsJava() {
         // given
         Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
-        httpStateHandler.add(expectationOne);
+        httpState.add(expectationOne);
         Expectation expectationTwo = new Expectation(request("request_two")).thenRespond(response("response_two"));
-        httpStateHandler.add(expectationTwo);
+        httpState.add(expectationTwo);
         Expectation expectationThree = new Expectation(request("request_one")).thenRespond(response("request_three"));
-        httpStateHandler.add(expectationThree);
+        httpState.add(expectationThree);
 
         // when
-        HttpResponse response = httpStateHandler
+        HttpResponse response = httpState
             .retrieve(
                 request()
                     .withQueryStringParameter("type", "active_expectations")
@@ -1718,7 +1715,7 @@ public class HttpStateHandlerTest {
         try {
             // given
             ConfigurationProperties.logLevel("INFO");
-            httpStateHandler.log(
+            httpState.log(
                 new LogEntry()
                     .setLogLevel(INFO)
                     .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
@@ -1727,7 +1724,7 @@ public class HttpStateHandlerTest {
                     .setMessageFormat("no expectation for:{}returning response:{}")
                     .setArguments(request("request_one"), notFoundResponse())
             );
-            httpStateHandler.log(
+            httpState.log(
                 new LogEntry()
                     .setLogLevel(INFO)
                     .setType(EXPECTATION_RESPONSE)
@@ -1736,7 +1733,7 @@ public class HttpStateHandlerTest {
                     .setMessageFormat("returning error:{}for request:{}for action:{}")
                     .setArguments(request("request_two"), response("response_two"), response("response_two"))
             );
-            httpStateHandler.log(
+            httpState.log(
                 new LogEntry()
                     .setLogLevel(INFO)
                     .setType(EXPECTATION_MATCHED)
@@ -1745,7 +1742,7 @@ public class HttpStateHandlerTest {
                     .setMessageFormat("request:{}matched expectation:{}")
                     .setArguments(request("request_one"), new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
             );
-            httpStateHandler.log(
+            httpState.log(
                 new LogEntry()
                     .setLogLevel(INFO)
                     .setType(EXPECTATION_MATCHED)
@@ -1754,7 +1751,7 @@ public class HttpStateHandlerTest {
                     .setMessageFormat("request:{}matched expectation:{}")
                     .setArguments(request("request_two"), new Expectation(request("request_two")).withId("key_two").thenRespond(response("response_two")))
             );
-            httpStateHandler.log(
+            httpState.log(
                 new LogEntry()
                     .setType(TRACE)
                     .setLogLevel(INFO)
@@ -1765,7 +1762,7 @@ public class HttpStateHandlerTest {
             );
 
             // when
-            HttpResponse response = httpStateHandler
+            HttpResponse response = httpState
                 .retrieve(
                     request()
                         .withQueryStringParameter("type", "logs")
@@ -1890,7 +1887,7 @@ public class HttpStateHandlerTest {
         try {
             // given
             ConfigurationProperties.logLevel("INFO");
-            httpStateHandler.log(
+            httpState.log(
                 new LogEntry()
                     .setLogLevel(INFO)
                     .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
@@ -1899,7 +1896,7 @@ public class HttpStateHandlerTest {
                     .setMessageFormat("no expectation for:{}returning response:{}")
                     .setArguments(request("request_one"), notFoundResponse())
             );
-            httpStateHandler.log(
+            httpState.log(
                 new LogEntry()
                     .setLogLevel(INFO)
                     .setType(EXPECTATION_RESPONSE)
@@ -1908,7 +1905,7 @@ public class HttpStateHandlerTest {
                     .setMessageFormat("returning error:{}for request:{}for action:{}")
                     .setArguments(request("request_two"), response("response_two"), response("response_two"))
             );
-            httpStateHandler.log(
+            httpState.log(
                 new LogEntry()
                     .setType(EXPECTATION_MATCHED)
                     .setLogLevel(INFO)
@@ -1917,7 +1914,7 @@ public class HttpStateHandlerTest {
                     .setMessageFormat("request:{}matched expectation:{}")
                     .setArguments(request("request_one"), new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
             );
-            httpStateHandler.log(
+            httpState.log(
                 new LogEntry()
                     .setType(EXPECTATION_MATCHED)
                     .setLogLevel(INFO)
@@ -1926,7 +1923,7 @@ public class HttpStateHandlerTest {
                     .setMessageFormat("request:{}matched expectation:{}")
                     .setArguments(request("request_two"), new Expectation(request("request_two")).withId("key_two").thenRespond(response("response_two")))
             );
-            httpStateHandler.log(
+            httpState.log(
                 new LogEntry()
                     .setType(TRACE)
                     .setHttpRequest(request("request_four"))
@@ -1936,7 +1933,7 @@ public class HttpStateHandlerTest {
             );
 
             // when
-            HttpResponse response = httpStateHandler
+            HttpResponse response = httpState
                 .retrieve(
                     request()
                         .withQueryStringParameter("type", "logs")
@@ -2005,7 +2002,7 @@ public class HttpStateHandlerTest {
     public void shouldThrowExceptionForInvalidRetrieveType() {
         try {
             // when
-            httpStateHandler.retrieve(request().withQueryStringParameter("type", "invalid"));
+            httpState.retrieve(request().withQueryStringParameter("type", "invalid"));
             fail("expected exception to be thrown");
         } catch (Throwable throwable) {
             // then
@@ -2018,7 +2015,7 @@ public class HttpStateHandlerTest {
     public void shouldThrowExceptionForInvalidRetrieveFormat() {
         try {
             // when
-            httpStateHandler.retrieve(request().withQueryStringParameter("format", "invalid"));
+            httpState.retrieve(request().withQueryStringParameter("format", "invalid"));
             fail("expected exception to be thrown");
         } catch (Throwable throwable) {
             // then
@@ -2033,12 +2030,12 @@ public class HttpStateHandlerTest {
         try {
             // given
             ConfigurationProperties.logLevel("INFO");
-            httpStateHandler.add(
+            httpState.add(
                 new Expectation(request("request_one"))
                     .thenRespond(response("response_one"))
             );
             // given - some log entries
-            httpStateHandler.log(
+            httpState.log(
                 new LogEntry()
                     .setType(TRACE)
                     .setHttpRequest(request("request_four"))
@@ -2048,11 +2045,11 @@ public class HttpStateHandlerTest {
             );
 
             // when
-            httpStateHandler.reset();
+            httpState.reset();
 
             // then - retrieves correct state
             assertThat(
-                httpStateHandler
+                httpState
                     .retrieve(
                         request()
                             .withQueryStringParameter("type", "logs")
@@ -2067,14 +2064,14 @@ public class HttpStateHandlerTest {
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
             );
             assertThat(
-                httpStateHandler
+                httpState
                     .retrieve(
                         request()
                             .withQueryStringParameter("type", "active_expectations")
                     ),
                 is(response().withBody("[]", MediaType.JSON_UTF_8).withStatusCode(200))
             );
-            assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
+            assertThat(httpState.firstMatchingExpectation(request("request_one")), nullValue());
         } finally {
             ConfigurationProperties.logLevel(originalLevel.name());
         }
@@ -2083,7 +2080,7 @@ public class HttpStateHandlerTest {
     @Test
     public void shouldVerifyWithFuture() throws Exception {
         // given
-        MockServerEventLog mockServerEventLog = httpStateHandler.getMockServerLog();
+        MockServerEventLog mockServerEventLog = httpState.getMockServerLog();
         mockServerEventLog.add(
             new LogEntry()
                 .setHttpRequest(request("one"))
@@ -2101,7 +2098,7 @@ public class HttpStateHandlerTest {
         );
 
         // when
-        String result = httpStateHandler.verify(
+        String result = httpState.verify(
             new Verification()
                 .withRequest(request("two"))
         ).get(5, SECONDS);
@@ -2113,7 +2110,7 @@ public class HttpStateHandlerTest {
     @Test
     public void shouldVerifyWithCallback() throws Exception {
         // given
-        MockServerEventLog mockServerEventLog = httpStateHandler.getMockServerLog();
+        MockServerEventLog mockServerEventLog = httpState.getMockServerLog();
         mockServerEventLog.add(
             new LogEntry()
                 .setHttpRequest(request("one"))
@@ -2132,7 +2129,7 @@ public class HttpStateHandlerTest {
         CompletableFuture<String> verificationResult = new CompletableFuture<>();
 
         // when
-        httpStateHandler.verify(
+        httpState.verify(
             new Verification()
                 .withRequest(request("two")),
             verificationResult::complete
@@ -2145,7 +2142,7 @@ public class HttpStateHandlerTest {
     @Test
     public void shouldVerifyFailureWithCallback() throws Exception {
         // given
-        MockServerEventLog mockServerEventLog = httpStateHandler.getMockServerLog();
+        MockServerEventLog mockServerEventLog = httpState.getMockServerLog();
         mockServerEventLog.add(
             new LogEntry()
                 .setHttpRequest(request("one"))
@@ -2154,7 +2151,7 @@ public class HttpStateHandlerTest {
         CompletableFuture<String> verificationResult = new CompletableFuture<>();
 
         // when
-        httpStateHandler.verify(
+        httpState.verify(
             new Verification()
                 .withRequest(request("two")),
             verificationResult::complete
@@ -2171,7 +2168,7 @@ public class HttpStateHandlerTest {
     @Test
     public void shouldVerifySequenceWithFuture() throws Exception {
         // given
-        MockServerEventLog mockServerEventLog = httpStateHandler.getMockServerLog();
+        MockServerEventLog mockServerEventLog = httpState.getMockServerLog();
         mockServerEventLog.add(
             new LogEntry()
                 .setHttpRequest(request("one"))
@@ -2189,7 +2186,7 @@ public class HttpStateHandlerTest {
         );
 
         // when
-        String result = httpStateHandler.verify(
+        String result = httpState.verify(
             new VerificationSequence()
                 .withRequests(
                     request("one"),
@@ -2204,7 +2201,7 @@ public class HttpStateHandlerTest {
     @Test
     public void shouldVerifySequenceWithCallback() throws Exception {
         // given
-        MockServerEventLog mockServerEventLog = httpStateHandler.getMockServerLog();
+        MockServerEventLog mockServerEventLog = httpState.getMockServerLog();
         mockServerEventLog.add(
             new LogEntry()
                 .setHttpRequest(request("one"))
@@ -2223,7 +2220,7 @@ public class HttpStateHandlerTest {
         CompletableFuture<String> verificationResult = new CompletableFuture<>();
 
         // when
-        httpStateHandler.verify(
+        httpState.verify(
             new VerificationSequence()
                 .withRequests(
                     request("one"),
@@ -2239,7 +2236,7 @@ public class HttpStateHandlerTest {
     @Test
     public void shouldVerifySequenceFailureWithCallback() throws Exception {
         // given
-        MockServerEventLog mockServerEventLog = httpStateHandler.getMockServerLog();
+        MockServerEventLog mockServerEventLog = httpState.getMockServerLog();
         mockServerEventLog.add(
             new LogEntry()
                 .setHttpRequest(request("one"))
@@ -2258,7 +2255,7 @@ public class HttpStateHandlerTest {
         CompletableFuture<String> verificationResult = new CompletableFuture<>();
 
         // when
-        httpStateHandler.verify(
+        httpState.verify(
             new VerificationSequence()
                 .withRequests(
                     request("three"),

@@ -18,6 +18,9 @@ package org.mockserver.openapi.examples.models;
 
 import java.math.BigInteger;
 
+/**
+ * See: https://github.com/swagger-api/swagger-inflector
+ */
 public class BigIntegerExample extends AbstractExample {
     private BigInteger value;
 

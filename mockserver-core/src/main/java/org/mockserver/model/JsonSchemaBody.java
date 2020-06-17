@@ -2,11 +2,13 @@ package org.mockserver.model;
 
 import org.mockserver.file.FileReader;
 
+import java.util.Objects;
+
 /**
  * @author jamesdbloom
  */
-public class JsonSchemaBody extends Body {
-
+public class JsonSchemaBody extends Body<String> {
+    private int hashCode;
     private final String jsonSchema;
 
     public JsonSchemaBody(String jsonSchema) {
@@ -24,5 +26,31 @@ public class JsonSchemaBody extends Body {
 
     public String getValue() {
         return jsonSchema;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (hashCode() != o.hashCode()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        JsonSchemaBody that = (JsonSchemaBody) o;
+        return Objects.equals(jsonSchema, that.jsonSchema);
+    }
+
+    @Override
+    public int hashCode() {
+        if (hashCode == 0) {
+            hashCode = Objects.hash(super.hashCode(), jsonSchema);
+        }
+        return hashCode;
     }
 }

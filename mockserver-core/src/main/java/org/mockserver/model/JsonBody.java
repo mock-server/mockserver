@@ -5,6 +5,8 @@ import org.mockserver.matchers.MatchType;
 import org.mockserver.serialization.ObjectMapperFactory;
 
 import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.Objects;
 
 import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
 
@@ -12,7 +14,7 @@ import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
  * @author jamesdbloom
  */
 public class JsonBody extends BodyWithContentType<String> {
-
+    private int hashCode;
     public static final MatchType DEFAULT_MATCH_TYPE = MatchType.ONLY_MATCHING_FIELDS;
     // setting default to UTF8 as per https://tools.ietf.org/html/rfc8259#section-8.1
     public static final MediaType DEFAULT_CONTENT_TYPE = MediaType.APPLICATION_JSON_UTF_8;
@@ -119,4 +121,32 @@ public class JsonBody extends BodyWithContentType<String> {
         return json;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (hashCode() != o.hashCode()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        JsonBody jsonBody = (JsonBody) o;
+        return Objects.equals(json, jsonBody.json) &&
+            matchType == jsonBody.matchType &&
+            Arrays.equals(rawBytes, jsonBody.rawBytes);
+    }
+
+    @Override
+    public int hashCode() {
+        if (hashCode == 0) {
+            int result = Objects.hash(super.hashCode(), json, matchType);
+            hashCode = 31 * result + Arrays.hashCode(rawBytes);
+        }
+        return hashCode;
+    }
 }

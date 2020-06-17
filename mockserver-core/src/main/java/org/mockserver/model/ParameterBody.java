@@ -4,13 +4,14 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author jamesdbloom
  */
 public class ParameterBody extends Body<Parameters> {
-
     public static final MediaType DEFAULT_CONTENT_TYPE = MediaType.FORM_DATA;
+    private int hashCode;
     private Parameters parameters = new Parameters();
 
     public ParameterBody(Parameter... parameters) {
@@ -70,5 +71,31 @@ public class ParameterBody extends Body<Parameters> {
             }
         }
         return body.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (hashCode() != o.hashCode()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        ParameterBody that = (ParameterBody) o;
+        return Objects.equals(parameters, that.parameters);
+    }
+
+    @Override
+    public int hashCode() {
+        if (hashCode == 0) {
+            hashCode = Objects.hash(super.hashCode(), parameters);
+        }
+        return hashCode;
     }
 }

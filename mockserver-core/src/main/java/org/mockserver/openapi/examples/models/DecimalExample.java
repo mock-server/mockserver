@@ -18,6 +18,9 @@ package org.mockserver.openapi.examples.models;
 
 import java.math.BigDecimal;
 
+/**
+ * See: https://github.com/swagger-api/swagger-inflector
+ */
 public class DecimalExample extends AbstractExample {
     private BigDecimal value;
 
