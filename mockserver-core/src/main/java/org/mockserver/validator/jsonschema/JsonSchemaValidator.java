@@ -34,9 +34,10 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
     private static final Map<String, String> schemaCache = new ConcurrentHashMap<>();
     private final MockServerLogger mockServerLogger;
     private final String schema;
+    private final JsonNode schemaJsonNode;
     private final String mainSchemeFile;
     private final JsonValidator validator = JsonSchemaFactory.byDefault().getValidator();
-    private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+    private final static ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
 
     public JsonSchemaValidator(MockServerLogger mockServerLogger, String schema) {
         this.mockServerLogger = mockServerLogger;
@@ -48,6 +49,7 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
             throw new IllegalArgumentException("Schema must either be a path reference to a *.json file or a json string");
         }
         this.mainSchemeFile = null;
+        this.schemaJsonNode = getSchemaJsonNode();
     }
 
     public JsonSchemaValidator(MockServerLogger mockServerLogger, String routePath, String mainSchemeFile, String... referenceFiles) {
@@ -57,6 +59,21 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
         }
         this.schema = schemaCache.get(mainSchemeFile);
         this.mainSchemeFile = mainSchemeFile;
+        this.schemaJsonNode = getSchemaJsonNode();
+    }
+
+    private JsonNode getSchemaJsonNode() {
+        try {
+            return OBJECT_MAPPER.readTree(this.schema);
+        } catch (Throwable throwable) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("exception loading JSON Schema " + throwable.getMessage())
+                    .setThrowable(throwable)
+            );
+            return null;
+        }
     }
 
     public String getSchema() {
@@ -80,12 +97,12 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
             combinedSchema = ObjectMapperFactory
                 .createObjectMapper(true)
                 .writeValueAsString(jsonSchema);
-        } catch (Exception e) {
+        } catch (Throwable throwable) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("exception loading JSON Schema for Exceptions")
-                    .setThrowable(e)
+                    .setMessageFormat("exception loading JSON Schema " + throwable.getMessage())
+                    .setThrowable(throwable)
             );
         }
         return combinedSchema;
@@ -103,22 +120,22 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
 
                 ProcessingReport processingReport = validator
                     .validate(
-                        objectMapper.readTree(schema),
-                        objectMapper.readTree(json),
+                        schemaJsonNode,
+                        OBJECT_MAPPER.readTree(json),
                         true
                     );
 
                 if (!processingReport.isSuccess()) {
                     validationResult = formatProcessingReport(processingReport, addOpenAPISpecificationMessage);
                 }
-            } catch (Exception e) {
+            } catch (Throwable throwable) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(Level.ERROR)
                         .setMessageFormat("exception validating JSON")
-                        .setThrowable(e)
+                        .setThrowable(throwable)
                 );
-                return e.getClass().getSimpleName() + " - " + e.getMessage();
+                return throwable.getClass().getSimpleName() + " - " + throwable.getMessage();
             }
         }
         return validationResult;
