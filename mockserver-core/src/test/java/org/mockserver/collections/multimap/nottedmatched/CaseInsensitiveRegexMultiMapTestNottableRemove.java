@@ -1,4 +1,4 @@
-package org.mockserver.collections.multimap.nottablematched;
+package org.mockserver.collections.multimap.nottedmatched;
 
 import org.junit.Test;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;

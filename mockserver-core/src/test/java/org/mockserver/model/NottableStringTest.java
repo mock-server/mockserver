@@ -2,8 +2,7 @@ package org.mockserver.model;
 
 import org.junit.Test;
 
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertTrue;
+import static junit.framework.TestCase.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
@@ -86,11 +85,11 @@ public class NottableStringTest {
 
     @Test
     public void shouldEqualForNotValueNull() {
-        assertTrue(NottableString.not("value").equals(string("value", true)));
-        assertTrue(NottableString.string("value").equals(string("value", false)));
+        assertEquals(NottableString.not("value"), string("value", true));
+        assertEquals(string("value"), string("value", false));
 
         NottableString initiallyTrueValue = NottableString.string("value");
-        assertTrue(initiallyTrueValue.equals(string("value", null)));
+        assertEquals(initiallyTrueValue, string("value", null));
         assertFalse(string("value", null).isNot());
     }
 

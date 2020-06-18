@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.NottableSchemaString;
 import org.mockserver.model.NottableString;
 
 import java.util.regex.PatternSyntaxException;
@@ -52,6 +53,18 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
     }
 
     public boolean matches(NottableString matcher, NottableString matched, boolean ignoreCase) {
+        if (matcher instanceof NottableSchemaString && matched instanceof NottableSchemaString) {
+            return matchesByStrings(matcher, matched, ignoreCase);
+        } else if (matcher instanceof NottableSchemaString) {
+            return matchesBySchemas((NottableSchemaString) matcher, matched);
+        } else if (matched instanceof NottableSchemaString) {
+            return matchesBySchemas((NottableSchemaString) matched, matcher);
+        } else {
+            return matchesByStrings(matcher, matched, ignoreCase);
+        }
+    }
+
+    private boolean matchesByStrings(NottableString matcher, NottableString matched, boolean ignoreCase) {
         if (matcher.isNot() && matched.isNot()) {
             // mutual notted control plane match
             return matches(matcher.getValue(), matched.getValue(), ignoreCase);
@@ -59,6 +72,10 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
             // data plane & control plan match
             return (matcher.isNot() || matched.isNot()) ^ matches(matcher.getValue(), matched.getValue(), ignoreCase);
         }
+    }
+
+    private boolean matchesBySchemas(NottableSchemaString schema, NottableString string) {
+        return string.isNot() != schema.matches(string.getValue());
     }
 
     public boolean matches(String matcher, String matched, boolean ignoreCase) {

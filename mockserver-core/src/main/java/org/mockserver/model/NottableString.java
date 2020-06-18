@@ -184,15 +184,34 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
     public boolean equals(Object other) {
         if (other instanceof String) {
             return not != other.equals(value);
+        } else if (this instanceof NottableSchemaString && other instanceof NottableSchemaString) {
+            return equalsValue((NottableString) other);
+        } else if (this instanceof NottableSchemaString) {
+            return equalsSchema((NottableSchemaString) this, (NottableString) other);
+        } else if (other instanceof NottableSchemaString) {
+            return equalsSchema((NottableSchemaString) other, this);
         } else if (other instanceof NottableString) {
-            NottableString that = (NottableString) other;
-            if (that.getValue() == null) {
-                return this.value == null;
-            }
-            boolean reverse = (that.not != this.not) && (that.not || this.not);
-            return reverse != that.getValue().equals(this.value);
+            return equalsValue((NottableString) other);
         }
         return false;
+    }
+
+    private boolean equalsSchema(NottableSchemaString schema, NottableString string) {
+        if (schema.getValue() == null && string.getValue() == null) {
+            return true;
+        } else if (schema.getValue() == null || string.getValue() == null) {
+            return false;
+        } else {
+            return schema.matches(string.getValue());
+        }
+    }
+
+    private boolean equalsValue(NottableString other) {
+        if (other.getValue() == null) {
+            return this.value == null;
+        }
+        boolean reverse = (other.not != this.not) && (other.not || this.not);
+        return reverse != other.getValue().equals(this.value);
     }
 
     @Override
