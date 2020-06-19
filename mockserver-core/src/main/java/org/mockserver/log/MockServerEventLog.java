@@ -9,7 +9,6 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.model.LogEventRequestAndResponse;
 import org.mockserver.model.RequestDefinition;
 import org.mockserver.scheduler.Scheduler;
@@ -136,7 +135,9 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
 
     public void stop() {
         try {
+            eventLog.clear();
             disruptor.shutdown(2, SECONDS);
+            System.gc();
         } catch (Throwable throwable) {
             if (!(throwable instanceof com.lmax.disruptor.TimeoutException)) {
                 writeToSystemOut(logger, new LogEntry()
