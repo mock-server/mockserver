@@ -27,7 +27,13 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
 
     public VerificationSequenceSerializer(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-        verificationSequenceValidator = jsonSchemaVerificationSequenceValidator(mockServerLogger);
+    }
+
+    private JsonSchemaVerificationSequenceValidator getValidator() {
+        if (verificationSequenceValidator == null) {
+            verificationSequenceValidator = jsonSchemaVerificationSequenceValidator(mockServerLogger);
+        }
+        return verificationSequenceValidator;
     }
 
     public String serialize(VerificationSequence verificationSequence) {
@@ -53,7 +59,7 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
                     OPEN_API_SPECIFICATION_URL
             );
         } else {
-            String validationErrors = verificationSequenceValidator.isValid(jsonVerificationSequence);
+            String validationErrors = getValidator().isValid(jsonVerificationSequence);
             if (validationErrors.isEmpty()) {
                 VerificationSequence verificationSequence = null;
                 try {

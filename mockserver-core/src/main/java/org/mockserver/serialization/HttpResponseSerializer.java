@@ -32,7 +32,13 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
 
     public HttpResponseSerializer(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-        httpResponseValidator = jsonSchemaHttpResponseValidator(mockServerLogger);
+    }
+
+    private JsonSchemaHttpResponseValidator getValidator() {
+        if (httpResponseValidator == null) {
+            httpResponseValidator = jsonSchemaHttpResponseValidator(mockServerLogger);
+        }
+        return httpResponseValidator;
     }
 
     public String serialize(HttpResponse httpResponse) {
@@ -101,7 +107,7 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                     throw new RuntimeException("Exception while parsing [" + jsonHttpResponse + "] for HttpResponse", throwable);
                 }
             }
-            String validationErrors = httpResponseValidator.isValid(jsonHttpResponse);
+            String validationErrors = getValidator().isValid(jsonHttpResponse);
             if (validationErrors.isEmpty()) {
                 HttpResponse httpResponse = null;
                 try {

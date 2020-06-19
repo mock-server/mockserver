@@ -15,16 +15,16 @@ import java.util.List;
  */
 public class LogEntrySerializer {
     private final MockServerLogger mockServerLogger;
-    private final ObjectWriter objectWriter;
+    private static final ObjectWriter objectWriter = ObjectMapperFactory
+        .createObjectMapper()
+        .writer(
+            new DefaultPrettyPrinter()
+                .withArrayIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE)
+                .withObjectIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE)
+        );
 
     public LogEntrySerializer(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-
-        DefaultPrettyPrinter prettyPrinter = new DefaultPrettyPrinter()
-            .withArrayIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE)
-            .withObjectIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE);
-
-        objectWriter = ObjectMapperFactory.createObjectMapper().writer(prettyPrinter);
     }
 
     public String serialize(LogEntry logEntry) {

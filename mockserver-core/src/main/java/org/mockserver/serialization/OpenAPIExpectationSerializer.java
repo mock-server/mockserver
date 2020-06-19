@@ -31,7 +31,13 @@ public class OpenAPIExpectationSerializer implements Serializer<OpenAPIExpectati
 
     public OpenAPIExpectationSerializer(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-        expectationValidator = jsonSchemaOpenAPIExpectationValidator(mockServerLogger);
+    }
+
+    private JsonSchemaOpenAPIExpectationValidator getValidator() {
+        if (expectationValidator == null) {
+            expectationValidator = jsonSchemaOpenAPIExpectationValidator(mockServerLogger);
+        }
+        return expectationValidator;
     }
 
     public String serialize(OpenAPIExpectation expectation) {
@@ -89,7 +95,7 @@ public class OpenAPIExpectationSerializer implements Serializer<OpenAPIExpectati
                     OPEN_API_SPECIFICATION_URL
             );
         } else {
-            String validationErrors = expectationValidator.isValid(jsonOpenAPIExpectation);
+            String validationErrors = getValidator().isValid(jsonOpenAPIExpectation);
             if (validationErrors.isEmpty()) {
                 OpenAPIExpectation expectation = null;
                 try {

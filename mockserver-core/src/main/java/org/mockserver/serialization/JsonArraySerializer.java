@@ -13,7 +13,7 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class JsonArraySerializer {
-    private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+    private static final ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
     public List<String> returnJSONObjects(String jsonArray) {
         List<String> arrayItems = new ArrayList<String>();

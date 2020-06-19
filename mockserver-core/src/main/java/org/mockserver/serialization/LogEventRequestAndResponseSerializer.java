@@ -25,16 +25,16 @@ public class LogEventRequestAndResponseSerializer {
     private final MockServerLogger mockServerLogger;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
-    private final ObjectWriter objectWriter;
+    private static final ObjectWriter objectWriter = ObjectMapperFactory
+        .createObjectMapper()
+        .writer(
+            new DefaultPrettyPrinter()
+                .withArrayIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE)
+                .withObjectIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE)
+        );
 
     public LogEventRequestAndResponseSerializer(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-
-        DefaultPrettyPrinter prettyPrinter = new DefaultPrettyPrinter()
-            .withArrayIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE)
-            .withObjectIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE);
-
-        objectWriter = ObjectMapperFactory.createObjectMapper().writer(prettyPrinter);
     }
 
     public String serialize(LogEventRequestAndResponse httpRequestAndHttpResponse) {

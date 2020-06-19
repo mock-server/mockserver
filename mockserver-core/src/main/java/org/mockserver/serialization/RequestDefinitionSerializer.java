@@ -37,7 +37,13 @@ public class RequestDefinitionSerializer implements Serializer<RequestDefinition
 
     public RequestDefinitionSerializer(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-        requestDefinitionValidator = jsonSchemaRequestDefinitionValidator(mockServerLogger);
+    }
+
+    private JsonSchemaRequestDefinitionValidator getValidator() {
+        if (requestDefinitionValidator == null) {
+            requestDefinitionValidator = jsonSchemaRequestDefinitionValidator(mockServerLogger);
+        }
+        return requestDefinitionValidator;
     }
 
     public String serialize(RequestDefinition requestDefinition) {
@@ -144,7 +150,7 @@ public class RequestDefinitionSerializer implements Serializer<RequestDefinition
                     throw new RuntimeException("Exception while parsing [" + jsonRequestDefinition + "] for RequestDefinition", throwable);
                 }
             }
-            String validationErrors = requestDefinitionValidator.isValid(jsonRequestDefinition);
+            String validationErrors = getValidator().isValid(jsonRequestDefinition);
             if (validationErrors.isEmpty()) {
                 RequestDefinition requestDefinition = null;
                 try {

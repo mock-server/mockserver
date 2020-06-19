@@ -28,10 +28,28 @@ public class ExpectationSerializer implements Serializer<Expectation> {
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
     private JsonSchemaExpectationValidator expectationValidator;
+    private static boolean printedECMA262Warning = false;
 
     public ExpectationSerializer(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-        expectationValidator = jsonSchemaExpectationValidator(mockServerLogger);
+    }
+
+    private JsonSchemaExpectationValidator getValidator() {
+        if (expectationValidator == null) {
+            if (!printedECMA262Warning) {
+                // output warning if Java 11+ due to deprecation warning from Nashorn
+                if (!System.getProperty("java.version").contains("1.8") && !System.getProperty("java.version").contains("1.9")) {
+                    try {
+                        this.getClass().getClassLoader().loadClass("jdk.nashorn.api.scripting.NashornScriptEngineFactory");
+                        System.err.println("Loading JavaScript to validate ECMA262 regular expression in JsonSchema because java.util.regex package in Java does not match ECMA262");
+                    } catch (ClassNotFoundException ignore) {
+                    }
+                }
+                printedECMA262Warning = true;
+            }
+            expectationValidator = jsonSchemaExpectationValidator(mockServerLogger);
+        }
+        return expectationValidator;
     }
 
     public String serialize(Expectation expectation) {
@@ -89,7 +107,7 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                     OPEN_API_SPECIFICATION_URL
             );
         } else {
-            String validationErrors = expectationValidator.isValid(jsonExpectation);
+            String validationErrors = getValidator().isValid(jsonExpectation);
             if (validationErrors.isEmpty()) {
                 Expectation expectation = null;
                 try {

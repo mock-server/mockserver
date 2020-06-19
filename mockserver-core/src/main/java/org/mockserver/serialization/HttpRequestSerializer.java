@@ -33,7 +33,13 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
 
     public HttpRequestSerializer(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-        httpRequestValidator = jsonSchemaHttpRequestValidator(mockServerLogger);
+    }
+
+    private JsonSchemaHttpRequestValidator getValidator() {
+        if (httpRequestValidator == null) {
+            httpRequestValidator = jsonSchemaHttpRequestValidator(mockServerLogger);
+        }
+        return httpRequestValidator;
     }
 
     public String serialize(HttpRequest httpRequest) {
@@ -126,7 +132,7 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                     throw new RuntimeException("Exception while parsing [" + jsonHttpRequest + "] for HttpRequest", throwable);
                 }
             }
-            String validationErrors = httpRequestValidator.isValid(jsonHttpRequest);
+            String validationErrors = getValidator().isValid(jsonHttpRequest);
             if (validationErrors.isEmpty()) {
                 HttpRequest httpRequest = null;
                 try {
