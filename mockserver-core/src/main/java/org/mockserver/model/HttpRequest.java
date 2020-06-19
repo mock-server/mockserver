@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -442,7 +443,14 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     @JsonIgnore
     public String getBodyAsString() {
         if (body != null) {
-            return body.toString();
+            Charset requestCharset = StandardCharsets.ISO_8859_1;
+            if (containsHeader(CONTENT_TYPE.toString())) {
+                Charset contentTypeHeaderCharset = MediaType.parse(getFirstHeader(CONTENT_TYPE.toString())).getCharset();
+                if (contentTypeHeaderCharset != null) {
+                    requestCharset = contentTypeHeaderCharset;
+                }
+            }
+            return new String(body.toString().getBytes(requestCharset));
         } else {
             return null;
         }
