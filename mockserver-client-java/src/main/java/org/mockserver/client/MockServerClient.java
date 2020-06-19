@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -177,6 +178,11 @@ public class MockServerClient implements Stoppable {
 
     private HttpResponse sendRequest(HttpRequest request, boolean ignoreErrors) {
         try {
+            if (!request.containsHeader(CONTENT_TYPE.toString())
+                && request.getBody() != null
+                && isNotBlank(request.getBody().getContentType())) {
+                request.withHeader(CONTENT_TYPE.toString(), request.getBody().getContentType());
+            }
             if (secure != null) {
                 request.withSecure(secure);
             }
@@ -353,7 +359,12 @@ public class MockServerClient implements Stoppable {
      * Bind new ports to listen on
      */
     public List<Integer> bind(Integer... ports) {
-        String boundPorts = sendRequest(request().withMethod("PUT").withPath(calculatePath("bind")).withBody(portBindingSerializer.serialize(portBinding(ports)), StandardCharsets.UTF_8)).getBodyAsString();
+        String boundPorts = sendRequest(
+            request()
+                .withMethod("PUT")
+                .withPath(calculatePath("bind"))
+                .withBody(portBindingSerializer.serialize(portBinding(ports)), StandardCharsets.UTF_8)
+        ).getBodyAsString();
         return portBindingSerializer.deserialize(boundPorts).getPorts();
     }
 
@@ -469,7 +480,8 @@ public class MockServerClient implements Stoppable {
                 .withMethod("PUT")
                 .withContentType(APPLICATION_JSON_UTF_8)
                 .withPath(calculatePath("clear"))
-                .withQueryStringParameter("type", type.name().toLowerCase()).withBody(requestDefinition != null ? requestDefinitionSerializer.serialize(requestDefinition) : "", StandardCharsets.UTF_8)
+                .withQueryStringParameter("type", type.name().toLowerCase())
+                .withBody(requestDefinition != null ? requestDefinitionSerializer.serialize(requestDefinition) : "", StandardCharsets.UTF_8)
         );
         return clientClass.cast(this);
     }

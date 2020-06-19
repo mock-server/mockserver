@@ -443,14 +443,21 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     @JsonIgnore
     public String getBodyAsString() {
         if (body != null) {
-            Charset requestCharset = StandardCharsets.ISO_8859_1;
-            if (containsHeader(CONTENT_TYPE.toString())) {
-                Charset contentTypeHeaderCharset = MediaType.parse(getFirstHeader(CONTENT_TYPE.toString())).getCharset();
-                if (contentTypeHeaderCharset != null) {
-                    requestCharset = contentTypeHeaderCharset;
-                }
+            return body.toString();
+        } else {
+            return null;
+        }
+    }
+    @JsonIgnore
+    public String getBodyAsJsonString() {
+        if (body != null) {
+            if (body instanceof StringBody) {
+                // if it should be json (and it has been validated i.e. control plane request)
+                // assume the Content-Type header was forgotten so should be parsed as json
+                return new String(body.toString().getBytes(MediaType.parse(getFirstHeader(CONTENT_TYPE.toString())).getCharsetOrDefault()), StandardCharsets.UTF_8);
+            } else {
+                return getBodyAsString();
             }
-            return new String(body.toString().getBytes(requestCharset));
         } else {
             return null;
         }
