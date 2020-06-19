@@ -128,6 +128,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     }
 
     private void processLogEntry(LogEntry logEntry) {
+        logEntry = logEntry.cloneAndClear();
         eventLog.add(logEntry);
         notifyListeners(this);
         writeToSystemOut(logger, logEntry);
@@ -137,7 +138,6 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         try {
             eventLog.clear();
             disruptor.shutdown(2, SECONDS);
-            System.gc();
         } catch (Throwable throwable) {
             if (!(throwable instanceof com.lmax.disruptor.TimeoutException)) {
                 writeToSystemOut(logger, new LogEntry()

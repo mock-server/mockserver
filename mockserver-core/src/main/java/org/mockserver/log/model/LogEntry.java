@@ -348,6 +348,12 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         }
     }
 
+    public LogEntry cloneAndClear() {
+        LogEntry clone = this.clone();
+        clear();
+        return clone;
+    }
+
     @SuppressWarnings("MethodDoesntCallSuperMethod")
     public LogEntry clone() {
         return new LogEntry()

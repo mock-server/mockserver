@@ -293,7 +293,7 @@ public class ConfigurationProperties {
     }
 
     public static int ringBufferSize() {
-        return nextPowerOfTwo(defaultMaxLogEntries());
+        return nextPowerOfTwo(Math.min(defaultMaxLogEntries(), 1500));
     }
 
     private static int nextPowerOfTwo(int value) {
