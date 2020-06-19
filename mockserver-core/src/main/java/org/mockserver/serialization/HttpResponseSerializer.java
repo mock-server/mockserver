@@ -90,15 +90,15 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                     if (jsonNode.has("httpResponse")) {
                         jsonHttpResponse = jsonNode.get("httpResponse").toString();
                     }
-                } catch (Exception e) {
+                } catch (Throwable throwable) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception while parsing{}for HttpResponse")
+                            .setMessageFormat("exception while parsing{}for HttpResponse" + throwable.getMessage())
                             .setArguments(jsonHttpResponse)
-                            .setThrowable(e)
+                            .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonHttpResponse + "] for HttpResponse", e);
+                    throw new RuntimeException("Exception while parsing [" + jsonHttpResponse + "] for HttpResponse", throwable);
                 }
             }
             String validationErrors = httpResponseValidator.isValid(jsonHttpResponse);
@@ -109,15 +109,15 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                     if (httpResponseDTO != null) {
                         httpResponse = httpResponseDTO.buildObject();
                     }
-                } catch (Exception e) {
+                } catch (Throwable throwable) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception while parsing{}for HttpResponse")
+                            .setMessageFormat("exception while parsing{}for HttpResponse " + throwable.getMessage())
                             .setArguments(jsonHttpResponse)
-                            .setThrowable(e)
+                            .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonHttpResponse + "] for HttpResponse", e);
+                    throw new RuntimeException("Exception while parsing [" + jsonHttpResponse + "] for HttpResponse", throwable);
                 }
                 return httpResponse;
             } else {

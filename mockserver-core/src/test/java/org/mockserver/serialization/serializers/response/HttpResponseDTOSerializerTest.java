@@ -103,7 +103,9 @@ public class HttpResponseDTOSerializerTest {
                 "  }," + NEW_LINE +
                 "  \"body\" : {" + NEW_LINE +
                 "    \"type\" : \"JSON\"," + NEW_LINE +
-                "    \"json\" : \"{ \\\"key\\\": \\\"some_value\\\" }\"," + NEW_LINE +
+                "    \"json\" : {" + NEW_LINE +
+                "      \"key\" : \"some_value\"" + NEW_LINE +
+                "    }," + NEW_LINE +
                 "    \"rawBytes\" : \"eyAia2V5IjogInNvbWVfdmFsdWUiIH0=\"" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}"));

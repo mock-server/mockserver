@@ -41,7 +41,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
     public boolean matches(final MatchDifference context, NottableString matched) {
         boolean result = false;
 
-        if (matcher == null || matches(matcher.getValue(), matched.getValue(), true)) {
+        if (matcher == null || matches(matcher, matched, true)) {
             result = true;
         }
 
@@ -49,7 +49,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
             context.addDifference(mockServerLogger, "string or regex match failed expected:{}found:{}", this.matcher, matched);
         }
 
-        return matched.isNot() == (matcher.isNot() == (not != result));
+        return not != result;
     }
 
     public boolean matches(NottableString matcher, NottableString matched, boolean ignoreCase) {

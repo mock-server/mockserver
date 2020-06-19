@@ -12,6 +12,7 @@ public class JsonSchemaHttpResponseValidator extends JsonSchemaValidator {
             mockServerLogger,
             "org/mockserver/model/schema/",
             "httpResponse",
+            "stringOrJsonSchema",
             "bodyWithContentType",
             "delay",
             "connectionOptions",

@@ -90,15 +90,15 @@ public class HttpRequestAndHttpResponseSerializer implements Serializer<HttpRequ
                     if (jsonNode.has("httpRequestAndHttpResponse")) {
                         jsonHttpRequest = jsonNode.get("httpRequestAndHttpResponse").toString();
                     }
-                } catch (Exception e) {
+                } catch (Throwable throwable) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception while parsing{}for HttpRequestAndHttpResponse")
+                            .setMessageFormat("exception while parsing{}for HttpRequestAndHttpResponse " + throwable.getMessage())
                             .setArguments(jsonHttpRequest)
-                            .setThrowable(e)
+                            .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonHttpRequest + "] for HttpRequestAndHttpResponse", e);
+                    throw new RuntimeException("Exception while parsing [" + jsonHttpRequest + "] for HttpRequestAndHttpResponse", throwable);
                 }
             }
             String validationErrors = jsonSchemaHttpRequestAndHttpResponseValidator.isValid(jsonHttpRequest);
@@ -109,15 +109,15 @@ public class HttpRequestAndHttpResponseSerializer implements Serializer<HttpRequ
                     if (httpRequestDTO != null) {
                         httpRequestAndHttpResponse = httpRequestDTO.buildObject();
                     }
-                } catch (Exception e) {
+                } catch (Throwable throwable) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception while parsing{}for HttpRequestAndHttpResponse")
+                            .setMessageFormat("exception while parsing{}for HttpRequestAndHttpResponse " + throwable.getMessage())
                             .setArguments(jsonHttpRequest)
-                            .setThrowable(e)
+                            .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonHttpRequest + "] for HttpRequestAndHttpResponse", e);
+                    throw new RuntimeException("Exception while parsing [" + jsonHttpRequest + "] for HttpRequestAndHttpResponse", throwable);
                 }
                 return httpRequestAndHttpResponse;
             } else {

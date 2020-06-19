@@ -430,7 +430,9 @@ public class HttpResponseSerializerIntegrationTest {
         assertEquals("{" + NEW_LINE +
             "  \"body\" : {" + NEW_LINE +
             "    \"type\" : \"JSON\"," + NEW_LINE +
-            "    \"json\" : \"{ \\\"key\\\": \\\"value\\\" }\"," + NEW_LINE +
+            "    \"json\" : {" + NEW_LINE +
+            "      \"key\" : \"value\"" + NEW_LINE +
+            "    }," + NEW_LINE +
             "    \"rawBytes\" : \"eyAia2V5IjogInZhbHVlIiB9\"" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonHttpResponse);
@@ -499,7 +501,9 @@ public class HttpResponseSerializerIntegrationTest {
         assertEquals("{" + NEW_LINE +
             "  \"body\" : {" + NEW_LINE +
             "    \"type\" : \"JSON\"," + NEW_LINE +
-            "    \"json\" : \"{ \\\"key\\\": \\\"value\\\" }\"" + NEW_LINE +
+            "    \"json\" : {" + NEW_LINE +
+            "      \"key\" : \"value\"" + NEW_LINE +
+            "    }" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonHttpResponse);
     }

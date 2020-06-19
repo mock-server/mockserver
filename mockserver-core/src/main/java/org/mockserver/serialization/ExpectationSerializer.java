@@ -97,15 +97,15 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                     if (expectationDTO != null) {
                         expectation = expectationDTO.buildObject();
                     }
-                } catch (Exception e) {
+                } catch (Throwable throwable) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception while parsing{}for Expectation")
+                            .setMessageFormat("exception while parsing{}for Expectation " + throwable.getMessage())
                             .setArguments(jsonExpectation)
-                            .setThrowable(e)
+                            .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonExpectation + "] for Expectation", e);
+                    throw new RuntimeException("Exception while parsing [" + jsonExpectation + "] for Expectation", throwable);
                 }
                 return expectation;
             } else {

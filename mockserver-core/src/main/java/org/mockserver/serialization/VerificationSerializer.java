@@ -61,15 +61,15 @@ public class VerificationSerializer implements Serializer<Verification> {
                     if (verificationDTO != null) {
                         verification = verificationDTO.buildObject();
                     }
-                } catch (Exception e) {
+                } catch (Throwable throwable) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception while parsing{}for Verification")
+                            .setMessageFormat("exception while parsing{}for Verification " + throwable.getMessage())
                             .setArguments(jsonVerification)
-                            .setThrowable(e)
+                            .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonVerification + "] for Verification", e);
+                    throw new RuntimeException("Exception while parsing [" + jsonVerification + "] for Verification", throwable);
                 }
                 return verification;
             } else {

@@ -1,0 +1,13 @@
+{
+  "title": "string or json schema",
+  "oneOf": [
+    {
+      "type": "string"
+    },
+    {
+      "$ref": "http://json-schema.org/draft-04/schema"
+    }
+  ],
+  "definitions": {
+  }
+}

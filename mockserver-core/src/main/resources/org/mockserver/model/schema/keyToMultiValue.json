@@ -28,7 +28,7 @@
                     "type": "array",
                     "additionalProperties": false,
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/stringOrJsonSchema"
                     }
                 }
             }

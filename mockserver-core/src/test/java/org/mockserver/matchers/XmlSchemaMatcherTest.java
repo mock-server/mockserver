@@ -99,7 +99,7 @@ public class XmlSchemaMatcherTest {
 
             // then
             verify(logger).debug("xml schema match failed expected:" + NEW_LINE +
-                    "" + NEW_LINE +
+                    NEW_LINE +
                     "  <?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
                     "  <xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
                     "      <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
@@ -121,13 +121,13 @@ public class XmlSchemaMatcherTest {
                     "          </xs:complexType>" + NEW_LINE +
                     "      </xs:element>" + NEW_LINE +
                     "  </xs:schema>" + NEW_LINE +
-                    "" + NEW_LINE +
+                    NEW_LINE +
                     " found:" + NEW_LINE +
-                    "" + NEW_LINE +
+                    NEW_LINE +
                     "  some_xml" + NEW_LINE +
-                    "" + NEW_LINE +
+                    NEW_LINE +
                     " failed because:" + NEW_LINE +
-                    "" + NEW_LINE +
+                    NEW_LINE +
                     "  validator_error" + NEW_LINE,
                 (Throwable) null);
         } finally {
@@ -150,7 +150,7 @@ public class XmlSchemaMatcherTest {
 
             // then
             verify(logger).debug("xml schema match failed expected:" + NEW_LINE +
-                    "" + NEW_LINE +
+                    NEW_LINE +
                     "  <?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
                     "  <xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
                     "      <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
@@ -172,13 +172,13 @@ public class XmlSchemaMatcherTest {
                     "          </xs:complexType>" + NEW_LINE +
                     "      </xs:element>" + NEW_LINE +
                     "  </xs:schema>" + NEW_LINE +
-                    "" + NEW_LINE +
+                    NEW_LINE +
                     " found:" + NEW_LINE +
-                    "" + NEW_LINE +
+                    NEW_LINE +
                     "  some_xml" + NEW_LINE +
-                    "" + NEW_LINE +
+                    NEW_LINE +
                     " failed because:" + NEW_LINE +
-                    "" + NEW_LINE +
+                    NEW_LINE +
                     "  TEST_EXCEPTION" + NEW_LINE,
                 test_exception);
         } finally {

@@ -97,15 +97,15 @@ public class OpenAPIExpectationSerializer implements Serializer<OpenAPIExpectati
                     if (expectationDTO != null) {
                         expectation = expectationDTO.buildObject();
                     }
-                } catch (Exception e) {
+                } catch (Throwable throwable) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception while parsing{}for OpenAPIExpectation")
+                            .setMessageFormat("exception while parsing{}for OpenAPIExpectation " + throwable.getMessage())
                             .setArguments(jsonOpenAPIExpectation)
-                            .setThrowable(e)
+                            .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonOpenAPIExpectation + "] for OpenAPIExpectation", e);
+                    throw new RuntimeException("Exception while parsing [" + jsonOpenAPIExpectation + "] for OpenAPIExpectation", throwable);
                 }
                 return expectation;
             } else {

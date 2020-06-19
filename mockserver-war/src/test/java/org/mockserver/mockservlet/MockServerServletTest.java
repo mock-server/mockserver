@@ -335,7 +335,7 @@ public class MockServerServletTest {
             // then
             assertThat(response.getStatus(), is(200));
             assertThat(new String(response.getContentAsByteArray(), UTF_8), containsString("creating expectation:" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 "  {" + NEW_LINE +
                 "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
                 "    \"priority\" : 0," + NEW_LINE +

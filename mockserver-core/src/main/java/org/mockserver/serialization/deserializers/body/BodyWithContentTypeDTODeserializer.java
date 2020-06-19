@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -30,8 +31,8 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
 
     private static final Map<String, Body.Type> fieldNameToType = new HashMap<>();
     private static final Base64.Decoder BASE64_DECODER = Base64.getDecoder();
-    private static ObjectMapper objectMapper;
-    private static ObjectMapper jsonBodyObjectMapper;
+    private static ObjectWriter objectMapper;
+    private static ObjectWriter jsonBodyObjectMapper;
 
     static {
         fieldNameToType.put("base64Bytes".toLowerCase(), Body.Type.BINARY);
@@ -83,7 +84,7 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                         if (Map.class.isAssignableFrom(entry.getValue().getClass()) ||
                             containsIgnoreCase(key, "json", "jsonSchema") && !String.class.isAssignableFrom(entry.getValue().getClass())) {
                             if (objectMapper == null) {
-                                objectMapper = ObjectMapperFactory.createObjectMapper();
+                                objectMapper = ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter();
                             }
                             valueJsonValue = objectMapper.writeValueAsString(entry.getValue());
                         } else {
@@ -186,13 +187,13 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                 }
             } else if (body.size() > 0) {
                 if (jsonBodyObjectMapper == null) {
-                    jsonBodyObjectMapper = new ObjectMapper();
+                    jsonBodyObjectMapper = new ObjectMapper().writerWithDefaultPrettyPrinter();
                 }
                 return new JsonBodyDTO(new JsonBody(jsonBodyObjectMapper.writeValueAsString(body), JsonBody.DEFAULT_MATCH_TYPE), null);
             }
         } else if (currentToken == JsonToken.START_ARRAY) {
             if (jsonBodyObjectMapper == null) {
-                jsonBodyObjectMapper = new ObjectMapper();
+                jsonBodyObjectMapper = new ObjectMapper().writerWithDefaultPrettyPrinter();
             }
             return new JsonBodyDTO(new JsonBody(jsonBodyObjectMapper.writeValueAsString(ctxt.readValue(jsonParser, List.class)), JsonBody.DEFAULT_MATCH_TYPE), null);
         } else if (currentToken == JsonToken.VALUE_STRING) {

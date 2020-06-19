@@ -1457,7 +1457,12 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), MediaType.APPLICATION_JSON_UTF_8.toString())
-                .withBody(json("{\"id\":1,\"name\":\"A green door\",\"price\":12.5,\"tags\":[\"home\",\"green\"]}")),
+                .withBody(json("{" + NEW_LINE +
+                    "  \"id\" : 1," + NEW_LINE +
+                    "  \"name\" : \"A green door\"," + NEW_LINE +
+                    "  \"price\" : 12.5," + NEW_LINE +
+                    "  \"tags\" : [ \"home\", \"green\" ]" + NEW_LINE +
+                    "}")),
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path"))
@@ -1655,10 +1660,10 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withStatusCode(ACCEPTED_202.code())
                     .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody(json("{" + NEW_LINE +
-                        "    \"ταυτότητα\": 1," + NEW_LINE +
-                        "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
-                        "    \"τιμή\": 12.50," + NEW_LINE +
-                        "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
+                        "  \"ταυτότητα\": 1," + NEW_LINE +
+                        "  \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
+                        "  \"τιμή\": 12.50," + NEW_LINE +
+                        "  \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
                         "}")
                     )
             );
@@ -1670,10 +1675,10 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withHeader("content-type", "application/json; charset=utf-8")
                 .withBody(json("{" + NEW_LINE +
-                    "    \"ταυτότητα\": 1," + NEW_LINE +
-                    "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
-                    "    \"τιμή\": 12.50," + NEW_LINE +
-                    "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
+                    "  \"ταυτότητα\" : 1," + NEW_LINE +
+                    "  \"όνομα\" : \"μια πράσινη πόρτα\"," + NEW_LINE +
+                    "  \"τιμή\" : 12.5," + NEW_LINE +
+                    "  \"ετικέτες\" : [ \"σπίτι\", \"πράσινος\" ]" + NEW_LINE +
                     "}")),
             makeRequest(
                 request()
@@ -5135,34 +5140,34 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
             "}");
         JsonSchemaBody jsonSchemaBodyTwo = jsonSchema("{" + NEW_LINE +
-            "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
-            "    \"title\": \"Product\"," + NEW_LINE +
-            "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
-            "    \"type\": \"object\"," + NEW_LINE +
-            "    \"properties\": {" + NEW_LINE +
-            "        \"id\": {" + NEW_LINE +
-            "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
-            "            \"type\": \"integer\"" + NEW_LINE +
-            "        }," + NEW_LINE +
-            "        \"name\": {" + NEW_LINE +
-            "            \"description\": \"Name of the product\"," + NEW_LINE +
-            "            \"type\": \"string\"" + NEW_LINE +
-            "        }," + NEW_LINE +
-            "        \"price\": {" + NEW_LINE +
-            "            \"type\": \"number\"," + NEW_LINE +
-            "            \"minimum\": 10," + NEW_LINE +
-            "            \"exclusiveMinimum\": true" + NEW_LINE +
-            "        }," + NEW_LINE +
-            "        \"tags\": {" + NEW_LINE +
-            "            \"type\": \"array\"," + NEW_LINE +
-            "            \"items\": {" + NEW_LINE +
-            "                \"type\": \"string\"" + NEW_LINE +
-            "            }," + NEW_LINE +
-            "            \"minItems\": 1," + NEW_LINE +
-            "            \"uniqueItems\": true" + NEW_LINE +
-            "        }" + NEW_LINE +
+            "  \"$schema\" : \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+            "  \"title\" : \"Product\"," + NEW_LINE +
+            "  \"description\" : \"A product from Acme's catalog\"," + NEW_LINE +
+            "  \"type\" : \"object\"," + NEW_LINE +
+            "  \"properties\" : {" + NEW_LINE +
+            "    \"id\" : {" + NEW_LINE +
+            "      \"description\" : \"The unique identifier for a product\"," + NEW_LINE +
+            "      \"type\" : \"integer\"" + NEW_LINE +
             "    }," + NEW_LINE +
-            "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+            "    \"name\" : {" + NEW_LINE +
+            "      \"description\" : \"Name of the product\"," + NEW_LINE +
+            "      \"type\" : \"string\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"price\" : {" + NEW_LINE +
+            "      \"type\" : \"number\"," + NEW_LINE +
+            "      \"minimum\" : 10," + NEW_LINE +
+            "      \"exclusiveMinimum\" : true" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"tags\" : {" + NEW_LINE +
+            "      \"type\" : \"array\"," + NEW_LINE +
+            "      \"items\" : {" + NEW_LINE +
+            "        \"type\" : \"string\"" + NEW_LINE +
+            "      }," + NEW_LINE +
+            "      \"minItems\" : 1," + NEW_LINE +
+            "      \"uniqueItems\" : true" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"required\" : [ \"id\", \"name\", \"price\" ]" + NEW_LINE +
             "}");
         mockServerClient
             .when(

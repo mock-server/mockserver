@@ -282,7 +282,7 @@ public class HttpStateTest {
                     NEW_LINE +
                     "------------------------------------" + NEW_LINE +
                     LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    "" + NEW_LINE +
+                    NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"path\" : \"request_one\"" + NEW_LINE +
                     "  }" + NEW_LINE +
@@ -401,7 +401,7 @@ public class HttpStateTest {
             " in 'reader', line 1, column 19:" + NEW_LINE +
             "    \"openapi\": \"3.0.0\"," + NEW_LINE +
             "                      ^" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             " at [Source: (StringReader); line: 1, column: 19]"));
     }
 
@@ -985,7 +985,7 @@ public class HttpStateTest {
                     ),
                 is(response().withBody("" +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
-                        "" + NEW_LINE +
+                        NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"id\" : \"key_one\"," + NEW_LINE +
                         "    \"priority\" : 0," + NEW_LINE +
@@ -1004,12 +1004,12 @@ public class HttpStateTest {
                         "      \"body\" : \"response_one\"" + NEW_LINE +
                         "    }" + NEW_LINE +
                         "  }" + NEW_LINE +
-                        "" + NEW_LINE +
+                        NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - some random" + NEW_LINE +
-                        "" + NEW_LINE +
+                        NEW_LINE +
                         "  argument_one" + NEW_LINE +
-                        "" + NEW_LINE +
+                        NEW_LINE +
                         " message" + NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
@@ -1035,14 +1035,14 @@ public class HttpStateTest {
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing expectations and logs that match:" + NEW_LINE +
-                        "" + NEW_LINE +
+                        NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"path\" : \"request_four\"" + NEW_LINE +
                         "  }" + NEW_LINE +
-                        "" + NEW_LINE +
+                        NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                        "" + NEW_LINE +
+                        NEW_LINE +
                         "  { }" + NEW_LINE +
                         NEW_LINE,
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
@@ -1132,7 +1132,7 @@ public class HttpStateTest {
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                        "" + NEW_LINE +
+                        NEW_LINE +
                         "  { }" + NEW_LINE +
                         NEW_LINE,
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
@@ -1871,7 +1871,7 @@ public class HttpStateTest {
                         " message" + NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                        "" + NEW_LINE +
+                        NEW_LINE +
                         "  { }" + NEW_LINE +
                         NEW_LINE,
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
@@ -1986,7 +1986,7 @@ public class HttpStateTest {
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                        "" + NEW_LINE +
+                        NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"path\" : \"request_one\"" + NEW_LINE +
                         "  }" + NEW_LINE +
@@ -2058,7 +2058,7 @@ public class HttpStateTest {
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - resetting all expectations and request logs" + NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                        "" + NEW_LINE +
+                        NEW_LINE +
                         "  { }" + NEW_LINE +
                         NEW_LINE,
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))

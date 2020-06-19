@@ -122,28 +122,10 @@ public class ParameterBodyDTODeserializerTest {
         // given
         String json = ("{" + NEW_LINE +
             "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
-            "  \"parameters\" : [ {" + NEW_LINE +
-            "    \"name\" : {" + NEW_LINE +
-            "      \"not\" : true," + NEW_LINE +
-            "      \"value\" : \"queryStringParameterOneName\"" + NEW_LINE +
-            "    }," + NEW_LINE +
-            "    \"values\" : [ {" + NEW_LINE +
-            "      \"not\" : false," + NEW_LINE +
-            "      \"value\" : \"queryStringParameterOneValueOne\"" + NEW_LINE +
-            "    }, {" + NEW_LINE +
-            "      \"not\" : false," + NEW_LINE +
-            "      \"value\" : \"queryStringParameterOneValueTwo\"" + NEW_LINE +
-            "    } ]" + NEW_LINE +
-            "  }, {" + NEW_LINE +
-            "    \"name\" : {" + NEW_LINE +
-            "      \"not\" : true," + NEW_LINE +
-            "      \"value\" : \"queryStringParameterTwoName\"" + NEW_LINE +
-            "    }," + NEW_LINE +
-            "    \"values\" : [ {" + NEW_LINE +
-            "      \"not\" : false," + NEW_LINE +
-            "      \"value\" : \"queryStringParameterTwoValue\"" + NEW_LINE +
-            "    } ]" + NEW_LINE +
-            "  } ]" + NEW_LINE +
+            "  \"parameters\" : {" + NEW_LINE +
+            "    \"!queryStringParameterOneName\" : [ \"queryStringParameterOneValueOne\", \"queryStringParameterOneValueTwo\" ]," + NEW_LINE +
+            "    \"!queryStringParameterTwoName\" : [ \"queryStringParameterTwoValue\" ]," + NEW_LINE +
+            "  }" + NEW_LINE +
             "}");
 
         // when
@@ -186,25 +168,10 @@ public class ParameterBodyDTODeserializerTest {
         // given
         String json = ("{" + NEW_LINE +
             "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
-            "  \"parameters\" : [ {" + NEW_LINE +
-            "    \"name\" : \"queryStringParameterOneName\"," + NEW_LINE +
-            "    \"values\" : [ {" + NEW_LINE +
-            "      \"not\" : true," + NEW_LINE +
-            "      \"value\" : \"queryStringParameterOneValueOne\"" + NEW_LINE +
-            "    }, {" + NEW_LINE +
-            "      \"not\" : true," + NEW_LINE +
-            "      \"value\" : \"queryStringParameterOneValueTwo\"" + NEW_LINE +
-            "    } ]" + NEW_LINE +
-            "  }, {" + NEW_LINE +
-            "    \"name\" : {" + NEW_LINE +
-            "      \"not\" : false," + NEW_LINE +
-            "      \"value\" : \"queryStringParameterTwoName\"" + NEW_LINE +
-            "    }," + NEW_LINE +
-            "    \"values\" : [ {" + NEW_LINE +
-            "      \"not\" : true," + NEW_LINE +
-            "      \"value\" : \"queryStringParameterTwoValue\"" + NEW_LINE +
-            "    } ]" + NEW_LINE +
-            "  } ]" + NEW_LINE +
+            "  \"parameters\" : {" + NEW_LINE +
+            "    \"queryStringParameterOneName\" : [ \"!queryStringParameterOneValueOne\", \"!queryStringParameterOneValueTwo\" ]," + NEW_LINE +
+            "    \"queryStringParameterTwoName\" : [ \"!queryStringParameterTwoValue\" ]" + NEW_LINE +
+            "  }" + NEW_LINE +
             "}");
 
         // when
@@ -247,28 +214,10 @@ public class ParameterBodyDTODeserializerTest {
         // given
         String json = ("{" + NEW_LINE +
             "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
-            "  \"parameters\" : [ {" + NEW_LINE +
-            "    \"name\" : {" + NEW_LINE +
-            "      \"not\" : true," + NEW_LINE +
-            "      \"value\" : \"queryStringParameterOneName\"" + NEW_LINE +
-            "    }," + NEW_LINE +
-            "    \"values\" : [ {" + NEW_LINE +
-            "      \"not\" : true," + NEW_LINE +
-            "      \"value\" : \"queryStringParameterOneValueOne\"" + NEW_LINE +
-            "    }, {" + NEW_LINE +
-            "      \"not\" : true," + NEW_LINE +
-            "      \"value\" : \"queryStringParameterOneValueTwo\"" + NEW_LINE +
-            "    } ]" + NEW_LINE +
-            "  }, {" + NEW_LINE +
-            "    \"name\" : {" + NEW_LINE +
-            "      \"not\" : true," + NEW_LINE +
-            "      \"value\" : \"queryStringParameterTwoName\"" + NEW_LINE +
-            "    }," + NEW_LINE +
-            "    \"values\" : [ {" + NEW_LINE +
-            "      \"not\" : true," + NEW_LINE +
-            "      \"value\" : \"queryStringParameterTwoValue\"" + NEW_LINE +
-            "    } ]" + NEW_LINE +
-            "  } ]" + NEW_LINE +
+            "  \"parameters\" : {" + NEW_LINE +
+            "    \"!queryStringParameterOneName\" : [ \"!queryStringParameterOneValueOne\", \"!queryStringParameterOneValueTwo\" ]," + NEW_LINE +
+            "    \"!queryStringParameterTwoName\" : [ \"!queryStringParameterTwoValue\" ]" + NEW_LINE +
+            "  }" + NEW_LINE +
             "}");
 
         // when
@@ -313,22 +262,10 @@ public class ParameterBodyDTODeserializerTest {
         // given
         String json = ("{" + NEW_LINE +
             "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
-            "  \"parameters\" : [ {" + NEW_LINE +
-            "    \"name\" : {" + NEW_LINE +
-            "      \"not\" : true," + NEW_LINE +
-            "      \"value\" : \"queryStringParameterOneName\"" + NEW_LINE +
-            "    }," + NEW_LINE +
-            "    \"values\" : [ \"queryStringParameterOneValueOne\", {" + NEW_LINE +
-            "      \"not\" : true," + NEW_LINE +
-            "      \"value\" : \"queryStringParameterOneValueTwo\"" + NEW_LINE +
-            "    } ]" + NEW_LINE +
-            "  }, {" + NEW_LINE +
-            "    \"name\" : \"queryStringParameterTwoName\"," + NEW_LINE +
-            "    \"values\" : [ {" + NEW_LINE +
-            "      \"not\" : true," + NEW_LINE +
-            "      \"value\" : \"queryStringParameterTwoValue\"" + NEW_LINE +
-            "    } ]" + NEW_LINE +
-            "  } ]" + NEW_LINE +
+            "  \"parameters\" : {" + NEW_LINE +
+            "    \"!queryStringParameterOneName\" : [ \"queryStringParameterOneValueOne\", \"!queryStringParameterOneValueTwo\" ]," + NEW_LINE +
+            "    \"queryStringParameterTwoName\" : [ \"!queryStringParameterTwoValue\" ]" + NEW_LINE +
+            "  }" + NEW_LINE +
             "}");
 
         // when

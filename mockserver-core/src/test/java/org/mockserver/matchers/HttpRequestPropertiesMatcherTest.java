@@ -323,20 +323,22 @@ public class HttpRequestPropertiesMatcherTest {
 
     @Test
     public void bodyMatchesParameterBodyDTO() {
-        assertTrue(update(new HttpRequest()
+        HttpRequest requestDefinition = new HttpRequest()
             .withBody(params(
                 new Parameter("nameOne", "valueOne"),
                 new Parameter("nameTwo", "valueTwo")
-            ))
-        )
-            .matches(
-                null, new HttpRequest()
-                    .withBody(new ParameterBodyDTO(params(
-                        new Parameter("nameOne", "valueOne"),
-                        new Parameter("nameTwo", "valueTwo")
-                    )).toString())
-                    .withMethod("PUT")
             ));
+        assertTrue(
+            update(requestDefinition)
+                .matches(
+                    null, new HttpRequest()
+                        .withBody(new ParameterBodyDTO(params(
+                            new Parameter("nameOne", "valueOne"),
+                            new Parameter("nameTwo", "valueTwo")
+                        )).toString())
+                        .withMethod("PUT")
+                )
+        );
     }
 
     @Test
@@ -728,7 +730,7 @@ public class HttpRequestPropertiesMatcherTest {
             )
                 .matches(
                     null, new HttpRequest()
-                        .withBody(new JsonBodyDTO(json("{ \"some_field\": \"some_value\" }")).toString())
+                        .withBody(json("{ \"some_field\": \"some_value\" }"))
                         .withMethod("PUT")
                 )
         );
@@ -834,8 +836,9 @@ public class HttpRequestPropertiesMatcherTest {
                 .withBody(jsonSchemaBody)
             )
                 .matches(
-                    null, new HttpRequest()
-                        .withBody(new JsonSchemaBodyDTO(jsonSchemaBody).toString())
+                    null,
+                    new HttpRequest()
+                        .withBody(jsonSchemaBody)
                         .withMethod("PUT")
                 )
         );

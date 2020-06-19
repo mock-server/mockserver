@@ -61,15 +61,15 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
                     if (verificationDTO != null) {
                         verificationSequence = verificationDTO.buildObject();
                     }
-                } catch (Exception e) {
+                } catch (Throwable throwable) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception while parsing{}for VerificationSequence")
+                            .setMessageFormat("exception while parsing{}for VerificationSequence " + throwable.getMessage())
                             .setArguments(jsonVerificationSequence)
-                            .setThrowable(e)
+                            .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonVerificationSequence + "] for VerificationSequence", e);
+                    throw new RuntimeException("Exception while parsing [" + jsonVerificationSequence + "] for VerificationSequence", throwable);
                 }
                 return verificationSequence;
             } else {

@@ -71,8 +71,8 @@ public class JsonSchemaHttpRequestAndHttpResponseValidatorIntegrationTest {
                 "  }" + NEW_LINE +
                 "}"),
             is(
-                "2 errors:" + NEW_LINE +
-                    " - for field \"/httpRequest/body\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
+                "14 errors:" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body\" has error: \" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
                     "   {" + NEW_LINE +
                     "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"BINARY\"," + NEW_LINE +
@@ -127,7 +127,20 @@ public class JsonSchemaHttpRequestAndHttpResponseValidatorIntegrationTest {
                     "     \"type\": \"XPATH\"," + NEW_LINE +
                     "     \"xpath\": \"\"" + NEW_LINE +
                     "   }" + NEW_LINE +
-                    " - instance failed to match at least one required schema among 13 for field \"/httpRequest/body\"" + NEW_LINE +
+                    NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/0\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/1\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/10\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/11\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/12\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/2\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/3\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/4\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/5\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/6\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/7\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/8\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/9\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));
@@ -161,9 +174,8 @@ public class JsonSchemaHttpRequestAndHttpResponseValidatorIntegrationTest {
                 "  \"path\" : false" + NEW_LINE +
                 "  }"),
             is(
-                "3 errors:" + NEW_LINE +
-                    " - object instance has properties which are not allowed by the schema: [\"method\",\"path\"]" + NEW_LINE +
-                    " - for field \"/httpRequest/body\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
+                "15 errors:" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body\" has error: \" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
                     "   {" + NEW_LINE +
                     "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"BINARY\"," + NEW_LINE +
@@ -218,7 +230,21 @@ public class JsonSchemaHttpRequestAndHttpResponseValidatorIntegrationTest {
                     "     \"type\": \"XPATH\"," + NEW_LINE +
                     "     \"xpath\": \"\"" + NEW_LINE +
                     "   }" + NEW_LINE +
-                    " - instance failed to match at least one required schema among 13 for field \"/httpRequest/body\"" + NEW_LINE +
+                    NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/0\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/1\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/10\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/11\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/12\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/2\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/3\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/4\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/5\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/6\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/7\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/8\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/9\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
+                    " - object instance has properties which are not allowed by the schema: [\"method\",\"path\"]" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));

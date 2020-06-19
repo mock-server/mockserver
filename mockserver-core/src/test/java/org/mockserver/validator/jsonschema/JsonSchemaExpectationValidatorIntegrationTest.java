@@ -567,10 +567,10 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
             "    \"statusCode\" : 304," + NEW_LINE +
             "    \"body\" : 50" + NEW_LINE +
             "  }" + NEW_LINE +
-            "}"), is("4 errors:" + NEW_LINE +
-            " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for schema \"requestDefinition/oneOf/1\" for field \"/httpRequest/operationId\"" + NEW_LINE +
-            " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequest\"" + NEW_LINE +
-            " - for field \"/httpResponse/body\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
+            "}"), is("11 errors:" + NEW_LINE +
+            " - field: \"/httpRequest\" for schema: \"httpRequest\" has error: \"object instance has properties which are not allowed by the schema: [\"operationId\",\"specUrlOrPayload\"]\"" + NEW_LINE +
+            " - field: \"/httpRequest/operationId\" for schema: \"openAPIDefinition/properties/operationId\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
+            " - field: \"/httpResponse/body\" for schema: \"bodyWithContentType\" has error: \" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
             "   {" + NEW_LINE +
             "     \"type\": \"BINARY\"," + NEW_LINE +
             "     \"base64Bytes\": \"\"," + NEW_LINE +
@@ -594,7 +594,15 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
             "     \"xml\": \"\"," + NEW_LINE +
             "     \"contentType\": \"\"" + NEW_LINE +
             "   }" + NEW_LINE +
-            " - instance failed to match at least one required schema among 8 for field \"/httpResponse/body\"" + NEW_LINE +
+            NEW_LINE +
+            " - field: \"/httpResponse/body\" for schema: \"bodyWithContentType/anyOf/0\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            " - field: \"/httpResponse/body\" for schema: \"bodyWithContentType/anyOf/1\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            " - field: \"/httpResponse/body\" for schema: \"bodyWithContentType/anyOf/2\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            " - field: \"/httpResponse/body\" for schema: \"bodyWithContentType/anyOf/3\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
+            " - field: \"/httpResponse/body\" for schema: \"bodyWithContentType/anyOf/4\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            " - field: \"/httpResponse/body\" for schema: \"bodyWithContentType/anyOf/5\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            " - field: \"/httpResponse/body\" for schema: \"bodyWithContentType/anyOf/6\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
+            " - field: \"/httpResponse/body\" for schema: \"bodyWithContentType/anyOf/7\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
             NEW_LINE +
             OPEN_API_SPECIFICATION_URL));
     }
@@ -625,50 +633,78 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
             "      \"values\" : [ 10 ]" + NEW_LINE +
             "    } ]" + NEW_LINE +
             "  }" + NEW_LINE +
-            "}"), is("7 errors:" + NEW_LINE +
-            " - for field \"/httpRequest/headers\" only one of the following example formats is allowed: " + NEW_LINE +
+            "}"), is("9 errors:" + NEW_LINE +
+            " - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
+            " - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"body\",\"headers\",\"method\",\"path\",\"socketAddress\"]\"" + NEW_LINE +
+            " - field: \"/httpRequest/headers\" for schema: \"keyToMultiValue\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
+            " - field: \"/httpRequest/headers\" for schema: \"keyToMultiValue/oneOf/1\" has error: \"instance type (array) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            " - field: \"/httpRequest/headers\" for schema: \"requestDefinition\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
             NEW_LINE +
-            "    {" + NEW_LINE +
-            "        \"exampleHeaderName\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
-            "        \"exampleMultiValuedHeaderName\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
-            "    }" + NEW_LINE +
+            "   {" + NEW_LINE +
+            "       \"exampleRegexHeader\": [" + NEW_LINE +
+            "           \"^some +regex$\"" + NEW_LINE +
+            "       ], " + NEW_LINE +
+            "       \"exampleNottedAndSimpleStringHeader\": [" + NEW_LINE +
+            "           \"!notThisValue\", " + NEW_LINE +
+            "           \"simpleStringMatch\"" + NEW_LINE +
+            "       ]" + NEW_LINE +
+            "   }" + NEW_LINE +
             NEW_LINE +
-            "   or:" + NEW_LINE +
+            "or:" + NEW_LINE +
             NEW_LINE +
-            "    [" + NEW_LINE +
-            "        {" + NEW_LINE +
-            "            \"name\" : \"exampleHeaderName\"," + NEW_LINE +
-            "            \"values\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
-            "        }," + NEW_LINE +
-            "        {" + NEW_LINE +
-            "            \"name\" : \"exampleMultiValuedHeaderName\"," + NEW_LINE +
-            "            \"values\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
-            "        }" + NEW_LINE +
-            "    ]" + NEW_LINE +
-            " - instance failed to match exactly one schema (matched 0 out of 2) for schema \"requestDefinition/oneOf/0\" for field \"/httpRequest/headers\"" + NEW_LINE +
-            " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequest\"" + NEW_LINE +
-            " - for field \"/httpResponse/headers\" only one of the following example formats is allowed: " + NEW_LINE +
+            "   {" + NEW_LINE +
+            "       \"exampleSchemaHeader\": [" + NEW_LINE +
+            "           {" + NEW_LINE +
+            "               \"type\": \"number\"" + NEW_LINE +
+            "           }" + NEW_LINE +
+            "       ], " + NEW_LINE +
+            "       \"exampleMultiSchemaHeader\": [" + NEW_LINE +
+            "           {" + NEW_LINE +
+            "               \"type\": \"string\", " + NEW_LINE +
+            "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
+            "           }, " + NEW_LINE +
+            "           {" + NEW_LINE +
+            "               \"type\": \"string\", " + NEW_LINE +
+            "               \"format\": \"ipv4\"" + NEW_LINE +
+            "           }" + NEW_LINE +
+            "       ]" + NEW_LINE +
+            "   }" + NEW_LINE +
             NEW_LINE +
-            "    {" + NEW_LINE +
-            "        \"exampleHeaderName\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
-            "        \"exampleMultiValuedHeaderName\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
-            "    }" + NEW_LINE +
+            " - field: \"/httpRequest/headers/0/name\" for schema: \"keyToMultiValue/oneOf/0/items/properties/name\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
+            " - field: \"/httpResponse/headers\" for schema: \"keyToMultiValue\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
             NEW_LINE +
-            "   or:" + NEW_LINE +
+            "   {" + NEW_LINE +
+            "       \"exampleRegexHeader\": [" + NEW_LINE +
+            "           \"^some +regex$\"" + NEW_LINE +
+            "       ], " + NEW_LINE +
+            "       \"exampleNottedAndSimpleStringHeader\": [" + NEW_LINE +
+            "           \"!notThisValue\", " + NEW_LINE +
+            "           \"simpleStringMatch\"" + NEW_LINE +
+            "       ]" + NEW_LINE +
+            "   }" + NEW_LINE +
             NEW_LINE +
-            "    [" + NEW_LINE +
-            "        {" + NEW_LINE +
-            "            \"name\" : \"exampleHeaderName\"," + NEW_LINE +
-            "            \"values\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
-            "        }," + NEW_LINE +
-            "        {" + NEW_LINE +
-            "            \"name\" : \"exampleMultiValuedHeaderName\"," + NEW_LINE +
-            "            \"values\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
-            "        }" + NEW_LINE +
-            "    ]" + NEW_LINE +
-            " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for schema \"keyToMultiValue/oneOf/0\" for field \"/httpResponse/headers/0/values/0\"" + NEW_LINE +
-            " - instance type (array) does not match any allowed primitive type (allowed: [\"object\"]) for schema \"keyToMultiValue/oneOf/1\" for field \"/httpResponse/headers\"" + NEW_LINE +
-            " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpResponse/headers\"" + NEW_LINE +
+            "or:" + NEW_LINE +
+            NEW_LINE +
+            "   {" + NEW_LINE +
+            "       \"exampleSchemaHeader\": [" + NEW_LINE +
+            "           {" + NEW_LINE +
+            "               \"type\": \"number\"" + NEW_LINE +
+            "           }" + NEW_LINE +
+            "       ], " + NEW_LINE +
+            "       \"exampleMultiSchemaHeader\": [" + NEW_LINE +
+            "           {" + NEW_LINE +
+            "               \"type\": \"string\", " + NEW_LINE +
+            "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
+            "           }, " + NEW_LINE +
+            "           {" + NEW_LINE +
+            "               \"type\": \"string\", " + NEW_LINE +
+            "               \"format\": \"ipv4\"" + NEW_LINE +
+            "           }" + NEW_LINE +
+            "       ]" + NEW_LINE +
+            "   }" + NEW_LINE +
+            NEW_LINE +
+            " - field: \"/httpResponse/headers\" for schema: \"keyToMultiValue/oneOf/1\" has error: \"instance type (array) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            " - field: \"/httpResponse/headers/0/values/0\" for schema: \"keyToMultiValue/oneOf/0/items/properties/values/items\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
             NEW_LINE +
             OPEN_API_SPECIFICATION_URL));
     }
@@ -694,50 +730,62 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
             "      \"value\" : 10" + NEW_LINE +
             "    } ]" + NEW_LINE +
             "  }" + NEW_LINE +
-            "}"), is("7 errors:" + NEW_LINE +
-            " - for field \"/httpRequest/cookies\" only one of the following example formats is allowed: " + NEW_LINE +
+            "}"), is("9 errors:" + NEW_LINE +
+            " - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
+            " - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"body\",\"cookies\",\"method\",\"path\"]\"" + NEW_LINE +
+            " - field: \"/httpRequest/cookies\" for schema: \"keyToValue\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
+            " - field: \"/httpRequest/cookies\" for schema: \"keyToValue/oneOf/1\" has error: \"instance type (array) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            " - field: \"/httpRequest/cookies\" for schema: \"requestDefinition\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
             NEW_LINE +
-            "    {" + NEW_LINE +
-            "        \"exampleCookieNameOne\" : \"exampleCookieValueOne\"" + NEW_LINE +
-            "        \"exampleCookieNameTwo\" : \"exampleCookieValueTwo\"" + NEW_LINE +
-            "    }" + NEW_LINE +
+            "   {" + NEW_LINE +
+            "       \"exampleRegexCookie\": \"^some +regex$\", " + NEW_LINE +
+            "       \"exampleNottedRegexCookie\": \"!notThisValue\", " + NEW_LINE +
+            "       \"exampleSimpleStringCookie\": \"simpleStringMatch\"" + NEW_LINE +
+            "   }" + NEW_LINE +
             NEW_LINE +
-            "   or:" + NEW_LINE +
+            "or:" + NEW_LINE +
             NEW_LINE +
-            "    [" + NEW_LINE +
-            "        {" + NEW_LINE +
-            "            \"name\" : \"exampleCookieNameOne\"," + NEW_LINE +
-            "            \"values\" : \"exampleCookieValueOne\"" + NEW_LINE +
-            "        }," + NEW_LINE +
-            "        {" + NEW_LINE +
-            "            \"name\" : \"exampleCookieNameTwo\"," + NEW_LINE +
-            "            \"values\" : \"exampleCookieValueTwo\"" + NEW_LINE +
-            "        }" + NEW_LINE +
-            "    ]" + NEW_LINE +
-            " - instance failed to match exactly one schema (matched 0 out of 2) for schema \"requestDefinition/oneOf/0\" for field \"/httpRequest/cookies\"" + NEW_LINE +
-            " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequest\"" + NEW_LINE +
-            " - for field \"/httpResponse/cookies\" only one of the following example formats is allowed: " + NEW_LINE +
+            "   {" + NEW_LINE +
+            "       \"exampleNumberSchemaCookie\": {" + NEW_LINE +
+            "           \"type\": \"number\"" + NEW_LINE +
+            "       }, " + NEW_LINE +
+            "       \"examplePatternSchemaCookie\": {" + NEW_LINE +
+            "           \"type\": \"string\", " + NEW_LINE +
+            "           \"pattern\": \"^some +regex$\"" + NEW_LINE +
+            "       }, " + NEW_LINE +
+            "       \"exampleFormatSchemaCookie\": {" + NEW_LINE +
+            "           \"type\": \"string\", " + NEW_LINE +
+            "           \"format\": \"ipv4\"" + NEW_LINE +
+            "       }" + NEW_LINE +
+            "   }" + NEW_LINE +
             NEW_LINE +
-            "    {" + NEW_LINE +
-            "        \"exampleCookieNameOne\" : \"exampleCookieValueOne\"" + NEW_LINE +
-            "        \"exampleCookieNameTwo\" : \"exampleCookieValueTwo\"" + NEW_LINE +
-            "    }" + NEW_LINE +
+            " - field: \"/httpRequest/cookies/0/name\" for schema: \"keyToValue/oneOf/0/items/properties/name\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
+            " - field: \"/httpResponse/cookies\" for schema: \"keyToValue\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
             NEW_LINE +
-            "   or:" + NEW_LINE +
+            "   {" + NEW_LINE +
+            "       \"exampleRegexCookie\": \"^some +regex$\", " + NEW_LINE +
+            "       \"exampleNottedRegexCookie\": \"!notThisValue\", " + NEW_LINE +
+            "       \"exampleSimpleStringCookie\": \"simpleStringMatch\"" + NEW_LINE +
+            "   }" + NEW_LINE +
             NEW_LINE +
-            "    [" + NEW_LINE +
-            "        {" + NEW_LINE +
-            "            \"name\" : \"exampleCookieNameOne\"," + NEW_LINE +
-            "            \"values\" : \"exampleCookieValueOne\"" + NEW_LINE +
-            "        }," + NEW_LINE +
-            "        {" + NEW_LINE +
-            "            \"name\" : \"exampleCookieNameTwo\"," + NEW_LINE +
-            "            \"values\" : \"exampleCookieValueTwo\"" + NEW_LINE +
-            "        }" + NEW_LINE +
-            "    ]" + NEW_LINE +
-            " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for schema \"keyToValue/oneOf/0\" for field \"/httpResponse/cookies/0/value\"" + NEW_LINE +
-            " - instance type (array) does not match any allowed primitive type (allowed: [\"object\"]) for schema \"keyToValue/oneOf/1\" for field \"/httpResponse/cookies\"" + NEW_LINE +
-            " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpResponse/cookies\"" + NEW_LINE +
+            "or:" + NEW_LINE +
+            NEW_LINE +
+            "   {" + NEW_LINE +
+            "       \"exampleNumberSchemaCookie\": {" + NEW_LINE +
+            "           \"type\": \"number\"" + NEW_LINE +
+            "       }, " + NEW_LINE +
+            "       \"examplePatternSchemaCookie\": {" + NEW_LINE +
+            "           \"type\": \"string\", " + NEW_LINE +
+            "           \"pattern\": \"^some +regex$\"" + NEW_LINE +
+            "       }, " + NEW_LINE +
+            "       \"exampleFormatSchemaCookie\": {" + NEW_LINE +
+            "           \"type\": \"string\", " + NEW_LINE +
+            "           \"format\": \"ipv4\"" + NEW_LINE +
+            "       }" + NEW_LINE +
+            "   }" + NEW_LINE +
+            NEW_LINE +
+            " - field: \"/httpResponse/cookies\" for schema: \"keyToValue/oneOf/1\" has error: \"instance type (array) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            " - field: \"/httpResponse/cookies/0/value\" for schema: \"keyToValue/oneOf/0/items/properties/value\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
             NEW_LINE +
             OPEN_API_SPECIFICATION_URL));
     }
@@ -761,29 +809,45 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
             "    \"statusCode\" : 304," + NEW_LINE +
             "    \"body\" : 50," + NEW_LINE +
             "  }" + NEW_LINE +
-            "}"), is("5 errors:" + NEW_LINE +
-            " - for field \"/httpRequest/queryStringParameters\" only one of the following example formats is allowed: " + NEW_LINE +
+            "}"), is("15 errors:" + NEW_LINE +
+            " - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
+            " - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"method\",\"path\",\"queryStringParameters\"]\"" + NEW_LINE +
+            " - field: \"/httpRequest/queryStringParameters\" for schema: \"keyToMultiValue\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
+            " - field: \"/httpRequest/queryStringParameters\" for schema: \"keyToMultiValue/oneOf/1\" has error: \"instance type (array) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            " - field: \"/httpRequest/queryStringParameters\" for schema: \"requestDefinition\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
             NEW_LINE +
-            "    {" + NEW_LINE +
-            "        \"exampleParameterName\" : [ \"exampleParameterValue\" ]" + NEW_LINE +
-            "        \"exampleMultiValuedParameterName\" : [ \"exampleParameterValueOne\", \"exampleParameterValueTwo\" ]" + NEW_LINE +
-            "    }" + NEW_LINE +
+            "   {" + NEW_LINE +
+            "       \"exampleRegexParameter\": [" + NEW_LINE +
+            "           \"^some +regex$\"" + NEW_LINE +
+            "       ], " + NEW_LINE +
+            "       \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
+            "           \"!notThisValue\", " + NEW_LINE +
+            "           \"simpleStringMatch\"" + NEW_LINE +
+            "       ]" + NEW_LINE +
+            "   }" + NEW_LINE +
             NEW_LINE +
-            "   or:" + NEW_LINE +
+            "or:" + NEW_LINE +
             NEW_LINE +
-            "    [" + NEW_LINE +
-            "        {" + NEW_LINE +
-            "            \"name\" : \"exampleParameterName\"," + NEW_LINE +
-            "            \"values\" : [ \"exampleParameterValue\" ]" + NEW_LINE +
-            "        }," + NEW_LINE +
-            "        {" + NEW_LINE +
-            "            \"name\" : \"exampleMultiValuedParameterName\"," + NEW_LINE +
-            "            \"values\" : [ \"exampleParameterValueOne\", \"exampleParameterValueTwo\" ]" + NEW_LINE +
-            "        }" + NEW_LINE +
-            "    ]" + NEW_LINE +
-            " - instance failed to match exactly one schema (matched 0 out of 2) for schema \"requestDefinition/oneOf/0\" for field \"/httpRequest/queryStringParameters\"" + NEW_LINE +
-            " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequest\"" + NEW_LINE +
-            " - for field \"/httpResponse/body\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
+            "   {" + NEW_LINE +
+            "       \"exampleSchemaParameter\": [" + NEW_LINE +
+            "           {" + NEW_LINE +
+            "               \"type\": \"number\"" + NEW_LINE +
+            "           }" + NEW_LINE +
+            "       ], " + NEW_LINE +
+            "       \"exampleMultiSchemaParameter\": [" + NEW_LINE +
+            "           {" + NEW_LINE +
+            "               \"type\": \"string\", " + NEW_LINE +
+            "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
+            "           }, " + NEW_LINE +
+            "           {" + NEW_LINE +
+            "               \"type\": \"string\", " + NEW_LINE +
+            "               \"format\": \"ipv4\"" + NEW_LINE +
+            "           }" + NEW_LINE +
+            "       ]" + NEW_LINE +
+            "   }" + NEW_LINE +
+            NEW_LINE +
+            " - field: \"/httpRequest/queryStringParameters/0/name\" for schema: \"keyToMultiValue/oneOf/0/items/properties/name\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
+            " - field: \"/httpResponse/body\" for schema: \"bodyWithContentType\" has error: \" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
             "   {" + NEW_LINE +
             "     \"type\": \"BINARY\"," + NEW_LINE +
             "     \"base64Bytes\": \"\"," + NEW_LINE +
@@ -807,7 +871,15 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
             "     \"xml\": \"\"," + NEW_LINE +
             "     \"contentType\": \"\"" + NEW_LINE +
             "   }" + NEW_LINE +
-            " - instance failed to match at least one required schema among 8 for field \"/httpResponse/body\"" + NEW_LINE +
+            NEW_LINE +
+            " - field: \"/httpResponse/body\" for schema: \"bodyWithContentType/anyOf/0\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            " - field: \"/httpResponse/body\" for schema: \"bodyWithContentType/anyOf/1\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            " - field: \"/httpResponse/body\" for schema: \"bodyWithContentType/anyOf/2\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            " - field: \"/httpResponse/body\" for schema: \"bodyWithContentType/anyOf/3\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
+            " - field: \"/httpResponse/body\" for schema: \"bodyWithContentType/anyOf/4\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            " - field: \"/httpResponse/body\" for schema: \"bodyWithContentType/anyOf/5\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            " - field: \"/httpResponse/body\" for schema: \"bodyWithContentType/anyOf/6\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
+            " - field: \"/httpResponse/body\" for schema: \"bodyWithContentType/anyOf/7\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
             NEW_LINE +
             OPEN_API_SPECIFICATION_URL));
     }
@@ -838,70 +910,105 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
             "      \"value\" : \"someCookieValue\"" + NEW_LINE +
             "    } ]" + NEW_LINE +
             "  }" + NEW_LINE +
-            "}"), is("9 errors:" + NEW_LINE +
-            " - for field \"/httpRequest/headers\" only one of the following example formats is allowed: " + NEW_LINE +
+            "}"), is("13 errors:" + NEW_LINE +
+            " - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
+            " - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"headers\",\"method\",\"path\",\"queryStringParameters\"]\"" + NEW_LINE +
+            " - field: \"/httpRequest/headers\" for schema: \"keyToMultiValue\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
+            " - field: \"/httpRequest/headers\" for schema: \"keyToMultiValue/oneOf/1\" has error: \"instance type (array) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            " - field: \"/httpRequest/headers\" for schema: \"requestDefinition\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
             NEW_LINE +
-            "    {" + NEW_LINE +
-            "        \"exampleHeaderName\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
-            "        \"exampleMultiValuedHeaderName\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
-            "    }" + NEW_LINE +
+            "   {" + NEW_LINE +
+            "       \"exampleRegexHeader\": [" + NEW_LINE +
+            "           \"^some +regex$\"" + NEW_LINE +
+            "       ], " + NEW_LINE +
+            "       \"exampleNottedAndSimpleStringHeader\": [" + NEW_LINE +
+            "           \"!notThisValue\", " + NEW_LINE +
+            "           \"simpleStringMatch\"" + NEW_LINE +
+            "       ]" + NEW_LINE +
+            "   }" + NEW_LINE +
             NEW_LINE +
-            "   or:" + NEW_LINE +
+            "or:" + NEW_LINE +
             NEW_LINE +
-            "    [" + NEW_LINE +
-            "        {" + NEW_LINE +
-            "            \"name\" : \"exampleHeaderName\"," + NEW_LINE +
-            "            \"values\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
-            "        }," + NEW_LINE +
-            "        {" + NEW_LINE +
-            "            \"name\" : \"exampleMultiValuedHeaderName\"," + NEW_LINE +
-            "            \"values\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
-            "        }" + NEW_LINE +
-            "    ]" + NEW_LINE +
-            " - for field \"/httpRequest/queryStringParameters\" only one of the following example formats is allowed: " + NEW_LINE +
+            "   {" + NEW_LINE +
+            "       \"exampleSchemaHeader\": [" + NEW_LINE +
+            "           {" + NEW_LINE +
+            "               \"type\": \"number\"" + NEW_LINE +
+            "           }" + NEW_LINE +
+            "       ], " + NEW_LINE +
+            "       \"exampleMultiSchemaHeader\": [" + NEW_LINE +
+            "           {" + NEW_LINE +
+            "               \"type\": \"string\", " + NEW_LINE +
+            "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
+            "           }, " + NEW_LINE +
+            "           {" + NEW_LINE +
+            "               \"type\": \"string\", " + NEW_LINE +
+            "               \"format\": \"ipv4\"" + NEW_LINE +
+            "           }" + NEW_LINE +
+            "       ]" + NEW_LINE +
+            "   }" + NEW_LINE +
             NEW_LINE +
-            "    {" + NEW_LINE +
-            "        \"exampleParameterName\" : [ \"exampleParameterValue\" ]" + NEW_LINE +
-            "        \"exampleMultiValuedParameterName\" : [ \"exampleParameterValueOne\", \"exampleParameterValueTwo\" ]" + NEW_LINE +
-            "    }" + NEW_LINE +
+            " - field: \"/httpRequest/headers/0/values/0\" for schema: \"keyToMultiValue/oneOf/0/items/properties/values/items\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
+            " - field: \"/httpRequest/queryStringParameters\" for schema: \"keyToMultiValue\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
+            " - field: \"/httpRequest/queryStringParameters\" for schema: \"keyToMultiValue/oneOf/1\" has error: \"instance type (array) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            " - field: \"/httpRequest/queryStringParameters\" for schema: \"requestDefinition\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
             NEW_LINE +
-            "   or:" + NEW_LINE +
+            "   {" + NEW_LINE +
+            "       \"exampleRegexParameter\": [" + NEW_LINE +
+            "           \"^some +regex$\"" + NEW_LINE +
+            "       ], " + NEW_LINE +
+            "       \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
+            "           \"!notThisValue\", " + NEW_LINE +
+            "           \"simpleStringMatch\"" + NEW_LINE +
+            "       ]" + NEW_LINE +
+            "   }" + NEW_LINE +
             NEW_LINE +
-            "    [" + NEW_LINE +
-            "        {" + NEW_LINE +
-            "            \"name\" : \"exampleParameterName\"," + NEW_LINE +
-            "            \"values\" : [ \"exampleParameterValue\" ]" + NEW_LINE +
-            "        }," + NEW_LINE +
-            "        {" + NEW_LINE +
-            "            \"name\" : \"exampleMultiValuedParameterName\"," + NEW_LINE +
-            "            \"values\" : [ \"exampleParameterValueOne\", \"exampleParameterValueTwo\" ]" + NEW_LINE +
-            "        }" + NEW_LINE +
-            "    ]" + NEW_LINE +
-            " - instance failed to match exactly one schema (matched 0 out of 2) for schema \"requestDefinition/oneOf/0\" for field \"/httpRequest/headers\"" + NEW_LINE +
-            " - instance failed to match exactly one schema (matched 0 out of 2) for schema \"requestDefinition/oneOf/0\" for field \"/httpRequest/queryStringParameters\"" + NEW_LINE +
-            " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequest\"" + NEW_LINE +
-            " - for field \"/httpResponse/cookies\" only one of the following example formats is allowed: " + NEW_LINE +
+            "or:" + NEW_LINE +
             NEW_LINE +
-            "    {" + NEW_LINE +
-            "        \"exampleCookieNameOne\" : \"exampleCookieValueOne\"" + NEW_LINE +
-            "        \"exampleCookieNameTwo\" : \"exampleCookieValueTwo\"" + NEW_LINE +
-            "    }" + NEW_LINE +
+            "   {" + NEW_LINE +
+            "       \"exampleSchemaParameter\": [" + NEW_LINE +
+            "           {" + NEW_LINE +
+            "               \"type\": \"number\"" + NEW_LINE +
+            "           }" + NEW_LINE +
+            "       ], " + NEW_LINE +
+            "       \"exampleMultiSchemaParameter\": [" + NEW_LINE +
+            "           {" + NEW_LINE +
+            "               \"type\": \"string\", " + NEW_LINE +
+            "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
+            "           }, " + NEW_LINE +
+            "           {" + NEW_LINE +
+            "               \"type\": \"string\", " + NEW_LINE +
+            "               \"format\": \"ipv4\"" + NEW_LINE +
+            "           }" + NEW_LINE +
+            "       ]" + NEW_LINE +
+            "   }" + NEW_LINE +
             NEW_LINE +
-            "   or:" + NEW_LINE +
+            " - field: \"/httpRequest/queryStringParameters/0/name\" for schema: \"keyToMultiValue/oneOf/0/items/properties/name\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
+            " - field: \"/httpResponse/cookies\" for schema: \"keyToValue\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
             NEW_LINE +
-            "    [" + NEW_LINE +
-            "        {" + NEW_LINE +
-            "            \"name\" : \"exampleCookieNameOne\"," + NEW_LINE +
-            "            \"values\" : \"exampleCookieValueOne\"" + NEW_LINE +
-            "        }," + NEW_LINE +
-            "        {" + NEW_LINE +
-            "            \"name\" : \"exampleCookieNameTwo\"," + NEW_LINE +
-            "            \"values\" : \"exampleCookieValueTwo\"" + NEW_LINE +
-            "        }" + NEW_LINE +
-            "    ]" + NEW_LINE +
-            " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for schema \"keyToValue/oneOf/0\" for field \"/httpResponse/cookies/0/name\"" + NEW_LINE +
-            " - instance type (array) does not match any allowed primitive type (allowed: [\"object\"]) for schema \"keyToValue/oneOf/1\" for field \"/httpResponse/cookies\"" + NEW_LINE +
-            " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpResponse/cookies\"" + NEW_LINE +
+            "   {" + NEW_LINE +
+            "       \"exampleRegexCookie\": \"^some +regex$\", " + NEW_LINE +
+            "       \"exampleNottedRegexCookie\": \"!notThisValue\", " + NEW_LINE +
+            "       \"exampleSimpleStringCookie\": \"simpleStringMatch\"" + NEW_LINE +
+            "   }" + NEW_LINE +
+            NEW_LINE +
+            "or:" + NEW_LINE +
+            NEW_LINE +
+            "   {" + NEW_LINE +
+            "       \"exampleNumberSchemaCookie\": {" + NEW_LINE +
+            "           \"type\": \"number\"" + NEW_LINE +
+            "       }, " + NEW_LINE +
+            "       \"examplePatternSchemaCookie\": {" + NEW_LINE +
+            "           \"type\": \"string\", " + NEW_LINE +
+            "           \"pattern\": \"^some +regex$\"" + NEW_LINE +
+            "       }, " + NEW_LINE +
+            "       \"exampleFormatSchemaCookie\": {" + NEW_LINE +
+            "           \"type\": \"string\", " + NEW_LINE +
+            "           \"format\": \"ipv4\"" + NEW_LINE +
+            "       }" + NEW_LINE +
+            "   }" + NEW_LINE +
+            NEW_LINE +
+            " - field: \"/httpResponse/cookies\" for schema: \"keyToValue/oneOf/1\" has error: \"instance type (array) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            " - field: \"/httpResponse/cookies/0/name\" for schema: \"keyToValue/oneOf/0/items/properties/name\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
             NEW_LINE +
             OPEN_API_SPECIFICATION_URL));
     }
@@ -939,9 +1046,18 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                 "  }" + NEW_LINE +
                 "}"),
             is(
-                "2 errors:" + NEW_LINE +
+                "11 errors:" + NEW_LINE +
                     " - oneOf of the following must be specified [\"httpResponse\", \"httpResponseTemplate\", \"httpResponseObjectCallback\", \"httpResponseClassCallback\", \"httpForward\", \"httpForwardTemplate\", \"httpForwardObjectCallback\", \"httpForwardClassCallback\", \"httpOverrideForwardedRequest\", \"httpError\"] but found 0 without errors" + NEW_LINE +
-                    " - instance failed to match exactly one schema (matched 0 out of 10)" + NEW_LINE +
+                    " - schema: \"/oneOf/0\" has error: \"object has missing required properties ([\"httpResponse\"])\"" + NEW_LINE +
+                    " - schema: \"/oneOf/1\" has error: \"object has missing required properties ([\"httpResponseTemplate\"])\"" + NEW_LINE +
+                    " - schema: \"/oneOf/2\" has error: \"object has missing required properties ([\"httpResponseObjectCallback\"])\"" + NEW_LINE +
+                    " - schema: \"/oneOf/3\" has error: \"object has missing required properties ([\"httpResponseClassCallback\"])\"" + NEW_LINE +
+                    " - schema: \"/oneOf/4\" has error: \"object has missing required properties ([\"httpForward\"])\"" + NEW_LINE +
+                    " - schema: \"/oneOf/5\" has error: \"object has missing required properties ([\"httpForwardTemplate\"])\"" + NEW_LINE +
+                    " - schema: \"/oneOf/6\" has error: \"object has missing required properties ([\"httpForwardObjectCallback\"])\"" + NEW_LINE +
+                    " - schema: \"/oneOf/7\" has error: \"object has missing required properties ([\"httpForwardClassCallback\"])\"" + NEW_LINE +
+                    " - schema: \"/oneOf/8\" has error: \"object has missing required properties ([\"httpOverrideForwardedRequest\"])\"" + NEW_LINE +
+                    " - schema: \"/oneOf/9\" has error: \"object has missing required properties ([\"httpError\"])\"" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));
@@ -954,10 +1070,19 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                 "    \"invalidField\" : \"randomValue\"" + NEW_LINE +
                 "  }"),
             is(
-                "3 errors:" + NEW_LINE +
+                "12 errors:" + NEW_LINE +
                     " - object instance has properties which are not allowed by the schema: [\"invalidField\"]" + NEW_LINE +
                     " - oneOf of the following must be specified [\"httpResponse\", \"httpResponseTemplate\", \"httpResponseObjectCallback\", \"httpResponseClassCallback\", \"httpForward\", \"httpForwardTemplate\", \"httpForwardObjectCallback\", \"httpForwardClassCallback\", \"httpOverrideForwardedRequest\", \"httpError\"] but found 0 without errors" + NEW_LINE +
-                    " - instance failed to match exactly one schema (matched 0 out of 10)" + NEW_LINE +
+                    " - schema: \"/oneOf/0\" has error: \"object has missing required properties ([\"httpResponse\"])\"" + NEW_LINE +
+                    " - schema: \"/oneOf/1\" has error: \"object has missing required properties ([\"httpResponseTemplate\"])\"" + NEW_LINE +
+                    " - schema: \"/oneOf/2\" has error: \"object has missing required properties ([\"httpResponseObjectCallback\"])\"" + NEW_LINE +
+                    " - schema: \"/oneOf/3\" has error: \"object has missing required properties ([\"httpResponseClassCallback\"])\"" + NEW_LINE +
+                    " - schema: \"/oneOf/4\" has error: \"object has missing required properties ([\"httpForward\"])\"" + NEW_LINE +
+                    " - schema: \"/oneOf/5\" has error: \"object has missing required properties ([\"httpForwardTemplate\"])\"" + NEW_LINE +
+                    " - schema: \"/oneOf/6\" has error: \"object has missing required properties ([\"httpForwardObjectCallback\"])\"" + NEW_LINE +
+                    " - schema: \"/oneOf/7\" has error: \"object has missing required properties ([\"httpForwardClassCallback\"])\"" + NEW_LINE +
+                    " - schema: \"/oneOf/8\" has error: \"object has missing required properties ([\"httpOverrideForwardedRequest\"])\"" + NEW_LINE +
+                    " - schema: \"/oneOf/9\" has error: \"object has missing required properties ([\"httpError\"])\"" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));
@@ -971,11 +1096,10 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                 "    \"httpResponse\" : false" + NEW_LINE +
                 "  }"),
             is(
-                "4 errors:" + NEW_LINE +
-                    " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for schema \"requestDefinition/oneOf/0\" for field \"/httpRequest\"" + NEW_LINE +
-                    " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for schema \"requestDefinition/oneOf/1\" for field \"/httpRequest\"" + NEW_LINE +
-                    " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequest\"" + NEW_LINE +
-                    " - instance type (boolean) does not match any allowed primitive type (allowed: [\"object\"]) for field \"/httpResponse\"" + NEW_LINE +
+                "3 errors:" + NEW_LINE +
+                    " - field: \"/httpRequest\" for schema: \"httpRequest\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpResponse\" for schema: \"httpResponse\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));
@@ -1030,54 +1154,81 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                 "    \"unlimited\" : false" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}"),
-            is(
-                "8 errors:" + NEW_LINE +
-                    " - for field \"/httpRequest/headers\" only one of the following example formats is allowed: " + NEW_LINE +
-                    NEW_LINE +
-                    "    {" + NEW_LINE +
-                    "        \"exampleHeaderName\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
-                    "        \"exampleMultiValuedHeaderName\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
-                    "    }" + NEW_LINE +
-                    NEW_LINE +
-                    "   or:" + NEW_LINE +
-                    NEW_LINE +
-                    "    [" + NEW_LINE +
-                    "        {" + NEW_LINE +
-                    "            \"name\" : \"exampleHeaderName\"," + NEW_LINE +
-                    "            \"values\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
-                    "        }," + NEW_LINE +
-                    "        {" + NEW_LINE +
-                    "            \"name\" : \"exampleMultiValuedHeaderName\"," + NEW_LINE +
-                    "            \"values\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
-                    "        }" + NEW_LINE +
-                    "    ]" + NEW_LINE +
-                    " - instance failed to match exactly one schema (matched 0 out of 2) for schema \"requestDefinition/oneOf/0\" for field \"/httpRequest/headers\"" + NEW_LINE +
-                    " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequest\"" + NEW_LINE +
-                    " - for field \"/httpResponse/headers\" only one of the following example formats is allowed: " + NEW_LINE +
-                    NEW_LINE +
-                    "    {" + NEW_LINE +
-                    "        \"exampleHeaderName\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
-                    "        \"exampleMultiValuedHeaderName\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
-                    "    }" + NEW_LINE +
-                    NEW_LINE +
-                    "   or:" + NEW_LINE +
-                    NEW_LINE +
-                    "    [" + NEW_LINE +
-                    "        {" + NEW_LINE +
-                    "            \"name\" : \"exampleHeaderName\"," + NEW_LINE +
-                    "            \"values\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
-                    "        }," + NEW_LINE +
-                    "        {" + NEW_LINE +
-                    "            \"name\" : \"exampleMultiValuedHeaderName\"," + NEW_LINE +
-                    "            \"values\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
-                    "        }" + NEW_LINE +
-                    "    ]" + NEW_LINE +
-                    " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for schema \"keyToMultiValue/oneOf/0\" for field \"/httpResponse/headers/0\"" + NEW_LINE +
-                    " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for schema \"keyToMultiValue/oneOf/0\" for field \"/httpResponse/headers/1\"" + NEW_LINE +
-                    " - instance type (array) does not match any allowed primitive type (allowed: [\"object\"]) for schema \"keyToMultiValue/oneOf/1\" for field \"/httpResponse/headers\"" + NEW_LINE +
-                    " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpResponse/headers\"" + NEW_LINE +
-                    NEW_LINE +
-                    OPEN_API_SPECIFICATION_URL
-            ));
+            is("11 errors:" + NEW_LINE +
+                " - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
+                " - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"body\",\"cookies\",\"headers\",\"method\",\"path\",\"queryStringParameters\"]\"" + NEW_LINE +
+                " - field: \"/httpRequest/headers\" for schema: \"keyToMultiValue\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
+                " - field: \"/httpRequest/headers\" for schema: \"keyToMultiValue/oneOf/1\" has error: \"instance type (array) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                " - field: \"/httpRequest/headers\" for schema: \"requestDefinition\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
+                NEW_LINE +
+                "   {" + NEW_LINE +
+                "       \"exampleRegexHeader\": [" + NEW_LINE +
+                "           \"^some +regex$\"" + NEW_LINE +
+                "       ], " + NEW_LINE +
+                "       \"exampleNottedAndSimpleStringHeader\": [" + NEW_LINE +
+                "           \"!notThisValue\", " + NEW_LINE +
+                "           \"simpleStringMatch\"" + NEW_LINE +
+                "       ]" + NEW_LINE +
+                "   }" + NEW_LINE +
+                NEW_LINE +
+                "or:" + NEW_LINE +
+                NEW_LINE +
+                "   {" + NEW_LINE +
+                "       \"exampleSchemaHeader\": [" + NEW_LINE +
+                "           {" + NEW_LINE +
+                "               \"type\": \"number\"" + NEW_LINE +
+                "           }" + NEW_LINE +
+                "       ], " + NEW_LINE +
+                "       \"exampleMultiSchemaHeader\": [" + NEW_LINE +
+                "           {" + NEW_LINE +
+                "               \"type\": \"string\", " + NEW_LINE +
+                "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
+                "           }, " + NEW_LINE +
+                "           {" + NEW_LINE +
+                "               \"type\": \"string\", " + NEW_LINE +
+                "               \"format\": \"ipv4\"" + NEW_LINE +
+                "           }" + NEW_LINE +
+                "       ]" + NEW_LINE +
+                "   }" + NEW_LINE +
+                NEW_LINE +
+                " - field: \"/httpRequest/headers/0\" for schema: \"keyToMultiValue/oneOf/0/items\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                " - field: \"/httpRequest/headers/1\" for schema: \"keyToMultiValue/oneOf/0/items\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                " - field: \"/httpResponse/headers\" for schema: \"keyToMultiValue\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
+                NEW_LINE +
+                "   {" + NEW_LINE +
+                "       \"exampleRegexHeader\": [" + NEW_LINE +
+                "           \"^some +regex$\"" + NEW_LINE +
+                "       ], " + NEW_LINE +
+                "       \"exampleNottedAndSimpleStringHeader\": [" + NEW_LINE +
+                "           \"!notThisValue\", " + NEW_LINE +
+                "           \"simpleStringMatch\"" + NEW_LINE +
+                "       ]" + NEW_LINE +
+                "   }" + NEW_LINE +
+                NEW_LINE +
+                "or:" + NEW_LINE +
+                NEW_LINE +
+                "   {" + NEW_LINE +
+                "       \"exampleSchemaHeader\": [" + NEW_LINE +
+                "           {" + NEW_LINE +
+                "               \"type\": \"number\"" + NEW_LINE +
+                "           }" + NEW_LINE +
+                "       ], " + NEW_LINE +
+                "       \"exampleMultiSchemaHeader\": [" + NEW_LINE +
+                "           {" + NEW_LINE +
+                "               \"type\": \"string\", " + NEW_LINE +
+                "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
+                "           }, " + NEW_LINE +
+                "           {" + NEW_LINE +
+                "               \"type\": \"string\", " + NEW_LINE +
+                "               \"format\": \"ipv4\"" + NEW_LINE +
+                "           }" + NEW_LINE +
+                "       ]" + NEW_LINE +
+                "   }" + NEW_LINE +
+                NEW_LINE +
+                " - field: \"/httpResponse/headers\" for schema: \"keyToMultiValue/oneOf/1\" has error: \"instance type (array) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                " - field: \"/httpResponse/headers/0\" for schema: \"keyToMultiValue/oneOf/0/items\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                " - field: \"/httpResponse/headers/1\" for schema: \"keyToMultiValue/oneOf/0/items\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                NEW_LINE +
+                OPEN_API_SPECIFICATION_URL));
     }
 }

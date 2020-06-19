@@ -362,9 +362,9 @@ components:
         queryStringParameters:
           $ref: "#/components/schemas/KeyToMultiValue"
         path:
-          type: string
+          $ref: "#/components/schemas/StringOrJsonSchema"
         method:
-          type: string
+          $ref: "#/components/schemas/StringOrJsonSchema"
         secure:
           type: boolean
         keepAlive:
@@ -510,12 +510,13 @@ components:
                 items:
                   type: string
         - type: object
-          # additionalProperties: false
-          # patternProperties:
-          #   "^\\S+$":
-          #     type: array
-          #     items:
-          #       type: string
+          additionalProperties: false
+          patternProperties:
+            "^\\S+$":
+              type: array
+              additionalProperties: false
+              items:
+                $ref: "#/components/schemas/StringOrJsonSchema"
     KeyToValue:
       oneOf:
         - type: array
@@ -528,10 +529,14 @@ components:
               value:
                 type: string
         - type: object
-          # additionalProperties: false
-          # patternProperties:
-          #   "^\\S+$":
-          #     type: string
+          additionalProperties: false
+          patternProperties:
+            "^\\S+$":
+              $ref: "#/components/schemas/StringOrJsonSchema"
+    StringOrJsonSchema:
+      oneOf:
+        - type: string
+        - $ref: http://json-schema.org/draft-04/schema
     SocketAddress:
       title: remote address to send request to
       type: object
@@ -591,7 +596,7 @@ components:
               enum:
                 - JSON_SCHEMA
             jsonSchema:
-              type: string
+              $ref: http://json-schema.org/draft-04/schema
         - type: object
           description: "JSON path body matcher"
           additionalProperties: false

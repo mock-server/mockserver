@@ -97,7 +97,9 @@ public class HttpRequestDTOSerializerTest {
                 "  }," + NEW_LINE +
                 "  \"body\" : {" + NEW_LINE +
                 "    \"type\" : \"JSON\"," + NEW_LINE +
-                "    \"json\" : \"{ \\\"key\\\": \\\"some_value\\\" }\"," + NEW_LINE +
+                "    \"json\" : {" + NEW_LINE +
+                "      \"key\" : \"some_value\"" + NEW_LINE +
+                "    }," + NEW_LINE +
                 "    \"rawBytes\" : \"eyAia2V5IjogInNvbWVfdmFsdWUiIH0=\"" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}"));
@@ -108,7 +110,15 @@ public class HttpRequestDTOSerializerTest {
         assertThat(objectMapper.writeValueAsString(new JsonSchemaBody("{\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"integer\"}}, \"required\": [\"id\"]}")),
             is("{" + NEW_LINE +
                 "  \"type\" : \"JSON_SCHEMA\"," + NEW_LINE +
-                "  \"jsonSchema\" : \"{\\\"type\\\": \\\"object\\\", \\\"properties\\\": {\\\"id\\\": {\\\"type\\\": \\\"integer\\\"}}, \\\"required\\\": [\\\"id\\\"]}\"" + NEW_LINE +
+                "  \"jsonSchema\" : {" + NEW_LINE +
+                "    \"type\" : \"object\"," + NEW_LINE +
+                "    \"properties\" : {" + NEW_LINE +
+                "      \"id\" : {" + NEW_LINE +
+                "        \"type\" : \"integer\"" + NEW_LINE +
+                "      }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\" : [ \"id\" ]" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}"));
 
         assertThat(objectMapper.writeValueAsString(
@@ -136,7 +146,15 @@ public class HttpRequestDTOSerializerTest {
                 "  }," + NEW_LINE +
                 "  \"body\" : {" + NEW_LINE +
                 "    \"type\" : \"JSON_SCHEMA\"," + NEW_LINE +
-                "    \"jsonSchema\" : \"{\\\"type\\\": \\\"object\\\", \\\"properties\\\": {\\\"id\\\": {\\\"type\\\": \\\"integer\\\"}}, \\\"required\\\": [\\\"id\\\"]}\"" + NEW_LINE +
+                "    \"jsonSchema\" : {" + NEW_LINE +
+                "      \"type\" : \"object\"," + NEW_LINE +
+                "      \"properties\" : {" + NEW_LINE +
+                "        \"id\" : {" + NEW_LINE +
+                "          \"type\" : \"integer\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "      }," + NEW_LINE +
+                "      \"required\" : [ \"id\" ]" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}"));
     }

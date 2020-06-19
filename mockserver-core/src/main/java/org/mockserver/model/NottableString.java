@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
  */
 public class NottableString extends ObjectWithJsonToString implements Comparable<NottableString> {
 
-    private static final char NOT_CHAR = '!';
+    public static final char NOT_CHAR = '!';
     private final String value;
     private final boolean isBlank;
     private final Boolean not;

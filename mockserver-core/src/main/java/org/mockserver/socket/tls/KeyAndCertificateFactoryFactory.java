@@ -29,7 +29,7 @@ public class KeyAndCertificateFactoryFactory {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(Level.ERROR)
-                        .setMessageFormat("Failed to instantiate the BouncyCastle KeyAndCertificateFactory because BouncyCastle library is not available in classpath please ensure the following dependencies are available")
+                        .setMessageFormat("failed to instantiate the BouncyCastle KeyAndCertificateFactory because BouncyCastle library is not available in classpath please ensure the following dependencies are available")
                         .setArguments("<dependency>\n" +
                             "    <groupId>org.bouncycastle</groupId>\n" +
                             "    <artifactId>bcprov-jdk15on</artifactId>\n" +
@@ -51,7 +51,7 @@ public class KeyAndCertificateFactoryFactory {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(Level.ERROR)
-                        .setMessageFormat("Failed to instantiate the BouncyCastle KeyAndCertificateFactory")
+                        .setMessageFormat("failed to instantiate the BouncyCastle KeyAndCertificateFactory")
                         .setThrowable(throwable)
                 );
             }

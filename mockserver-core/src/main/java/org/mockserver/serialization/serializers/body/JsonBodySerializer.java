@@ -1,9 +1,11 @@
 package org.mockserver.serialization.serializers.body;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.mockserver.model.JsonBody;
+import org.mockserver.serialization.ObjectMapperFactory;
 
 import java.io.IOException;
 
@@ -11,6 +13,8 @@ import java.io.IOException;
  * @author jamesdbloom
  */
 public class JsonBodySerializer extends StdSerializer<JsonBody> {
+
+    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
 
     public JsonBodySerializer() {
         super(JsonBody.class);
@@ -26,7 +30,7 @@ public class JsonBodySerializer extends StdSerializer<JsonBody> {
             jgen.writeStringField("contentType", jsonBody.getContentType());
         }
         jgen.writeStringField("type", jsonBody.getType().name());
-        jgen.writeStringField("json", jsonBody.getValue());
+        jgen.writeObjectField("json", OBJECT_MAPPER.readTree(jsonBody.getValue()));
         if (jsonBody.getMatchType() != JsonBody.DEFAULT_MATCH_TYPE) {
             jgen.writeStringField("matchType", jsonBody.getMatchType().name());
         }

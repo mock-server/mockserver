@@ -21,7 +21,7 @@
             "additionalProperties": false,
             "patternProperties": {
                 "^\\S+$": {
-                    "type": "string"
+                    "$ref": "#/definitions/stringOrJsonSchema"
                 }
             }
         }

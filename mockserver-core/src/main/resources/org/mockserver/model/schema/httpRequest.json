@@ -16,10 +16,10 @@
             "$ref": "#/definitions/keyToMultiValue"
         },
         "path": {
-            "type": "string"
+            "$ref": "#/definitions/stringOrJsonSchema"
         },
         "method": {
-            "type": "string"
+            "$ref": "#/definitions/stringOrJsonSchema"
         },
         "secure": {
             "type": "boolean"

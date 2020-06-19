@@ -182,7 +182,7 @@ public class OpenAPIConverter {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(ERROR)
-                    .setMessageFormat("Exception while serialising " + example.getClass() + " {}")
+                    .setMessageFormat("exception while serialising " + example.getClass() + " {}")
                     .setArguments(example)
                     .setThrowable(throwable)
             );

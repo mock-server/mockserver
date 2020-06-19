@@ -102,7 +102,7 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
             assertThat(loadBalancerLogMessages[2], containsString(" for forwarded request" + NEW_LINE +
                 NEW_LINE +
                 " in json:" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 "  {" + NEW_LINE +
                 "    \"method\" : \"GET\"," + NEW_LINE +
                 "    \"path\" : \"/some_path\"," + NEW_LINE)
@@ -163,7 +163,7 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
             // and - logs hide proxied request
             String[] logMessages = loadBalancerClientAndServer.retrieveLogMessagesArray(null);
             assertThat(logMessages[2], containsString("returning response:" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 "  {" + NEW_LINE +
                 "    \"statusCode\" : 200," + NEW_LINE +
                 "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
@@ -173,11 +173,11 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
                 "    }," + NEW_LINE +
                 "    \"body\" : \"target_response\"" + NEW_LINE +
                 "  }" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 " for forwarded request" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 " in json:" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 "  {" + NEW_LINE +
                 "    \"method\" : \"GET\"," + NEW_LINE +
                 "    \"path\" : \"/target\"," + NEW_LINE));
@@ -265,7 +265,7 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
             // and - logs hide proxied request
             String[] logMessages = loadBalancerClientAndServer.retrieveLogMessagesArray(null);
             assertThat(logMessages[2], containsString("returning response:" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 "  {" + NEW_LINE +
                 "    \"statusCode\" : 200," + NEW_LINE +
                 "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
@@ -275,11 +275,11 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
                 "    }," + NEW_LINE +
                 "    \"body\" : \"target_response\"" + NEW_LINE +
                 "  }" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 " for forwarded request" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 " in json:" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 "  {" + NEW_LINE +
                 "    \"method\" : \"GET\"," + NEW_LINE +
                 "    \"path\" : \"/target\"," + NEW_LINE));

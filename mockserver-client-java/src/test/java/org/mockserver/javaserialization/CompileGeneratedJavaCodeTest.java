@@ -82,7 +82,7 @@ public class CompileGeneratedJavaCodeTest {
             "import static org.mockserver.model.HttpResponse.response;" + NEW_LINE + NEW_LINE +
             "class TestClass {" + NEW_LINE +
             "   static {" +
-            "      " + expectationAsJavaCode + "" + NEW_LINE +
+            "      " + expectationAsJavaCode + NEW_LINE +
             "   }" + NEW_LINE +
             "}")
         );
@@ -124,7 +124,7 @@ public class CompileGeneratedJavaCodeTest {
             "import static org.mockserver.model.HttpTemplate.template;" + NEW_LINE + NEW_LINE +
             "class TestClass {" + NEW_LINE +
             "   static {" +
-            "      " + expectationAsJavaCode + "" + NEW_LINE +
+            "      " + expectationAsJavaCode + NEW_LINE +
             "   }" + NEW_LINE +
             "}")
         );
@@ -168,7 +168,7 @@ public class CompileGeneratedJavaCodeTest {
             "import static org.mockserver.model.HttpForward.forward;" + NEW_LINE + NEW_LINE +
             "class TestClass {" + NEW_LINE +
             "   static {" +
-            "      " + expectationAsJavaCode + "" + NEW_LINE +
+            "      " + expectationAsJavaCode + NEW_LINE +
             "   }" + NEW_LINE +
             "}")
         );
@@ -210,7 +210,7 @@ public class CompileGeneratedJavaCodeTest {
             "import static org.mockserver.model.HttpClassCallback.callback;" + NEW_LINE + NEW_LINE +
             "class TestClass {" + NEW_LINE +
             "   static {" +
-            "      " + expectationAsJavaCode + "" + NEW_LINE +
+            "      " + expectationAsJavaCode + NEW_LINE +
             "   }" + NEW_LINE +
             "}")
         );
@@ -257,7 +257,7 @@ public class CompileGeneratedJavaCodeTest {
             "import static org.mockserver.model.HttpRequest.request;" + NEW_LINE + NEW_LINE +
             "class TestClass {" + NEW_LINE +
             "   static {" +
-            "      " + expectationAsJavaCode + "" + NEW_LINE +
+            "      " + expectationAsJavaCode + NEW_LINE +
             "   }" + NEW_LINE +
             "}")
         );

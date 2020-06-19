@@ -144,7 +144,7 @@ public class NettySslContextFactory {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(Level.ERROR)
-                        .setMessageFormat("Exception creating SSL context for server" + throwable.getMessage())
+                        .setMessageFormat("exception creating SSL context for server" + throwable.getMessage())
                         .setThrowable(throwable)
                 );
             }

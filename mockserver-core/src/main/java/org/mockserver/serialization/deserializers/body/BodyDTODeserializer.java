@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -31,8 +32,9 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
 
     private static final Map<String, Body.Type> fieldNameToType = new HashMap<>();
     private static final Base64.Decoder BASE64_DECODER = Base64.getDecoder();
+    private static ObjectWriter objectWriter;
     private static ObjectMapper objectMapper;
-    private static ObjectMapper jsonBodyObjectMapper;
+    private static ObjectWriter jsonBodyObjectWriter;
 
     static {
         fieldNameToType.put("base64Bytes".toLowerCase(), Body.Type.BINARY);
@@ -91,10 +93,10 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         }
                         if (Map.class.isAssignableFrom(entry.getValue().getClass()) ||
                             containsIgnoreCase(key, "json", "jsonSchema") && !String.class.isAssignableFrom(entry.getValue().getClass())) {
-                            if (objectMapper == null) {
-                                objectMapper = ObjectMapperFactory.createObjectMapper();
+                            if (objectWriter == null) {
+                                objectWriter = ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter();
                             }
-                            valueJsonValue = objectMapper.writeValueAsString(entry.getValue());
+                            valueJsonValue = objectWriter.writeValueAsString(entry.getValue());
                         } else {
                             valueJsonValue = String.valueOf(entry.getValue());
                         }
@@ -193,7 +195,10 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         if (objectMapper == null) {
                             objectMapper = ObjectMapperFactory.createObjectMapper();
                         }
-                        parameters = objectMapper.readValue(objectMapper.writeValueAsString(entry.getValue()), Parameters.class);
+                        if (objectWriter == null) {
+                            objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
+                        }
+                        parameters = objectMapper.readValue(objectWriter.writeValueAsString(entry.getValue()), Parameters.class);
                     }
                 }
             }
@@ -243,16 +248,16 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         return new XPathBodyDTO(new XPathBody(valueJsonValue), not);
                 }
             } else if (body.size() > 0) {
-                if (jsonBodyObjectMapper == null) {
-                    jsonBodyObjectMapper = new ObjectMapper();
+                if (jsonBodyObjectWriter == null) {
+                    jsonBodyObjectWriter = new ObjectMapper().writerWithDefaultPrettyPrinter();
                 }
-                return new JsonBodyDTO(new JsonBody(jsonBodyObjectMapper.writeValueAsString(body), JsonBody.DEFAULT_MATCH_TYPE), null);
+                return new JsonBodyDTO(new JsonBody(jsonBodyObjectWriter.writeValueAsString(body), JsonBody.DEFAULT_MATCH_TYPE), null);
             }
         } else if (currentToken == JsonToken.START_ARRAY) {
-            if (jsonBodyObjectMapper == null) {
-                jsonBodyObjectMapper = new ObjectMapper();
+            if (jsonBodyObjectWriter == null) {
+                jsonBodyObjectWriter = new ObjectMapper().writerWithDefaultPrettyPrinter();
             }
-            return new JsonBodyDTO(new JsonBody(jsonBodyObjectMapper.writeValueAsString(ctxt.readValue(jsonParser, List.class)), JsonBody.DEFAULT_MATCH_TYPE), null);
+            return new JsonBodyDTO(new JsonBody(jsonBodyObjectWriter.writeValueAsString(ctxt.readValue(jsonParser, List.class)), JsonBody.DEFAULT_MATCH_TYPE), null);
         } else if (currentToken == JsonToken.VALUE_STRING) {
             return new StringBodyDTO(new StringBody(jsonParser.getText()));
         }

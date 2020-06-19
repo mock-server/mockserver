@@ -426,9 +426,17 @@ public class BodyWithContentTypeDTODeserializerTest {
     public void shouldParseJsonWithJsonBodyAsObject() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
-            "    \"httpResponse\": {" + NEW_LINE +
-            "        \"body\" : {\"employees\":[{\"firstName\":\"John\", \"lastName\":\"Doe\"}]}" + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"JSON\"," + NEW_LINE +
+            "      \"json\" : {" + NEW_LINE +
+            "        \"employees\" : [ {" + NEW_LINE +
+            "          \"firstName\" : \"John\"," + NEW_LINE +
+            "          \"lastName\" : \"Doe\"" + NEW_LINE +
+            "        } ]" + NEW_LINE +
+            "      }" + NEW_LINE +
             "    }" + NEW_LINE +
+            "  }" + NEW_LINE +
             "}");
 
         // when
@@ -438,7 +446,12 @@ public class BodyWithContentTypeDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpResponse(
                 new HttpResponseDTO()
-                    .setBody(new JsonBodyDTO(new JsonBody("{\"employees\":[{\"firstName\":\"John\",\"lastName\":\"Doe\"}]}")))
+                    .setBody(new JsonBodyDTO(new JsonBody("{" + NEW_LINE +
+                        "  \"employees\" : [ {" + NEW_LINE +
+                        "    \"firstName\" : \"John\"," + NEW_LINE +
+                        "    \"lastName\" : \"Doe\"" + NEW_LINE +
+                        "  } ]" + NEW_LINE +
+                        "}")))
             ), expectationDTO);
     }
 
@@ -446,9 +459,15 @@ public class BodyWithContentTypeDTODeserializerTest {
     public void shouldParseJsonWithJsonBodyAsArray() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
-            "    \"httpResponse\": {" + NEW_LINE +
-            "        \"body\" : [{\"firstName\":\"John\", \"lastName\":\"Doe\"}]" + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"JSON\"," + NEW_LINE +
+            "      \"json\" : [ {" + NEW_LINE +
+            "        \"firstName\" : \"John\"," + NEW_LINE +
+            "        \"lastName\" : \"Doe\"" + NEW_LINE +
+            "      } ]" + NEW_LINE +
             "    }" + NEW_LINE +
+            "  }" + NEW_LINE +
             "}");
 
         // when
@@ -458,7 +477,10 @@ public class BodyWithContentTypeDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpResponse(
                 new HttpResponseDTO()
-                    .setBody(new JsonBodyDTO(new JsonBody("[{\"firstName\":\"John\",\"lastName\":\"Doe\"}]")))
+                    .setBody(new JsonBodyDTO(new JsonBody("[ {" + NEW_LINE +
+                        "  \"firstName\" : \"John\"," + NEW_LINE +
+                        "  \"lastName\" : \"Doe\"" + NEW_LINE +
+                        "} ]")))
             ), expectationDTO);
     }
 
@@ -466,9 +488,14 @@ public class BodyWithContentTypeDTODeserializerTest {
     public void shouldParseJsonWithJsonBodyWithEmptyArray() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
-            "    \"httpResponse\": {" + NEW_LINE +
-            "        \"body\" : {\"emptyArray\":\"[]\"}" + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"JSON\"," + NEW_LINE +
+            "      \"json\" : {" + NEW_LINE +
+            "        \"emptyArray\" : \"[]\"" + NEW_LINE +
+            "      }" + NEW_LINE +
             "    }" + NEW_LINE +
+            "  }" + NEW_LINE +
             "}");
 
         // when
@@ -478,7 +505,9 @@ public class BodyWithContentTypeDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpResponse(
                 new HttpResponseDTO()
-                    .setBody(new JsonBodyDTO(new JsonBody("{\"emptyArray\":\"[]\"}")))
+                    .setBody(new JsonBodyDTO(new JsonBody("{" + NEW_LINE +
+                        "  \"emptyArray\" : \"[]\"" + NEW_LINE +
+                        "}")))
             ), expectationDTO);
     }
 
@@ -510,13 +539,20 @@ public class BodyWithContentTypeDTODeserializerTest {
     public void shouldParseJsonWithJsonBodyAsObjectFieldAsObject() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
-            "    \"httpResponse\": {" + NEW_LINE +
-            "        \"body\": {" + NEW_LINE +
-            "            \"type\": \"JSON\"," + NEW_LINE +
-            "            \"json\": {\"context\": [{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"}]}," + NEW_LINE +
-            "            \"matchType\" : \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
-            "        }" + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"JSON\"," + NEW_LINE +
+            "      \"json\" : {" + NEW_LINE +
+            "        \"context\" : [ {" + NEW_LINE +
+            "          \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+            "        }, {" + NEW_LINE +
+            "          \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+            "        }, {" + NEW_LINE +
+            "          \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+            "        } ]" + NEW_LINE +
+            "      }" + NEW_LINE +
             "    }" + NEW_LINE +
+            "  }" + NEW_LINE +
             "}");
 
         // when
@@ -526,22 +562,37 @@ public class BodyWithContentTypeDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpResponse(
                 new HttpResponseDTO()
-                    .setBody(new JsonBodyDTO(new JsonBody("{\"context\":[{\"source\":\"DECISION_REQUEST\"},{\"source\":\"DECISION_REQUEST\"},{\"source\":\"DECISION_REQUEST\"}]}")))
+                    .setBody(new JsonBodyDTO(new JsonBody("{" + NEW_LINE +
+                        "  \"context\" : [ {" + NEW_LINE +
+                        "    \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+                        "  }, {" + NEW_LINE +
+                        "    \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+                        "  }, {" + NEW_LINE +
+                        "    \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+                        "  } ]" + NEW_LINE +
+                        "}")))
             ), expectationDTO);
     }
 
     @Test
     public void shouldParseJsonWithJsonBodyAsObjectFieldAsArray() throws IOException {
         // given
-        String json = ("{" + NEW_LINE +
-            "    \"httpResponse\": {" + NEW_LINE +
-            "        \"body\": {" + NEW_LINE +
-            "            \"type\": \"JSON\"," + NEW_LINE +
-            "            \"json\": [{\"context\": [{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"}]}]," + NEW_LINE +
-            "            \"matchType\" : \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
-            "        }" + NEW_LINE +
+        String json = "{" + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"JSON\"," + NEW_LINE +
+            "      \"json\" : [ {" + NEW_LINE +
+            "        \"context\" : [ {" + NEW_LINE +
+            "          \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+            "        }, {" + NEW_LINE +
+            "          \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+            "        }, {" + NEW_LINE +
+            "          \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+            "        } ]" + NEW_LINE +
+            "      } ]" + NEW_LINE +
             "    }" + NEW_LINE +
-            "}");
+            "  }" + NEW_LINE +
+            "}";
 
         // when
         ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
@@ -550,7 +601,15 @@ public class BodyWithContentTypeDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpResponse(
                 new HttpResponseDTO()
-                    .setBody(new JsonBodyDTO(new JsonBody("[{\"context\":[{\"source\":\"DECISION_REQUEST\"},{\"source\":\"DECISION_REQUEST\"},{\"source\":\"DECISION_REQUEST\"}]}]")))
+                    .setBody(new JsonBodyDTO(new JsonBody("[ {" + NEW_LINE +
+                        "  \"context\" : [ {" + NEW_LINE +
+                        "    \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+                        "  }, {" + NEW_LINE +
+                        "    \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+                        "  }, {" + NEW_LINE +
+                        "    \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+                        "  } ]" + NEW_LINE +
+                        "} ]")))
             ), expectationDTO);
     }
 

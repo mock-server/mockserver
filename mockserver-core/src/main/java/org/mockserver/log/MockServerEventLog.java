@@ -102,17 +102,17 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         final ExceptionHandler<LogEntry> errorHandler = new ExceptionHandler<LogEntry>() {
             @Override
             public void handleEventException(Throwable ex, long sequence, LogEntry logEntry) {
-                logger.error("Exception handling log entry in log ring buffer, for log entry: " + logEntry, ex);
+                logger.error("exception handling log entry in log ring buffer, for log entry: " + logEntry, ex);
             }
 
             @Override
             public void handleOnStartException(Throwable ex) {
-                logger.error("Exception starting log ring buffer", ex);
+                logger.error("exception starting log ring buffer", ex);
             }
 
             @Override
             public void handleOnShutdownException(Throwable ex) {
-                logger.error("Exception during shutdown of log ring buffer", ex);
+                logger.error("exception during shutdown of log ring buffer", ex);
             }
         };
         disruptor.setDefaultExceptionHandler(errorHandler);

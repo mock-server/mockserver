@@ -40,59 +40,71 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
             while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
                 String fieldName = jsonParser.getCurrentName();
                 switch (fieldName) {
-                    case "not":
+                    case "not": {
                         jsonParser.nextToken();
                         not = jsonParser.getBooleanValue();
                         break;
-                    case "method":
+                    }
+                    case "method": {
                         jsonParser.nextToken();
                         method = ctxt.readValue(jsonParser, NottableString.class);
                         break;
-                    case "path":
+                    }
+                    case "path": {
                         jsonParser.nextToken();
                         path = ctxt.readValue(jsonParser, NottableString.class);
                         break;
-                    case "queryStringParameters":
+                    }
+                    case "queryStringParameters": {
                         jsonParser.nextToken();
                         queryStringParameters = ctxt.readValue(jsonParser, Parameters.class);
                         break;
-                    case "body":
+                    }
+                    case "body": {
                         jsonParser.nextToken();
                         body = ctxt.readValue(jsonParser, BodyDTO.class);
                         break;
-                    case "cookies":
+                    }
+                    case "cookies": {
                         jsonParser.nextToken();
                         cookies = ctxt.readValue(jsonParser, Cookies.class);
                         break;
-                    case "headers":
+                    }
+                    case "headers": {
                         jsonParser.nextToken();
                         headers = ctxt.readValue(jsonParser, Headers.class);
                         break;
-                    case "keepAlive":
+                    }
+                    case "keepAlive": {
                         jsonParser.nextToken();
                         keepAlive = ctxt.readValue(jsonParser, Boolean.class);
                         break;
-                    case "secure":
+                    }
+                    case "secure": {
                         jsonParser.nextToken();
                         secure = ctxt.readValue(jsonParser, Boolean.class);
                         break;
-                    case "socketAddress":
+                    }
+                    case "socketAddress": {
                         jsonParser.nextToken();
                         socketAddress = ctxt.readValue(jsonParser, SocketAddressDTO.class);
                         break;
-                    case "specUrlOrPayload":
+                    }
+                    case "specUrlOrPayload": {
                         jsonParser.nextToken();
-                        JsonNode specUrlOrPayloadField = ctxt.readValue(jsonParser, JsonNode.class);
-                        if (specUrlOrPayloadField.isTextual()) {
-                            specUrlOrPayload = specUrlOrPayloadField.asText();
+                        JsonNode potentiallyJsonField = ctxt.readValue(jsonParser, JsonNode.class);
+                        if (potentiallyJsonField.isTextual()) {
+                            specUrlOrPayload = potentiallyJsonField.asText();
                         } else {
-                            specUrlOrPayload = specUrlOrPayloadField.toPrettyString();
+                            specUrlOrPayload = potentiallyJsonField.toPrettyString();
                         }
                         break;
-                    case "operationId":
+                    }
+                    case "operationId": {
                         jsonParser.nextToken();
                         operationId = ctxt.readValue(jsonParser, String.class);
                         break;
+                    }
                 }
             }
             if (isNotBlank(specUrlOrPayload)) {

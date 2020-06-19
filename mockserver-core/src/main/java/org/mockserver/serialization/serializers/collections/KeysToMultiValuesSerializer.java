@@ -29,7 +29,7 @@ public abstract class KeysToMultiValuesSerializer<T extends KeysToMultiValues<? 
             Collection<NottableString> values = collection.getValues(key);
             jgen.writeStartArray(values.size());
             for (NottableString nottableString : values) {
-                jgen.writeString(serialiseNottableString(nottableString));
+                jgen.writeObject(nottableString);
             }
             jgen.writeEndArray();
         }

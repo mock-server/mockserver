@@ -162,7 +162,11 @@ public class DashboardLogEntryDTOSerializerTest {
             "        \"reasonPhrase\" : \"OK\"," + NEW_LINE +
             "        \"body\" : {" + NEW_LINE +
             "          \"type\" : \"JSON\"," + NEW_LINE +
-            "          \"json\" : \"{\\\"derivationMode\\\":\\\"HASHED\\\",\\\"deviceUrn\\\":\\\"411323184fd0c2bf724713149de137f4dde072c1fd31f0e29256800a1b2c1afc\\\",\\\"ciphertextBytesFormat\\\":\\\"JSON\\\"}\"" + NEW_LINE +
+            "          \"json\" : {" + NEW_LINE +
+            "            \"derivationMode\" : \"HASHED\"," + NEW_LINE +
+            "            \"deviceUrn\" : \"411323184fd0c2bf724713149de137f4dde072c1fd31f0e29256800a1b2c1afc\"," + NEW_LINE +
+            "            \"ciphertextBytesFormat\" : \"JSON\"" + NEW_LINE +
+            "          }" + NEW_LINE +
             "        }" + NEW_LINE +
             "      }" + NEW_LINE +
             "    }" + NEW_LINE +

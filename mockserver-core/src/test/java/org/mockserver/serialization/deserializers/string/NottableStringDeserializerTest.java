@@ -22,30 +22,11 @@ public class NottableStringDeserializerTest {
     public void shouldDeserializeNottableString() throws IOException {
         assertThat(ObjectMapperFactory.createObjectMapper().readValue("\"some_string\"", NottableString.class),
             is(string("some_string")));
-
-        assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"not\":false,\"value\":\"some_string\"}", NottableString.class),
-            is(string("some_string")));
     }
 
     @Test
     public void shouldDeserializeNotNottableString() throws IOException {
         assertThat(ObjectMapperFactory.createObjectMapper().readValue("\"!some_string\"", NottableString.class),
-            is(NottableString.not("some_string")));
-
-        assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"not\":true,\"value\":\"some_string\"}", NottableString.class),
-            is(NottableString.not("some_string")));
-    }
-
-    @Test
-    public void shouldDeserializeNottableStringWithExclamationMark() throws IOException {
-        assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"not\":false,\"value\":\"!some_string\"}", NottableString.class),
-            is(string("!some_string")));
-    }
-
-
-    @Test
-    public void shouldDeserializeNottableStringWithNot() throws IOException {
-        assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"not\":true,\"value\":\"some_string\"}", NottableString.class),
             is(NottableString.not("some_string")));
     }
 
@@ -54,10 +35,7 @@ public class NottableStringDeserializerTest {
         // given
         String json = ("{" + NEW_LINE +
             "    \"httpRequest\": {" + NEW_LINE +
-            "        \"method\" : {" + NEW_LINE +
-            "            \"not\" : true," + NEW_LINE +
-            "            \"value\" : \"HEAD\"" + NEW_LINE +
-            "        }" + NEW_LINE +
+            "        \"method\": \"!HEAD\"" + NEW_LINE +
             "    }" + NEW_LINE +
             "}");
 
@@ -97,10 +75,7 @@ public class NottableStringDeserializerTest {
         // given
         String json = ("{" + NEW_LINE +
             "    \"httpRequest\": {" + NEW_LINE +
-            "        \"path\" : {" + NEW_LINE +
-            "            \"not\" : true," + NEW_LINE +
-            "            \"value\" : \"/some/path\"" + NEW_LINE +
-            "        }" + NEW_LINE +
+            "        \"path\": \"!/some/path\"" + NEW_LINE +
             "    }" + NEW_LINE +
             "}");
 

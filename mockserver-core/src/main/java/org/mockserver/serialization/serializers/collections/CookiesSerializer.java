@@ -23,7 +23,7 @@ public class CookiesSerializer extends StdSerializer<Cookies> {
     public void serialize(Cookies collection, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         jgen.writeStartObject();
         for (Cookie cookie : collection.getEntries()) {
-            jgen.writeStringField(serialiseNottableString(cookie.getName()), serialiseNottableString(cookie.getValue()));
+            jgen.writeObjectField(serialiseNottableString(cookie.getName()), cookie.getValue());
         }
         jgen.writeEndObject();
     }

@@ -115,7 +115,7 @@ public class JsonSchemaMatcherTest {
 
             // then
             verify(logger).debug("json schema match failed expected:" + NEW_LINE +
-                    "" + NEW_LINE +
+                    NEW_LINE +
                     "  {" + NEW_LINE +
                     "      \"type\": \"object\"," + NEW_LINE +
                     "      \"properties\": {" + NEW_LINE +
@@ -153,13 +153,13 @@ public class JsonSchemaMatcherTest {
                     "      \"additionalProperties\" : false," + NEW_LINE +
                     "      \"required\": [ \"enumField\", \"arrayField\" ]" + NEW_LINE +
                     "  }" + NEW_LINE +
-                    "" + NEW_LINE +
+                    NEW_LINE +
                     " found:" + NEW_LINE +
-                    "" + NEW_LINE +
+                    NEW_LINE +
                     "  some_json" + NEW_LINE +
-                    "" + NEW_LINE +
+                    NEW_LINE +
                     " failed because:" + NEW_LINE +
-                    "" + NEW_LINE +
+                    NEW_LINE +
                     "  validator_error" + NEW_LINE,
                 (Throwable) null);
         } finally {
@@ -182,7 +182,7 @@ public class JsonSchemaMatcherTest {
 
             // then
             verify(logger).debug("json schema match failed expected:" + NEW_LINE +
-                    "" + NEW_LINE +
+                    NEW_LINE +
                     "  {" + NEW_LINE +
                     "      \"type\": \"object\"," + NEW_LINE +
                     "      \"properties\": {" + NEW_LINE +
@@ -220,13 +220,13 @@ public class JsonSchemaMatcherTest {
                     "      \"additionalProperties\" : false," + NEW_LINE +
                     "      \"required\": [ \"enumField\", \"arrayField\" ]" + NEW_LINE +
                     "  }" + NEW_LINE +
-                    "" + NEW_LINE +
+                    NEW_LINE +
                     " found:" + NEW_LINE +
-                    "" + NEW_LINE +
+                    NEW_LINE +
                     "  some_json" + NEW_LINE +
-                    "" + NEW_LINE +
+                    NEW_LINE +
                     " failed because:" + NEW_LINE +
-                    "" + NEW_LINE +
+                    NEW_LINE +
                     "  TEST_EXCEPTION" + NEW_LINE,
                 test_exception);
         } finally {

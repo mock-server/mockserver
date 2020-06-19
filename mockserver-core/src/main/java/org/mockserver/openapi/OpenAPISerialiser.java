@@ -49,7 +49,7 @@ public class OpenAPISerialiser {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(ERROR)
-                    .setMessageFormat("Exception while serialising specification for OpenAPIDefinition{}")
+                    .setMessageFormat("exception while serialising specification for OpenAPIDefinition{}")
                     .setArguments(openAPIDefinition)
                     .setThrowable(throwable)
             );

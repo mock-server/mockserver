@@ -550,11 +550,13 @@ public class Expectation extends ObjectWithJsonToString {
             return false;
         }
         Expectation that = (Expectation) o;
+        boolean equals = Objects.equals(httpResponse, that.httpResponse);
+        boolean equals1 = Objects.equals(httpRequest, that.httpRequest);
         return Objects.equals(priority, that.priority) &&
-            Objects.equals(httpRequest, that.httpRequest) &&
+            equals1 &&
             Objects.equals(times, that.times) &&
             Objects.equals(timeToLive, that.timeToLive) &&
-            Objects.equals(httpResponse, that.httpResponse) &&
+            equals &&
             Objects.equals(httpResponseTemplate, that.httpResponseTemplate) &&
             Objects.equals(httpResponseClassCallback, that.httpResponseClassCallback) &&
             Objects.equals(httpResponseObjectCallback, that.httpResponseObjectCallback) &&

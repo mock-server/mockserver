@@ -316,7 +316,7 @@ public class OpenAPIConverterTest {
                 " in 'reader', line 1, column 19:" + NEW_LINE +
                 "    \"openapi\": \"3.0.0\"," + NEW_LINE +
                 "                      ^" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 " at [Source: (StringReader); line: 1, column: 19]"));
         }
     }
@@ -370,7 +370,7 @@ public class OpenAPIConverterTest {
                 " in 'reader', line 1, column 19:" + NEW_LINE +
                 "    \"openapi\": \"3.0.0\"," + NEW_LINE +
                 "                      ^" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 " at [Source: (StringReader); line: 1, column: 19]"));
         }
     }

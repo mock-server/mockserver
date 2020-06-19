@@ -363,17 +363,8 @@ public class BodyDTODeserializerTest {
             "    \"body\" : {" + NEW_LINE +
             "      \"type\" : \"PARAMETERS\"," + NEW_LINE +
             "      \"parameters\" : [ {" + NEW_LINE +
-            "        \"name\" : {" + NEW_LINE +
-            "          \"not\" : true," + NEW_LINE +
-            "          \"value\" : \"parameterOneName\"" + NEW_LINE +
-            "        }," + NEW_LINE +
-            "        \"values\" : [ {" + NEW_LINE +
-            "          \"not\" : true," + NEW_LINE +
-            "          \"value\" : \"parameterOneValueOne\"" + NEW_LINE +
-            "        }, {" + NEW_LINE +
-            "          \"not\" : true," + NEW_LINE +
-            "          \"value\" : \"parameterOneValueTwo\"" + NEW_LINE +
-            "        } ]" + NEW_LINE +
+            "        \"name\" : \"!parameterOneName\"," + NEW_LINE +
+            "        \"values\" : [ \"!parameterOneValueOne\", \"!parameterOneValueTwo\" ]" + NEW_LINE +
             "      }, {" + NEW_LINE +
             "        \"name\" : \"parameterTwoName\"," + NEW_LINE +
             "        \"values\" : [ \"parameterTwoValue\" ]" + NEW_LINE +
@@ -873,9 +864,17 @@ public class BodyDTODeserializerTest {
     public void shouldParseJsonWithJsonBodyAsObject() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
-            "    \"httpRequest\": {" + NEW_LINE +
-            "        \"body\" : {\"employees\":[{\"firstName\":\"John\", \"lastName\":\"Doe\"}]}" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"JSON\"," + NEW_LINE +
+            "      \"json\" : {" + NEW_LINE +
+            "        \"employees\" : [ {" + NEW_LINE +
+            "          \"firstName\" : \"John\"," + NEW_LINE +
+            "          \"lastName\" : \"Doe\"" + NEW_LINE +
+            "        } ]" + NEW_LINE +
+            "      }" + NEW_LINE +
             "    }" + NEW_LINE +
+            "  }" + NEW_LINE +
             "}");
 
         // when
@@ -885,7 +884,12 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new JsonBodyDTO(new JsonBody("{\"employees\":[{\"firstName\":\"John\",\"lastName\":\"Doe\"}]}")))
+                    .setBody(new JsonBodyDTO(new JsonBody("{" + NEW_LINE +
+                        "  \"employees\" : [ {" + NEW_LINE +
+                        "    \"firstName\" : \"John\"," + NEW_LINE +
+                        "    \"lastName\" : \"Doe\"" + NEW_LINE +
+                        "  } ]" + NEW_LINE +
+                        "}")))
             ), expectationDTO);
     }
 
@@ -893,9 +897,15 @@ public class BodyDTODeserializerTest {
     public void shouldParseJsonWithJsonBodyAsArray() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
-            "    \"httpRequest\": {" + NEW_LINE +
-            "        \"body\" : [{\"firstName\":\"John\", \"lastName\":\"Doe\"}]" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"JSON\"," + NEW_LINE +
+            "      \"json\" : [ {" + NEW_LINE +
+            "        \"firstName\" : \"John\"," + NEW_LINE +
+            "        \"lastName\" : \"Doe\"" + NEW_LINE +
+            "      } ]" + NEW_LINE +
             "    }" + NEW_LINE +
+            "  }" + NEW_LINE +
             "}");
 
         // when
@@ -905,7 +915,10 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new JsonBodyDTO(new JsonBody("[{\"firstName\":\"John\",\"lastName\":\"Doe\"}]")))
+                    .setBody(new JsonBodyDTO(new JsonBody("[ {" + NEW_LINE +
+                        "  \"firstName\" : \"John\"," + NEW_LINE +
+                        "  \"lastName\" : \"Doe\"" + NEW_LINE +
+                        "} ]")))
             ), expectationDTO);
     }
 
@@ -913,21 +926,27 @@ public class BodyDTODeserializerTest {
     public void shouldParseJsonWithJsonBodyWithEmptyArray() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
-            "    \"httpRequest\": {" + NEW_LINE +
-            "        \"body\" : {\"emptyArray\":\"[]\"}" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"JSON\"," + NEW_LINE +
+            "      \"json\" : {" + NEW_LINE +
+            "        \"emptyArray\" : \"[]\"" + NEW_LINE +
+            "      }" + NEW_LINE +
             "    }" + NEW_LINE +
+            "  }" + NEW_LINE +
             "}");
 
         // when
         ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
 
         // then
-        ExpectationDTO expected = new ExpectationDTO()
+        assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new JsonBodyDTO(new JsonBody("{\"emptyArray\":\"[]\"}")))
-            );
-        assertEquals(expected, expectationDTO);
+                    .setBody(new JsonBodyDTO(new JsonBody("{" + NEW_LINE +
+                        "  \"emptyArray\" : \"[]\"" + NEW_LINE +
+                        "}")))
+            ), expectationDTO);
     }
 
     @Test
@@ -958,13 +977,20 @@ public class BodyDTODeserializerTest {
     public void shouldParseJsonWithJsonBodyAsObjectFieldAsObject() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
-            "    \"httpRequest\": {" + NEW_LINE +
-            "        \"body\": {" + NEW_LINE +
-            "            \"type\": \"JSON\"," + NEW_LINE +
-            "            \"json\": {\"context\": [{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"}]}," + NEW_LINE +
-            "            \"matchType\" : \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
-            "        }" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"JSON\"," + NEW_LINE +
+            "      \"json\" : {" + NEW_LINE +
+            "        \"context\" : [ {" + NEW_LINE +
+            "          \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+            "        }, {" + NEW_LINE +
+            "          \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+            "        }, {" + NEW_LINE +
+            "          \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+            "        } ]" + NEW_LINE +
+            "      }" + NEW_LINE +
             "    }" + NEW_LINE +
+            "  }" + NEW_LINE +
             "}");
 
         // when
@@ -974,22 +1000,37 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new JsonBodyDTO(new JsonBody("{\"context\":[{\"source\":\"DECISION_REQUEST\"},{\"source\":\"DECISION_REQUEST\"},{\"source\":\"DECISION_REQUEST\"}]}")))
+                    .setBody(new JsonBodyDTO(new JsonBody("{" + NEW_LINE +
+                        "  \"context\" : [ {" + NEW_LINE +
+                        "    \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+                        "  }, {" + NEW_LINE +
+                        "    \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+                        "  }, {" + NEW_LINE +
+                        "    \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+                        "  } ]" + NEW_LINE +
+                        "}")))
             ), expectationDTO);
     }
 
     @Test
     public void shouldParseJsonWithJsonBodyAsObjectFieldAsArray() throws IOException {
         // given
-        String json = ("{" + NEW_LINE +
-            "    \"httpRequest\": {" + NEW_LINE +
-            "        \"body\": {" + NEW_LINE +
-            "            \"type\": \"JSON\"," + NEW_LINE +
-            "            \"json\": [{\"context\": [{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"}]}]," + NEW_LINE +
-            "            \"matchType\" : \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
-            "        }" + NEW_LINE +
+        String json = "{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"JSON\"," + NEW_LINE +
+            "      \"json\" : [ {" + NEW_LINE +
+            "        \"context\" : [ {" + NEW_LINE +
+            "          \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+            "        }, {" + NEW_LINE +
+            "          \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+            "        }, {" + NEW_LINE +
+            "          \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+            "        } ]" + NEW_LINE +
+            "      } ]" + NEW_LINE +
             "    }" + NEW_LINE +
-            "}");
+            "  }" + NEW_LINE +
+            "}";
 
         // when
         ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
@@ -998,7 +1039,15 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new JsonBodyDTO(new JsonBody("[{\"context\":[{\"source\":\"DECISION_REQUEST\"},{\"source\":\"DECISION_REQUEST\"},{\"source\":\"DECISION_REQUEST\"}]}]")))
+                    .setBody(new JsonBodyDTO(new JsonBody("[ {" + NEW_LINE +
+                        "  \"context\" : [ {" + NEW_LINE +
+                        "    \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+                        "  }, {" + NEW_LINE +
+                        "    \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+                        "  }, {" + NEW_LINE +
+                        "    \"source\" : \"DECISION_REQUEST\"" + NEW_LINE +
+                        "  } ]" + NEW_LINE +
+                        "} ]")))
             ), expectationDTO);
     }
 

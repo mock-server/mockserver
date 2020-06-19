@@ -321,6 +321,9 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
 
     @SuppressWarnings("unchecked")
     private boolean bodyMatches(MatchDifference context, HttpRequest request) {
+        if (controlPlaneMatcher && httpRequest.getBody() != null && httpRequest.getBody().equals(request.getBody())) {
+            return true;
+        }
         boolean bodyMatches;
         String bodyAsString = request.getBody() != null ? new String(request.getBody().getRawBytes(), request.getBody().getCharset(DEFAULT_HTTP_CHARACTER_SET)) : "";
         if (bodyMatcher instanceof BinaryMatcher) {

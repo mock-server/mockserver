@@ -117,15 +117,15 @@ public class RequestDefinitionSerializer implements Serializer<RequestDefinition
                     if (jsonNode.has("httpRequest")) {
                         jsonRequestDefinition = jsonNode.get("httpRequest").toString();
                     }
-                } catch (Exception e) {
+                } catch (Throwable throwable) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception while parsing{}for RequestDefinition")
+                            .setMessageFormat("exception while parsing{}for RequestDefinition " + throwable.getMessage())
                             .setArguments(jsonRequestDefinition)
-                            .setThrowable(e)
+                            .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonRequestDefinition + "] for RequestDefinition", e);
+                    throw new RuntimeException("Exception while parsing [" + jsonRequestDefinition + "] for RequestDefinition", throwable);
                 }
             } else if (jsonRequestDefinition.contains("\"openAPIDefinition\"")) {
                 try {
@@ -133,15 +133,15 @@ public class RequestDefinitionSerializer implements Serializer<RequestDefinition
                     if (jsonNode.has("openAPIDefinition")) {
                         jsonRequestDefinition = jsonNode.get("openAPIDefinition").toString();
                     }
-                } catch (Exception e) {
+                } catch (Throwable throwable) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception while parsing{}for RequestDefinition")
+                            .setMessageFormat("exception while parsing{}for RequestDefinition " + throwable.getMessage())
                             .setArguments(jsonRequestDefinition)
-                            .setThrowable(e)
+                            .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonRequestDefinition + "] for RequestDefinition", e);
+                    throw new RuntimeException("Exception while parsing [" + jsonRequestDefinition + "] for RequestDefinition", throwable);
                 }
             }
             String validationErrors = requestDefinitionValidator.isValid(jsonRequestDefinition);
@@ -152,15 +152,15 @@ public class RequestDefinitionSerializer implements Serializer<RequestDefinition
                     if (requestDefinitionDTO != null) {
                         requestDefinition = requestDefinitionDTO.buildObject();
                     }
-                } catch (Exception e) {
+                } catch (Throwable throwable) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception while parsing{}for RequestDefinition")
+                            .setMessageFormat("exception while parsing{}for RequestDefinition " + throwable.getMessage())
                             .setArguments(jsonRequestDefinition)
-                            .setThrowable(e)
+                            .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonRequestDefinition + "] for RequestDefinition", e);
+                    throw new RuntimeException("Exception while parsing [" + jsonRequestDefinition + "] for RequestDefinition", throwable);
                 }
                 return requestDefinition;
             } else {

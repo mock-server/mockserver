@@ -25,6 +25,10 @@ public class JsonSchemaMatcher extends BodyMatcher<String> {
     public boolean matches(final MatchDifference context, String matched) {
         boolean result = false;
 
+        if (matcher.equalsIgnoreCase(matched)) {
+            result = true;
+        }
+
         try {
             String validation = jsonSchemaValidator.isValid(matched, false);
 

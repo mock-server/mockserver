@@ -1817,7 +1817,9 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  {" + NEW_LINE +
                     "    \"body\" : {" + NEW_LINE +
                     "      \"type\" : \"JSON\"," + NEW_LINE +
-                    "      \"json\" : \"{ \\\"some_field\\\": \\\"some_value\\\" }\"" + NEW_LINE +
+                    "      \"json\" : {" + NEW_LINE +
+                    "        \"some_field\" : \"some_value\"" + NEW_LINE +
+                    "      }" + NEW_LINE +
                     "    }" + NEW_LINE +
                     "  }" + NEW_LINE +
                     NEW_LINE +
@@ -1920,36 +1922,36 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  {" + NEW_LINE +
                     "    \"body\" : {" + NEW_LINE +
                     "      \"type\" : \"JSON_SCHEMA\"," + NEW_LINE +
-                    "      \"jsonSchema\" : \"{" + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "    \\\"$schema\\\": \\\"http://json-schema.org/draft-04/schema#\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "    \\\"title\\\": \\\"Product\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "    \\\"description\\\": \\\"A product from Acme's catalog\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "    \\\"type\\\": \\\"object\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "    \\\"properties\\\": {" + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "        \\\"id\\\": {" + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "            \\\"description\\\": \\\"The unique identifier for a product\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "            \\\"type\\\": \\\"integer\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "        }," + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "        \\\"name\\\": {" + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "            \\\"description\\\": \\\"Name of the product\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "            \\\"type\\\": \\\"string\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "        }," + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "        \\\"price\\\": {" + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "            \\\"type\\\": \\\"number\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "            \\\"minimum\\\": 0," + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "            \\\"exclusiveMinimum\\\": true" + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "        }," + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "        \\\"tags\\\": {" + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "            \\\"type\\\": \\\"array\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "            \\\"items\\\": {" + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "                \\\"type\\\": \\\"string\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "            }," + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "            \\\"minItems\\\": 1," + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "            \\\"uniqueItems\\\": true" + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "        }" + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "    }," + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "    \\\"required\\\": [\\\"id\\\", \\\"name\\\", \\\"price\\\"]" + StringEscapeUtils.escapeJava(NEW_LINE) +
-                    "}\"" + NEW_LINE +
+                    "      \"jsonSchema\" : {\n" +
+                    "        \"$schema\" : \"http://json-schema.org/draft-04/schema#\",\n" +
+                    "        \"title\" : \"Product\",\n" +
+                    "        \"description\" : \"A product from Acme's catalog\",\n" +
+                    "        \"type\" : \"object\",\n" +
+                    "        \"properties\" : {\n" +
+                    "          \"id\" : {\n" +
+                    "            \"description\" : \"The unique identifier for a product\",\n" +
+                    "            \"type\" : \"integer\"\n" +
+                    "          },\n" +
+                    "          \"name\" : {\n" +
+                    "            \"description\" : \"Name of the product\",\n" +
+                    "            \"type\" : \"string\"\n" +
+                    "          },\n" +
+                    "          \"price\" : {\n" +
+                    "            \"type\" : \"number\",\n" +
+                    "            \"minimum\" : 0,\n" +
+                    "            \"exclusiveMinimum\" : true\n" +
+                    "          },\n" +
+                    "          \"tags\" : {\n" +
+                    "            \"type\" : \"array\",\n" +
+                    "            \"items\" : {\n" +
+                    "              \"type\" : \"string\"\n" +
+                    "            },\n" +
+                    "            \"minItems\" : 1,\n" +
+                    "            \"uniqueItems\" : true\n" +
+                    "          }\n" +
+                    "        },\n" +
+                    "        \"required\" : [ \"id\", \"name\", \"price\" ]\n" +
+                    "      }" + NEW_LINE +
                     "    }" + NEW_LINE +
                     "  }" + NEW_LINE +
                     NEW_LINE +
@@ -2004,7 +2006,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "     failed because:" + NEW_LINE +
                     "  " + NEW_LINE +
                     "      1 error:" + NEW_LINE +
-                    "       - array is too short: must have at least 1 elements but instance has 0 elements for field \"/tags\"" + NEW_LINE +
+                    "       - field: \"/tags\" for schema: \"/properties/tags\" has error: \"array is too short: must have at least 1 elements but instance has 0 elements\"" + NEW_LINE +
                     NEW_LINE +
                     NEW_LINE +
                     "------------------------------------" + NEW_LINE +

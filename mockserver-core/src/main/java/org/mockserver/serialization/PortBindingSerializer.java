@@ -22,14 +22,14 @@ public class PortBindingSerializer implements Serializer<PortBinding> {
     public String serialize(PortBinding portBinding) {
         try {
             return objectWriter.writeValueAsString(portBinding);
-        } catch (Exception e) {
+        } catch (Throwable throwable) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(Level.ERROR)
                     .setMessageFormat("exception while serializing portBinding to JSON with value " + portBinding)
-                    .setThrowable(e)
+                    .setThrowable(throwable)
             );
-            throw new RuntimeException("Exception while serializing portBinding to JSON with value " + portBinding, e);
+            throw new RuntimeException("Exception while serializing portBinding to JSON with value " + portBinding, throwable);
         }
     }
 
@@ -38,15 +38,15 @@ public class PortBindingSerializer implements Serializer<PortBinding> {
         if (jsonPortBinding != null && !jsonPortBinding.isEmpty()) {
             try {
                 portBinding = objectMapper.readValue(jsonPortBinding, PortBinding.class);
-            } catch (Exception e) {
+            } catch (Throwable throwable) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(Level.ERROR)
-                        .setMessageFormat("exception while parsing{}for PortBinding")
+                        .setMessageFormat("exception while parsing{}for PortBinding " + throwable.getMessage())
                         .setArguments(jsonPortBinding)
-                        .setThrowable(e)
+                        .setThrowable(throwable)
                 );
-                throw new RuntimeException("Exception while parsing PortBinding for [" + jsonPortBinding + "]", e);
+                throw new RuntimeException("Exception while parsing PortBinding for [" + jsonPortBinding + "]", throwable);
             }
         }
         return portBinding;

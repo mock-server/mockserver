@@ -87,14 +87,13 @@ public class ExpectationSerializerIntegrationTest {
             fail("expected exception to be thrown");
         } catch (Throwable throwable) {
             assertThat(throwable, instanceOf(IllegalArgumentException.class));
-            assertThat(throwable.getMessage(), is("5 errors:" + NEW_LINE +
-                " - object instance has properties which are not allowed by the schema: [\"extra_field\"] for schema \"requestDefinition/oneOf/0\" for field \"/httpRequest\"" + NEW_LINE +
-                " - object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"] for schema \"requestDefinition/oneOf/1\" for field \"/httpRequest\"" + NEW_LINE +
-                " - object has missing required properties ([\"specUrlOrPayload\"]) for schema \"requestDefinition/oneOf/1\" for field \"/httpRequest\"" + NEW_LINE +
-                " - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequest\"" + NEW_LINE +
-                " - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"" + NEW_LINE +
+            assertThat(throwable.getMessage(), is("4 errors:" + NEW_LINE +
+                " - field: \"/httpRequest\" for schema: \"httpRequest\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
+                " - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
+                " - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"]\"" + NEW_LINE +
+                " - field: \"/httpResponse\" for schema: \"httpResponse\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
                 NEW_LINE +
-                OPEN_API_SPECIFICATION_URL));
+                "See: https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x for OpenAPI Specification"));
         }
     }
 
@@ -201,29 +200,26 @@ public class ExpectationSerializerIntegrationTest {
         } catch (Throwable throwable) {
             assertThat(throwable, instanceOf(IllegalArgumentException.class));
             assertThat(throwable.getMessage(), is("[" + NEW_LINE +
-                "  5 errors:" + NEW_LINE +
-                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for schema \"requestDefinition/oneOf/0\" for field \"/httpRequest\"" + NEW_LINE +
-                "   - object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"] for schema \"requestDefinition/oneOf/1\" for field \"/httpRequest\"" + NEW_LINE +
-                "   - object has missing required properties ([\"specUrlOrPayload\"]) for schema \"requestDefinition/oneOf/1\" for field \"/httpRequest\"" + NEW_LINE +
-                "   - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequest\"" + NEW_LINE +
-                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"" + NEW_LINE +
-                "  " + NEW_LINE  +
+                "  4 errors:" + NEW_LINE +
+                "   - field: \"/httpRequest\" for schema: \"httpRequest\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
+                "   - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
+                "   - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"]\"" + NEW_LINE +
+                "   - field: \"/httpResponse\" for schema: \"httpResponse\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
+                "  " + NEW_LINE +
                 "  " + OPEN_API_SPECIFICATION_URL + "," + NEW_LINE +
-                "  5 errors:" + NEW_LINE +
-                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for schema \"requestDefinition/oneOf/0\" for field \"/httpRequest\"" + NEW_LINE +
-                "   - object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"] for schema \"requestDefinition/oneOf/1\" for field \"/httpRequest\"" + NEW_LINE +
-                "   - object has missing required properties ([\"specUrlOrPayload\"]) for schema \"requestDefinition/oneOf/1\" for field \"/httpRequest\"" + NEW_LINE +
-                "   - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequest\"" + NEW_LINE +
-                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"" + NEW_LINE +
-                "  " + NEW_LINE  +
+                "  4 errors:" + NEW_LINE +
+                "   - field: \"/httpRequest\" for schema: \"httpRequest\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
+                "   - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
+                "   - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"]\"" + NEW_LINE +
+                "   - field: \"/httpResponse\" for schema: \"httpResponse\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
+                "  " + NEW_LINE +
                 "  " + OPEN_API_SPECIFICATION_URL + "," + NEW_LINE +
-                "  5 errors:" + NEW_LINE +
-                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for schema \"requestDefinition/oneOf/0\" for field \"/httpRequest\"" + NEW_LINE +
-                "   - object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"] for schema \"requestDefinition/oneOf/1\" for field \"/httpRequest\"" + NEW_LINE +
-                "   - object has missing required properties ([\"specUrlOrPayload\"]) for schema \"requestDefinition/oneOf/1\" for field \"/httpRequest\"" + NEW_LINE +
-                "   - instance failed to match exactly one schema (matched 0 out of 2) for field \"/httpRequest\"" + NEW_LINE +
-                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"" + NEW_LINE +
-                "  " + NEW_LINE  +
+                "  4 errors:" + NEW_LINE +
+                "   - field: \"/httpRequest\" for schema: \"httpRequest\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
+                "   - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
+                "   - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"]\"" + NEW_LINE +
+                "   - field: \"/httpResponse\" for schema: \"httpResponse\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
+                "  " + NEW_LINE +
                 "  " + OPEN_API_SPECIFICATION_URL + NEW_LINE +
                 "]"));
         }
@@ -2168,30 +2164,33 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
-            "  \"httpRequest\" : {" + NEW_LINE +
-            "    \"path\" : \"somePath\"," + NEW_LINE +
-            "    \"body\" : {" + NEW_LINE +
-            "      \"type\" : \"XML_SCHEMA\"," + NEW_LINE +
-            "      \"xmlSchema\" : \"" + StringEscapeUtils.escapeJava(xmlSchema) + "\"" + NEW_LINE +
-            "    }" + NEW_LINE +
-            "  }," + NEW_LINE +
-            "  \"httpResponse\" : {" + NEW_LINE +
-            "    \"body\" : {" + NEW_LINE +
-            "      \"type\" : \"JSON\"," + NEW_LINE +
-            "      \"json\" : \"{fieldOne: \\\"valueOne\\\", \\\"fieldTwo\\\": \\\"valueTwo\\\"}\"," + NEW_LINE +
-            "      \"rawBytes\" : \"e2ZpZWxkT25lOiAidmFsdWVPbmUiLCAiZmllbGRUd28iOiAidmFsdWVUd28ifQ==\"" + NEW_LINE +
-            "    }" + NEW_LINE +
-            "  }," + NEW_LINE +
-            "  \"times\" : {" + NEW_LINE +
-            "    \"remainingTimes\" : 5" + NEW_LINE +
-            "  }," + NEW_LINE +
-            "  \"timeToLive\" : {" + NEW_LINE +
-            "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
-            "    \"timeToLive\" : 2" + NEW_LINE +
-            "  }" + NEW_LINE +
-            "}", jsonExpectation);
+                "  \"id\" : \"some_key\"," + NEW_LINE +
+                "  \"priority\" : 10," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"somePath\"," + NEW_LINE +
+                "    \"body\" : {" + NEW_LINE +
+                "      \"type\" : \"XML_SCHEMA\"," + NEW_LINE +
+                "      \"xmlSchema\" : \"" + StringEscapeUtils.escapeJava(xmlSchema) + "\"" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : {" + NEW_LINE +
+                "      \"type\" : \"JSON\"," + NEW_LINE +
+                "      \"json\" : {" + NEW_LINE +
+                "        \"fieldOne\" : \"valueOne\"," + NEW_LINE +
+                "        \"fieldTwo\" : \"valueTwo\"" + NEW_LINE +
+                "      }," + NEW_LINE +
+                "      \"rawBytes\" : \"e2ZpZWxkT25lOiAidmFsdWVPbmUiLCAiZmllbGRUd28iOiAidmFsdWVUd28ifQ==\"" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 5" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+                "    \"timeToLive\" : 2" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}", jsonExpectation);
     }
 
     @Test
@@ -2240,13 +2239,33 @@ public class ExpectationSerializerIntegrationTest {
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
             "      \"type\" : \"JSON_SCHEMA\"," + NEW_LINE +
-            "      \"jsonSchema\" : \"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"" + NEW_LINE +
+            "      \"jsonSchema\" : {" + NEW_LINE +
+            "        \"title\" : \"Example Schema\"," + NEW_LINE +
+            "        \"type\" : \"object\"," + NEW_LINE +
+            "        \"properties\" : {" + NEW_LINE +
+            "          \"firstName\" : {" + NEW_LINE +
+            "            \"type\" : \"string\"" + NEW_LINE +
+            "          }," + NEW_LINE +
+            "          \"lastName\" : {" + NEW_LINE +
+            "            \"type\" : \"string\"" + NEW_LINE +
+            "          }," + NEW_LINE +
+            "          \"age\" : {" + NEW_LINE +
+            "            \"description\" : \"Age in years\"," + NEW_LINE +
+            "            \"type\" : \"integer\"," + NEW_LINE +
+            "            \"minimum\" : 0" + NEW_LINE +
+            "          }" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        \"required\" : [ \"firstName\", \"lastName\" ]" + NEW_LINE +
+            "      }" + NEW_LINE +
             "    }" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"httpResponse\" : {" + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
             "      \"type\" : \"JSON\"," + NEW_LINE +
-            "      \"json\" : \"{fieldOne: \\\"valueOne\\\", \\\"fieldTwo\\\": \\\"valueTwo\\\"}\"," + NEW_LINE +
+            "      \"json\" : {" + NEW_LINE +
+            "        \"fieldOne\" : \"valueOne\"," + NEW_LINE +
+            "        \"fieldTwo\" : \"valueTwo\"" + NEW_LINE +
+            "      }," + NEW_LINE +
             "      \"rawBytes\" : \"e2ZpZWxkT25lOiAidmFsdWVPbmUiLCAiZmllbGRUd28iOiAidmFsdWVUd28ifQ==\"" + NEW_LINE +
             "    }" + NEW_LINE +
             "  }," + NEW_LINE +
@@ -2288,14 +2307,20 @@ public class ExpectationSerializerIntegrationTest {
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
             "      \"type\" : \"JSON\"," + NEW_LINE +
-            "      \"json\" : \"" + StringEscapeUtils.escapeJava(jsonBody) + "\"," + NEW_LINE +
-            "      \"rawBytes\" : \"" + Base64.getEncoder().encodeToString(jsonBody.getBytes(UTF_8)) + "\"" + NEW_LINE +
+            "      \"json\" : {" + NEW_LINE +
+            "        \"fieldOne\" : \"valueOne\"," + NEW_LINE +
+            "        \"fieldTwo\" : \"valueTwo\"" + NEW_LINE +
+            "      }," + NEW_LINE +
+            "      \"rawBytes\" : \"e2ZpZWxkT25lOiAidmFsdWVPbmUiLCAiZmllbGRUd28iOiAidmFsdWVUd28ifQ==\"" + NEW_LINE +
             "    }" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"httpResponse\" : {" + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
             "      \"type\" : \"JSON\"," + NEW_LINE +
-            "      \"json\" : \"{fieldOne: \\\"valueOne\\\", \\\"fieldTwo\\\": \\\"valueTwo\\\"}\"," + NEW_LINE +
+            "      \"json\" : {" + NEW_LINE +
+            "        \"fieldOne\" : \"valueOne\"," + NEW_LINE +
+            "        \"fieldTwo\" : \"valueTwo\"" + NEW_LINE +
+            "      }," + NEW_LINE +
             "      \"rawBytes\" : \"e2ZpZWxkT25lOiAidmFsdWVPbmUiLCAiZmllbGRUd28iOiAidmFsdWVUd28ifQ==\"" + NEW_LINE +
             "    }" + NEW_LINE +
             "  }," + NEW_LINE +

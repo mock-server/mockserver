@@ -151,61 +151,89 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
             String fieldPointer = pointerValue(instanceJson).replaceAll("\"", "");
             String schemaPointer = removeDefinitionPrefix(pointerValue(schemaJson));
             if (isErrorForField(reports, fieldPointer, "/headers")) {
-                validationErrors.add("for field \"" + deepFieldName(reports, fieldPointer, "/headers") + "\" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
-                    "    {" + NEW_LINE +
-                    "        \"exampleHeaderName\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
-                    "        \"exampleMultiValuedHeaderName\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
-                    "    }" + NEW_LINE + NEW_LINE +
-                    "   or:" + NEW_LINE + NEW_LINE +
-                    "    [" + NEW_LINE +
-                    "        {" + NEW_LINE +
-                    "            \"name\" : \"exampleHeaderName\"," + NEW_LINE +
-                    "            \"values\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
-                    "        }," + NEW_LINE +
-                    "        {" + NEW_LINE +
-                    "            \"name\" : \"exampleMultiValuedHeaderName\"," + NEW_LINE +
-                    "            \"values\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
-                    "        }" + NEW_LINE +
-                    "    ]");
+                validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/headers") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "       \"exampleRegexHeader\": [" + NEW_LINE +
+                    "           \"^some +regex$\"" + NEW_LINE +
+                    "       ], " + NEW_LINE +
+                    "       \"exampleNottedAndSimpleStringHeader\": [" + NEW_LINE +
+                    "           \"!notThisValue\", " + NEW_LINE +
+                    "           \"simpleStringMatch\"" + NEW_LINE +
+                    "       ]" + NEW_LINE +
+                    "   }" + NEW_LINE + NEW_LINE +
+                    "or:" + NEW_LINE + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "       \"exampleSchemaHeader\": [" + NEW_LINE +
+                    "           {" + NEW_LINE +
+                    "               \"type\": \"number\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "       ], " + NEW_LINE +
+                    "       \"exampleMultiSchemaHeader\": [" + NEW_LINE +
+                    "           {" + NEW_LINE +
+                    "               \"type\": \"string\", " + NEW_LINE +
+                    "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
+                    "           }, " + NEW_LINE +
+                    "           {" + NEW_LINE +
+                    "               \"type\": \"string\", " + NEW_LINE +
+                    "               \"format\": \"ipv4\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "       ]" + NEW_LINE +
+                    "   }" + NEW_LINE);
             }
             if (isErrorForField(reports, fieldPointer, "/queryStringParameters")) {
-                validationErrors.add("for field \"" + deepFieldName(reports, fieldPointer, "/queryStringParameters") + "\" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
-                    "    {" + NEW_LINE +
-                    "        \"exampleParameterName\" : [ \"exampleParameterValue\" ]" + NEW_LINE +
-                    "        \"exampleMultiValuedParameterName\" : [ \"exampleParameterValueOne\", \"exampleParameterValueTwo\" ]" + NEW_LINE +
-                    "    }" + NEW_LINE + NEW_LINE +
-                    "   or:" + NEW_LINE + NEW_LINE +
-                    "    [" + NEW_LINE +
-                    "        {" + NEW_LINE +
-                    "            \"name\" : \"exampleParameterName\"," + NEW_LINE +
-                    "            \"values\" : [ \"exampleParameterValue\" ]" + NEW_LINE +
-                    "        }," + NEW_LINE +
-                    "        {" + NEW_LINE +
-                    "            \"name\" : \"exampleMultiValuedParameterName\"," + NEW_LINE +
-                    "            \"values\" : [ \"exampleParameterValueOne\", \"exampleParameterValueTwo\" ]" + NEW_LINE +
-                    "        }" + NEW_LINE +
-                    "    ]");
+                validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/queryStringParameters") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "       \"exampleRegexParameter\": [" + NEW_LINE +
+                    "           \"^some +regex$\"" + NEW_LINE +
+                    "       ], " + NEW_LINE +
+                    "       \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
+                    "           \"!notThisValue\", " + NEW_LINE +
+                    "           \"simpleStringMatch\"" + NEW_LINE +
+                    "       ]" + NEW_LINE +
+                    "   }" + NEW_LINE + NEW_LINE +
+                    "or:" + NEW_LINE + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "       \"exampleSchemaParameter\": [" + NEW_LINE +
+                    "           {" + NEW_LINE +
+                    "               \"type\": \"number\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "       ], " + NEW_LINE +
+                    "       \"exampleMultiSchemaParameter\": [" + NEW_LINE +
+                    "           {" + NEW_LINE +
+                    "               \"type\": \"string\", " + NEW_LINE +
+                    "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
+                    "           }, " + NEW_LINE +
+                    "           {" + NEW_LINE +
+                    "               \"type\": \"string\", " + NEW_LINE +
+                    "               \"format\": \"ipv4\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "       ]" + NEW_LINE +
+                    "   }" + NEW_LINE);
             }
             if (isErrorForField(reports, fieldPointer, "/cookies")) {
-                validationErrors.add("for field \"" + deepFieldName(reports, fieldPointer, "/cookies") + "\" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
-                    "    {" + NEW_LINE +
-                    "        \"exampleCookieNameOne\" : \"exampleCookieValueOne\"" + NEW_LINE +
-                    "        \"exampleCookieNameTwo\" : \"exampleCookieValueTwo\"" + NEW_LINE +
-                    "    }" + NEW_LINE + NEW_LINE +
-                    "   or:" + NEW_LINE + NEW_LINE +
-                    "    [" + NEW_LINE +
-                    "        {" + NEW_LINE +
-                    "            \"name\" : \"exampleCookieNameOne\"," + NEW_LINE +
-                    "            \"values\" : \"exampleCookieValueOne\"" + NEW_LINE +
-                    "        }," + NEW_LINE +
-                    "        {" + NEW_LINE +
-                    "            \"name\" : \"exampleCookieNameTwo\"," + NEW_LINE +
-                    "            \"values\" : \"exampleCookieValueTwo\"" + NEW_LINE +
-                    "        }" + NEW_LINE +
-                    "    ]");
+                validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/cookies") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "       \"exampleRegexCookie\": \"^some +regex$\", " + NEW_LINE +
+                    "       \"exampleNottedRegexCookie\": \"!notThisValue\", " + NEW_LINE +
+                    "       \"exampleSimpleStringCookie\": \"simpleStringMatch\"" + NEW_LINE +
+                    "   }" + NEW_LINE + NEW_LINE +
+                    "or:" + NEW_LINE + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "       \"exampleNumberSchemaCookie\": {" + NEW_LINE +
+                    "           \"type\": \"number\"" + NEW_LINE +
+                    "       }, " + NEW_LINE +
+                    "       \"examplePatternSchemaCookie\": {" + NEW_LINE +
+                    "           \"type\": \"string\", " + NEW_LINE +
+                    "           \"pattern\": \"^some +regex$\"" + NEW_LINE +
+                    "       }, " + NEW_LINE +
+                    "       \"exampleFormatSchemaCookie\": {" + NEW_LINE +
+                    "           \"type\": \"string\", " + NEW_LINE +
+                    "           \"format\": \"ipv4\"" + NEW_LINE +
+                    "       }" + NEW_LINE +
+                    "   }" + NEW_LINE);
             }
             if (isErrorForField(reports, fieldPointer, "/body") && !schemaPointer.contains("bodyWithContentType")) {
-                validationErrors.add("for field \"" + deepFieldName(reports, fieldPointer, "/body") + "\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
+                validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/body") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
                     "   {" + NEW_LINE +
                     "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"BINARY\"," + NEW_LINE +
@@ -259,10 +287,10 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                     "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"XPATH\"," + NEW_LINE +
                     "     \"xpath\": \"\"" + NEW_LINE +
-                    "   }");
+                    "   }" + NEW_LINE);
             }
             if (isErrorForField(reports, fieldPointer, "/body") && schemaPointer.contains("bodyWithContentType")) {
-                validationErrors.add("for field \"" + deepFieldName(reports, fieldPointer, "/body") + "\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
+                validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/body") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
                     "   {" + NEW_LINE +
                     "     \"type\": \"BINARY\"," + NEW_LINE +
                     "     \"base64Bytes\": \"\"," + NEW_LINE +
@@ -285,7 +313,7 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                     "     \"type\": \"XML\"," + NEW_LINE +
                     "     \"xml\": \"\"," + NEW_LINE +
                     "     \"contentType\": \"\"" + NEW_LINE +
-                    "   }");
+                    "   }" + NEW_LINE);
             }
             if (String.valueOf(processingMessageJson.get("keyword")).contains("oneOf")) {
                 StringBuilder oneOfErrorMessage = new StringBuilder("oneOf of the following must be specified ");
@@ -324,43 +352,20 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                         );
                     }
                 }
-                stream(reports.fieldNames())
-                    .filter(fieldName -> fieldName.contains("/oneOf/") && reports.get(fieldName).isArray())
-                    .forEach(fieldName ->
-                        stream(reports.get(fieldName).iterator())
-                            .filter(jsonNode -> String.valueOf(jsonNode.get("level")).contains("error") && !(String.valueOf(jsonNode.get("keyword")).contains("additionalProperties") || String.valueOf(jsonNode.get("keyword")).contains("required")))
-                            .filter(jsonNode -> jsonNode.has("instance") && jsonNode.get("instance").has("pointer") && jsonNode.has("message"))
-                            .forEach(jsonNode -> {
-                                if (isNotBlank(pointerValue(jsonNode.get("instance")))) {
-                                    validationErrors.add(jsonNode.get("message").asText() + " for schema \"" + bestSchemaDefinition(fieldName, jsonNode) + "\"" + " for field \"" + pointerValue(jsonNode.get("instance")) + "\"");
-                                }
-                            }));
-                if (validationErrors.isEmpty()) {
-                    stream(reports.fieldNames())
-                        .filter(fieldName -> fieldName.contains("/oneOf/") && reports.get(fieldName).isArray())
-                        .forEach(fieldName ->
-                            stream(reports.get(fieldName).iterator())
-                                .filter(jsonNode -> String.valueOf(jsonNode.get("level")).contains("error") && (String.valueOf(jsonNode.get("keyword")).contains("additionalProperties") || String.valueOf(jsonNode.get("keyword")).contains("required")))
-                                .filter(jsonNode -> jsonNode.has("schema") && jsonNode.get("schema").has("pointer") && jsonNode.has("message"))
-                                .forEach(jsonNode -> {
-                                    if (isNotBlank(pointerValue(jsonNode.get("schema")))) {
-                                        validationErrors.add(jsonNode.get("message").asText() + " for schema \"" + bestSchemaDefinition(fieldName, jsonNode) + "\"" + " for field \"" + pointerValue(jsonNode.get("instance")) + "\"");
-                                    }
-                                }));
-                }
             }
             if (fieldPointer.endsWith("/times") && processingMessage.toString().contains("has properties which are not allowed by the schema") && String.valueOf(schemaJson).contains("verificationTimes")) {
-                validationErrors.add(processingMessage.getMessage() + " for field \"" + fieldPointer + "\", allowed fields are [\"atLeast\", \"atMost\"]");
+                validationErrors.add("field: \"" + fieldPointer + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \"" + processingMessage.getMessage() + ", allowed fields are [\"atLeast\", \"atMost\"]\"");
             }
-            validationErrors.add(processingMessage.getMessage() + (fieldPointer.isEmpty() ? "" : " for field \"" + fieldPointer + "\""));
+            if (reports != null) {
+                validationErrors.addAll(extractMessage(reports));
+            } else {
+                validationErrors.addAll(extractMessage(processingMessageJson));
+            }
         }
+        validationErrors.sort(String::compareToIgnoreCase);
         return validationErrors.size() + " error" + (validationErrors.size() > 1 ? "s" : "") + ":" + NEW_LINE
             + " - " + Joiner.on(NEW_LINE + " - ").join(validationErrors) +
             (addOpenAPISpecificationMessage ? NEW_LINE + NEW_LINE + OPEN_API_SPECIFICATION_URL : "");
-    }
-
-    private String bestSchemaDefinition(String fieldName, JsonNode jsonNode) {
-        return isNotBlank(removeDefinitionPrefix(fieldName)) && removeDefinitionPrefix(fieldName).contains("oneOf") ? removeDefinitionPrefix(fieldName) : removeDefinitionPrefix(pointerValue(jsonNode.get("schema")));
     }
 
     private boolean isErrorForField(JsonNode reports, String fieldPointer, String fieldName) {
@@ -381,7 +386,7 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
     }
 
     private String removeDefinitionPrefix(String text) {
-        return StringUtils.substringAfter(text, "/definitions/");
+        return StringUtils.remove(text, "/definitions/");
     }
 
     private String pointerValue(JsonNode jsonNode) {
@@ -390,5 +395,30 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
 
     public static <T> Stream<T> stream(Iterator<T> iterator) {
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, Spliterator.ORDERED), false);
+    }
+
+    public Set<String> extractMessage(JsonNode reports) {
+        Set<String> messages = new HashSet<>();
+        if (reports != null) {
+            // if object
+            stream(reports.fields())
+                .forEach(field -> {
+                    if ("message".equals(field.getKey())) {
+                        String fieldName = pointerValue(reports.get("instance"));
+                        String schemaName = pointerValue(reports.get("schema"));
+                        if (field.getValue() != null) {
+                            boolean fieldNotBlank = isNotBlank(fieldName);
+                            boolean schemaNotBlank = isNotBlank(schemaName);
+                            messages.add((fieldNotBlank ? "field: \"" + fieldName + "\"" : "") + (schemaNotBlank ? (fieldNotBlank ? " for " : "") + "schema: \"" + removeDefinitionPrefix(schemaName) + "\"" : "") + (fieldNotBlank || schemaNotBlank ? " has error: \"" : "") + field.getValue().asText() + (fieldNotBlank || schemaNotBlank ? "\"" : ""));
+                        }
+                    } else if (field.getValue() != null && (field.getValue().isArray() || field.getValue().isObject())) {
+                        messages.addAll(extractMessage(field.getValue()));
+                    }
+                });
+            // if array
+            stream(reports.iterator())
+                .forEach(node -> messages.addAll(extractMessage(node)));
+        }
+        return messages;
     }
 }

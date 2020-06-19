@@ -62,15 +62,15 @@ public class LogEventJsonSerializer implements Serializer<LogEntry> {
         if (jsonLogEntry != null && !jsonLogEntry.isEmpty()) {
             try {
                 messageLogEntry = objectMapper.readValue(jsonLogEntry, LogEntry.class);
-            } catch (Exception e) {
+            } catch (Throwable throwable) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(Level.ERROR)
-                        .setMessageFormat("exception while parsing{}for LogEntry")
+                        .setMessageFormat("exception while parsing{}for LogEntry " + throwable.getMessage())
                         .setArguments(jsonLogEntry)
-                        .setThrowable(e)
+                        .setThrowable(throwable)
                 );
-                throw new RuntimeException("Exception while parsing LogEntry for [" + jsonLogEntry + "]", e);
+                throw new RuntimeException("Exception while parsing LogEntry for [" + jsonLogEntry + "]", throwable);
             }
         }
         return messageLogEntry;

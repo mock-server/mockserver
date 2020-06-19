@@ -43,7 +43,10 @@ public class CookiesDeserializer extends StdDeserializer<Cookies> {
                     key = string(jsonParser.getText());
                     break;
                 case JsonTokenId.ID_STRING:
-                    cookies.withEntry(key, string(ctxt.readValue(jsonParser, String.class)));
+                    cookies.withEntry(key, ctxt.readValue(jsonParser, NottableString.class));
+                    break;
+                case JsonTokenId.ID_START_OBJECT:
+                    cookies.withEntry(key, ctxt.readValue(jsonParser, NottableString.class));
                     break;
                 case JsonTokenId.ID_END_OBJECT:
                     return cookies;
@@ -74,7 +77,7 @@ public class CookiesDeserializer extends StdDeserializer<Cookies> {
                     if ("name".equals(fieldName)) {
                         key = string(ctxt.readValue(jsonParser, String.class));
                     } else if ("value".equals(fieldName)) {
-                        value = string(ctxt.readValue(jsonParser, String.class));
+                        value = ctxt.readValue(jsonParser, NottableString.class);
                     }
                     break;
                 case JsonTokenId.ID_END_OBJECT:

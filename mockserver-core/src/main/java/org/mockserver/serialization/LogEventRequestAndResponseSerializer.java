@@ -89,15 +89,15 @@ public class LogEventRequestAndResponseSerializer {
                 if (httpRequestAndHttpResponseDTO != null) {
                     httpRequestAndHttpResponse = httpRequestAndHttpResponseDTO.buildObject();
                 }
-            } catch (Exception e) {
+            } catch (Throwable throwable) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(Level.ERROR)
-                        .setMessageFormat("exception while parsing{}for HttpRequestAndHttpResponse")
+                        .setMessageFormat("exception while parsing{}for HttpRequestAndHttpResponse " + throwable.getMessage())
                         .setArguments(jsonHttpRequestAndHttpResponse)
-                        .setThrowable(e)
+                        .setThrowable(throwable)
                 );
-                throw new RuntimeException("Exception while parsing [" + jsonHttpRequestAndHttpResponse + "] for HttpRequestAndHttpResponse", e);
+                throw new RuntimeException("Exception while parsing [" + jsonHttpRequestAndHttpResponse + "] for HttpRequestAndHttpResponse", throwable);
             }
             return httpRequestAndHttpResponse;
         }

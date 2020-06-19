@@ -134,7 +134,8 @@ public class NottableSchemaString extends NottableString {
     public boolean matches(String json) {
         if (schemaJsonNode != null) {
             try {
-                return isNot() != VALIDATOR.validate(schemaJsonNode, convertToJsonNode(json, type, format), true).isSuccess();
+                JsonNode instance = convertToJsonNode(json, type, format);
+                return isNot() != VALIDATOR.validate(schemaJsonNode, instance, true).isSuccess();
             } catch (Throwable throwable) {
                 MOCK_SERVER_LOGGER.logEvent(
                     new LogEntry()

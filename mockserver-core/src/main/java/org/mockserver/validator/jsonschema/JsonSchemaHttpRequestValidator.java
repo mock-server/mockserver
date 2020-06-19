@@ -12,6 +12,7 @@ public class JsonSchemaHttpRequestValidator extends JsonSchemaValidator {
             mockServerLogger,
             "org/mockserver/model/schema/",
             "httpRequest",
+            "stringOrJsonSchema",
             "body",
             "keyToMultiValue",
             "keyToValue",

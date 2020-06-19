@@ -1,8 +1,10 @@
 package org.mockserver.serialization.serializers.body;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.JsonSchemaBodyDTO;
 
 import java.io.IOException;
@@ -11,6 +13,8 @@ import java.io.IOException;
  * @author jamesdbloom
  */
 public class JsonSchemaBodyDTOSerializer extends StdSerializer<JsonSchemaBodyDTO> {
+
+    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
 
     public JsonSchemaBodyDTOSerializer() {
         super(JsonSchemaBodyDTO.class);
@@ -23,7 +27,7 @@ public class JsonSchemaBodyDTOSerializer extends StdSerializer<JsonSchemaBodyDTO
             jgen.writeBooleanField("not", jsonSchemaBodyDTO.getNot());
         }
         jgen.writeStringField("type", jsonSchemaBodyDTO.getType().name());
-        jgen.writeStringField("jsonSchema", jsonSchemaBodyDTO.getJson());
+        jgen.writeObjectField("jsonSchema", OBJECT_MAPPER.readTree(jsonSchemaBodyDTO.getJson()));
         jgen.writeEndObject();
     }
 }
