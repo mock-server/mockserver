@@ -93,10 +93,10 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         }
                         if (Map.class.isAssignableFrom(entry.getValue().getClass()) ||
                             containsIgnoreCase(key, "json", "jsonSchema") && !String.class.isAssignableFrom(entry.getValue().getClass())) {
-                            if (objectWriter == null) {
-                                objectWriter = ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter();
+                            if (jsonBodyObjectWriter == null) {
+                                jsonBodyObjectWriter = new ObjectMapper().writerWithDefaultPrettyPrinter();
                             }
-                            valueJsonValue = objectWriter.writeValueAsString(entry.getValue());
+                            valueJsonValue = jsonBodyObjectWriter.writeValueAsString(entry.getValue());
                         } else {
                             valueJsonValue = String.valueOf(entry.getValue());
                         }
