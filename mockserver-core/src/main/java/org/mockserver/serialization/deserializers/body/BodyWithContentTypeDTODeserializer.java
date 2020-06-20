@@ -164,9 +164,9 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                         if (contentType != null && isNotBlank(contentType.toString())) {
                             return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, contentType, JsonBody.DEFAULT_MATCH_TYPE), not);
                         } else if (charset != null) {
-                            return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, JsonBody.DEFAULT_CONTENT_TYPE.withCharset(charset), JsonBody.DEFAULT_MATCH_TYPE), not);
+                            return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, JsonBody.DEFAULT_JSON_CONTENT_TYPE.withCharset(charset), JsonBody.DEFAULT_MATCH_TYPE), not);
                         } else {
-                            return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, JsonBody.DEFAULT_CONTENT_TYPE, JsonBody.DEFAULT_MATCH_TYPE), not);
+                            return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, JsonBody.DEFAULT_JSON_CONTENT_TYPE, JsonBody.DEFAULT_MATCH_TYPE), not);
                         }
                     case STRING:
                         if (contentType != null && isNotBlank(contentType.toString())) {
@@ -180,9 +180,9 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                         if (contentType != null && isNotBlank(contentType.toString())) {
                             return new XmlBodyDTO(new XmlBody(valueJsonValue, rawBytes, contentType), not);
                         } else if (charset != null) {
-                            return new XmlBodyDTO(new XmlBody(valueJsonValue, rawBytes, XmlBody.DEFAULT_CONTENT_TYPE.withCharset(charset)), not);
+                            return new XmlBodyDTO(new XmlBody(valueJsonValue, rawBytes, XmlBody.DEFAULT_XML_CONTENT_TYPE.withCharset(charset)), not);
                         } else {
-                            return new XmlBodyDTO(new XmlBody(valueJsonValue, rawBytes, XmlBody.DEFAULT_CONTENT_TYPE), not);
+                            return new XmlBodyDTO(new XmlBody(valueJsonValue, rawBytes, XmlBody.DEFAULT_XML_CONTENT_TYPE), not);
                         }
                 }
             } else if (body.size() > 0) {

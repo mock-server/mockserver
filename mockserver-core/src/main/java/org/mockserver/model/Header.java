@@ -1,6 +1,9 @@
 package org.mockserver.model;
 
+import java.util.Arrays;
 import java.util.Collection;
+
+import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
@@ -41,5 +44,9 @@ public class Header extends KeyToMultiValue {
 
     public static Header header(NottableString name, Collection<NottableString> value) {
         return new Header(name, value);
+    }
+
+    public static Header schemaHeader(String name, String... values) {
+        return new Header(string(name), Arrays.stream(values).map(NottableSchemaString::schemaString).toArray(NottableString[]::new));
     }
 }

@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
 
 /**
  * @author jamesdbloom
@@ -36,6 +37,14 @@ public abstract class Body<T> extends Not {
             return this.getCharset(defaultIfNotSet);
         }
         return defaultIfNotSet;
+    }
+
+    @JsonIgnore
+    public Charset getCharsetOrDefault() {
+        if (this instanceof BodyWithContentType) {
+            return this.getCharsetOrDefault();
+        }
+        return DEFAULT_HTTP_CHARACTER_SET;
     }
 
     public String getContentType() {

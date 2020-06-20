@@ -35,7 +35,9 @@ import static org.mockserver.matchers.Times.once;
 import static org.mockserver.mock.Expectation.when;
 import static org.mockserver.mock.OpenAPIExpectation.openAPIExpectation;
 import static org.mockserver.model.Cookie.cookie;
+import static org.mockserver.model.Cookie.schemaCookie;
 import static org.mockserver.model.Header.header;
+import static org.mockserver.model.Header.schemaHeader;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;
@@ -47,6 +49,7 @@ import static org.mockserver.model.HttpTemplate.template;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.OpenAPIDefinition.openAPI;
 import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.Parameter.schemaParam;
 import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
@@ -55,6 +58,12 @@ import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_S
  * @author jamesdbloom
  */
 public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockingIntegrationTestBase {
+
+    protected HttpResponse localNotFoundResponse() {
+        return response()
+            .withStatusCode(NOT_FOUND_404.code())
+            .withReasonPhrase(NOT_FOUND_404.reasonPhrase());
+    }
 
     @Test
     public void shouldReturnResponseWithOnlyBody() {
@@ -147,6 +156,59 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
+    public void shouldReturnResponseByMatchingSchemaPathAndSchemaMethod() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withMethodSchema("{" + NEW_LINE +
+                        "   \"type\": \"string\"," + NEW_LINE +
+                        "   \"pattern\": \"^PO[A-Z]{2}$\"" + NEW_LINE +
+                        "}")
+                    .withPathSchema("{" + NEW_LINE +
+                        "   \"type\": \"string\"," + NEW_LINE +
+                        "   \"pattern\": \"some_[a-z]{4}$\"" + NEW_LINE +
+                        "}")
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST"),
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_other_path"))
+                    .withMethod("POST"),
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("PUT"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
     public void shouldReturnResponseByMatchingStringBody() {
         // when
         mockServerClient
@@ -173,13 +235,92 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 headersToIgnore)
         );
         assertEquals(
-            response()
-                .withStatusCode(NOT_FOUND_404.code())
-                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
+            localNotFoundResponse(),
             makeRequest(
                 request()
                     .withMethod("POST")
                     .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingSchemaHeaderCookieAndParameter() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withHeader(schemaHeader(
+                        "headerName", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"^headerVal[a-z]{2}$\"" + NEW_LINE +
+                            "}"
+                    ))
+                    .withQueryStringParameter(schemaParam(
+                        "parameterName", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"^parameterVal[a-z]{2}$\"" + NEW_LINE +
+                            "}"
+                    ))
+                    .withCookie(schemaCookie(
+                        "cookieName", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"^cookieVal[a-z]{2}$\"" + NEW_LINE +
+                            "}"
+                    ))
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path?parameterName=parameterValue"))
+                    .withHeader("headerName", "headerValue")
+                    .withCookie("cookieName", "cookieValue")
+                ,
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path?parameterName=parameterOtherValue"))
+                    .withHeader("headerName", "headerValue")
+                    .withCookie("cookieName", "cookieValue")
+                ,
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path?parameterName=parameterValue"))
+                    .withHeader("headerName", "headerOtherValue")
+                    .withCookie("cookieName", "cookieValue")
+                ,
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path?parameterName=parameterValue"))
+                    .withHeader("headerName", "headerValue")
+                    .withCookie("cookieName", "cookieOtherValue")
+                ,
                 headersToIgnore)
         );
     }
@@ -211,9 +352,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 headersToIgnore)
         );
         assertEquals(
-            response()
-                .withStatusCode(NOT_FOUND_404.code())
-                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
+            localNotFoundResponse(),
             makeRequest(
                 request()
                     .withMethod("POST")
@@ -816,9 +955,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
 
         // then
         assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
+            localNotFoundResponse(),
             makeRequest(
                 request()
                     .withMethod("GET")
@@ -884,9 +1021,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
 
         // then
         assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
+            localNotFoundResponse(),
             makeRequest(
                 request()
                     .withMethod("GET")
@@ -914,9 +1049,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
 
         // then
         assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
+            localNotFoundResponse(),
             makeRequest(
                 request()
                     .withMethod("PUT")
@@ -1777,9 +1910,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 headersToIgnore)
         );
         assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
+            localNotFoundResponse(),
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path1")),
@@ -1866,9 +1997,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             )
         );
         assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
+            localNotFoundResponse(),
             makeRequest(
                 request()
                     .withMethod("GET")
@@ -1919,18 +2048,14 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         // then
         // - in http
         assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
+            localNotFoundResponse(),
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path1")),
                 headersToIgnore)
         );
         assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
+            localNotFoundResponse(),
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path2")),
@@ -2928,9 +3053,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         );
         // - no response or forward
         assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
+            localNotFoundResponse(),
             makeRequest(
                 request()
                     .withPath(calculatePath("test_headers_and_body")),

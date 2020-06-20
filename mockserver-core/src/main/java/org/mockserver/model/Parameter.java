@@ -1,6 +1,12 @@
 package org.mockserver.model;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.mockserver.model.NottableSchemaString.schemaString;
+import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
@@ -37,5 +43,9 @@ public class Parameter extends KeyToMultiValue {
 
     public static Parameter param(NottableString name, Collection<NottableString> value) {
         return new Parameter(name, value);
+    }
+
+    public static Parameter schemaParam(String name, String... values) {
+        return new Parameter(string(name), Arrays.stream(values).map(NottableSchemaString::schemaString).toArray(NottableString[]::new));
     }
 }

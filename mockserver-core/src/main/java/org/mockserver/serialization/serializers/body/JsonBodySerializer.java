@@ -26,7 +26,7 @@ public class JsonBodySerializer extends StdSerializer<JsonBody> {
         if (jsonBody.getNot() != null && jsonBody.getNot()) {
             jgen.writeBooleanField("not", jsonBody.getNot());
         }
-        if (jsonBody.getContentType() != null && !jsonBody.getContentType().equals(JsonBody.DEFAULT_CONTENT_TYPE.toString())) {
+        if (jsonBody.getContentType() != null && !jsonBody.getContentType().equals(JsonBody.DEFAULT_JSON_CONTENT_TYPE.toString())) {
             jgen.writeStringField("contentType", jsonBody.getContentType());
         }
         jgen.writeStringField("type", jsonBody.getType().name());

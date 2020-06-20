@@ -16,7 +16,7 @@ import static org.mockserver.model.NottableString.string;
 /**
  * @author jamesdbloom
  */
-public class XmlStringMatcher extends BodyMatcher<NottableString> {
+public class XmlStringMatcher extends BodyMatcher<String> {
     private static final String[] EXCLUDED_FIELDS = {"mockServerLogger", "diffBuilder"};
     private final MockServerLogger mockServerLogger;
     private DiffBuilder diffBuilder;
@@ -46,15 +46,15 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
     }
 
     public boolean matches(String matched) {
-        return matches(null, string(matched));
+        return matches(null, matched);
     }
 
-    public boolean matches(final MatchDifference context, NottableString matched) {
+    public boolean matches(final MatchDifference context, String matched) {
         boolean result = false;
 
         if (diffBuilder != null) {
             try {
-                Diff diff = diffBuilder.withTest(Input.fromString(matched.getValue())).withDifferenceEvaluator(new PlaceholderDifferenceEvaluator()).build();
+                Diff diff = diffBuilder.withTest(Input.fromString(matched)).withDifferenceEvaluator(new PlaceholderDifferenceEvaluator()).build();
                 result = !diff.hasDifferences();
 
                 if (!result && context != null) {

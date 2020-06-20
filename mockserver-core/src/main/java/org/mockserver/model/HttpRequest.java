@@ -16,6 +16,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.Header.header;
+import static org.mockserver.model.NottableSchemaString.schemaString;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -115,6 +116,39 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
+     * The HTTP method to match on as a JSON Schema for example:
+     * <pre>
+     * {
+     *     "type": "string",
+     *     "minLength": 2,
+     *     "maxLength": 3
+     * }
+     *
+     * or
+     *
+     * {
+     *     "type": "string",
+     *     "pattern": "^P.{2,3}$"
+     * }
+     *
+     * or
+     *
+     * {
+     *     "type": "string",
+     *     "format": "ipv4"
+     * }
+     * </pre>
+     *
+     * For full details of JSON Schema see, https://json-schema.org/understanding-json-schema/reference/string.html
+     *
+     * @param method the HTTP method to match on as a JSON Schema
+     */
+    public HttpRequest withMethodSchema(String method) {
+        withMethod(schemaString(method));
+        return this;
+    }
+
+    /**
      * The HTTP method all method except a specific value using the "not" operator,
      * for example this allows operations such as not("GET")
      *
@@ -138,7 +172,6 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         }
     }
 
-
     /**
      * The path to match on such as "/some_mocked_path" any servlet context path is ignored for matching and should not be specified here
      * regex values are also supported such as ".*_path", see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html
@@ -153,15 +186,48 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * The path to not match on for example not("/some_mocked_path") with match any path not equal to "/some_mocked_path",
-     * the servlet context path is ignored for matching and should not be specified here
-     * regex values are also supported such as not(".*_path"), see
-     * http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html for full details of the supported regex syntax
+     * the servlet context path is ignored for matching and should not be specified hereregex values are also supported
+     * such as not(".*_path"), see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html for full details
+     * of the supported regex syntax
      *
      * @param path the path to not match on such as not("/some_mocked_path") or not(".*_path")
      */
     public HttpRequest withPath(NottableString path) {
         this.path = path;
         this.hashCode = 0;
+        return this;
+    }
+
+    /**
+     * The path to match on as a JSON Schema for example:
+     * <pre>
+     * {
+     *     "type": "string",
+     *     "minLength": 2,
+     *     "maxLength": 3
+     * }
+     *
+     * or
+     *
+     * {
+     *     "type": "string",
+     *     "pattern": "^simp.{2}$"
+     * }
+     *
+     * or
+     *
+     * {
+     *     "type": "string",
+     *     "format": "ipv4"
+     * }
+     * </pre>
+     *
+     * For full details of JSON Schema see, https://json-schema.org/understanding-json-schema/reference/string.html
+     *
+     * @param path the path to match on as a JSON Schema
+     */
+    public HttpRequest withPathSchema(String path) {
+        withPath(schemaString(path));
         return this;
     }
 
@@ -449,7 +515,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         }
     }
     @JsonIgnore
-    public String getBodyAsJsonString() {
+    public String getBodyAsJsonOrXmlString() {
         if (body != null) {
             if (body instanceof StringBody) {
                 // if it should be json (and it has been validated i.e. control plane request)

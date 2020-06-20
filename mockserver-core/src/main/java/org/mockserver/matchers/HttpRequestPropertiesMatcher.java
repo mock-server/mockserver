@@ -8,17 +8,17 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.mockserver.serialization.ObjectMapperFactory;
-import org.mockserver.serialization.model.*;
+import org.mockserver.serialization.model.BodyDTO;
 import org.slf4j.event.Level;
 
 import java.util.Objects;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.matchersFailFast;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_MATCHED;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED;
 import static org.mockserver.matchers.MatchDifference.Field.*;
-import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
 import static org.mockserver.model.NottableString.string;
 import static org.slf4j.event.Level.DEBUG;
 
@@ -42,7 +42,6 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
     private MultiValueMapMatcher headerMatcher = null;
     private HashMapMatcher cookieMatcher = null;
     private BooleanMatcher keepAliveMatcher = null;
-    private BodyDTO bodyDTOMatcher = null;
     private BooleanMatcher sslMatcher = null;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
@@ -90,68 +89,64 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
     }
 
     private void withBody(Body body) {
+        this.bodyMatcher = buildBodyMatcher(body);
+    }
+
+    private BodyMatcher buildBodyMatcher(Body body) {
+        BodyMatcher bodyMatcher = null;
         if (body != null) {
             switch (body.getType()) {
                 case STRING:
                     StringBody stringBody = (StringBody) body;
-                    bodyDTOMatcher = new StringBodyDTO(stringBody);
                     if (stringBody.isSubString()) {
-                        this.bodyMatcher = new SubStringMatcher(mockServerLogger, string(stringBody.getValue()));
+                        bodyMatcher = new SubStringMatcher(mockServerLogger, string(stringBody.getValue()));
                     } else {
-                        this.bodyMatcher = new ExactStringMatcher(mockServerLogger, string(stringBody.getValue()));
+                        bodyMatcher = new ExactStringMatcher(mockServerLogger, string(stringBody.getValue()));
                     }
                     break;
                 case REGEX:
                     RegexBody regexBody = (RegexBody) body;
-                    bodyDTOMatcher = new RegexBodyDTO(regexBody);
-                    this.bodyMatcher = new RegexStringMatcher(mockServerLogger, string(regexBody.getValue()), controlPlaneMatcher);
+                    bodyMatcher = new RegexStringMatcher(mockServerLogger, string(regexBody.getValue()), controlPlaneMatcher);
                     break;
                 case PARAMETERS:
                     ParameterBody parameterBody = (ParameterBody) body;
-                    bodyDTOMatcher = new ParameterBodyDTO(parameterBody);
-                    this.bodyMatcher = new ParameterStringMatcher(mockServerLogger, parameterBody.getValue(), controlPlaneMatcher);
+                    bodyMatcher = new ParameterStringMatcher(mockServerLogger, parameterBody.getValue(), controlPlaneMatcher);
                     break;
                 case XPATH:
                     XPathBody xPathBody = (XPathBody) body;
-                    bodyDTOMatcher = new XPathBodyDTO(xPathBody);
-                    this.bodyMatcher = new XPathMatcher(mockServerLogger, xPathBody.getValue());
+                    bodyMatcher = new XPathMatcher(mockServerLogger, xPathBody.getValue());
                     break;
                 case XML:
                     XmlBody xmlBody = (XmlBody) body;
-                    bodyDTOMatcher = new XmlBodyDTO(xmlBody);
-                    this.bodyMatcher = new XmlStringMatcher(mockServerLogger, xmlBody.getValue());
+                    bodyMatcher = new XmlStringMatcher(mockServerLogger, xmlBody.getValue());
                     break;
                 case JSON:
                     JsonBody jsonBody = (JsonBody) body;
-                    bodyDTOMatcher = new JsonBodyDTO(jsonBody);
-                    this.bodyMatcher = new JsonStringMatcher(mockServerLogger, jsonBody.getValue(), jsonBody.getMatchType());
+                    bodyMatcher = new JsonStringMatcher(mockServerLogger, jsonBody.getValue(), jsonBody.getMatchType());
                     break;
                 case JSON_SCHEMA:
                     JsonSchemaBody jsonSchemaBody = (JsonSchemaBody) body;
-                    bodyDTOMatcher = new JsonSchemaBodyDTO(jsonSchemaBody);
-                    this.bodyMatcher = new JsonSchemaMatcher(mockServerLogger, jsonSchemaBody.getValue());
+                    bodyMatcher = new JsonSchemaMatcher(mockServerLogger, jsonSchemaBody.getValue());
                     break;
                 case JSON_PATH:
                     JsonPathBody jsonPathBody = (JsonPathBody) body;
-                    bodyDTOMatcher = new JsonPathBodyDTO(jsonPathBody);
-                    this.bodyMatcher = new JsonPathMatcher(mockServerLogger, jsonPathBody.getValue());
+                    bodyMatcher = new JsonPathMatcher(mockServerLogger, jsonPathBody.getValue());
                     break;
                 case XML_SCHEMA:
                     XmlSchemaBody xmlSchemaBody = (XmlSchemaBody) body;
-                    bodyDTOMatcher = new XmlSchemaBodyDTO(xmlSchemaBody);
-                    this.bodyMatcher = new XmlSchemaMatcher(mockServerLogger, xmlSchemaBody.getValue());
+                    bodyMatcher = new XmlSchemaMatcher(mockServerLogger, xmlSchemaBody.getValue());
                     break;
                 case BINARY:
                     BinaryBody binaryBody = (BinaryBody) body;
-                    bodyDTOMatcher = new BinaryBodyDTO(binaryBody);
-                    this.bodyMatcher = new BinaryMatcher(mockServerLogger, binaryBody.getValue());
+                    bodyMatcher = new BinaryMatcher(mockServerLogger, binaryBody.getValue());
                     break;
             }
             if (body.isNot()) {
                 //noinspection ConstantConditions
-                this.bodyMatcher = not(this.bodyMatcher);
+                bodyMatcher = not(bodyMatcher);
             }
         }
+        return bodyMatcher;
     }
 
     private void withHeaders(Headers headers) {
@@ -319,31 +314,60 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
         return count % 2 != 0;
     }
 
-    @SuppressWarnings("unchecked")
     private boolean bodyMatches(MatchDifference context, HttpRequest request) {
-        if (controlPlaneMatcher && httpRequest.getBody() != null && httpRequest.getBody().equals(request.getBody())) {
-            return true;
-        }
         boolean bodyMatches;
-        String bodyAsString = request.getBody() != null ? new String(request.getBody().getRawBytes(), request.getBody().getCharset(DEFAULT_HTTP_CHARACTER_SET)) : "";
+        if (bodyMatcher != null) {
+            if (controlPlaneMatcher) {
+                if (httpRequest.getBody() != null && request.getBody() != null && String.valueOf(httpRequest.getBody()).equalsIgnoreCase(String.valueOf(request.getBody()))) {
+                    bodyMatches = true;
+                } else if (bodyMatchesNotControlPlane(bodyMatcher, context, request)) {
+                    // allow match of entries in EchoServer log (i.e. for java client integration tests)
+                    bodyMatches = true;
+                } else {
+                    if (isNotBlank(request.getBodyAsJsonOrXmlString())) {
+                        try {
+                            BodyDTO bodyDTO = objectMapper.readValue(request.getBodyAsJsonOrXmlString(), BodyDTO.class);
+                            bodyMatches = bodyMatchesNotControlPlane(
+                                buildBodyMatcher(bodyDTO.buildObject()),
+                                context,
+                                httpRequest
+                            );
+                        } catch (Throwable ignore) {
+                            // ignore this exception as this exception would typically get thrown for "normal" HTTP requests (i.e. not clear or retrieve)
+                            bodyMatches = false;
+                        }
+                    } else {
+                        bodyMatches = false;
+                    }
+                }
+            } else {
+                bodyMatches = bodyMatchesNotControlPlane(bodyMatcher, context, request);
+            }
+        } else {
+            bodyMatches = true;
+        }
+        return bodyMatches;
+    }
+
+    @SuppressWarnings("unchecked")
+    private boolean bodyMatchesNotControlPlane(BodyMatcher bodyMatcher, MatchDifference context, HttpRequest request) {
+        boolean bodyMatches;
         if (bodyMatcher instanceof BinaryMatcher) {
             bodyMatches = matches(BODY, context, bodyMatcher, request.getBodyAsRawBytes());
         } else {
             if (bodyMatcher instanceof ExactStringMatcher ||
                 bodyMatcher instanceof SubStringMatcher ||
-                bodyMatcher instanceof RegexStringMatcher ||
-                bodyMatcher instanceof XmlStringMatcher) {
-                bodyMatches = matches(BODY, context, bodyMatcher, string(bodyAsString));
+                bodyMatcher instanceof RegexStringMatcher) {
+                bodyMatches = matches(BODY, context, bodyMatcher, string(request.getBodyAsString()));
+            } else if (bodyMatcher instanceof XmlStringMatcher ||
+                bodyMatcher instanceof XmlSchemaMatcher ||
+                bodyMatcher instanceof JsonStringMatcher ||
+                bodyMatcher instanceof JsonSchemaMatcher ||
+                bodyMatcher instanceof JsonPathMatcher
+            ) {
+                bodyMatches = matches(BODY, context, bodyMatcher, request.getBodyAsString());
             } else {
-                bodyMatches = matches(BODY, context, bodyMatcher, bodyAsString);
-            }
-        }
-        if (!bodyMatches) {
-            try {
-                BodyDTO bodyDTO = objectMapper.readValue(bodyAsString, BodyDTO.class);
-                bodyMatches = bodyDTOMatcher.equals(bodyDTO);
-            } catch (Throwable e) {
-                // ignore this exception as this exception would typically get thrown for "normal" HTTP requests (i.e. not clear or retrieve)
+                bodyMatches = matches(BODY, context, bodyMatcher, request.getBodyAsString());
             }
         }
         return bodyMatches;

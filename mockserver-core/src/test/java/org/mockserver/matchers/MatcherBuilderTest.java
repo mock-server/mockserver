@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.FullHttpRequestToMockServerRequest;
+import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 
 import static io.netty.buffer.Unpooled.wrappedBuffer;
@@ -42,7 +43,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatMatchesAllFields() {
         // when
-        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockServerLogger).transformsToMatcher(httpRequest);
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockServerLogger).transformsToMatcher(new Expectation(httpRequest));
 
         // then
         assertTrue(httpRequestMapper.matches(null, httpRequest));
@@ -65,12 +66,12 @@ public class MatcherBuilderTest {
         HttpRequest httpRequest = fullHttpRequestToMockServerRequest.mapFullHttpRequestToMockServerRequest(fullHttpRequest);
 
         // and
-        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(new MockServerLogger()).transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(new MockServerLogger()).transformsToMatcher(new Expectation(
             new HttpRequest()
                 .withMethod(GET.name())
                 .withPath("/uri")
                 .withBody(new StringBody(bodyTestString))
-        );
+        ));
 
         // then
         assertThat(httpRequest.getBody().getCharset(null), is(DEFAULT_HTTP_CHARACTER_SET));
@@ -94,12 +95,12 @@ public class MatcherBuilderTest {
         HttpRequest httpRequest = fullHttpRequestToMockServerRequest.mapFullHttpRequestToMockServerRequest(fullHttpRequest);
 
         // and
-        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(new MockServerLogger()).transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(new MockServerLogger()).transformsToMatcher(new Expectation(
             new HttpRequest()
                 .withMethod(GET.name())
                 .withPath("/uri")
                 .withBody(new StringBody(bodyTestString))
-        );
+        ));
 
         // then - request used default charset, then body charset is NULL
         assertNull(httpRequest.getBody().getCharset(null));
@@ -109,7 +110,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatIgnoresMethod() {
         // when
-        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockServerLogger).transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockServerLogger).transformsToMatcher(new Expectation(
             new HttpRequest()
                 .withMethod("")
                 .withPath("some_path")
@@ -117,7 +118,7 @@ public class MatcherBuilderTest {
                 .withBody(new StringBody("some_body"))
                 .withHeaders(new Header("name", "value"))
                 .withCookies(new Cookie("name", "value"))
-        );
+        ));
 
         // then
         assertTrue(httpRequestMapper.matches(null, httpRequest));
@@ -126,7 +127,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatIgnoresPath() {
         // when
-        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockServerLogger).transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockServerLogger).transformsToMatcher(new Expectation(
             new HttpRequest()
                 .withMethod("GET")
                 .withPath("")
@@ -134,7 +135,7 @@ public class MatcherBuilderTest {
                 .withBody(new StringBody("some_body"))
                 .withHeaders(new Header("name", "value"))
                 .withCookies(new Cookie("name", "value"))
-        );
+        ));
 
         // then
         assertTrue(httpRequestMapper.matches(null, httpRequest));
@@ -143,7 +144,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatIgnoresQueryString() {
         // when
-        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockServerLogger).transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockServerLogger).transformsToMatcher(new Expectation(
             new HttpRequest()
                 .withMethod("GET")
                 .withPath("some_path")
@@ -151,7 +152,7 @@ public class MatcherBuilderTest {
                 .withBody(new StringBody("some_body"))
                 .withHeaders(new Header("name", "value"))
                 .withCookies(new Cookie("name", "value"))
-        );
+        ));
 
         // then
         assertTrue(httpRequestMapper.matches(null, httpRequest));
@@ -160,7 +161,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatIgnoresBodyParameters() {
         // when
-        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockServerLogger).transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockServerLogger).transformsToMatcher(new Expectation(
             new HttpRequest()
                 .withMethod("GET")
                 .withPath("some_path")
@@ -168,7 +169,7 @@ public class MatcherBuilderTest {
                 .withBody(new ParameterBody())
                 .withHeaders(new Header("name", "value"))
                 .withCookies(new Cookie("name", "value"))
-        );
+        ));
 
         // then
         assertTrue(httpRequestMapper.matches(null, httpRequest));
@@ -177,7 +178,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatIgnoresBody() {
         // when
-        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockServerLogger).transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockServerLogger).transformsToMatcher(new Expectation(
             new HttpRequest()
                 .withMethod("GET")
                 .withPath("some_path")
@@ -185,7 +186,7 @@ public class MatcherBuilderTest {
                 .withBody(new StringBody(""))
                 .withHeaders(new Header("name", "value"))
                 .withCookies(new Cookie("name", "value"))
-        );
+        ));
 
         // then
         assertTrue(httpRequestMapper.matches(null, httpRequest));
@@ -194,7 +195,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatIgnoresHeaders() {
         // when
-        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockServerLogger).transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockServerLogger).transformsToMatcher(new Expectation(
             new HttpRequest()
                 .withMethod("GET")
                 .withPath("some_path")
@@ -202,7 +203,7 @@ public class MatcherBuilderTest {
                 .withBody(new StringBody("some_body"))
                 .withHeaders()
                 .withCookies(new Cookie("name", "value"))
-        );
+        ));
 
         // then
         assertTrue(httpRequestMapper.matches(null, httpRequest));
@@ -211,7 +212,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatIgnoresCookies() {
         // when
-        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockServerLogger).transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockServerLogger).transformsToMatcher(new Expectation(
             new HttpRequest()
                 .withMethod("GET")
                 .withPath("some_path")
@@ -219,7 +220,7 @@ public class MatcherBuilderTest {
                 .withBody(new StringBody("some_body"))
                 .withHeaders(new Header("name", "value"))
                 .withCookies()
-        );
+        ));
 
         // then
         assertTrue(httpRequestMapper.matches(null, httpRequest));

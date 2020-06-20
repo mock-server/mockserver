@@ -54,11 +54,11 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
 
     public boolean matches(NottableString matcher, NottableString matched, boolean ignoreCase) {
         if (matcher instanceof NottableSchemaString && matched instanceof NottableSchemaString) {
-            return matchesByStrings(matcher, matched, ignoreCase);
+            return controlPlaneMatcher && matchesByStrings(matcher, matched, ignoreCase);
         } else if (matcher instanceof NottableSchemaString) {
             return matchesBySchemas((NottableSchemaString) matcher, matched);
         } else if (matched instanceof NottableSchemaString) {
-            return matchesBySchemas((NottableSchemaString) matched, matcher);
+            return controlPlaneMatcher && matchesBySchemas((NottableSchemaString) matched, matcher);
         } else {
             return matchesByStrings(matcher, matched, ignoreCase);
         }

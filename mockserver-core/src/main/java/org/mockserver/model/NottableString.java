@@ -34,7 +34,7 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
         if (this.not) {
             this.json = NOT_CHAR + this.value;
         } else {
-            this.json = this.value;
+            this.json = !this.isBlank ? this.value : "";
         }
     }
 
@@ -51,7 +51,7 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
         if (this.not) {
             this.json = NOT_CHAR + this.value;
         } else {
-            this.json = this.value;
+            this.json = !this.isBlank ? this.value : "";
         }
     }
 

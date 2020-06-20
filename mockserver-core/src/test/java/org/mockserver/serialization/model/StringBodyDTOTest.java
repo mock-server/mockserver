@@ -184,7 +184,7 @@ public class StringBodyDTOTest {
         StringBody stringBody = new StringBodyDTO(new StringBody(null)).buildObject();
 
         // then
-        assertThat(stringBody.getValue(), nullValue());
+        assertThat(stringBody.getValue(), is(""));
         assertThat(stringBody.getType(), is(Body.Type.STRING));
     }
 

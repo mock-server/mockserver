@@ -1,5 +1,6 @@
 package org.mockserver.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.serialization.ObjectMapperFactory;
@@ -17,21 +18,21 @@ public class JsonBody extends BodyWithContentType<String> {
     private int hashCode;
     public static final MatchType DEFAULT_MATCH_TYPE = MatchType.ONLY_MATCHING_FIELDS;
     // setting default to UTF8 as per https://tools.ietf.org/html/rfc8259#section-8.1
-    public static final MediaType DEFAULT_CONTENT_TYPE = MediaType.APPLICATION_JSON_UTF_8;
+    public static final MediaType DEFAULT_JSON_CONTENT_TYPE = MediaType.APPLICATION_JSON_UTF_8;
     private final String json;
     private final MatchType matchType;
     private final byte[] rawBytes;
 
     public JsonBody(String json) {
-        this(json, null, DEFAULT_CONTENT_TYPE, DEFAULT_MATCH_TYPE);
+        this(json, null, DEFAULT_JSON_CONTENT_TYPE, DEFAULT_MATCH_TYPE);
     }
 
     public JsonBody(String json, MatchType matchType) {
-        this(json, null, DEFAULT_CONTENT_TYPE, matchType);
+        this(json, null, DEFAULT_JSON_CONTENT_TYPE, matchType);
     }
 
     public JsonBody(String json, Charset charset, MatchType matchType) {
-        this(json, null, (charset != null ? DEFAULT_CONTENT_TYPE.withCharset(charset) : null), matchType);
+        this(json, null, (charset != null ? DEFAULT_JSON_CONTENT_TYPE.withCharset(charset) : null), matchType);
     }
 
     public JsonBody(String json, byte[] rawBytes, MediaType contentType, MatchType matchType) {
@@ -55,11 +56,11 @@ public class JsonBody extends BodyWithContentType<String> {
     }
 
     public static JsonBody json(String json, Charset charset) {
-        return new JsonBody(json, null, (charset != null ? DEFAULT_CONTENT_TYPE.withCharset(charset) : null), DEFAULT_MATCH_TYPE);
+        return new JsonBody(json, null, (charset != null ? DEFAULT_JSON_CONTENT_TYPE.withCharset(charset) : null), DEFAULT_MATCH_TYPE);
     }
 
     public static JsonBody json(String json, Charset charset, MatchType matchType) {
-        return new JsonBody(json, null, (charset != null ? DEFAULT_CONTENT_TYPE.withCharset(charset) : null), matchType);
+        return new JsonBody(json, null, (charset != null ? DEFAULT_JSON_CONTENT_TYPE.withCharset(charset) : null), matchType);
     }
 
     public static JsonBody json(String json, MediaType contentType) {
@@ -89,11 +90,11 @@ public class JsonBody extends BodyWithContentType<String> {
     }
 
     public static JsonBody json(Object object, Charset charset) {
-        return new JsonBody(toJson(object), null, (charset != null ? DEFAULT_CONTENT_TYPE.withCharset(charset) : null), DEFAULT_MATCH_TYPE);
+        return new JsonBody(toJson(object), null, (charset != null ? DEFAULT_JSON_CONTENT_TYPE.withCharset(charset) : null), DEFAULT_MATCH_TYPE);
     }
 
     public static JsonBody json(Object object, Charset charset, MatchType matchType) {
-        return new JsonBody(toJson(object), null, (charset != null ? DEFAULT_CONTENT_TYPE.withCharset(charset) : null), matchType);
+        return new JsonBody(toJson(object), null, (charset != null ? DEFAULT_JSON_CONTENT_TYPE.withCharset(charset) : null), matchType);
     }
 
     public static JsonBody json(Object object, MediaType contentType) {
@@ -110,6 +111,11 @@ public class JsonBody extends BodyWithContentType<String> {
 
     public byte[] getRawBytes() {
         return rawBytes;
+    }
+
+    @JsonIgnore
+    public Charset getCharsetOrDefault() {
+        return DEFAULT_JSON_CONTENT_TYPE.getCharset();
     }
 
     public MatchType getMatchType() {

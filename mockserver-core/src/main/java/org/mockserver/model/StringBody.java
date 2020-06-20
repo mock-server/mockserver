@@ -4,6 +4,7 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Objects;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
 
 /**
@@ -30,7 +31,7 @@ public class StringBody extends BodyWithContentType<String> {
 
     public StringBody(String value, byte[] rawBytes, boolean subString, MediaType contentType) {
         super(Type.STRING, contentType);
-        this.value = value;
+        this.value = isNotBlank(value) ? value : "";
         this.subString = subString;
 
         if (rawBytes == null && value != null) {

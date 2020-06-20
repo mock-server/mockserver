@@ -214,9 +214,9 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         if (contentType != null) {
                             return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, contentType, matchType), not);
                         } else if (charset != null) {
-                            return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, JsonBody.DEFAULT_CONTENT_TYPE.withCharset(charset), matchType), not);
+                            return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, JsonBody.DEFAULT_JSON_CONTENT_TYPE.withCharset(charset), matchType), not);
                         } else {
-                            return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, JsonBody.DEFAULT_CONTENT_TYPE, matchType), not);
+                            return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, JsonBody.DEFAULT_JSON_CONTENT_TYPE, matchType), not);
                         }
                     case JSON_SCHEMA:
                         return new JsonSchemaBodyDTO(new JsonSchemaBody(valueJsonValue), not);
@@ -238,9 +238,9 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         if (contentType != null) {
                             return new XmlBodyDTO(new XmlBody(valueJsonValue, rawBytes, contentType), not);
                         } else if (charset != null) {
-                            return new XmlBodyDTO(new XmlBody(valueJsonValue, rawBytes, XmlBody.DEFAULT_CONTENT_TYPE.withCharset(charset)), not);
+                            return new XmlBodyDTO(new XmlBody(valueJsonValue, rawBytes, XmlBody.DEFAULT_XML_CONTENT_TYPE.withCharset(charset)), not);
                         } else {
-                            return new XmlBodyDTO(new XmlBody(valueJsonValue, rawBytes, XmlBody.DEFAULT_CONTENT_TYPE), not);
+                            return new XmlBodyDTO(new XmlBody(valueJsonValue, rawBytes, XmlBody.DEFAULT_XML_CONTENT_TYPE), not);
                         }
                     case XML_SCHEMA:
                         return new XmlSchemaBodyDTO(new XmlSchemaBody(valueJsonValue), not);

@@ -1,5 +1,7 @@
 package org.mockserver.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Objects;
@@ -12,16 +14,16 @@ import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
 public class XmlBody extends BodyWithContentType<String> {
     private int hashCode;
     // setting default to UTF8 as per https://tools.ietf.org/html/rfc3470#section-5.1
-    public static final MediaType DEFAULT_CONTENT_TYPE = MediaType.APPLICATION_XML_UTF_8;
+    public static final MediaType DEFAULT_XML_CONTENT_TYPE = MediaType.APPLICATION_XML_UTF_8;
     private final String xml;
     private final byte[] rawBytes;
 
     public XmlBody(String xml) {
-        this(xml, DEFAULT_CONTENT_TYPE);
+        this(xml, DEFAULT_XML_CONTENT_TYPE);
     }
 
     public XmlBody(String xml, Charset charset) {
-        this(xml, null, (charset != null ? DEFAULT_CONTENT_TYPE.withCharset(charset) : null));
+        this(xml, null, (charset != null ? DEFAULT_XML_CONTENT_TYPE.withCharset(charset) : null));
     }
 
     public XmlBody(String xml, MediaType contentType) {
@@ -57,6 +59,11 @@ public class XmlBody extends BodyWithContentType<String> {
 
     public byte[] getRawBytes() {
         return rawBytes;
+    }
+
+    @JsonIgnore
+    public Charset getCharsetOrDefault() {
+        return DEFAULT_XML_CONTENT_TYPE.getCharset();
     }
 
     @Override

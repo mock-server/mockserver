@@ -28,7 +28,7 @@ public class XmlBodyDTOSerializer extends StdSerializer<XmlBodyDTO> {
         if (xmlBodyDTO.getRawBytes() != null) {
             jgen.writeObjectField("rawBytes", xmlBodyDTO.getRawBytes());
         }
-        if (xmlBodyDTO.getContentType() != null && !xmlBodyDTO.getContentType().equals(XmlBody.DEFAULT_CONTENT_TYPE.toString())) {
+        if (xmlBodyDTO.getContentType() != null && !xmlBodyDTO.getContentType().equals(XmlBody.DEFAULT_XML_CONTENT_TYPE.toString())) {
             jgen.writeStringField("contentType", xmlBodyDTO.getContentType());
         }
         jgen.writeEndObject();

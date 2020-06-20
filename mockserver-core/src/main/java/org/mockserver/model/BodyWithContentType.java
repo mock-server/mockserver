@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.nio.charset.Charset;
 import java.util.Objects;
 
+import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
+
 /**
  * @author jamesdbloom
  */
@@ -34,11 +36,15 @@ public abstract class BodyWithContentType<T> extends Body<T> {
         return determineCharacterSet(contentType, defaultIfNotSet);
     }
 
+    @JsonIgnore
+    public Charset getCharsetOrDefault() {
+        return DEFAULT_HTTP_CHARACTER_SET;
+    }
+
     @Override
     public String getContentType() {
         return (contentType != null ? contentType.toString() : null);
     }
-
 
     @Override
     public boolean equals(Object o) {

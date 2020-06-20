@@ -96,7 +96,7 @@ public class HttpState {
     public void clear(HttpRequest request) {
         RequestDefinition requestDefinition = null;
         if (isNotBlank(request.getBodyAsString())) {
-            requestDefinition = getRequestDefinitionSerializer().deserialize(request.getBodyAsJsonString());
+            requestDefinition = getRequestDefinitionSerializer().deserialize(request.getBodyAsJsonOrXmlString());
         }
         try {
             ClearType type = ClearType.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "ALL"));
@@ -206,7 +206,7 @@ public class HttpState {
         HttpResponse response = response().withStatusCode(OK.code());
         if (request != null) {
             try {
-                final RequestDefinition requestDefinition = isNotBlank(request.getBodyAsString()) ? getRequestDefinitionSerializer().deserialize(request.getBodyAsJsonString()) : null;
+                final RequestDefinition requestDefinition = isNotBlank(request.getBodyAsString()) ? getRequestDefinitionSerializer().deserialize(request.getBodyAsJsonOrXmlString()) : null;
                 Format format = Format.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("format").toUpperCase(), "JSON"));
                 RetrieveType type = RetrieveType.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "REQUESTS"));
                 switch (type) {
@@ -470,7 +470,7 @@ public class HttpState {
             if (request.matches("PUT", PATH_PREFIX + "/expectation", "/expectation")) {
 
                 List<Expectation> upsertedExpectations = new ArrayList<>();
-                for (Expectation expectation : getExpectationSerializer().deserializeArray(request.getBodyAsJsonString(), false)) {
+                for (Expectation expectation : getExpectationSerializer().deserializeArray(request.getBodyAsJsonOrXmlString(), false)) {
                     if (!warDeployment || validateSupportedFeatures(expectation, request, responseWriter)) {
                         upsertedExpectations.addAll(add(expectation));
                     }
@@ -485,7 +485,7 @@ public class HttpState {
 
                 try {
                     List<Expectation> upsertedExpectations = new ArrayList<>();
-                    for (OpenAPIExpectation openAPIExpectation : getOpenAPIExpectationSerializer().deserializeArray(request.getBodyAsJsonString(), false)) {
+                    for (OpenAPIExpectation openAPIExpectation : getOpenAPIExpectationSerializer().deserializeArray(request.getBodyAsJsonOrXmlString(), false)) {
                         upsertedExpectations.addAll(add(openAPIExpectation));
                     }
                     responseWriter.writeResponse(request, response()
@@ -520,7 +520,7 @@ public class HttpState {
 
             } else if (request.matches("PUT", PATH_PREFIX + "/verify", "/verify")) {
 
-                Verification verification = getVerificationSerializer().deserialize(request.getBodyAsJsonString());
+                Verification verification = getVerificationSerializer().deserialize(request.getBodyAsJsonOrXmlString());
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(VERIFICATION)
@@ -541,7 +541,7 @@ public class HttpState {
 
             } else if (request.matches("PUT", PATH_PREFIX + "/verifySequence", "/verifySequence")) {
 
-                VerificationSequence verificationSequence = getVerificationSequenceSerializer().deserialize(request.getBodyAsJsonString());
+                VerificationSequence verificationSequence = getVerificationSequenceSerializer().deserialize(request.getBodyAsJsonOrXmlString());
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(VERIFICATION)
