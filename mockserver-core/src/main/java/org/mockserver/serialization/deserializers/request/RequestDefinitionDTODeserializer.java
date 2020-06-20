@@ -28,6 +28,7 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
             Boolean not = null;
             NottableString method = string("");
             NottableString path = string("");
+            Parameters pathParameters = null;
             Parameters queryStringParameters = null;
             BodyDTO body = null;
             Cookies cookies = null;
@@ -53,6 +54,11 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
                     case "path": {
                         jsonParser.nextToken();
                         path = ctxt.readValue(jsonParser, NottableString.class);
+                        break;
+                    }
+                    case "pathParameters": {
+                        jsonParser.nextToken();
+                        pathParameters = ctxt.readValue(jsonParser, Parameters.class);
                         break;
                     }
                     case "queryStringParameters": {
@@ -116,6 +122,7 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
                 return (RequestDefinitionDTO) new HttpRequestDTO()
                     .setMethod(method)
                     .setPath(path)
+                    .setPathParameters(pathParameters)
                     .setQueryStringParameters(queryStringParameters)
                     .setBody(body)
                     .setCookies(cookies)

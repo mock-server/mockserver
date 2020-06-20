@@ -18,6 +18,7 @@ import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -43,6 +44,7 @@ public class ExpectationWithForwardTemplateSerializerTest {
         new HttpRequest()
             .withMethod("GET")
             .withPath("somePath")
+            .withPathParameters(new Parameter("pathParameterName", Collections.singletonList("pathParameterValue")))
             .withQueryStringParameters(new Parameters().withEntries(
                 param("queryParameterName", "queryParameterValue")
             ))
@@ -65,6 +67,9 @@ public class ExpectationWithForwardTemplateSerializerTest {
             new HttpRequestDTO()
                 .setMethod(string("GET"))
                 .setPath(string("somePath"))
+                .setPathParameters(new Parameters().withEntries(
+                    param("pathParameterName", "pathParameterValue")
+                ))
                 .setQueryStringParameters(new Parameters().withEntries(
                     param("queryParameterName", "queryParameterValue")
                 ))

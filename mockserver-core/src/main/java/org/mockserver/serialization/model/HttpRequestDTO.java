@@ -10,6 +10,7 @@ import static org.mockserver.model.NottableString.string;
 public class HttpRequestDTO extends RequestDefinitionDTO implements DTO<HttpRequest> {
     private NottableString method = string("");
     private NottableString path = string("");
+    private Parameters pathParameters;
     private Parameters queryStringParameters;
     private BodyDTO body;
     private Cookies cookies;
@@ -29,6 +30,7 @@ public class HttpRequestDTO extends RequestDefinitionDTO implements DTO<HttpRequ
             path = httpRequest.getPath();
             headers = httpRequest.getHeaders();
             cookies = httpRequest.getCookies();
+            pathParameters = httpRequest.getPathParameters();
             queryStringParameters = httpRequest.getQueryStringParameters();
             body = BodyDTO.createDTO(httpRequest.getBody());
             keepAlive = httpRequest.isKeepAlive();
@@ -43,6 +45,7 @@ public class HttpRequestDTO extends RequestDefinitionDTO implements DTO<HttpRequ
         return (HttpRequest) new HttpRequest()
             .withMethod(method)
             .withPath(path)
+            .withPathParameters(pathParameters)
             .withQueryStringParameters(queryStringParameters)
             .withBody((body != null ? Not.not(body.buildObject(), body.getNot()) : null))
             .withHeaders(headers)
@@ -68,6 +71,15 @@ public class HttpRequestDTO extends RequestDefinitionDTO implements DTO<HttpRequ
 
     public HttpRequestDTO setPath(NottableString path) {
         this.path = path;
+        return this;
+    }
+
+    public Parameters getPathParameters() {
+        return pathParameters;
+    }
+
+    public HttpRequestDTO setPathParameters(Parameters pathParameters) {
+        this.pathParameters = pathParameters;
         return this;
     }
 

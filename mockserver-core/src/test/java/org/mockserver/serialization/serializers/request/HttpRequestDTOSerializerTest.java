@@ -44,6 +44,7 @@ public class HttpRequestDTOSerializerTest {
                 request()
                     .withMethod("GET")
                     .withPath("/some/path")
+                    .withPathParameters(param("path_parameterOneName", "path_parameterOneValue"))
                     .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
                     .withBody("some_body")
                     .withHeaders(new Header("name", "value"))
@@ -55,6 +56,9 @@ public class HttpRequestDTOSerializerTest {
             is("{" + NEW_LINE +
                 "  \"method\" : \"GET\"," + NEW_LINE +
                 "  \"path\" : \"/some/path\"," + NEW_LINE +
+                "  \"pathParameters\" : {" + NEW_LINE +
+                "    \"path_parameterOneName\" : [ \"path_parameterOneValue\" ]" + NEW_LINE +
+                "  }," + NEW_LINE +
                 "  \"queryStringParameters\" : {" + NEW_LINE +
                 "    \"parameterOneName\" : [ \"parameterOneValue\" ]" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -77,6 +81,7 @@ public class HttpRequestDTOSerializerTest {
                 request()
                     .withMethod("GET")
                     .withPath("/some/path")
+                    .withPathParameters(param("path_parameterOneName", "path_parameterOneValue"))
                     .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
                     .withBody(json("{ \"key\": \"some_value\" }"))
                     .withHeaders(new Header("name", "value"))
@@ -86,6 +91,9 @@ public class HttpRequestDTOSerializerTest {
             is("{" + NEW_LINE +
                 "  \"method\" : \"GET\"," + NEW_LINE +
                 "  \"path\" : \"/some/path\"," + NEW_LINE +
+                "  \"pathParameters\" : {" + NEW_LINE +
+                "    \"path_parameterOneName\" : [ \"path_parameterOneValue\" ]" + NEW_LINE +
+                "  }," + NEW_LINE +
                 "  \"queryStringParameters\" : {" + NEW_LINE +
                 "    \"parameterOneName\" : [ \"parameterOneValue\" ]" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -126,6 +134,7 @@ public class HttpRequestDTOSerializerTest {
                 request()
                     .withMethod("GET")
                     .withPath("/some/path")
+                    .withPathParameters(param("path_parameterOneName", "path_parameterOneValue"))
                     .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
                     .withBody(jsonSchema("{\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"integer\"}}, \"required\": [\"id\"]}"))
                     .withHeaders(new Header("name", "value"))
@@ -135,6 +144,9 @@ public class HttpRequestDTOSerializerTest {
             is("{" + NEW_LINE +
                 "  \"method\" : \"GET\"," + NEW_LINE +
                 "  \"path\" : \"/some/path\"," + NEW_LINE +
+                "  \"pathParameters\" : {" + NEW_LINE +
+                "    \"path_parameterOneName\" : [ \"path_parameterOneValue\" ]" + NEW_LINE +
+                "  }," + NEW_LINE +
                 "  \"queryStringParameters\" : {" + NEW_LINE +
                 "    \"parameterOneName\" : [ \"parameterOneValue\" ]" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -166,6 +178,7 @@ public class HttpRequestDTOSerializerTest {
                 request()
                     .withMethod("GET")
                     .withPath("/some/path")
+                    .withPathParameters(param("path_parameterOneName", "path_parameterOneValue"))
                     .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
                     .withBody(jsonPath("$..book[?(@.price <= $['expensive'])]"))
                     .withHeaders(new Header("name", "value"))
@@ -175,6 +188,9 @@ public class HttpRequestDTOSerializerTest {
             is("{" + NEW_LINE +
                 "  \"method\" : \"GET\"," + NEW_LINE +
                 "  \"path\" : \"/some/path\"," + NEW_LINE +
+                "  \"pathParameters\" : {" + NEW_LINE +
+                "    \"path_parameterOneName\" : [ \"path_parameterOneValue\" ]" + NEW_LINE +
+                "  }," + NEW_LINE +
                 "  \"queryStringParameters\" : {" + NEW_LINE +
                 "    \"parameterOneName\" : [ \"parameterOneValue\" ]" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -199,6 +215,7 @@ public class HttpRequestDTOSerializerTest {
                 request()
                     .withMethod("GET")
                     .withPath("/some/path")
+                    .withPathParameters(param("path_parameterOneName", "path_parameterOneValue"))
                     .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
                     .withBody(xml("<some><xml></xml></some>"))
                     .withHeaders(new Header("name", "value"))
@@ -208,6 +225,9 @@ public class HttpRequestDTOSerializerTest {
             is("{" + NEW_LINE +
                 "  \"method\" : \"GET\"," + NEW_LINE +
                 "  \"path\" : \"/some/path\"," + NEW_LINE +
+                "  \"pathParameters\" : {" + NEW_LINE +
+                "    \"path_parameterOneName\" : [ \"path_parameterOneValue\" ]" + NEW_LINE +
+                "  }," + NEW_LINE +
                 "  \"queryStringParameters\" : {" + NEW_LINE +
                 "    \"parameterOneName\" : [ \"parameterOneValue\" ]" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -239,6 +259,7 @@ public class HttpRequestDTOSerializerTest {
                 request()
                     .withMethod("GET")
                     .withPath("/some/path")
+                    .withPathParameters(param("path_parameterOneName", "path_parameterOneValue"))
                     .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
                     .withBody(xmlSchema("{\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"integer\"}}, \"required\": [\"id\"]}"))
                     .withHeaders(new Header("name", "value"))
@@ -248,6 +269,9 @@ public class HttpRequestDTOSerializerTest {
             is("{" + NEW_LINE +
                 "  \"method\" : \"GET\"," + NEW_LINE +
                 "  \"path\" : \"/some/path\"," + NEW_LINE +
+                "  \"pathParameters\" : {" + NEW_LINE +
+                "    \"path_parameterOneName\" : [ \"path_parameterOneValue\" ]" + NEW_LINE +
+                "  }," + NEW_LINE +
                 "  \"queryStringParameters\" : {" + NEW_LINE +
                 "    \"parameterOneName\" : [ \"parameterOneValue\" ]" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -271,6 +295,7 @@ public class HttpRequestDTOSerializerTest {
                 request()
                     .withMethod("GET")
                     .withPath("/some/path")
+                    .withPathParameters(param("path_parameterOneName", "path_parameterOneValue"))
                     .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
                     .withBody(xpath("//some/xml/path"))
                     .withHeaders(new Header("name", "value"))
@@ -280,6 +305,9 @@ public class HttpRequestDTOSerializerTest {
             is("{" + NEW_LINE +
                 "  \"method\" : \"GET\"," + NEW_LINE +
                 "  \"path\" : \"/some/path\"," + NEW_LINE +
+                "  \"pathParameters\" : {" + NEW_LINE +
+                "    \"path_parameterOneName\" : [ \"path_parameterOneValue\" ]" + NEW_LINE +
+                "  }," + NEW_LINE +
                 "  \"queryStringParameters\" : {" + NEW_LINE +
                 "    \"parameterOneName\" : [ \"parameterOneValue\" ]" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -304,6 +332,7 @@ public class HttpRequestDTOSerializerTest {
                 request()
                     .withMethod("GET")
                     .withPath("/some/path")
+                    .withPathParameters(param("path_parameterOneName", "path_parameterOneValue"))
                     .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
                     .withBody(regex("[a-z]{1,3}"))
                     .withHeaders(new Header("name", "value"))
@@ -313,6 +342,9 @@ public class HttpRequestDTOSerializerTest {
             is("{" + NEW_LINE +
                 "  \"method\" : \"GET\"," + NEW_LINE +
                 "  \"path\" : \"/some/path\"," + NEW_LINE +
+                "  \"pathParameters\" : {" + NEW_LINE +
+                "    \"path_parameterOneName\" : [ \"path_parameterOneValue\" ]" + NEW_LINE +
+                "  }," + NEW_LINE +
                 "  \"queryStringParameters\" : {" + NEW_LINE +
                 "    \"parameterOneName\" : [ \"parameterOneValue\" ]" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -337,10 +369,11 @@ public class HttpRequestDTOSerializerTest {
                 request()
                     .withMethod("GET")
                     .withPath("/some/path")
+                    .withPathParameters(param("path_parameterOneName", "path_parameterOneValue"))
                     .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
                     .withBody(params(
-                        param("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
-                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                        param("path_parameterOneName", "path_parameterOneValueOne", "path_parameterOneValueTwo"),
+                        param("path_parameterTwoName", "path_parameterTwoValue")
                     ))
                     .withHeaders(new Header("name", "value"))
                     .withCookies(new Cookie("name", "[A-Z]{0,10}"))
@@ -349,6 +382,9 @@ public class HttpRequestDTOSerializerTest {
             is("{" + NEW_LINE +
                 "  \"method\" : \"GET\"," + NEW_LINE +
                 "  \"path\" : \"/some/path\"," + NEW_LINE +
+                "  \"pathParameters\" : {" + NEW_LINE +
+                "    \"path_parameterOneName\" : [ \"path_parameterOneValue\" ]" + NEW_LINE +
+                "  }," + NEW_LINE +
                 "  \"queryStringParameters\" : {" + NEW_LINE +
                 "    \"parameterOneName\" : [ \"parameterOneValue\" ]" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -361,8 +397,8 @@ public class HttpRequestDTOSerializerTest {
                 "  \"body\" : {" + NEW_LINE +
                 "    \"type\" : \"PARAMETERS\"," + NEW_LINE +
                 "    \"parameters\" : {" + NEW_LINE +
-                "      \"queryStringParameterOneName\" : [ \"queryStringParameterOneValueOne\", \"queryStringParameterOneValueTwo\" ]," + NEW_LINE +
-                "      \"queryStringParameterTwoName\" : [ \"queryStringParameterTwoValue\" ]" + NEW_LINE +
+                "      \"path_parameterOneName\" : [ \"path_parameterOneValueOne\", \"path_parameterOneValueTwo\" ]," + NEW_LINE +
+                "      \"path_parameterTwoName\" : [ \"path_parameterTwoValue\" ]" + NEW_LINE +
                 "    }" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}")

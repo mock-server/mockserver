@@ -50,6 +50,16 @@ public class HttpRequestTest {
     }
 
     @Test
+    public void returnsPathParameters() {
+        assertEquals(new Parameter("name", "value"), new HttpRequest().withPathParameters(new Parameter("name", "value")).getPathParameterList().get(0));
+        assertEquals(new Parameter("name", "value"), new HttpRequest().withPathParameters(Collections.singletonList(new Parameter("name", "value"))).getPathParameterList().get(0));
+        assertEquals(new Parameter("name", "value"), new HttpRequest().withPathParameter(new Parameter("name", "value")).getPathParameterList().get(0));
+        assertEquals(new Parameter("name", "value"), new HttpRequest().withPathParameter("name", "value").getPathParameterList().get(0));
+        assertEquals(new Parameter("name", "value_one", "value_two"), new HttpRequest().withPathParameter(new Parameter("name", "value_one")).withPathParameter(new Parameter("name", "value_two")).getPathParameterList().get(0));
+        assertEquals(new Parameter("name", "value_one", "value_two"), new HttpRequest().withPathParameter(new Parameter("name", "value_one")).withPathParameter("name", "value_two").getPathParameterList().get(0));
+    }
+
+    @Test
     public void returnsQueryStringParameters() {
         assertEquals(new Parameter("name", "value"), new HttpRequest().withQueryStringParameters(new Parameter("name", "value")).getQueryStringParameterList().get(0));
         assertEquals(new Parameter("name", "value"), new HttpRequest().withQueryStringParameters(Collections.singletonList(new Parameter("name", "value"))).getQueryStringParameterList().get(0));
@@ -124,6 +134,9 @@ public class HttpRequestTest {
         TestCase.assertEquals("{" + NEW_LINE +
                 "  \"method\" : \"METHOD\"," + NEW_LINE +
                 "  \"path\" : \"some_path\"," + NEW_LINE +
+                "  \"pathParameters\" : {" + NEW_LINE +
+                "    \"some_path_parameter\" : [ \"some_path_parameter_value\" ]" + NEW_LINE +
+                "  }," + NEW_LINE +
                 "  \"queryStringParameters\" : {" + NEW_LINE +
                 "    \"some_parameter\" : [ \"some_parameter_value\" ]" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -144,6 +157,7 @@ public class HttpRequestTest {
                 .withHeaders(new Header("some_header", "some_header_value"))
                 .withCookies(new Cookie("some_cookie", "some_cookie_value"))
                 .withSecure(true)
+                .withPathParameters(new Parameter("some_path_parameter", "some_path_parameter_value"))
                 .withQueryStringParameters(new Parameter("some_parameter", "some_parameter_value"))
                 .withKeepAlive(true)
                 .toString()
@@ -160,6 +174,7 @@ public class HttpRequestTest {
             .withHeader("some_header", "some_header_value")
             .withSecure(true)
             .withCookie("some_cookie", "some_cookie_value")
+            .withPathParameter("some_path_parameter", "some_path_parameter_value")
             .withQueryStringParameter("some_parameter", "some_parameter_value")
             .withKeepAlive(true);
 
@@ -181,6 +196,7 @@ public class HttpRequestTest {
             .withHeader("some_header", "some_header_value")
             .withSecure(true)
             .withCookie("some_cookie", "some_cookie_value")
+            .withPathParameter("some_path_parameter", "some_path_parameter_value")
             .withQueryStringParameter("some_parameter", "some_parameter_value")
             .withKeepAlive(true);
         HttpRequest requestTwo = request()
@@ -190,6 +206,7 @@ public class HttpRequestTest {
             .withHeader("some_header_two", "some_header_value_two")
             .withSecure(false)
             .withCookie("some_cookie_two", "some_cookie_value_two")
+            .withPathParameter("some_path_parameter_two", "some_path_parameter_value_two")
             .withQueryStringParameter("some_parameter_two", "some_parameter_value_two")
             .withKeepAlive(false);
 
@@ -207,6 +224,8 @@ public class HttpRequestTest {
                 .withSecure(false)
                 .withCookie("some_cookie", "some_cookie_value")
                 .withCookie("some_cookie_two", "some_cookie_value_two")
+                .withPathParameter("some_path_parameter", "some_path_parameter_value")
+                .withPathParameter("some_path_parameter_two", "some_path_parameter_value_two")
                 .withQueryStringParameter("some_parameter", "some_parameter_value")
                 .withQueryStringParameter("some_parameter_two", "some_parameter_value_two")
                 .withKeepAlive(false)
@@ -224,6 +243,7 @@ public class HttpRequestTest {
             .withHeader("some_header_two", "some_header_value_two")
             .withSecure(false)
             .withCookie("some_cookie_two", "some_cookie_value_two")
+            .withPathParameter("some_path_parameter_two", "some_path_parameter_value_two")
             .withQueryStringParameter("some_parameter_two", "some_parameter_value_two")
             .withKeepAlive(false);
 
@@ -239,6 +259,7 @@ public class HttpRequestTest {
                 .withHeader("some_header_two", "some_header_value_two")
                 .withSecure(false)
                 .withCookie("some_cookie_two", "some_cookie_value_two")
+                .withPathParameter("some_path_parameter_two", "some_path_parameter_value_two")
                 .withQueryStringParameter("some_parameter_two", "some_parameter_value_two")
                 .withKeepAlive(false)
         ));

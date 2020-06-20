@@ -328,7 +328,8 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "  headers matched" + NEW_LINE +
                     "  cookies matched" + NEW_LINE +
-                    "  query matched" + NEW_LINE +
+                    "  pathParameters matched" + NEW_LINE +
+                    "  queryParameters matched" + NEW_LINE +
                     "  keep-alive didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
                     "    boolean match failed expected:" + NEW_LINE +
@@ -455,7 +456,8 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "  headers matched" + NEW_LINE +
                     "  cookies matched" + NEW_LINE +
-                    "  query matched" + NEW_LINE +
+                    "  pathParameters matched" + NEW_LINE +
+                    "  queryParameters matched" + NEW_LINE +
                     "  keep-alive didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
                     "    boolean match failed expected:" + NEW_LINE +
@@ -520,7 +522,8 @@ public class HttpRequestPropertiesMatcherLogTest {
                 "  body matched" + NEW_LINE +
                 "  headers matched" + NEW_LINE +
                 "  cookies matched" + NEW_LINE +
-                "  query matched" + NEW_LINE +
+                "  pathParameters matched" + NEW_LINE +
+                "  queryParameters matched" + NEW_LINE +
                 "  keep-alive didn't match: " + NEW_LINE +
                 "  " + NEW_LINE +
                 "    boolean match failed expected:" + NEW_LINE +
@@ -550,7 +553,8 @@ public class HttpRequestPropertiesMatcherLogTest {
                 "  body matched" + NEW_LINE +
                 "  headers matched" + NEW_LINE +
                 "  cookies matched" + NEW_LINE +
-                "  query matched" + NEW_LINE +
+                "  pathParameters matched" + NEW_LINE +
+                "  queryParameters matched" + NEW_LINE +
                 "  keep-alive didn't match: " + NEW_LINE +
                 "  " + NEW_LINE +
                 "    boolean match failed expected:" + NEW_LINE +
@@ -605,7 +609,8 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  body matched" + NEW_LINE +
                     "  headers matched" + NEW_LINE +
                     "  cookies matched" + NEW_LINE +
-                    "  query matched" + NEW_LINE +
+                    "  pathParameters matched" + NEW_LINE +
+                    "  queryParameters matched" + NEW_LINE +
                     "  keep-alive didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
                     "    boolean match failed expected:" + NEW_LINE +
@@ -636,7 +641,8 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  body matched" + NEW_LINE +
                     "  headers matched" + NEW_LINE +
                     "  cookies matched" + NEW_LINE +
-                    "  query matched" + NEW_LINE +
+                    "  pathParameters matched" + NEW_LINE +
+                    "  queryParameters matched" + NEW_LINE +
                     "  keep-alive didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
                     "    boolean match failed expected:" + NEW_LINE +
@@ -705,7 +711,8 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  body matched" + NEW_LINE +
                     "  headers matched" + NEW_LINE +
                     "  cookies matched" + NEW_LINE +
-                    "  query matched" + NEW_LINE +
+                    "  pathParameters matched" + NEW_LINE +
+                    "  queryParameters matched" + NEW_LINE +
                     "  keep-alive didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
                     "    boolean match failed expected:" + NEW_LINE +
@@ -746,7 +753,8 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  body matched" + NEW_LINE +
                     "  headers matched" + NEW_LINE +
                     "  cookies matched" + NEW_LINE +
-                    "  query matched" + NEW_LINE +
+                    "  pathParameters matched" + NEW_LINE +
+                    "  queryParameters matched" + NEW_LINE +
                     "  keep-alive didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
                     "    boolean match failed expected:" + NEW_LINE +
@@ -804,7 +812,8 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  body matched" + NEW_LINE +
                     "  headers matched" + NEW_LINE +
                     "  cookies matched" + NEW_LINE +
-                    "  query matched" + NEW_LINE +
+                    "  pathParameters matched" + NEW_LINE +
+                    "  queryParameters matched" + NEW_LINE +
                     "  keep-alive matched" + NEW_LINE +
                     "  sslMatches didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
@@ -835,7 +844,8 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  body matched" + NEW_LINE +
                     "  headers matched" + NEW_LINE +
                     "  cookies matched" + NEW_LINE +
-                    "  query matched" + NEW_LINE +
+                    "  pathParameters matched" + NEW_LINE +
+                    "  queryParameters matched" + NEW_LINE +
                     "  keep-alive matched" + NEW_LINE +
                     "  sslMatches didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
@@ -1113,6 +1123,140 @@ public class HttpRequestPropertiesMatcherLogTest {
     }
 
     @Test
+    public void doesNotMatchIncorrectPathName() {
+        boolean originalMatchersFailFast = matchersFailFast();
+        try {
+            // given
+            assertFalse(match(request().withPathParameters(new Parameter("someKey", "someValue")), request().withPathParameter(new Parameter("someOtherKey", "someValue"))));
+
+            // then
+            HttpResponse response = httpStateHandler
+                .retrieve(
+                    request()
+                        .withQueryStringParameter("type", "logs")
+                );
+            assertThat(response.getBodyAsString(), is(
+                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                    NEW_LINE +
+                    "  {" + NEW_LINE +
+                    "    \"pathParameters\" : {" + NEW_LINE +
+                    "      \"someOtherKey\" : [ \"someValue\" ]" + NEW_LINE +
+                    "    }" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    NEW_LINE +
+                    " didn't match request matcher:" + NEW_LINE +
+                    NEW_LINE +
+                    "  {" + NEW_LINE +
+                    "    \"pathParameters\" : {" + NEW_LINE +
+                    "      \"someKey\" : [ \"someValue\" ]" + NEW_LINE +
+                    "    }" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    NEW_LINE +
+                    " because:" + NEW_LINE +
+                    NEW_LINE +
+                    "  method matched" + NEW_LINE +
+                    "  path matched" + NEW_LINE +
+                    "  body matched" + NEW_LINE +
+                    "  headers matched" + NEW_LINE +
+                    "  cookies matched" + NEW_LINE +
+                    "  pathParameters didn't match: " + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "    multimap subset match failed expected:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      {" + NEW_LINE +
+                    "        \"someKey\" : [ \"someValue\" ]" + NEW_LINE +
+                    "      }" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "     found:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      {" + NEW_LINE +
+                    "        \"someOtherKey\" : [ \"someValue\" ]" + NEW_LINE +
+                    "      }" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "     failed because:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      multimap is not a subset" + NEW_LINE +
+                    NEW_LINE +
+                    NEW_LINE +
+                    "------------------------------------" + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
+                    NEW_LINE +
+                    "  { }" + NEW_LINE +
+                    NEW_LINE
+            ));
+        } finally {
+            matchersFailFast(originalMatchersFailFast);
+        }
+    }
+
+    @Test
+    public void doesNotMatchIncorrectPathValue() {
+        boolean originalMatchersFailFast = matchersFailFast();
+        try {
+            // given
+            assertFalse(match(request().withPathParameters(new Parameter("someKey", "someValue")), request().withPathParameter(new Parameter("someKey", "someOtherValue"))));
+
+            // then
+            HttpResponse response = httpStateHandler
+                .retrieve(
+                    request()
+                        .withQueryStringParameter("type", "logs")
+                );
+            assertThat(response.getBodyAsString(), is(
+                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                    NEW_LINE +
+                    "  {" + NEW_LINE +
+                    "    \"pathParameters\" : {" + NEW_LINE +
+                    "      \"someKey\" : [ \"someOtherValue\" ]" + NEW_LINE +
+                    "    }" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    NEW_LINE +
+                    " didn't match request matcher:" + NEW_LINE +
+                    NEW_LINE +
+                    "  {" + NEW_LINE +
+                    "    \"pathParameters\" : {" + NEW_LINE +
+                    "      \"someKey\" : [ \"someValue\" ]" + NEW_LINE +
+                    "    }" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    NEW_LINE +
+                    " because:" + NEW_LINE +
+                    NEW_LINE +
+                    "  method matched" + NEW_LINE +
+                    "  path matched" + NEW_LINE +
+                    "  body matched" + NEW_LINE +
+                    "  headers matched" + NEW_LINE +
+                    "  cookies matched" + NEW_LINE +
+                    "  pathParameters didn't match: " + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "    multimap subset match failed expected:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      {" + NEW_LINE +
+                    "        \"someKey\" : [ \"someValue\" ]" + NEW_LINE +
+                    "      }" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "     found:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      {" + NEW_LINE +
+                    "        \"someKey\" : [ \"someOtherValue\" ]" + NEW_LINE +
+                    "      }" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "     failed because:" + NEW_LINE +
+                    "  " + NEW_LINE +
+                    "      multimap is not a subset" + NEW_LINE +
+                    NEW_LINE +
+                    NEW_LINE +
+                    "------------------------------------" + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
+                    NEW_LINE +
+                    "  { }" + NEW_LINE +
+                    NEW_LINE
+            ));
+        } finally {
+            matchersFailFast(originalMatchersFailFast);
+        }
+    }
+
+    @Test
     public void doesNotMatchIncorrectQueryStringName() {
         boolean originalMatchersFailFast = matchersFailFast();
         try {
@@ -1149,7 +1293,8 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  body matched" + NEW_LINE +
                     "  headers matched" + NEW_LINE +
                     "  cookies matched" + NEW_LINE +
-                    "  query didn't match: " + NEW_LINE +
+                    "  pathParameters matched" + NEW_LINE +
+                    "  queryParameters didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
                     "    multimap subset match failed expected:" + NEW_LINE +
                     "  " + NEW_LINE +
@@ -1216,7 +1361,8 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  body matched" + NEW_LINE +
                     "  headers matched" + NEW_LINE +
                     "  cookies matched" + NEW_LINE +
-                    "  query didn't match: " + NEW_LINE +
+                    "  pathParameters matched" + NEW_LINE +
+                    "  queryParameters didn't match: " + NEW_LINE +
                     "  " + NEW_LINE +
                     "    multimap subset match failed expected:" + NEW_LINE +
                     "  " + NEW_LINE +

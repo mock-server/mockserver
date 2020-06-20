@@ -36,6 +36,10 @@ public class HttpRequestAndHttpResponseSerializerTest {
                 new HttpRequest()
                     .withMethod("GET")
                     .withPath("somepath")
+                    .withPathParameters(
+                        new Parameter("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        new Parameter("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    )
                     .withQueryStringParameters(
                         new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -62,6 +66,10 @@ public class HttpRequestAndHttpResponseSerializerTest {
                 new HttpRequestDTO()
                     .setMethod(string("GET"))
                     .setPath(string("somepath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")

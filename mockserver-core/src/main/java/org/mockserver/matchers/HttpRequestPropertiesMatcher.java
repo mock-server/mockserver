@@ -28,7 +28,7 @@ import static org.slf4j.event.Level.DEBUG;
 @SuppressWarnings("rawtypes")
 public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
 
-    private static final String[] excludedFields = {"mockServerLogger", "methodMatcher", "pathMatcher", "queryStringParameterMatcher", "bodyMatcher", "headerMatcher", "cookieMatcher", "keepAliveMatcher", "bodyDTOMatcher", "sslMatcher", "controlPlaneMatcher", "responseInProgress", "objectMapper"};
+    private static final String[] excludedFields = {"mockServerLogger", "methodMatcher", "pathMatcher", "pathParameterMatcher", "queryStringParameterMatcher", "bodyMatcher", "headerMatcher", "cookieMatcher", "keepAliveMatcher", "bodyDTOMatcher", "sslMatcher", "controlPlaneMatcher", "responseInProgress", "objectMapper"};
     private static final String COMMA = ",";
     private static final String REQUEST_NOT_OPERATOR_IS_ENABLED = COMMA + NEW_LINE + "request 'not' operator is enabled";
     private static final String EXPECTATION_REQUEST_NOT_OPERATOR_IS_ENABLED = COMMA + NEW_LINE + "expectation's request 'not' operator is enabled";
@@ -37,6 +37,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
     private HttpRequest httpRequest;
     private RegexStringMatcher methodMatcher = null;
     private RegexStringMatcher pathMatcher = null;
+    private MultiValueMapMatcher pathParameterMatcher = null;
     private MultiValueMapMatcher queryStringParameterMatcher = null;
     private BodyMatcher bodyMatcher = null;
     private MultiValueMapMatcher headerMatcher = null;
@@ -57,7 +58,8 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             this.httpRequest = httpRequest;
             if (httpRequest != null) {
                 withMethod(httpRequest.getMethod());
-                withPath(httpRequest.getPath());
+                withPath(httpRequest.getPath(), httpRequest.getPathParameters());
+                withPathParameters(httpRequest.getPathParameters());
                 withQueryStringParameters(httpRequest.getQueryStringParameters());
                 withBody(httpRequest.getBody());
                 withHeaders(httpRequest.getHeaders());
@@ -71,6 +73,16 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
         }
     }
 
+    private NottableString normalisePathForParameters(NottableString path, Parameters pathParameters) {
+        // TODO(jamesdbloom) path parameters
+        return path;
+    }
+
+    private Parameters retrievePathParameters(HttpRequest request, Parameters expectedPathParameters) {
+        // TODO(jamesdbloom) path parameters
+        return request.getPathParameters();
+    }
+
     public HttpRequestPropertiesMatcher withControlPlaneMatcher(boolean controlPlaneMatcher) {
         this.controlPlaneMatcher = controlPlaneMatcher;
         return this;
@@ -80,8 +92,12 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
         this.methodMatcher = new RegexStringMatcher(mockServerLogger, method, controlPlaneMatcher);
     }
 
-    private void withPath(NottableString path) {
-        this.pathMatcher = new RegexStringMatcher(mockServerLogger, path, controlPlaneMatcher);
+    private void withPath(NottableString path, Parameters pathParameters) {
+        this.pathMatcher = new RegexStringMatcher(mockServerLogger, normalisePathForParameters(path, pathParameters), controlPlaneMatcher);
+    }
+
+    private void withPathParameters(Parameters parameters) {
+        this.pathParameterMatcher = new MultiValueMapMatcher(mockServerLogger, parameters, controlPlaneMatcher);
     }
 
     private void withQueryStringParameters(Parameters parameters) {
@@ -241,8 +257,13 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                         return false;
                     }
 
-                    boolean queryStringParametersMatches = matches(QUERY, matchDifference, queryStringParameterMatcher, request.getQueryStringParameters());
-                    if (failFast(queryStringParameterMatcher, matchDifference, matchDifferenceCount, becauseBuilder, queryStringParametersMatches, QUERY)) {
+                    boolean pathParametersMatches = matches(PATH_PARAMETERS, matchDifference, pathParameterMatcher, controlPlaneMatcher ? request.getPathParameters() : retrievePathParameters(request, httpRequest.getPathParameters()));
+                    if (failFast(pathParameterMatcher, matchDifference, matchDifferenceCount, becauseBuilder, pathParametersMatches, PATH_PARAMETERS)) {
+                        return false;
+                    }
+
+                    boolean queryStringParametersMatches = matches(QUERY_PARAMETERS, matchDifference, queryStringParameterMatcher, request.getQueryStringParameters());
+                    if (failFast(queryStringParameterMatcher, matchDifference, matchDifferenceCount, becauseBuilder, queryStringParametersMatches, QUERY_PARAMETERS)) {
                         return false;
                     }
 

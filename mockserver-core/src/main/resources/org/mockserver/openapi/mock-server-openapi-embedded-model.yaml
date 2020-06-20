@@ -346,31 +346,33 @@ components:
     RequestDefinition:
       title: "request definition"
       oneOf:
-        - "$ref": "#/components/schemas/HttpRequest"
-        - "$ref": "#/components/schemas/OpenAPIDefinition"
+        - $ref: "#/components/schemas/HttpRequest"
+        - $ref: "#/components/schemas/OpenAPIDefinition"
     HttpRequest:
       title: "request properties matcher"
       type: object
       additionalProperties: false
       properties:
-        body:
-          $ref: "#/components/schemas/Body"
-        headers:
-          $ref: "#/components/schemas/KeyToMultiValue"
-        cookies:
-          $ref: "#/components/schemas/KeyToValue"
-        queryStringParameters:
-          $ref: "#/components/schemas/KeyToMultiValue"
-        path:
-          $ref: "#/components/schemas/StringOrJsonSchema"
-        method:
-          $ref: "#/components/schemas/StringOrJsonSchema"
         secure:
           type: boolean
         keepAlive:
           type: boolean
+        method:
+          $ref: "#/definitions/stringOrJsonSchema"
+        path:
+          $ref: "#/definitions/stringOrJsonSchema"
+        pathParameters:
+          $ref: "#/definitions/keyToMultiValue"
+        queryStringParameters:
+          $ref: "#/definitions/keyToMultiValue"
+        body:
+          $ref: "#/definitions/body"
+        headers:
+          $ref: "#/definitions/keyToMultiValue"
+        cookies:
+          $ref: "#/definitions/keyToValue"
         socketAddress:
-          $ref: "#/components/schemas/SocketAddress"
+          $ref: "#/definitions/socketAddress"
     OpenAPIDefinition:
       title: "open api or swagger request matcher"
       type: object

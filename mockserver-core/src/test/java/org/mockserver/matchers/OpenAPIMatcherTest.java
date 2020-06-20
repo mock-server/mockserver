@@ -256,7 +256,7 @@ public class OpenAPIMatcherTest {
         assertThat(matches, is(false));
         assertThat(matchDifference.getDifferences(METHOD), nullValue());
         assertThat(matchDifference.getDifferences(PATH), nullValue());
-        assertThat(matchDifference.getDifferences(QUERY), nullValue());
+        assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), nullValue());
         assertThat(matchDifference.getDifferences(BODY), nullValue());
@@ -318,7 +318,7 @@ public class OpenAPIMatcherTest {
         assertThat(matches, is(false));
         assertThat(matchDifference.getDifferences(METHOD), nullValue());
         assertThat(matchDifference.getDifferences(PATH), nullValue());
-        assertThat(matchDifference.getDifferences(QUERY), nullValue());
+        assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), nullValue());
         assertThat(matchDifference.getDifferences(BODY), nullValue());
@@ -350,7 +350,7 @@ public class OpenAPIMatcherTest {
         assertThat(matches, is(false));
         assertThat(matchDifference.getDifferences(METHOD), nullValue());
         assertThat(matchDifference.getDifferences(PATH), nullValue());
-        assertThat(matchDifference.getDifferences(QUERY), nullValue());
+        assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), nullValue());
         assertThat(matchDifference.getDifferences(BODY), nullValue());
@@ -382,7 +382,7 @@ public class OpenAPIMatcherTest {
         assertThat(matches, is(false));
         assertThat(matchDifference.getDifferences(METHOD), nullValue());
         assertThat(matchDifference.getDifferences(PATH), nullValue());
-        assertThat(matchDifference.getDifferences(QUERY), nullValue());
+        assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), nullValue());
         assertThat(matchDifference.getDifferences(BODY), nullValue());
@@ -414,7 +414,7 @@ public class OpenAPIMatcherTest {
         assertThat(matches, is(false));
         assertThat(matchDifference.getDifferences(METHOD), nullValue());
         assertThat(matchDifference.getDifferences(PATH), nullValue());
-        assertThat(matchDifference.getDifferences(QUERY), nullValue());
+        assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), nullValue());
         assertThat(matchDifference.getDifferences(BODY), nullValue());
@@ -448,7 +448,7 @@ public class OpenAPIMatcherTest {
         assertThat(matches, is(false));
         assertThat(matchDifference.getDifferences(METHOD), nullValue());
         assertThat(matchDifference.getDifferences(PATH), nullValue());
-        assertThat(matchDifference.getDifferences(QUERY), nullValue());
+        assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), nullValue());
         assertThat(matchDifference.getDifferences(BODY), nullValue());
@@ -488,7 +488,7 @@ public class OpenAPIMatcherTest {
         assertThat(matches, is(false));
         assertThat(matchDifference.getDifferences(METHOD), nullValue());
         assertThat(matchDifference.getDifferences(PATH), nullValue());
-        assertThat(matchDifference.getDifferences(QUERY), nullValue());
+        assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), nullValue());
         assertThat(matchDifference.getDifferences(BODY), nullValue());
@@ -526,7 +526,7 @@ public class OpenAPIMatcherTest {
         assertThat(matches, is(false));
         assertThat(matchDifference.getDifferences(METHOD), nullValue());
         assertThat(matchDifference.getDifferences(PATH), nullValue());
-        assertThat(matchDifference.getDifferences(QUERY), nullValue());
+        assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), nullValue());
         assertThat(matchDifference.getDifferences(BODY), nullValue());
@@ -565,7 +565,7 @@ public class OpenAPIMatcherTest {
         assertThat(matches, is(false));
         assertThat(matchDifference.getDifferences(METHOD), nullValue());
         assertThat(matchDifference.getDifferences(PATH), nullValue());
-        assertThat(matchDifference.getDifferences(QUERY), nullValue());
+        assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), nullValue());
         assertThat(matchDifference.getDifferences(BODY), nullValue());
@@ -581,7 +581,7 @@ public class OpenAPIMatcherTest {
         assertThat(matches, is(expected));
         assertThat(matchDifference.getDifferences(METHOD), nullValue());
         assertThat(matchDifference.getDifferences(PATH), nullValue());
-        assertThat(matchDifference.getDifferences(QUERY), nullValue());
+        assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), nullValue());
         assertThat(matchDifference.getDifferences(BODY), nullValue());

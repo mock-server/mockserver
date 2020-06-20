@@ -31,6 +31,7 @@ public class HttpRequestSerializerTest {
             request()
                 .withMethod("GET")
                 .withPath("/some/path")
+                .withPathParameters(param("path_parameterOneName", "path_parameterOneValue"))
                 .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
                 .withBody("some_body")
                 .withHeaders(new Header("name", "value"))
@@ -41,6 +42,9 @@ public class HttpRequestSerializerTest {
             is("{" + NEW_LINE +
                 "  \"method\" : \"GET\"," + NEW_LINE +
                 "  \"path\" : \"/some/path\"," + NEW_LINE +
+                "  \"pathParameters\" : {" + NEW_LINE +
+                "    \"path_parameterOneName\" : [ \"path_parameterOneValue\" ]" + NEW_LINE +
+                "  }," + NEW_LINE +
                 "  \"queryStringParameters\" : {" + NEW_LINE +
                 "    \"parameterOneName\" : [ \"parameterOneValue\" ]" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -61,6 +65,7 @@ public class HttpRequestSerializerTest {
         assertThat(objectMapper.writeValueAsString(request()
                 .withMethod("GET")
                 .withPath("/some/path")
+                .withPathParameters(param("path_parameterOneName", "path_parameterOneValue"))
                 .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
                 .withBody(json("{ \"key\": \"some_value\" }"))
                 .withHeaders(new Header("name", "value"))
@@ -68,6 +73,9 @@ public class HttpRequestSerializerTest {
             is("{" + NEW_LINE +
                 "  \"method\" : \"GET\"," + NEW_LINE +
                 "  \"path\" : \"/some/path\"," + NEW_LINE +
+                "  \"pathParameters\" : {" + NEW_LINE +
+                "    \"path_parameterOneName\" : [ \"path_parameterOneValue\" ]" + NEW_LINE +
+                "  }," + NEW_LINE +
                 "  \"queryStringParameters\" : {" + NEW_LINE +
                 "    \"parameterOneName\" : [ \"parameterOneValue\" ]" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -91,6 +99,7 @@ public class HttpRequestSerializerTest {
         assertThat(objectMapper.writeValueAsString(request()
                 .withMethod("GET")
                 .withPath("/some/path")
+                .withPathParameters(param("path_parameterOneName", "path_parameterOneValue"))
                 .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
                 .withBody(xpath("//some/xml/path"))
                 .withHeaders(new Header("name", "value"))
@@ -98,6 +107,9 @@ public class HttpRequestSerializerTest {
             is("{" + NEW_LINE +
                 "  \"method\" : \"GET\"," + NEW_LINE +
                 "  \"path\" : \"/some/path\"," + NEW_LINE +
+                "  \"pathParameters\" : {" + NEW_LINE +
+                "    \"path_parameterOneName\" : [ \"path_parameterOneValue\" ]" + NEW_LINE +
+                "  }," + NEW_LINE +
                 "  \"queryStringParameters\" : {" + NEW_LINE +
                 "    \"parameterOneName\" : [ \"parameterOneValue\" ]" + NEW_LINE +
                 "  }," + NEW_LINE +

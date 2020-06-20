@@ -42,6 +42,7 @@ public class ExpectationWithForwardObjectCallbackSerializerTest {
         new HttpRequest()
             .withMethod("GET")
             .withPath("somePath")
+            .withPathParameters(new Parameter("pathParameterName", Collections.singletonList("pathParameterValue")))
             .withQueryStringParameters(new Parameter("queryParameterName", Collections.singletonList("queryParameterValue")))
             .withBody(new StringBody("someBody"))
             .withHeaders(new Header("headerName", "headerValue"))
@@ -57,6 +58,9 @@ public class ExpectationWithForwardObjectCallbackSerializerTest {
             new HttpRequestDTO()
                 .setMethod(string("GET"))
                 .setPath(string("somePath"))
+                .setPathParameters(new Parameters().withEntries(
+                    param("pathParameterName", "pathParameterValue")
+                ))
                 .setQueryStringParameters(new Parameters().withEntries(
                     param("queryParameterName", "queryParameterValue")
                 ))

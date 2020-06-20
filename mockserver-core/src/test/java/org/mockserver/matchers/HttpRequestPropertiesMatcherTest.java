@@ -41,6 +41,7 @@ public class HttpRequestPropertiesMatcherTest {
      * - SSL
      * - Method
      * - Path
+     * - PathParameters
      * - QueryStringParameters
      * - Headers
      * - Cookies
@@ -465,6 +466,270 @@ public class HttpRequestPropertiesMatcherTest {
             "someOtherPath"
         )).matches(null, new HttpRequest().withPathSchema(
             "{ \"type\": \"string\", \"pattern\": \"^somePa.{2}$\" }"
+        )));
+    }
+
+    // PATH PARAMETERS
+
+    @Test
+    public void shouldMatchPathParameter() {
+        assertTrue(update(new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someValue")
+        )).matches(null, new HttpRequest().withPathParameter(
+            new Parameter("someKey", "someValue")
+        )));
+        assertTrue(update(new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someValueOne", "someValueTwo")
+        )).matches(null, new HttpRequest().withPathParameter(
+            new Parameter("someKey", "someValueOne", "someValueTwo")
+        )));
+        assertTrue(update(new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someValue")
+        )).matches(null, new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someValue"),
+            new Parameter("someKeyTwo", "someValueTwo")
+        )));
+        assertTrue(update(new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someValueOne", "someValueTwo")
+        )).matches(null, new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someValueOne", "someValueTwo"),
+            new Parameter("someKeyTwo", "someValueOne", "someValueTwo")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchPathParameterKey() {
+        assertFalse(update(new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someValue")
+        )).matches(null, new HttpRequest().withPathParameter(
+            new Parameter("someOtherKey", "someValue")
+        )));
+        assertFalse(update(new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someValue")
+        )).matches(null, new HttpRequest().withPathParameters(
+            new Parameter("someOtherKey", "someValue"),
+            new Parameter("someKeyTwo", "someValueTwo")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchPathParameterValue() {
+        assertFalse(update(new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someValue")
+        )).matches(null, new HttpRequest().withPathParameter(
+            new Parameter("someKey", "someOtherValue")
+        )));
+        assertFalse(update(new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someValueOne", "someValueTwo")
+        )).matches(null, new HttpRequest().withPathParameter(
+            new Parameter("someKey", "someOtherValueOne", "someValueTwo")
+        )));
+        assertFalse(update(new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someValueOne", "someValueTwo")
+        )).matches(null, new HttpRequest().withPathParameter(
+            new Parameter("someKey", "someValueOne", "someOtherValueTwo")
+        )));
+        assertFalse(update(new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someValue")
+        )).matches(null, new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someOtherValue"),
+            new Parameter("someKeyTwo", "someValueTwo")
+        )));
+        assertFalse(update(new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someValueOne", "someValueTwo")
+        )).matches(null, new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someOtherValueOne", "someValueTwo"),
+            new Parameter("someKeyTwo", "someValueTwoOne", "someValueTwoTwo")
+        )));
+        assertFalse(update(new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someValueOne", "someValueTwo")
+        )).matches(null, new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someValueOne", "someOtherValueTwo"),
+            new Parameter("someKeyOther", "someValueTwoOne", "someValueTwoTwo")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchPathParameterKeyAndValue() {
+        assertFalse(update(new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someValue")
+        )).matches(null, new HttpRequest().withPathParameter(
+            new Parameter("someOtherKey", "someOtherValue")
+        )));
+        assertFalse(update(new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someValue")
+        )).matches(null, new HttpRequest().withPathParameters(
+            new Parameter("someOtherKey", "someOtherValue"),
+            new Parameter("someOtherKeyTwo", "someOtherValueTwo")
+        )));
+    }
+
+    @Test
+    public void shouldMatchPathParameterWithRegex() {
+        assertTrue(update(new HttpRequest().withPathParameters(
+            new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
+        )).matches(null, new HttpRequest().withPathParameter(
+            new Parameter("someKey", "someValue")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchPathParameterKeyWithRegex() {
+        assertFalse(update(new HttpRequest().withPathParameters(
+            new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
+        )).matches(null, new HttpRequest().withPathParameter(
+            new Parameter("someOtherKey", "someValue")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchPathParameterValueWithRegex() {
+        assertFalse(update(new HttpRequest().withPathParameters(
+            new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
+        )).matches(null, new HttpRequest().withPathParameter(
+            new Parameter("someKey", "someOtherValue")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchPathParameterKeyAndValueWithRegex() {
+        assertFalse(update(new HttpRequest().withPathParameters(
+            new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
+        )).matches(null, new HttpRequest().withPathParameter(
+            new Parameter("someOtherKey", "someOtherValue")
+        )));
+    }
+
+    @Test
+    public void shouldMatchPathParameterWithRegexForControlPlane() {
+        assertTrue(updateForControlPlane(new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someValue")
+        )).matches(null, new HttpRequest().withPathParameter(
+            new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
+        )));
+        assertTrue(updateForControlPlane(new HttpRequest().withPathParameters(
+            new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
+        )).matches(null, new HttpRequest().withPathParameter(
+            new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
+        )));
+        assertFalse(update(new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someValue")
+        )).matches(null, new HttpRequest().withPathParameter(
+            new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchPathParameterKeyWithRegexForControlPlane() {
+        assertFalse(updateForControlPlane(new HttpRequest().withPathParameters(
+            new Parameter("someOtherKey", "someValue")
+        )).matches(null, new HttpRequest().withPathParameter(
+            new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchPathParameterValueWithRegexForControlPlane() {
+        assertFalse(updateForControlPlane(new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someOtherValue")
+        )).matches(null, new HttpRequest().withPathParameter(
+            new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchPathParameterKeyAndValueWithRegexForControlPlane() {
+        assertFalse(updateForControlPlane(new HttpRequest().withPathParameters(
+            new Parameter("someOtherKey", "someOtherValue")
+        )).matches(null, new HttpRequest().withPathParameter(
+            new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
+        )));
+    }
+
+    @Test
+    public void shouldMatchPathParameterWithSchema() {
+        assertTrue(update(new HttpRequest().withPathParameters(
+            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
+        )).matches(null, new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someValue")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchPathParameterKeyWithSchema() {
+        assertFalse(update(new HttpRequest().withPathParameters(
+            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
+        )).matches(null, new HttpRequest().withPathParameters(
+            new Parameter("someOtherKey", "someValue")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchPathParameterValueWithSchema() {
+        assertFalse(update(new HttpRequest().withPathParameters(
+            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
+        )).matches(null, new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someOtherValue")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchPathParameterKeyAndValueWithSchema() {
+        assertFalse(update(new HttpRequest().withPathParameters(
+            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
+        )).matches(null, new HttpRequest().withPathParameter(
+            new Parameter("someOtherKey", "someOtherValue")
+        )));
+    }
+
+    @Test
+    public void shouldMatchPathParameterWithSchemaForControlPlane() {
+        assertTrue(updateForControlPlane(new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someValue")
+        )).matches(null, new HttpRequest().withPathParameters(
+            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
+        )));
+        assertTrue(updateForControlPlane(new HttpRequest().withPathParameters(
+            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
+        )).matches(null, new HttpRequest().withPathParameters(
+            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
+        )));
+        assertFalse(update(new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someValue")
+        )).matches(null, new HttpRequest().withPathParameters(
+            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
+        )));
+        assertFalse(update(new HttpRequest().withPathParameters(
+            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
+        )).matches(null, new HttpRequest().withPathParameters(
+            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchPathParameterKeyWithSchemaForControlPlane() {
+        assertFalse(updateForControlPlane(new HttpRequest().withPathParameters(
+            new Parameter("someOtherKey", "someValue")
+        )).matches(null, new HttpRequest().withPathParameters(
+            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchPathParameterValueWithSchemaForControlPlane() {
+        assertFalse(updateForControlPlane(new HttpRequest().withPathParameters(
+            new Parameter("someKey", "someOtherValue")
+        )).matches(null, new HttpRequest().withPathParameters(
+            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchPathParameterKeyAndValueWithSchemaForControlPlane() {
+        assertFalse(updateForControlPlane(new HttpRequest().withPathParameters(
+            new Parameter("someOtherKey", "someOtherValue")
+        )).matches(null, new HttpRequest().withPathParameter(
+            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
         )));
     }
 

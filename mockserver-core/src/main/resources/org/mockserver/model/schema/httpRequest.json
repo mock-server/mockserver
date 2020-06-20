@@ -3,6 +3,24 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
+        "secure": {
+            "type": "boolean"
+        },
+        "keepAlive": {
+            "type": "boolean"
+        },
+        "method": {
+            "$ref": "#/definitions/stringOrJsonSchema"
+        },
+        "path": {
+            "$ref": "#/definitions/stringOrJsonSchema"
+        },
+        "pathParameters": {
+            "$ref": "#/definitions/keyToMultiValue"
+        },
+        "queryStringParameters": {
+            "$ref": "#/definitions/keyToMultiValue"
+        },
         "body": {
             "$ref": "#/definitions/body"
         },
@@ -11,21 +29,6 @@
         },
         "cookies": {
             "$ref": "#/definitions/keyToValue"
-        },
-        "queryStringParameters": {
-            "$ref": "#/definitions/keyToMultiValue"
-        },
-        "path": {
-            "$ref": "#/definitions/stringOrJsonSchema"
-        },
-        "method": {
-            "$ref": "#/definitions/stringOrJsonSchema"
-        },
-        "secure": {
-            "type": "boolean"
-        },
-        "keepAlive": {
-            "type": "boolean"
         },
         "socketAddress": {
             "$ref": "#/definitions/socketAddress"

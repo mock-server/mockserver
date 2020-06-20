@@ -140,6 +140,106 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
+    public void shouldValidatePathParameterValueIsList() {
+        // given
+        String requestBytes = "{" + NEW_LINE +
+            "    \"pathParameters\" : {" + NEW_LINE +
+            "        \"path_someParameterName\" : \"path_someParameterValue\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}";
+
+        // then
+        throwCorrectError(requestBytes, "4 errors:" + NEW_LINE +
+            " - field: \"/pathParameters\" for schema: \"keyToMultiValue\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
+            NEW_LINE +
+            "   {" + NEW_LINE +
+            "       \"exampleRegexParameter\": [" + NEW_LINE +
+            "           \"^some +regex$\"" + NEW_LINE +
+            "       ], " + NEW_LINE +
+            "       \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
+            "           \"!notThisValue\", " + NEW_LINE +
+            "           \"simpleStringMatch\"" + NEW_LINE +
+            "       ]" + NEW_LINE +
+            "   }" + NEW_LINE +
+            NEW_LINE +
+            "or:" + NEW_LINE +
+            NEW_LINE +
+            "   {" + NEW_LINE +
+            "       \"exampleSchemaParameter\": [" + NEW_LINE +
+            "           {" + NEW_LINE +
+            "               \"type\": \"number\"" + NEW_LINE +
+            "           }" + NEW_LINE +
+            "       ], " + NEW_LINE +
+            "       \"exampleMultiSchemaParameter\": [" + NEW_LINE +
+            "           {" + NEW_LINE +
+            "               \"type\": \"string\", " + NEW_LINE +
+            "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
+            "           }, " + NEW_LINE +
+            "           {" + NEW_LINE +
+            "               \"type\": \"string\", " + NEW_LINE +
+            "               \"format\": \"ipv4\"" + NEW_LINE +
+            "           }" + NEW_LINE +
+            "       ]" + NEW_LINE +
+            "   }" + NEW_LINE +
+            NEW_LINE +
+            " - field: \"/pathParameters\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"instance type (object) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
+            " - field: \"/pathParameters\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"object instance has properties which are not allowed by the schema: [\"path_someParameterName\"]\"" + NEW_LINE +
+            " - field: \"/pathParameters/path_someParameterName\" for schema: \"keyToMultiValue/oneOf/1/patternProperties/^\\S+$\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
+            NEW_LINE +
+            OPEN_API_SPECIFICATION_URL);
+    }
+
+    @Test
+    public void shouldValidatePathParameterNameValid() {
+        // given
+        String requestBytes = "{" + NEW_LINE +
+            "    \"pathParameters\" : {" + NEW_LINE +
+            "        \"path_somePara meterName\" : [ \"path_someParameterValue\" ]" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}";
+
+        // then
+        throwCorrectError(requestBytes, "4 errors:" + NEW_LINE +
+            " - field: \"/pathParameters\" for schema: \"keyToMultiValue\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
+            NEW_LINE +
+            "   {" + NEW_LINE +
+            "       \"exampleRegexParameter\": [" + NEW_LINE +
+            "           \"^some +regex$\"" + NEW_LINE +
+            "       ], " + NEW_LINE +
+            "       \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
+            "           \"!notThisValue\", " + NEW_LINE +
+            "           \"simpleStringMatch\"" + NEW_LINE +
+            "       ]" + NEW_LINE +
+            "   }" + NEW_LINE +
+            NEW_LINE +
+            "or:" + NEW_LINE +
+            NEW_LINE +
+            "   {" + NEW_LINE +
+            "       \"exampleSchemaParameter\": [" + NEW_LINE +
+            "           {" + NEW_LINE +
+            "               \"type\": \"number\"" + NEW_LINE +
+            "           }" + NEW_LINE +
+            "       ], " + NEW_LINE +
+            "       \"exampleMultiSchemaParameter\": [" + NEW_LINE +
+            "           {" + NEW_LINE +
+            "               \"type\": \"string\", " + NEW_LINE +
+            "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
+            "           }, " + NEW_LINE +
+            "           {" + NEW_LINE +
+            "               \"type\": \"string\", " + NEW_LINE +
+            "               \"format\": \"ipv4\"" + NEW_LINE +
+            "           }" + NEW_LINE +
+            "       ]" + NEW_LINE +
+            "   }" + NEW_LINE +
+            NEW_LINE +
+            " - field: \"/pathParameters\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"instance type (object) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
+            " - field: \"/pathParameters\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"object instance has properties which are not allowed by the schema: [\"path_somePara meterName\"]\"" + NEW_LINE +
+            " - field: \"/pathParameters\" for schema: \"keyToMultiValue/oneOf/1\" has error: \"object instance has properties which are not allowed by the schema: [\"path_somePara meterName\"]\"" + NEW_LINE +
+            NEW_LINE +
+            OPEN_API_SPECIFICATION_URL);
+    }
+
+    @Test
     public void shouldValidateQueryStringParameterValueIsList() {
         // given
         String requestBytes = "{" + NEW_LINE +
@@ -302,7 +402,13 @@ public class HttpRequestSerializerIntegrationTest {
         // given
         String requestBytes = "{" + NEW_LINE +
             "  \"method\" : \"someMethod\"," + NEW_LINE +
+            "  \"path\" : \"somePath\"," + NEW_LINE +
+            "  \"secure\" : true," + NEW_LINE +
             "  \"keepAlive\" : false," + NEW_LINE +
+            "  \"pathParameters\" : [ {" + NEW_LINE +
+            "    \"name\" : \"pathParameterName\"," + NEW_LINE +
+            "    \"values\" : [ \"pathParameterValue\" ]" + NEW_LINE +
+            "  } ]," + NEW_LINE +
             "  \"queryStringParameters\" : [ {" + NEW_LINE +
             "    \"name\" : \"queryParameterName\"," + NEW_LINE +
             "    \"values\" : [ \"queryParameterValue\" ]" + NEW_LINE +
@@ -319,8 +425,6 @@ public class HttpRequestSerializerIntegrationTest {
             "    \"name\" : \"someHeaderName\"," + NEW_LINE +
             "    \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
             "  } ]," + NEW_LINE +
-            "  \"path\" : \"somePath\"," + NEW_LINE +
-            "  \"secure\" : true," + NEW_LINE +
             "  \"socketAddress\" : {" + NEW_LINE +
             "    \"host\" : \"someHost\"," + NEW_LINE +
             "    \"port\" : 1234," + NEW_LINE +
@@ -335,6 +439,9 @@ public class HttpRequestSerializerIntegrationTest {
         assertEquals(new HttpRequestDTO()
             .setMethod(string("someMethod"))
             .setPath(string("somePath"))
+            .setPathParameters(new Parameters().withEntries(
+                param("pathParameterName", "pathParameterValue")
+            ))
             .setQueryStringParameters(new Parameters().withEntries(
                 param("queryParameterName", "queryParameterValue")
             ))
@@ -616,6 +723,10 @@ public class HttpRequestSerializerIntegrationTest {
         String requestBytes = "{" + NEW_LINE +
             "    \"httpRequest\": {" + NEW_LINE +
             "        \"path\": \"somePath\"," + NEW_LINE +
+            "        \"pathParameters\" : [ {" + NEW_LINE +
+            "            \"name\" : \"pathParameterName\"," + NEW_LINE +
+            "            \"values\" : [ \"pathParameterValue\" ]" + NEW_LINE +
+            "        } ]," + NEW_LINE +
             "        \"queryStringParameters\" : [ {" + NEW_LINE +
             "            \"name\" : \"queryParameterName\"," + NEW_LINE +
             "            \"values\" : [ \"queryParameterValue\" ]" + NEW_LINE +
@@ -629,6 +740,9 @@ public class HttpRequestSerializerIntegrationTest {
         // then
         assertEquals(new HttpRequestDTO()
             .setPath(string("somePath"))
+            .setPathParameters(new Parameters().withEntries(
+                param("pathParameterName", "pathParameterValue")
+            ))
             .setQueryStringParameters(new Parameters().withEntries(
                 param("queryParameterName", "queryParameterValue")
             ))
@@ -642,6 +756,9 @@ public class HttpRequestSerializerIntegrationTest {
             new HttpRequestDTO()
                 .setMethod(string("someMethod"))
                 .setPath(string("somePath"))
+                .setPathParameters(new Parameters().withEntries(
+                    param("pathParameterName", "pathParameterValue")
+                ))
                 .setQueryStringParameters(new Parameters().withEntries(
                     param("queryParameterName", "queryParameterValue")
                 ))
@@ -659,6 +776,9 @@ public class HttpRequestSerializerIntegrationTest {
         assertEquals("{" + NEW_LINE +
             "  \"method\" : \"someMethod\"," + NEW_LINE +
             "  \"path\" : \"somePath\"," + NEW_LINE +
+            "  \"pathParameters\" : {" + NEW_LINE +
+            "    \"pathParameterName\" : [ \"pathParameterValue\" ]" + NEW_LINE +
+            "  }," + NEW_LINE +
             "  \"queryStringParameters\" : {" + NEW_LINE +
             "    \"queryParameterName\" : [ \"queryParameterValue\" ]" + NEW_LINE +
             "  }," + NEW_LINE +

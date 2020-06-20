@@ -32,8 +32,6 @@ public class HttpRequestAndHttpResponseSerializationErrorsTest {
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
     @Mock
-    private ObjectMapper objectMapper;
-    @Mock
     private ObjectWriter objectWriter;
     @InjectMocks
     private HttpRequestAndHttpResponseSerializer httpRequestSerializer;

@@ -234,6 +234,13 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : [ {" + NEW_LINE +
+            "      \"name\" : \"pathParameterNameOne\"," + NEW_LINE +
+            "      \"values\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"name\" : \"pathParameterNameTwo\"," + NEW_LINE +
+            "      \"values\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
             "    \"queryStringParameters\" : [ {" + NEW_LINE +
             "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
             "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
@@ -303,6 +310,10 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
                     .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -361,6 +372,10 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
                     .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -489,6 +504,13 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : [ {" + NEW_LINE +
+            "      \"name\" : \"pathParameterNameOne\"," + NEW_LINE +
+            "      \"values\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"name\" : \"pathParameterNameTwo\"," + NEW_LINE +
+            "      \"values\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
             "    \"queryStringParameters\" : [ {" + NEW_LINE +
             "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
             "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
@@ -534,6 +556,10 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
                     .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -566,6 +592,13 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : [ {" + NEW_LINE +
+            "      \"name\" : \"pathParameterNameOne\"," + NEW_LINE +
+            "      \"values\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"name\" : \"pathParameterNameTwo\"," + NEW_LINE +
+            "      \"values\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
             "    \"queryStringParameters\" : [ {" + NEW_LINE +
             "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
             "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
@@ -606,6 +639,10 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
                     .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -635,6 +672,13 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : [ {" + NEW_LINE +
+            "      \"name\" : \"pathParameterNameOne\"," + NEW_LINE +
+            "      \"values\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"name\" : \"pathParameterNameTwo\"," + NEW_LINE +
+            "      \"values\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
             "    \"queryStringParameters\" : [ {" + NEW_LINE +
             "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
             "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
@@ -675,6 +719,10 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
                     .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -704,6 +752,13 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : [ {" + NEW_LINE +
+            "      \"name\" : \"pathParameterNameOne\"," + NEW_LINE +
+            "      \"values\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"name\" : \"pathParameterNameTwo\"," + NEW_LINE +
+            "      \"values\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
             "    \"queryStringParameters\" : [ {" + NEW_LINE +
             "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
             "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
@@ -746,6 +801,10 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
                     .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -778,6 +837,13 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : [ {" + NEW_LINE +
+            "      \"name\" : \"pathParameterNameOne\"," + NEW_LINE +
+            "      \"values\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"name\" : \"pathParameterNameTwo\"," + NEW_LINE +
+            "      \"values\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
             "    \"queryStringParameters\" : [ {" + NEW_LINE +
             "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
             "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
@@ -823,6 +889,10 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
                     .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -855,6 +925,13 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : [ {" + NEW_LINE +
+            "      \"name\" : \"pathParameterNameOne\"," + NEW_LINE +
+            "      \"values\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"name\" : \"pathParameterNameTwo\"," + NEW_LINE +
+            "      \"values\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
             "    \"queryStringParameters\" : [ {" + NEW_LINE +
             "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
             "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
@@ -895,6 +972,10 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
                     .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -924,6 +1005,13 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : [ {" + NEW_LINE +
+            "      \"name\" : \"pathParameterNameOne\"," + NEW_LINE +
+            "      \"values\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"name\" : \"pathParameterNameTwo\"," + NEW_LINE +
+            "      \"values\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
             "    \"queryStringParameters\" : [ {" + NEW_LINE +
             "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
             "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
@@ -964,6 +1052,10 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
                     .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -993,6 +1085,10 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : {" + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
             "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
             "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
@@ -1036,6 +1132,10 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
                     .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -1074,6 +1174,13 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : [ {" + NEW_LINE +
+            "      \"name\" : \"pathParameterNameOne\"," + NEW_LINE +
+            "      \"values\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"name\" : \"pathParameterNameTwo\"," + NEW_LINE +
+            "      \"values\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
             "    \"queryStringParameters\" : [ {" + NEW_LINE +
             "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
             "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
@@ -1119,6 +1226,10 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
                     .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -1267,6 +1378,10 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
                     .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -1317,6 +1432,10 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : {" + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
             "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
             "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
@@ -1373,6 +1492,10 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
                     .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -1403,6 +1526,10 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : {" + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
             "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
             "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
@@ -1442,6 +1569,10 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
                     .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -1470,6 +1601,10 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : {" + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
             "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
             "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
@@ -1505,6 +1640,10 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
                     .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -1533,6 +1672,10 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : {" + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
             "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
             "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
@@ -1568,6 +1711,10 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
                     .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -1598,6 +1745,10 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : {" + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
             "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
             "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
@@ -1635,6 +1786,10 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
                     .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -1665,6 +1820,10 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : {" + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
             "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
             "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
@@ -1704,6 +1863,10 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
                     .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -1732,6 +1895,10 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : {" + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
             "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
             "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
@@ -1767,6 +1934,10 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
                     .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -1795,6 +1966,10 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : {" + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
             "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
             "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
@@ -1830,6 +2005,10 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
                     .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -1865,6 +2044,10 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : {" + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
             "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
             "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
@@ -1907,6 +2090,10 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
                     .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -1937,6 +2124,10 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : {" + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
             "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
             "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
@@ -1977,6 +2168,10 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
                     .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
                     .setQueryStringParameters(new Parameters().withEntries(
                         param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -2008,6 +2203,10 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : {" + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
             "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
             "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +

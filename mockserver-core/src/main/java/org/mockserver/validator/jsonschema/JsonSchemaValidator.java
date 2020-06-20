@@ -180,6 +180,36 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                     "       ]" + NEW_LINE +
                     "   }" + NEW_LINE);
             }
+            if (isErrorForField(reports, fieldPointer, "/pathParameters")) {
+                validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/pathParameters") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "       \"exampleRegexParameter\": [" + NEW_LINE +
+                    "           \"^some +regex$\"" + NEW_LINE +
+                    "       ], " + NEW_LINE +
+                    "       \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
+                    "           \"!notThisValue\", " + NEW_LINE +
+                    "           \"simpleStringMatch\"" + NEW_LINE +
+                    "       ]" + NEW_LINE +
+                    "   }" + NEW_LINE + NEW_LINE +
+                    "or:" + NEW_LINE + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "       \"exampleSchemaParameter\": [" + NEW_LINE +
+                    "           {" + NEW_LINE +
+                    "               \"type\": \"number\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "       ], " + NEW_LINE +
+                    "       \"exampleMultiSchemaParameter\": [" + NEW_LINE +
+                    "           {" + NEW_LINE +
+                    "               \"type\": \"string\", " + NEW_LINE +
+                    "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
+                    "           }, " + NEW_LINE +
+                    "           {" + NEW_LINE +
+                    "               \"type\": \"string\", " + NEW_LINE +
+                    "               \"format\": \"ipv4\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "       ]" + NEW_LINE +
+                    "   }" + NEW_LINE);
+            }
             if (isErrorForField(reports, fieldPointer, "/queryStringParameters")) {
                 validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/queryStringParameters") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
                     "   {" + NEW_LINE +

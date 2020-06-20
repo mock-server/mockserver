@@ -24,6 +24,10 @@ public class HttpRequestAndHttpResponseSerializerIntegrationTest {
                 new HttpRequest()
                     .withMethod("GET")
                     .withPath("somepath")
+                    .withPathParameters(
+                        new Parameter("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        new Parameter("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    )
                     .withQueryStringParameters(
                         new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                         new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -48,6 +52,10 @@ public class HttpRequestAndHttpResponseSerializerIntegrationTest {
         "  \"httpRequest\" : {" + NEW_LINE +
         "    \"method\" : \"GET\"," + NEW_LINE +
         "    \"path\" : \"somepath\"," + NEW_LINE +
+        "    \"pathParameters\" : {" + NEW_LINE +
+        "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
+        "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+        "    }," + NEW_LINE +
         "    \"queryStringParameters\" : {" + NEW_LINE +
         "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
         "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +

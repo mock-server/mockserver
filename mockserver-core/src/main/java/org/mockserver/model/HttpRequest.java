@@ -27,6 +27,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     private int hashCode;
     private NottableString method = string("");
     private NottableString path = string("");
+    private Parameters pathParameters;
     private Parameters queryStringParameters;
     private Body body = null;
     private Headers headers;
@@ -248,6 +249,138 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
             }
         }
         return matches;
+    }
+
+    public Parameters getPathParameters() {
+        return this.pathParameters;
+    }
+
+    private Parameters getOrCreatePathParameters() {
+        if (this.pathParameters == null) {
+            this.pathParameters = new Parameters();
+            this.hashCode = 0;
+        }
+        return this.pathParameters;
+    }
+
+    public HttpRequest withPathParameters(Parameters parameters) {
+        if (parameters == null || parameters.isEmpty()) {
+            this.pathParameters = null;
+        } else {
+            this.pathParameters = parameters;
+        }
+        this.hashCode = 0;
+        return this;
+    }
+
+    /**
+     * The query string parameters to match on as a list of Parameter objects where the values or keys of each parameter can be either a string or a regex
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     *
+     * @param parameters the list of Parameter objects where the values or keys of each parameter can be either a string or a regex
+     */
+    public HttpRequest withPathParameters(List<Parameter> parameters) {
+        getOrCreatePathParameters().withEntries(parameters);
+        this.hashCode = 0;
+        return this;
+    }
+
+    /**
+     * The query string parameters to match on as a varags Parameter objects where the values or keys of each parameter can be either a string or a regex
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     *
+     * @param parameters the varags Parameter objects where the values or keys of each parameter can be either a string or a regex
+     */
+    public HttpRequest withPathParameters(Parameter... parameters) {
+        getOrCreatePathParameters().withEntries(parameters);
+        this.hashCode = 0;
+        return this;
+    }
+
+    /**
+     * The query string parameters to match on as a Map<String, List<String>> where the values or keys of each parameter can be either a string or a regex
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     *
+     * @param parameters the Map<String, List<String>> object where the values or keys of each parameter can be either a string or a regex
+     */
+    public HttpRequest withPathParameters(Map<String, List<String>> parameters) {
+        getOrCreatePathParameters().withEntries(parameters);
+        this.hashCode = 0;
+        return this;
+    }
+
+    /**
+     * Adds one query string parameter to match on as a Parameter object where the parameter values list can be a list of strings or regular expressions
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     *
+     * @param parameter the Parameter object which can have a values list of strings or regular expressions
+     */
+    public HttpRequest withPathParameter(Parameter parameter) {
+        getOrCreatePathParameters().withEntry(parameter);
+        this.hashCode = 0;
+        return this;
+    }
+
+    /**
+     * Adds one query string parameter to match which can specified using plain strings or regular expressions
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     *
+     * @param name   the parameter name
+     * @param values the parameter values which can be a varags of strings or regular expressions
+     */
+    public HttpRequest withPathParameter(String name, String... values) {
+        getOrCreatePathParameters().withEntry(name, values);
+        this.hashCode = 0;
+        return this;
+    }
+
+    /**
+     * Adds one query string parameter to match on or to not match on using the NottableString, each NottableString can either be a positive matching
+     * value, such as string("match"), or a value to not match on, such as not("do not match"), the string values passed to the NottableString
+     * can also be a plain string or a regex (for more details of the supported regex syntax
+     * see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     *
+     * @param name   the parameter name as a NottableString
+     * @param values the parameter values which can be a varags of NottableStrings
+     */
+    public HttpRequest withPathParameter(NottableString name, NottableString... values) {
+        getOrCreatePathParameters().withEntry(name, values);
+        this.hashCode = 0;
+        return this;
+    }
+
+    public List<Parameter> getPathParameterList() {
+        if (this.pathParameters != null) {
+            return this.pathParameters.getEntries();
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    @SuppressWarnings("unused")
+    public boolean hasPathParameter(String name, String value) {
+        if (this.pathParameters != null) {
+            return this.pathParameters.containsEntry(name, value);
+        } else {
+            return false;
+        }
+    }
+
+    @SuppressWarnings("unused")
+    public boolean hasPathParameter(NottableString name, NottableString value) {
+        if (this.pathParameters != null) {
+            return this.pathParameters.containsEntry(name, value);
+        } else {
+            return false;
+        }
+    }
+
+    public String getFirstPathParameter(String name) {
+        if (this.pathParameters != null) {
+            return this.pathParameters.getFirstValue(name);
+        } else {
+            return "";
+        }
     }
 
     public Parameters getQueryStringParameters() {
@@ -814,6 +947,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         return not(request(), not)
             .withMethod(method)
             .withPath(path)
+            .withPathParameters(pathParameters != null ? pathParameters.clone() : null)
             .withQueryStringParameters(queryStringParameters != null ? queryStringParameters.clone() : null)
             .withBody(body)
             .withHeaders(headers != null ? headers.clone() : null)
@@ -830,17 +964,20 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         if (replaceRequest.getPath() != null && isNotBlank(replaceRequest.getPath().getValue())) {
             withPath(replaceRequest.getPath());
         }
-        for (Header header : replaceRequest.getHeaderList()) {
-            getOrCreateHeaders().replaceEntry(header);
-        }
-        for (Cookie cookie : replaceRequest.getCookieList()) {
-            withCookie(cookie);
+        for (Parameter parameter : replaceRequest.getPathParameterList()) {
+            getOrCreatePathParameters().replaceEntry(parameter);
         }
         for (Parameter parameter : replaceRequest.getQueryStringParameterList()) {
             getOrCreateQueryStringParameters().replaceEntry(parameter);
         }
         if (replaceRequest.getBody() != null) {
             withBody(replaceRequest.getBody());
+        }
+        for (Header header : replaceRequest.getHeaderList()) {
+            getOrCreateHeaders().replaceEntry(header);
+        }
+        for (Cookie cookie : replaceRequest.getCookieList()) {
+            withCookie(cookie);
         }
         if (replaceRequest.isSecure() != null) {
             withSecure(replaceRequest.isSecure());
@@ -872,6 +1009,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         HttpRequest that = (HttpRequest) o;
         return Objects.equals(method, that.method) &&
             Objects.equals(path, that.path) &&
+            Objects.equals(pathParameters, that.pathParameters) &&
             Objects.equals(queryStringParameters, that.queryStringParameters) &&
             Objects.equals(body, that.body) &&
             Objects.equals(headers, that.headers) &&
@@ -884,7 +1022,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(super.hashCode(), method, path, queryStringParameters, body, headers, cookies, keepAlive, secure, socketAddress);
+            hashCode = Objects.hash(super.hashCode(), method, path, pathParameters, queryStringParameters, body, headers, cookies, keepAlive, secure, socketAddress);
         }
         return hashCode;
     }

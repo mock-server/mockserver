@@ -19,7 +19,8 @@ public class MatchDifference {
     public enum Field {
         METHOD("method"),
         PATH("path"),
-        QUERY("query"),
+        PATH_PARAMETERS("pathParameters"),
+        QUERY_PARAMETERS("queryParameters"),
         COOKIES("cookies"),
         HEADERS("headers"),
         BODY("body"),

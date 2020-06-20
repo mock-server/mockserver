@@ -118,6 +118,10 @@ public class RequestDefinitionDTODeserializerTest {
         String requestBytes = "{" + NEW_LINE +
             "  \"method\" : \"someMethod\"," + NEW_LINE +
             "  \"keepAlive\" : false," + NEW_LINE +
+            "  \"pathParameters\" : [ {" + NEW_LINE +
+            "    \"name\" : \"path_queryParameterName\"," + NEW_LINE +
+            "    \"values\" : [ \"path_queryParameterValue\" ]" + NEW_LINE +
+            "  } ]," + NEW_LINE +
             "  \"queryStringParameters\" : [ {" + NEW_LINE +
             "    \"name\" : \"queryParameterName\"," + NEW_LINE +
             "    \"values\" : [ \"queryParameterValue\" ]" + NEW_LINE +
@@ -150,6 +154,9 @@ public class RequestDefinitionDTODeserializerTest {
         assertEquals(new HttpRequestDTO()
                 .setMethod(string("someMethod"))
                 .setPath(string("somePath"))
+                .setPathParameters(new Parameters().withEntries(
+                    param("path_queryParameterName", "path_queryParameterValue")
+                ))
                 .setQueryStringParameters(new Parameters().withEntries(
                     param("queryParameterName", "queryParameterValue")
                 ))

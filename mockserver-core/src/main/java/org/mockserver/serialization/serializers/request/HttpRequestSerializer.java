@@ -30,6 +30,9 @@ public class HttpRequestSerializer extends StdSerializer<HttpRequest> {
         if (httpRequest.getPath() != null && !httpRequest.getPath().isBlank()) {
             jgen.writeObjectField("path", httpRequest.getPath());
         }
+        if (httpRequest.getPathParameters() != null && !httpRequest.getPathParameters().isEmpty()) {
+            jgen.writeObjectField("pathParameters", httpRequest.getPathParameters());
+        }
         if (httpRequest.getQueryStringParameterList() != null && !httpRequest.getQueryStringParameterList().isEmpty()) {
             jgen.writeObjectField("queryStringParameters", httpRequest.getQueryStringParameters());
         }
