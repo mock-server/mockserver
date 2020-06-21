@@ -62,6 +62,9 @@ public class PathParametersParser {
             if (matcher.getPathParameters() != null && !matcher.getPathParameters().isEmpty()) {
                 String[] matcherPathParts = matcher.getPath().getValue().split("/");
                 String[] matchedPathParts = matched.getPath().getValue().split("/");
+                if (matcherPathParts.length != matchedPathParts.length) {
+                    throw new IllegalArgumentException("matcher path " + matcher.getPath().getValue() + " has " + matcherPathParts.length + " parts but matched path " + matched.getPath().getValue() + " has " + matchedPathParts.length + " parts ");
+                }
                 for (int i = 0; i < matcherPathParts.length; i++) {
                     Matcher pathParameterName = PATH_VARIABLE_NAME_PATTERN.matcher(matcherPathParts[i]);
                     if (pathParameterName.matches()) {
@@ -76,6 +79,8 @@ public class PathParametersParser {
                 }
             }
         }
+        // ensure actions have path parameters available to them
+        matched.withPathParameters(parsedParameters);
         return parsedParameters;
     }
 }

@@ -209,6 +209,68 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
+    public void shouldReturnResponseByMatchingSchemaPathVariable() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some/path/{variableOne}/{variableTwo}")
+                .withPathParameters(
+                    schemaParam("variableO[a-z]{2}", "{" + NEW_LINE +
+                        "   \"type\": \"string\"," + NEW_LINE +
+                        "   \"pattern\": \"variableOneV[a-z]{4}$\"" + NEW_LINE +
+                        "}"),
+                    schemaParam("variableTwo", "{" + NEW_LINE +
+                        "   \"type\": \"string\"," + NEW_LINE +
+                        "   \"pattern\": \"variableTwoV[a-z]{4}$\"" + NEW_LINE +
+                        "}")
+                )
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path/variableOneValue/variableTwoValue")),
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/other/path")),
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path/variableOneValue/variableTwoOtherValue")),
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path/variableOneOtherValue/variableTwoValue")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
     public void shouldReturnResponseByMatchingStringBody() {
         // when
         mockServerClient

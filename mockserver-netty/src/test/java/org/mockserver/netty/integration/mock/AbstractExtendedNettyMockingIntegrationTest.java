@@ -54,6 +54,7 @@ import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.*;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.Parameter.schemaParam;
 import static org.mockserver.model.PortBinding.portBinding;
 import static org.mockserver.testing.closurecallback.ViaWebSocket.viaWebSocket;
 import static org.mockserver.testing.tls.SSLSocketFactory.sslSocketFactory;
@@ -661,6 +662,58 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     )
                     .withBody("an_example_body_https"),
                 headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldForwardByObjectCallbackViaLocalJVMWithPathVariables() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some/path/{variableOne}/{variableTwo}")
+                    .withPathParameters(
+                        schemaParam("variableO[a-z]{2}", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"variableOneV[a-z]{4}$\"" + NEW_LINE +
+                            "}"),
+                        schemaParam("variableTwo", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"variableTwoV[a-z]{4}$\"" + NEW_LINE +
+                            "}")
+                    )
+            )
+            .forward(
+                httpRequest -> request()
+                    .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
+                    .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
+                    .withBody("some_overridden_body " + httpRequest.getPathParameters())
+                    .withSecure(httpRequest.isSecure())
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overridden_body {" + NEW_LINE +
+                    "  \"variableOne\" : [ \"variableOneValue\" ]," + NEW_LINE +
+                    "  \"variableTwo\" : [ \"variableTwoValue\" ]" + NEW_LINE +
+                    "}"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path/variableOneValue/variableTwoValue"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore
+            )
         );
     }
 
