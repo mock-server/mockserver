@@ -64,15 +64,14 @@ public class JsonStringMatcher extends BodyMatcher<String> {
                     if (matcherJsonNode == null) {
                         matcherJsonNode = ObjectMapperFactory.createObjectMapper().readTree(matcher);
                     }
-                    Diff diff = Diff
+                    result = Diff
                         .create(
                             matcherJsonNode,
                             ObjectMapperFactory.createObjectMapper().readTree(matched),
                             "",
                             "",
                             diffConfig
-                        );
-                    result = diff
+                        )
                         .similar();
                 } catch (Throwable throwable) {
                     if (context != null) {

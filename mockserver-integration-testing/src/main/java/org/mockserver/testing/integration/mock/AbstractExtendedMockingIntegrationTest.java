@@ -1478,6 +1478,63 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
+    public void shouldReturnResponseByMatchingBodyWithJsonWithBlankFields() {
+        // when
+        makeRequest(
+            request()
+                .withPath(calculatePath("mockserver/expectation"))
+                .withMethod("PUT")
+                .withBody("{" + NEW_LINE +
+                    "  \"httpRequest\" : {" + NEW_LINE +
+                    "    \"body\" : {" + NEW_LINE +
+                    "        \"id\": 1," + NEW_LINE +
+                    "        \"name\": \"\"," + NEW_LINE +
+                    "        \"price\": 0," + NEW_LINE +
+                    "        \"null\": null," + NEW_LINE +
+                    "        \"tags\": []" + NEW_LINE +
+                    "    }" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"httpResponse\" : {" + NEW_LINE +
+                    "    \"body\" : {" + NEW_LINE +
+                    "        \"id\": 1," + NEW_LINE +
+                    "        \"name\": \"\"," + NEW_LINE +
+                    "        \"price\": 0," + NEW_LINE +
+                    "        \"null\": null," + NEW_LINE +
+                    "        \"tags\": []" + NEW_LINE +
+                    "    }" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    "}"),
+            headersToIgnore);
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader(CONTENT_TYPE.toString(), MediaType.APPLICATION_JSON_UTF_8.toString())
+                .withBody(json("{" + NEW_LINE +
+                    "  \"id\" : 1," + NEW_LINE +
+                    "  \"name\" : \"\"," + NEW_LINE +
+                    "  \"price\" : 0," + NEW_LINE +
+                    "  \"null\" : null," + NEW_LINE +
+                    "  \"tags\" : [ ]" + NEW_LINE +
+                    "}")),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST")
+                    .withBody(json("{" + NEW_LINE +
+                        "  \"id\" : 1," + NEW_LINE +
+                        "  \"name\" : \"\"," + NEW_LINE +
+                        "  \"price\" : 0," + NEW_LINE +
+                        "  \"null\" : null," + NEW_LINE +
+                        "  \"tags\" : [ ]" + NEW_LINE +
+                        "}")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
     public void shouldReturnResponseByMatchingBodyWithJsonWithCharsetUTF16() {
         // when
         mockServerClient
