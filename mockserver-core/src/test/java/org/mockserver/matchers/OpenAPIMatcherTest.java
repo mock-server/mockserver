@@ -9,6 +9,8 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.OpenAPIDefinition;
 
+import java.util.UUID;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
@@ -30,11 +32,11 @@ public class OpenAPIMatcherTest {
     public void shouldHandleBlankStrings() {
         // given
         OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(
+        openAPIMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("")
                 .withOperationId("")
-        );
+        ));
         HttpRequest httpRequest = request();
         MatchDifference matchDifference = new MatchDifference(httpRequest);
 
@@ -49,11 +51,11 @@ public class OpenAPIMatcherTest {
     public void shouldHandleNulls() {
         // given
         OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(
+        openAPIMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload(null)
                 .withOperationId(null)
-        );
+        ));
         HttpRequest httpRequest = request();
         MatchDifference matchDifference = new MatchDifference(httpRequest);
 
@@ -128,11 +130,11 @@ public class OpenAPIMatcherTest {
     public void shouldMatchSingleOperationInOpenAPIJsonUrl() {
         // given
         OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(
+        openAPIMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
                 .withOperationId("listPets")
-        );
+        ));
         HttpRequest httpRequest = request()
             .withMethod("GET")
             .withPath("/pets")
@@ -147,14 +149,37 @@ public class OpenAPIMatcherTest {
     }
 
     @Test
+    public void shouldMatchSingleOperationWithPathVariablesInOpenAPIJsonUrl() {
+        // given
+        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
+        openAPIMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                .withOperationId("showPetById")
+        ));
+        HttpRequest httpRequest = request()
+            .withMethod("GET")
+            .withPath("/pets/12345")
+            .withHeader("X-Request-ID", UUID.randomUUID().toString())
+            .withHeader("Other-Header", UUID.randomUUID().toString());
+        MatchDifference matchDifference = new MatchDifference(httpRequest);
+
+        // when
+        boolean matches = openAPIMatcher.matches(matchDifference, httpRequest);
+
+        // then
+        thenMatchesEmptyFieldDifferences(matchDifference, matches, true);
+    }
+
+    @Test
     public void shouldMatchSingleOperationInOpenAPIJsonSpec() {
         // given
         OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(
+        openAPIMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json"))
                 .withOperationId("listPets")
-        );
+        ));
         HttpRequest httpRequest = request()
             .withMethod("GET")
             .withPath("/pets")
@@ -172,11 +197,11 @@ public class OpenAPIMatcherTest {
     public void shouldMatchSingleOperationInOpenAPIYamlUrl() {
         // given
         OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(
+        openAPIMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.yaml")
                 .withOperationId("listPets")
-        );
+        ));
         HttpRequest httpRequest = request()
             .withMethod("GET")
             .withPath("/pets")
@@ -194,11 +219,11 @@ public class OpenAPIMatcherTest {
     public void shouldMatchSingleOperationInOpenAPIYamlSpec() {
         // given
         OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(
+        openAPIMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.yaml"))
                 .withOperationId("listPets")
-        );
+        ));
         HttpRequest httpRequest = request()
             .withMethod("GET")
             .withPath("/pets")
@@ -216,11 +241,11 @@ public class OpenAPIMatcherTest {
     public void shouldMatchAnyOperationInOpenAPI() {
         // given
         OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(
+        openAPIMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
                 .withOperationId("")
-        );
+        ));
         HttpRequest httpRequest = request()
             .withMethod("GET")
             .withPath("/pets")

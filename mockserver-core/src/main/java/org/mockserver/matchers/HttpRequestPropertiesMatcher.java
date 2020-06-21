@@ -33,6 +33,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
     private static final String REQUEST_NOT_OPERATOR_IS_ENABLED = COMMA + NEW_LINE + "request 'not' operator is enabled";
     private static final String EXPECTATION_REQUEST_NOT_OPERATOR_IS_ENABLED = COMMA + NEW_LINE + "expectation's request 'not' operator is enabled";
     private static final String EXPECTATION_REQUEST_MATCHER_NOT_OPERATOR_IS_ENABLED = COMMA + NEW_LINE + "expectation's request matcher 'not' operator is enabled";
+    private static final PathParametersParser pathParametersParser = new PathParametersParser();
     private int hashCode;
     private HttpRequest httpRequest;
     private RegexStringMatcher methodMatcher = null;
@@ -58,7 +59,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             this.httpRequest = httpRequest;
             if (httpRequest != null) {
                 withMethod(httpRequest.getMethod());
-                withPath(httpRequest.getPath(), httpRequest.getPathParameters());
+                withPath(httpRequest);
                 withPathParameters(httpRequest.getPathParameters());
                 withQueryStringParameters(httpRequest.getQueryStringParameters());
                 withBody(httpRequest.getBody());
@@ -73,16 +74,6 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
         }
     }
 
-    private NottableString normalisePathForParameters(NottableString path, Parameters pathParameters) {
-        // TODO(jamesdbloom) path parameters
-        return path;
-    }
-
-    private Parameters retrievePathParameters(HttpRequest request, Parameters expectedPathParameters) {
-        // TODO(jamesdbloom) path parameters
-        return request.getPathParameters();
-    }
-
     public HttpRequestPropertiesMatcher withControlPlaneMatcher(boolean controlPlaneMatcher) {
         this.controlPlaneMatcher = controlPlaneMatcher;
         return this;
@@ -92,8 +83,8 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
         this.methodMatcher = new RegexStringMatcher(mockServerLogger, method, controlPlaneMatcher);
     }
 
-    private void withPath(NottableString path, Parameters pathParameters) {
-        this.pathMatcher = new RegexStringMatcher(mockServerLogger, normalisePathForParameters(path, pathParameters), controlPlaneMatcher);
+    private void withPath(HttpRequest httpRequest) {
+        this.pathMatcher = new RegexStringMatcher(mockServerLogger, pathParametersParser.normalisePathWithParametersForMatching(httpRequest), controlPlaneMatcher);
     }
 
     private void withPathParameters(Parameters parameters) {
@@ -237,7 +228,8 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                         return false;
                     }
 
-                    boolean pathMatches = StringUtils.isBlank(request.getPath().getValue()) || matches(PATH, matchDifference, pathMatcher, request.getPath());
+                    NottableString path = controlPlaneMatcher ? pathParametersParser.normalisePathWithParametersForMatching(request) : request.getPath();
+                    boolean pathMatches = StringUtils.isBlank(request.getPath().getValue()) || matches(PATH, matchDifference, pathMatcher, path);
                     if (failFast(pathMatcher, matchDifference, matchDifferenceCount, becauseBuilder, pathMatches, PATH)) {
                         return false;
                     }
@@ -257,7 +249,9 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                         return false;
                     }
 
-                    boolean pathParametersMatches = matches(PATH_PARAMETERS, matchDifference, pathParameterMatcher, controlPlaneMatcher ? request.getPathParameters() : retrievePathParameters(request, httpRequest.getPathParameters()));
+                    Parameters pathParameters = controlPlaneMatcher ? pathParametersParser.retrievePathParameters(request, httpRequest) : pathParametersParser.retrievePathParameters(httpRequest, request);
+                    MultiValueMapMatcher pathParameterMatcher = controlPlaneMatcher ? new MultiValueMapMatcher(mockServerLogger, request.getPathParameters(), controlPlaneMatcher) : this.pathParameterMatcher;
+                    boolean pathParametersMatches = matches(PATH_PARAMETERS, matchDifference, pathParameterMatcher, pathParameters);
                     if (failFast(pathParameterMatcher, matchDifference, matchDifferenceCount, becauseBuilder, pathParametersMatches, PATH_PARAMETERS)) {
                         return false;
                     }
