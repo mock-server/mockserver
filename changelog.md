@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - create expectation using OpenAPI or Swagger specification with automatic example responses
 - verifications of requests or request sequences using OpenAPI or Swagger specification
 - clear log, clear expectations, retrieve logs and retrieve requests using OpenAPI or Swagger specification
+- json schema matchers for method, path, headers, query string parameters and cookies
+- path variables matched by nottable string, regex or json schema (as per query string parameters)  
 
 ### Changed
 - reduced time range of CA certificates to increase likelihood they will be accepted by strict systems (i.e. VMWare vCenter Server)
@@ -34,12 +36,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - reduced expiry of certification to one year to avoid errors from modern systems that don't like long lived certificates (such as Chrome or VMWare)
 - defaulted charset for XML and JSON to UTF8 as per rfc3470 and rfc8259
 - version matching logic for client now only matches on major and minor version and not bug fix version
+- improved handling of body matching for control plane to clearly separate control plane and data plan matching
 
 ### Fixed
-- fixed but with environment vairable configuration for long, integer and integer list values
+- fixed but with environment variable configuration for long, integer and integer list values
 - removed call to ReflectionToStringBuilder.setDefaultStyle to avoid impacting toString globally for JVM
 - fixed destination port and ip in Socks5CommandResponse which prevented SOCKS5 proxied connections
-- fixed Subject Alternative Names with wildcards or other valid DNS name formats not supported by certain versions of the JDK (<= 1.8) 
+- fixed Subject Alternative Names with wildcards or other valid DNS name formats not supported by certain versions of the JDK (<= 1.8)
+- fixed json body responses by returning blank or null fields, objects and arrays 
 
 ## [5.10.0] - 2020-03-24
 
