@@ -29,7 +29,7 @@ import static org.slf4j.event.Level.DEBUG;
 
 public class OpenAPIMatcher extends AbstractHttpRequestMatcher {
 
-    public static final String OPEN_API_LOAD_ERROR = "Unable to load API spec from provided URL or payload because ";
+    public static final String OPEN_API_LOAD_ERROR = "Unable to load API spec from provided URL or payload ";
     private static final String MATCHED = " matched ";
     private static OpenAPISerialiser openAPISerialiser;
     private int hashCode;
@@ -51,13 +51,17 @@ public class OpenAPIMatcher extends AbstractHttpRequestMatcher {
                 try {
                     this.openApiInteractionValidator = builder.build();
                 } catch (Throwable throwable) {
-                    String message = OPEN_API_LOAD_ERROR + throwable.getMessage();
+                    String message;
                     if (throwable instanceof OpenApiInteractionValidator.ApiLoadException) {
                         OpenApiInteractionValidator.ApiLoadException apiLoadException = (OpenApiInteractionValidator.ApiLoadException) throwable;
                         if (!apiLoadException.getParseMessages().isEmpty()) {
                             message = OPEN_API_LOAD_ERROR + String.join(" and ", apiLoadException.getParseMessages()).trim();
+                        } else {
+                            message = OPEN_API_LOAD_ERROR.trim();
                         }
 
+                    } else {
+                        message = ((!throwable.getMessage().contains(OPEN_API_LOAD_ERROR.trim()) ? OPEN_API_LOAD_ERROR : "") + throwable.getMessage()).trim();
                     }
                     throw new IllegalArgumentException(message);
                 }
@@ -124,7 +128,7 @@ public class OpenAPIMatcher extends AbstractHttpRequestMatcher {
                             .setLogLevel(Level.INFO)
                             .setHttpRequest(httpRequest)
                             .setExpectation(this.expectation)
-                            .setMessageFormat(this.expectation == null ? REQUEST_DID_NOT_MATCH : becauseBuilder.length() > 0 ? EXPECTATION_DID_NOT_MATCH : EXPECTATION_DID_NOT_MATCH_WITHOUT_BECAUSE)
+                            .setMessageFormat(this.expectation == null ? didNotMatchRequestBecause : becauseBuilder.length() > 0 ? didNotMatchExpectationBecause : didNotMatchExpectationWithoutBecause)
                             .setArguments(httpRequest, (this.expectation == null ? this : this.expectation.clone()), becauseBuilder.toString())
                     );
                 }

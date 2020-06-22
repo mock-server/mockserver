@@ -196,7 +196,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                             .setLogLevel(Level.INFO)
                             .setHttpRequest(request)
                             .setExpectation(this.expectation)
-                            .setMessageFormat(this.expectation == null ? REQUEST_DID_NOT_MATCH : becauseBuilder.length() > 0 ? EXPECTATION_DID_NOT_MATCH : EXPECTATION_DID_NOT_MATCH_WITHOUT_BECAUSE)
+                            .setMessageFormat(this.expectation == null ? didNotMatchRequestBecause : becauseBuilder.length() > 0 ? didNotMatchExpectationBecause : didNotMatchExpectationWithoutBecause)
                             .setArguments(request, (this.expectation == null ? this : this.expectation.clone()), becauseBuilder.toString())
                     );
                 }

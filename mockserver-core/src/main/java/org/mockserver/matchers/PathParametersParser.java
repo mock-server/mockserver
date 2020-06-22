@@ -33,7 +33,7 @@ public class PathParametersParser {
                 }
             }
         }
-        // Unable to load API spec from provided URL or payload because attribute paths.'/pets/{petId}'. Declared path parameter petId needs to be defined as a path parameter in path or operation level
+        // Unable to load API spec from provided URL or payload attribute paths.'/pets/{petId}'. Declared path parameter petId needs to be defined as a path parameter in path or operation level
         return error;
     }
 
@@ -52,7 +52,7 @@ public class PathParametersParser {
                 result = matcher.getPath();
             }
         }
-        // Unable to load API spec from provided URL or payload because attribute paths.'/pets/{petId}'. Declared path parameter petId needs to be defined as a path parameter in path or operation level
+        // Unable to load API spec from provided URL or payload attribute paths.'/pets/{petId}'. Declared path parameter petId needs to be defined as a path parameter in path or operation level
         return result;
     }
 

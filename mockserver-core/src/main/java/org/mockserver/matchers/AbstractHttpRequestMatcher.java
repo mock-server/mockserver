@@ -10,9 +10,11 @@ import static org.mockserver.character.Character.NEW_LINE;
 
 public abstract class AbstractHttpRequestMatcher extends NotMatcher<RequestDefinition> implements HttpRequestMatcher {
 
-    protected static final String REQUEST_DID_NOT_MATCH = "request:{}didn't match request matcher:{}because:{}";
-    protected static final String EXPECTATION_DID_NOT_MATCH = "request:{}didn't match expectation:{}because:{}";
+    protected static final String REQUEST_DID_NOT_MATCH = "request:{}didn't match request matcher";
+    protected static final String EXPECTATION_DID_NOT_MATCH = "request:{}didn't match expectation";
+    protected static final String BECAUSE = ":{}because:{}";
     protected static final String EXPECTATION_DID_NOT_MATCH_WITHOUT_BECAUSE = "request:{}didn't match expectation:{}";
+    protected static final String WITHOUT_BECAUSE = ":{}";
     protected static final String REQUEST_DID_MATCH = "request:{}matched request:{}";
     protected static final String EXPECTATION_DID_MATCH = "request:{}matched expectation:{}";
     protected static final String DID_NOT_MATCH = " didn't match";
@@ -26,6 +28,9 @@ public abstract class AbstractHttpRequestMatcher extends NotMatcher<RequestDefin
     private boolean responseInProgress = false;
     protected boolean controlPlaneMatcher;
     protected Expectation expectation;
+    protected String didNotMatchRequestBecause = REQUEST_DID_NOT_MATCH + BECAUSE;
+    protected String didNotMatchExpectationBecause = EXPECTATION_DID_NOT_MATCH + BECAUSE;
+    protected String didNotMatchExpectationWithoutBecause = EXPECTATION_DID_NOT_MATCH_WITHOUT_BECAUSE + WITHOUT_BECAUSE;
 
     protected AbstractHttpRequestMatcher(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
@@ -52,6 +57,16 @@ public abstract class AbstractHttpRequestMatcher extends NotMatcher<RequestDefin
         this.hashCode = 0;
         this.isBlank = requestDefinition == null;
         return apply(requestDefinition);
+    }
+
+    public void setControlPlaneMatcher(boolean controlPlaneMatcher) {
+        this.controlPlaneMatcher = controlPlaneMatcher;
+    }
+
+    public void setDescription(String description) {
+        didNotMatchRequestBecause = REQUEST_DID_NOT_MATCH + " " + description.trim() + BECAUSE;
+        didNotMatchExpectationBecause = EXPECTATION_DID_NOT_MATCH + " " + description.trim() + BECAUSE;
+        didNotMatchExpectationWithoutBecause = EXPECTATION_DID_NOT_MATCH_WITHOUT_BECAUSE + " " + description.trim() + WITHOUT_BECAUSE;
     }
 
     abstract boolean apply(RequestDefinition requestDefinition);

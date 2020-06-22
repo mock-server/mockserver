@@ -2,7 +2,6 @@ package org.mockserver.matchers;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.file.FileReader;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
@@ -24,15 +23,16 @@ import static org.mockserver.model.JsonBody.json;
 /**
  * @author jamesdbloom
  */
-public class OpenAPIMatcherTest {
+@Ignore("still work in progress")
+public class HttpRequestsPropertiesMatcherTest {
 
-    private final MockServerLogger mockServerLogger = new MockServerLogger(OpenAPIMatcherTest.class);
+    private final MockServerLogger mockServerLogger = new MockServerLogger(HttpRequestsPropertiesMatcherTest.class);
 
     @Test
     public void shouldHandleBlankStrings() {
         // given
-        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(new Expectation(
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("")
                 .withOperationId("")
@@ -41,7 +41,7 @@ public class OpenAPIMatcherTest {
         MatchDifference matchDifference = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = openAPIMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
 
         // then
         thenMatchesEmptyFieldDifferences(matchDifference, matches, true);
@@ -50,8 +50,8 @@ public class OpenAPIMatcherTest {
     @Test
     public void shouldHandleNulls() {
         // given
-        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(new Expectation(
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload(null)
                 .withOperationId(null)
@@ -60,7 +60,7 @@ public class OpenAPIMatcherTest {
         MatchDifference matchDifference = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = openAPIMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
 
         // then
         thenMatchesEmptyFieldDifferences(matchDifference, matches, true);
@@ -69,11 +69,11 @@ public class OpenAPIMatcherTest {
     @Test
     public void shouldHandleInvalidOpenAPIJsonSpec() {
         // given
-        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
 
         try {
             // when
-            openAPIMatcher.update(
+            httpRequestsPropertiesMatcher.update(
                 new OpenAPIDefinition()
                     .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json").substring(0, 100))
                     .withOperationId("listPets")
@@ -82,18 +82,24 @@ public class OpenAPIMatcherTest {
             // then
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload malformed or unreadable swagger supplied"));
+            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload Unexpected end-of-input in field name" + NEW_LINE +
+                " at [Source: (String)\"{" + NEW_LINE +
+                "  \"openapi\": \"3.0.0\"," + NEW_LINE +
+                "  \"info\": {" + NEW_LINE +
+                "    \"version\": \"1.0.0\"," + NEW_LINE +
+                "    \"title\": \"Swagger Petstore\"," + NEW_LINE +
+                "    \"li\"; line: 6, column: 8]"));
         }
     }
 
     @Test
     public void shouldHandleInvalidOpenAPIYamlSpec() {
         // given
-        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
 
         try {
             // when
-            openAPIMatcher.update(
+            httpRequestsPropertiesMatcher.update(
                 new OpenAPIDefinition()
                     .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.yaml").substring(0, 100))
                     .withOperationId("listPets")
@@ -102,18 +108,27 @@ public class OpenAPIMatcherTest {
             // then
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload malformed or unreadable swagger supplied"));
+            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload while scanning a simple key" + NEW_LINE +
+                " in 'reader', line 8, column 1:" + NEW_LINE +
+                "    servers" + NEW_LINE +
+                "    ^" + NEW_LINE +
+                "could not find expected ':'" + NEW_LINE +
+                " in 'reader', line 8, column 8:" + NEW_LINE +
+                "    servers" + NEW_LINE +
+                "           ^" + NEW_LINE +
+                "" + NEW_LINE +
+                " at [Source: (StringReader); line: 8, column: 1]"));
         }
     }
 
     @Test
     public void shouldHandleInvalidOpenAPIUrl() {
         // given
-        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
 
         try {
             // when
-            openAPIMatcher.update(
+            httpRequestsPropertiesMatcher.update(
                 new OpenAPIDefinition()
                     .withSpecUrlOrPayload("org/mockserver/mock/does_not_exist.json")
                     .withOperationId("listPets")
@@ -129,8 +144,8 @@ public class OpenAPIMatcherTest {
     @Test
     public void shouldMatchSingleOperationInOpenAPIJsonUrl() {
         // given
-        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(new Expectation(
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
                 .withOperationId("listPets")
@@ -142,7 +157,7 @@ public class OpenAPIMatcherTest {
         MatchDifference matchDifference = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = openAPIMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
 
         // then
         thenMatchesEmptyFieldDifferences(matchDifference, matches, true);
@@ -151,8 +166,8 @@ public class OpenAPIMatcherTest {
     @Test
     public void shouldMatchSingleOperationWithPathVariablesInOpenAPIJsonUrl() {
         // given
-        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(new Expectation(
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
                 .withOperationId("showPetById")
@@ -165,7 +180,7 @@ public class OpenAPIMatcherTest {
         MatchDifference matchDifference = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = openAPIMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
 
         // then
         thenMatchesEmptyFieldDifferences(matchDifference, matches, true);
@@ -174,8 +189,8 @@ public class OpenAPIMatcherTest {
     @Test
     public void shouldMatchSingleOperationInOpenAPIJsonSpec() {
         // given
-        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(new Expectation(
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json"))
                 .withOperationId("listPets")
@@ -187,7 +202,7 @@ public class OpenAPIMatcherTest {
         MatchDifference matchDifference = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = openAPIMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
 
         // then
         thenMatchesEmptyFieldDifferences(matchDifference, matches, true);
@@ -196,8 +211,8 @@ public class OpenAPIMatcherTest {
     @Test
     public void shouldMatchSingleOperationInOpenAPIYamlUrl() {
         // given
-        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(new Expectation(
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.yaml")
                 .withOperationId("listPets")
@@ -209,7 +224,7 @@ public class OpenAPIMatcherTest {
         MatchDifference matchDifference = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = openAPIMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
 
         // then
         thenMatchesEmptyFieldDifferences(matchDifference, matches, true);
@@ -218,8 +233,8 @@ public class OpenAPIMatcherTest {
     @Test
     public void shouldMatchSingleOperationInOpenAPIYamlSpec() {
         // given
-        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(new Expectation(
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.yaml"))
                 .withOperationId("listPets")
@@ -231,7 +246,7 @@ public class OpenAPIMatcherTest {
         MatchDifference matchDifference = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = openAPIMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
 
         // then
         thenMatchesEmptyFieldDifferences(matchDifference, matches, true);
@@ -240,8 +255,8 @@ public class OpenAPIMatcherTest {
     @Test
     public void shouldMatchAnyOperationInOpenAPI() {
         // given
-        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(new Expectation(
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
                 .withOperationId("")
@@ -253,7 +268,7 @@ public class OpenAPIMatcherTest {
         MatchDifference matchDifference = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = openAPIMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
 
         // then
         thenMatchesEmptyFieldDifferences(matchDifference, matches, true);
@@ -262,8 +277,8 @@ public class OpenAPIMatcherTest {
     @Test
     public void shouldNotMatchRequestWithWrongOperationIdInOpenAPI() {
         // given
-        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(new Expectation(
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
                 .withOperationId("showPetById")
@@ -275,7 +290,7 @@ public class OpenAPIMatcherTest {
         MatchDifference matchDifference = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = openAPIMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
 
         // then
         assertThat(matches, is(false));
@@ -300,8 +315,8 @@ public class OpenAPIMatcherTest {
     @Test
     public void shouldNotMatchRequestWithWrongOperationIdWithNullContextInOpenAPI() {
         // given
-        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(new Expectation(
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
                 .withOperationId("showPetById")
@@ -313,7 +328,7 @@ public class OpenAPIMatcherTest {
         MatchDifference matchDifference = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = openAPIMatcher.matches(httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(httpRequest);
 
         // then
         thenMatchesEmptyFieldDifferences(matchDifference, matches, false);
@@ -322,8 +337,8 @@ public class OpenAPIMatcherTest {
     @Test
     public void shouldNotMatchRequestWithMethodMismatchInOpenAPI() {
         // given
-        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(new Expectation(
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
                 .withOperationId("showPetById")
@@ -335,7 +350,7 @@ public class OpenAPIMatcherTest {
         MatchDifference matchDifference = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = openAPIMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
 
         // then
         assertThat(matches, is(false));
@@ -354,8 +369,8 @@ public class OpenAPIMatcherTest {
     @Test
     public void shouldNotMatchRequestWithPathMismatchInOpenAPI() {
         // given
-        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(new Expectation(
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
                 .withOperationId("showPetById")
@@ -367,7 +382,7 @@ public class OpenAPIMatcherTest {
         MatchDifference matchDifference = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = openAPIMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
 
         // then
         assertThat(matches, is(false));
@@ -386,8 +401,8 @@ public class OpenAPIMatcherTest {
     @Test
     public void shouldNotMatchRequestWithHeaderMismatchInOpenAPI() {
         // given
-        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(new Expectation(
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
                 .withOperationId("somePath")
@@ -399,7 +414,7 @@ public class OpenAPIMatcherTest {
         MatchDifference matchDifference = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = openAPIMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
 
         // then
         assertThat(matches, is(false));
@@ -418,8 +433,8 @@ public class OpenAPIMatcherTest {
     @Test
     public void shouldNotMatchRequestWithHeaderAndQueryParameterMismatchInOpenAPI() {
         // given
-        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(new Expectation(
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
                 .withOperationId("somePath")
@@ -431,7 +446,7 @@ public class OpenAPIMatcherTest {
         MatchDifference matchDifference = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = openAPIMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
 
         // then
         assertThat(matches, is(false));
@@ -453,8 +468,8 @@ public class OpenAPIMatcherTest {
     @Test
     public void shouldNotMatchRequestWithHeaderAndQueryParameterMismatchInOpenAPIWithoutOperationId() {
         // given
-        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(new Expectation(
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
         ));
@@ -465,7 +480,7 @@ public class OpenAPIMatcherTest {
         MatchDifference matchDifference = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = openAPIMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
 
         // then
         assertThat(matches, is(false));
@@ -487,8 +502,8 @@ public class OpenAPIMatcherTest {
     @Test
     public void shouldNotMatchRequestWithBodyMismatchWithContentTypeInOpenAPI() {
         // given
-        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(new Expectation(
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
                 .withOperationId("createPets")
@@ -497,15 +512,15 @@ public class OpenAPIMatcherTest {
             .withMethod("POST")
             .withPath("/pets")
             .withHeader("content-type", "application/json")
-            .withBody(json("{\n" +
-                "    \"id\": \"invalid_id_format\", \n" +
-                "    \"name\": \"scruffles\", \n" +
-                "    \"tag\": \"dog\"\n" +
+            .withBody(json("{" + NEW_LINE +
+                "    \"id\": \"invalid_id_format\", " + NEW_LINE +
+                "    \"name\": \"scruffles\", " + NEW_LINE +
+                "    \"tag\": \"dog\"" + NEW_LINE +
                 "}"));
         MatchDifference matchDifference = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = openAPIMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
 
         // then
         assertThat(matches, is(false));
@@ -526,8 +541,8 @@ public class OpenAPIMatcherTest {
     @Test
     public void shouldNotMatchRequestWithBodyMismatchWithContentTypeInOpenAPIWithoutOperationID() {
         // given
-        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(new Expectation(
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
         ));
@@ -535,15 +550,15 @@ public class OpenAPIMatcherTest {
             .withMethod("POST")
             .withPath("/pets")
             .withHeader("content-type", "application/json")
-            .withBody(json("{\n" +
-                "    \"id\": \"invalid_id_format\", \n" +
-                "    \"name\": \"scruffles\", \n" +
-                "    \"tag\": \"dog\"\n" +
+            .withBody(json("{" + NEW_LINE +
+                "    \"id\": \"invalid_id_format\", " + NEW_LINE +
+                "    \"name\": \"scruffles\", " + NEW_LINE +
+                "    \"tag\": \"dog\"" + NEW_LINE +
                 "}"));
         MatchDifference matchDifference = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = openAPIMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
 
         // then
         assertThat(matches, is(false));
@@ -562,11 +577,10 @@ public class OpenAPIMatcherTest {
     }
 
     @Test
-    @Ignore("bug in validator library https://bitbucket.org/atlassian/swagger-request-validator/issues/238/request-with-no-content-type-header-are")
     public void shouldNotMatchRequestInOpenAPIWithBodyMismatch() {
         // given
-        OpenAPIMatcher openAPIMatcher = new OpenAPIMatcher(mockServerLogger);
-        openAPIMatcher.update(new Expectation(
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
                 .withOperationId("createPets")
@@ -574,15 +588,15 @@ public class OpenAPIMatcherTest {
         HttpRequest httpRequest = request()
             .withMethod("POST")
             .withPath("/pets")
-            .withBody(json("{\n" +
-                "    \"id\": \"invalid_id_format\", \n" +
-                "    \"name\": \"scruffles\", \n" +
-                "    \"tag\": \"dog\"\n" +
+            .withBody(json("{" + NEW_LINE +
+                "    \"id\": \"invalid_id_format\", " + NEW_LINE +
+                "    \"name\": \"scruffles\", " + NEW_LINE +
+                "    \"tag\": \"dog\"" + NEW_LINE +
                 "}"));
         MatchDifference matchDifference = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = openAPIMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
 
         // then
         assertThat(matches, is(false));
