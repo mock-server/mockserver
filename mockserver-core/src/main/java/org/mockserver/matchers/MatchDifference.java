@@ -70,7 +70,7 @@ public class MatchDifference {
     public MatchDifference addDifference(Field fieldName, String messageFormat, Object... arguments) {
         if (detailedMatchFailures()) {
             if (isNotEmpty(messageFormat) && arguments != null && isNotEmpty(fieldName)) {
-                differences
+                this.differences
                     .computeIfAbsent(fieldName, key -> new ArrayList<>())
                     .add(formatLogMessage(1, messageFormat, arguments));
             }
@@ -94,7 +94,18 @@ public class MatchDifference {
     }
 
     public List<String> getDifferences(Field fieldName) {
-        return differences.get(fieldName);
+        return this.differences.get(fieldName);
     }
 
+    public Map<Field, List<String>> getAllDifferences() {
+        return this.differences;
+    }
+
+    public void addDifferences(Map<Field, List<String>> differences) {
+        for (Field field : differences.keySet()) {
+            this.differences
+                .computeIfAbsent(field, key -> new ArrayList<>())
+                .addAll(differences.get(field));
+        }
+    }
 }

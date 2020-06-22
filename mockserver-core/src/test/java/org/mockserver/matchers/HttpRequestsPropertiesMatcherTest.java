@@ -1,6 +1,5 @@
 package org.mockserver.matchers;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.file.FileReader;
 import org.mockserver.logging.MockServerLogger;
@@ -23,7 +22,6 @@ import static org.mockserver.model.JsonBody.json;
 /**
  * @author jamesdbloom
  */
-@Ignore("still work in progress")
 public class HttpRequestsPropertiesMatcherTest {
 
     private final MockServerLogger mockServerLogger = new MockServerLogger(HttpRequestsPropertiesMatcherTest.class);
@@ -295,20 +293,20 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertThat(matches, is(false));
         assertThat(matchDifference.getDifferences(METHOD), nullValue());
-        assertThat(matchDifference.getDifferences(PATH), nullValue());
+        assertThat(matchDifference.getDifferences(PATH), containsInAnyOrder("  string or regex match failed expected:\n" +
+            "\n" +
+            "    /pets/.*\n" +
+            "\n" +
+            "   found:\n" +
+            "\n" +
+            "    /pets\n"));
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), nullValue());
         assertThat(matchDifference.getDifferences(BODY), nullValue());
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
         assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
-        assertThat(matchDifference.getDifferences(OPERATION), containsInAnyOrder("  expected match against operation" + NEW_LINE +
-            NEW_LINE +
-            "    showPetById" + NEW_LINE +
-            NEW_LINE +
-            "   but request matched operation" + NEW_LINE +
-            NEW_LINE +
-            "    listPets" + NEW_LINE));
+        assertThat(matchDifference.getDifferences(OPERATION), nullValue());
         assertThat(matchDifference.getDifferences(OPENAPI), nullValue());
     }
 
@@ -354,7 +352,13 @@ public class HttpRequestsPropertiesMatcherTest {
 
         // then
         assertThat(matches, is(false));
-        assertThat(matchDifference.getDifferences(METHOD), nullValue());
+        assertThat(matchDifference.getDifferences(METHOD), containsInAnyOrder("  string or regex match failed expected:\n" +
+            "\n" +
+            "    GET\n" +
+            "\n" +
+            "   found:\n" +
+            "\n" +
+            "    PUT\n"));
         assertThat(matchDifference.getDifferences(PATH), nullValue());
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
@@ -363,7 +367,7 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
         assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(OPENAPI), containsInAnyOrder("  PUT operation not allowed on path '/pets'"));
+        assertThat(matchDifference.getDifferences(OPENAPI), nullValue());
     }
 
     @Test
@@ -387,7 +391,13 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertThat(matches, is(false));
         assertThat(matchDifference.getDifferences(METHOD), nullValue());
-        assertThat(matchDifference.getDifferences(PATH), nullValue());
+        assertThat(matchDifference.getDifferences(PATH), containsInAnyOrder("  string or regex match failed expected:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    /pets/.*" + NEW_LINE +
+            "" + NEW_LINE +
+            "   found:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    /wrong" + NEW_LINE));
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), nullValue());
@@ -395,7 +405,7 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
         assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(OPENAPI), containsInAnyOrder("  No API path found that matches request '/wrong'"));
+        assertThat(matchDifference.getDifferences(OPENAPI), nullValue());
     }
 
     @Test
@@ -422,12 +432,27 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(matchDifference.getDifferences(PATH), nullValue());
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
-        assertThat(matchDifference.getDifferences(HEADERS), nullValue());
+        assertThat(matchDifference.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:\n" +
+            "\n" +
+            "    {\n" +
+            "      \"X-Request-ID\" : [ {\n" +
+            "        \"type\" : \"string\",\n" +
+            "        \"format\" : \"uuid\"\n" +
+            "      } ]\n" +
+            "    }\n" +
+            "\n" +
+            "   found:\n" +
+            "\n" +
+            "    none\n" +
+            "\n" +
+            "   failed because:\n" +
+            "\n" +
+            "    none is not a subset\n"));
         assertThat(matchDifference.getDifferences(BODY), nullValue());
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
         assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(OPENAPI), containsInAnyOrder("  Header parameter 'X-Request-ID' is required on path '/some/path' but not found in request"));
+        assertThat(matchDifference.getDifferences(OPENAPI), nullValue());
     }
 
     @Test
@@ -454,15 +479,27 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(matchDifference.getDifferences(PATH), nullValue());
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
-        assertThat(matchDifference.getDifferences(HEADERS), nullValue());
+        assertThat(matchDifference.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:\n" +
+            "\n" +
+            "    {\n" +
+            "      \"X-Request-ID\" : [ {\n" +
+            "        \"type\" : \"string\",\n" +
+            "        \"format\" : \"uuid\"\n" +
+            "      } ]\n" +
+            "    }\n" +
+            "\n" +
+            "   found:\n" +
+            "\n" +
+            "    none\n" +
+            "\n" +
+            "   failed because:\n" +
+            "\n" +
+            "    none is not a subset\n"));
         assertThat(matchDifference.getDifferences(BODY), nullValue());
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
         assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(OPENAPI), containsInAnyOrder(
-            "  Header parameter 'X-Request-ID' is required on path '/some/path' but not found in request",
-            "  Instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])"
-        ));
+        assertThat(matchDifference.getDifferences(OPENAPI), nullValue());
     }
 
     @Test
@@ -484,19 +521,57 @@ public class HttpRequestsPropertiesMatcherTest {
 
         // then
         assertThat(matches, is(false));
-        assertThat(matchDifference.getDifferences(METHOD), nullValue());
-        assertThat(matchDifference.getDifferences(PATH), nullValue());
+        assertThat(matchDifference.getDifferences(PATH), containsInAnyOrder("  string or regex match failed expected:\n" +
+                "\n" +
+                "    /pets\n" +
+                "\n" +
+                "   found:\n" +
+                "\n" +
+                "    /some/path\n",
+            "  string or regex match failed expected:\n" +
+                "\n" +
+                "    /pets/.*\n" +
+                "\n" +
+                "   found:\n" +
+                "\n" +
+                "    /some/path\n"));
+        assertThat(matchDifference.getDifferences(METHOD), containsInAnyOrder("  string or regex match failed expected:\n" +
+                "\n" +
+                "    POST\n" +
+                "\n" +
+                "   found:\n" +
+                "\n" +
+                "    GET\n",
+            "  string or regex match failed expected:\n" +
+                "\n" +
+                "    POST\n" +
+                "\n" +
+                "   found:\n" +
+                "\n" +
+                "    GET\n"));
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
-        assertThat(matchDifference.getDifferences(HEADERS), nullValue());
+        assertThat(matchDifference.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:\n" +
+            "\n" +
+            "    {\n" +
+            "      \"X-Request-ID\" : [ {\n" +
+            "        \"type\" : \"string\",\n" +
+            "        \"format\" : \"uuid\"\n" +
+            "      } ]\n" +
+            "    }\n" +
+            "\n" +
+            "   found:\n" +
+            "\n" +
+            "    none\n" +
+            "\n" +
+            "   failed because:\n" +
+            "\n" +
+            "    none is not a subset\n"));
         assertThat(matchDifference.getDifferences(BODY), nullValue());
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
         assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(OPENAPI), containsInAnyOrder(
-            "  Header parameter 'X-Request-ID' is required on path '/some/path' but not found in request",
-            "  Instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])"
-        ));
+        assertThat(matchDifference.getDifferences(OPENAPI), nullValue());
     }
 
     @Test
@@ -529,13 +604,43 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), nullValue());
-        assertThat(matchDifference.getDifferences(BODY), nullValue());
+        String bodyError = "  json schema match failed expected:\n" +
+            "\n" +
+            "    {\n" +
+            "      \"required\" : [ \"id\", \"name\" ],\n" +
+            "      \"type\" : \"object\",\n" +
+            "      \"properties\" : {\n" +
+            "        \"id\" : {\n" +
+            "          \"type\" : \"integer\",\n" +
+            "          \"format\" : \"int64\"\n" +
+            "        },\n" +
+            "        \"name\" : {\n" +
+            "          \"type\" : \"string\"\n" +
+            "        },\n" +
+            "        \"tag\" : {\n" +
+            "          \"type\" : \"string\"\n" +
+            "        }\n" +
+            "      }\n" +
+            "    }\n" +
+            "\n" +
+            "   found:\n" +
+            "\n" +
+            "    {\n" +
+            "        \"id\": \"invalid_id_format\", \n" +
+            "        \"name\": \"scruffles\", \n" +
+            "        \"tag\": \"dog\"\n" +
+            "    }\n" +
+            "\n" +
+            "   failed because:\n" +
+            "\n" +
+            "    2 errors:\n" +
+            "     - field: \"/id\" for schema: \"/properties/id\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])\"\n" +
+            "     - schema: \"/properties/id\" has error: \"format attribute \"int64\" not supported\"\n";
+        assertThat(matchDifference.getDifferences(BODY), containsInAnyOrder(bodyError, bodyError));
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
         assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(OPENAPI), containsInAnyOrder(
-            "  [Path '/id'] Instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])"
-        ));
+        assertThat(matchDifference.getDifferences(OPENAPI), nullValue());
     }
 
     @Test
@@ -562,18 +667,55 @@ public class HttpRequestsPropertiesMatcherTest {
 
         // then
         assertThat(matches, is(false));
-        assertThat(matchDifference.getDifferences(METHOD), nullValue());
+        String methodError = "  string or regex match failed expected:\n" +
+            "\n" +
+            "    GET\n" +
+            "\n" +
+            "   found:\n" +
+            "\n" +
+            "    POST\n";
+        assertThat(matchDifference.getDifferences(METHOD), containsInAnyOrder(methodError, methodError, methodError));
         assertThat(matchDifference.getDifferences(PATH), nullValue());
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), nullValue());
-        assertThat(matchDifference.getDifferences(BODY), nullValue());
+        String bodyError = "  json schema match failed expected:\n" +
+            "\n" +
+            "    {\n" +
+            "      \"required\" : [ \"id\", \"name\" ],\n" +
+            "      \"type\" : \"object\",\n" +
+            "      \"properties\" : {\n" +
+            "        \"id\" : {\n" +
+            "          \"type\" : \"integer\",\n" +
+            "          \"format\" : \"int64\"\n" +
+            "        },\n" +
+            "        \"name\" : {\n" +
+            "          \"type\" : \"string\"\n" +
+            "        },\n" +
+            "        \"tag\" : {\n" +
+            "          \"type\" : \"string\"\n" +
+            "        }\n" +
+            "      }\n" +
+            "    }\n" +
+            "\n" +
+            "   found:\n" +
+            "\n" +
+            "    {\n" +
+            "        \"id\": \"invalid_id_format\", \n" +
+            "        \"name\": \"scruffles\", \n" +
+            "        \"tag\": \"dog\"\n" +
+            "    }\n" +
+            "\n" +
+            "   failed because:\n" +
+            "\n" +
+            "    2 errors:\n" +
+            "     - field: \"/id\" for schema: \"/properties/id\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])\"\n" +
+            "     - schema: \"/properties/id\" has error: \"format attribute \"int64\" not supported\"\n";
+        assertThat(matchDifference.getDifferences(BODY), containsInAnyOrder(bodyError, bodyError));
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
         assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(OPENAPI), containsInAnyOrder(
-            "  [Path '/id'] Instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])"
-        ));
+        assertThat(matchDifference.getDifferences(OPENAPI), nullValue());
     }
 
     @Test
@@ -605,13 +747,43 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), nullValue());
-        assertThat(matchDifference.getDifferences(BODY), nullValue());
+        String schemaValidationError = "  json schema match failed expected:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    {" + NEW_LINE +
+            "      \"required\" : [ \"id\", \"name\" ]," + NEW_LINE +
+            "      \"type\" : \"object\"," + NEW_LINE +
+            "      \"properties\" : {" + NEW_LINE +
+            "        \"id\" : {" + NEW_LINE +
+            "          \"type\" : \"integer\"," + NEW_LINE +
+            "          \"format\" : \"int64\"" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        \"name\" : {" + NEW_LINE +
+            "          \"type\" : \"string\"" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        \"tag\" : {" + NEW_LINE +
+            "          \"type\" : \"string\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "" + NEW_LINE +
+            "   found:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    {" + NEW_LINE +
+            "        \"id\": \"invalid_id_format\", " + NEW_LINE +
+            "        \"name\": \"scruffles\", " + NEW_LINE +
+            "        \"tag\": \"dog\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "" + NEW_LINE +
+            "   failed because:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    2 errors:" + NEW_LINE +
+            "     - field: \"/id\" for schema: \"/properties/id\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])\"" + NEW_LINE +
+            "     - schema: \"/properties/id\" has error: \"format attribute \"int64\" not supported\"" + NEW_LINE;
+        assertThat(matchDifference.getDifferences(BODY), containsInAnyOrder(schemaValidationError, schemaValidationError));
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
         assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(OPENAPI), containsInAnyOrder(
-            "  [Path '/id'] Instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])"
-        ));
+        assertThat(matchDifference.getDifferences(OPENAPI), nullValue());
     }
 
     private void thenMatchesEmptyFieldDifferences(MatchDifference matchDifference, boolean matches, boolean expected) {

@@ -70,7 +70,7 @@ public class OpenAPISerialiser {
     }
 
     public Map<String, List<Pair<String, Operation>>> retrieveOperations(String specUrlOrPayload, String operationId) {
-        Map<String, List<Pair<String, Operation>>> operations = new HashMap<>();
+        Map<String, List<Pair<String, Operation>>> operations = new LinkedHashMap<>();
         OpenAPI openAPI = buildOpenAPI(specUrlOrPayload, true);
         if (openAPI != null) {
             openAPI
@@ -80,6 +80,7 @@ public class OpenAPISerialiser {
                         List<Pair<String, Operation>> filteredOperations = mapOperations(value)
                             .stream()
                             .filter(operation -> isBlank(operationId) || operationId.equals(operation.getRight().getOperationId()))
+                            .sorted(Comparator.comparing(Pair::getLeft))
                             .collect(Collectors.toList());
                         if (!filteredOperations.isEmpty()) {
                             operations.put(key, filteredOperations);
@@ -98,17 +99,17 @@ public class OpenAPISerialiser {
         if (pathItem.getPut() != null) {
             allOperations.add(new ImmutablePair<>("PUT", pathItem.getPut()));
         }
-        if (pathItem.getHead() != null) {
-            allOperations.add(new ImmutablePair<>("HEAD", pathItem.getHead()));
-        }
         if (pathItem.getPost() != null) {
             allOperations.add(new ImmutablePair<>("POST", pathItem.getPost()));
+        }
+        if (pathItem.getPatch() != null) {
+            allOperations.add(new ImmutablePair<>("PATCH", pathItem.getPatch()));
         }
         if (pathItem.getDelete() != null) {
             allOperations.add(new ImmutablePair<>("DELETE", pathItem.getDelete()));
         }
-        if (pathItem.getPatch() != null) {
-            allOperations.add(new ImmutablePair<>("PATCH", pathItem.getPatch()));
+        if (pathItem.getHead() != null) {
+            allOperations.add(new ImmutablePair<>("HEAD", pathItem.getHead()));
         }
         if (pathItem.getOptions() != null) {
             allOperations.add(new ImmutablePair<>("OPTIONS", pathItem.getOptions()));
