@@ -35,14 +35,10 @@ public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues> {
         } else if (values == null || values.isEmpty()) {
             result = matcher.allKeysNotted();
         } else {
-            if (values.toCaseInsensitiveRegexMultiMap(mockServerLogger, controlPlaneMatcher).containsAll(matcher)) {
-                result = true;
-            } else {
-                if (context != null) {
-                    context.addDifference(mockServerLogger, "multimap subset match failed expected:{}found:{}failed because:{}", keysToMultiValues, values, "multimap is not a subset");
-                }
-                result = false;
-            }
+            result = values.toCaseInsensitiveRegexMultiMap(mockServerLogger, controlPlaneMatcher).containsAll(matcher);
+        }
+        if (!result && context != null) {
+            context.addDifference(mockServerLogger, "multimap subset match failed expected:{}found:{}failed because:{}", keysToMultiValues, values != null ? values : "none", values != null ? "multimap is not a subset" : "none is not a subset");
         }
 
         return not != result;
