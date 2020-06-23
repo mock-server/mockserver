@@ -2020,6 +2020,32 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchJsonArrayBody() {
+        assertTrue(update(new HttpRequest().withBody(
+            json("" +
+                "{\n" +
+                "  \"digests\" : [ ]\n" +
+                "}\n")
+        )).matches(null, new HttpRequest().withBody(
+            "" +
+                "{\n" +
+                "  \"digests\" : [ ]\n" +
+                "}\n"
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            json("" +
+                "{\n" +
+                "  \"digests\" : [ ]\n" +
+                "}\n")
+        )).matches(null, new HttpRequest().withBody(
+            json("" +
+                "{\n" +
+                "  \"digests\" : [ \"sha256:475b124d0575504fe0f028fe29fa44b3065fca745d4dcb1448f064892018b44f\" ]\n" +
+                "}\n")
+        )));
+    }
+
+    @Test
     public void shouldMatchJsonBodyWithCharset() {
         assertTrue(update(new HttpRequest().withBody(
             json("{ \"some_field\": \"我说中国话\" }", UTF_8, MatchType.ONLY_MATCHING_FIELDS)
@@ -2106,6 +2132,43 @@ public class HttpRequestPropertiesMatcherTest {
                 "}")
         )).matches(null, new HttpRequest().withBody(
             new JsonBodyDTO(json("{ \"some_field\": \"some_value\" }")).toString()
+        )));
+    }
+
+    @Test
+    public void shouldMatchJsonArrayBodyForControlPlane() {
+        assertTrue(updateForControlPlane(new HttpRequest().withBody(
+            json("" +
+                "{\n" +
+                "  \"digests\" : [ ]\n" +
+                "}\n")
+        )).matches(null, new HttpRequest().withBody(
+            "" +
+                "{\n" +
+                "  \"digests\" : [ ]\n" +
+                "}\n"
+        )));
+        assertTrue(updateForControlPlane(new HttpRequest().withBody(
+            json("" +
+                "{\n" +
+                "  \"digests\" : [ \"sha256:475b124d0575504fe0f028fe29fa44b3065fca745d4dcb1448f064892018b44f\" ]\n" +
+                "}\n")
+        )).matches(null, new HttpRequest().withBody(
+            json("" +
+                "{\n" +
+                "  \"digests\" : [ ]\n" +
+                "}\n")
+        )));
+        assertFalse(update(new HttpRequest().withBody(
+            json("" +
+                "{\n" +
+                "  \"digests\" : [ \"sha256:475b124d0575504fe0f028fe29fa44b3065fca745d4dcb1448f064892018b44f\" ]\n" +
+                "}\n")
+        )).matches(null, new HttpRequest().withBody(
+            json("" +
+                "{\n" +
+                "  \"digests\" : [ ]\n" +
+                "}\n")
         )));
     }
 
