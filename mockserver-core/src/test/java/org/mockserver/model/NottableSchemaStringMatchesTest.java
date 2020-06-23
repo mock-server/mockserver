@@ -4,14 +4,10 @@ import org.junit.Test;
 
 import java.util.UUID;
 
-import static junit.framework.TestCase.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNot.not;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.model.NottableSchemaString.notSchema;
 import static org.mockserver.model.NottableSchemaString.schemaString;
-import static org.mockserver.model.NottableString.string;
 
 public class NottableSchemaStringMatchesTest {
 
@@ -36,6 +32,19 @@ public class NottableSchemaStringMatchesTest {
         assertThat(string.matches("1"), is(true));
         assertThat(string.matches("a"), is(false));
         assertThat(notString.matches("1"), is(false));
+        assertThat(notString.matches("a"), is(true));
+    }
+
+    @Test
+    public void shouldMatchNullableInteger() {
+        String schema = "{ \"type\": \"integer\", \"nullable\": true }";
+        NottableSchemaString string = schemaString(schema);
+        NottableSchemaString notString = schemaString("!" + schema);
+        assertThat(string.matches("1"), is(true));
+        assertThat(string.matches(""), is(true));
+        assertThat(string.matches("a"), is(false));
+        assertThat(notString.matches("1"), is(false));
+        assertThat(notString.matches(""), is(false));
         assertThat(notString.matches("a"), is(true));
     }
 
@@ -67,6 +76,24 @@ public class NottableSchemaStringMatchesTest {
         assertThat(string.matches("abc"), is(true));
         assertThat(string.matches("a"), is(false));
         assertThat(notString.matches("abc"), is(false));
+        assertThat(notString.matches("a"), is(true));
+    }
+
+    @Test
+    public void shouldMatchNullableStringByLength() {
+        String schema = "{" + NEW_LINE +
+            "  \"type\": \"string\"," + NEW_LINE +
+            "  \"minLength\": 2," + NEW_LINE +
+            "  \"maxLength\": 3," + NEW_LINE +
+            "  \"nullable\": true" + NEW_LINE +
+            "}";
+        NottableSchemaString string = schemaString(schema);
+        NottableSchemaString notString = schemaString("!" + schema);
+        assertThat(string.matches("abc"), is(true));
+        assertThat(string.matches(""), is(true));
+        assertThat(string.matches("a"), is(false));
+        assertThat(notString.matches("abc"), is(false));
+        assertThat(notString.matches(""), is(false));
         assertThat(notString.matches("a"), is(true));
     }
 

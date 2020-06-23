@@ -11,6 +11,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.NottableString;
 import org.mockserver.model.OpenAPIDefinition;
 import org.mockserver.model.RequestDefinition;
 import org.mockserver.openapi.OpenAPISerialiser;
@@ -22,8 +23,10 @@ import java.util.*;
 import static java.util.jar.Attributes.Name.CONTENT_TYPE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
+import static org.mockserver.model.NottableOptionalString.optionalString;
 import static org.mockserver.model.NottableSchemaString.schemaString;
 import static org.mockserver.model.NottableString.string;
+import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.ERROR;
 
 public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
@@ -128,21 +131,25 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                     );
                 if (schema != null) {
                     try {
+                        NottableString name = parameter.getRequired() != null && parameter.getRequired() ? string(parameter.getName()) : optionalString(parameter.getName());
+                        if (parameter.getAllowEmptyValue() != null && parameter.getAllowEmptyValue()) {
+                            schema.nullable(true);
+                        }
                         switch (parameter.getIn()) {
                             case "query": {
-                                httpRequest.withQueryStringParameter(string(parameter.getName()), schemaString(OBJECT_WRITER.writeValueAsString(schema)));
+                                httpRequest.withQueryStringParameter(name, schemaString(OBJECT_WRITER.writeValueAsString(schema)));
                                 break;
                             }
                             case "header": {
-                                httpRequest.withHeader(string(parameter.getName()), schemaString(OBJECT_WRITER.writeValueAsString(schema)));
+                                httpRequest.withHeader(name, schemaString(OBJECT_WRITER.writeValueAsString(schema)));
                                 break;
                             }
                             case "path": {
-                                httpRequest.withPathParameter(string(parameter.getName()), schemaString(OBJECT_WRITER.writeValueAsString(schema)));
+                                httpRequest.withPathParameter(name, schemaString(OBJECT_WRITER.writeValueAsString(schema)));
                                 break;
                             }
                             case "cookie": {
-                                httpRequest.withCookie(string(parameter.getName()), schemaString(OBJECT_WRITER.writeValueAsString(schema)));
+                                httpRequest.withCookie(name, schemaString(OBJECT_WRITER.writeValueAsString(schema)));
                                 break;
                             }
                             default:
@@ -173,7 +180,10 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
         if (httpRequestPropertiesMatchers != null && !httpRequestPropertiesMatchers.isEmpty()) {
             for (HttpRequestPropertiesMatcher httpRequestPropertiesMatcher : httpRequestPropertiesMatchers) {
                 if (matchDifference == null) {
-                    httpRequestPropertiesMatcher.matches(matchDifference, requestDefinition);
+                    if (MockServerLogger.isEnabled(DEBUG) && requestDefinition instanceof HttpRequest) {
+                        matchDifference = new MatchDifference((HttpRequest) requestDefinition);
+                    }
+                    result = httpRequestPropertiesMatcher.matches(matchDifference, requestDefinition);
                 } else {
                     MatchDifference singleMatchDifference = new MatchDifference(matchDifference.getHttpRequest());
                     result = httpRequestPropertiesMatcher.matches(singleMatchDifference, requestDefinition);

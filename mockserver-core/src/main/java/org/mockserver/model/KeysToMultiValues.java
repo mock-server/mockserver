@@ -24,7 +24,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
         if (entries != null) {
             for (KeyToMultiValue keyToMultiValue : entries) {
                 for (NottableString value : keyToMultiValue.getValues()) {
-                    caseInsensitiveRegexMultiMap.put(keyToMultiValue.getName(), value);
+                    caseInsensitiveRegexMultiMap.put(keyToMultiValue.getName(), value != null ? value : string(""));
                 }
             }
         }
@@ -72,7 +72,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
 
     public K withEntry(final String name, final String... values) {
         if (values == null || values.length == 0) {
-            listMultimap.put(string(name), null);
+            listMultimap.put(string(name), string(""));
         } else {
             listMultimap.putAll(string(name), deserializeNottableStrings(values));
         }

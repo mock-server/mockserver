@@ -102,8 +102,8 @@ public class QueryParameterMatcherTest {
             )
         ));
 
-        // not extra parameter
-        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Parameters().withEntries(
+        // not extra parameter (number of parameters don't match)
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(), new Parameters().withEntries(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue"),
             new Parameter(not("parameterThree"), not("parameterThreeValueOne"))
@@ -234,8 +234,8 @@ public class QueryParameterMatcherTest {
     }
 
     @Test
-    public void shouldNotMatchMatchingParameterWithOnlyNotParameter() {
-        assertFalse(new MultiValueMapMatcher(new MockServerLogger(), new Parameters().withEntries(
+    public void shouldMatchMatchingParameterWithOnlyNotParameter() {
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Parameters().withEntries(
             new Parameter(not("parameterTwoName"), not("parameterTwoValue"))
         ), true).matches(
             null,

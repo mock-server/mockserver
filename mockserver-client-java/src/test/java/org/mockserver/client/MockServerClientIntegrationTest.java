@@ -1169,7 +1169,6 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSendClearRequest() {
         // given
-        ConfigurationProperties.disableSystemOut(false);
         echoServerOne.withNextResponse(response().withStatusCode(201));
 
         // when

@@ -228,8 +228,19 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                         return false;
                     }
 
-                    NottableString path = controlPlaneMatcher ? pathParametersParser.normalisePathWithParametersForMatching(request) : request.getPath();
-                    boolean pathMatches = StringUtils.isBlank(request.getPath().getValue()) || matches(PATH, matchDifference, pathMatcher, path);
+                    Parameters pathParameters = null;
+                    boolean pathMatches;
+                    try {
+                        pathParameters = controlPlaneMatcher ? pathParametersParser.retrievePathParameters(request, httpRequest) : pathParametersParser.retrievePathParameters(httpRequest, request);
+                        NottableString path = controlPlaneMatcher ? pathParametersParser.normalisePathWithParametersForMatching(request) : request.getPath();
+                        pathMatches = StringUtils.isBlank(request.getPath().getValue()) || matches(PATH, matchDifference, pathMatcher, path);
+                    } catch (IllegalArgumentException iae) {
+                        if (matchDifference != null) {
+                            matchDifference.currentField(PATH);
+                            matchDifference.addDifference(mockServerLogger, iae.getMessage());
+                        }
+                        pathMatches = false;
+                    }
                     if (failFast(pathMatcher, matchDifference, matchDifferenceCount, becauseBuilder, pathMatches, PATH)) {
                         return false;
                     }
@@ -249,7 +260,6 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                         return false;
                     }
 
-                    Parameters pathParameters = controlPlaneMatcher ? pathParametersParser.retrievePathParameters(request, httpRequest) : pathParametersParser.retrievePathParameters(httpRequest, request);
                     MultiValueMapMatcher pathParameterMatcher = controlPlaneMatcher ? new MultiValueMapMatcher(mockServerLogger, request.getPathParameters(), controlPlaneMatcher) : this.pathParameterMatcher;
                     boolean pathParametersMatches = matches(PATH_PARAMETERS, matchDifference, pathParameterMatcher, pathParameters);
                     if (failFast(pathParameterMatcher, matchDifference, matchDifferenceCount, becauseBuilder, pathParametersMatches, PATH_PARAMETERS)) {
@@ -333,7 +343,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
         boolean bodyMatches;
         if (bodyMatcher != null) {
             if (controlPlaneMatcher) {
-                if (httpRequest.getBody() != null && request.getBody() != null && String.valueOf(httpRequest.getBody()).equalsIgnoreCase(String.valueOf(request.getBody()))) {
+                if (httpRequest.getBody() != null && String.valueOf(httpRequest.getBody()).equalsIgnoreCase(String.valueOf(request.getBody()))) {
                     bodyMatches = true;
                 } else if (bodyMatchesNotControlPlane(bodyMatcher, context, request)) {
                     // allow match of entries in EchoServer log (i.e. for java client integration tests)

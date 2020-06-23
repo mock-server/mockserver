@@ -26,18 +26,18 @@ public class HashMapMatcher extends NotMatcher<KeysAndValues> {
         }
     }
 
-    public boolean matches(final MatchDifference context, KeysAndValues values) {
+    public boolean matches(final MatchDifference context, KeysAndValues matched) {
         boolean result;
 
         if (matcher == null || matcher.isEmpty()) {
             result = true;
-        } else if (values == null || values.isEmpty()) {
+        } else if (matched == null || matched.isEmpty()) {
             result = matcher.allKeysNotted();
-        } else if (values.toCaseInsensitiveRegexMultiMap(mockServerLogger, controlPlaneMatcher).containsAll(matcher)) {
+        } else if (matched.toCaseInsensitiveRegexMultiMap(mockServerLogger, controlPlaneMatcher).containsAll(matcher)) {
             result = true;
         } else {
             if (context != null) {
-                context.addDifference(mockServerLogger, "map subset match failed expected:{}found:{}failed because:{}", keysAndValues, values, "map is not a subset");
+                context.addDifference(mockServerLogger, "map subset match failed expected:{}found:{}failed because:{}", keysAndValues, matched, "map is not a subset");
             }
             result = false;
         }

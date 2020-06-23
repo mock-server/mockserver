@@ -2631,99 +2631,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
-    public void shouldReturnResponseByNotMatchingBodyParameterWithNotOperatorForNameAndValue() {
-        // when
-        mockServerClient
-            .when(
-                request()
-                    .withMethod("POST")
-                    .withPath(calculatePath("some_pathRequest"))
-                    .withBody(params(
-                        param(not("bodyParameterOneName"), not("Parameter One Value One"), not("Parameter One Value Two")),
-                        param("bodyParameterTwoName", "Parameter Two")
-                    ))
-            )
-            .respond(
-                response()
-                    .withStatusCode(ACCEPTED_202.code())
-                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                    .withBody("some_body_response")
-            );
-
-        // then
-        // wrong query string parameter name
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withBody("some_body_response"),
-            makeRequest(
-                request()
-                    .withMethod("POST")
-                    .withPath(calculatePath("some_pathRequest"))
-                    .withBody(params(
-                        param("OTHERBodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
-                        param("bodyParameterTwoName", "Parameter Two")
-                    ))
-                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
-                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                headersToIgnore)
-        );
-        // wrong query string parameter name
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withBody("some_body_response"),
-            makeRequest(
-                request()
-                    .withMethod("POST")
-                    .withPath(calculatePath("some_pathRequest"))
-                    .withBody(new StringBody("OTHERBodyParameterOneName=Parameter+One+Value+One" +
-                        "&OTHERBodyParameterOneName=Parameter+One+Value+Two" +
-                        "&bodyParameterTwoName=Parameter+Two"))
-                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
-                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                headersToIgnore)
-        );
-        // wrong query string parameter value
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withBody("some_body_response"),
-            makeRequest(
-                request()
-                    .withMethod("POST")
-                    .withPath(calculatePath("some_pathRequest"))
-                    .withBody(params(
-                        param("bodyParameterOneName", "OTHER Parameter One Value One", "OTHER Parameter One Value Two"),
-                        param("bodyParameterTwoName", "Parameter Two")
-                    ))
-                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
-                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                headersToIgnore)
-        );
-        // wrong query string parameter value
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withBody("some_body_response"),
-            makeRequest(
-                request()
-                    .withMethod("POST")
-                    .withPath(calculatePath("some_pathRequest"))
-                    .withBody(new StringBody("bodyParameterOneName=OTHER Parameter+One+Value+One" +
-                        "&bodyParameterOneName=OTHER Parameter+One+Value+Two" +
-                        "&bodyParameterTwoName=Parameter+Two"))
-                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
-                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                headersToIgnore)
-        );
-    }
-
-    @Test
     public void shouldReturnResponseByNotMatchingBodyParameterWithNotOperatorForName() {
         // when
         mockServerClient
@@ -2790,7 +2697,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("POST")
                     .withPath(calculatePath("some_pathRequest"))
                     .withBody(params(
-                        param(string("bodyParameterOneName"), not("Parameter One Value One"), not("Parameter One Value Two")),
+                        param(string("bodyParameterOneName"), string("!Parameter One Value One"), not("Parameter One Value Two")),
                         param("bodyParameterTwoName", "Parameter Two")
                     ))
             )
@@ -2802,7 +2709,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // wrong query string parameter value
+        // wrong query string parameter first value
         assertEquals(
             response()
                 .withStatusCode(ACCEPTED_202.code())
@@ -2813,14 +2720,14 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("POST")
                     .withPath(calculatePath("some_pathRequest"))
                     .withBody(params(
-                        param("bodyParameterOneName", "OTHER Parameter One Value One", "OTHER Parameter One Value Two"),
+                        param("bodyParameterOneName", "Other Parameter One Value One", "Parameter One Value Two"),
                         param("bodyParameterTwoName", "Parameter Two")
                     ))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
                 headersToIgnore)
         );
-        // wrong query string parameter value
+        // wrong query string parameter first value
         assertEquals(
             response()
                 .withStatusCode(ACCEPTED_202.code())
@@ -2830,8 +2737,78 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withMethod("POST")
                     .withPath(calculatePath("some_pathRequest"))
-                    .withBody(new StringBody("bodyParameterOneName=OTHER Parameter+One+Value+One" +
-                        "&bodyParameterOneName=OTHER Parameter+One+Value+Two" +
+                    .withBody(new StringBody("bodyParameterOneName=Other+Parameter+One+Value+One" +
+                        "&bodyParameterOneName=Parameter+One+Value+Two" +
+                        "&bodyParameterTwoName=Parameter+Two"))
+                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
+                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
+                headersToIgnore)
+        );
+        // wrong query string parameter second value
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_pathRequest"))
+                    .withBody(params(
+                        param("bodyParameterOneName", "Parameter One Value One", "Other Parameter One Value Two"),
+                        param("bodyParameterTwoName", "Parameter Two")
+                    ))
+                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
+                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
+                headersToIgnore)
+        );
+        // wrong query string parameter second value
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_pathRequest"))
+                    .withBody(new StringBody("bodyParameterOneName=Parameter+One+Value+One" +
+                        "&bodyParameterOneName=Other+Parameter+One+Value+Two" +
+                        "&bodyParameterTwoName=Parameter+Two"))
+                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
+                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
+                headersToIgnore)
+        );
+        // wrong body parameter values
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_pathRequest"))
+                    .withBody(params(
+                        param("bodyParameterOneName", "Other Parameter One Value One", "Other Parameter One Value Two"),
+                        param("bodyParameterTwoName", "Parameter Two")
+                    ))
+                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
+                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
+                headersToIgnore)
+        );
+        // wrong body parameter values
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_pathRequest"))
+                    .withBody(new StringBody("bodyParameterOneName=Other+Parameter+One+Value+One" +
+                        "&bodyParameterOneName=Other+Parameter+One+Value+Two" +
                         "&bodyParameterTwoName=Parameter+Two"))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
@@ -2848,7 +2825,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("POST")
                     .withPath(calculatePath("some_pathRequest"))
                     .withQueryStringParameters(
-                        param(not("queryStringParameterOneName"), not("Parameter One Value One"), not("Parameter One Value Two")),
+                        param(string("queryStringParameterOneName"), not("Parameter One Value One"), string("!Parameter One Value Two")),
                         param("queryStringParameterTwoName", "Parameter Two")
                     )
             )
@@ -2871,7 +2848,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("POST")
                     .withPath(calculatePath("some_pathRequest"))
                     .withQueryStringParameters(
-                        param("OTHERQueryStringParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
+                        param("queryStringParameterOneName", "Other Parameter One Value One", "Parameter One Value Two"),
                         param("queryStringParameterTwoName", "Parameter Two")
                     ),
                 headersToIgnore)
@@ -2887,7 +2864,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("POST")
                     .withPath(calculatePath("some_pathRequest"))
                     .withQueryStringParameters(
-                        param("queryStringParameterOneName", "OTHER Parameter One Value One", "OTHER Parameter One Value Two"),
+                        param("queryStringParameterOneName", "Parameter One Value One", "Other Parameter One Value Two"),
                         param("queryStringParameterTwoName", "Parameter Two")
                     ),
                 headersToIgnore)
@@ -2942,7 +2919,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("POST")
                     .withPath(calculatePath("some_pathRequest"))
                     .withQueryStringParameters(
-                        param(string("queryStringParameterOneName"), not("Parameter One Value One"), not("Parameter One Value Two")),
+                        param(string("queryStringParameterOneName"), not("Parameter One Value One"), string("!Parameter One Value Two")),
                         param("queryStringParameterTwoName", "Parameter Two")
                     )
             )
@@ -2965,7 +2942,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("POST")
                     .withPath(calculatePath("some_pathRequest"))
                     .withQueryStringParameters(
-                        param("queryStringParameterOneName", "OTHER Parameter One Value One", "OTHER Parameter One Value Two"),
+                        param("queryStringParameterOneName", "Other Parameter One Value One", "Other Parameter One Value Two"),
                         param("queryStringParameterTwoName", "Parameter Two")
                     ),
                 headersToIgnore)
@@ -2981,7 +2958,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("GET")
                     .withPath(calculatePath("some_pathRequest"))
                     .withCookies(
-                        cookie(not("requestCookieNameOne"), not("requestCookieValueOne")),
+                        cookie("requestCookieNameOne", "!requestCookieValueOne"),
                         cookie("requestCookieNameTwo", "requestCookieValueTwo")
                     )
             )
@@ -2993,22 +2970,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // wrong query string cookie name
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withBody("some_body_response"),
-            makeRequest(
-                request()
-                    .withMethod("GET")
-                    .withPath(calculatePath("some_pathRequest"))
-                    .withCookies(
-                        cookie("OTHERrequestCookieNameOne", "requestCookieValueOne"),
-                        cookie("requestCookieNameTwo", "requestCookieValueTwo")
-                    ),
-                headersToIgnore)
-        );
         // wrong query string cookie value
         assertEquals(
             response()
@@ -4168,7 +4129,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("GET")
                     .withPath(calculatePath("some_pathRequest"))
                     .withHeaders(
-                        header(not("requestHeaderNameOne"), not("requestHeaderValueOne")),
+                        header(string("requestHeaderNameOne"), not("requestHeaderValueOne")),
                         header("requestHeaderNameTwo", "requestHeaderValueTwo")
                     )
             )

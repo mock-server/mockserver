@@ -1,7 +1,10 @@
 package org.mockserver.collections;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.RegexStringMatcher;
 import org.mockserver.model.NottableString;
@@ -9,20 +12,28 @@ import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
 import java.util.*;
 
+import static org.mockserver.collections.ImmutableEntry.*;
+import static org.mockserver.collections.SubSets.distinctSubSetsList;
+import static org.mockserver.collections.SubSets.distinctSubSetsMap;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.NottableString.strings;
+import static org.slf4j.event.Level.DEBUG;
 
 /**
  * MultiMap that uses case insensitive regex expression matching for keys and values
  *
  * @author jamesdbloom
  */
+@SuppressWarnings("NullableProblems")
 public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHashCodeToString implements Map<NottableString, NottableString> {
     private final CaseInsensitiveNottableRegexListHashMap backingMap;
 
     private final RegexStringMatcher regexStringMatcher;
+    private final MockServerLogger mockServerLogger;
+    private boolean noOptionals = true;
 
     public CaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher) {
+        this.mockServerLogger = mockServerLogger;
         regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
         backingMap = new CaseInsensitiveNottableRegexListHashMap(mockServerLogger, controlPlaneMatcher);
     }
@@ -49,28 +60,73 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
         return multiMap;
     }
 
-    public static Entry<NottableString, NottableString> entry(String key, String value) {
-        return new ImmutableEntry(key, value);
+    public boolean isNoOptionals() {
+        return noOptionals;
     }
 
-    public boolean containsAll(CaseInsensitiveRegexMultiMap subSet) {
-        if (isEmpty() && subSet.allKeysNotted()) {
+    public boolean containsAll(CaseInsensitiveRegexMultiMap matcherSubSet) {
+        if (isEmpty() && matcherSubSet.allKeysNotted()) {
             return true;
-        } else {
-            for (Entry<NottableString, NottableString> entry : subSet.entryList()) {
-                if ((entry.getKey().isNot() || entry.getValue().isNot()) && containsKeyValue(entry.getKey().getValue(), entry.getValue().getValue())) {
-                    Entry<NottableString, NottableString> matchingEntry = retrieveEntry(entry.getKey(), entry.getValue());
-                    if (matchingEntry != null) {
-                        return entry.getKey().isNot() == matchingEntry.getKey().isNot() && entry.getValue().isNot() == matchingEntry.getValue().isNot();
-                    } else {
-                        return false;
+        } else if (noOptionals && matcherSubSet.isNoOptionals()) {
+            List<ImmutableEntry> matchedEntries = entryList();
+            Multimap<Integer, List<ImmutableEntry>> allMatchedSubSets
+                = distinctSubSetsMap(matchedEntries, ArrayListMultimap.create(), matchedEntries.size() - 1);
+
+            List<ImmutableEntry> matcherEntries = matcherSubSet.entryList();
+            for (List<ImmutableEntry> matchedSubSet : allMatchedSubSets.get(matcherEntries.size())) {
+                if (listsEqual(matcherEntries, matchedSubSet)) {
+                    if (MockServerLogger.isEnabled(DEBUG)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(DEBUG)
+                                .setMessageFormat("multimap{}containsAll matched subset{}with{}")
+                                .setArguments(this, matcherEntries, matchedSubSet)
+
+                        );
                     }
-                } else if (!containsKeyValue(entry.getKey(), entry.getValue())) {
-                    return false;
+                    return true;
                 }
             }
+            if (MockServerLogger.isEnabled(DEBUG)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(DEBUG)
+                        .setMessageFormat("multimap{}containsAll found no subset equal to{}from{}")
+                        .setArguments(this, matcherEntries, allMatchedSubSets)
+
+                );
+            }
+        } else {
+            List<ImmutableEntry> matchedEntries = entryList();
+            List<List<ImmutableEntry>> allMatchedSubSets
+                = distinctSubSetsList(matchedEntries, new ArrayList<>(), matchedEntries.size() - 1);
+
+            List<ImmutableEntry> matcherEntries = matcherSubSet.entryList();
+            for (List<ImmutableEntry> matchedSubSet : allMatchedSubSets) {
+                if (listsEqualWithOptionals(matcherEntries, matchedSubSet)) {
+                    if (MockServerLogger.isEnabled(DEBUG)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(DEBUG)
+                                .setMessageFormat("multimap with optionals{}containsAll matched subset{}with{}")
+                                .setArguments(this, matcherEntries, matchedSubSet)
+
+                        );
+                    }
+                    return true;
+                }
+            }
+            if (MockServerLogger.isEnabled(DEBUG)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(DEBUG)
+                        .setMessageFormat("multimap with optionals{}containsAll found no subset equal to{}from{}")
+                        .setArguments(this, matcherEntries, allMatchedSubSets)
+
+                );
+            }
         }
-        return true;
+        return false;
     }
 
     public boolean allKeysNotted() {
@@ -99,18 +155,6 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
         return false;
     }
 
-    private synchronized Entry<NottableString, NottableString> retrieveEntry(NottableString key, NottableString value) {
-        if (!isEmpty()) {
-            for (Entry<NottableString, NottableString> matcherEntry : entryList()) {
-                if (regexStringMatcher.matches(value, matcherEntry.getValue(), true)
-                    && regexStringMatcher.matches(key, matcherEntry.getKey(), true)) {
-                    return matcherEntry;
-                }
-            }
-        }
-        return null;
-    }
-
     @Override
     public synchronized boolean containsKey(Object key) {
         return backingMap.containsKey(key);
@@ -123,7 +167,7 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
                 for (NottableString key : backingMap.keySet()) {
                     for (List<NottableString> allKeyValues : backingMap.getAll(key)) {
                         for (NottableString keyValue : allKeyValues) {
-                            if (regexStringMatcher.matches(keyValue, (NottableString) value, false)) {
+                            if (regexStringMatcher.matches(keyValue, (NottableString) value, true)) {
                                 return true;
                             }
                         }
@@ -182,13 +226,16 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
         if (value == null) {
             throw new IllegalArgumentException("value must not be null");
         }
-        List<NottableString> list = Collections.synchronizedList(new ArrayList<NottableString>());
-        for (Entry<NottableString, NottableString> entry : entryList()) {
+        List<NottableString> list = Collections.synchronizedList(new ArrayList<>());
+        for (ImmutableEntry entry : entryList()) {
             if (EqualsBuilder.reflectionEquals(entry.getKey(), key, "key")) {
                 list.add(entry.getValue());
             }
         }
         list.add(value);
+        if (key.isOptional()) {
+            noOptionals = false;
+        }
         backingMap.put(key, list);
         return value;
     }
@@ -209,6 +256,7 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
     }
 
     @Override
+    @SuppressWarnings("SuspiciousMethodCalls")
     public synchronized NottableString remove(Object key) {
         if (!isEmpty()) {
             if (key instanceof String) {
@@ -234,6 +282,7 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
         return backingMap.remove(key);
     }
 
+    @SuppressWarnings("SuspiciousMethodCalls")
     public synchronized List<NottableString> removeAll(String key) {
         return backingMap.remove(key);
     }
@@ -262,40 +311,11 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
     @Override
     public synchronized Collection<NottableString> values() {
         if (!isEmpty()) {
-            Collection<NottableString> values = new ArrayList<NottableString>();
+            Collection<NottableString> values = new ArrayList<>();
             for (List<NottableString> valuesForKey : backingMap.values()) {
                 values.addAll(valuesForKey);
             }
             return values;
-        } else {
-            return Collections.emptyList();
-        }
-    }
-
-    @Override
-    public synchronized Set<Entry<NottableString, NottableString>> entrySet() {
-        if (!isEmpty()) {
-            Set<Entry<NottableString, NottableString>> entrySet = new LinkedHashSet<Entry<NottableString, NottableString>>();
-            for (Entry<NottableString, List<NottableString>> entry : backingMap.entrySet()) {
-                for (NottableString value : entry.getValue()) {
-                    entrySet.add(new ImmutableEntry(entry.getKey(), value));
-                }
-            }
-            return entrySet;
-        } else {
-            return Collections.emptySet();
-        }
-    }
-
-    public synchronized List<Entry<NottableString, NottableString>> entryList() {
-        if (!isEmpty()) {
-            List<Entry<NottableString, NottableString>> entrySet = new ArrayList<>();
-            for (Entry<NottableString, List<NottableString>> entry : backingMap.entrySet()) {
-                for (NottableString value : entry.getValue()) {
-                    entrySet.add(new ImmutableEntry(entry.getKey(), value));
-                }
-            }
-            return entrySet;
         } else {
             return Collections.emptyList();
         }
@@ -311,36 +331,34 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
         return backingMap.isEmpty();
     }
 
-    static class ImmutableEntry extends ObjectWithReflectiveEqualsHashCodeToString implements Entry<NottableString, NottableString> {
-        private final NottableString key;
-        private final NottableString value;
-
-        ImmutableEntry(String key, String value) {
-            this.key = string(key);
-            this.value = string(value);
-        }
-
-        ImmutableEntry(NottableString key, NottableString value) {
-            this.key = key;
-            this.value = value;
-        }
-
-        @Override
-        public NottableString getKey() {
-            return key;
-        }
-
-        @Override
-        public NottableString getValue() {
-            return value;
-        }
-
-        @Override
-        public NottableString setValue(NottableString value) {
-            throw new UnsupportedOperationException("ImmutableEntry is immutable");
+    @Override
+    public synchronized Set<Entry<NottableString, NottableString>> entrySet() {
+        if (!isEmpty()) {
+            Set<Entry<NottableString, NottableString>> entrySet = new LinkedHashSet<>();
+            for (Entry<NottableString, List<NottableString>> entry : backingMap.entrySet()) {
+                for (NottableString value : entry.getValue()) {
+                    entrySet.add(entry(regexStringMatcher, entry.getKey(), value));
+                }
+            }
+            return entrySet;
+        } else {
+            return Collections.emptySet();
         }
     }
 
+    public synchronized List<ImmutableEntry> entryList() {
+        if (!isEmpty()) {
+            List<ImmutableEntry> entrySet = new ArrayList<>();
+            for (Entry<NottableString, List<NottableString>> entry : backingMap.entrySet()) {
+                for (NottableString value : entry.getValue()) {
+                    entrySet.add(entry(regexStringMatcher, entry.getKey(), value));
+                }
+            }
+            return entrySet;
+        } else {
+            return Collections.emptyList();
+        }
+    }
 }
 
 

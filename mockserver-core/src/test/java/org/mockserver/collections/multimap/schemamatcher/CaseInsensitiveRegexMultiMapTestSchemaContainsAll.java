@@ -444,11 +444,11 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
 
         // NOT-ED
 
-        // then - doesn't match (not-ed both)
+        // then - does match (not-ed both)
         assertThat(multiMap.containsAll(multiMap(
             true, new NottableString[]{not("abc"), not("abc")},
             new NottableString[]{not("someone@mockserver.com"), not("someone@mockserver.com")}
-        )), is(false));
+        )), is(true));
 
         // then - doesn't match (not-ed keys)
         assertThat(multiMap.containsAll(multiMap(

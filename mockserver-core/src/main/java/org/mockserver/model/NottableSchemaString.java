@@ -1,14 +1,15 @@
-
 package org.mockserver.model;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.github.fge.jsonschema.main.JsonValidator;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.parser.util.SchemaTypeUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.serialization.ObjectMapperFactory;
@@ -41,6 +42,7 @@ public class NottableSchemaString extends NottableString {
         .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true).parseDefaulting(ChronoField.NANO_OF_SECOND, 0)
         .optionalEnd()
         .appendOffset("+HH:mm", "Z").toFormatter();
+    private static final String TRUE = "true";
     private final ObjectNode schemaJsonNode;
     private final String type;
     private final String format;
@@ -134,8 +136,7 @@ public class NottableSchemaString extends NottableString {
     public boolean matches(String json) {
         if (schemaJsonNode != null) {
             try {
-                JsonNode instance = convertToJsonNode(json, type, format);
-                return isNot() != VALIDATOR.validate(schemaJsonNode, instance, true).isSuccess();
+                return isNot() != validate(json);
             } catch (Throwable throwable) {
                 MOCK_SERVER_LOGGER.logEvent(
                     new LogEntry()
@@ -147,6 +148,14 @@ public class NottableSchemaString extends NottableString {
             return isNot();
         } else {
             return !isNot();
+        }
+    }
+
+    private boolean validate(String json) throws ProcessingException, IOException {
+        if (schemaJsonNode.get("nullable") != null && TRUE.equals(schemaJsonNode.get("nullable").asText()) && StringUtils.isBlank(json)) {
+            return true;
+        } else {
+            return VALIDATOR.validate(schemaJsonNode, convertToJsonNode(json, type, format), false).isSuccess();
         }
     }
 

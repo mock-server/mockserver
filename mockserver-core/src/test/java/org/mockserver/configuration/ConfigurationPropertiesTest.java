@@ -691,6 +691,7 @@ public class ConfigurationPropertiesTest {
         try {
             // given
             System.clearProperty("mockserver.logLevel");
+            ConfigurationProperties.reset();
 
             // when
             assertEquals(Level.INFO, logLevel());
@@ -713,7 +714,7 @@ public class ConfigurationPropertiesTest {
         try {
             // given
             System.clearProperty("mockserver.logLevel");
-            logLevel(null);
+            ConfigurationProperties.reset();
 
             // when
             assertEquals(Level.INFO, logLevel());

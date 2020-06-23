@@ -3,6 +3,7 @@ package org.mockserver.mock;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.mockserver.scheduler.Scheduler;
@@ -23,10 +24,9 @@ public class MockServerMatcherBasicResponsesTest {
 
     @Before
     public void prepareTestFixture() {
-        MockServerLogger mockLogFormatter = mock(MockServerLogger.class);
         Scheduler scheduler = mock(Scheduler.class);
         WebSocketClientRegistry webSocketClientRegistry = mock(WebSocketClientRegistry.class);
-        requestMatchers = new RequestMatchers(mockLogFormatter, scheduler, webSocketClientRegistry);
+        requestMatchers = new RequestMatchers(new MockServerLogger(), scheduler, webSocketClientRegistry);
     }
 
     @Test
@@ -297,7 +297,8 @@ public class MockServerMatcherBasicResponsesTest {
 
         // then
         assertEquals(expectation, requestMatchers.firstMatchingExpectation(new HttpRequest().withQueryStringParameters(
-                new Parameter("nameExtra", "valueExtra"), new Parameter("name", "value"),
+                new Parameter("nameExtra", "valueExtra"),
+                new Parameter("name", "value"),
                 new Parameter("nameExtraExtra", "valueExtraExtra")
         )));
     }

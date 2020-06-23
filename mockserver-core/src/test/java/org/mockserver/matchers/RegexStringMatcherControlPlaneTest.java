@@ -100,13 +100,23 @@ public class RegexStringMatcherControlPlaneTest {
     }
 
     @Test
-    public void shouldNotMatchNullTest() {
+    public void shouldNotMatchNullTestForControlPlane() {
         assertFalse(new RegexStringMatcher(new MockServerLogger(), string("some_value"), true).matches(null, string(null)));
     }
 
     @Test
-    public void shouldNotMatchEmptyTest() {
+    public void shouldNotMatchNullTest() {
+        assertFalse(new RegexStringMatcher(new MockServerLogger(), string("some_value"), false).matches(null, string(null)));
+    }
+
+    @Test
+    public void shouldNotMatchEmptyTestForControlPlane() {
         assertFalse(new RegexStringMatcher(new MockServerLogger(), string("some_value"), true).matches(""));
+    }
+
+    @Test
+    public void shouldNotMatchEmptyTest() {
+        assertFalse(new RegexStringMatcher(new MockServerLogger(), string("some_value"), false).matches(""));
     }
 
     @Test

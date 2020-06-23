@@ -2,11 +2,13 @@ package org.mockserver.collections.hashmap;
 
 import org.junit.Test;
 import org.mockserver.collections.CaseInsensitiveRegexHashMap;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.matchers.RegexStringMatcher;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.mockserver.collections.CaseInsensitiveRegexHashMap.hashMap;
-import static org.mockserver.collections.CaseInsensitiveRegexMultiMap.entry;
+import static org.mockserver.collections.ImmutableEntry.entry;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -18,7 +20,8 @@ public class CaseInsensitiveRegexHashMapTestKeysAndValue {
     public void shouldReturnKeysForMapWithSingleEntry() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            true, new String[]{"keyOne", "keyOneValue"}
+            true,
+            new String[]{"keyOne", "keyOneValue"}
         );
 
         // then
@@ -29,7 +32,8 @@ public class CaseInsensitiveRegexHashMapTestKeysAndValue {
     public void shouldReturnKeysForMapWithMultipleEntries() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            true, new String[]{"keyOne", "keyOneValue"},
+            true,
+            new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"}
         );
 
@@ -41,7 +45,8 @@ public class CaseInsensitiveRegexHashMapTestKeysAndValue {
     public void shouldReturnValuesForMapWithSingleEntry() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            true, new String[]{"keyOne", "keyOneValue"}
+            true,
+            new String[]{"keyOne", "keyOneValue"}
         );
 
         // then
@@ -52,7 +57,8 @@ public class CaseInsensitiveRegexHashMapTestKeysAndValue {
     public void shouldReturnValuesForMapWithMultipleEntries() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            true, new String[]{"keyOne", "keyOneValue"},
+            true,
+            new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"}
         );
 
@@ -61,18 +67,19 @@ public class CaseInsensitiveRegexHashMapTestKeysAndValue {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void shouldReturnEntrySet() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            true, new String[]{"keyOne", "keyOneValue"},
+            true,
+            new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"}
         );
+        RegexStringMatcher regexStringMatcher = new RegexStringMatcher(new MockServerLogger(), false);
 
         // then
         assertThat(hashMap.entrySet(), containsInAnyOrder(
-            entry("keyOne", "keyOneValue"),
-            entry("keyTwo", "keyTwoValue")
+            entry(regexStringMatcher, "keyOne", "keyOneValue"),
+            entry(regexStringMatcher, "keyTwo", "keyTwoValue")
         ));
     }
 }

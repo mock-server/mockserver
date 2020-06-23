@@ -1,4 +1,3 @@
-
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -122,6 +121,10 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
     @JsonIgnore
     public boolean isNot() {
         return not;
+    }
+
+    public boolean isOptional() {
+        return false;
     }
 
     NottableString capitalize() {

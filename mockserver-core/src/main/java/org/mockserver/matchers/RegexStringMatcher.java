@@ -106,6 +106,13 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
             try {
                 if (controlPlaneMatcher && matcher.matches(matched)) {
                     return true;
+                } else if (MockServerLogger.isEnabled(DEBUG) && matcher.matches(matched)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(DEBUG)
+                            .setMessageFormat("matcher{}would match{}if matcher was used for control plane")
+                            .setArguments(matcher, matched)
+                    );
                 }
             } catch (PatternSyntaxException pse) {
                 if (MockServerLogger.isEnabled(DEBUG)) {
