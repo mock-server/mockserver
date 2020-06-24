@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - clear log, clear expectations, retrieve logs and retrieve requests using OpenAPI or Swagger specification
 - json schema matchers for method, path, headers, query string parameters and cookies
 - path variables matched by nottable string, regex or json schema (as per query string parameters)  
+- added support for nullable keyword in JSON Schemas (part of Open API specification not JSON Schema specification)
+- added support for matching xml bodies against JSON Schema matchers
 
 ### Changed
 - reduced time range of CA certificates to increase likelihood they will be accepted by strict systems (i.e. VMWare vCenter Server)
