@@ -148,7 +148,10 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
     private BiConsumer<String, MediaType> handleJsonBody(OpenAPIDefinition openAPIDefinition, String path, Pair<String, Operation> methodOperationPair) {
         return (contentType, mediaType) -> {
             HttpRequest httpRequest = createHttpRequest(openAPIDefinition, path, methodOperationPair);
-            httpRequest.withHeader(CONTENT_TYPE.toString(), contentType);
+            if (!contentType.equals("*/*")) {
+                // ensure that parameters added to the content type such as charset don't break the matching
+                httpRequest.withHeader(CONTENT_TYPE.toString(), contentType.replaceAll("\\*", ".*") + ".*");
+            }
             if (mediaType != null && mediaType.getSchema() != null) {
                 try {
                     httpRequest.withBody(jsonSchema(OBJECT_WRITER.writeValueAsString(mediaType.getSchema())));

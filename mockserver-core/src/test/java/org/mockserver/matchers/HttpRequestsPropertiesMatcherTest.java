@@ -1,6 +1,5 @@
 package org.mockserver.matchers;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.file.FileReader;
 import org.mockserver.logging.MockServerLogger;
@@ -19,6 +18,8 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.MatchDifference.Field.*;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.JsonBody.json;
+import static org.mockserver.model.StringBody.exact;
+import static org.mockserver.model.XmlBody.xml;
 
 /**
  * @author jamesdbloom
@@ -28,38 +29,42 @@ public class HttpRequestsPropertiesMatcherTest {
     private final MockServerLogger mockServerLogger = new MockServerLogger(HttpRequestsPropertiesMatcherTest.class);
 
     /**
-     * Test Pattern For Fields:
+     * Test Pattern For Non Body Fields:
      * - method
-     *   - basic
+     * - basic
      * - path
-     *   - basic
-     *   - with path parameter
+     * - basic
+     * - with path parameter
      * - parameters (see: https://swagger.io/docs/specification/describing-parameters/)
-     *   - path
-     *   - query string
-     *   - header
-     *   - cookie
-     *   Then:
-     *   - required field
-     *   - allowReserved field (NOT COVERED) - TODO(jamesdbloom)
-     *   - allowEmptyValue field -> nullable: true in json schema
-     *   - common parameter for all methods of path
-     *   - common parameter for all paths
+     * - path
+     * - query string
+     * - header
+     * - cookie
+     * Then:
+     * - required field
+     * - allowReserved field - TODO(jamesdbloom) is this required?
+     * - allowEmptyValue field -> nullable: true in json schema
+     * - common parameter for all methods of path
+     * - common parameter for all paths
+     *
+     * Test Pattern For Body Fields:
      * - requestBody (see: https://swagger.io/docs/specification/describing-request-body/)
-     *   - json (i.e. application/json)
-     *   - text (i.e. text/plain) - TODO(jamesdbloom)
-     *   - xml (i.e. application/xml) - TODO(jamesdbloom)
-     *   - form parameters (i.e. application/x-www-form-urlencoded) - TODO(jamesdbloom)
-     *   - multipart form data (i.e. multipart/form-data) - TODO(jamesdbloom)
-     *   Then:
-     *   - media type range
-     *   - media type default
-     *   - required field
-     *   - encoding (multipart/form-data or application/x-www-form-urlencoded)
+     * - json (i.e. application/json)
+     * - text (i.e. text/plain)
+     * - xml (i.e. application/xml)
+     * - form parameters (i.e. application/x-www-form-urlencoded)
+     * - multipart form data (i.e. multipart/form-data) - TODO(jamesdbloom) is this required?
+     * Then:
+     * - required: false (or missing) - TODO(jamesdbloom) is this required?
+     * - media type range
+     * - media type default
+     * - required field
+     * - encoding (multipart/form-data or application/x-www-form-urlencoded) - TODO(jamesdbloom) is this required?
+     *
+     * Test Pattern For Security Handlers: - TODO(jamesdbloom) is this required?
      */
 
     // METHOD
-
     @Test
     public void shouldMatchByMethod() {
         // when
@@ -1394,6 +1399,129 @@ public class HttpRequestsPropertiesMatcherTest {
                 .withHeader("content-type", "application/json")
                 .withBody(json("{ \"id\": 1, \"name\": \"abc\" }"))
         ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/json; charset=utf-8")
+                .withBody(json("{ \"id\": 1, \"name\": \"abc\" }"))
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/json")
+                .withBody(json("{ \"id\": 1, \"name\": 1 }"))
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/json")
+                .withBody(json("{ \"id\": \"abc\", \"name\": \"abc\" }"))
+        ));
+    }
+
+    @Test
+    public void shouldMatchByJsonBodyWithMediaTypeRange() {
+        // when
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        content:" + NEW_LINE +
+                    "          application/*:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: int64" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE +
+                    "          application/xml:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: int64" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/json")
+                .withBody(json("{ \"id\": 1, \"name\": \"abc\" }"))
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/json")
+                .withBody(json("{ \"id\": 1, \"name\": 1 }"))
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/json")
+                .withBody(json("{ \"id\": \"abc\", \"name\": \"abc\" }"))
+        ));
+    }
+
+    @Test
+    public void shouldMatchByJsonBodyWithDefaultMediaType() {
+        // when
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        content:" + NEW_LINE +
+                    "          \"*/*\":" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: int64" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE +
+                    "          application/xml:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: int64" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/json")
+                .withBody(json("{ \"id\": 1, \"name\": \"abc\" }"))
+        ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
                 .withHeader("content-type", "application/json")
@@ -1517,10 +1645,301 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
     }
 
+    // - PLAIN TEXT BODY (via JsonSchema)
+
+    @Test
+    public void shouldMatchByPlainTextBody() {
+        // when
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        content:" + NEW_LINE +
+                    "          application/json:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: int64" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE +
+                    "          plain/text:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: int64" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "plain/text")
+                .withBody(exact("{ \"id\": 1, \"name\": \"abc\" }"))
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "plain/text; charset=utf-8")
+                .withBody(exact("{ \"id\": 1, \"name\": \"abc\" }"))
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "plain/text")
+                .withBody(exact("{ \"id\": 1, \"name\": 1 }"))
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "plain/text")
+                .withBody(exact("{ \"id\": \"abc\", \"name\": \"abc\" }"))
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPlainTextBodyWithMediaTypeRange() {
+        // when
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        content:" + NEW_LINE +
+                    "          application/json:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: int64" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE +
+                    "          plain/*:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: int64" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "plain/text")
+                .withBody(exact("{ \"id\": 1, \"name\": \"abc\" }"))
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "plain/text")
+                .withBody(exact("{ \"id\": 1, \"name\": 1 }"))
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "plain/text")
+                .withBody(exact("{ \"id\": \"abc\", \"name\": \"abc\" }"))
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPlainTextBodyWithDefaultMediaType() {
+        // when
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        content:" + NEW_LINE +
+                    "          application/json:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: int64" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE +
+                    "          \"*/*\":" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: int64" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withBody(exact("{ \"id\": 1, \"name\": \"abc\" }"))
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withBody(exact("{ \"id\": 1, \"name\": 1 }"))
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withBody(exact("{ \"id\": \"abc\", \"name\": \"abc\" }"))
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPlainTextBodyWithSchemaComponent() {
+        // when
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        content:" + NEW_LINE +
+                    "          application/json:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              $ref: '#/components/schemas/Simple'" + NEW_LINE +
+                    "          plain/text:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              $ref: '#/components/schemas/Simple'" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  schemas:" + NEW_LINE +
+                    "    Simple:" + NEW_LINE +
+                    "      type: object" + NEW_LINE +
+                    "      required:" + NEW_LINE +
+                    "        - id" + NEW_LINE +
+                    "        - name" + NEW_LINE +
+                    "      properties:" + NEW_LINE +
+                    "        id:" + NEW_LINE +
+                    "          type: integer" + NEW_LINE +
+                    "          format: int64" + NEW_LINE +
+                    "        name:" + NEW_LINE +
+                    "          type: string" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "plain/text")
+                .withBody(exact("{ \"id\": 1, \"name\": \"abc\" }"))
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "plain/text")
+                .withBody(exact("{ \"id\": 1, \"name\": 1 }"))
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "plain/text")
+                .withBody(exact("{ \"id\": \"abc\", \"name\": \"abc\" }"))
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPlainTextodyWithRequestBodyAndSchemaComponent() {
+        // when
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        $ref: '#/components/requestBodies/SimpleBody'" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  requestBodies:" + NEW_LINE +
+                    "    SimpleBody:" + NEW_LINE +
+                    "      required: true" + NEW_LINE +
+                    "      content:" + NEW_LINE +
+                    "        application/json:" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            $ref: '#/components/schemas/Simple'" + NEW_LINE +
+                    "        plain/text:" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            $ref: '#/components/schemas/Simple'" + NEW_LINE +
+                    "  schemas:" + NEW_LINE +
+                    "    Simple:" + NEW_LINE +
+                    "      type: object" + NEW_LINE +
+                    "      required:" + NEW_LINE +
+                    "        - id" + NEW_LINE +
+                    "        - name" + NEW_LINE +
+                    "      properties:" + NEW_LINE +
+                    "        id:" + NEW_LINE +
+                    "          type: integer" + NEW_LINE +
+                    "          format: int64" + NEW_LINE +
+                    "        name:" + NEW_LINE +
+                    "          type: string" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "plain/text")
+                .withBody(exact("{ \"id\": 1, \"name\": \"abc\" }"))
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "plain/text")
+                .withBody(exact("{ \"id\": 1, \"name\": 1 }"))
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "plain/text")
+                .withBody(exact("{ \"id\": \"abc\", \"name\": \"abc\" }"))
+        ));
+    }
+
     // - XML BODY (via JsonSchema)
 
     @Test
-    @Ignore("TODO: transform into json and compare with schema")
     public void shouldMatchByXmlBody() {
         // when
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
@@ -1567,20 +1986,27 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("someParam", "1")
+                .withHeader("content-type", "application/xml")
+                .withBody(xml("<root><id>1</id><name>abc</name></root>"))
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/xml; charset=utf-8")
+                .withBody(xml("<root><id>1</id><name>abc</name></root>"))
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("someParam", "0")
+                .withHeader("content-type", "application/xml")
+                .withBody(xml("<root><id>1</id><name>1</name></root>"))
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("someOtherParam", "1")
+                .withHeader("content-type", "application/xml")
+                .withBody(xml("<root><id>abc</id><name>1</name></root>"))
         ));
     }
 
     @Test
-    @Ignore("TODO: transform into json and compare with schema")
     public void shouldMatchByXmlBodyWithSchemaComponent() {
         // when
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
@@ -1619,20 +2045,22 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("someParam", "1")
+                .withHeader("content-type", "application/xml")
+                .withBody(xml("<root><id>1</id><name>abc</name></root>"))
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("someParam", "0")
+                .withHeader("content-type", "application/xml")
+                .withBody(xml("<root><id>1</id><name>1</name></root>"))
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("someOtherParam", "1")
+                .withHeader("content-type", "application/xml")
+                .withBody(xml("<root><id>abc</id><name>1</name></root>"))
         ));
     }
 
     @Test
-    @Ignore("TODO: transform into json and compare with schema")
     public void shouldMatchByXmlBodyWithRequestBodyAndSchemaComponent() {
         // when
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
@@ -1674,22 +2102,24 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("someParam", "1")
+                .withHeader("content-type", "application/xml")
+                .withBody(xml("<root><id>1</id><name>abc</name></root>"))
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("someParam", "0")
+                .withHeader("content-type", "application/xml")
+                .withBody(xml("<root><id>1</id><name>1</name></root>"))
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("someOtherParam", "1")
+                .withHeader("content-type", "application/xml")
+                .withBody(xml("<root><id>abc</id><name>1</name></root>"))
         ));
     }
 
     // - FORM BODY (via JsonSchema)
 
     @Test
-    @Ignore("TODO: transform into json and compare with schema")
     public void shouldMatchByFormBody() {
         // when
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
@@ -1707,15 +2137,15 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          application/x-www-form-urlencoded:" + NEW_LINE +
                     "            schema:" + NEW_LINE +
                     "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
                     "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: int64" + NEW_LINE +
                     "                name:" + NEW_LINE +
                     "                  type: string" + NEW_LINE +
-                    "                email:" + NEW_LINE +
-                    "                  type: integer" + NEW_LINE +
-                    "                  format: email" + NEW_LINE +
-                    "              required:" + NEW_LINE +
-                    "                - name" + NEW_LINE +
-                    "                - email'" + NEW_LINE +
                     "          text/plain:" + NEW_LINE +
                     "            schema:" + NEW_LINE +
                     "              type: string" + NEW_LINE)
@@ -1724,20 +2154,27 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("someParam", "1")
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=1&name=abc")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/x-www-form-urlencoded; charset=utf-8")
+                .withBody("id=1&name=abc")
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("someParam", "0")
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=1&name=1")
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("someOtherParam", "1")
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=abc&name=1")
         ));
     }
 
     @Test
-    @Ignore("TODO: transform into json and compare with schema")
     public void shouldMatchByFormBodyWithSchemaComponent() {
         // when
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
@@ -1770,26 +2207,29 @@ public class HttpRequestsPropertiesMatcherTest {
                     "          type: integer" + NEW_LINE +
                     "          format: int64" + NEW_LINE +
                     "        name:" + NEW_LINE +
-                    "          type: string" + NEW_LINE)
+                    "          type: string" + NEW_LINE
+                )
         ));
 
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("someParam", "1")
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=1&name=abc")
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("someParam", "0")
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=1&name=1")
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("someOtherParam", "1")
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=abc&name=1")
         ));
     }
 
     @Test
-    @Ignore("TODO: transform into json and compare with schema")
     public void shouldMatchByFormBodyWithRequestBodyAndSchemaComponent() {
         // when
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
@@ -1831,15 +2271,18 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("someParam", "1")
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=1&name=abc")
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("someParam", "0")
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=1&name=1")
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("someOtherParam", "1")
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=abc&name=1")
         ));
     }
 
