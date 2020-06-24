@@ -1,6 +1,5 @@
 package org.mockserver.matchers;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
@@ -10,7 +9,8 @@ import org.mockserver.serialization.model.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.jar.Attributes.Name.CONTENT_TYPE;
 import static junit.framework.TestCase.assertEquals;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.NotMatcher.not;
 import static org.mockserver.model.BinaryBody.binary;
@@ -2775,15 +2775,12 @@ public class HttpRequestPropertiesMatcherTest {
             jsonSchema("{" + NEW_LINE +
                 "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
                 "    \"title\": \"Product\"," + NEW_LINE +
-                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
                 "    \"type\": \"object\"," + NEW_LINE +
                 "    \"properties\": {" + NEW_LINE +
                 "        \"id\": {" + NEW_LINE +
-                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
                 "            \"type\": \"integer\"" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"name\": {" + NEW_LINE +
-                "            \"description\": \"Name of the product\"," + NEW_LINE +
                 "            \"type\": \"string\"" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"price\": {" + NEW_LINE +
@@ -2815,15 +2812,12 @@ public class HttpRequestPropertiesMatcherTest {
             jsonSchema("{" + NEW_LINE +
                 "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
                 "    \"title\": \"Product\"," + NEW_LINE +
-                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
                 "    \"type\": \"object\"," + NEW_LINE +
                 "    \"properties\": {" + NEW_LINE +
                 "        \"id\": {" + NEW_LINE +
-                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
                 "            \"type\": \"integer\"" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"name\": {" + NEW_LINE +
-                "            \"description\": \"Name of the product\"," + NEW_LINE +
                 "            \"type\": \"string\"" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"price\": {" + NEW_LINE +
@@ -2880,15 +2874,12 @@ public class HttpRequestPropertiesMatcherTest {
             jsonSchema("{" + NEW_LINE +
                 "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
                 "    \"title\": \"Product\"," + NEW_LINE +
-                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
                 "    \"type\": \"object\"," + NEW_LINE +
                 "    \"properties\": {" + NEW_LINE +
                 "        \"id\": {" + NEW_LINE +
-                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
                 "            \"type\": \"integer\"" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"name\": {" + NEW_LINE +
-                "            \"description\": \"Name of the product\"," + NEW_LINE +
                 "            \"type\": \"string\"" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"price\": {" + NEW_LINE +
@@ -2920,15 +2911,12 @@ public class HttpRequestPropertiesMatcherTest {
             jsonSchema("{" + NEW_LINE +
                 "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
                 "    \"title\": \"Product\"," + NEW_LINE +
-                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
                 "    \"type\": \"object\"," + NEW_LINE +
                 "    \"properties\": {" + NEW_LINE +
                 "        \"id\": {" + NEW_LINE +
-                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
                 "            \"type\": \"integer\"" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"name\": {" + NEW_LINE +
-                "            \"description\": \"Name of the product\"," + NEW_LINE +
                 "            \"type\": \"string\"" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"price\": {" + NEW_LINE +
@@ -3022,18 +3010,18 @@ public class HttpRequestPropertiesMatcherTest {
             jsonSchema("{" + NEW_LINE +
                 "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
                 "    \"title\": \"Product\"," + NEW_LINE +
-                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
                 "    \"type\": \"object\"," + NEW_LINE +
                 "    \"properties\": {" + NEW_LINE +
                 "        \"id\": {" + NEW_LINE +
-                "            \"type\": \"string\"" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"name\": {" + NEW_LINE +
                 "            \"type\": \"string\"" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"price\": {" + NEW_LINE +
-                "            \"type\": \"string\"," + NEW_LINE +
-                "            \"pattern\": \"^\\\\d+(\\\\.\\\\d)?$\"" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"tags\": {" + NEW_LINE +
                 "            \"type\": \"array\"," + NEW_LINE +
@@ -3064,18 +3052,18 @@ public class HttpRequestPropertiesMatcherTest {
             jsonSchema("{" + NEW_LINE +
                 "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
                 "    \"title\": \"Product\"," + NEW_LINE +
-                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
                 "    \"type\": \"object\"," + NEW_LINE +
                 "    \"properties\": {" + NEW_LINE +
                 "        \"id\": {" + NEW_LINE +
-                "            \"type\": \"string\"" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"name\": {" + NEW_LINE +
                 "            \"type\": \"string\"" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"price\": {" + NEW_LINE +
-                "            \"type\": \"string\"," + NEW_LINE +
-                "            \"pattern\": \"^\\\\d+(\\\\.\\\\d)?$\"" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"tags\": {" + NEW_LINE +
                 "            \"type\": \"array\"," + NEW_LINE +
@@ -3111,18 +3099,18 @@ public class HttpRequestPropertiesMatcherTest {
             jsonSchema("{" + NEW_LINE +
                 "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
                 "    \"title\": \"Product\"," + NEW_LINE +
-                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
                 "    \"type\": \"object\"," + NEW_LINE +
                 "    \"properties\": {" + NEW_LINE +
                 "        \"id\": {" + NEW_LINE +
-                "            \"type\": \"string\"" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"name\": {" + NEW_LINE +
                 "            \"type\": \"string\"" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"price\": {" + NEW_LINE +
-                "            \"type\": \"string\"," + NEW_LINE +
-                "            \"pattern\": \"^\\\\d+(\\\\.\\\\d)?$\"" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"tags\": {" + NEW_LINE +
                 "            \"type\": \"array\"," + NEW_LINE +
@@ -3171,18 +3159,18 @@ public class HttpRequestPropertiesMatcherTest {
                 jsonSchema("{" + NEW_LINE +
                     "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
                     "    \"title\": \"Product\"," + NEW_LINE +
-                    "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
                     "    \"type\": \"object\"," + NEW_LINE +
                     "    \"properties\": {" + NEW_LINE +
                     "        \"id\": {" + NEW_LINE +
-                    "            \"type\": \"string\"" + NEW_LINE +
+                    "            \"type\": \"integer\"" + NEW_LINE +
                     "        }," + NEW_LINE +
                     "        \"name\": {" + NEW_LINE +
                     "            \"type\": \"string\"" + NEW_LINE +
                     "        }," + NEW_LINE +
                     "        \"price\": {" + NEW_LINE +
-                    "            \"type\": \"string\"," + NEW_LINE +
-                    "            \"pattern\": \"^\\\\d+(\\\\.\\\\d)?$\"" + NEW_LINE +
+                    "            \"type\": \"number\"," + NEW_LINE +
+                    "            \"minimum\": 0," + NEW_LINE +
+                    "            \"exclusiveMinimum\": true" + NEW_LINE +
                     "        }," + NEW_LINE +
                     "        \"tags\": {" + NEW_LINE +
                     "            \"type\": \"array\"," + NEW_LINE +
@@ -3216,18 +3204,18 @@ public class HttpRequestPropertiesMatcherTest {
                 jsonSchema("{" + NEW_LINE +
                     "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
                     "    \"title\": \"Product\"," + NEW_LINE +
-                    "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
                     "    \"type\": \"object\"," + NEW_LINE +
                     "    \"properties\": {" + NEW_LINE +
                     "        \"id\": {" + NEW_LINE +
-                    "            \"type\": \"string\"" + NEW_LINE +
+                    "            \"type\": \"integer\"" + NEW_LINE +
                     "        }," + NEW_LINE +
                     "        \"name\": {" + NEW_LINE +
                     "            \"type\": \"string\"" + NEW_LINE +
                     "        }," + NEW_LINE +
                     "        \"price\": {" + NEW_LINE +
-                    "            \"type\": \"string\"," + NEW_LINE +
-                    "            \"pattern\": \"^\\\\d+(\\\\.\\\\d)?$\"" + NEW_LINE +
+                    "            \"type\": \"number\"," + NEW_LINE +
+                    "            \"minimum\": 0," + NEW_LINE +
+                    "            \"exclusiveMinimum\": true" + NEW_LINE +
                     "        }," + NEW_LINE +
                     "        \"tags\": {" + NEW_LINE +
                     "            \"type\": \"array\"," + NEW_LINE +
@@ -3265,18 +3253,18 @@ public class HttpRequestPropertiesMatcherTest {
                 jsonSchema("{" + NEW_LINE +
                     "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
                     "    \"title\": \"Product\"," + NEW_LINE +
-                    "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
                     "    \"type\": \"object\"," + NEW_LINE +
                     "    \"properties\": {" + NEW_LINE +
                     "        \"id\": {" + NEW_LINE +
-                    "            \"type\": \"string\"" + NEW_LINE +
+                    "            \"type\": \"integer\"" + NEW_LINE +
                     "        }," + NEW_LINE +
                     "        \"name\": {" + NEW_LINE +
                     "            \"type\": \"string\"" + NEW_LINE +
                     "        }," + NEW_LINE +
                     "        \"price\": {" + NEW_LINE +
-                    "            \"type\": \"string\"," + NEW_LINE +
-                    "            \"pattern\": \"^\\\\d+(\\\\.\\\\d)?$\"" + NEW_LINE +
+                    "            \"type\": \"number\"," + NEW_LINE +
+                    "            \"minimum\": 0," + NEW_LINE +
+                    "            \"exclusiveMinimum\": true" + NEW_LINE +
                     "        }," + NEW_LINE +
                     "        \"tags\": {" + NEW_LINE +
                     "            \"type\": \"array\"," + NEW_LINE +
@@ -3294,30 +3282,260 @@ public class HttpRequestPropertiesMatcherTest {
         ));
     }
 
-    // - with Form Parameters (TODO)
+    // - with Form Parameters
 
     @Test
-    @Ignore
     public void shouldMatchJsonSchemaBodyWithFormParameters() {
-        fail("not yet implemented");
+        assertTrue(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+        )).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .withBody("" +
+                "id=1" +
+                "&name=A+green+door" +
+                "&price=12.5" +
+                "&tags=home" +
+                "&tags=green")
+        ));
+        assertTrue(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"خانه\", \"سبز\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+        )).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED.withCharset(UTF_8))
+            .withBody("" +
+                "id=1" +
+                "&name=یک درب سبز" +
+                "&price=12.5" +
+                "&tags=خانه" +
+                "&tags=سبز")
+        ));
     }
 
     @Test
-    @Ignore
     public void shouldNotMatchJsonSchemaBodyWithFormParameters() {
-        fail("not yet implemented");
+        assertFalse(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 3," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+        )).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .withBody("" +
+                "id=1" +
+                "&name=A+green+door" +
+                "&price=12.5" +
+                "&tags=home" +
+                "&tags=green")
+        ));
     }
 
     @Test
-    @Ignore
     public void shouldMatchJsonSchemaBodyWithFormParametersForControlPlane() {
-        fail("not yet implemented");
+        assertTrue(updateForControlPlane(new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .withBody("" +
+                "id=1" +
+                "&name=A+green+door" +
+                "&price=12.5" +
+                "&tags=home" +
+                "&tags=green")
+        ).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .withBody(
+                jsonSchema("{" + NEW_LINE +
+                    "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                    "    \"title\": \"Product\"," + NEW_LINE +
+                    "    \"type\": \"object\"," + NEW_LINE +
+                    "    \"properties\": {" + NEW_LINE +
+                    "        \"id\": {" + NEW_LINE +
+                    "            \"type\": \"integer\"" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"name\": {" + NEW_LINE +
+                    "            \"type\": \"string\"" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"price\": {" + NEW_LINE +
+                    "            \"type\": \"number\"," + NEW_LINE +
+                    "            \"minimum\": 0," + NEW_LINE +
+                    "            \"exclusiveMinimum\": true" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"tags\": {" + NEW_LINE +
+                    "            \"type\": \"array\"," + NEW_LINE +
+                    "            \"items\": {" + NEW_LINE +
+                    "                \"type\": \"string\"," + NEW_LINE +
+                    "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                    "            }," + NEW_LINE +
+                    "            \"minItems\": 1," + NEW_LINE +
+                    "            \"uniqueItems\": true" + NEW_LINE +
+                    "        }" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                    "}")
+            )
+        ));
+        assertFalse(update(new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .withBody("" +
+                "id=1" +
+                "&name=A+green+door" +
+                "&price=12.5" +
+                "&tags=home" +
+                "&tags=green")
+        ).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .withBody(
+                jsonSchema("{" + NEW_LINE +
+                    "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                    "    \"title\": \"Product\"," + NEW_LINE +
+                    "    \"type\": \"object\"," + NEW_LINE +
+                    "    \"properties\": {" + NEW_LINE +
+                    "        \"id\": {" + NEW_LINE +
+                    "            \"type\": \"integer\"" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"name\": {" + NEW_LINE +
+                    "            \"type\": \"string\"" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"price\": {" + NEW_LINE +
+                    "            \"type\": \"number\"," + NEW_LINE +
+                    "            \"minimum\": 0," + NEW_LINE +
+                    "            \"exclusiveMinimum\": true" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"tags\": {" + NEW_LINE +
+                    "            \"type\": \"array\"," + NEW_LINE +
+                    "            \"items\": {" + NEW_LINE +
+                    "                \"type\": \"string\"," + NEW_LINE +
+                    "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                    "            }," + NEW_LINE +
+                    "            \"minItems\": 1," + NEW_LINE +
+                    "            \"uniqueItems\": true" + NEW_LINE +
+                    "        }" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                    "}")
+            )
+        ));
+
     }
 
     @Test
-    @Ignore
     public void shouldNotMatchJsonSchemaBodyWithFormParametersForControlPlane() {
-        fail("not yet implemented");
+        assertFalse(updateForControlPlane(new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .withBody("" +
+                "id=1" +
+                "&name=A+green+door" +
+                "&price=12.5" +
+                "&tags=home" +
+                "&tags=green")
+        ).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .withBody(
+                jsonSchema("{" + NEW_LINE +
+                    "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                    "    \"title\": \"Product\"," + NEW_LINE +
+                    "    \"type\": \"object\"," + NEW_LINE +
+                    "    \"properties\": {" + NEW_LINE +
+                    "        \"id\": {" + NEW_LINE +
+                    "            \"type\": \"integer\"" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"name\": {" + NEW_LINE +
+                    "            \"type\": \"string\"" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"price\": {" + NEW_LINE +
+                    "            \"type\": \"number\"," + NEW_LINE +
+                    "            \"minimum\": 0," + NEW_LINE +
+                    "            \"exclusiveMinimum\": true" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"tags\": {" + NEW_LINE +
+                    "            \"type\": \"array\"," + NEW_LINE +
+                    "            \"items\": {" + NEW_LINE +
+                    "                \"type\": \"string\"," + NEW_LINE +
+                    "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                    "            }," + NEW_LINE +
+                    "            \"minItems\": 3," + NEW_LINE +
+                    "            \"uniqueItems\": true" + NEW_LINE +
+                    "        }" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                    "}")
+            )
+        ));
     }
 
     // - ParameterBody

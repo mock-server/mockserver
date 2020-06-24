@@ -23,6 +23,9 @@ import static org.mockserver.log.model.LogEntry.LogMessageType.EXCEPTION;
 
 public class JsonSchemaBodyParser {
 
+    private static final String APPLICATION_XML = "application/xml";
+    private static final String TEXT_XML = "text/xml";
+    private static final String APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
     private final MockServerLogger mockServerLogger;
     private final Expectation expectation;
     private final HttpRequest httpRequest;
@@ -36,7 +39,7 @@ public class JsonSchemaBodyParser {
     public String convertToJson(HttpRequest request, MatchDifference context, BodyMatcher<?> bodyMatcher) {
         String bodyAsJson = request.getBodyAsString();
         String contentType = request.getFirstHeader(CONTENT_TYPE.toString());
-        if (contentType.contains("application/xml") || contentType.contains("text/xml")) {
+        if (contentType.contains(APPLICATION_XML) || contentType.contains(TEXT_XML)) {
             try {
                 Document document = new StringToXmlDocumentParser().buildDocument(request.getBodyAsString(), (matchedInException, throwable) -> {
                     if (context != null) {
@@ -55,11 +58,12 @@ public class JsonSchemaBodyParser {
                         .setArguments(request, this.httpRequest)
                 );
             }
-        } else if (contentType.contains("application/x-www-form-urlencoded")) {
-            final Map<String, List<String>> data = new QueryStringDecoder("?" + request.getBodyAsString()).parameters();
-            final ObjectNode root = new ObjectNode(JsonNodeFactory.instance);
-            data.forEach((key, values) -> root.set(key, toJsonObject(values)));
-            bodyAsJson = root.toPrettyString();
+        } else if (contentType.contains(APPLICATION_X_WWW_FORM_URLENCODED)) {
+            ObjectNode objectNode = new ObjectNode(JsonNodeFactory.instance);
+            new QueryStringDecoder("?" + request.getBodyAsString())
+                .parameters()
+                .forEach((key, values) -> objectNode.set(key, toJsonObject(values)));
+            bodyAsJson = objectNode.toPrettyString();
         }
         return bodyAsJson;
     }
@@ -68,7 +72,7 @@ public class JsonSchemaBodyParser {
     private Object xmlToMap(Node node) {
         Map<String, Object> objectMap = new HashMap<>();
         NodeList childNodes = node.getChildNodes();
-        String content = null;
+        JsonNode content = null;
         for (int i = 0; i < childNodes.getLength(); i++) {
             Node item = childNodes.item(i);
             if (item.getChildNodes().getLength() > 0) {
@@ -86,7 +90,7 @@ public class JsonSchemaBodyParser {
                     objectMap.put(item.getNodeName(), xmlToMap(item));
                 }
             } else if (item.getNodeType() == Node.TEXT_NODE) {
-                content = item.getTextContent().trim();
+                content = toJsonObject(item.getTextContent().trim());
             }
         }
         return objectMap.size() > 0 ? objectMap : content;
