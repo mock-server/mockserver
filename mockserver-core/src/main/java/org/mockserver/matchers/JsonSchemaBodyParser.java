@@ -2,7 +2,6 @@ package org.mockserver.matchers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
