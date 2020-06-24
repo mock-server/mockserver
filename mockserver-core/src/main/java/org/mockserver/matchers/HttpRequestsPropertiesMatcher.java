@@ -19,6 +19,7 @@ import org.mockserver.openapi.examples.JsonNodeExampleSerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 
 import static java.util.jar.Attributes.Name.CONTENT_TYPE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -55,24 +56,7 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                             .forEach(methodOperationPair -> {
                                 Operation operation = methodOperationPair.getValue();
                                 if (operation.getRequestBody() != null && operation.getRequestBody().getContent() != null) {
-                                    operation.getRequestBody().getContent().forEach((contentType, mediaType) -> {
-                                        HttpRequest httpRequest = createHttpRequest(openAPIDefinition, path, methodOperationPair);
-                                        httpRequest.withHeader(CONTENT_TYPE.toString(), contentType);
-                                        if (mediaType != null && mediaType.getSchema() != null) {
-                                            try {
-                                                httpRequest.withBody(jsonSchema(OBJECT_WRITER.writeValueAsString(mediaType.getSchema())));
-                                            } catch (Throwable throwable) {
-                                                mockServerLogger.logEvent(
-                                                    new LogEntry()
-                                                        .setLogLevel(ERROR)
-                                                        .setMessageFormat("exception while creating adding request body{}from schema{}")
-                                                        .setArguments(mediaType.getSchema(), openAPIDefinition)
-                                                        .setThrowable(throwable)
-                                                );
-                                            }
-                                        }
-                                        addRequestMatcher(openAPIDefinition, methodOperationPair, httpRequest, contentType);
-                                    });
+                                    operation.getRequestBody().getContent().forEach(handleJsonBody(openAPIDefinition, path, methodOperationPair));
                                 } else {
                                     HttpRequest httpRequest = createHttpRequest(openAPIDefinition, path, methodOperationPair);
                                     addRequestMatcher(openAPIDefinition, methodOperationPair, httpRequest, "");
@@ -95,19 +79,6 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
         } else {
             return false;
         }
-    }
-
-    private void addRequestMatcher(OpenAPIDefinition openAPIDefinition, Pair<String, Operation> methodOperationPair, HttpRequest httpRequest, String contentType) {
-        HttpRequestPropertiesMatcher httpRequestPropertiesMatcher = new HttpRequestPropertiesMatcher(mockServerLogger);
-        httpRequestPropertiesMatcher.update(httpRequest);
-        httpRequestPropertiesMatcher.setControlPlaneMatcher(controlPlaneMatcher);
-        httpRequestPropertiesMatcher.setDescription("" +
-            "for swagger " +
-            (openAPIDefinition.getSpecUrlOrPayload().endsWith(".json") || openAPIDefinition.getSpecUrlOrPayload().endsWith(".yaml") ? "\"" + openAPIDefinition.getSpecUrlOrPayload() + "\" " : "") +
-            "operation \"" + methodOperationPair.getValue().getOperationId() + "\"" +
-            (isNotBlank(contentType) ? " content-type \"" + contentType + "\"" : "")
-        );
-        httpRequestPropertiesMatchers.add(httpRequestPropertiesMatcher);
     }
 
     private HttpRequest createHttpRequest(OpenAPIDefinition openAPIDefinition, String path, Pair<String, Operation> methodOperationPair) {
@@ -172,6 +143,40 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
             }
         }
         return httpRequest;
+    }
+
+    private BiConsumer<String, MediaType> handleJsonBody(OpenAPIDefinition openAPIDefinition, String path, Pair<String, Operation> methodOperationPair) {
+        return (contentType, mediaType) -> {
+            HttpRequest httpRequest = createHttpRequest(openAPIDefinition, path, methodOperationPair);
+            httpRequest.withHeader(CONTENT_TYPE.toString(), contentType);
+            if (mediaType != null && mediaType.getSchema() != null) {
+                try {
+                    httpRequest.withBody(jsonSchema(OBJECT_WRITER.writeValueAsString(mediaType.getSchema())));
+                } catch (Throwable throwable) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(ERROR)
+                            .setMessageFormat("exception while creating adding request body{}from schema{}")
+                            .setArguments(mediaType.getSchema(), openAPIDefinition)
+                            .setThrowable(throwable)
+                    );
+                }
+            }
+            addRequestMatcher(openAPIDefinition, methodOperationPair, httpRequest, contentType);
+        };
+    }
+
+    private void addRequestMatcher(OpenAPIDefinition openAPIDefinition, Pair<String, Operation> methodOperationPair, HttpRequest httpRequest, String contentType) {
+        HttpRequestPropertiesMatcher httpRequestPropertiesMatcher = new HttpRequestPropertiesMatcher(mockServerLogger);
+        httpRequestPropertiesMatcher.update(httpRequest);
+        httpRequestPropertiesMatcher.setControlPlaneMatcher(controlPlaneMatcher);
+        httpRequestPropertiesMatcher.setDescription("" +
+            "for swagger " +
+            (openAPIDefinition.getSpecUrlOrPayload().endsWith(".json") || openAPIDefinition.getSpecUrlOrPayload().endsWith(".yaml") ? "\"" + openAPIDefinition.getSpecUrlOrPayload() + "\" " : "") +
+            "operation \"" + methodOperationPair.getValue().getOperationId() + "\"" +
+            (isNotBlank(contentType) ? " content-type \"" + contentType + "\"" : "")
+        );
+        httpRequestPropertiesMatchers.add(httpRequestPropertiesMatcher);
     }
 
     @Override

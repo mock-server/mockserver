@@ -1409,12 +1409,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                 LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
-                    "    \"body\" : {" + NEW_LINE +
-                    "      \"type\" : \"PARAMETERS\"," + NEW_LINE +
-                    "      \"value\" : {" + NEW_LINE +
-                    "        \"name1\" : [ \"value\" ]" + NEW_LINE +
-                    "      }" + NEW_LINE +
-                    "    }" + NEW_LINE +
+                    "    \"body\" : \"name1=value\"" + NEW_LINE +
                     "  }" + NEW_LINE +
                     NEW_LINE +
                     " didn't match request matcher:" + NEW_LINE +
@@ -1479,12 +1474,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                 LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
-                    "    \"body\" : {" + NEW_LINE +
-                    "      \"type\" : \"PARAMETERS\"," + NEW_LINE +
-                    "      \"value\" : {" + NEW_LINE +
-                    "        \"name\" : [ \"value1\" ]" + NEW_LINE +
-                    "      }" + NEW_LINE +
-                    "    }" + NEW_LINE +
+                    "    \"body\" : \"name=value1\"" + NEW_LINE +
                     "  }" + NEW_LINE +
                     NEW_LINE +
                     " didn't match request matcher:" + NEW_LINE +

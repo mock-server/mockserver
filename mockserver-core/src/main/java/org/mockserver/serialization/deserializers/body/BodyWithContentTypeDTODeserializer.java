@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
+import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.*;
 
 import java.io.IOException;
@@ -30,6 +31,8 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
 
     private static final Map<String, Body.Type> fieldNameToType = new HashMap<>();
     private static final Base64.Decoder BASE64_DECODER = Base64.getDecoder();
+    private static ObjectWriter objectWriter;
+    private static ObjectMapper objectMapper;
     private static ObjectWriter jsonBodyObjectWriter;
 
     static {
@@ -55,6 +58,7 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
         Boolean not = null;
         MediaType contentType = null;
         Charset charset = null;
+        Parameters parameters = null;
         if (currentToken == JsonToken.START_OBJECT) {
             @SuppressWarnings("unchecked") Map<Object, Object> body = (Map<Object, Object>) ctxt.readValue(jsonParser, Map.class);
             for (Map.Entry<Object, Object> entry : body.entrySet()) {
@@ -112,7 +116,10 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                         try {
                             String mediaTypeHeader = String.valueOf(entry.getValue());
                             if (isNotBlank(mediaTypeHeader)) {
-                                contentType = MediaType.parse(mediaTypeHeader);
+                                MediaType parsedMediaTypeHeader = MediaType.parse(mediaTypeHeader);
+                                if (isNotBlank(parsedMediaTypeHeader.toString())) {
+                                    contentType = parsedMediaTypeHeader;
+                                }
                             }
                         } catch (IllegalArgumentException uce) {
                             if (MockServerLogger.isEnabled(DEBUG)) {
@@ -148,6 +155,15 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                             }
                         }
                     }
+                    if (key.equalsIgnoreCase("parameters")) {
+                        if (objectMapper == null) {
+                            objectMapper = ObjectMapperFactory.createObjectMapper();
+                        }
+                        if (objectWriter == null) {
+                            objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
+                        }
+                        parameters = objectMapper.readValue(objectWriter.writeValueAsString(entry.getValue()), Parameters.class);
+                    }
                 }
             }
             if (type != null) {
@@ -166,6 +182,8 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                         } else {
                             return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, JsonBody.DEFAULT_JSON_CONTENT_TYPE, JsonBody.DEFAULT_MATCH_TYPE), not);
                         }
+                    case PARAMETERS:
+                        return new ParameterBodyDTO(new ParameterBody(parameters), not);
                     case STRING:
                         if (contentType != null && isNotBlank(contentType.toString())) {
                             return new StringBodyDTO(new StringBody(valueJsonValue, rawBytes, false, contentType), not);

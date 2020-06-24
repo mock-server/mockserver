@@ -8,7 +8,7 @@ import java.util.Objects;
 /**
  * @author jamesdbloom
  */
-public class ParameterBodyDTO extends BodyDTO {
+public class ParameterBodyDTO extends BodyWithContentTypeDTO {
 
     private final Parameters parameters;
 
@@ -17,7 +17,7 @@ public class ParameterBodyDTO extends BodyDTO {
     }
 
     public ParameterBodyDTO(ParameterBody parameterBody, Boolean not) {
-        super(parameterBody.getType(), not);
+        super(parameterBody.getType(), not, parameterBody.getContentType());
         parameters = parameterBody.getValue();
     }
 
@@ -29,20 +29,4 @@ public class ParameterBodyDTO extends BodyDTO {
         return new ParameterBody(parameters);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof ParameterBodyDTO)) {
-            return false;
-        }
-        ParameterBodyDTO that = (ParameterBodyDTO) o;
-        return Objects.equals(parameters, that.parameters);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(parameters);
-    }
 }

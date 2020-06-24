@@ -27,41 +27,38 @@ public class HttpRequestsPropertiesMatcherTest {
 
     private final MockServerLogger mockServerLogger = new MockServerLogger(HttpRequestsPropertiesMatcherTest.class);
 
-    /*
-     - test order
-       - path
-         - basic
-         - with path parameter
-       - method
-         - basic
-       - parameters (see: https://swagger.io/docs/specification/describing-parameters/)
-         - path
-         - query string
-         - header
-         - cookie
-         - body
-         - required field
-         - allowReserved field
-         - allowEmptyValue field -> nullable: true in json schema
-         - common parameter for all methods of path
-         - common parameter for all various paths
-       - requestBody (see: https://swagger.io/docs/specification/describing-request-body/)
-         - json
-           - application/json
-           - application-* (as json)
-           - *-* (as json)
-         - xml
-           - application/xml
-           - application-* (as xml) - could I know this?
-           - *-* (as xml) - could I know this?
-         - form parameters
-           - application/x-www-form-urlencoded
-         - form data
-           - multipart/form-data
-
-     Swagger v2
-     - body format?
+    /**
+     * Test Pattern For Fields:
+     * - method
+     *   - basic
+     * - path
+     *   - basic
+     *   - with path parameter
+     * - parameters (see: https://swagger.io/docs/specification/describing-parameters/)
+     *   - path
+     *   - query string
+     *   - header
+     *   - cookie
+     *   Then:
+     *   - required field
+     *   - allowReserved field (NOT COVERED) - TODO(jamesdbloom)
+     *   - allowEmptyValue field -> nullable: true in json schema
+     *   - common parameter for all methods of path
+     *   - common parameter for all paths
+     * - requestBody (see: https://swagger.io/docs/specification/describing-request-body/)
+     *   - json (i.e. application/json)
+     *   - text (i.e. text/plain) - TODO(jamesdbloom)
+     *   - xml (i.e. application/xml) - TODO(jamesdbloom)
+     *   - form parameters (i.e. application/x-www-form-urlencoded) - TODO(jamesdbloom)
+     *   - multipart form data (i.e. multipart/form-data) - TODO(jamesdbloom)
+     *   Then:
+     *   - media type range
+     *   - media type default
+     *   - required field
+     *   - encoding (multipart/form-data or application/x-www-form-urlencoded)
      */
+
+    // METHOD
 
     @Test
     public void shouldMatchByMethod() {
@@ -69,12 +66,12 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n")
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE)
         ));
 
         // then
@@ -94,12 +91,12 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n")
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE)
                 .withOperationId("someOperation")
         ));
 
@@ -114,18 +111,20 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
     }
 
+    // PATH
+
     @Test
     public void shouldMatchByPath() {
         // when
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n")
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE)
         ));
 
         // then
@@ -145,12 +144,12 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n")
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE)
                 .withOperationId("someOperation")
         ));
 
@@ -165,24 +164,26 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
     }
 
+    // PATH PARAMETERS
+
     @Test
     public void shouldMatchByPathWithPathParameter() {
         // when
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath/{someParam}\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - in: path\n" +
-                    "          name: someParam\n" +
-                    "          required: true\n" +
-                    "          schema:\n" +
-                    "            type: integer\n" +
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath/{someParam}\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: path" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
                     "            minimum: 1")
         ));
 
@@ -211,26 +212,26 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath/{someParam}/{someOtherParam}\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - in: path\n" +
-                    "          name: someParam\n" +
-                    "          required: true\n" +
-                    "          schema:\n" +
-                    "            type: integer\n" +
-                    "            minimum: 1\n" +
-                    "        - in: path\n" +
-                    "          name: someOtherParam\n" +
-                    "          required: true\n" +
-                    "          schema:\n" +
-                    "            type: string\n" +
-                    "            minLength: 2\n" +
-                    "            maxLength: 3\n")
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath/{someParam}/{someOtherParam}\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: path" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 1" + NEW_LINE +
+                    "        - in: path" + NEW_LINE +
+                    "          name: someOtherParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: string" + NEW_LINE +
+                    "            minLength: 2" + NEW_LINE +
+                    "            maxLength: 3" + NEW_LINE)
         ));
 
         // then
@@ -262,26 +263,26 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - in: path\n" +
-                    "          name: someParam\n" +
-                    "          required: true\n" +
-                    "          schema:\n" +
-                    "            type: integer\n" +
-                    "            minimum: 1\n" +
-                    "        - in: path\n" +
-                    "          name: someOtherParam\n" +
-                    "          required: true\n" +
-                    "          schema:\n" +
-                    "            type: string\n" +
-                    "            minLength: 2\n" +
-                    "            maxLength: 3\n")
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: path" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 1" + NEW_LINE +
+                    "        - in: path" + NEW_LINE +
+                    "          name: someOtherParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: string" + NEW_LINE +
+                    "            minLength: 2" + NEW_LINE +
+                    "            maxLength: 3" + NEW_LINE)
         ));
 
         // then
@@ -309,18 +310,18 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath/{someParam}\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - in: path\n" +
-                    "          name: someParam\n" +
-                    "          required: true\n" +
-                    "          schema:\n" +
-                    "            type: integer\n" +
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath/{someParam}\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: path" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
                     "            minimum: 1")
                 .withOperationId("someOperation")
         ));
@@ -350,18 +351,18 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath/{someParam}\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - in: path\n" +
-                    "          name: someParam\n" +
-                    "          required: false\n" +
-                    "          schema:\n" +
-                    "            type: integer\n" +
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath/{someParam}\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: path" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: false" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
                     "            minimum: 1")
         ));
 
@@ -394,19 +395,19 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath/{someParam}\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - in: path\n" +
-                    "          name: someParam\n" +
-                    "          required: true\n" +
-                    "          allowEmptyValue: true\n" +
-                    "          schema:\n" +
-                    "            type: integer\n" +
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath/{someParam}\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: path" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          allowEmptyValue: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
                     "            minimum: 1")
         ));
 
@@ -433,24 +434,26 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
     }
 
+    // QUERY STRING PARAMETERS
+
     @Test
     public void shouldMatchByQueryStringParameter() {
         // when
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - in: query\n" +
-                    "          name: someParam\n" +
-                    "          required: true\n" +
-                    "          schema:\n" +
-                    "            type: integer\n" +
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: query" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
                     "            minimum: 1")
         ));
 
@@ -475,18 +478,18 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - in: query\n" +
-                    "          name: someParam\n" +
-                    "          required: true\n" +
-                    "          schema:\n" +
-                    "            type: integer\n" +
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: query" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
                     "            minimum: 1")
                 .withOperationId("someOperation")
         ));
@@ -512,18 +515,18 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - in: query\n" +
-                    "          name: someParam\n" +
-                    "          required: false\n" +
-                    "          schema:\n" +
-                    "            type: integer\n" +
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: query" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: false" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
                     "            minimum: 1")
         ));
 
@@ -552,17 +555,17 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - in: query\n" +
-                    "          name: someParam\n" +
-                    "          schema:\n" +
-                    "            type: integer\n" +
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: query" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
                     "            minimum: 1")
         ));
 
@@ -591,19 +594,19 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - in: query\n" +
-                    "          name: someParam\n" +
-                    "          required: true\n" +
-                    "          allowEmptyValue: true\n" +
-                    "          schema:\n" +
-                    "            type: integer\n" +
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: query" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          allowEmptyValue: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
                     "            minimum: 1")
         ));
 
@@ -632,19 +635,19 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - in: query\n" +
-                    "          name: someParam\n" +
-                    "          required: false\n" +
-                    "          allowEmptyValue: true\n" +
-                    "          schema:\n" +
-                    "            type: integer\n" +
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: query" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: false" + NEW_LINE +
+                    "          allowEmptyValue: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
                     "            minimum: 1")
         ));
 
@@ -677,19 +680,19 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    parameters:\n" +
-                    "      - in: query\n" +
-                    "        name: someParam\n" +
-                    "        required: true\n" +
-                    "        schema:\n" +
-                    "          type: integer\n" +
-                    "          minimum: 1\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n")
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    parameters:" + NEW_LINE +
+                    "      - in: query" + NEW_LINE +
+                    "        name: someParam" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        schema:" + NEW_LINE +
+                    "          type: integer" + NEW_LINE +
+                    "          minimum: 1" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE)
         ));
 
         // then
@@ -713,33 +716,33 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "components:\n" +
-                    "  parameters:\n" +
-                    "    someParam:\n" +
-                    "      in: query\n" +
-                    "      name: someParam\n" +
-                    "      required: true\n" +
-                    "      schema:\n" +
-                    "        type: integer\n" +
-                    "        minimum: 1\n" +
-                    "    someOtherParam:\n" +
-                    "      in: query\n" +
-                    "      name: someOtherParam\n" +
-                    "      required: true\n" +
-                    "      schema:\n" +
-                    "        type: string\n" +
-                    "        minLength: 2\n" +
-                    "        maxLength: 3\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    parameters:\n" +
-                    "      - $ref: '#/components/parameters/someParam'\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - $ref: '#/components/parameters/someOtherParam'\n")
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  parameters:" + NEW_LINE +
+                    "    someParam:" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      name: someParam" + NEW_LINE +
+                    "      required: true" + NEW_LINE +
+                    "      schema:" + NEW_LINE +
+                    "        type: integer" + NEW_LINE +
+                    "        minimum: 1" + NEW_LINE +
+                    "    someOtherParam:" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      name: someOtherParam" + NEW_LINE +
+                    "      required: true" + NEW_LINE +
+                    "      schema:" + NEW_LINE +
+                    "        type: string" + NEW_LINE +
+                    "        minLength: 2" + NEW_LINE +
+                    "        maxLength: 3" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    parameters:" + NEW_LINE +
+                    "      - $ref: '#/components/parameters/someParam'" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - $ref: '#/components/parameters/someOtherParam'" + NEW_LINE)
         ));
 
         // then
@@ -764,24 +767,26 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
     }
 
+    // HEADERS
+
     @Test
     public void shouldMatchByHeader() {
         // when
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - in: header\n" +
-                    "          name: someParam\n" +
-                    "          required: true\n" +
-                    "          schema:\n" +
-                    "            type: integer\n" +
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: header" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
                     "            minimum: 1")
         ));
 
@@ -806,18 +811,18 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - in: header\n" +
-                    "          name: someParam\n" +
-                    "          required: true\n" +
-                    "          schema:\n" +
-                    "            type: integer\n" +
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: header" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
                     "            minimum: 1")
                 .withOperationId("someOperation")
         ));
@@ -843,18 +848,18 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - in: header\n" +
-                    "          name: someParam\n" +
-                    "          required: false\n" +
-                    "          schema:\n" +
-                    "            type: integer\n" +
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: header" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: false" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
                     "            minimum: 1")
         ));
 
@@ -883,17 +888,17 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - in: header\n" +
-                    "          name: someParam\n" +
-                    "          schema:\n" +
-                    "            type: integer\n" +
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: header" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
                     "            minimum: 1")
         ));
 
@@ -922,19 +927,19 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - in: header\n" +
-                    "          name: someParam\n" +
-                    "          required: true\n" +
-                    "          allowEmptyValue: true\n" +
-                    "          schema:\n" +
-                    "            type: integer\n" +
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: header" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          allowEmptyValue: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
                     "            minimum: 1")
         ));
 
@@ -963,19 +968,19 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    parameters:\n" +
-                    "      - in: header\n" +
-                    "        name: someParam\n" +
-                    "        required: true\n" +
-                    "        schema:\n" +
-                    "          type: integer\n" +
-                    "          minimum: 1\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n")
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    parameters:" + NEW_LINE +
+                    "      - in: header" + NEW_LINE +
+                    "        name: someParam" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        schema:" + NEW_LINE +
+                    "          type: integer" + NEW_LINE +
+                    "          minimum: 1" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE)
         ));
 
         // then
@@ -999,33 +1004,33 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "components:\n" +
-                    "  parameters:\n" +
-                    "    someParam:\n" +
-                    "      in: header\n" +
-                    "      name: someParam\n" +
-                    "      required: true\n" +
-                    "      schema:\n" +
-                    "        type: integer\n" +
-                    "        minimum: 1\n" +
-                    "    someOtherParam:\n" +
-                    "      in: header\n" +
-                    "      name: someOtherParam\n" +
-                    "      required: true\n" +
-                    "      schema:\n" +
-                    "        type: string\n" +
-                    "        minLength: 2\n" +
-                    "        maxLength: 3\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    parameters:\n" +
-                    "      - $ref: '#/components/parameters/someParam'\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - $ref: '#/components/parameters/someOtherParam'\n")
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  parameters:" + NEW_LINE +
+                    "    someParam:" + NEW_LINE +
+                    "      in: header" + NEW_LINE +
+                    "      name: someParam" + NEW_LINE +
+                    "      required: true" + NEW_LINE +
+                    "      schema:" + NEW_LINE +
+                    "        type: integer" + NEW_LINE +
+                    "        minimum: 1" + NEW_LINE +
+                    "    someOtherParam:" + NEW_LINE +
+                    "      in: header" + NEW_LINE +
+                    "      name: someOtherParam" + NEW_LINE +
+                    "      required: true" + NEW_LINE +
+                    "      schema:" + NEW_LINE +
+                    "        type: string" + NEW_LINE +
+                    "        minLength: 2" + NEW_LINE +
+                    "        maxLength: 3" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    parameters:" + NEW_LINE +
+                    "      - $ref: '#/components/parameters/someParam'" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - $ref: '#/components/parameters/someOtherParam'" + NEW_LINE)
         ));
 
         // then
@@ -1050,24 +1055,26 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
     }
 
+    // COOKIES
+
     @Test
     public void shouldMatchByCookie() {
         // when
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - in: cookie\n" +
-                    "          name: someParam\n" +
-                    "          required: true\n" +
-                    "          schema:\n" +
-                    "            type: integer\n" +
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: cookie" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
                     "            minimum: 1")
         ));
 
@@ -1092,18 +1099,18 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - in: cookie\n" +
-                    "          name: someParam\n" +
-                    "          required: true\n" +
-                    "          schema:\n" +
-                    "            type: integer\n" +
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: cookie" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
                     "            minimum: 1")
                 .withOperationId("someOperation")
         ));
@@ -1129,18 +1136,18 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - in: cookie\n" +
-                    "          name: someParam\n" +
-                    "          required: false\n" +
-                    "          schema:\n" +
-                    "            type: integer\n" +
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: cookie" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: false" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
                     "            minimum: 1")
         ));
 
@@ -1169,17 +1176,17 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - in: cookie\n" +
-                    "          name: someParam\n" +
-                    "          schema:\n" +
-                    "            type: integer\n" +
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: cookie" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
                     "            minimum: 1")
         ));
 
@@ -1208,19 +1215,19 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - in: cookie\n" +
-                    "          name: someParam\n" +
-                    "          required: true\n" +
-                    "          allowEmptyValue: true\n" +
-                    "          schema:\n" +
-                    "            type: integer\n" +
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: cookie" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          allowEmptyValue: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
                     "            minimum: 1")
         ));
 
@@ -1249,19 +1256,19 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    parameters:\n" +
-                    "      - in: cookie\n" +
-                    "        name: someParam\n" +
-                    "        required: true\n" +
-                    "        schema:\n" +
-                    "          type: integer\n" +
-                    "          minimum: 1\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n")
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    parameters:" + NEW_LINE +
+                    "      - in: cookie" + NEW_LINE +
+                    "        name: someParam" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        schema:" + NEW_LINE +
+                    "          type: integer" + NEW_LINE +
+                    "          minimum: 1" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE)
         ));
 
         // then
@@ -1285,33 +1292,33 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "components:\n" +
-                    "  parameters:\n" +
-                    "    someParam:\n" +
-                    "      in: cookie\n" +
-                    "      name: someParam\n" +
-                    "      required: true\n" +
-                    "      schema:\n" +
-                    "        type: integer\n" +
-                    "        minimum: 1\n" +
-                    "    someOtherParam:\n" +
-                    "      in: cookie\n" +
-                    "      name: someOtherParam\n" +
-                    "      required: true\n" +
-                    "      schema:\n" +
-                    "        type: string\n" +
-                    "        minLength: 2\n" +
-                    "        maxLength: 3\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    parameters:\n" +
-                    "      - $ref: '#/components/parameters/someParam'\n" +
-                    "    get:\n" +
-                    "      operationId: someOperation\n" +
-                    "      parameters:\n" +
-                    "        - $ref: '#/components/parameters/someOtherParam'\n")
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  parameters:" + NEW_LINE +
+                    "    someParam:" + NEW_LINE +
+                    "      in: cookie" + NEW_LINE +
+                    "      name: someParam" + NEW_LINE +
+                    "      required: true" + NEW_LINE +
+                    "      schema:" + NEW_LINE +
+                    "        type: integer" + NEW_LINE +
+                    "        minimum: 1" + NEW_LINE +
+                    "    someOtherParam:" + NEW_LINE +
+                    "      in: cookie" + NEW_LINE +
+                    "      name: someOtherParam" + NEW_LINE +
+                    "      required: true" + NEW_LINE +
+                    "      schema:" + NEW_LINE +
+                    "        type: string" + NEW_LINE +
+                    "        minLength: 2" + NEW_LINE +
+                    "        maxLength: 3" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    parameters:" + NEW_LINE +
+                    "      - $ref: '#/components/parameters/someParam'" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - $ref: '#/components/parameters/someOtherParam'" + NEW_LINE)
         ));
 
         // then
@@ -1336,45 +1343,49 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
     }
 
+    // BODY
+
+    // - JSON BODY (via JsonSchema)
+
     @Test
     public void shouldMatchByJsonBody() {
         // when
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    post:\n" +
-                    "      operationId: someOperation\n" +
-                    "      requestBody:\n" +
-                    "        required: true\n" +
-                    "        content:\n" +
-                    "          application/json:\n" +
-                    "            schema:\n" +
-                    "              type: object\n" +
-                    "              required:\n" +
-                    "                - id\n" +
-                    "                - name\n" +
-                    "              properties:\n" +
-                    "                id:\n" +
-                    "                  type: integer\n" +
-                    "                  format: int64\n" +
-                    "                name:\n" +
-                    "                  type: string\n" +
-                    "          application/xml:\n" +
-                    "            schema:\n" +
-                    "              type: object\n" +
-                    "              required:\n" +
-                    "                - id\n" +
-                    "                - name\n" +
-                    "              properties:\n" +
-                    "                id:\n" +
-                    "                  type: integer\n" +
-                    "                  format: int64\n" +
-                    "                name:\n" +
-                    "                  type: string\n")
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        content:" + NEW_LINE +
+                    "          application/json:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: int64" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE +
+                    "          application/xml:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: int64" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE)
         ));
 
         // then
@@ -1401,34 +1412,34 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    post:\n" +
-                    "      operationId: someOperation\n" +
-                    "      requestBody:\n" +
-                    "        required: true\n" +
-                    "        content:\n" +
-                    "          application/json:\n" +
-                    "            schema:\n" +
-                    "              $ref: '#/components/schemas/Simple'\n" +
-                    "          application/xml:\n" +
-                    "            schema:\n" +
-                    "              $ref: '#/components/schemas/Simple'\n" +
-                    "components:\n" +
-                    "  schemas:\n" +
-                    "    Simple:\n" +
-                    "      type: object\n" +
-                    "      required:\n" +
-                    "        - id\n" +
-                    "        - name\n" +
-                    "      properties:\n" +
-                    "        id:\n" +
-                    "          type: integer\n" +
-                    "          format: int64\n" +
-                    "        name:\n" +
-                    "          type: string\n")
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        content:" + NEW_LINE +
+                    "          application/json:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              $ref: '#/components/schemas/Simple'" + NEW_LINE +
+                    "          application/xml:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              $ref: '#/components/schemas/Simple'" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  schemas:" + NEW_LINE +
+                    "    Simple:" + NEW_LINE +
+                    "      type: object" + NEW_LINE +
+                    "      required:" + NEW_LINE +
+                    "        - id" + NEW_LINE +
+                    "        - name" + NEW_LINE +
+                    "      properties:" + NEW_LINE +
+                    "        id:" + NEW_LINE +
+                    "          type: integer" + NEW_LINE +
+                    "          format: int64" + NEW_LINE +
+                    "        name:" + NEW_LINE +
+                    "          type: string" + NEW_LINE)
         ));
 
         // then
@@ -1455,37 +1466,37 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    post:\n" +
-                    "      operationId: someOperation\n" +
-                    "      requestBody:\n" +
-                    "        $ref: '#/components/requestBodies/SimpleBody'\n" +
-                    "components:\n" +
-                    "  requestBodies:\n" +
-                    "    SimpleBody:\n" +
-                    "      required: true\n" +
-                    "      content:\n" +
-                    "        application/json:\n" +
-                    "          schema:\n" +
-                    "            $ref: '#/components/schemas/Simple'\n" +
-                    "        application/xml:\n" +
-                    "          schema:\n" +
-                    "            $ref: '#/components/schemas/Simple'\n" +
-                    "  schemas:\n" +
-                    "    Simple:\n" +
-                    "      type: object\n" +
-                    "      required:\n" +
-                    "        - id\n" +
-                    "        - name\n" +
-                    "      properties:\n" +
-                    "        id:\n" +
-                    "          type: integer\n" +
-                    "          format: int64\n" +
-                    "        name:\n" +
-                    "          type: string\n")
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        $ref: '#/components/requestBodies/SimpleBody'" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  requestBodies:" + NEW_LINE +
+                    "    SimpleBody:" + NEW_LINE +
+                    "      required: true" + NEW_LINE +
+                    "      content:" + NEW_LINE +
+                    "        application/json:" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            $ref: '#/components/schemas/Simple'" + NEW_LINE +
+                    "        application/xml:" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            $ref: '#/components/schemas/Simple'" + NEW_LINE +
+                    "  schemas:" + NEW_LINE +
+                    "    Simple:" + NEW_LINE +
+                    "      type: object" + NEW_LINE +
+                    "      required:" + NEW_LINE +
+                    "        - id" + NEW_LINE +
+                    "        - name" + NEW_LINE +
+                    "      properties:" + NEW_LINE +
+                    "        id:" + NEW_LINE +
+                    "          type: integer" + NEW_LINE +
+                    "          format: int64" + NEW_LINE +
+                    "        name:" + NEW_LINE +
+                    "          type: string" + NEW_LINE)
         ));
 
         // then
@@ -1506,6 +1517,8 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
     }
 
+    // - XML BODY (via JsonSchema)
+
     @Test
     @Ignore("TODO: transform into json and compare with schema")
     public void shouldMatchByXmlBody() {
@@ -1513,42 +1526,42 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    post:\n" +
-                    "      operationId: someOperation\n" +
-                    "      requestBody:\n" +
-                    "        required: true\n" +
-                    "        content:\n" +
-                    "          application/xml:\n" +
-                    "            schema:\n" +
-                    "              type: object\n" +
-                    "              required:\n" +
-                    "                - id\n" +
-                    "                - name\n" +
-                    "              properties:\n" +
-                    "                id:\n" +
-                    "                  type: integer\n" +
-                    "                  format: int64\n" +
-                    "                name:\n" +
-                    "                  type: string\n" +
-                    "          application/x-www-form-urlencoded:\n" +
-                    "            schema:\n" +
-                    "              type: object\n" +
-                    "              properties:\n" +
-                    "                name:\n" +
-                    "                  type: string\n" +
-                    "                email:\n" +
-                    "                  type: integer\n" +
-                    "                  format: email\n" +
-                    "              required:\n" +
-                    "                - name\n" +
-                    "                - email'\n" +
-                    "          text/plain:\n" +
-                    "            schema:\n" +
-                    "              type: string\n")
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        content:" + NEW_LINE +
+                    "          application/xml:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: int64" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE +
+                    "          application/x-www-form-urlencoded:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE +
+                    "                email:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: email" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "                - email'" + NEW_LINE +
+                    "          text/plain:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: string" + NEW_LINE)
         ));
 
         // then
@@ -1573,34 +1586,34 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    post:\n" +
-                    "      operationId: someOperation\n" +
-                    "      requestBody:\n" +
-                    "        required: true\n" +
-                    "        content:\n" +
-                    "          application/json:\n" +
-                    "            schema:\n" +
-                    "              $ref: '#/components/schemas/Simple'\n" +
-                    "          application/xml:\n" +
-                    "            schema:\n" +
-                    "              $ref: '#/components/schemas/Simple'\n" +
-                    "components:\n" +
-                    "  schemas:\n" +
-                    "    Simple:\n" +
-                    "      type: object\n" +
-                    "      required:\n" +
-                    "        - id\n" +
-                    "        - name\n" +
-                    "      properties:\n" +
-                    "        id:\n" +
-                    "          type: integer\n" +
-                    "          format: int64\n" +
-                    "        name:\n" +
-                    "          type: string\n")
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        content:" + NEW_LINE +
+                    "          application/json:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              $ref: '#/components/schemas/Simple'" + NEW_LINE +
+                    "          application/xml:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              $ref: '#/components/schemas/Simple'" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  schemas:" + NEW_LINE +
+                    "    Simple:" + NEW_LINE +
+                    "      type: object" + NEW_LINE +
+                    "      required:" + NEW_LINE +
+                    "        - id" + NEW_LINE +
+                    "        - name" + NEW_LINE +
+                    "      properties:" + NEW_LINE +
+                    "        id:" + NEW_LINE +
+                    "          type: integer" + NEW_LINE +
+                    "          format: int64" + NEW_LINE +
+                    "        name:" + NEW_LINE +
+                    "          type: string" + NEW_LINE)
         ));
 
         // then
@@ -1625,37 +1638,37 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    post:\n" +
-                    "      operationId: someOperation\n" +
-                    "      requestBody:\n" +
-                    "        $ref: '#/components/requestBodies/SimpleBody'\n" +
-                    "components:\n" +
-                    "  requestBodies:\n" +
-                    "    SimpleBody:\n" +
-                    "      required: true\n" +
-                    "      content:\n" +
-                    "        application/json:\n" +
-                    "          schema:\n" +
-                    "            $ref: '#/components/schemas/Simple'\n" +
-                    "        application/xml:\n" +
-                    "          schema:\n" +
-                    "            $ref: '#/components/schemas/Simple'\n" +
-                    "  schemas:\n" +
-                    "    Simple:\n" +
-                    "      type: object\n" +
-                    "      required:\n" +
-                    "        - id\n" +
-                    "        - name\n" +
-                    "      properties:\n" +
-                    "        id:\n" +
-                    "          type: integer\n" +
-                    "          format: int64\n" +
-                    "        name:\n" +
-                    "          type: string\n")
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        $ref: '#/components/requestBodies/SimpleBody'" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  requestBodies:" + NEW_LINE +
+                    "    SimpleBody:" + NEW_LINE +
+                    "      required: true" + NEW_LINE +
+                    "      content:" + NEW_LINE +
+                    "        application/json:" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            $ref: '#/components/schemas/Simple'" + NEW_LINE +
+                    "        application/xml:" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            $ref: '#/components/schemas/Simple'" + NEW_LINE +
+                    "  schemas:" + NEW_LINE +
+                    "    Simple:" + NEW_LINE +
+                    "      type: object" + NEW_LINE +
+                    "      required:" + NEW_LINE +
+                    "        - id" + NEW_LINE +
+                    "        - name" + NEW_LINE +
+                    "      properties:" + NEW_LINE +
+                    "        id:" + NEW_LINE +
+                    "          type: integer" + NEW_LINE +
+                    "          format: int64" + NEW_LINE +
+                    "        name:" + NEW_LINE +
+                    "          type: string" + NEW_LINE)
         ));
 
         // then
@@ -1673,6 +1686,8 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
     }
 
+    // - FORM BODY (via JsonSchema)
+
     @Test
     @Ignore("TODO: transform into json and compare with schema")
     public void shouldMatchByFormBody() {
@@ -1680,30 +1695,30 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    post:\n" +
-                    "      operationId: someOperation\n" +
-                    "      requestBody:\n" +
-                    "        required: true\n" +
-                    "        content:\n" +
-                    "          application/x-www-form-urlencoded:\n" +
-                    "            schema:\n" +
-                    "              type: object\n" +
-                    "              properties:\n" +
-                    "                name:\n" +
-                    "                  type: string\n" +
-                    "                email:\n" +
-                    "                  type: integer\n" +
-                    "                  format: email\n" +
-                    "              required:\n" +
-                    "                - name\n" +
-                    "                - email'\n" +
-                    "          text/plain:\n" +
-                    "            schema:\n" +
-                    "              type: string\n")
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        content:" + NEW_LINE +
+                    "          application/x-www-form-urlencoded:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE +
+                    "                email:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: email" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "                - email'" + NEW_LINE +
+                    "          text/plain:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: string" + NEW_LINE)
         ));
 
         // then
@@ -1728,34 +1743,34 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    post:\n" +
-                    "      operationId: someOperation\n" +
-                    "      requestBody:\n" +
-                    "        required: true\n" +
-                    "        content:\n" +
-                    "          application/x-www-form-urlencoded:\n" +
-                    "            schema:\n" +
-                    "              $ref: '#/components/schemas/Simple'\n" +
-                    "          application/xml:\n" +
-                    "            schema:\n" +
-                    "              $ref: '#/components/schemas/Simple'\n" +
-                    "components:\n" +
-                    "  schemas:\n" +
-                    "    Simple:\n" +
-                    "      type: object\n" +
-                    "      required:\n" +
-                    "        - id\n" +
-                    "        - name\n" +
-                    "      properties:\n" +
-                    "        id:\n" +
-                    "          type: integer\n" +
-                    "          format: int64\n" +
-                    "        name:\n" +
-                    "          type: string\n")
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        content:" + NEW_LINE +
+                    "          application/x-www-form-urlencoded:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              $ref: '#/components/schemas/Simple'" + NEW_LINE +
+                    "          application/xml:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              $ref: '#/components/schemas/Simple'" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  schemas:" + NEW_LINE +
+                    "    Simple:" + NEW_LINE +
+                    "      type: object" + NEW_LINE +
+                    "      required:" + NEW_LINE +
+                    "        - id" + NEW_LINE +
+                    "        - name" + NEW_LINE +
+                    "      properties:" + NEW_LINE +
+                    "        id:" + NEW_LINE +
+                    "          type: integer" + NEW_LINE +
+                    "          format: int64" + NEW_LINE +
+                    "        name:" + NEW_LINE +
+                    "          type: string" + NEW_LINE)
         ));
 
         // then
@@ -1780,37 +1795,37 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---\n" +
-                    "openapi: 3.0.0\n" +
-                    "paths:\n" +
-                    "  \"/somePath\":\n" +
-                    "    post:\n" +
-                    "      operationId: someOperation\n" +
-                    "      requestBody:\n" +
-                    "        $ref: '#/components/requestBodies/SimpleBody'\n" +
-                    "components:\n" +
-                    "  requestBodies:\n" +
-                    "    SimpleBody:\n" +
-                    "      required: true\n" +
-                    "      content:\n" +
-                    "        application/x-www-form-urlencoded:\n" +
-                    "          schema:\n" +
-                    "            $ref: '#/components/schemas/Simple'\n" +
-                    "        application/xml:\n" +
-                    "          schema:\n" +
-                    "            $ref: '#/components/schemas/Simple'\n" +
-                    "  schemas:\n" +
-                    "    Simple:\n" +
-                    "      type: object\n" +
-                    "      required:\n" +
-                    "        - id\n" +
-                    "        - name\n" +
-                    "      properties:\n" +
-                    "        id:\n" +
-                    "          type: integer\n" +
-                    "          format: int64\n" +
-                    "        name:\n" +
-                    "          type: string\n")
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        $ref: '#/components/requestBodies/SimpleBody'" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  requestBodies:" + NEW_LINE +
+                    "    SimpleBody:" + NEW_LINE +
+                    "      required: true" + NEW_LINE +
+                    "      content:" + NEW_LINE +
+                    "        application/x-www-form-urlencoded:" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            $ref: '#/components/schemas/Simple'" + NEW_LINE +
+                    "        application/xml:" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            $ref: '#/components/schemas/Simple'" + NEW_LINE +
+                    "  schemas:" + NEW_LINE +
+                    "    Simple:" + NEW_LINE +
+                    "      type: object" + NEW_LINE +
+                    "      required:" + NEW_LINE +
+                    "        - id" + NEW_LINE +
+                    "        - name" + NEW_LINE +
+                    "      properties:" + NEW_LINE +
+                    "        id:" + NEW_LINE +
+                    "          type: integer" + NEW_LINE +
+                    "          format: int64" + NEW_LINE +
+                    "        name:" + NEW_LINE +
+                    "          type: string" + NEW_LINE)
         ));
 
         // then
@@ -2148,13 +2163,13 @@ public class HttpRequestsPropertiesMatcherTest {
 
         // then
         assertThat(matches, is(false));
-        assertThat(matchDifference.getDifferences(METHOD), containsInAnyOrder("  string or regex match failed expected:\n" +
-            "\n" +
-            "    GET\n" +
-            "\n" +
-            "   found:\n" +
-            "\n" +
-            "    PUT\n"));
+        assertThat(matchDifference.getDifferences(METHOD), containsInAnyOrder("  string or regex match failed expected:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    GET" + NEW_LINE +
+            "" + NEW_LINE +
+            "   found:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    PUT" + NEW_LINE));
         assertThat(matchDifference.getDifferences(PATH), nullValue());
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
@@ -2222,22 +2237,22 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(matchDifference.getDifferences(PATH), nullValue());
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
-        assertThat(matchDifference.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:\n" +
-            "\n" +
-            "    {\n" +
-            "      \"X-Request-ID\" : [ {\n" +
-            "        \"type\" : \"string\",\n" +
-            "        \"format\" : \"uuid\"\n" +
-            "      } ]\n" +
-            "    }\n" +
-            "\n" +
-            "   found:\n" +
-            "\n" +
-            "    none\n" +
-            "\n" +
-            "   failed because:\n" +
-            "\n" +
-            "    none is not a subset\n"));
+        assertThat(matchDifference.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    {" + NEW_LINE +
+            "      \"X-Request-ID\" : [ {" + NEW_LINE +
+            "        \"type\" : \"string\"," + NEW_LINE +
+            "        \"format\" : \"uuid\"" + NEW_LINE +
+            "      } ]" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "" + NEW_LINE +
+            "   found:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    none" + NEW_LINE +
+            "" + NEW_LINE +
+            "   failed because:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    none is not a subset" + NEW_LINE));
         assertThat(matchDifference.getDifferences(BODY), nullValue());
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
         assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
@@ -2269,22 +2284,22 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(matchDifference.getDifferences(PATH), nullValue());
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
-        assertThat(matchDifference.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:\n" +
-            "\n" +
-            "    {\n" +
-            "      \"X-Request-ID\" : [ {\n" +
-            "        \"type\" : \"string\",\n" +
-            "        \"format\" : \"uuid\"\n" +
-            "      } ]\n" +
-            "    }\n" +
-            "\n" +
-            "   found:\n" +
-            "\n" +
-            "    none\n" +
-            "\n" +
-            "   failed because:\n" +
-            "\n" +
-            "    none is not a subset\n"));
+        assertThat(matchDifference.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    {" + NEW_LINE +
+            "      \"X-Request-ID\" : [ {" + NEW_LINE +
+            "        \"type\" : \"string\"," + NEW_LINE +
+            "        \"format\" : \"uuid\"" + NEW_LINE +
+            "      } ]" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "" + NEW_LINE +
+            "   found:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    none" + NEW_LINE +
+            "" + NEW_LINE +
+            "   failed because:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    none is not a subset" + NEW_LINE));
         assertThat(matchDifference.getDifferences(BODY), nullValue());
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
         assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
@@ -2311,52 +2326,52 @@ public class HttpRequestsPropertiesMatcherTest {
 
         // then
         assertThat(matches, is(false));
-        assertThat(matchDifference.getDifferences(PATH), containsInAnyOrder("  string or regex match failed expected:\n" +
-                "\n" +
-                "    /pets\n" +
-                "\n" +
-                "   found:\n" +
-                "\n" +
-                "    /some/path\n",
-            "  string or regex match failed expected:\n" +
-                "\n" +
-                "    /pets/.*\n" +
-                "\n" +
-                "   found:\n" +
-                "\n" +
-                "    /some/path\n"));
-        assertThat(matchDifference.getDifferences(METHOD), containsInAnyOrder("  string or regex match failed expected:\n" +
-                "\n" +
-                "    POST\n" +
-                "\n" +
-                "   found:\n" +
-                "\n" +
-                "    GET\n",
-            "  string or regex match failed expected:\n" +
-                "\n" +
-                "    POST\n" +
-                "\n" +
-                "   found:\n" +
-                "\n" +
-                "    GET\n"));
+        assertThat(matchDifference.getDifferences(PATH), containsInAnyOrder("  string or regex match failed expected:" + NEW_LINE +
+                "" + NEW_LINE +
+                "    /pets" + NEW_LINE +
+                "" + NEW_LINE +
+                "   found:" + NEW_LINE +
+                "" + NEW_LINE +
+                "    /some/path" + NEW_LINE,
+            "  string or regex match failed expected:" + NEW_LINE +
+                "" + NEW_LINE +
+                "    /pets/.*" + NEW_LINE +
+                "" + NEW_LINE +
+                "   found:" + NEW_LINE +
+                "" + NEW_LINE +
+                "    /some/path" + NEW_LINE));
+        assertThat(matchDifference.getDifferences(METHOD), containsInAnyOrder("  string or regex match failed expected:" + NEW_LINE +
+                "" + NEW_LINE +
+                "    POST" + NEW_LINE +
+                "" + NEW_LINE +
+                "   found:" + NEW_LINE +
+                "" + NEW_LINE +
+                "    GET" + NEW_LINE,
+            "  string or regex match failed expected:" + NEW_LINE +
+                "" + NEW_LINE +
+                "    POST" + NEW_LINE +
+                "" + NEW_LINE +
+                "   found:" + NEW_LINE +
+                "" + NEW_LINE +
+                "    GET" + NEW_LINE));
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
-        assertThat(matchDifference.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:\n" +
-            "\n" +
-            "    {\n" +
-            "      \"X-Request-ID\" : [ {\n" +
-            "        \"type\" : \"string\",\n" +
-            "        \"format\" : \"uuid\"\n" +
-            "      } ]\n" +
-            "    }\n" +
-            "\n" +
-            "   found:\n" +
-            "\n" +
-            "    none\n" +
-            "\n" +
-            "   failed because:\n" +
-            "\n" +
-            "    none is not a subset\n"));
+        assertThat(matchDifference.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    {" + NEW_LINE +
+            "      \"X-Request-ID\" : [ {" + NEW_LINE +
+            "        \"type\" : \"string\"," + NEW_LINE +
+            "        \"format\" : \"uuid\"" + NEW_LINE +
+            "      } ]" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "" + NEW_LINE +
+            "   found:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    none" + NEW_LINE +
+            "" + NEW_LINE +
+            "   failed because:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    none is not a subset" + NEW_LINE));
         assertThat(matchDifference.getDifferences(BODY), nullValue());
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
         assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
@@ -2394,38 +2409,38 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), nullValue());
-        String bodyError = "  json schema match failed expected:\n" +
-            "\n" +
-            "    {\n" +
-            "      \"required\" : [ \"id\", \"name\" ],\n" +
-            "      \"type\" : \"object\",\n" +
-            "      \"properties\" : {\n" +
-            "        \"id\" : {\n" +
-            "          \"type\" : \"integer\",\n" +
-            "          \"format\" : \"int64\"\n" +
-            "        },\n" +
-            "        \"name\" : {\n" +
-            "          \"type\" : \"string\"\n" +
-            "        },\n" +
-            "        \"tag\" : {\n" +
-            "          \"type\" : \"string\"\n" +
-            "        }\n" +
-            "      }\n" +
-            "    }\n" +
-            "\n" +
-            "   found:\n" +
-            "\n" +
-            "    {\n" +
-            "        \"id\": \"invalid_id_format\", \n" +
-            "        \"name\": \"scruffles\", \n" +
-            "        \"tag\": \"dog\"\n" +
-            "    }\n" +
-            "\n" +
-            "   failed because:\n" +
-            "\n" +
-            "    2 errors:\n" +
-            "     - field: \"/id\" for schema: \"/properties/id\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])\"\n" +
-            "     - schema: \"/properties/id\" has error: \"format attribute \"int64\" not supported\"\n";
+        String bodyError = "  json schema match failed expected:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    {" + NEW_LINE +
+            "      \"required\" : [ \"id\", \"name\" ]," + NEW_LINE +
+            "      \"type\" : \"object\"," + NEW_LINE +
+            "      \"properties\" : {" + NEW_LINE +
+            "        \"id\" : {" + NEW_LINE +
+            "          \"type\" : \"integer\"," + NEW_LINE +
+            "          \"format\" : \"int64\"" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        \"name\" : {" + NEW_LINE +
+            "          \"type\" : \"string\"" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        \"tag\" : {" + NEW_LINE +
+            "          \"type\" : \"string\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "" + NEW_LINE +
+            "   found:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    {" + NEW_LINE +
+            "        \"id\": \"invalid_id_format\", " + NEW_LINE +
+            "        \"name\": \"scruffles\", " + NEW_LINE +
+            "        \"tag\": \"dog\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "" + NEW_LINE +
+            "   failed because:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    2 errors:" + NEW_LINE +
+            "     - field: \"/id\" for schema: \"/properties/id\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])\"" + NEW_LINE +
+            "     - schema: \"/properties/id\" has error: \"format attribute \"int64\" not supported\"" + NEW_LINE;
         assertThat(matchDifference.getDifferences(BODY), containsInAnyOrder(bodyError, bodyError));
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
         assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
@@ -2457,50 +2472,50 @@ public class HttpRequestsPropertiesMatcherTest {
 
         // then
         assertThat(matches, is(false));
-        String methodError = "  string or regex match failed expected:\n" +
-            "\n" +
-            "    GET\n" +
-            "\n" +
-            "   found:\n" +
-            "\n" +
-            "    POST\n";
+        String methodError = "  string or regex match failed expected:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    GET" + NEW_LINE +
+            "" + NEW_LINE +
+            "   found:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    POST" + NEW_LINE;
         assertThat(matchDifference.getDifferences(METHOD), containsInAnyOrder(methodError, methodError, methodError));
         assertThat(matchDifference.getDifferences(PATH), nullValue());
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), nullValue());
-        String bodyError = "  json schema match failed expected:\n" +
-            "\n" +
-            "    {\n" +
-            "      \"required\" : [ \"id\", \"name\" ],\n" +
-            "      \"type\" : \"object\",\n" +
-            "      \"properties\" : {\n" +
-            "        \"id\" : {\n" +
-            "          \"type\" : \"integer\",\n" +
-            "          \"format\" : \"int64\"\n" +
-            "        },\n" +
-            "        \"name\" : {\n" +
-            "          \"type\" : \"string\"\n" +
-            "        },\n" +
-            "        \"tag\" : {\n" +
-            "          \"type\" : \"string\"\n" +
-            "        }\n" +
-            "      }\n" +
-            "    }\n" +
-            "\n" +
-            "   found:\n" +
-            "\n" +
-            "    {\n" +
-            "        \"id\": \"invalid_id_format\", \n" +
-            "        \"name\": \"scruffles\", \n" +
-            "        \"tag\": \"dog\"\n" +
-            "    }\n" +
-            "\n" +
-            "   failed because:\n" +
-            "\n" +
-            "    2 errors:\n" +
-            "     - field: \"/id\" for schema: \"/properties/id\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])\"\n" +
-            "     - schema: \"/properties/id\" has error: \"format attribute \"int64\" not supported\"\n";
+        String bodyError = "  json schema match failed expected:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    {" + NEW_LINE +
+            "      \"required\" : [ \"id\", \"name\" ]," + NEW_LINE +
+            "      \"type\" : \"object\"," + NEW_LINE +
+            "      \"properties\" : {" + NEW_LINE +
+            "        \"id\" : {" + NEW_LINE +
+            "          \"type\" : \"integer\"," + NEW_LINE +
+            "          \"format\" : \"int64\"" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        \"name\" : {" + NEW_LINE +
+            "          \"type\" : \"string\"" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        \"tag\" : {" + NEW_LINE +
+            "          \"type\" : \"string\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "" + NEW_LINE +
+            "   found:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    {" + NEW_LINE +
+            "        \"id\": \"invalid_id_format\", " + NEW_LINE +
+            "        \"name\": \"scruffles\", " + NEW_LINE +
+            "        \"tag\": \"dog\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "" + NEW_LINE +
+            "   failed because:" + NEW_LINE +
+            "" + NEW_LINE +
+            "    2 errors:" + NEW_LINE +
+            "     - field: \"/id\" for schema: \"/properties/id\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])\"" + NEW_LINE +
+            "     - schema: \"/properties/id\" has error: \"format attribute \"int64\" not supported\"" + NEW_LINE;
         assertThat(matchDifference.getDifferences(BODY), containsInAnyOrder(bodyError, bodyError));
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
         assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());

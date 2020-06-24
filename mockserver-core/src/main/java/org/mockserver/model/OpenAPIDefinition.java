@@ -17,7 +17,7 @@ public class OpenAPIDefinition extends RequestDefinition {
     }
 
     /**
-     * Specify the OpenAPI / Swagger to match against by URL or payload and string as follows:
+     * Specify the OpenAPI to match against by URL or payload and string as follows:
      * <p>
      * // Create from a publicly hosted HTTP location (json or yaml)
      * openAPI("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml")
@@ -28,11 +28,11 @@ public class OpenAPIDefinition extends RequestDefinition {
      * // Create from a classpath resource in the /api package (json or yaml)
      * openAPI("org/mockserver/mock/openapi_petstore_example.json");
      * <p>
-     * // Create from an OpenAPI / Swagger payload (json or yaml)
+     * // Create from an OpenAPI payload (json or yaml)
      * openAPI("{\"openapi\": \"3.0.0\", \"info\": { ...")
      * <p>
      *
-     * @param specUrlOrPayload the OpenAPI / Swagger to match against by URL or payload
+     * @param specUrlOrPayload the OpenAPI to match against by URL or payload
      * @return the OpenAPIMatcher
      */
     public static OpenAPIDefinition openAPI(String specUrlOrPayload) {
@@ -41,7 +41,7 @@ public class OpenAPIDefinition extends RequestDefinition {
     }
 
     /**
-     * Specify the OpenAPI / Swagger and operationId to match against by URL or payload and string as follows:
+     * Specify the OpenAPI and operationId to match against by URL or payload and string as follows:
      * <p>
      * // Create from a publicly hosted HTTP location (json or yaml)
      * openAPI("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById")
@@ -52,12 +52,12 @@ public class OpenAPIDefinition extends RequestDefinition {
      * // Create from a classpath resource in the /api package (json or yaml)
      * openAPI("org/mockserver/mock/openapi_petstore_example.json", "showPetById");
      * <p>
-     * // Create from an OpenAPI / Swagger payload (json or yaml)
+     * // Create from an OpenAPI payload (json or yaml)
      * openAPI("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById")
      * <p>
      *
-     * @param specUrlOrPayload the OpenAPI / Swagger to match against by URL or payload
-     * @param operationId      operationId from the OpenAPI / Swagger to match against i.e. "showPetById"
+     * @param specUrlOrPayload the OpenAPI to match against by URL or payload
+     * @param operationId      operationId from the OpenAPI to match against i.e. "showPetById"
      * @return the OpenAPIMatcher
      */
     public static OpenAPIDefinition openAPI(String specUrlOrPayload, String operationId) {
@@ -71,7 +71,7 @@ public class OpenAPIDefinition extends RequestDefinition {
     }
 
     /**
-     * Specify the OpenAPI / Swagger to match against by URL or payload as follows:
+     * Specify the OpenAPI to match against by URL or payload as follows:
      * <p>
      * // Create from a publicly hosted HTTP location (json or yaml)
      * withSpecUrlOrPayload("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml")
@@ -82,11 +82,11 @@ public class OpenAPIDefinition extends RequestDefinition {
      * // Create from a classpath resource in the /api package (json or yaml)
      * withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json");
      * <p>
-     * // Create from an OpenAPI / Swagger payload (json or yaml)
+     * // Create from an OpenAPI payload (json or yaml)
      * withSpecUrlOrPayload("{\"openapi\": \"3.0.0\", \"info\": { ...")
      * <p>
      *
-     * @param specUrlOrPayload the OpenAPI / Swagger to match against by URL or payload
+     * @param specUrlOrPayload the OpenAPI to match against by URL or payload
      * @return the OpenAPIMatcher
      */
     public OpenAPIDefinition withSpecUrlOrPayload(String specUrlOrPayload) {
@@ -99,9 +99,9 @@ public class OpenAPIDefinition extends RequestDefinition {
     }
 
     /**
-     * Specify operationId from the OpenAPI / Swagger to match against i.e. "showPetById"
+     * Specify operationId from the OpenAPI to match against i.e. "showPetById"
      *
-     * @param operationId operationId from the OpenAPI / Swagger to match against i.e. "showPetById"
+     * @param operationId operationId from the OpenAPI to match against i.e. "showPetById"
      * @return the OpenAPIMatcher
      */
     public OpenAPIDefinition withOperationId(String operationId) {

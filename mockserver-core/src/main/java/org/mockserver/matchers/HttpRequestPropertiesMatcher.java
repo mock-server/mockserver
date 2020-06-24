@@ -46,6 +46,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
     private BooleanMatcher keepAliveMatcher = null;
     private BooleanMatcher sslMatcher = null;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+    private JsonSchemaBodyParser jsonSchemaBodyParser;
 
     public HttpRequestPropertiesMatcher(MockServerLogger mockServerLogger) {
         super(mockServerLogger);
@@ -67,6 +68,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                 withCookies(httpRequest.getCookies());
                 withKeepAlive(httpRequest.isKeepAlive());
                 withSsl(httpRequest.isSecure());
+                this.jsonSchemaBodyParser = new JsonSchemaBodyParser(mockServerLogger, expectation, httpRequest);
             }
             return true;
         } else {
@@ -383,14 +385,19 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             if (bodyMatcher instanceof ExactStringMatcher ||
                 bodyMatcher instanceof SubStringMatcher ||
                 bodyMatcher instanceof RegexStringMatcher) {
+                // string body matcher
                 bodyMatches = matches(BODY, context, bodyMatcher, string(request.getBodyAsString()));
             } else if (bodyMatcher instanceof XmlStringMatcher ||
-                bodyMatcher instanceof XmlSchemaMatcher ||
-                bodyMatcher instanceof JsonStringMatcher ||
+                bodyMatcher instanceof XmlSchemaMatcher
+            ) {
+                // xml body matcher
+                bodyMatches = matches(BODY, context, bodyMatcher, request.getBodyAsString());
+            } else if (bodyMatcher instanceof JsonStringMatcher ||
                 bodyMatcher instanceof JsonSchemaMatcher ||
                 bodyMatcher instanceof JsonPathMatcher
             ) {
-                bodyMatches = matches(BODY, context, bodyMatcher, request.getBodyAsString());
+                // json body matcher
+                bodyMatches = matches(BODY, context, bodyMatcher, jsonSchemaBodyParser.convertToJson(request, context, bodyMatcher));
             } else {
                 bodyMatches = matches(BODY, context, bodyMatcher, request.getBodyAsString());
             }

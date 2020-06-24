@@ -839,9 +839,9 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
-     * Specify OpenAPI / Swagger and operations and responses to create matchers and example responses
+     * Specify OpenAPI and operations and responses to create matchers and example responses
      *
-     * @param openAPIExpectations the OpenAPI / Swagger and operations and responses to create matchers and example responses
+     * @param openAPIExpectations the OpenAPI and operations and responses to create matchers and example responses
      * @return upserted expectations
      */
     public Expectation[] upsert(OpenAPIExpectation... openAPIExpectations) {

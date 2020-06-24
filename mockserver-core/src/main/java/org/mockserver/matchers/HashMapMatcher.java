@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.collections.CaseInsensitiveRegexHashMap;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.KeysAndValues;
@@ -9,11 +10,11 @@ import org.mockserver.model.KeysAndValues;
  */
 @SuppressWarnings("rawtypes")
 public class HashMapMatcher extends NotMatcher<KeysAndValues> {
-
+    private static final String[] EXCLUDED_FIELDS = {"mockServerLogger"};
     private final MockServerLogger mockServerLogger;
+    private final CaseInsensitiveRegexHashMap matcher;
     private final KeysAndValues keysAndValues;
     private final boolean controlPlaneMatcher;
-    private final CaseInsensitiveRegexHashMap matcher;
 
     HashMapMatcher(MockServerLogger mockServerLogger, KeysAndValues keysAndValues, boolean controlPlaneMatcher) {
         this.mockServerLogger = mockServerLogger;
@@ -33,13 +34,12 @@ public class HashMapMatcher extends NotMatcher<KeysAndValues> {
             result = true;
         } else if (matched == null || matched.isEmpty()) {
             result = matcher.allKeysNotted();
-        } else if (matched.toCaseInsensitiveRegexMultiMap(mockServerLogger, controlPlaneMatcher).containsAll(matcher)) {
-            result = true;
         } else {
-            if (context != null) {
-                context.addDifference(mockServerLogger, "map subset match failed expected:{}found:{}failed because:{}", keysAndValues, matched, "map is not a subset");
-            }
-            result = false;
+            result = matched.toCaseInsensitiveRegexMultiMap(mockServerLogger, controlPlaneMatcher).containsAll(matcher);
+        }
+
+        if (!result && context != null) {
+            context.addDifference(mockServerLogger, "map subset match failed expected:{}found:{}failed because:{}", keysAndValues, matched != null ? matched : "none", matched != null ? "map is not a subset" : "none is not a subset");
         }
 
         return not != result;
@@ -47,5 +47,11 @@ public class HashMapMatcher extends NotMatcher<KeysAndValues> {
 
     public boolean isBlank() {
         return matcher == null || matcher.isEmpty();
+    }
+
+    @Override
+    @JsonIgnore
+    protected String[] fieldsExcludedFromEqualsAndHashCode() {
+        return EXCLUDED_FIELDS;
     }
 }

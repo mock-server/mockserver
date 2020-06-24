@@ -11,9 +11,9 @@ sitemap:
   lastmod: 2019-11-10T08:00:00+01:00
 ---
 
-<p>MockServer supports <a href="https://swagger.io/docs/specification/basic-structure/"><strong>OpenAPI v3</strong></a> or <a href="https://swagger.io/docs/specification/2-0/basic-structure/"><strong>Swagger v2</strong></a> specifications in either JSON or YAML format.</p>
+<p>MockServer supports <a href="https://swagger.io/docs/specification/basic-structure/"><strong>OpenAPI v3</strong></a> specifications in either JSON or YAML format.</p>
 
-<p>OpenAPI or Swagger specifications can be used in <a href="/mock_server/getting_started.html#request_openapi_matchers"><strong>request matchers</strong></a> for</p>
+<p>OpenAPI specifications can be used in <a href="/mock_server/getting_started.html#request_openapi_matchers"><strong>request matchers</strong></a> for</p>
 <ul>
   <li>expectation <a href="/mock_server/getting_started.html#request_openapi_matchers"><strong>request matchers</strong></a></li>
   <li><a href="/mock_server/verification.html"><strong>verifying requests</strong></a> and <a href="/mock_server/verification.html"><strong>verifying request sequences</strong></a></li>
@@ -21,13 +21,13 @@ sitemap:
   <li>retrieving <a href="/mock_server/debugging_issues.html#retrieving_recorded_logs"><strong>logs</strong></a>, <a href="/mock_server/debugging_issues.html#retrieving_recorded_requests"><strong>recorded requests</strong></a> and <a href="/mock_server/debugging_issues.html#retrieving_active_expectations"><strong>expectations</strong></a></li>
 </ul>
 
-<p>OpenAPI or Swagger specifications can also be used to <a href="#generate_expectation_from_openapi"><strong>generate expectations</strong></a> with example responses.</p>
+<p>OpenAPI specifications can also be used to <a href="#generate_expectation_from_openapi"><strong>generate expectations</strong></a> with example responses.</p>
 
 <a id="generate_expectation_from_openapi" class="anchor" href="#generate_expectation_from_openapi">&nbsp;</a>
 
-<h2>Generate Expectations From OpenAPI or Swagger</h2>
+<h2>Generate Expectations From OpenAPI</h2>
 
-<p>MockServer can create an expectation for each operation in an OpenAPI or Swagger specifications.</p>
+<p>MockServer can create an expectation for each operation in an OpenAPI specifications.</p>
 <p>Each expectation will use an <a href="/mock_server/getting_started.html#request_openapi_matchers"><strong>OpenAPI request matcher</strong></a> to match requests.</p>
 <p>An <a href="/mock_server/creating_expectations.html#response_action"><strong>HttpResponse</strong></a> action is added to each expectation using <a href="https://swagger.io/docs/specification/adding-examples/">examples provided in the specification</a>.  If no examples are provided in the specification then the <a href="/mock_server/creating_expectations.html#response_action"><strong>HttpResponse</strong></a> is auto-generated examples from schema definitions for response body and headers of the operation.</p>
 <p>If the operation specifies multiple response bodies for different status codes the first status code response body is used by default, however this can be specified by using a <strong>operationsAndResponses</strong> map which lists <strong>operationId</strong> to <strong>statusCode</strong> (such as "200", "400" and "default").</p>

@@ -45,7 +45,7 @@ public class Expectation extends ObjectWithJsonToString {
         .thenComparing(Expectation::getCreated, Comparator.nullsLast(Comparator.naturalOrder()));
 
     /**
-     * Specify the OpenAPI / Swagger and operationId to match against by URL or payload and string as follows:
+     * Specify the OpenAPI and operationId to match against by URL or payload and string as follows:
      * <p><pre>
      *   // Create from a publicly hosted HTTP location (json or yaml)
      *   when("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById")
@@ -56,12 +56,12 @@ public class Expectation extends ObjectWithJsonToString {
      *   // Create from a classpath resource in the /api package (json or yaml)
      *   when("org/mockserver/mock/openapi_petstore_example.json", "showPetById");
      *
-     *   // Create from an OpenAPI / Swagger payload (json or yaml)
+     *   // Create from an OpenAPI payload (json or yaml)
      *   when("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById")
      * </pre><p>
      *
-     * @param specUrlOrPayload the OpenAPI / Swagger to match against by URL or payload
-     * @param operationId      operationId from the OpenAPI / Swagger to match against i.e. "showPetById"
+     * @param specUrlOrPayload the OpenAPI to match against by URL or payload
+     * @param operationId      operationId from the OpenAPI to match against i.e. "showPetById"
      * @return the Expectation
      */
     public static Expectation when(String specUrlOrPayload, String operationId) {
@@ -69,7 +69,7 @@ public class Expectation extends ObjectWithJsonToString {
     }
 
     /**
-     * Specify the OpenAPI / Swagger and operationId to match against by URL or payload and string with a match priority as follows:
+     * Specify the OpenAPI and operationId to match against by URL or payload and string with a match priority as follows:
      * <p><pre>
      *   // Create from a publicly hosted HTTP location (json or yaml)
      *   when("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById", 10)
@@ -80,12 +80,12 @@ public class Expectation extends ObjectWithJsonToString {
      *   // Create from a classpath resource in the /api package (json or yaml)
      *   when("org/mockserver/mock/openapi_petstore_example.json", "showPetById", 10);
      *
-     *   // Create from an OpenAPI / Swagger payload (json or yaml)
+     *   // Create from an OpenAPI payload (json or yaml)
      *   when("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById", 10)
      * </pre><p>
      *
-     * @param specUrlOrPayload the OpenAPI / Swagger to match against by URL or payload
-     * @param operationId      operationId from the OpenAPI / Swagger to match against i.e. "showPetById"
+     * @param specUrlOrPayload the OpenAPI to match against by URL or payload
+     * @param operationId      operationId from the OpenAPI to match against i.e. "showPetById"
      * @param priority         the priority with which this expectation is used to match requests compared to other expectations (high first)
      * @return the Expectation
      */
@@ -94,7 +94,7 @@ public class Expectation extends ObjectWithJsonToString {
     }
 
     /**
-     * Specify the OpenAPI / Swagger and operationId to match against by URL or payload and string for a limit number of times or time as follows:
+     * Specify the OpenAPI and operationId to match against by URL or payload and string for a limit number of times or time as follows:
      * <p><pre>
      *   // Create from a publicly hosted HTTP location (json or yaml)
      *   when("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById", 5, exactly(TimeUnit.SECONDS, 90))
@@ -105,12 +105,12 @@ public class Expectation extends ObjectWithJsonToString {
      *   // Create from a classpath resource in the /api package (json or yaml)
      *   when("org/mockserver/mock/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
      *
-     *   // Create from an OpenAPI / Swagger payload (json or yaml)
+     *   // Create from an OpenAPI payload (json or yaml)
      *   when("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById", 5, exactly(TimeUnit.SECONDS, 90))
      * </pre><p>
      *
-     * @param specUrlOrPayload the OpenAPI / Swagger to match against by URL or payload
-     * @param operationId      operationId from the OpenAPI / Swagger to match against i.e. "showPetById"
+     * @param specUrlOrPayload the OpenAPI to match against by URL or payload
+     * @param operationId      operationId from the OpenAPI to match against i.e. "showPetById"
      * @param times            the number of times to use this expectation to match requests
      * @param timeToLive       the time this expectation should be used to match requests
      * @return the Expectation
@@ -120,7 +120,7 @@ public class Expectation extends ObjectWithJsonToString {
     }
 
     /**
-     * Specify the OpenAPI / Swagger and operationId to match against by URL or payload and string for a limit number of times or time and a match priority as follows:
+     * Specify the OpenAPI and operationId to match against by URL or payload and string for a limit number of times or time and a match priority as follows:
      * <p><pre>
      *   // Create from a publicly hosted HTTP location (json or yaml)
      *   when("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById", 5, exactly(TimeUnit.SECONDS, 90))
@@ -131,12 +131,12 @@ public class Expectation extends ObjectWithJsonToString {
      *   // Create from a classpath resource in the /api package (json or yaml)
      *   when("org/mockserver/mock/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
      *
-     *   // Create from an OpenAPI / Swagger payload (json or yaml)
+     *   // Create from an OpenAPI payload (json or yaml)
      *   when("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById", 5, exactly(TimeUnit.SECONDS, 90))
      * </pre><p>
      *
-     * @param specUrlOrPayload the OpenAPI / Swagger to match against by URL or payload
-     * @param operationId      operationId from the OpenAPI / Swagger to match against i.e. "showPetById"
+     * @param specUrlOrPayload the OpenAPI to match against by URL or payload
+     * @param operationId      operationId from the OpenAPI to match against i.e. "showPetById"
      * @param times            the number of times to use this expectation to match requests
      * @param timeToLive       the time this expectation should be used to match requests
      * @param priority         the priority with which this expectation is used to match requests compared to other expectations (high first)
