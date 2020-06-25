@@ -46,9 +46,9 @@ public class HttpRequestsPropertiesMatcherTest {
      * - allowEmptyValue field -> nullable: true in json schema
      * - common parameter for all methods of path
      * - common parameter for all paths
-     * - override of common all paths at all methods - TODO (jamesdbloom)
-     * - override of common all paths at operation - TODO (jamesdbloom)
-     * - override of common all methods at operation - TODO (jamesdbloom)
+     * - override of common all paths at all methods
+     * - override of common all paths at operation
+     * - override of common all methods at operation
      * <p>
      * Test Pattern For Body Fields:
      * - requestBody (see: https://swagger.io/docs/specification/describing-request-body/)
@@ -64,20 +64,20 @@ public class HttpRequestsPropertiesMatcherTest {
      * - required field
      * - encoding (application/x-www-form-urlencoded)
      * <p>
-     * Test Pattern For Security Handlers: - TODO (jamesdbloom)
-     * components:
-     *   securitySchemes:
-     *     <some matching name>:
-     *       type: http, bearer, openIdConnect, oauth2 => requires authorisation header
-     *       type: apiKey => read in and name to add parameter
-     *       in: header
-     *       name: X-API-Key
-     * root level of spec
-     * operation level of spec
-     * override of root level at operation level
+     * Test Pattern For Security Handlers:
+     * - basic
+     * - bearer
+     * - api-key
+     * - openIdConnect
+     * - oauth2
+     * Then:
+     * - operation level of spec
+     * - multi schemes
+     * - override of root level at operation level
      */
 
     // METHOD
+
     @Test
     public void shouldMatchByMethod() {
         // given
@@ -759,44 +759,6 @@ public class HttpRequestsPropertiesMatcherTest {
     }
 
     @Test
-    public void shouldMatchByQueryStringParameterCommonForPath() {
-        // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
-
-        // when
-        httpRequestsPropertiesMatcher.update(new Expectation(
-            new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---" + NEW_LINE +
-                    "openapi: 3.0.0" + NEW_LINE +
-                    "paths:" + NEW_LINE +
-                    "  \"/somePath\":" + NEW_LINE +
-                    "    parameters:" + NEW_LINE +
-                    "      - in: query" + NEW_LINE +
-                    "        name: someParam" + NEW_LINE +
-                    "        required: true" + NEW_LINE +
-                    "        schema:" + NEW_LINE +
-                    "          type: integer" + NEW_LINE +
-                    "          minimum: 1" + NEW_LINE +
-                    "    get:" + NEW_LINE +
-                    "      operationId: someOperation" + NEW_LINE)
-        ));
-
-        // then
-        assertTrue(httpRequestsPropertiesMatcher.matches(
-            request()
-                .withQueryStringParameter("someParam", "1")
-        ));
-        assertFalse(httpRequestsPropertiesMatcher.matches(
-            request()
-                .withQueryStringParameter("someParam", "0")
-        ));
-        assertFalse(httpRequestsPropertiesMatcher.matches(
-            request()
-                .withQueryStringParameter("someOtherParam", "1")
-        ));
-    }
-
-    @Test
     public void shouldMatchByQueryStringParameterCommonForAllPaths() {
         // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
@@ -847,6 +809,178 @@ public class HttpRequestsPropertiesMatcherTest {
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
                 .withQueryStringParameter("someParam", "1")
+                .withQueryStringParameter("someOtherParam", "a")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("someOtherParam", "1")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByQueryStringParameterCommonForPath() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    parameters:" + NEW_LINE +
+                    "      - in: query" + NEW_LINE +
+                    "        name: someParam" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        schema:" + NEW_LINE +
+                    "          type: integer" + NEW_LINE +
+                    "          minimum: 1" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("someParam", "1")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("someParam", "0")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("someOtherParam", "1")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByQueryStringParameterCommonForAllPathsOverriddenAtPath() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  parameters:" + NEW_LINE +
+                    "    someParam:" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      name: someParam" + NEW_LINE +
+                    "      required: true" + NEW_LINE +
+                    "      schema:" + NEW_LINE +
+                    "        type: integer" + NEW_LINE +
+                    "        minimum: 1" + NEW_LINE +
+                    "    someOtherParam:" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      name: someOtherParam" + NEW_LINE +
+                    "      required: true" + NEW_LINE +
+                    "      schema:" + NEW_LINE +
+                    "        type: string" + NEW_LINE +
+                    "        minLength: 2" + NEW_LINE +
+                    "        maxLength: 3" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    parameters:" + NEW_LINE +
+                    "      - in: query" + NEW_LINE +
+                    "        name: someParam" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        schema:" + NEW_LINE +
+                    "          type: integer" + NEW_LINE +
+                    "          minimum: 10" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - $ref: '#/components/parameters/someOtherParam'" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("someParam", "10")
+                .withQueryStringParameter("someOtherParam", "ab")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("someParam", "5")
+                .withQueryStringParameter("someOtherParam", "ab")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("someParam", "10")
+                .withQueryStringParameter("someOtherParam", "a")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("someOtherParam", "1")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByQueryStringParameterCommonForAllPathsOverriddenAtMethod() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  parameters:" + NEW_LINE +
+                    "    someParam:" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      name: someParam" + NEW_LINE +
+                    "      required: true" + NEW_LINE +
+                    "      schema:" + NEW_LINE +
+                    "        type: integer" + NEW_LINE +
+                    "        minimum: 1" + NEW_LINE +
+                    "    someOtherParam:" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      name: someOtherParam" + NEW_LINE +
+                    "      required: true" + NEW_LINE +
+                    "      schema:" + NEW_LINE +
+                    "        type: string" + NEW_LINE +
+                    "        minLength: 2" + NEW_LINE +
+                    "        maxLength: 3" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    parameters:" + NEW_LINE +
+                    "      - in: query" + NEW_LINE +
+                    "        name: someParam" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        schema:" + NEW_LINE +
+                    "          type: integer" + NEW_LINE +
+                    "          minimum: 10" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: query" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 100" + NEW_LINE +
+                    "        - $ref: '#/components/parameters/someOtherParam'" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("someParam", "100")
+                .withQueryStringParameter("someOtherParam", "ab")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("someParam", "50")
+                .withQueryStringParameter("someOtherParam", "ab")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("someParam", "100")
                 .withQueryStringParameter("someOtherParam", "a")
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
@@ -1061,44 +1195,6 @@ public class HttpRequestsPropertiesMatcherTest {
     }
 
     @Test
-    public void shouldMatchByHeaderCommonForPath() {
-        // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
-
-        // when
-        httpRequestsPropertiesMatcher.update(new Expectation(
-            new OpenAPIDefinition()
-                .withSpecUrlOrPayload("---" + NEW_LINE +
-                    "openapi: 3.0.0" + NEW_LINE +
-                    "paths:" + NEW_LINE +
-                    "  \"/somePath\":" + NEW_LINE +
-                    "    parameters:" + NEW_LINE +
-                    "      - in: header" + NEW_LINE +
-                    "        name: someParam" + NEW_LINE +
-                    "        required: true" + NEW_LINE +
-                    "        schema:" + NEW_LINE +
-                    "          type: integer" + NEW_LINE +
-                    "          minimum: 1" + NEW_LINE +
-                    "    get:" + NEW_LINE +
-                    "      operationId: someOperation" + NEW_LINE)
-        ));
-
-        // then
-        assertTrue(httpRequestsPropertiesMatcher.matches(
-            request()
-                .withHeader("someParam", "1")
-        ));
-        assertFalse(httpRequestsPropertiesMatcher.matches(
-            request()
-                .withHeader("someParam", "0")
-        ));
-        assertFalse(httpRequestsPropertiesMatcher.matches(
-            request()
-                .withHeader("someOtherParam", "1")
-        ));
-    }
-
-    @Test
     public void shouldMatchByHeaderCommonForAllPaths() {
         // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
@@ -1149,6 +1245,114 @@ public class HttpRequestsPropertiesMatcherTest {
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
                 .withHeader("someParam", "1")
+                .withHeader("someOtherParam", "a")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("someOtherParam", "1")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByHeaderCommonForPath() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    parameters:" + NEW_LINE +
+                    "      - in: header" + NEW_LINE +
+                    "        name: someParam" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        schema:" + NEW_LINE +
+                    "          type: integer" + NEW_LINE +
+                    "          minimum: 1" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("someParam", "1")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("someParam", "0")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("someOtherParam", "1")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByHeaderCommonForAllPathsOverriddenAtMethod() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  parameters:" + NEW_LINE +
+                    "    someParam:" + NEW_LINE +
+                    "      in: header" + NEW_LINE +
+                    "      name: someParam" + NEW_LINE +
+                    "      required: true" + NEW_LINE +
+                    "      schema:" + NEW_LINE +
+                    "        type: integer" + NEW_LINE +
+                    "        minimum: 1" + NEW_LINE +
+                    "    someOtherParam:" + NEW_LINE +
+                    "      in: header" + NEW_LINE +
+                    "      name: someOtherParam" + NEW_LINE +
+                    "      required: true" + NEW_LINE +
+                    "      schema:" + NEW_LINE +
+                    "        type: string" + NEW_LINE +
+                    "        minLength: 2" + NEW_LINE +
+                    "        maxLength: 3" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    parameters:" + NEW_LINE +
+                    "      - in: header" + NEW_LINE +
+                    "        name: someParam" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        schema:" + NEW_LINE +
+                    "          type: integer" + NEW_LINE +
+                    "          minimum: 10" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: header" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 100" + NEW_LINE +
+                    "        - $ref: '#/components/parameters/someOtherParam'" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("someParam", "100")
+                .withHeader("someOtherParam", "ab")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("someParam", "50")
+                .withHeader("someOtherParam", "ab")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("someParam", "100")
                 .withHeader("someOtherParam", "a")
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
@@ -1451,6 +1655,76 @@ public class HttpRequestsPropertiesMatcherTest {
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
                 .withCookie("someParam", "1")
+                .withCookie("someOtherParam", "a")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("someOtherParam", "1")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByCookieCommonForAllPathsOverriddenAtMethod() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  parameters:" + NEW_LINE +
+                    "    someParam:" + NEW_LINE +
+                    "      in: cookie" + NEW_LINE +
+                    "      name: someParam" + NEW_LINE +
+                    "      required: true" + NEW_LINE +
+                    "      schema:" + NEW_LINE +
+                    "        type: integer" + NEW_LINE +
+                    "        minimum: 1" + NEW_LINE +
+                    "    someOtherParam:" + NEW_LINE +
+                    "      in: cookie" + NEW_LINE +
+                    "      name: someOtherParam" + NEW_LINE +
+                    "      required: true" + NEW_LINE +
+                    "      schema:" + NEW_LINE +
+                    "        type: string" + NEW_LINE +
+                    "        minLength: 2" + NEW_LINE +
+                    "        maxLength: 3" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    parameters:" + NEW_LINE +
+                    "      - in: cookie" + NEW_LINE +
+                    "        name: someParam" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        schema:" + NEW_LINE +
+                    "          type: integer" + NEW_LINE +
+                    "          minimum: 10" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: cookie" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 100" + NEW_LINE +
+                    "        - $ref: '#/components/parameters/someOtherParam'" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("someParam", "100")
+                .withCookie("someOtherParam", "ab")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("someParam", "50")
+                .withCookie("someOtherParam", "ab")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("someParam", "100")
                 .withCookie("someOtherParam", "a")
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
@@ -3011,6 +3285,413 @@ public class HttpRequestsPropertiesMatcherTest {
 
         // then
         thenMatchesEmptyFieldDifferences(matchDifference, matches, true);
+    }
+
+    // SECURITY SCHEMES
+
+    @Test
+    public void shouldMatchBySecuritySchemeWithBasic() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - BasicAuth: []" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    BasicAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      scheme: basic" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "basic " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchBySecuritySchemeWithBearer() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - BearerAuth: []" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    BearerAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      scheme: bearer" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchBySecuritySchemeWithApiKey() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - ApiKeyAuth: []" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    ApiKeyAuth:" + NEW_LINE +
+                    "      type: apiKey" + NEW_LINE +
+                    "      in: header" + NEW_LINE +
+                    "      name: X-API-Key" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("X-API-Key", UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchBySecuritySchemeWithOpenIdConnect() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - OpenID:" + NEW_LINE +
+                    "            - read" + NEW_LINE +
+                    "            - write" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    OpenID:" + NEW_LINE +
+                    "      type: openIdConnect" + NEW_LINE +
+                    "      openIdConnectUrl: https://example.com/.well-known/openid-configuration" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchBySecuritySchemeWithOAuth2() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - OAuth2:" + NEW_LINE +
+                    "            - read" + NEW_LINE +
+                    "            - write" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    OAuth2:" + NEW_LINE +
+                    "      type: oauth2" + NEW_LINE +
+                    "      flows:" + NEW_LINE +
+                    "        authorizationCode:" + NEW_LINE +
+                    "          authorizationUrl: https://example.com/oauth/authorize" + NEW_LINE +
+                    "          tokenUrl: https://example.com/oauth/token" + NEW_LINE +
+                    "          scopes:" + NEW_LINE +
+                    "            read: Grants read access" + NEW_LINE +
+                    "            write: Grants write access" + NEW_LINE +
+                    "            admin: Grants access to admin operations"
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchBySecuritySchemeWithMultiAuthorizationHeaderSchemes() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - BasicAuth: []" + NEW_LINE +
+                    "        - BearerAuth: []" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    BasicAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      scheme: basic" + NEW_LINE +
+                    "    BearerAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      scheme: bearer" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "basic " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchBySecuritySchemeWithMultiSchemesIncludingAPIKey() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - BasicAuth: []" + NEW_LINE +
+                    "        - BearerAuth: []" + NEW_LINE +
+                    "        - ApiKeyAuth: []" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    BasicAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      scheme: basic" + NEW_LINE +
+                    "    BearerAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      scheme: bearer" + NEW_LINE +
+                    "    ApiKeyAuth:" + NEW_LINE +
+                    "      type: apiKey" + NEW_LINE +
+                    "      in: header" + NEW_LINE +
+                    "      name: X-API-Key" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "basic " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("X-API-Key", UUID.randomUUID().toString())
+        ));
+        // cross match Authorization header with X-API-Key allowed value - TODO(jamesdbloom) how can this be prevented?
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchByDefaultSecuritySchemeWithMultiSchemesIncludingAPIKey() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "security:" + NEW_LINE +
+                    "  - BasicAuth: []" + NEW_LINE +
+                    "  - BearerAuth: []" + NEW_LINE +
+                    "  - ApiKeyAuth: []" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    BasicAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      scheme: basic" + NEW_LINE +
+                    "    BearerAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      scheme: bearer" + NEW_LINE +
+                    "    ApiKeyAuth:" + NEW_LINE +
+                    "      type: apiKey" + NEW_LINE +
+                    "      in: header" + NEW_LINE +
+                    "      name: X-API-Key" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "basic " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("X-API-Key", UUID.randomUUID().toString())
+        ));
+        // cross match Authorization header with X-API-Key allowed value - TODO(jamesdbloom) how can this be prevented?
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchByDefaultSecuritySchemeWithMultiSchemesIncludingAPIKeyWithOperationOverride() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "security:" + NEW_LINE +
+                    "  - BasicAuth: []" + NEW_LINE +
+                    "  - BearerAuth: []" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - ApiKeyAuth: []" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    BasicAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      scheme: basic" + NEW_LINE +
+                    "    BearerAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      scheme: bearer" + NEW_LINE +
+                    "    ApiKeyAuth:" + NEW_LINE +
+                    "      type: apiKey" + NEW_LINE +
+                    "      in: header" + NEW_LINE +
+                    "      name: X-API-Key" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "basic " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("X-API-Key", UUID.randomUUID().toString())
+        ));
+        // cross match Authorization header with X-API-Key allowed value - TODO(jamesdbloom) how can this be prevented?
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
     }
 
     // OTHER TESTS

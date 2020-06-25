@@ -69,9 +69,8 @@ public class OpenAPISerialiser {
             .findFirst();
     }
 
-    public Map<String, List<Pair<String, Operation>>> retrieveOperations(String specUrlOrPayload, String operationId) {
+    public Map<String, List<Pair<String, Operation>>> retrieveOperations(OpenAPI openAPI, String operationId) {
         Map<String, List<Pair<String, Operation>>> operations = new LinkedHashMap<>();
-        OpenAPI openAPI = buildOpenAPI(specUrlOrPayload, true);
         if (openAPI != null) {
             openAPI
                 .getPaths()

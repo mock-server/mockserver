@@ -2,10 +2,14 @@ package org.mockserver.matchers;
 
 import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.google.common.base.Joiner;
+import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.Parameter;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mockserver.log.model.LogEntry;
@@ -22,7 +26,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.BiConsumer;
 
-import static java.util.jar.Attributes.Name.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderNames.AUTHORIZATION;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.NottableOptionalString.optionalString;
@@ -51,15 +56,16 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                 httpRequestPropertiesMatchers = new ArrayList<>();
                 OpenAPISerialiser openAPISerialiser = new OpenAPISerialiser(mockServerLogger);
                 try {
-                    final Map<String, List<Pair<String, Operation>>> stringListMap = openAPISerialiser.retrieveOperations(openAPIDefinition.getSpecUrlOrPayload(), openAPIDefinition.getOperationId());
+                    OpenAPI openAPI = openAPISerialiser.buildOpenAPI(openAPIDefinition.getSpecUrlOrPayload(), true);
+                    final Map<String, List<Pair<String, Operation>>> stringListMap = openAPISerialiser.retrieveOperations(openAPI, openAPIDefinition.getOperationId());
                     stringListMap
                         .forEach((path, operations) -> operations
                             .forEach(methodOperationPair -> {
                                 Operation operation = methodOperationPair.getValue();
                                 if (operation.getRequestBody() != null && operation.getRequestBody().getContent() != null) {
-                                    operation.getRequestBody().getContent().forEach(handleRequestBody(openAPIDefinition, path, methodOperationPair, Boolean.TRUE.equals(operation.getRequestBody().getRequired())));
+                                    operation.getRequestBody().getContent().forEach(handleRequestBody(openAPIDefinition, openAPI, path, methodOperationPair, Boolean.TRUE.equals(operation.getRequestBody().getRequired())));
                                 } else {
-                                    HttpRequest httpRequest = createHttpRequest(openAPIDefinition, path, methodOperationPair);
+                                    HttpRequest httpRequest = createHttpRequest(openAPIDefinition, openAPI, path, methodOperationPair);
                                     addRequestMatcher(openAPIDefinition, methodOperationPair, httpRequest, "");
                                 }
                             }));
@@ -82,11 +88,12 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
         }
     }
 
-    private HttpRequest createHttpRequest(OpenAPIDefinition openAPIDefinition, String path, Pair<String, Operation> methodOperationPair) {
+    private HttpRequest createHttpRequest(OpenAPIDefinition openAPIDefinition, OpenAPI openAPI, String path, Pair<String, Operation> methodOperationPair) {
         HttpRequest httpRequest = new HttpRequest()
             .withMethod(methodOperationPair.getKey())
             .withPath(path);
         Operation operation = methodOperationPair.getValue();
+        // parameters
         if (operation.getParameters() != null) {
             for (Parameter parameter : operation.getParameters()) {
                 Schema<?> schema = Optional
@@ -146,12 +153,50 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                 }
             }
         }
+        // security schemes
+        Set<String> headerNames = new HashSet<>();
+        Set<String> headerValues = new HashSet<>();
+        buildSecurityHeaderValues(openAPI, headerNames, headerValues, openAPI.getSecurity());
+        buildSecurityHeaderValues(openAPI, headerNames, headerValues, methodOperationPair.getRight().getSecurity());
+        if (!headerNames.isEmpty() && !headerValues.isEmpty()) {
+            httpRequest.withHeader(Joiner.on("|").join(headerNames), Joiner.on("|").join(headerValues));
+        }
         return httpRequest;
     }
 
-    private BiConsumer<String, MediaType> handleRequestBody(OpenAPIDefinition openAPIDefinition, String path, Pair<String, Operation> methodOperationPair, Boolean required) {
+    private void buildSecurityHeaderValues(OpenAPI openAPI, Set<String> headerNames, Set<String> headerValue, List<SecurityRequirement> security) {
+        if (security != null) {
+            for (SecurityRequirement securityRequirement : security) {
+                if (securityRequirement != null) {
+                    for (String securityRequirementName : securityRequirement.keySet()) {
+                        if (openAPI.getComponents() != null && openAPI.getComponents().getSecuritySchemes() != null && openAPI.getComponents().getSecuritySchemes().get(securityRequirementName) != null) {
+                            SecurityScheme securityScheme = openAPI.getComponents().getSecuritySchemes().get(securityRequirementName);
+                            String scheme = securityScheme.getScheme();
+                            switch (securityScheme.getType()) {
+                                case APIKEY:
+                                    if (isNotBlank(securityScheme.getName())) {
+                                        headerNames.add(securityScheme.getName());
+                                        headerValue.add(".*");
+                                    }
+                                    break;
+                                case HTTP:
+                                case OAUTH2:
+                                case OPENIDCONNECT:
+                                    headerNames.add(AUTHORIZATION.toString());
+                                    headerValue.add((isNotBlank(scheme) ? scheme : "") + ".*");
+                                    break;
+                            }
+
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private BiConsumer<String, MediaType> handleRequestBody(OpenAPIDefinition openAPIDefinition, OpenAPI openAPI, String path, Pair<String, Operation> methodOperationPair, Boolean required) {
         return (contentType, mediaType) -> {
-            HttpRequest httpRequest = createHttpRequest(openAPIDefinition, path, methodOperationPair);
+            HttpRequest httpRequest = createHttpRequest(openAPIDefinition, openAPI, path, methodOperationPair);
             if (contentType.equals("multipart/form-data")) {
                 throw new IllegalArgumentException("multipart form data is not supported on requestBody, found on operation: \"" + methodOperationPair.getRight().getOperationId() + "\" method: \"" + methodOperationPair.getLeft() + "\"");
             }
