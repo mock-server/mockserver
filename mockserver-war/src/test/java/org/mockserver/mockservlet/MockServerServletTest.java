@@ -196,7 +196,7 @@ public class MockServerServletTest {
         MockHttpServletRequest statusRequest = buildHttpServletRequest(
             "PUT",
             "/mockserver/bind", portBindingSerializer.serialize(
-                portBinding(1080, 1090)
+                portBinding(1090, 1090)
             ));
 
         // when

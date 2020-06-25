@@ -25,7 +25,7 @@ public class PortBindingSerializerIntegrationTest {
         String requestBytes = "{" + NEW_LINE +
                 "    \"ports\": [" + NEW_LINE +
                 "        0," + NEW_LINE +
-                "        1080," + NEW_LINE +
+                "        1090," + NEW_LINE +
                 "        0" + NEW_LINE +
                 "    ]," + NEW_LINE +
                 "    \"extra_field\": \"extra_value\"" + NEW_LINE +
@@ -35,7 +35,7 @@ public class PortBindingSerializerIntegrationTest {
         PortBinding portBinding = new PortBindingSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
-        assertEquals(portBinding(0, 1080, 0), portBinding);
+        assertEquals(portBinding(0, 1090, 0), portBinding);
     }
 
     @Test
@@ -44,7 +44,7 @@ public class PortBindingSerializerIntegrationTest {
         String requestBytes = "{" + NEW_LINE +
                 "    \"ports\": [" + NEW_LINE +
                 "        0," + NEW_LINE +
-                "        1080," + NEW_LINE +
+                "        1090," + NEW_LINE +
                 "        0" + NEW_LINE +
                 "    ]" + NEW_LINE +
                 "}";
@@ -53,7 +53,7 @@ public class PortBindingSerializerIntegrationTest {
         PortBinding portBinding = new PortBindingSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
-        assertEquals(portBinding(0, 1080, 0), portBinding);
+        assertEquals(portBinding(0, 1090, 0), portBinding);
     }
 
     @Test
@@ -72,12 +72,12 @@ public class PortBindingSerializerIntegrationTest {
     public void shouldSerializeCompleteObject() {
         // when
         String jsonPortBinding = new PortBindingSerializer(new MockServerLogger()).serialize(
-                new PortBinding().setPorts(Arrays.asList(0, 1080, 0))
+                new PortBinding().setPorts(Arrays.asList(0, 1090, 0))
         );
 
         // then
         assertThat(jsonPortBinding, containsString("{" + NEW_LINE +
-                "  \"ports\" : [ 0, 1080, 0 ]," + NEW_LINE));
+                "  \"ports\" : [ 0, 1090, 0 ]," + NEW_LINE));
         assertThat(jsonPortBinding, containsString("\"version\" : "));
         assertThat(jsonPortBinding, containsString("\"artifactId\" : "));
         assertThat(jsonPortBinding, containsString("\"groupId\" : "));

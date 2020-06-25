@@ -191,7 +191,7 @@ public class ProxyServletTest {
         MockHttpServletRequest statusRequest = buildHttpServletRequest(
             "PUT",
             "/bind", portBindingSerializer.serialize(
-                portBinding(1080, 1090)
+                portBinding(1090, 1090)
             ));
 
         // when

@@ -351,7 +351,7 @@ public class ConfigurationPropertiesTest {
         // when
         assertThat(Arrays.asList(sslSubjectAlternativeNameDomains()), empty());
         addSslSubjectAlternativeNameDomains("a", "b", "c");
-        addSubjectAlternativeName("d:1080");
+        addSubjectAlternativeName("d:1090");
 
         // then
         assertThat(Arrays.asList(sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d"));
@@ -854,11 +854,11 @@ public class ConfigurationPropertiesTest {
 
         // when
         assertNull(httpProxy());
-        httpProxy("127.0.0.1:1080");
+        httpProxy("127.0.0.1:1090");
 
         // then
-        assertEquals("/127.0.0.1:1080", httpProxy().toString());
-        assertEquals("127.0.0.1:1080", System.getProperty("mockserver.httpProxy"));
+        assertEquals("/127.0.0.1:1090", httpProxy().toString());
+        assertEquals("127.0.0.1:1090", System.getProperty("mockserver.httpProxy"));
     }
 
     @Test
@@ -878,11 +878,11 @@ public class ConfigurationPropertiesTest {
 
         // when
         assertNull(httpsProxy());
-        httpsProxy("127.0.0.1:1080");
+        httpsProxy("127.0.0.1:1090");
 
         // then
-        assertEquals("/127.0.0.1:1080", httpsProxy().toString());
-        assertEquals("127.0.0.1:1080", System.getProperty("mockserver.httpsProxy"));
+        assertEquals("/127.0.0.1:1090", httpsProxy().toString());
+        assertEquals("127.0.0.1:1090", System.getProperty("mockserver.httpsProxy"));
     }
 
     @Test
@@ -902,11 +902,11 @@ public class ConfigurationPropertiesTest {
 
         // when
         assertNull(socksProxy());
-        socksProxy("127.0.0.1:1080");
+        socksProxy("127.0.0.1:1090");
 
         // then
-        assertEquals("/127.0.0.1:1080", socksProxy().toString());
-        assertEquals("127.0.0.1:1080", System.getProperty("mockserver.socksProxy"));
+        assertEquals("/127.0.0.1:1090", socksProxy().toString());
+        assertEquals("127.0.0.1:1090", System.getProperty("mockserver.socksProxy"));
     }
 
     @Test
@@ -925,11 +925,11 @@ public class ConfigurationPropertiesTest {
 
         // when
         assertNull(forwardHttpProxy());
-        forwardHttpProxy("127.0.0.1:1080");
+        forwardHttpProxy("127.0.0.1:1090");
 
         // then
-        assertEquals("/127.0.0.1:1080", forwardHttpProxy().toString());
-        assertEquals("127.0.0.1:1080", System.getProperty("mockserver.forwardHttpProxy"));
+        assertEquals("/127.0.0.1:1090", forwardHttpProxy().toString());
+        assertEquals("127.0.0.1:1090", System.getProperty("mockserver.forwardHttpProxy"));
     }
 
     @Test
@@ -947,11 +947,11 @@ public class ConfigurationPropertiesTest {
 
         // when
         assertNull(forwardHttpsProxy());
-        forwardHttpsProxy("127.0.0.1:1080");
+        forwardHttpsProxy("127.0.0.1:1090");
 
         // then
-        assertEquals("/127.0.0.1:1080", forwardHttpsProxy().toString());
-        assertEquals("127.0.0.1:1080", System.getProperty("mockserver.forwardHttpsProxy"));
+        assertEquals("/127.0.0.1:1090", forwardHttpsProxy().toString());
+        assertEquals("127.0.0.1:1090", System.getProperty("mockserver.forwardHttpsProxy"));
     }
 
     @Test
@@ -969,11 +969,11 @@ public class ConfigurationPropertiesTest {
 
         // when
         assertNull(forwardSocksProxy());
-        forwardSocksProxy("127.0.0.1:1080");
+        forwardSocksProxy("127.0.0.1:1090");
 
         // then
-        assertEquals("/127.0.0.1:1080", forwardSocksProxy().toString());
-        assertEquals("127.0.0.1:1080", System.getProperty("mockserver.forwardSocksProxy"));
+        assertEquals("/127.0.0.1:1090", forwardSocksProxy().toString());
+        assertEquals("127.0.0.1:1090", System.getProperty("mockserver.forwardSocksProxy"));
     }
 
     @Test

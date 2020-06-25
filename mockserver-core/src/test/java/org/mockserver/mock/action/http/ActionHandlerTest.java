@@ -296,7 +296,7 @@ public class ActionHandlerTest {
         // given
         HttpForward forward = forward()
             .withHost("localhost")
-            .withPort(1080);
+            .withPort(1090);
         expectation = new Expectation(request).thenForward(forward);
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
@@ -541,7 +541,7 @@ public class ActionHandlerTest {
         ChannelHandlerContext mockChannelHandlerContext = mock(ChannelHandlerContext.class);
         Channel mockChannel = mock(Channel.class);
         when(mockChannelHandlerContext.channel()).thenReturn(mockChannel);
-        InetSocketAddress remoteAddress = new InetSocketAddress(1080);
+        InetSocketAddress remoteAddress = new InetSocketAddress(1090);
         Attribute<InetSocketAddress> inetSocketAddressAttribute = mock(Attribute.class);
         when(inetSocketAddressAttribute.get()).thenReturn(remoteAddress);
         when(mockChannel.attr(REMOTE_SOCKET)).thenReturn(inetSocketAddressAttribute);

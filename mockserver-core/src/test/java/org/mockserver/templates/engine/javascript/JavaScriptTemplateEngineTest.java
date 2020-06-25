@@ -260,7 +260,7 @@ public class JavaScriptTemplateEngineTest {
             "    } ]," + NEW_LINE +
             "    'headers' : [ {" + NEW_LINE +
             "        'name' : \"Host\"," + NEW_LINE +
-            "        'values' : [ \"localhost:1080\" ]" + NEW_LINE +
+            "        'values' : [ \"localhost:1090\" ]" + NEW_LINE +
             "    } ]," + NEW_LINE +
             "    'body': \"{'name': 'value'}\"" + NEW_LINE +
             "};";
@@ -278,7 +278,7 @@ public class JavaScriptTemplateEngineTest {
         if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
             assertThat(actualHttpRequest, is(
                 request()
-                    .withHeader("Host", "localhost:1080")
+                    .withHeader("Host", "localhost:1090")
                     .withPath("/somePath")
                     .withQueryStringParameter("queryParameter", "someValue")
                     .withBody("{'name': 'value'}")
@@ -299,7 +299,7 @@ public class JavaScriptTemplateEngineTest {
             "    } ]," + NEW_LINE +
             "    'headers' : [ {" + NEW_LINE +
             "        'name' : \"Host\"," + NEW_LINE +
-            "        'values' : [ \"localhost:1080\" ]" + NEW_LINE +
+            "        'values' : [ \"localhost:1090\" ]" + NEW_LINE +
             "    } ]," + NEW_LINE +
             "    'body': \"{'name': 'value'}\"" + NEW_LINE +
             "};";
@@ -318,7 +318,7 @@ public class JavaScriptTemplateEngineTest {
                 "        } ]," + NEW_LINE +
                 "        'headers' : [ {" + NEW_LINE +
                 "            'name' : \"Host\"," + NEW_LINE +
-                "            'values' : [ \"localhost:1080\" ]" + NEW_LINE +
+                "            'values' : [ \"localhost:1090\" ]" + NEW_LINE +
                 "        } ]," + NEW_LINE +
                 "        'body': \"{'name': 'value'}\"" + NEW_LINE +
                 "    };" + NEW_LINE +

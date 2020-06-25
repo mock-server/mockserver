@@ -180,7 +180,7 @@ public class HttpStateTest {
         HttpRequest statusRequest = request("/mockserver/bind")
             .withMethod("PUT")
             .withBody(portBindingSerializer.serialize(
-                portBinding(1080, 1090)
+                portBinding(1090, 1090)
             ));
         FakeResponseWriter responseWriter = new FakeResponseWriter();
 

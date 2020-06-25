@@ -74,7 +74,7 @@ public class MockServerClientTest {
 
     @Before
     public void setupTestFixture() {
-        mockServerClient = new MockServerClient("localhost", 1080);
+        mockServerClient = new MockServerClient("localhost", 1090);
 
         initMocks(this);
     }
@@ -86,7 +86,7 @@ public class MockServerClientTest {
         exception.expectMessage(containsString("Host can not be null or empty"));
 
         // when
-        new MockServerClient(null, 1080);
+        new MockServerClient(null, 1090);
     }
 
     @Test
@@ -124,7 +124,7 @@ public class MockServerClientTest {
         exception.expectMessage(containsString("ContextPath can not be null"));
 
         // when
-        new MockServerClient("localhost", 1080, null);
+        new MockServerClient("localhost", 1090, null);
     }
 
     @Test
@@ -235,7 +235,7 @@ public class MockServerClientTest {
         verify(mockHttpClient, atLeastOnce()).sendRequest(
             request()
                 .withHeader(CONTENT_TYPE.toString(), APPLICATION_JSON_UTF_8.toString())
-                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withHeader(HOST.toString(), "localhost:" + 1090)
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
                 .withBody("some_body", UTF_8),
@@ -724,7 +724,7 @@ public class MockServerClientTest {
         // then
         verify(mockHttpClient).sendRequest(
             request()
-                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withHeader(HOST.toString(), "localhost:" + 1090)
                 .withMethod("PUT")
                 .withPath("/mockserver/stop"),
             20000,
@@ -741,7 +741,7 @@ public class MockServerClientTest {
         // then
         verify(mockHttpClient).sendRequest(
             request()
-                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withHeader(HOST.toString(), "localhost:" + 1090)
                 .withMethod("PUT")
                 .withPath("/mockserver/stop"),
             20000,
@@ -765,7 +765,7 @@ public class MockServerClientTest {
         verify(mockHttpClient, new AtLeast(1))
             .sendRequest(
                 request()
-                    .withHeader(HOST.toString(), "localhost:" + 1080)
+                    .withHeader(HOST.toString(), "localhost:" + 1090)
                     .withMethod("PUT")
                     .withPath("/mockserver/status"),
                 20000,
@@ -788,7 +788,7 @@ public class MockServerClientTest {
         assertThat(hasStarted, is(false));
         verify(mockHttpClient, atLeastOnce()).sendRequest(
             request()
-                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withHeader(HOST.toString(), "localhost:" + 1090)
                 .withMethod("PUT")
                 .withPath("/mockserver/status"),
             20000,
@@ -805,7 +805,7 @@ public class MockServerClientTest {
         // then
         verify(mockHttpClient).sendRequest(
             request()
-                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withHeader(HOST.toString(), "localhost:" + 1090)
                 .withMethod("PUT")
                 .withPath("/mockserver/reset"),
             20000,
@@ -828,7 +828,7 @@ public class MockServerClientTest {
         // then
         verify(mockHttpClient).sendRequest(
             request()
-                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withHeader(HOST.toString(), "localhost:" + 1090)
                 .withMethod("PUT")
                 .withContentType(APPLICATION_JSON_UTF_8)
                 .withPath("/mockserver/clear")
@@ -853,7 +853,7 @@ public class MockServerClientTest {
         // then
         verify(mockHttpClient).sendRequest(
             request()
-                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withHeader(HOST.toString(), "localhost:" + 1090)
                 .withMethod("PUT")
                 .withContentType(APPLICATION_JSON_UTF_8)
                 .withPath("/mockserver/clear")
@@ -874,7 +874,7 @@ public class MockServerClientTest {
         // then
         verify(mockHttpClient).sendRequest(
             request()
-                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withHeader(HOST.toString(), "localhost:" + 1090)
                 .withMethod("PUT")
                 .withContentType(APPLICATION_JSON_UTF_8)
                 .withPath("/mockserver/clear")
@@ -906,7 +906,7 @@ public class MockServerClientTest {
         // then
         verify(mockHttpClient).sendRequest(
             request()
-                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withHeader(HOST.toString(), "localhost:" + 1090)
                 .withMethod("PUT")
                 .withContentType(APPLICATION_JSON_UTF_8)
                 .withPath("/mockserver/retrieve")
@@ -932,7 +932,7 @@ public class MockServerClientTest {
         // then
         verify(mockHttpClient).sendRequest(
             request()
-                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withHeader(HOST.toString(), "localhost:" + 1090)
                 .withMethod("PUT")
                 .withContentType(APPLICATION_JSON_UTF_8)
                 .withPath("/mockserver/retrieve")
@@ -967,7 +967,7 @@ public class MockServerClientTest {
         // then
         verify(mockHttpClient).sendRequest(
             request()
-                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withHeader(HOST.toString(), "localhost:" + 1090)
                 .withMethod("PUT")
                 .withContentType(APPLICATION_JSON_UTF_8)
                 .withPath("/mockserver/retrieve")
@@ -994,7 +994,7 @@ public class MockServerClientTest {
         // then
         verify(mockHttpClient).sendRequest(
             request()
-                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withHeader(HOST.toString(), "localhost:" + 1090)
                 .withMethod("PUT")
                 .withContentType(APPLICATION_JSON_UTF_8)
                 .withPath("/mockserver/retrieve")
@@ -1029,7 +1029,7 @@ public class MockServerClientTest {
         // then
         verify(mockHttpClient).sendRequest(
             request()
-                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withHeader(HOST.toString(), "localhost:" + 1090)
                 .withMethod("PUT")
                 .withContentType(APPLICATION_JSON_UTF_8)
                 .withPath("/mockserver/retrieve")
@@ -1056,7 +1056,7 @@ public class MockServerClientTest {
         // then
         verify(mockHttpClient).sendRequest(
             request()
-                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withHeader(HOST.toString(), "localhost:" + 1090)
                 .withMethod("PUT")
                 .withContentType(APPLICATION_JSON_UTF_8)
                 .withPath("/mockserver/retrieve")
@@ -1091,7 +1091,7 @@ public class MockServerClientTest {
         // then
         verify(mockHttpClient).sendRequest(
             request()
-                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withHeader(HOST.toString(), "localhost:" + 1090)
                 .withMethod("PUT")
                 .withContentType(APPLICATION_JSON_UTF_8)
                 .withPath("/mockserver/retrieve")
@@ -1118,7 +1118,7 @@ public class MockServerClientTest {
         // then
         verify(mockHttpClient).sendRequest(
             request()
-                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withHeader(HOST.toString(), "localhost:" + 1090)
                 .withMethod("PUT")
                 .withContentType(APPLICATION_JSON_UTF_8)
                 .withPath("/mockserver/retrieve")
@@ -1150,7 +1150,7 @@ public class MockServerClientTest {
             verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest));
             verify(mockHttpClient).sendRequest(
                 request()
-                    .withHeader(HOST.toString(), "localhost:" + 1080)
+                    .withHeader(HOST.toString(), "localhost:" + 1090)
                     .withMethod("PUT")
                     .withContentType(APPLICATION_JSON_UTF_8)
                     .withPath("/mockserver/verifySequence")
@@ -1181,7 +1181,7 @@ public class MockServerClientTest {
             verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest, httpRequest));
             verify(mockHttpClient).sendRequest(
                 request()
-                    .withHeader(HOST.toString(), "localhost:" + 1080)
+                    .withHeader(HOST.toString(), "localhost:" + 1090)
                     .withMethod("PUT")
                     .withContentType(APPLICATION_JSON_UTF_8)
                     .withPath("/mockserver/verifySequence")
@@ -1215,7 +1215,7 @@ public class MockServerClientTest {
         verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest));
         verify(mockHttpClient).sendRequest(
             request()
-                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withHeader(HOST.toString(), "localhost:" + 1090)
                 .withMethod("PUT")
                 .withContentType(APPLICATION_JSON_UTF_8)
                 .withPath("/mockserver/verifySequence")
@@ -1247,7 +1247,7 @@ public class MockServerClientTest {
         verify(mockVerificationSerializer).serialize(verification().withRequest(httpRequest).withTimes(once()));
         verify(mockHttpClient).sendRequest(
             request()
-                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withHeader(HOST.toString(), "localhost:" + 1090)
                 .withMethod("PUT")
                 .withContentType(APPLICATION_JSON_UTF_8)
                 .withPath("/mockserver/verify")
@@ -1276,7 +1276,7 @@ public class MockServerClientTest {
             verify(mockVerificationSerializer).serialize(verification().withRequest(httpRequest).withTimes(atLeast(1)));
             verify(mockHttpClient).sendRequest(
                 request()
-                    .withHeader(HOST.toString(), "localhost:" + 1080)
+                    .withHeader(HOST.toString(), "localhost:" + 1090)
                     .withMethod("PUT")
                     .withContentType(APPLICATION_JSON_UTF_8)
                     .withPath("/mockserver/verify")
