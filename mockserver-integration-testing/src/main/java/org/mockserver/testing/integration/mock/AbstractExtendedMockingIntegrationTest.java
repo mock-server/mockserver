@@ -4556,6 +4556,99 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
+    public void shouldRetrieveRecordedRequestsAsJsonWithJsonBody() {
+        // when
+        mockServerClient
+            .when(
+                request()
+            )
+            .respond(
+                response()
+                    .withBody("some_body")
+            );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withBody("{\"digests\": [ ]}"),
+                headersToIgnore)
+        );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withBody("{\"digests\": [\"sha256:one\"]}"),
+                headersToIgnore)
+        );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withBody("{\"digests\": [ ]}"),
+                headersToIgnore)
+        );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withBody("{\"digests\": [\"sha256:two\"]}"),
+                headersToIgnore)
+        );
+
+        // then
+        verifyRequestsMatches(
+            new HttpRequestSerializer(new MockServerLogger()).deserializeArray(mockServerClient.retrieveRecordedRequests(request().withBody("{\"digests\": [ ]}"), Format.JSON)),
+            request().withBody("{\"digests\": [ ]}"),
+            request().withBody("{\"digests\": [ ]}")
+        );
+
+        verifyRequestsMatches(
+            new HttpRequestSerializer(new MockServerLogger()).deserializeArray(mockServerClient.retrieveRecordedRequests(request().withBody(json("{\"digests\": [ ]}")), Format.JSON)),
+            request().withBody("{\"digests\": [ ]}"),
+            request().withBody("{\"digests\": [\"sha256:one\"]}"),
+            request().withBody("{\"digests\": [ ]}"),
+            request().withBody("{\"digests\": [\"sha256:two\"]}")
+        );
+
+        verifyRequestsMatches(
+            new HttpRequestSerializer(new MockServerLogger()).deserializeArray(mockServerClient.retrieveRecordedRequests(request().withBody("{\"digests\": [\"sha256:one\"]}"), Format.JSON)),
+            request().withBody("{\"digests\": [\"sha256:one\"]}")
+        );
+
+        verifyRequestsMatches(
+            new HttpRequestSerializer(new MockServerLogger()).deserializeArray(mockServerClient.retrieveRecordedRequests(request().withBody(json("{\"digests\": [\"sha256:one\"]}")), Format.JSON)),
+            request().withBody("{\"digests\": [\"sha256:one\"]}")
+        );
+
+        verifyRequestsMatches(
+            new HttpRequestSerializer(new MockServerLogger()).deserializeArray(mockServerClient.retrieveRecordedRequests(request().withBody("{\"digests\": [\"sha256:two\"]}"), Format.JSON)),
+            request().withBody("{\"digests\": [\"sha256:two\"]}")
+        );
+
+        verifyRequestsMatches(
+            new HttpRequestSerializer(new MockServerLogger()).deserializeArray(mockServerClient.retrieveRecordedRequests(request().withBody(json("{\"digests\": [\"sha256:two\"]}")), Format.JSON)),
+            request().withBody("{\"digests\": [\"sha256:two\"]}")
+        );
+
+        verifyRequestsMatches(
+            new HttpRequestSerializer(new MockServerLogger()).deserializeArray(mockServerClient.retrieveRecordedRequests(request().withBody(json("{ }")), Format.JSON)),
+            request().withBody("{\"digests\": [ ]}"),
+            request().withBody("{\"digests\": [\"sha256:one\"]}"),
+            request().withBody("{\"digests\": [ ]}"),
+            request().withBody("{\"digests\": [\"sha256:two\"]}")
+        );
+
+        verifyRequestsMatches(
+            new HttpRequestSerializer(new MockServerLogger()).deserializeArray(mockServerClient.retrieveRecordedRequests(request(), Format.JSON)),
+            request().withBody("{\"digests\": [ ]}"),
+            request().withBody("{\"digests\": [\"sha256:one\"]}"),
+            request().withBody("{\"digests\": [ ]}"),
+            request().withBody("{\"digests\": [\"sha256:two\"]}")
+        );
+    }
+
+
+    @Test
     public void shouldRetrieveRecordedRequestsAsLogEntries() {
         // given
         mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(response().withBody("some_body"));

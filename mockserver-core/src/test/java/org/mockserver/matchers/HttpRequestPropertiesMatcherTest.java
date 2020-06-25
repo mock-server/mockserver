@@ -2440,25 +2440,36 @@ public class HttpRequestPropertiesMatcherTest {
     public void shouldMatchJsonArrayBody() {
         assertTrue(update(new HttpRequest().withBody(
             json("" +
-                "{\n" +
-                "  \"digests\" : [ ]\n" +
-                "}\n")
+                "{" + NEW_LINE +
+                "  \"digests\" : [ ]" + NEW_LINE +
+                "}" + NEW_LINE)
         )).matches(null, new HttpRequest().withBody(
             "" +
-                "{\n" +
-                "  \"digests\" : [ ]\n" +
-                "}\n"
+                "{" + NEW_LINE +
+                "  \"digests\" : [ ]" + NEW_LINE +
+                "}" + NEW_LINE
         )));
         assertTrue(update(new HttpRequest().withBody(
             json("" +
-                "{\n" +
-                "  \"digests\" : [ ]\n" +
-                "}\n")
+                "{" + NEW_LINE +
+                "  \"digests\" : [ ]" + NEW_LINE +
+                "}" + NEW_LINE)
         )).matches(null, new HttpRequest().withBody(
             json("" +
-                "{\n" +
-                "  \"digests\" : [ \"sha256:475b124d0575504fe0f028fe29fa44b3065fca745d4dcb1448f064892018b44f\" ]\n" +
-                "}\n")
+                "{" + NEW_LINE +
+                "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
+                "}" + NEW_LINE)
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ ]" + NEW_LINE +
+                "}" + NEW_LINE)
+        )).matches(null, new HttpRequest().withBody(
+            "" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
+                "}" + NEW_LINE
         )));
     }
 
@@ -2578,38 +2589,74 @@ public class HttpRequestPropertiesMatcherTest {
 
     @Test
     public void shouldMatchJsonArrayBodyForControlPlane() {
+        // matches without being serialised BodyDTO
         assertTrue(updateForControlPlane(new HttpRequest().withBody(
             json("" +
-                "{\n" +
-                "  \"digests\" : [ ]\n" +
-                "}\n")
+                "{" + NEW_LINE +
+                "  \"digests\" : [ ]" + NEW_LINE +
+                "}" + NEW_LINE)
         )).matches(null, new HttpRequest().withBody(
             "" +
-                "{\n" +
-                "  \"digests\" : [ ]\n" +
-                "}\n"
+                "{" + NEW_LINE +
+                "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
+                "}" + NEW_LINE
         )));
         assertTrue(updateForControlPlane(new HttpRequest().withBody(
             json("" +
-                "{\n" +
-                "  \"digests\" : [ \"sha256:475b124d0575504fe0f028fe29fa44b3065fca745d4dcb1448f064892018b44f\" ]\n" +
-                "}\n")
+                "{" + NEW_LINE +
+                "  \"digests\" : [ ]" + NEW_LINE +
+                "}" + NEW_LINE)
         )).matches(null, new HttpRequest().withBody(
             json("" +
-                "{\n" +
-                "  \"digests\" : [ ]\n" +
-                "}\n")
+                "{" + NEW_LINE +
+                "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
+                "}" + NEW_LINE)
         )));
+        // matches as serialised BodyDTO for control-plane
+        assertTrue(updateForControlPlane(new HttpRequest().withBody(
+            json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
+                "}" + NEW_LINE)
+        )).matches(null, new HttpRequest().withBody(
+            new JsonBodyDTO(json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
+                "}" + NEW_LINE)).toString()
+        )));
+        assertTrue(updateForControlPlane(new HttpRequest().withBody(
+            json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
+                "}" + NEW_LINE)
+        )).matches(null, new HttpRequest().withBody(
+            new JsonBodyDTO(json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ ]" + NEW_LINE +
+                "}" + NEW_LINE)).toString()
+        )));
+        assertFalse(updateForControlPlane(new HttpRequest().withBody(
+            json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ ]" + NEW_LINE +
+                "}" + NEW_LINE)
+        )).matches(null, new HttpRequest().withBody(
+            new JsonBodyDTO(json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
+                "}" + NEW_LINE)).toString()
+        )));
+        // doesn't work as serialised BodyDTO for non-control-plane
         assertFalse(update(new HttpRequest().withBody(
             json("" +
-                "{\n" +
-                "  \"digests\" : [ \"sha256:475b124d0575504fe0f028fe29fa44b3065fca745d4dcb1448f064892018b44f\" ]\n" +
-                "}\n")
+                "{" + NEW_LINE +
+                "  \"digests\" : [ ]" + NEW_LINE +
+                "}" + NEW_LINE)
         )).matches(null, new HttpRequest().withBody(
-            json("" +
-                "{\n" +
-                "  \"digests\" : [ ]\n" +
-                "}\n")
+            new JsonBodyDTO(json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
+                "}" + NEW_LINE)).toString()
         )));
     }
 
@@ -3109,7 +3156,7 @@ public class HttpRequestPropertiesMatcherTest {
     @Test
     public void shouldNotMatchNottedJsonSchemaBody() {
         assertFalse(update(new HttpRequest().withBody(
-           not(jsonSchema("{" + NEW_LINE +
+            not(jsonSchema("{" + NEW_LINE +
                 "   \"type\": \"string\"," + NEW_LINE +
                 "   \"pattern\": \"^someB[a-z]{3}$\"" + NEW_LINE +
                 "}"))
@@ -3307,12 +3354,12 @@ public class HttpRequestPropertiesMatcherTest {
             .withContentType(MediaType.APPLICATION_XML)
             .withBody(
                 "" +
-                    "<root>\n" +
-                    "    <id>1</id>\n" +
-                    "    <name>A green door</name>\n" +
-                    "    <price>12.5</price>\n" +
-                    "    <tags>home</tags>\n" +
-                    "    <tags>green</tags>\n" +
+                    "<root>" + NEW_LINE +
+                    "    <id>1</id>" + NEW_LINE +
+                    "    <name>A green door</name>" + NEW_LINE +
+                    "    <price>12.5</price>" + NEW_LINE +
+                    "    <tags>home</tags>" + NEW_LINE +
+                    "    <tags>green</tags>" + NEW_LINE +
                     "</root>"
             )
         ));
@@ -3349,12 +3396,12 @@ public class HttpRequestPropertiesMatcherTest {
             .withContentType(MediaType.APPLICATION_XML_UTF_8)
             .withBody(
                 "" +
-                    "<root>\n" +
-                    "    <id>1</id>\n" +
-                    "    <name>یک درب سبز</name>\n" +
-                    "    <price>12.5</price>\n" +
-                    "    <tags>خانه</tags>\n" +
-                    "    <tags>سبز</tags>\n" +
+                    "<root>" + NEW_LINE +
+                    "    <id>1</id>" + NEW_LINE +
+                    "    <name>یک درب سبز</name>" + NEW_LINE +
+                    "    <price>12.5</price>" + NEW_LINE +
+                    "    <tags>خانه</tags>" + NEW_LINE +
+                    "    <tags>سبز</tags>" + NEW_LINE +
                     "</root>"
             )
         ));
@@ -3396,12 +3443,12 @@ public class HttpRequestPropertiesMatcherTest {
             .withContentType(MediaType.APPLICATION_XML)
             .withBody(
                 "" +
-                    "<root>\n" +
-                    "    <id>1</id>\n" +
-                    "    <name>A green door</name>\n" +
-                    "    <price>12.5</price>\n" +
-                    "    <tags>home</tags>\n" +
-                    "    <tags>green</tags>\n" +
+                    "<root>" + NEW_LINE +
+                    "    <id>1</id>" + NEW_LINE +
+                    "    <name>A green door</name>" + NEW_LINE +
+                    "    <price>12.5</price>" + NEW_LINE +
+                    "    <tags>home</tags>" + NEW_LINE +
+                    "    <tags>green</tags>" + NEW_LINE +
                     "</root>"
             )
         ));
@@ -3443,12 +3490,12 @@ public class HttpRequestPropertiesMatcherTest {
             .withContentType(MediaType.APPLICATION_XML)
             .withBody(
                 "" +
-                    "<root>\n" +
-                    "    <id>1</id>\n" +
-                    "    <name>A green door</name>\n" +
-                    "    <price>12.5</price>\n" +
-                    "    <tags>home</tags>\n" +
-                    "    <tags>green</tags>\n" +
+                    "<root>" + NEW_LINE +
+                    "    <id>1</id>" + NEW_LINE +
+                    "    <name>A green door</name>" + NEW_LINE +
+                    "    <price>12.5</price>" + NEW_LINE +
+                    "    <tags>home</tags>" + NEW_LINE +
+                    "    <tags>green</tags>" + NEW_LINE +
                     "</root>"
             )
         ));
@@ -3521,12 +3568,12 @@ public class HttpRequestPropertiesMatcherTest {
             .withContentType(MediaType.APPLICATION_XML)
             .withBody(
                 "" +
-                    "<root>\n" +
-                    "    <id>1</id>\n" +
-                    "    <name>A green door</name>\n" +
-                    "    <price>12.5</price>\n" +
-                    "    <tags>home</tags>\n" +
-                    "    <tags>green</tags>\n" +
+                    "<root>" + NEW_LINE +
+                    "    <id>1</id>" + NEW_LINE +
+                    "    <name>A green door</name>" + NEW_LINE +
+                    "    <price>12.5</price>" + NEW_LINE +
+                    "    <tags>home</tags>" + NEW_LINE +
+                    "    <tags>green</tags>" + NEW_LINE +
                     "</root>"
             )
         ));
@@ -3567,12 +3614,12 @@ public class HttpRequestPropertiesMatcherTest {
             .withContentType(MediaType.APPLICATION_XML)
             .withBody(
                 "" +
-                    "<root>\n" +
-                    "    <id>1</id>\n" +
-                    "    <name>A green door</name>\n" +
-                    "    <price>12.5</price>\n" +
-                    "    <tags>home</tags>\n" +
-                    "    <tags>green</tags>\n" +
+                    "<root>" + NEW_LINE +
+                    "    <id>1</id>" + NEW_LINE +
+                    "    <name>A green door</name>" + NEW_LINE +
+                    "    <price>12.5</price>" + NEW_LINE +
+                    "    <tags>home</tags>" + NEW_LINE +
+                    "    <tags>green</tags>" + NEW_LINE +
                     "</root>"
             )
         ));
@@ -3649,12 +3696,12 @@ public class HttpRequestPropertiesMatcherTest {
             .withContentType(MediaType.APPLICATION_XML)
             .withBody(
                 "" +
-                    "<root>\n" +
-                    "    <id>1</id>\n" +
-                    "    <name>A green door</name>\n" +
-                    "    <price>12.5</price>\n" +
-                    "    <tags>home</tags>\n" +
-                    "    <tags>green</tags>\n" +
+                    "<root>" + NEW_LINE +
+                    "    <id>1</id>" + NEW_LINE +
+                    "    <name>A green door</name>" + NEW_LINE +
+                    "    <price>12.5</price>" + NEW_LINE +
+                    "    <tags>home</tags>" + NEW_LINE +
+                    "    <tags>green</tags>" + NEW_LINE +
                     "</root>"
             )
         ).matches(null, new HttpRequest()
@@ -3694,12 +3741,12 @@ public class HttpRequestPropertiesMatcherTest {
             .withContentType(MediaType.APPLICATION_XML)
             .withBody(
                 "" +
-                    "<root>\n" +
-                    "    <id>1</id>\n" +
-                    "    <name>A green door</name>\n" +
-                    "    <price>12.5</price>\n" +
-                    "    <tags>home</tags>\n" +
-                    "    <tags>green</tags>\n" +
+                    "<root>" + NEW_LINE +
+                    "    <id>1</id>" + NEW_LINE +
+                    "    <name>A green door</name>" + NEW_LINE +
+                    "    <price>12.5</price>" + NEW_LINE +
+                    "    <tags>home</tags>" + NEW_LINE +
+                    "    <tags>green</tags>" + NEW_LINE +
                     "</root>"
             )
         ).matches(null, new HttpRequest()
@@ -3744,12 +3791,12 @@ public class HttpRequestPropertiesMatcherTest {
             .withContentType(MediaType.APPLICATION_XML)
             .withBody(
                 "" +
-                    "<root>\n" +
-                    "    <id>1</id>\n" +
-                    "    <name>A green door</name>\n" +
-                    "    <price>12.5</price>\n" +
-                    "    <tags>home</tags>\n" +
-                    "    <tags>green</tags>\n" +
+                    "<root>" + NEW_LINE +
+                    "    <id>1</id>" + NEW_LINE +
+                    "    <name>A green door</name>" + NEW_LINE +
+                    "    <price>12.5</price>" + NEW_LINE +
+                    "    <tags>home</tags>" + NEW_LINE +
+                    "    <tags>green</tags>" + NEW_LINE +
                     "</root>"
             )
         ).matches(null, new HttpRequest()
@@ -5239,7 +5286,7 @@ public class HttpRequestPropertiesMatcherTest {
                 "        </xs:complexType>" + NEW_LINE +
                 "    </xs:element>" + NEW_LINE +
                 "</xs:schema>")
-            .withOptional(true)
+                .withOptional(true)
         )).matches(null, new HttpRequest().withBody("" +
             "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
             "<notes>" + NEW_LINE +
@@ -5279,7 +5326,7 @@ public class HttpRequestPropertiesMatcherTest {
                 "        </xs:complexType>" + NEW_LINE +
                 "    </xs:element>" + NEW_LINE +
                 "</xs:schema>")
-            .withOptional(true)
+                .withOptional(true)
         )).matches(null, new HttpRequest()));
     }
 

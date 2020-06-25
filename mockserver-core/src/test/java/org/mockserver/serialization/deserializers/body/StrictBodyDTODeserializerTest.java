@@ -1,5 +1,6 @@
 package org.mockserver.serialization.deserializers.body;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
 import org.mockserver.matchers.MatchType;
@@ -19,7 +20,9 @@ import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.StringBody.exact;
 
-public class BodyDTODeserializerTest {
+public class StrictBodyDTODeserializerTest {
+
+    private final ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper(new StrictBodyDTODeserializer());
 
     @Test
     public void shouldParseJsonWithInvalidBody() throws IOException {
@@ -32,7 +35,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -53,7 +56,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -74,7 +77,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -97,7 +100,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -120,7 +123,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -143,7 +146,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -166,7 +169,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -189,7 +192,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -211,7 +214,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -234,7 +237,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -257,7 +260,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -280,7 +283,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -303,16 +306,12 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new JsonBodyDTO(json("{" + NEW_LINE +
-                        "  \"contentType\" : \"\"," + NEW_LINE +
-                        "  \"foo\" : \"some_value\"" + NEW_LINE +
-                        "}")))
             ), expectationDTO);
     }
 
@@ -329,16 +328,12 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new JsonBodyDTO(json("[ {" + NEW_LINE +
-                        "  \"contentType\" : \"\"," + NEW_LINE +
-                        "  \"foo\" : \"some_value\"" + NEW_LINE +
-                        "} ]")))
             ), expectationDTO);
     }
 
@@ -352,13 +347,12 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new StringBodyDTO(exact("some_value")))
             ), expectationDTO);
     }
 
@@ -381,7 +375,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -414,7 +408,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -447,7 +441,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -479,7 +473,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -513,7 +507,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         ExpectationDTO expected = new ExpectationDTO()
@@ -539,13 +533,12 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new StringBodyDTO(new StringBody("some_value")))
             ), expectationDTO);
     }
 
@@ -562,7 +555,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -585,7 +578,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -607,7 +600,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -631,7 +624,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -655,7 +648,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -678,7 +671,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -701,7 +694,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -724,7 +717,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -748,7 +741,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -771,7 +764,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -794,7 +787,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -819,7 +812,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -844,7 +837,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -868,7 +861,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -890,7 +883,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -913,7 +906,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -936,7 +929,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -959,7 +952,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -981,7 +974,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1004,7 +997,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1027,7 +1020,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1050,7 +1043,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1078,7 +1071,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1109,7 +1102,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1137,7 +1130,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1163,7 +1156,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1194,7 +1187,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1233,7 +1226,7 @@ public class BodyDTODeserializerTest {
             "}";
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1266,7 +1259,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1290,7 +1283,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1326,7 +1319,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1362,7 +1355,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1397,7 +1390,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1433,7 +1426,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1455,7 +1448,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1478,7 +1471,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1501,7 +1494,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1524,7 +1517,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1560,7 +1553,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1596,7 +1589,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1631,7 +1624,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1667,7 +1660,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         final ExpectationDTO expected = new ExpectationDTO()
@@ -1690,7 +1683,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1713,7 +1706,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1736,7 +1729,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1759,7 +1752,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1781,7 +1774,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1804,7 +1797,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1827,7 +1820,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1850,7 +1843,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1873,7 +1866,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1896,7 +1889,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1918,7 +1911,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1941,7 +1934,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1964,7 +1957,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1987,7 +1980,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         ExpectationDTO expected = new ExpectationDTO()
@@ -2011,7 +2004,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -2040,7 +2033,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -2069,7 +2062,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -2100,7 +2093,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -2128,7 +2121,7 @@ public class BodyDTODeserializerTest {
             "}");
 
         // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+        ExpectationDTO expectationDTO = objectMapper.readValue(json, ExpectationDTO.class);
 
         // then
         assertEquals(new ExpectationDTO()

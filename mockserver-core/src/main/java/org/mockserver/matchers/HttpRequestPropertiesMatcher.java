@@ -8,6 +8,7 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.mockserver.serialization.ObjectMapperFactory;
+import org.mockserver.serialization.deserializers.body.StrictBodyDTODeserializer;
 import org.mockserver.serialization.model.BodyDTO;
 import org.slf4j.event.Level;
 
@@ -45,7 +46,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
     private HashMapMatcher cookieMatcher = null;
     private BooleanMatcher keepAliveMatcher = null;
     private BooleanMatcher sslMatcher = null;
-    private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+    private ObjectMapper objectMapperWithStrictBodyDTODeserializer = ObjectMapperFactory.createObjectMapper(new StrictBodyDTODeserializer());
     private JsonSchemaBodyParser jsonSchemaBodyParser;
 
     public HttpRequestPropertiesMatcher(MockServerLogger mockServerLogger) {
@@ -353,12 +354,16 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                 } else {
                     if (isNotBlank(request.getBodyAsJsonOrXmlString())) {
                         try {
-                            BodyDTO bodyDTO = objectMapper.readValue(request.getBodyAsJsonOrXmlString(), BodyDTO.class);
-                            bodyMatches = bodyMatches(
-                                buildBodyMatcher(bodyDTO.buildObject()),
-                                context,
-                                httpRequest
-                            );
+                            BodyDTO bodyDTO = objectMapperWithStrictBodyDTODeserializer.readValue(request.getBodyAsJsonOrXmlString(), BodyDTO.class);
+                            if (bodyDTO != null) {
+                                bodyMatches = bodyMatches(
+                                    buildBodyMatcher(bodyDTO.buildObject()),
+                                    context,
+                                    httpRequest
+                                );
+                            } else {
+                                bodyMatches = false;
+                            }
                         } catch (Throwable ignore) {
                             // ignore this exception as this exception would typically get thrown for "normal" HTTP requests (i.e. not clear or retrieve)
                             bodyMatches = false;

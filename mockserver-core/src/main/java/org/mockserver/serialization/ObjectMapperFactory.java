@@ -29,10 +29,7 @@ import org.mockserver.serialization.serializers.response.HttpResponseSerializer;
 import org.mockserver.serialization.serializers.response.*;
 import org.mockserver.serialization.serializers.string.NottableStringSerializer;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.mockserver.exception.ExceptionHandling.swallowThrowable;
 
@@ -42,18 +39,36 @@ import static org.mockserver.exception.ExceptionHandling.swallowThrowable;
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class ObjectMapperFactory {
 
-    private static ObjectMapper objectMapper = buildObjectMapper();
-    private static ObjectWriter prettyPrintWriter = buildObjectMapper().writerWithDefaultPrettyPrinter();
-    private static ObjectWriter writer = buildObjectMapper().writer();
+    private static ObjectMapper objectMapper = buildObjectMapper(Collections.emptyList(), Collections.emptyList());
+    private static ObjectWriter prettyPrintWriter = buildObjectMapper(Collections.emptyList(), Collections.emptyList()).writerWithDefaultPrettyPrinter();
+    private static ObjectWriter writer = buildObjectMapper(Collections.emptyList(), Collections.emptyList()).writer();
+
+    public static ObjectMapper createObjectMapper() {
+        if (objectMapper == null) {
+            objectMapper = buildObjectMapper(Collections.emptyList(), Collections.emptyList());
+        }
+        return objectMapper;
+    }
 
     public static ObjectMapper createObjectMapper(JsonSerializer... additionJsonSerializers) {
         if (additionJsonSerializers == null || additionJsonSerializers.length == 0) {
             if (objectMapper == null) {
-                objectMapper = buildObjectMapper();
+                objectMapper = buildObjectMapper(Collections.emptyList(), Collections.emptyList());
             }
             return objectMapper;
         } else {
-            return buildObjectMapper(additionJsonSerializers);
+            return buildObjectMapper(Collections.emptyList(), Arrays.asList(additionJsonSerializers));
+        }
+    }
+
+    public static ObjectMapper createObjectMapper(JsonDeserializer... replacementJsonDeserializers) {
+        if (replacementJsonDeserializers == null || replacementJsonDeserializers.length == 0) {
+            if (objectMapper == null) {
+                objectMapper = buildObjectMapper(Collections.emptyList(), Collections.emptyList());
+            }
+            return objectMapper;
+        } else {
+            return buildObjectMapper(Arrays.asList(replacementJsonDeserializers), Collections.emptyList());
         }
     }
 
@@ -66,15 +81,15 @@ public class ObjectMapperFactory {
             }
         } else {
             if (pretty) {
-                return buildObjectMapper(additionJsonSerializers).writerWithDefaultPrettyPrinter();
+                return buildObjectMapper(Collections.emptyList(), Arrays.asList(additionJsonSerializers)).writerWithDefaultPrettyPrinter();
             } else {
-                return buildObjectMapper(additionJsonSerializers).writer();
+                return buildObjectMapper(Collections.emptyList(), Arrays.asList(additionJsonSerializers)).writer();
             }
         }
     }
 
     @SuppressWarnings("deprecation")
-    private static ObjectMapper buildObjectMapper(JsonSerializer... additionJsonSerializers) {
+    private static ObjectMapper buildObjectMapper(List<JsonDeserializer> replacementJsonDeserializers, List<JsonSerializer> replacementJsonSerializers) {
         ObjectMapper objectMapper = new ObjectMapper();
 
         // ignore failures
@@ -110,13 +125,13 @@ public class ObjectMapperFactory {
 
         // register our own module with our serializers and deserializers
         SimpleModule module = new SimpleModule();
-        addDeserializers(module);
-        addSerializers(module, additionJsonSerializers);
+        addDeserializers(module, replacementJsonDeserializers.toArray(new JsonDeserializer[0]));
+        addSerializers(module, replacementJsonSerializers.toArray(new JsonSerializer[0]));
         objectMapper.registerModule(module);
         return objectMapper;
     }
 
-    private static void addDeserializers(SimpleModule module) {
+    private static void addDeserializers(SimpleModule module, JsonDeserializer[] replacementJsonDeserializers) {
         List<JsonDeserializer> jsonDeserializers = Arrays.asList(
             // expectation
             new OpenAPIExpectationDTODeserializer(),
@@ -136,13 +151,20 @@ public class ObjectMapperFactory {
             new ParametersDeserializer(),
             new CookiesDeserializer()
         );
+        Map<Class, JsonDeserializer> jsonDeserializersByType = new HashMap<>();
         for (JsonDeserializer jsonDeserializer : jsonDeserializers) {
-            Class type = jsonDeserializer.handledType();
-            module.addDeserializer(type, jsonDeserializer);
+            jsonDeserializersByType.put(jsonDeserializer.handledType(), jsonDeserializer);
+        }
+        // override any existing deserializers
+        for (JsonDeserializer additionJsonDeserializer : replacementJsonDeserializers) {
+            jsonDeserializersByType.put(additionJsonDeserializer.handledType(), additionJsonDeserializer);
+        }
+        for (Map.Entry<Class, JsonDeserializer> additionJsonDeserializer : jsonDeserializersByType.entrySet()) {
+            module.addDeserializer(additionJsonDeserializer.getKey(), additionJsonDeserializer.getValue());
         }
     }
 
-    private static void addSerializers(SimpleModule module, JsonSerializer[] additionJsonSerializers) {
+    private static void addSerializers(SimpleModule module, JsonSerializer[] replacementJsonSerializers) {
         List<JsonSerializer> jsonSerializers = Arrays.asList(
             // expectation
             new OpenAPIExpectationSerializer(),
@@ -200,7 +222,7 @@ public class ObjectMapperFactory {
             jsonSerializersByType.put(jsonSerializer.handledType(), jsonSerializer);
         }
         // override any existing serializers
-        for (JsonSerializer additionJsonSerializer : additionJsonSerializers) {
+        for (JsonSerializer additionJsonSerializer : replacementJsonSerializers) {
             jsonSerializersByType.put(additionJsonSerializer.handledType(), additionJsonSerializer);
         }
         for (Map.Entry<Class, JsonSerializer> additionJsonSerializer : jsonSerializersByType.entrySet()) {
