@@ -23,6 +23,9 @@ public class XmlBodyDTOSerializer extends StdSerializer<XmlBodyDTO> {
         if (xmlBodyDTO.getNot() != null && xmlBodyDTO.getNot()) {
             jgen.writeBooleanField("not", true);
         }
+        if (xmlBodyDTO.getOptional() != null && xmlBodyDTO.getOptional()) {
+            jgen.writeBooleanField("optional", xmlBodyDTO.getOptional());
+        }
         jgen.writeStringField("type", xmlBodyDTO.getType().name());
         jgen.writeStringField("xml", xmlBodyDTO.getXml());
         if (xmlBodyDTO.getRawBytes() != null) {

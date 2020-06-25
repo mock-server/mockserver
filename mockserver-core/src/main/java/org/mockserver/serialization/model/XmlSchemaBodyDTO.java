@@ -17,6 +17,7 @@ public class XmlSchemaBodyDTO extends BodyDTO {
     public XmlSchemaBodyDTO(XmlSchemaBody xmlSchemaBody, Boolean not) {
         super(Body.Type.XML_SCHEMA, not);
         this.xmlSchema = xmlSchemaBody.getValue();
+        withOptional(xmlSchemaBody.getOptional());
     }
 
     public String getXml() {

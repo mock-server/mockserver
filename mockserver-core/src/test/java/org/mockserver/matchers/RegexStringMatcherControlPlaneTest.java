@@ -6,7 +6,7 @@ import org.mockserver.model.NottableString;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockserver.matchers.NotMatcher.not;
+import static org.mockserver.matchers.NotMatcher.notMatcher;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -51,7 +51,7 @@ public class RegexStringMatcherControlPlaneTest {
 
     @Test
     public void shouldNotMatchMatchingString() {
-        assertFalse(not(new RegexStringMatcher(new MockServerLogger(), string("some_value"), true)).matches("some_value"));
+        assertFalse(notMatcher(new RegexStringMatcher(new MockServerLogger(), string("some_value"), true)).matches("some_value"));
     }
 
     @Test
@@ -81,7 +81,7 @@ public class RegexStringMatcherControlPlaneTest {
 
     @Test
     public void shouldMatchIncorrectString() {
-        assertTrue(not(new RegexStringMatcher(new MockServerLogger(), string("some_value"), true)).matches("not_matching"));
+        assertTrue(notMatcher(new RegexStringMatcher(new MockServerLogger(), string("some_value"), true)).matches("not_matching"));
     }
 
     @Test

@@ -19,6 +19,12 @@ public class BinaryBodySerializer extends StdSerializer<BinaryBody> {
     @Override
     public void serialize(BinaryBody binaryBody, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         jgen.writeStartObject();
+        if (binaryBody.getNot() != null && binaryBody.getNot()) {
+            jgen.writeBooleanField("not", binaryBody.getNot());
+        }
+        if (binaryBody.getOptional() != null && binaryBody.getOptional()) {
+            jgen.writeBooleanField("optional", binaryBody.getOptional());
+        }
         if (binaryBody.getContentType() != null) {
             jgen.writeStringField("contentType", binaryBody.getContentType());
         }

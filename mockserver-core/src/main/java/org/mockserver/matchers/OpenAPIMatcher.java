@@ -25,11 +25,11 @@ import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_MATCH
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED;
 import static org.mockserver.matchers.OperationIdValidator.OPERATION_NO_MATCH_KEY;
 import static org.mockserver.model.NottableString.serialiseNottableString;
+import static org.mockserver.openapi.OpenAPISerialiser.OPEN_API_LOAD_ERROR;
 import static org.slf4j.event.Level.DEBUG;
 
 public class OpenAPIMatcher extends AbstractHttpRequestMatcher {
 
-    public static final String OPEN_API_LOAD_ERROR = "Unable to load API spec from provided URL or payload ";
     private static final String MATCHED = " matched ";
     private static OpenAPISerialiser openAPISerialiser;
     private int hashCode;
@@ -55,13 +55,14 @@ public class OpenAPIMatcher extends AbstractHttpRequestMatcher {
                     if (throwable instanceof OpenApiInteractionValidator.ApiLoadException) {
                         OpenApiInteractionValidator.ApiLoadException apiLoadException = (OpenApiInteractionValidator.ApiLoadException) throwable;
                         if (!apiLoadException.getParseMessages().isEmpty()) {
-                            message = OPEN_API_LOAD_ERROR + String.join(" and ", apiLoadException.getParseMessages()).trim();
+                            String errors = String.join(" and ", apiLoadException.getParseMessages()).trim();
+                            message = OPEN_API_LOAD_ERROR + (isNotBlank(errors) ? ", " + errors : "");
                         } else {
-                            message = OPEN_API_LOAD_ERROR.trim();
+                            message = OPEN_API_LOAD_ERROR;
                         }
 
                     } else {
-                        message = ((!throwable.getMessage().contains(OPEN_API_LOAD_ERROR.trim()) ? OPEN_API_LOAD_ERROR : "") + throwable.getMessage()).trim();
+                        message = ((!throwable.getMessage().contains(OPEN_API_LOAD_ERROR) ? OPEN_API_LOAD_ERROR : "") + (isNotBlank(throwable.getMessage()) ? ", " + throwable.getMessage() : "")).trim();
                     }
                     throw new IllegalArgumentException(message);
                 }

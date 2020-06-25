@@ -12,7 +12,7 @@ import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.matchers.NotMatcher.not;
+import static org.mockserver.matchers.NotMatcher.notMatcher;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.Cookie.schemaCookie;
 import static org.mockserver.model.Header.schemaHeader;
@@ -20,6 +20,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.JsonPathBody.jsonPath;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
+import static org.mockserver.model.Not.not;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.Parameter.schemaParam;
 import static org.mockserver.model.ParameterBody.params;
@@ -83,37 +84,37 @@ public class HttpRequestPropertiesMatcherTest {
     @Test
     public void shouldMatchWithNottedMatcher() {
         // requests match - matcher HttpRequest notted
-        assertFalse(update(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))).matches(null, new HttpRequest().withMethod("HEAD")));
+        assertFalse(update(not(new HttpRequest().withMethod("HEAD"))).matches(null, new HttpRequest().withMethod("HEAD")));
 
         // requests match - matched HttpRequest notted
-        assertFalse(update(new HttpRequest().withMethod("HEAD")).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))));
+        assertFalse(update(new HttpRequest().withMethod("HEAD")).matches(null, not(new HttpRequest().withMethod("HEAD"))));
 
         // requests match - matcher HttpRequest notted & HttpRequestMatch notted
-        assertTrue(not(update(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD")))).matches(null, new HttpRequest().withMethod("HEAD")));
+        assertTrue(notMatcher(update(not(new HttpRequest().withMethod("HEAD")))).matches(null, new HttpRequest().withMethod("HEAD")));
 
         // requests match - matched HttpRequest notted & HttpRequestMatch notted
-        assertTrue(not(update(new HttpRequest().withMethod("HEAD"))).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))));
+        assertTrue(notMatcher(update(new HttpRequest().withMethod("HEAD"))).matches(null, not(new HttpRequest().withMethod("HEAD"))));
 
         // requests match - matcher HttpRequest notted & matched HttpRequest notted & HttpRequestMatch notted
-        assertFalse(not(update(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD")))).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))));
+        assertFalse(notMatcher(update(not(new HttpRequest().withMethod("HEAD")))).matches(null, not(new HttpRequest().withMethod("HEAD"))));
     }
 
     @Test
     public void shouldNotMatchWithNottedMatcher() {
         // requests don't match - matcher HttpRequest notted
-        assertTrue(update(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))).matches(null, new HttpRequest().withMethod("OPTIONS")));
+        assertTrue(update(not(new HttpRequest().withMethod("HEAD"))).matches(null, new HttpRequest().withMethod("OPTIONS")));
 
         // requests don't match - matched HttpRequest notted
-        assertTrue(update(new HttpRequest().withMethod("HEAD")).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("OPTIONS"))));
+        assertTrue(update(new HttpRequest().withMethod("HEAD")).matches(null, not(new HttpRequest().withMethod("OPTIONS"))));
 
         // requests don't match - matcher HttpRequest notted & HttpRequestMatch notted
-        assertFalse(not(update(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD")))).matches(null, new HttpRequest().withMethod("OPTIONS")));
+        assertFalse(notMatcher(update(not(new HttpRequest().withMethod("HEAD")))).matches(null, new HttpRequest().withMethod("OPTIONS")));
 
         // requests don't match - matched HttpRequest notted & HttpRequestMatch notted
-        assertFalse(not(update(new HttpRequest().withMethod("HEAD"))).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("OPTIONS"))));
+        assertFalse(notMatcher(update(new HttpRequest().withMethod("HEAD"))).matches(null, not(new HttpRequest().withMethod("OPTIONS"))));
 
         // requests don't match - matcher HttpRequest notted & matched HttpRequest notted & HttpRequestMatch notted
-        assertTrue(not(update(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD")))).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("OPTIONS"))));
+        assertTrue(notMatcher(update(not(new HttpRequest().withMethod("HEAD")))).matches(null, not(new HttpRequest().withMethod("OPTIONS"))));
     }
 
     // KEEP ALIVE
@@ -2310,12 +2311,55 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchNottedBinaryBody() {
+        assertTrue(update(new HttpRequest().withBody(
+            not(binary("some binary value".getBytes(UTF_8)))
+        )).matches(null, new HttpRequest().withBody(
+            "some other binary value".getBytes(UTF_8)
+        )));
+    }
+
+    @Test
+    public void shouldMatchBinaryBodyWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            binary("some binary value".getBytes(UTF_8))
+                .withOptional(true)
+        )).matches(null, new HttpRequest().withBody(
+            "some binary value".getBytes(UTF_8)
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            binary("some binary value".getBytes(UTF_8))
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
     public void shouldNotMatchBinaryBody() {
         assertFalse(update(new HttpRequest().withBody(
             binary("some binary value".getBytes(UTF_8))
         )).matches(null, new HttpRequest().withBody(
             "some other binary value".getBytes(UTF_8)
         )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedBinaryBody() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(binary("some binary value".getBytes(UTF_8)))
+        )).matches(null, new HttpRequest().withBody(
+            "some binary value".getBytes(UTF_8)
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchBinaryBodyWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            binary("some binary value".getBytes(UTF_8))
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            binary("some binary value".getBytes(UTF_8))
+        )).matches(null, new HttpRequest()));
     }
 
     @Test
@@ -2363,6 +2407,33 @@ public class HttpRequestPropertiesMatcherTest {
                 "   \"some_other_field\": \"some_other_value\" " +
                 "}")
         )));
+    }
+
+    @Test
+    public void shouldMatchNottedJsonBody() {
+        assertTrue(update(new HttpRequest().withBody(
+            not(json("{ \"some_field\": \"some_value\" }"))
+        )).matches(null, new HttpRequest().withHeader(CONTENT_TYPE.toString(), MediaType.APPLICATION_JSON_UTF_8.toString()).withBody(
+            "{ \"some_other_field\": \"some_other_value\" }"
+        )));
+    }
+
+    @Test
+    public void shouldMatchJsonBodyWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            json("{ \"some_field\": \"some_value\" }")
+                .withOptional(true)
+        )).matches(null, new HttpRequest().withBody(
+            "" +
+                "{ " +
+                "   \"some_field\": \"some_value\", " +
+                "   \"some_other_field\": \"some_other_value\" " +
+                "}"
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            json("{ \"some_field\": \"some_value\" }")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
     }
 
     @Test
@@ -2425,6 +2496,30 @@ public class HttpRequestPropertiesMatcherTest {
         )).matches(null, new HttpRequest().withBody(
             json("{ \"some_other_field\": \"some_other_value\" }")
         )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedJsonBody() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(json("{ \"some_field\": \"some_value\" }"))
+        )).matches(null, new HttpRequest().withBody(
+            "" +
+                "{ " +
+                "   \"some_field\": \"some_value\", " +
+                "   \"some_other_field\": \"some_other_value\" " +
+                "}"
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchJsonBodyWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            json("{ \"some_field\": \"some_value\" }")
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            json("{ \"some_field\": \"some_value\" }")
+        )).matches(null, new HttpRequest()));
     }
 
     @Test
@@ -2622,6 +2717,49 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchNottedJsonPathBody() {
+        assertTrue(update(new HttpRequest().withBody(
+            not(jsonPath("$..book[?(@.price > $['expensive'])]"))
+        )).matches(null, new HttpRequest().withBody(
+            "{" + NEW_LINE +
+                "    \"store\": {" + NEW_LINE +
+                "        \"book\": [" + NEW_LINE +
+                "            {" + NEW_LINE +
+                "                \"category\": \"reference\"," + NEW_LINE +
+                "                \"author\": \"Nigel Rees\"," + NEW_LINE +
+                "                \"title\": \"Sayings of the Century\"," + NEW_LINE +
+                "                \"price\": 8.95" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            {" + NEW_LINE +
+                "                \"category\": \"fiction\"," + NEW_LINE +
+                "                \"author\": \"Herman Melville\"," + NEW_LINE +
+                "                \"title\": \"Moby Dick\"," + NEW_LINE +
+                "                \"isbn\": \"0-553-21311-3\"," + NEW_LINE +
+                "                \"price\": 8.99" + NEW_LINE +
+                "            }" + NEW_LINE +
+                "        ]," + NEW_LINE +
+                "        \"bicycle\": {" + NEW_LINE +
+                "            \"color\": \"red\"," + NEW_LINE +
+                "            \"price\": 9.95" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"expensive\": 10" + NEW_LINE +
+                "}"
+        )));
+    }
+
+    @Test
+    public void shouldMatchJsonPathBodyWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            jsonPath("$..book[?(@.price > $['expensive'])]")
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            jsonPath("$..book[?(@.price > $['expensive'])]")
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
     public void shouldNotMatchJsonPathBody() {
         assertFalse(update(new HttpRequest().withBody(
             jsonPath("$..book[?(@.price > $['expensive'])]")
@@ -2651,6 +2789,75 @@ public class HttpRequestPropertiesMatcherTest {
                 "    \"expensive\": 10" + NEW_LINE +
                 "}"
         )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedJsonPathBody() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(jsonPath("$..book[?(@.price > $['expensive'])]"))
+        )).matches(null, new HttpRequest().withBody(
+            "{" + NEW_LINE +
+                "    \"store\": {" + NEW_LINE +
+                "        \"book\": [" + NEW_LINE +
+                "            {" + NEW_LINE +
+                "                \"category\": \"reference\"," + NEW_LINE +
+                "                \"author\": \"Nigel Rees\"," + NEW_LINE +
+                "                \"title\": \"Sayings of the Century\"," + NEW_LINE +
+                "                \"price\": 8.95" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            {" + NEW_LINE +
+                "                \"category\": \"fiction\"," + NEW_LINE +
+                "                \"author\": \"Herman Melville\"," + NEW_LINE +
+                "                \"title\": \"Moby Dick\"," + NEW_LINE +
+                "                \"isbn\": \"0-553-21311-3\"," + NEW_LINE +
+                "                \"price\": 18.99" + NEW_LINE +
+                "            }" + NEW_LINE +
+                "        ]," + NEW_LINE +
+                "        \"bicycle\": {" + NEW_LINE +
+                "            \"color\": \"red\"," + NEW_LINE +
+                "            \"price\": 19.95" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"expensive\": 10" + NEW_LINE +
+                "}"
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchJsonPathBodyWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            jsonPath("$..book[?(@.price > $['expensive'])]")
+                .withOptional(true)
+        )).matches(null, new HttpRequest().withBody(
+            "{" + NEW_LINE +
+                "    \"store\": {" + NEW_LINE +
+                "        \"book\": [" + NEW_LINE +
+                "            {" + NEW_LINE +
+                "                \"category\": \"reference\"," + NEW_LINE +
+                "                \"author\": \"Nigel Rees\"," + NEW_LINE +
+                "                \"title\": \"Sayings of the Century\"," + NEW_LINE +
+                "                \"price\": 8.95" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            {" + NEW_LINE +
+                "                \"category\": \"fiction\"," + NEW_LINE +
+                "                \"author\": \"Herman Melville\"," + NEW_LINE +
+                "                \"title\": \"Moby Dick\"," + NEW_LINE +
+                "                \"isbn\": \"0-553-21311-3\"," + NEW_LINE +
+                "                \"price\": 18.99" + NEW_LINE +
+                "            }" + NEW_LINE +
+                "        ]," + NEW_LINE +
+                "        \"bicycle\": {" + NEW_LINE +
+                "            \"color\": \"red\"," + NEW_LINE +
+                "            \"price\": 19.95" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"expensive\": 10" + NEW_LINE +
+                "}"
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            jsonPath("$..book[?(@.price > $['expensive'])]")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
     }
 
     @Test
@@ -2770,6 +2977,38 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchNottedJsonSchemaBody() {
+        assertTrue(update(new HttpRequest().withBody(
+            not(jsonSchema("{" + NEW_LINE +
+                "   \"type\": \"string\"," + NEW_LINE +
+                "   \"pattern\": \"^someB[a-z]{3}$\"" + NEW_LINE +
+                "}"))
+        )).matches(null, new HttpRequest().withBody(
+            "\"someOtherBody\""
+        )));
+    }
+
+    @Test
+    public void shouldMatchJsonSchemaBodyWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "   \"type\": \"string\"," + NEW_LINE +
+                "   \"pattern\": \"^someB[a-z]{3}$\"" + NEW_LINE +
+                "}")
+                .withOptional(true)
+        )).matches(null, new HttpRequest().withBody(
+            "\"someBody\""
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "   \"type\": \"string\"," + NEW_LINE +
+                "   \"pattern\": \"^someB[a-z]{3}$\"" + NEW_LINE +
+                "}")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
     public void shouldMatchJsonSchemaBodyWithComplexSchema() {
         assertTrue(update(new HttpRequest().withBody(
             jsonSchema("{" + NEW_LINE +
@@ -2865,6 +3104,35 @@ public class HttpRequestPropertiesMatcherTest {
         )).matches(null, new HttpRequest().withBody(
             json("\"someOtherBody\"")
         )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedJsonSchemaBody() {
+        assertFalse(update(new HttpRequest().withBody(
+           not(jsonSchema("{" + NEW_LINE +
+                "   \"type\": \"string\"," + NEW_LINE +
+                "   \"pattern\": \"^someB[a-z]{3}$\"" + NEW_LINE +
+                "}"))
+        )).matches(null, new HttpRequest().withBody(
+            "\"someBody\""
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchJsonSchemaBodyWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "   \"type\": \"string\"," + NEW_LINE +
+                "   \"pattern\": \"^someB[a-z]{3}$\"" + NEW_LINE +
+                "}")
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "   \"type\": \"string\"," + NEW_LINE +
+                "   \"pattern\": \"^someB[a-z]{3}$\"" + NEW_LINE +
+                "}")
+        )).matches(null, new HttpRequest()));
     }
 
     @Test
@@ -3093,6 +3361,131 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchNottedJsonSchemaBodyWithXmlBody() {
+        // too few tags in array
+        assertTrue(update(new HttpRequest().withBody(
+            not(jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 3," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}"))
+        )).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_XML)
+            .withBody(
+                "" +
+                    "<root>\n" +
+                    "    <id>1</id>\n" +
+                    "    <name>A green door</name>\n" +
+                    "    <price>12.5</price>\n" +
+                    "    <tags>home</tags>\n" +
+                    "    <tags>green</tags>\n" +
+                    "</root>"
+            )
+        ));
+    }
+
+    @Test
+    public void shouldMatchJsonSchemaBodyWithXmlBodyWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_XML)
+            .withBody(
+                "" +
+                    "<root>\n" +
+                    "    <id>1</id>\n" +
+                    "    <name>A green door</name>\n" +
+                    "    <price>12.5</price>\n" +
+                    "    <tags>home</tags>\n" +
+                    "    <tags>green</tags>\n" +
+                    "</root>"
+            )
+        ));
+        assertTrue(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
     public void shouldNotMatchJsonSchemaBodyWithXmlBody() {
         // too few tags in array
         assertFalse(update(new HttpRequest().withBody(
@@ -3137,6 +3530,117 @@ public class HttpRequestPropertiesMatcherTest {
                     "</root>"
             )
         ));
+    }
+
+    @Test
+    public void shouldNotMatchNottedJsonSchemaBodyWithXmlBody() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}"))
+        )).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_XML)
+            .withBody(
+                "" +
+                    "<root>\n" +
+                    "    <id>1</id>\n" +
+                    "    <name>A green door</name>\n" +
+                    "    <price>12.5</price>\n" +
+                    "    <tags>home</tags>\n" +
+                    "    <tags>green</tags>\n" +
+                    "</root>"
+            )
+        ));
+    }
+
+    @Test
+    public void shouldNotMatchJsonSchemaBodyWithXmlBodyWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+        )).matches(null, new HttpRequest()));
     }
 
     @Test
@@ -3365,6 +3869,122 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchNottedJsonSchemaBodyWithFormParameters() {
+        assertTrue(update(new HttpRequest().withBody(
+            not(jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 3," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}"))
+        )).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .withBody("" +
+                "id=1" +
+                "&name=A+green+door" +
+                "&price=12.5" +
+                "&tags=home" +
+                "&tags=green")
+        ));
+    }
+
+    @Test
+    public void shouldMatchJsonSchemaBodyWithFormParametersWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .withBody("" +
+                "id=1" +
+                "&name=A+green+door" +
+                "&price=12.5" +
+                "&tags=home" +
+                "&tags=green")
+        ));
+        assertTrue(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
     public void shouldNotMatchJsonSchemaBodyWithFormParameters() {
         assertFalse(update(new HttpRequest().withBody(
             jsonSchema("{" + NEW_LINE +
@@ -3404,6 +4024,113 @@ public class HttpRequestPropertiesMatcherTest {
                 "&tags=home" +
                 "&tags=green")
         ));
+    }
+
+    @Test
+    public void shouldNotMatchNottedJsonSchemaBodyWithFormParameters() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}"))
+        )).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .withBody("" +
+                "id=1" +
+                "&name=A+green+door" +
+                "&price=12.5" +
+                "&tags=home" +
+                "&tags=green")
+        ));
+    }
+
+    @Test
+    public void shouldNotMatchJsonSchemaBodyWithFormParametersWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+        )).matches(null, new HttpRequest()));
     }
 
     @Test
@@ -3607,6 +4334,36 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchNottedParameterBody() {
+        assertTrue(update(new HttpRequest().withBody(
+            not(new ParameterBody(new Parameter("name", "value"))))
+        ).matches(null, new HttpRequest().withBody(
+            new ParameterBody(new Parameter("wrongName", "value"))
+        )));
+    }
+
+    @Test
+    public void shouldMatchParameterBodyWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            new ParameterBody(
+                new Parameter("nameOne", "valueOne")
+            )
+                .withOptional(true)
+        )).matches(null, new HttpRequest().withBody(
+            new ParameterBody(
+                new Parameter("nameOne", "valueOne"),
+                new Parameter("nameTwo", "valueTwo")
+            )
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            new ParameterBody(
+                new Parameter("nameOne", "valueOne")
+            )
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
     public void shouldMatchParameterBodyWithUrlEncodedBodyParameters() {
         // pass exact match
         assertTrue(update(new HttpRequest().withBody(
@@ -3678,6 +4435,35 @@ public class HttpRequestPropertiesMatcherTest {
         )).matches(null, new HttpRequest().withBody(
             new ParameterBody(new Parameter("name", "wrongValue"))
         )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedParameterBody() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(new ParameterBody(
+                new Parameter("nameOne", "valueOne")
+            ))
+        )).matches(null, new HttpRequest().withBody(
+            new ParameterBody(
+                new Parameter("nameOne", "valueOne"),
+                new Parameter("nameTwo", "valueTwo")
+            )
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchParameterBodyWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            new ParameterBody(
+                new Parameter("nameOne", "valueOne")
+            )
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            new ParameterBody(
+                new Parameter("nameOne", "valueOne")
+            )
+        )).matches(null, new HttpRequest()));
     }
 
     @Test
@@ -3799,6 +4585,29 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchNottedRegexBody() {
+        assertTrue(update(new HttpRequest().withBody(
+            not(new RegexBody("someb[a-z]{3}"))
+        )).matches(null, new HttpRequest().withBody(
+            "wrongBody"
+        )));
+    }
+
+    @Test
+    public void shouldMatchRegexBodyWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            new RegexBody("someb[a-z]{3}")
+                .withOptional(true)
+        )).matches(null, new HttpRequest().withBody(
+            "somebody"
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            new RegexBody("someb[a-z]{3}")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
     public void shouldNotMatchRegexBody() {
         assertFalse(update(new HttpRequest().withBody(
             new RegexBody("someb[a-z]{3}")
@@ -3815,6 +4624,26 @@ public class HttpRequestPropertiesMatcherTest {
         )).matches(null, new HttpRequest().withBody(
             ""
         )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedRegexBody() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(new RegexBody("someb[a-z]{3}"))
+        )).matches(null, new HttpRequest().withBody(
+            "somebody"
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchRegexBodyWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            new RegexBody("someb[a-z]{3}")
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            new RegexBody("someb[a-z]{3}")
+        )).matches(null, new HttpRequest()));
     }
 
     @Test
@@ -3897,6 +4726,29 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchNottedStringBody() {
+        assertTrue(update(new HttpRequest().withBody(
+            not(new StringBody("somebody"))
+        )).matches(null, new HttpRequest().withBody(
+            "wrongBody"
+        )));
+    }
+
+    @Test
+    public void shouldMatchStringBodyWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            new StringBody("somebody")
+                .withOptional(true)
+        )).matches(null, new HttpRequest().withBody(
+            "somebody"
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            new StringBody("somebody")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
     public void shouldNotMatchStringBody() {
         assertFalse(update(new HttpRequest().withBody(
             new StringBody("somebody")
@@ -3913,6 +4765,26 @@ public class HttpRequestPropertiesMatcherTest {
         )).matches(null, new HttpRequest().withBody(
             ""
         )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedStringBody() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(new StringBody("somebody"))
+        )).matches(null, new HttpRequest().withBody(
+            "somebody"
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchStringBodyWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            new StringBody("somebody")
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            new StringBody("somebody")
+        )).matches(null, new HttpRequest()));
     }
 
     @Test
@@ -3997,6 +4869,36 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchNottedXPathBody() {
+        assertTrue(update(new HttpRequest().withBody(
+            not(xpath("/element[key = 'some_key' and value = 'some_value']"))
+        )).matches(null, new HttpRequest().withBody(
+            "" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "</element>"
+        )));
+    }
+
+    @Test
+    public void shouldMatchXPathBodyWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            xpath("/element[key = 'some_key' and value = 'some_value']")
+                .withOptional(true)
+        )).matches(null, new HttpRequest().withBody(
+            "" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>"
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            xpath("/element[key = 'some_key' and value = 'some_value']")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
     public void shouldNotMatchXPathBody() {
         assertFalse(update(new HttpRequest().withBody(
             xpath("/element[key = 'some_key' and value = 'some_value']")
@@ -4006,6 +4908,30 @@ public class HttpRequestPropertiesMatcherTest {
                 "   <key>some_key</key>" +
                 "</element>"
         )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedXPathBody() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(xpath("/element[key = 'some_key' and value = 'some_value']"))
+        )).matches(null, new HttpRequest().withBody(
+            "" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>"
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchXPathBodyWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            xpath("/element[key = 'some_key' and value = 'some_value']")
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            xpath("/element[key = 'some_key' and value = 'some_value']")
+        )).matches(null, new HttpRequest()));
     }
 
     @Test
@@ -4062,6 +4988,48 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchNottedXmlBody() {
+        assertTrue(update(new HttpRequest().withBody(
+            not(xml("" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>"))
+        )).matches(null, new HttpRequest().withBody(
+            "" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "</element>"
+        )));
+    }
+
+    @Test
+    public void shouldMatchXmlBodyWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            xml("" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>")
+                .withOptional(true)
+        )).matches(null, new HttpRequest().withBody(
+            "" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>"
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            xml("" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
     public void shouldNotMatchXmlBody() {
         assertFalse(update(new HttpRequest().withBody(
             xml("" +
@@ -4075,6 +5043,42 @@ public class HttpRequestPropertiesMatcherTest {
                 "   <key>some_key</key>" +
                 "</element>"
         )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedXmlBody() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(xml("" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>"))
+        )).matches(null, new HttpRequest().withBody(
+            "" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>"
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchXmlBodyWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            xml("" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>")
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            xml("" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>")
+        )).matches(null, new HttpRequest()));
     }
 
     @Test
@@ -4169,6 +5173,117 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchNottedXMLSchemaBody() {
+        // from missing in first note
+        assertTrue(update(new HttpRequest().withBody(
+            not(xmlSchema("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+                "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+                "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+                "    <xs:element name=\"notes\">" + NEW_LINE +
+                "        <xs:complexType>" + NEW_LINE +
+                "            <xs:sequence>" + NEW_LINE +
+                "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+                "                    <xs:complexType>" + NEW_LINE +
+                "                        <xs:sequence>" + NEW_LINE +
+                "                            <xs:element name=\"to\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"from\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"heading\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"body\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                        </xs:sequence>" + NEW_LINE +
+                "                    </xs:complexType>" + NEW_LINE +
+                "                </xs:element>" + NEW_LINE +
+                "            </xs:sequence>" + NEW_LINE +
+                "        </xs:complexType>" + NEW_LINE +
+                "    </xs:element>" + NEW_LINE +
+                "</xs:schema>"))
+        )).matches(null, new HttpRequest().withBody("" +
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+            "<notes>" + NEW_LINE +
+            "    <note>" + NEW_LINE +
+            "        <to>Bob</to>" + NEW_LINE +
+            "        <heading>Reminder</heading>" + NEW_LINE +
+            "        <body>Buy Bread</body>" + NEW_LINE +
+            "    </note>" + NEW_LINE +
+            "    <note>" + NEW_LINE +
+            "        <to>Jack</to>" + NEW_LINE +
+            "        <from>Jill</from>" + NEW_LINE +
+            "        <heading>Reminder</heading>" + NEW_LINE +
+            "        <body>Wash Shirts</body>" + NEW_LINE +
+            "    </note>" + NEW_LINE +
+            "</notes>"
+        )));
+    }
+
+    @Test
+    public void shouldMatchXMLSchemaBodyWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            xmlSchema("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+                "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+                "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+                "    <xs:element name=\"notes\">" + NEW_LINE +
+                "        <xs:complexType>" + NEW_LINE +
+                "            <xs:sequence>" + NEW_LINE +
+                "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+                "                    <xs:complexType>" + NEW_LINE +
+                "                        <xs:sequence>" + NEW_LINE +
+                "                            <xs:element name=\"to\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"from\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"heading\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"body\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                        </xs:sequence>" + NEW_LINE +
+                "                    </xs:complexType>" + NEW_LINE +
+                "                </xs:element>" + NEW_LINE +
+                "            </xs:sequence>" + NEW_LINE +
+                "        </xs:complexType>" + NEW_LINE +
+                "    </xs:element>" + NEW_LINE +
+                "</xs:schema>")
+            .withOptional(true)
+        )).matches(null, new HttpRequest().withBody("" +
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+            "<notes>" + NEW_LINE +
+            "    <note>" + NEW_LINE +
+            "        <to>Bob</to>" + NEW_LINE +
+            "        <from>Bill</from>" + NEW_LINE +
+            "        <heading>Reminder</heading>" + NEW_LINE +
+            "        <body>Buy Bread</body>" + NEW_LINE +
+            "    </note>" + NEW_LINE +
+            "    <note>" + NEW_LINE +
+            "        <to>Jack</to>" + NEW_LINE +
+            "        <from>Jill</from>" + NEW_LINE +
+            "        <heading>Reminder</heading>" + NEW_LINE +
+            "        <body>Wash Shirts</body>" + NEW_LINE +
+            "    </note>" + NEW_LINE +
+            "</notes>"
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            xmlSchema("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+                "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+                "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+                "    <xs:element name=\"notes\">" + NEW_LINE +
+                "        <xs:complexType>" + NEW_LINE +
+                "            <xs:sequence>" + NEW_LINE +
+                "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+                "                    <xs:complexType>" + NEW_LINE +
+                "                        <xs:sequence>" + NEW_LINE +
+                "                            <xs:element name=\"to\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"from\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"heading\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"body\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                        </xs:sequence>" + NEW_LINE +
+                "                    </xs:complexType>" + NEW_LINE +
+                "                </xs:element>" + NEW_LINE +
+                "            </xs:sequence>" + NEW_LINE +
+                "        </xs:complexType>" + NEW_LINE +
+                "    </xs:element>" + NEW_LINE +
+                "</xs:schema>")
+            .withOptional(true)
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
     public void shouldNotMatchXMLSchemaBody() {
         // from missing in first note
         assertFalse(update(new HttpRequest().withBody(
@@ -4209,6 +5324,100 @@ public class HttpRequestPropertiesMatcherTest {
             "    </note>" + NEW_LINE +
             "</notes>"
         )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedXMLSchemaBody() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(xmlSchema("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+                "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+                "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+                "    <xs:element name=\"notes\">" + NEW_LINE +
+                "        <xs:complexType>" + NEW_LINE +
+                "            <xs:sequence>" + NEW_LINE +
+                "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+                "                    <xs:complexType>" + NEW_LINE +
+                "                        <xs:sequence>" + NEW_LINE +
+                "                            <xs:element name=\"to\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"from\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"heading\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"body\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                        </xs:sequence>" + NEW_LINE +
+                "                    </xs:complexType>" + NEW_LINE +
+                "                </xs:element>" + NEW_LINE +
+                "            </xs:sequence>" + NEW_LINE +
+                "        </xs:complexType>" + NEW_LINE +
+                "    </xs:element>" + NEW_LINE +
+                "</xs:schema>"))
+        )).matches(null, new HttpRequest().withBody("" +
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+            "<notes>" + NEW_LINE +
+            "    <note>" + NEW_LINE +
+            "        <to>Bob</to>" + NEW_LINE +
+            "        <from>Bill</from>" + NEW_LINE +
+            "        <heading>Reminder</heading>" + NEW_LINE +
+            "        <body>Buy Bread</body>" + NEW_LINE +
+            "    </note>" + NEW_LINE +
+            "    <note>" + NEW_LINE +
+            "        <to>Jack</to>" + NEW_LINE +
+            "        <from>Jill</from>" + NEW_LINE +
+            "        <heading>Reminder</heading>" + NEW_LINE +
+            "        <body>Wash Shirts</body>" + NEW_LINE +
+            "    </note>" + NEW_LINE +
+            "</notes>"
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchXMLSchemaBodyWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            xmlSchema("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+                "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+                "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+                "    <xs:element name=\"notes\">" + NEW_LINE +
+                "        <xs:complexType>" + NEW_LINE +
+                "            <xs:sequence>" + NEW_LINE +
+                "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+                "                    <xs:complexType>" + NEW_LINE +
+                "                        <xs:sequence>" + NEW_LINE +
+                "                            <xs:element name=\"to\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"from\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"heading\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"body\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                        </xs:sequence>" + NEW_LINE +
+                "                    </xs:complexType>" + NEW_LINE +
+                "                </xs:element>" + NEW_LINE +
+                "            </xs:sequence>" + NEW_LINE +
+                "        </xs:complexType>" + NEW_LINE +
+                "    </xs:element>" + NEW_LINE +
+                "</xs:schema>")
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            xmlSchema("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+                "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+                "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+                "    <xs:element name=\"notes\">" + NEW_LINE +
+                "        <xs:complexType>" + NEW_LINE +
+                "            <xs:sequence>" + NEW_LINE +
+                "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+                "                    <xs:complexType>" + NEW_LINE +
+                "                        <xs:sequence>" + NEW_LINE +
+                "                            <xs:element name=\"to\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"from\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"heading\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"body\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                        </xs:sequence>" + NEW_LINE +
+                "                    </xs:complexType>" + NEW_LINE +
+                "                </xs:element>" + NEW_LINE +
+                "            </xs:sequence>" + NEW_LINE +
+                "        </xs:complexType>" + NEW_LINE +
+                "    </xs:element>" + NEW_LINE +
+                "</xs:schema>")
+        )).matches(null, new HttpRequest()));
     }
 
     @Test

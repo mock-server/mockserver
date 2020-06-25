@@ -27,6 +27,12 @@ public class XmlBodySerializerTest {
     }
 
     @Test
+    public void shouldSerializeXmlBodyWithOptional() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new XmlBody("<some><xml></xml></some>").withOptional(true)),
+                is("{\"optional\":true,\"type\":\"XML\",\"xml\":\"<some><xml></xml></some>\"}"));
+    }
+
+    @Test
     public void shouldSerializeXmlBodyWithContentType() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new XmlBody("<some><xml></xml></some>", MediaType.ATOM_UTF_8)),
                 is("{\"contentType\":\"application/atom+xml; charset=utf-8\",\"type\":\"XML\",\"xml\":\"<some><xml></xml></some>\"}"));

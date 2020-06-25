@@ -22,6 +22,9 @@ public class ParameterBodyDTOSerializer extends StdSerializer<ParameterBodyDTO> 
         if (parameterBodyDTO.getNot() != null && parameterBodyDTO.getNot()) {
             jgen.writeBooleanField("not", parameterBodyDTO.getNot());
         }
+        if (parameterBodyDTO.getOptional() != null && parameterBodyDTO.getOptional()) {
+            jgen.writeBooleanField("optional", parameterBodyDTO.getOptional());
+        }
         jgen.writeStringField("type", parameterBodyDTO.getType().name());
         if (!parameterBodyDTO.getParameters().isEmpty()) {
             jgen.writeObjectField("parameters", parameterBodyDTO.getParameters());

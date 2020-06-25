@@ -23,4 +23,10 @@ public class JsonSchemaBodyDTOSerializerTest {
                 is("{\"not\":true,\"type\":\"JSON_SCHEMA\",\"jsonSchema\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"integer\"}},\"required\":[\"id\"]}}"));
     }
 
+    @Test
+    public void shouldSerializeJsonBodyDTOWithOptional() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new JsonSchemaBodyDTO(new JsonSchemaBody("{\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"integer\"}}, \"required\": [\"id\"]}")).withOptional(true)),
+                is("{\"optional\":true,\"type\":\"JSON_SCHEMA\",\"jsonSchema\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"integer\"}},\"required\":[\"id\"]}}"));
+    }
+
 }

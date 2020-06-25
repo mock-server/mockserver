@@ -49,6 +49,22 @@ public class ParameterBodySerializerTest {
     }
 
     @Test
+    public void shouldSerializeParameterBodyDTOWithOptional() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper(true).writeValueAsString(params(
+            param("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
+            param("queryStringParameterTwoName", "queryStringParameterTwoValue")
+            ).withOptional(true)),
+            is("{" + NEW_LINE +
+                "  \"optional\" : true," + NEW_LINE +
+                "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
+                "  \"value\" : {" + NEW_LINE +
+                "    \"queryStringParameterOneName\" : [ \"queryStringParameterOneValueOne\", \"queryStringParameterOneValueTwo\" ]," + NEW_LINE +
+                "    \"queryStringParameterTwoName\" : [ \"queryStringParameterTwoValue\" ]" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}"));
+    }
+
+    @Test
     public void shouldSerializeParameterBodyDTOWithAllNottedParameterKeys() throws IOException {
         assertThat(ObjectMapperFactory.createObjectMapper(true).writeValueAsString(params(
             param(not("queryStringParameterOneName"), not("queryStringParameterOneValueOne"), not("queryStringParameterOneValueTwo")),

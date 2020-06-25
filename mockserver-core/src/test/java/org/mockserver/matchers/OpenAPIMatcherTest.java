@@ -82,7 +82,7 @@ public class OpenAPIMatcherTest {
             // then
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload malformed or unreadable swagger supplied"));
+            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload, malformed or unreadable swagger supplied"));
         }
     }
 
@@ -102,7 +102,7 @@ public class OpenAPIMatcherTest {
             // then
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload malformed or unreadable swagger supplied"));
+            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload, malformed or unreadable swagger supplied"));
         }
     }
 

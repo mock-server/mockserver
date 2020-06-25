@@ -28,10 +28,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.mockserver.matchers.OpenAPIMatcher.OPEN_API_LOAD_ERROR;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.OpenAPIDefinition.openAPI;
+import static org.mockserver.openapi.OpenAPISerialiser.OPEN_API_LOAD_ERROR;
 import static org.slf4j.event.Level.ERROR;
 
 public class OpenAPIConverter {
@@ -70,14 +71,15 @@ public class OpenAPIConverter {
             try {
                 return resolve(new OpenAPIV3Parser().read(specUrlOrPayload));
             } catch (Throwable throwable) {
-                throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + throwable.getMessage());
+                throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + (isNotBlank(throwable.getMessage()) ? ", " + throwable.getMessage() : ""));
             }
         } else {
             SwaggerParseResult swaggerParseResult = new OpenAPIV3Parser().readContents(specUrlOrPayload);
             if (swaggerParseResult.getOpenAPI() != null) {
                 return resolve(swaggerParseResult.getOpenAPI());
             } else {
-                throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + String.join(" and ", swaggerParseResult.getMessages()).trim());
+                String mesage = String.join(" and ", swaggerParseResult.getMessages()).trim();
+                throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + (isNotBlank(mesage) ? ", " + mesage : ""));
             }
         }
     }

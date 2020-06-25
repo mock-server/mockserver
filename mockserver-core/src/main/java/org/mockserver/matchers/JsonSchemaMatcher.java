@@ -27,19 +27,19 @@ public class JsonSchemaMatcher extends BodyMatcher<String> {
 
         if (matcher.equalsIgnoreCase(matched)) {
             result = true;
-        }
+        } else if (!StringUtils.isBlank(matched)) {
+            try {
+                String validation = jsonSchemaValidator.isValid(matched, false);
 
-        try {
-            String validation = jsonSchemaValidator.isValid(matched, false);
+                result = validation.isEmpty();
 
-            result = validation.isEmpty();
-
-            if (!result && context != null) {
-                context.addDifference(mockServerLogger, "json schema match failed expected:{}found:{}failed because:{}", this.matcher, matched, validation);
-            }
-        } catch (Throwable throwable) {
-            if (context != null) {
-                context.addDifference(mockServerLogger, throwable, "json schema match failed expected:{}found:{}failed because:{}", this.matcher, matched, throwable.getMessage());
+                if (!result && context != null) {
+                    context.addDifference(mockServerLogger, "json schema match failed expected:{}found:{}failed because:{}", this.matcher, matched, validation);
+                }
+            } catch (Throwable throwable) {
+                if (context != null) {
+                    context.addDifference(mockServerLogger, throwable, "json schema match failed expected:{}found:{}failed because:{}", this.matcher, matched, throwable.getMessage());
+                }
             }
         }
 

@@ -31,14 +31,11 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
 
     private static final Map<String, Body.Type> fieldNameToType = new HashMap<>();
     private static final Base64.Decoder BASE64_DECODER = Base64.getDecoder();
-    private static ObjectWriter objectWriter;
-    private static ObjectMapper objectMapper;
     private static ObjectWriter jsonBodyObjectWriter;
 
     static {
         fieldNameToType.put("base64Bytes".toLowerCase(), Body.Type.BINARY);
         fieldNameToType.put("json".toLowerCase(), Body.Type.JSON);
-        fieldNameToType.put("parameters".toLowerCase(), Body.Type.PARAMETERS);
         fieldNameToType.put("string".toLowerCase(), Body.Type.STRING);
         fieldNameToType.put("xml".toLowerCase(), Body.Type.XML);
     }
@@ -51,14 +48,15 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
 
     @Override
     public BodyWithContentTypeDTO deserialize(JsonParser jsonParser, DeserializationContext ctxt) throws IOException {
+        BodyWithContentTypeDTO result = null;
         JsonToken currentToken = jsonParser.getCurrentToken();
         String valueJsonValue = "";
         byte[] rawBytes = null;
         Body.Type type = null;
         Boolean not = null;
+        Boolean optional = null;
         MediaType contentType = null;
         Charset charset = null;
-        Parameters parameters = null;
         if (currentToken == JsonToken.START_OBJECT) {
             @SuppressWarnings("unchecked") Map<Object, Object> body = (Map<Object, Object>) ctxt.readValue(jsonParser, Map.class);
             for (Map.Entry<Object, Object> entry : body.entrySet()) {
@@ -112,6 +110,9 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                     if (key.equalsIgnoreCase("not")) {
                         not = Boolean.parseBoolean(String.valueOf(entry.getValue()));
                     }
+                    if (key.equalsIgnoreCase("optional")) {
+                        optional = Boolean.parseBoolean(String.valueOf(entry.getValue()));
+                    }
                     if (key.equalsIgnoreCase("contentType")) {
                         try {
                             String mediaTypeHeader = String.valueOf(entry.getValue());
@@ -155,67 +156,70 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                             }
                         }
                     }
-                    if (key.equalsIgnoreCase("parameters")) {
-                        if (objectMapper == null) {
-                            objectMapper = ObjectMapperFactory.createObjectMapper();
-                        }
-                        if (objectWriter == null) {
-                            objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
-                        }
-                        parameters = objectMapper.readValue(objectWriter.writeValueAsString(entry.getValue()), Parameters.class);
-                    }
                 }
             }
             if (type != null) {
                 switch (type) {
                     case BINARY:
                         if (contentType != null && isNotBlank(contentType.toString())) {
-                            return new BinaryBodyDTO(new BinaryBody(rawBytes, contentType), not);
+                            result = new BinaryBodyDTO(new BinaryBody(rawBytes, contentType), not);
+                            break;
                         } else {
-                            return new BinaryBodyDTO(new BinaryBody(rawBytes), not);
+                            result = new BinaryBodyDTO(new BinaryBody(rawBytes), not);
+                            break;
                         }
                     case JSON:
                         if (contentType != null && isNotBlank(contentType.toString())) {
-                            return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, contentType, JsonBody.DEFAULT_MATCH_TYPE), not);
+                            result = new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, contentType, JsonBody.DEFAULT_MATCH_TYPE), not);
+                            break;
                         } else if (charset != null) {
-                            return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, JsonBody.DEFAULT_JSON_CONTENT_TYPE.withCharset(charset), JsonBody.DEFAULT_MATCH_TYPE), not);
+                            result = new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, JsonBody.DEFAULT_JSON_CONTENT_TYPE.withCharset(charset), JsonBody.DEFAULT_MATCH_TYPE), not);
+                            break;
                         } else {
-                            return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, JsonBody.DEFAULT_JSON_CONTENT_TYPE, JsonBody.DEFAULT_MATCH_TYPE), not);
+                            result = new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, JsonBody.DEFAULT_JSON_CONTENT_TYPE, JsonBody.DEFAULT_MATCH_TYPE), not);
+                            break;
                         }
-                    case PARAMETERS:
-                        return new ParameterBodyDTO(new ParameterBody(parameters), not);
                     case STRING:
                         if (contentType != null && isNotBlank(contentType.toString())) {
-                            return new StringBodyDTO(new StringBody(valueJsonValue, rawBytes, false, contentType), not);
+                            result = new StringBodyDTO(new StringBody(valueJsonValue, rawBytes, false, contentType), not);
+                            break;
                         } else if (charset != null) {
-                            return new StringBodyDTO(new StringBody(valueJsonValue, rawBytes, false, StringBody.DEFAULT_CONTENT_TYPE.withCharset(charset)), not);
+                            result = new StringBodyDTO(new StringBody(valueJsonValue, rawBytes, false, StringBody.DEFAULT_CONTENT_TYPE.withCharset(charset)), not);
+                            break;
                         } else {
-                            return new StringBodyDTO(new StringBody(valueJsonValue, rawBytes, false, null), not);
+                            result = new StringBodyDTO(new StringBody(valueJsonValue, rawBytes, false, null), not);
+                            break;
                         }
                     case XML:
                         if (contentType != null && isNotBlank(contentType.toString())) {
-                            return new XmlBodyDTO(new XmlBody(valueJsonValue, rawBytes, contentType), not);
+                            result = new XmlBodyDTO(new XmlBody(valueJsonValue, rawBytes, contentType), not);
+                            break;
                         } else if (charset != null) {
-                            return new XmlBodyDTO(new XmlBody(valueJsonValue, rawBytes, XmlBody.DEFAULT_XML_CONTENT_TYPE.withCharset(charset)), not);
+                            result = new XmlBodyDTO(new XmlBody(valueJsonValue, rawBytes, XmlBody.DEFAULT_XML_CONTENT_TYPE.withCharset(charset)), not);
+                            break;
                         } else {
-                            return new XmlBodyDTO(new XmlBody(valueJsonValue, rawBytes, XmlBody.DEFAULT_XML_CONTENT_TYPE), not);
+                            result = new XmlBodyDTO(new XmlBody(valueJsonValue, rawBytes, XmlBody.DEFAULT_XML_CONTENT_TYPE), not);
+                            break;
                         }
                 }
             } else if (body.size() > 0) {
                 if (jsonBodyObjectWriter == null) {
                     jsonBodyObjectWriter = new ObjectMapper().writerWithDefaultPrettyPrinter();
                 }
-                return new JsonBodyDTO(new JsonBody(jsonBodyObjectWriter.writeValueAsString(body), JsonBody.DEFAULT_MATCH_TYPE), null);
+                result = new JsonBodyDTO(new JsonBody(jsonBodyObjectWriter.writeValueAsString(body), JsonBody.DEFAULT_MATCH_TYPE), null);
             }
         } else if (currentToken == JsonToken.START_ARRAY) {
             if (jsonBodyObjectWriter == null) {
                 jsonBodyObjectWriter = new ObjectMapper().writerWithDefaultPrettyPrinter();
             }
-            return new JsonBodyDTO(new JsonBody(jsonBodyObjectWriter.writeValueAsString(ctxt.readValue(jsonParser, List.class)), JsonBody.DEFAULT_MATCH_TYPE), null);
+            result = new JsonBodyDTO(new JsonBody(jsonBodyObjectWriter.writeValueAsString(ctxt.readValue(jsonParser, List.class)), JsonBody.DEFAULT_MATCH_TYPE), null);
         } else if (currentToken == JsonToken.VALUE_STRING) {
-            return new StringBodyDTO(new StringBody(jsonParser.getText()));
+            result = new StringBodyDTO(new StringBody(jsonParser.getText()));
         }
-        return null;
+        if (result != null) {
+            result.withOptional(optional);
+        }
+        return result;
     }
 
     private boolean containsIgnoreCase(String valueToMatch, String... listOfValues) {

@@ -17,6 +17,7 @@ public class JsonPathBodyDTO extends BodyDTO {
     public JsonPathBodyDTO(JsonPathBody jsonPathBody, Boolean not) {
         super(Body.Type.JSON_PATH, not);
         this.jsonPath = jsonPathBody.getValue();
+        withOptional(jsonPathBody.getOptional());
     }
 
     public String getJsonPath() {

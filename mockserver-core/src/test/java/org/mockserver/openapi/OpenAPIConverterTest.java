@@ -308,7 +308,7 @@ public class OpenAPIConverterTest {
             // then
             fail("exception expected");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload while parsing a block mapping" + NEW_LINE +
+            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload, while parsing a block mapping" + NEW_LINE +
                 " in 'reader', line 1, column 1:" + NEW_LINE +
                 "    \"openapi\": \"3.0.0\"," + NEW_LINE +
                 "    ^" + NEW_LINE +
@@ -333,7 +333,7 @@ public class OpenAPIConverterTest {
             // then
             fail("exception expected");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload while scanning a simple key" + NEW_LINE +
+            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload, while scanning a simple key" + NEW_LINE +
                 " in 'reader', line 8, column 1:" + NEW_LINE +
                 "    servers" + NEW_LINE +
                 "    ^" + NEW_LINE +
@@ -362,7 +362,7 @@ public class OpenAPIConverterTest {
             // then
             fail("exception expected");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload while parsing a block mapping" + NEW_LINE +
+            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload, while parsing a block mapping" + NEW_LINE +
                 " in 'reader', line 1, column 1:" + NEW_LINE +
                 "    \"openapi\": \"3.0.0\"," + NEW_LINE +
                 "    ^" + NEW_LINE +
@@ -387,7 +387,7 @@ public class OpenAPIConverterTest {
             // then
             fail("exception expected");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload while scanning a simple key" + NEW_LINE +
+            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload, while scanning a simple key" + NEW_LINE +
                 " in 'reader', line 8, column 1:" + NEW_LINE +
                 "    servers" + NEW_LINE +
                 "    ^" + NEW_LINE +

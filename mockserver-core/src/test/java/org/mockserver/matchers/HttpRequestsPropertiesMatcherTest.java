@@ -42,33 +42,48 @@ public class HttpRequestsPropertiesMatcherTest {
      * - cookie
      * Then:
      * - required field
-     * - allowReserved field - TODO(jamesdbloom) is this required?
+     * - allowReserved field
      * - allowEmptyValue field -> nullable: true in json schema
      * - common parameter for all methods of path
      * - common parameter for all paths
-     *
+     * - override of common all paths at all methods - TODO (jamesdbloom)
+     * - override of common all paths at operation - TODO (jamesdbloom)
+     * - override of common all methods at operation - TODO (jamesdbloom)
+     * <p>
      * Test Pattern For Body Fields:
      * - requestBody (see: https://swagger.io/docs/specification/describing-request-body/)
      * - json (i.e. application/json)
      * - text (i.e. text/plain)
      * - xml (i.e. application/xml)
      * - form parameters (i.e. application/x-www-form-urlencoded)
-     * - multipart form data (i.e. multipart/form-data) - TODO(jamesdbloom) is this required?
+     * - multipart form data (i.e. multipart/form-data)
      * Then:
-     * - required: false (or missing) - TODO(jamesdbloom) is this required?
+     * - required: false (or missing)
      * - media type range
      * - media type default
      * - required field
-     * - encoding (multipart/form-data or application/x-www-form-urlencoded) - TODO(jamesdbloom) is this required?
-     *
-     * Test Pattern For Security Handlers: - TODO(jamesdbloom) is this required?
+     * - encoding (application/x-www-form-urlencoded)
+     * <p>
+     * Test Pattern For Security Handlers: - TODO (jamesdbloom)
+     * components:
+     *   securitySchemes:
+     *     <some matching name>:
+     *       type: http, bearer, openIdConnect, oauth2 => requires authorisation header
+     *       type: apiKey => read in and name to add parameter
+     *       in: header
+     *       name: X-API-Key
+     * root level of spec
+     * operation level of spec
+     * override of root level at operation level
      */
 
     // METHOD
     @Test
     public void shouldMatchByMethod() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -92,8 +107,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByMethodWithOperationId() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -120,8 +137,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByPath() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -145,8 +164,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByPathWithOperationId() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -169,12 +190,48 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
     }
 
+    // PARAMETERS
+
+    @Test
+    public void shouldThrowExceptionForAllowReserved() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        try {
+            // when
+            httpRequestsPropertiesMatcher.update(new Expectation(
+                new OpenAPIDefinition()
+                    .withSpecUrlOrPayload("---" + NEW_LINE +
+                        "openapi: 3.0.0" + NEW_LINE +
+                        "paths:" + NEW_LINE +
+                        "  \"/somePath/{someParam}\":" + NEW_LINE +
+                        "    get:" + NEW_LINE +
+                        "      operationId: someOperation" + NEW_LINE +
+                        "      parameters:" + NEW_LINE +
+                        "        - in: path" + NEW_LINE +
+                        "          name: someParam" + NEW_LINE +
+                        "          required: true" + NEW_LINE +
+                        "          allowReserved: true" + NEW_LINE +
+                        "          schema:" + NEW_LINE +
+                        "            type: integer" + NEW_LINE +
+                        "            minimum: 1")
+            ));
+
+            // then
+            fail("expected exception");
+        } catch (IllegalArgumentException iae) {
+            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload, allowReserved field is not supported on parameters, found on operation: \"someOperation\" method: \"GET\" parameter: \"someParam\" in: \"path\""));
+        }
+    }
+
     // PATH PARAMETERS
 
     @Test
     public void shouldMatchByPathWithPathParameter() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -213,8 +270,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByPathWithMultiplePathParameter() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -264,8 +323,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByPathWithMultipleMissingPathParameter() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -311,8 +372,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByPathWithPathParameterAndOperationId() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -352,8 +415,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByPathWithOptionalPathParameter() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -396,8 +461,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByPathWithAllowEmptyPathParameter() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -443,8 +510,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByQueryStringParameter() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -479,8 +548,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByQueryStringParameterWithOperationId() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -516,8 +587,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByOptionalQueryString() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -556,8 +629,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByOptionalNotSpecifiedQueryString() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -595,8 +670,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchQueryStringWithAllowEmpty() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -636,8 +713,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByOptionalQueryStringWithAllowEmpty() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -681,8 +760,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByQueryStringParameterCommonForPath() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -717,8 +798,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByQueryStringParameterCommonForAllPaths() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -776,8 +859,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByHeader() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -812,8 +897,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByHeaderWithOperationId() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -849,8 +936,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByOptionalHeader() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -889,8 +978,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByOptionalNotSpecifiedHeader() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -928,8 +1019,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchHeaderWithAllowEmpty() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -969,8 +1062,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByHeaderCommonForPath() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -1005,8 +1100,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByHeaderCommonForAllPaths() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -1064,8 +1161,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByCookie() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -1100,8 +1199,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByCookieWithOperationId() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -1137,8 +1238,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByOptionalCookie() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -1177,8 +1280,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByOptionalNotSpecifiedCookie() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -1216,8 +1321,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchCookieWithAllowEmpty() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -1257,8 +1364,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByCookieCommonForPath() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -1293,8 +1402,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByCookieCommonForAllPaths() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -1350,12 +1461,120 @@ public class HttpRequestsPropertiesMatcherTest {
 
     // BODY
 
+    @Test
+    public void shouldThrowExceptionForRequestBodyWithMultipartForm() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        try {
+            // when
+            httpRequestsPropertiesMatcher.update(new Expectation(
+                new OpenAPIDefinition()
+                    .withSpecUrlOrPayload("---" + NEW_LINE +
+                        "openapi: 3.0.0" + NEW_LINE +
+                        "paths:" + NEW_LINE +
+                        "  \"/somePath\":" + NEW_LINE +
+                        "    post:" + NEW_LINE +
+                        "      operationId: someOperation" + NEW_LINE +
+                        "      requestBody:" + NEW_LINE +
+                        "        required: true" + NEW_LINE +
+                        "        content:" + NEW_LINE +
+                        "          multipart/form-data:" + NEW_LINE +
+                        "            schema:" + NEW_LINE +
+                        "              type: object" + NEW_LINE +
+                        "              required:" + NEW_LINE +
+                        "                - id" + NEW_LINE +
+                        "                - name" + NEW_LINE +
+                        "              properties:" + NEW_LINE +
+                        "                id:" + NEW_LINE +
+                        "                  type: integer" + NEW_LINE +
+                        "                  format: int64" + NEW_LINE +
+                        "                name:" + NEW_LINE +
+                        "                  type: string" + NEW_LINE +
+                        "          application/xml:" + NEW_LINE +
+                        "            schema:" + NEW_LINE +
+                        "              type: object" + NEW_LINE +
+                        "              required:" + NEW_LINE +
+                        "                - id" + NEW_LINE +
+                        "                - name" + NEW_LINE +
+                        "              properties:" + NEW_LINE +
+                        "                id:" + NEW_LINE +
+                        "                  type: integer" + NEW_LINE +
+                        "                  format: int64" + NEW_LINE +
+                        "                name:" + NEW_LINE +
+                        "                  type: string" + NEW_LINE)
+            ));
+
+            // then
+            fail("expected exception");
+        } catch (IllegalArgumentException iae) {
+            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload, multipart form data is not supported on requestBody, found on operation: \"someOperation\" method: \"POST\""));
+        }
+    }
+
+    @Test
+    public void shouldThrowExceptionForRequestBodyWithEncoding() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        try {
+            // when
+            httpRequestsPropertiesMatcher.update(new Expectation(
+                new OpenAPIDefinition()
+                    .withSpecUrlOrPayload("---" + NEW_LINE +
+                        "openapi: 3.0.0" + NEW_LINE +
+                        "paths:" + NEW_LINE +
+                        "  \"/somePath\":" + NEW_LINE +
+                        "    post:" + NEW_LINE +
+                        "      operationId: someOperation" + NEW_LINE +
+                        "      requestBody:" + NEW_LINE +
+                        "        required: true" + NEW_LINE +
+                        "        content:" + NEW_LINE +
+                        "          application/x-www-form-urlencoded:" + NEW_LINE +
+                        "            schema:" + NEW_LINE +
+                        "              type: object" + NEW_LINE +
+                        "              required:" + NEW_LINE +
+                        "                - id" + NEW_LINE +
+                        "                - name" + NEW_LINE +
+                        "              properties:" + NEW_LINE +
+                        "                id:" + NEW_LINE +
+                        "                  type: integer" + NEW_LINE +
+                        "                  format: int64" + NEW_LINE +
+                        "                name:" + NEW_LINE +
+                        "                  type: string" + NEW_LINE +
+                        "            encoding:" + NEW_LINE +
+                        "              color:" + NEW_LINE +
+                        "                style: form" + NEW_LINE +
+                        "                explode: false" + NEW_LINE +
+                        "          application/xml:" + NEW_LINE +
+                        "            schema:" + NEW_LINE +
+                        "              type: object" + NEW_LINE +
+                        "              required:" + NEW_LINE +
+                        "                - id" + NEW_LINE +
+                        "                - name" + NEW_LINE +
+                        "              properties:" + NEW_LINE +
+                        "                id:" + NEW_LINE +
+                        "                  type: integer" + NEW_LINE +
+                        "                  format: int64" + NEW_LINE +
+                        "                name:" + NEW_LINE +
+                        "                  type: string" + NEW_LINE)
+            ));
+
+            // then
+            fail("expected exception");
+        } catch (IllegalArgumentException iae) {
+            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload, encoding is not supported on requestBody, found on operation: \"someOperation\" method: \"POST\""));
+        }
+    }
+
     // - JSON BODY (via JsonSchema)
 
     @Test
     public void shouldMatchByJsonBody() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -1418,8 +1637,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByJsonBodyWithMediaTypeRange() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -1477,8 +1698,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByJsonBodyWithDefaultMediaType() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -1536,8 +1759,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByJsonBodyWithSchemaComponent() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -1590,8 +1815,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByJsonBodyWithRequestBodyAndSchemaComponent() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -1649,8 +1876,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByPlainTextBody() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -1712,9 +1941,168 @@ public class HttpRequestsPropertiesMatcherTest {
     }
 
     @Test
-    public void shouldMatchByPlainTextBodyWithMediaTypeRange() {
-        // when
+    public void shouldMatchByPlainTextBodyWithRequiredFalse() {
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        required: false" + NEW_LINE +
+                    "        content:" + NEW_LINE +
+                    "          application/json:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: int64" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE +
+                    "          plain/text:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: int64" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "plain/text")
+                .withBody(exact("{ \"id\": 1, \"name\": \"abc\" }"))
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "plain/text; charset=utf-8")
+                .withBody(exact("{ \"id\": 1, \"name\": \"abc\" }"))
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "plain/text")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "plain/text")
+                .withBody(exact("{ \"id\": 1, \"name\": 1 }"))
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "plain/text")
+                .withBody(exact("{ \"id\": \"abc\", \"name\": \"abc\" }"))
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPlainTextBodyWithRequiredDefaulted() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        content:" + NEW_LINE +
+                    "          application/json:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: int64" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE +
+                    "          plain/text:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: int64" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "plain/text")
+                .withBody(exact("{ \"id\": 1, \"name\": \"abc\" }"))
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "plain/text; charset=utf-8")
+                .withBody(exact("{ \"id\": 1, \"name\": \"abc\" }"))
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "plain/text")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "plain/text")
+                .withBody(exact("{ \"id\": 1, \"name\": 1 }"))
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "plain/text")
+                .withBody(exact("{ \"id\": \"abc\", \"name\": \"abc\" }"))
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPlainTextBodyWithMediaTypeRange() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -1772,8 +2160,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByPlainTextBodyWithDefaultMediaType() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -1828,8 +2218,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByPlainTextBodyWithSchemaComponent() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -1881,9 +2273,11 @@ public class HttpRequestsPropertiesMatcherTest {
     }
 
     @Test
-    public void shouldMatchByPlainTextodyWithRequestBodyAndSchemaComponent() {
-        // when
+    public void shouldMatchByPlainTextBodyWithRequestBodyAndSchemaComponent() {
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -1941,8 +2335,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByXmlBody() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -2007,9 +2403,174 @@ public class HttpRequestsPropertiesMatcherTest {
     }
 
     @Test
-    public void shouldMatchByXmlBodyWithSchemaComponent() {
-        // when
+    public void shouldMatchByXmlBodyWithRequiredFalse() {
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        required: false" + NEW_LINE +
+                    "        content:" + NEW_LINE +
+                    "          application/xml:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: int64" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE +
+                    "          application/x-www-form-urlencoded:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE +
+                    "                email:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: email" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "                - email'" + NEW_LINE +
+                    "          text/plain:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: string" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "application/xml")
+                .withBody(xml("<root><id>1</id><name>abc</name></root>"))
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "application/xml; charset=utf-8")
+                .withBody(xml("<root><id>1</id><name>abc</name></root>"))
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "application/xml")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "application/xml")
+                .withBody(xml("<root><id>1</id><name>1</name></root>"))
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "application/xml")
+                .withBody(xml("<root><id>abc</id><name>1</name></root>"))
+        ));
+    }
+
+    @Test
+    public void shouldMatchByXmlBodyWithRequiredDefaulted() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        content:" + NEW_LINE +
+                    "          application/xml:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: int64" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE +
+                    "          application/x-www-form-urlencoded:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE +
+                    "                email:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: email" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "                - email'" + NEW_LINE +
+                    "          text/plain:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: string" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "application/xml")
+                .withBody(xml("<root><id>1</id><name>abc</name></root>"))
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "application/xml; charset=utf-8")
+                .withBody(xml("<root><id>1</id><name>abc</name></root>"))
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "application/xml")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "application/xml")
+                .withBody(xml("<root><id>1</id><name>1</name></root>"))
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "application/xml")
+                .withBody(xml("<root><id>abc</id><name>1</name></root>"))
+        ));
+    }
+
+    @Test
+    public void shouldMatchByXmlBodyWithSchemaComponent() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -2062,8 +2623,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByXmlBodyWithRequestBodyAndSchemaComponent() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -2121,8 +2684,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByFormBody() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -2175,9 +2740,150 @@ public class HttpRequestsPropertiesMatcherTest {
     }
 
     @Test
-    public void shouldMatchByFormBodyWithSchemaComponent() {
-        // when
+    public void shouldMatchByFormBodyWithRequiredFalse() {
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        required: false" + NEW_LINE +
+                    "        content:" + NEW_LINE +
+                    "          application/x-www-form-urlencoded:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: int64" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE +
+                    "          text/plain:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: string" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=1&name=abc")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "application/x-www-form-urlencoded; charset=utf-8")
+                .withBody("id=1&name=abc")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "application/x-www-form-urlencoded; charset=utf-8")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=1&name=1")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=abc&name=1")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByFormBodyWithRequiredDefaulted() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        content:" + NEW_LINE +
+                    "          application/x-www-form-urlencoded:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: integer" + NEW_LINE +
+                    "                  format: int64" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: string" + NEW_LINE +
+                    "          text/plain:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: string" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=1&name=abc")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "application/x-www-form-urlencoded; charset=utf-8")
+                .withBody("id=1&name=abc")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "application/x-www-form-urlencoded; charset=utf-8")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=1&name=1")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=abc&name=1")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByFormBodyWithSchemaComponent() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -2231,8 +2937,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     @Test
     public void shouldMatchByFormBodyWithRequestBodyAndSchemaComponent() {
-        // when
+        // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("---" + NEW_LINE +
@@ -2305,6 +3013,8 @@ public class HttpRequestsPropertiesMatcherTest {
         thenMatchesEmptyFieldDifferences(matchDifference, matches, true);
     }
 
+    // OTHER TESTS
+
     @Test
     public void shouldHandleNulls() {
         // given
@@ -2340,7 +3050,7 @@ public class HttpRequestsPropertiesMatcherTest {
             // then
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload Unexpected end-of-input in field name" + NEW_LINE +
+            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload, Unexpected end-of-input in field name" + NEW_LINE +
                 " at [Source: (String)\"{" + NEW_LINE +
                 "  \"openapi\": \"3.0.0\"," + NEW_LINE +
                 "  \"info\": {" + NEW_LINE +
@@ -2366,7 +3076,7 @@ public class HttpRequestsPropertiesMatcherTest {
             // then
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload while scanning a simple key" + NEW_LINE +
+            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload, while scanning a simple key" + NEW_LINE +
                 " in 'reader', line 8, column 1:" + NEW_LINE +
                 "    servers" + NEW_LINE +
                 "    ^" + NEW_LINE +

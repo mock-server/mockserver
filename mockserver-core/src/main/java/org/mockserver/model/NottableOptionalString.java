@@ -5,6 +5,8 @@ package org.mockserver.model;
  */
 public class NottableOptionalString extends NottableString {
 
+    public static final char OPTIONAL_CHAR = '?';
+
     public static NottableOptionalString optionalString(String value, Boolean not) {
         return new NottableOptionalString(value, not);
     }
@@ -32,7 +34,7 @@ public class NottableOptionalString extends NottableString {
 
     @Override
     public String toString() {
-        return "?" + super.toString();
+        return OPTIONAL_CHAR + super.toString();
     }
 
 }

@@ -17,6 +17,7 @@ public class RegexBodyDTO extends BodyDTO {
     public RegexBodyDTO(RegexBody regexBody, Boolean not) {
         super(Body.Type.REGEX, not);
         this.regex = regexBody.getValue();
+        withOptional(regexBody.getOptional());
     }
 
     public String getRegex() {

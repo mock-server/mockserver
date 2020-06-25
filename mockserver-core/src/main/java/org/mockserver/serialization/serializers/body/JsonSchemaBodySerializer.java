@@ -26,6 +26,9 @@ public class JsonSchemaBodySerializer extends StdSerializer<JsonSchemaBody> {
         if (jsonSchemaBody.getNot() != null && jsonSchemaBody.getNot()) {
             jgen.writeBooleanField("not", jsonSchemaBody.getNot());
         }
+        if (jsonSchemaBody.getOptional() != null && jsonSchemaBody.getOptional()) {
+            jgen.writeBooleanField("optional", jsonSchemaBody.getOptional());
+        }
         jgen.writeStringField("type", jsonSchemaBody.getType().name());
         jgen.writeObjectField("jsonSchema", OBJECT_MAPPER.readTree(jsonSchemaBody.getValue()));
         jgen.writeEndObject();

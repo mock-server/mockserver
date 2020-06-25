@@ -22,6 +22,9 @@ public class BinaryBodyDTOSerializer extends StdSerializer<BinaryBodyDTO> {
         if (binaryBodyDTO.getNot() != null && binaryBodyDTO.getNot()) {
             jgen.writeBooleanField("not", binaryBodyDTO.getNot());
         }
+        if (binaryBodyDTO.getOptional() != null && binaryBodyDTO.getOptional()) {
+            jgen.writeBooleanField("optional", binaryBodyDTO.getOptional());
+        }
         jgen.writeStringField("type", binaryBodyDTO.getType().name());
         jgen.writeObjectField("base64Bytes", binaryBodyDTO.getBase64Bytes());
         if (binaryBodyDTO.getContentType() != null) {

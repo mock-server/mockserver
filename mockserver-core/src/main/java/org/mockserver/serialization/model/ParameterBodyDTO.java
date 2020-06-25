@@ -8,7 +8,7 @@ import java.util.Objects;
 /**
  * @author jamesdbloom
  */
-public class ParameterBodyDTO extends BodyWithContentTypeDTO {
+public class ParameterBodyDTO extends BodyDTO {
 
     private final Parameters parameters;
 
@@ -17,8 +17,9 @@ public class ParameterBodyDTO extends BodyWithContentTypeDTO {
     }
 
     public ParameterBodyDTO(ParameterBody parameterBody, Boolean not) {
-        super(parameterBody.getType(), not, parameterBody.getContentType());
+        super(parameterBody.getType(), not);
         parameters = parameterBody.getValue();
+        withOptional(parameterBody.getOptional());
     }
 
     public Parameters getParameters() {

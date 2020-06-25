@@ -46,6 +46,7 @@ public class NottableSchemaString extends NottableString {
     private final ObjectNode schemaJsonNode;
     private final String type;
     private final String format;
+    private final String json;
 
 
     private static JsonNode convertToJsonNode(@Nonnull final String value, final String type, final String format) throws IOException {
@@ -81,7 +82,10 @@ public class NottableSchemaString extends NottableString {
 
     private ObjectNode getSchemaJsonNode(String schema) {
         try {
-            return (ObjectNode) OBJECT_MAPPER.readTree(schema);
+            ObjectNode jsonNodes = (ObjectNode) OBJECT_MAPPER.readTree(schema);
+            // remove embedded not field (for nottable schema string support)
+            jsonNodes.remove("not");
+            return jsonNodes;
         } catch (Throwable throwable) {
             MOCK_SERVER_LOGGER.logEvent(
                 new LogEntry()
@@ -117,6 +121,7 @@ public class NottableSchemaString extends NottableString {
             type = null;
             format = null;
         }
+        json = (Boolean.TRUE.equals(isNot()) ? NOT_CHAR : "") + schema;
     }
 
     private NottableSchemaString(String schema) {
@@ -131,6 +136,7 @@ public class NottableSchemaString extends NottableString {
             type = null;
             format = null;
         }
+        json = (Boolean.TRUE.equals(isNot()) ? NOT_CHAR : "") + schema;
     }
 
     public boolean matches(String json) {
@@ -161,5 +167,10 @@ public class NottableSchemaString extends NottableString {
 
     public boolean matchesIgnoreCase(String json) {
         return matches(json);
+    }
+
+    @Override
+    public String toString() {
+        return json;
     }
 }

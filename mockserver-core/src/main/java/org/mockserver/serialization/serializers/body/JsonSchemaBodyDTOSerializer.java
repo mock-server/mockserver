@@ -26,6 +26,9 @@ public class JsonSchemaBodyDTOSerializer extends StdSerializer<JsonSchemaBodyDTO
         if (jsonSchemaBodyDTO.getNot() != null && jsonSchemaBodyDTO.getNot()) {
             jgen.writeBooleanField("not", jsonSchemaBodyDTO.getNot());
         }
+        if (jsonSchemaBodyDTO.getOptional() != null && jsonSchemaBodyDTO.getOptional()) {
+            jgen.writeBooleanField("optional", jsonSchemaBodyDTO.getOptional());
+        }
         jgen.writeStringField("type", jsonSchemaBodyDTO.getType().name());
         jgen.writeObjectField("jsonSchema", OBJECT_MAPPER.readTree(jsonSchemaBodyDTO.getJson()));
         jgen.writeEndObject();

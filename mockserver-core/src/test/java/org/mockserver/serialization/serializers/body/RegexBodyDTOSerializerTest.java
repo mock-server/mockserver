@@ -23,4 +23,10 @@ public class RegexBodyDTOSerializerTest {
                 is("{\"not\":true,\"type\":\"REGEX\",\"regex\":\"some[a-zA-Z]*\"}"));
     }
 
+    @Test
+    public void shouldSerializeRegexBodyDTOWithOptional() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new RegexBodyDTO(new RegexBody("some[a-zA-Z]*")).withOptional(true)),
+                is("{\"optional\":true,\"type\":\"REGEX\",\"regex\":\"some[a-zA-Z]*\"}"));
+    }
+
 }

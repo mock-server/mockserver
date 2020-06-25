@@ -18,7 +18,7 @@ public class JsonBodyDTO extends BodyWithContentTypeDTO {
     }
 
     public JsonBodyDTO(JsonBody jsonBody, Boolean not) {
-        super(Body.Type.JSON, not, jsonBody.getContentType());
+        super(Body.Type.JSON, not, jsonBody);
         json = jsonBody.getValue();
         matchType = jsonBody.getMatchType();
         rawBytes = jsonBody.getRawBytes();

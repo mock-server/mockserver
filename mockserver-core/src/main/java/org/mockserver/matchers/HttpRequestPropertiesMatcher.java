@@ -152,7 +152,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             }
             if (body.isNot()) {
                 //noinspection ConstantConditions
-                bodyMatcher = not(bodyMatcher);
+                bodyMatcher = notMatcher(bodyMatcher);
             }
         }
         return bodyMatcher;
@@ -347,14 +347,14 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             if (controlPlaneMatcher) {
                 if (httpRequest.getBody() != null && String.valueOf(httpRequest.getBody()).equalsIgnoreCase(String.valueOf(request.getBody()))) {
                     bodyMatches = true;
-                } else if (bodyMatchesNotControlPlane(bodyMatcher, context, request)) {
+                } else if (bodyMatches(bodyMatcher, context, request)) {
                     // allow match of entries in EchoServer log (i.e. for java client integration tests)
                     bodyMatches = true;
                 } else {
                     if (isNotBlank(request.getBodyAsJsonOrXmlString())) {
                         try {
                             BodyDTO bodyDTO = objectMapper.readValue(request.getBodyAsJsonOrXmlString(), BodyDTO.class);
-                            bodyMatches = bodyMatchesNotControlPlane(
+                            bodyMatches = bodyMatches(
                                 buildBodyMatcher(bodyDTO.buildObject()),
                                 context,
                                 httpRequest
@@ -368,7 +368,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                     }
                 }
             } else {
-                bodyMatches = bodyMatchesNotControlPlane(bodyMatcher, context, request);
+                bodyMatches = bodyMatches(bodyMatcher, context, request);
             }
         } else {
             bodyMatches = true;
@@ -377,9 +377,11 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
     }
 
     @SuppressWarnings("unchecked")
-    private boolean bodyMatchesNotControlPlane(BodyMatcher bodyMatcher, MatchDifference context, HttpRequest request) {
+    private boolean bodyMatches(BodyMatcher bodyMatcher, MatchDifference context, HttpRequest request) {
         boolean bodyMatches;
-        if (bodyMatcher instanceof BinaryMatcher) {
+        if (httpRequest.getBody().getOptional() != null && httpRequest.getBody().getOptional() && request.getBody() == null) {
+            bodyMatches = true;
+        } else if (bodyMatcher instanceof BinaryMatcher) {
             bodyMatches = matches(BODY, context, bodyMatcher, request.getBodyAsRawBytes());
         } else {
             if (bodyMatcher instanceof ExactStringMatcher ||

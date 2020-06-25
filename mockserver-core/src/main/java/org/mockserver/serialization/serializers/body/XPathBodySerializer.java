@@ -22,6 +22,9 @@ public class XPathBodySerializer extends StdSerializer<XPathBody> {
         if (xPathBody.getNot() != null && xPathBody.getNot()) {
             jgen.writeBooleanField("not", xPathBody.getNot());
         }
+        if (xPathBody.getOptional() != null && xPathBody.getOptional()) {
+            jgen.writeBooleanField("optional", xPathBody.getOptional());
+        }
         jgen.writeStringField("type", xPathBody.getType().name());
         jgen.writeStringField("xpath", xPathBody.getValue());
         jgen.writeEndObject();

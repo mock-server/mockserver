@@ -9,7 +9,7 @@ public abstract class NotMatcher<MatchedType> extends ObjectWithReflectiveEquals
 
     boolean not = false;
 
-    public static <MatcherType extends NotMatcher> MatcherType not(MatcherType matcher) {
+    public static <MatcherType extends NotMatcher<?>> MatcherType notMatcher(MatcherType matcher) {
         matcher.not = true;
         return matcher;
     }

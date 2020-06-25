@@ -8,6 +8,7 @@ import org.mockserver.model.*;
 public abstract class BodyDTO extends NotDTO implements DTO<Body<?>> {
 
     private final Body.Type type;
+    private Boolean optional;
 
     public BodyDTO(Body.Type type, Boolean not) {
         super(not);
@@ -49,11 +50,24 @@ public abstract class BodyDTO extends NotDTO implements DTO<Body<?>> {
             result = new XPathBodyDTO(xPathBody, xPathBody.getNot());
         }
 
+        if (result != null) {
+            result.withOptional(body.getOptional());
+        }
+
         return result;
     }
 
     public Body.Type getType() {
         return type;
+    }
+
+    public Boolean getOptional() {
+        return optional;
+    }
+
+    public BodyDTO withOptional(Boolean optional) {
+        this.optional = optional;
+        return this;
     }
 
     public abstract Body<?> buildObject();

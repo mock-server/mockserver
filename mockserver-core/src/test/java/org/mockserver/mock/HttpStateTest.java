@@ -393,7 +393,7 @@ public class HttpStateTest {
         // then
         assertThat(handle, is(true));
         assertThat(responseWriter.response.getStatusCode(), is(400));
-        assertThat(responseWriter.response.getBodyAsString(), is("Unable to load API spec from provided URL or payload while parsing a block mapping" + NEW_LINE +
+        assertThat(responseWriter.response.getBodyAsString(), is("Unable to load API spec from provided URL or payload, while parsing a block mapping" + NEW_LINE +
             " in 'reader', line 1, column 1:" + NEW_LINE +
             "    \"openapi\": \"3.0.0\"," + NEW_LINE +
             "    ^" + NEW_LINE +
@@ -465,7 +465,7 @@ public class HttpStateTest {
         // then
         assertThat(handle, is(true));
         assertThat(responseWriter.response.getStatusCode(), is(400));
-        assertThat(responseWriter.response.getBodyAsString(), is("Unable to load API spec from provided URL or payload while scanning a simple key" + NEW_LINE +
+        assertThat(responseWriter.response.getBodyAsString(), is("Unable to load API spec from provided URL or payload, while scanning a simple key" + NEW_LINE +
             " in 'reader', line 8, column 1:" + NEW_LINE +
             "    servers" + NEW_LINE +
             "    ^" + NEW_LINE +

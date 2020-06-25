@@ -4,7 +4,7 @@ import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 
 import static org.junit.Assert.*;
-import static org.mockserver.matchers.NotMatcher.not;
+import static org.mockserver.matchers.NotMatcher.notMatcher;
 
 /**
  * @author jamesdbloom
@@ -31,10 +31,10 @@ public class XPathMatcherTest {
                 "   <key>some_key</key>" +
                 "   <value>some_value</value>" +
                 "</element>";
-        assertFalse(not(new XPathMatcher(new MockServerLogger(),"/element[key = 'some_key' and value = 'some_value']")).matches(null, matched));
-        assertFalse(not(new XPathMatcher(new MockServerLogger(),"/element[key = 'some_key']")).matches(null, matched));
-        assertFalse(not(new XPathMatcher(new MockServerLogger(),"/element/key")).matches(null, matched));
-        assertFalse(not(new XPathMatcher(new MockServerLogger(),"/element[key and value]")).matches(null, matched));
+        assertFalse(notMatcher(new XPathMatcher(new MockServerLogger(),"/element[key = 'some_key' and value = 'some_value']")).matches(null, matched));
+        assertFalse(notMatcher(new XPathMatcher(new MockServerLogger(),"/element[key = 'some_key']")).matches(null, matched));
+        assertFalse(notMatcher(new XPathMatcher(new MockServerLogger(),"/element/key")).matches(null, matched));
+        assertFalse(notMatcher(new XPathMatcher(new MockServerLogger(),"/element[key and value]")).matches(null, matched));
     }
 
     @Test
@@ -72,10 +72,10 @@ public class XPathMatcherTest {
                 "   <key>some_key</key>" +
                 "   <value>some_value</value>" +
                 "</element>";
-        assertTrue(not(new XPathMatcher(new MockServerLogger(),"/element[key = 'some_key' and value = 'some_other_value']")).matches(null, matched));
-        assertTrue(not(new XPathMatcher(new MockServerLogger(),"/element[key = 'some_other_key']")).matches(null, matched));
-        assertTrue(not(new XPathMatcher(new MockServerLogger(),"/element/not_key")).matches(null, matched));
-        assertTrue(not(new XPathMatcher(new MockServerLogger(),"/element[key and not_value]")).matches(null, matched));
+        assertTrue(notMatcher(new XPathMatcher(new MockServerLogger(),"/element[key = 'some_key' and value = 'some_other_value']")).matches(null, matched));
+        assertTrue(notMatcher(new XPathMatcher(new MockServerLogger(),"/element[key = 'some_other_key']")).matches(null, matched));
+        assertTrue(notMatcher(new XPathMatcher(new MockServerLogger(),"/element/not_key")).matches(null, matched));
+        assertTrue(notMatcher(new XPathMatcher(new MockServerLogger(),"/element[key and not_value]")).matches(null, matched));
     }
 
     @Test

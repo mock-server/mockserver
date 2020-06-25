@@ -303,6 +303,12 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
                             new LogEventBody(body.toString())
                         );
                 }
+            } else if (body instanceof ParameterBody) {
+                return httpRequest
+                    .clone()
+                    .withBody(
+                        new LogEventBody(body.toString())
+                    );
             } else if (body instanceof BodyWithContentType && !(body instanceof LogEventBody)) {
                 return httpRequest
                     .clone()

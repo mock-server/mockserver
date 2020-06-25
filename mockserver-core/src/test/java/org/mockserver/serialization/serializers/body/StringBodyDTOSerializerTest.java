@@ -40,6 +40,12 @@ public class StringBodyDTOSerializerTest {
     }
 
     @Test
+    public void shouldSerializeStringBodyDTOWithOptional() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(new StringBody("string_body")).withOptional(true)),
+                is("{\"optional\":true,\"type\":\"STRING\",\"string\":\"string_body\",\"rawBytes\":\"c3RyaW5nX2JvZHk=\"}"));
+    }
+
+    @Test
     public void shouldSerializeStringBodyDTOWithCharsetAndNot() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(not(new StringBody("string_body", MediaType.PLAIN_TEXT_UTF_8)))),
                 is("{\"not\":true,\"type\":\"STRING\",\"string\":\"string_body\",\"rawBytes\":\"c3RyaW5nX2JvZHk=\",\"contentType\":\"text/plain; charset=utf-8\"}"));

@@ -18,6 +18,7 @@ import org.mockserver.openapi.OpenAPISerialiser;
 import org.mockserver.openapi.examples.JsonNodeExampleSerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.function.BiConsumer;
 
@@ -27,11 +28,11 @@ import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.NottableOptionalString.optionalString;
 import static org.mockserver.model.NottableSchemaString.schemaString;
 import static org.mockserver.model.NottableString.string;
+import static org.mockserver.openapi.OpenAPISerialiser.OPEN_API_LOAD_ERROR;
 import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.ERROR;
 
 public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
-    public static final String OPEN_API_LOAD_ERROR = "Unable to load API spec from provided URL or payload ";
     private int hashCode;
     private OpenAPIDefinition openAPIDefinition;
     private List<HttpRequestPropertiesMatcher> httpRequestPropertiesMatchers;
@@ -50,20 +51,20 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                 httpRequestPropertiesMatchers = new ArrayList<>();
                 OpenAPISerialiser openAPISerialiser = new OpenAPISerialiser(mockServerLogger);
                 try {
-                    Map<String, List<Pair<String, Operation>>> stringListMap = openAPISerialiser.retrieveOperations(openAPIDefinition.getSpecUrlOrPayload(), openAPIDefinition.getOperationId());
+                    final Map<String, List<Pair<String, Operation>>> stringListMap = openAPISerialiser.retrieveOperations(openAPIDefinition.getSpecUrlOrPayload(), openAPIDefinition.getOperationId());
                     stringListMap
                         .forEach((path, operations) -> operations
                             .forEach(methodOperationPair -> {
                                 Operation operation = methodOperationPair.getValue();
                                 if (operation.getRequestBody() != null && operation.getRequestBody().getContent() != null) {
-                                    operation.getRequestBody().getContent().forEach(handleJsonBody(openAPIDefinition, path, methodOperationPair));
+                                    operation.getRequestBody().getContent().forEach(handleRequestBody(openAPIDefinition, path, methodOperationPair, Boolean.TRUE.equals(operation.getRequestBody().getRequired())));
                                 } else {
                                     HttpRequest httpRequest = createHttpRequest(openAPIDefinition, path, methodOperationPair);
                                     addRequestMatcher(openAPIDefinition, methodOperationPair, httpRequest, "");
                                 }
                             }));
                 } catch (Throwable throwable) {
-                    String message = (StringUtils.isBlank(throwable.getMessage()) || !throwable.getMessage().contains(OPEN_API_LOAD_ERROR.trim()) ? OPEN_API_LOAD_ERROR : "") + throwable.getMessage();
+                    String message = (StringUtils.isBlank(throwable.getMessage()) || !throwable.getMessage().contains(OPEN_API_LOAD_ERROR) ? OPEN_API_LOAD_ERROR + (isNotBlank(throwable.getMessage()) ? ", " : "") : "") + throwable.getMessage();
                     if (throwable instanceof OpenApiInteractionValidator.ApiLoadException) {
                         OpenApiInteractionValidator.ApiLoadException apiLoadException = (OpenApiInteractionValidator.ApiLoadException) throwable;
                         if (!apiLoadException.getParseMessages().isEmpty()) {
@@ -71,7 +72,7 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                         }
 
                     }
-                    throw new IllegalArgumentException(message);
+                    throw new IllegalArgumentException(message, throwable);
                 }
             }
             this.hashCode = 0;
@@ -106,6 +107,9 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                         if (parameter.getAllowEmptyValue() != null && parameter.getAllowEmptyValue()) {
                             schema.nullable(true);
                         }
+                        if (Boolean.TRUE.equals(parameter.getAllowReserved())) {
+                            throw new IllegalArgumentException("allowReserved field is not supported on parameters, found on operation: \"" + methodOperationPair.getRight().getOperationId() + "\" method: \"" + methodOperationPair.getLeft() + "\" parameter: \"" + name + "\" in: \"" + parameter.getIn() + "\"");
+                        }
                         switch (parameter.getIn()) {
                             case "query": {
                                 httpRequest.withQueryStringParameter(name, schemaString(OBJECT_WRITER.writeValueAsString(schema)));
@@ -130,13 +134,13 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                                         .setMessageFormat("unknown value for parameter in property, expected \"query\", \"header\", \"path\" or \"cookie\" found \"" + parameter.getIn() + "\"")
                                 );
                         }
-                    } catch (Throwable throwable) {
+                    } catch (IOException exception) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(ERROR)
                                 .setMessageFormat("exception while creating adding parameter{}from schema{}")
                                 .setArguments(parameter, openAPIDefinition)
-                                .setThrowable(throwable)
+                                .setThrowable(exception)
                         );
                     }
                 }
@@ -145,16 +149,22 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
         return httpRequest;
     }
 
-    private BiConsumer<String, MediaType> handleJsonBody(OpenAPIDefinition openAPIDefinition, String path, Pair<String, Operation> methodOperationPair) {
+    private BiConsumer<String, MediaType> handleRequestBody(OpenAPIDefinition openAPIDefinition, String path, Pair<String, Operation> methodOperationPair, Boolean required) {
         return (contentType, mediaType) -> {
             HttpRequest httpRequest = createHttpRequest(openAPIDefinition, path, methodOperationPair);
-            if (!contentType.equals("*/*")) {
+            if (contentType.equals("multipart/form-data")) {
+                throw new IllegalArgumentException("multipart form data is not supported on requestBody, found on operation: \"" + methodOperationPair.getRight().getOperationId() + "\" method: \"" + methodOperationPair.getLeft() + "\"");
+            }
+            if (!contentType.equals("*/*") && required) {
                 // ensure that parameters added to the content type such as charset don't break the matching
                 httpRequest.withHeader(CONTENT_TYPE.toString(), contentType.replaceAll("\\*", ".*") + ".*");
             }
             if (mediaType != null && mediaType.getSchema() != null) {
+                if (mediaType.getEncoding() != null) {
+                    throw new IllegalArgumentException("encoding is not supported on requestBody, found on operation: \"" + methodOperationPair.getRight().getOperationId() + "\" method: \"" + methodOperationPair.getLeft() + "\"");
+                }
                 try {
-                    httpRequest.withBody(jsonSchema(OBJECT_WRITER.writeValueAsString(mediaType.getSchema())));
+                    httpRequest.withBody(jsonSchema(OBJECT_WRITER.writeValueAsString(mediaType.getSchema())).withOptional(!required));
                 } catch (Throwable throwable) {
                     mockServerLogger.logEvent(
                         new LogEntry()

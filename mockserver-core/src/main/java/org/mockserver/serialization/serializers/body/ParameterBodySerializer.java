@@ -22,6 +22,9 @@ public class ParameterBodySerializer extends StdSerializer<ParameterBody> {
         if (parameterBody.getNot() != null && parameterBody.getNot()) {
             jgen.writeBooleanField("not", parameterBody.getNot());
         }
+        if (parameterBody.getOptional() != null && parameterBody.getOptional()) {
+            jgen.writeBooleanField("optional", parameterBody.getOptional());
+        }
         jgen.writeStringField("type", parameterBody.getType().name());
         if (!parameterBody.getValue().isEmpty()) {
             jgen.writeObjectField("value", parameterBody.getValue());

@@ -113,11 +113,6 @@ public class JsonBody extends BodyWithContentType<String> {
         return rawBytes;
     }
 
-    @JsonIgnore
-    public Charset getCharsetOrDefault() {
-        return DEFAULT_JSON_CONTENT_TYPE.getCharset();
-    }
-
     public MatchType getMatchType() {
         return matchType;
     }

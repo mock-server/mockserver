@@ -16,7 +16,7 @@ public class XmlBodyDTO extends BodyWithContentTypeDTO {
     }
 
     public XmlBodyDTO(XmlBody xmlBody, Boolean not) {
-        super(Body.Type.XML, not, xmlBody.getContentType());
+        super(Body.Type.XML, not, xmlBody);
         xml = xmlBody.getValue();
         rawBytes = xmlBody.getRawBytes();
     }

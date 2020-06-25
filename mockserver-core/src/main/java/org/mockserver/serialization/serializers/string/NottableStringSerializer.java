@@ -1,8 +1,10 @@
 package org.mockserver.serialization.serializers.string;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.mockserver.model.NottableSchemaString;
 import org.mockserver.model.NottableString;
@@ -26,8 +28,12 @@ public class NottableStringSerializer extends StdSerializer<NottableString> {
 
     @Override
     public void serialize(NottableString nottableString, JsonGenerator jgen, SerializerProvider provider) throws IOException {
-        if (nottableString instanceof NottableSchemaString && !nottableString.isNot()) {
-            jgen.writeObject(OBJECT_MAPPER.readTree(nottableString.getValue()));
+        if (nottableString instanceof NottableSchemaString) {
+            JsonNode jsonNode = OBJECT_MAPPER.readTree(nottableString.getValue());
+            if (Boolean.TRUE.equals(nottableString.isNot()) && jsonNode instanceof ObjectNode) {
+                ((ObjectNode)jsonNode).put("not", true);
+            }
+            jgen.writeObject(jsonNode);
         } else {
             jgen.writeString(serialiseNottableString(nottableString));
         }

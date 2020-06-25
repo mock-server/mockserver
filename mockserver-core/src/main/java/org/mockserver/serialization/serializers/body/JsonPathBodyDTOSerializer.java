@@ -22,6 +22,9 @@ public class JsonPathBodyDTOSerializer extends StdSerializer<JsonPathBodyDTO> {
         if (jsonPathBodyDTO.getNot() != null && jsonPathBodyDTO.getNot()) {
             jgen.writeBooleanField("not", jsonPathBodyDTO.getNot());
         }
+        if (jsonPathBodyDTO.getOptional() != null && jsonPathBodyDTO.getOptional()) {
+            jgen.writeBooleanField("optional", jsonPathBodyDTO.getOptional());
+        }
         jgen.writeStringField("type", jsonPathBodyDTO.getType().name());
         jgen.writeStringField("jsonPath", jsonPathBodyDTO.getJsonPath());
         jgen.writeEndObject();

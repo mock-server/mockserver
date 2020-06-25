@@ -15,6 +15,7 @@ import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
 public abstract class Body<T> extends Not {
     private int hashCode;
     private final Type type;
+    private Boolean optional;
 
     public Body(Type type) {
         this.type = type;
@@ -22,6 +23,15 @@ public abstract class Body<T> extends Not {
 
     public Type getType() {
         return type;
+    }
+
+    public Boolean getOptional() {
+        return optional;
+    }
+
+    public Body<T> withOptional(Boolean optional) {
+        this.optional = optional;
+        return this;
     }
 
     public abstract T getValue();
@@ -37,14 +47,6 @@ public abstract class Body<T> extends Not {
             return this.getCharset(defaultIfNotSet);
         }
         return defaultIfNotSet;
-    }
-
-    @JsonIgnore
-    public Charset getCharsetOrDefault() {
-        if (this instanceof BodyWithContentType) {
-            return this.getCharsetOrDefault();
-        }
-        return DEFAULT_HTTP_CHARACTER_SET;
     }
 
     public String getContentType() {
@@ -83,13 +85,14 @@ public abstract class Body<T> extends Not {
             return false;
         }
         Body<?> body = (Body<?>) o;
-        return type == body.type;
+        return type == body.type &&
+            Objects.equals(optional, body.optional);
     }
 
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(super.hashCode(), type);
+            hashCode = Objects.hash(super.hashCode(), type, optional);
         }
         return hashCode;
     }

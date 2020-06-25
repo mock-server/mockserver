@@ -52,7 +52,7 @@ public class QueryParameterMatcherTest {
         ));
 
         // then - not matcher
-        assertFalse(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(), new Parameters().withEntries(
+        assertFalse(NotMatcher.notMatcher(new MultiValueMapMatcher(new MockServerLogger(), new Parameters().withEntries(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         ), true)).matches(
@@ -76,7 +76,7 @@ public class QueryParameterMatcherTest {
         ));
 
         // and - not matcher and not parameter
-        assertTrue(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(), new Parameters().withEntries(
+        assertTrue(NotMatcher.notMatcher(new MultiValueMapMatcher(new MockServerLogger(), new Parameters().withEntries(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter(not("parameterTwoName"), not("parameterTwoValue"))
         ), true)).matches(
@@ -271,7 +271,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldNotMatchNullExpectationWhenNotApplied() {
-        assertFalse(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(), null, true))
+        assertFalse(NotMatcher.notMatcher(new MultiValueMapMatcher(new MockServerLogger(), null, true))
             .matches(
                 null,
                 new Parameters().withEntries(
@@ -295,7 +295,7 @@ public class QueryParameterMatcherTest {
     @Test
 
     public void shouldNotMatchEmptyExpectationWhenNotApplied() {
-        assertFalse(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(), new Parameters(), true))
+        assertFalse(NotMatcher.notMatcher(new MultiValueMapMatcher(new MockServerLogger(), new Parameters(), true))
             .matches(
                 null,
                 new Parameters().withEntries(
@@ -321,7 +321,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldMatchIncorrectParameterNameWhenNotApplied() {
-        assertTrue(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(), new Parameters().withEntries(
+        assertTrue(NotMatcher.notMatcher(new MultiValueMapMatcher(new MockServerLogger(), new Parameters().withEntries(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         ), true)).matches(
@@ -349,7 +349,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldMatchIncorrectParameterValueWhenNotApplied() {
-        assertTrue(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(), new Parameters().withEntries(
+        assertTrue(NotMatcher.notMatcher(new MultiValueMapMatcher(new MockServerLogger(), new Parameters().withEntries(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         ), true)).matches(
@@ -377,7 +377,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldMatchIncorrectParameterNameAndValueWhenNotApplied() {
-        assertTrue(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(), new Parameters().withEntries(
+        assertTrue(NotMatcher.notMatcher(new MultiValueMapMatcher(new MockServerLogger(), new Parameters().withEntries(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         ), true)).matches(
@@ -405,7 +405,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldNotMatchNullParameterValueWhenNotApplied() {
-        assertFalse(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(), new Parameters().withEntries(
+        assertFalse(NotMatcher.notMatcher(new MultiValueMapMatcher(new MockServerLogger(), new Parameters().withEntries(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         ), true)).matches(
@@ -446,7 +446,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldMatchMissingParameterWhenNotApplied() {
-        assertTrue(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(), new Parameters().withEntries(
+        assertTrue(NotMatcher.notMatcher(new MultiValueMapMatcher(new MockServerLogger(), new Parameters().withEntries(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         ), true)).matches(
@@ -464,7 +464,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldNotMatchNullTestWhenNotApplied() {
-        assertFalse(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(), new Parameters(), true)).matches(null, null));
+        assertFalse(NotMatcher.notMatcher(new MultiValueMapMatcher(new MockServerLogger(), new Parameters(), true)).matches(null, null));
     }
 
     @Test
@@ -474,6 +474,6 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldNotMatchEmptyTestWhenNotApplied() {
-        assertFalse(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(), new Parameters(), true)).matches(null, new Parameters()));
+        assertFalse(NotMatcher.notMatcher(new MultiValueMapMatcher(new MockServerLogger(), new Parameters(), true)).matches(null, new Parameters()));
     }
 }

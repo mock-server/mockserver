@@ -41,9 +41,9 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.addSubjectAlternativeName;
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
-import static org.mockserver.matchers.OpenAPIMatcher.OPEN_API_LOAD_ERROR;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.openapi.OpenAPISerialiser.OPEN_API_LOAD_ERROR;
 
 /**
  * @author jamesdbloom
@@ -495,7 +495,7 @@ public class HttpState {
                     responseWriter.writeResponse(
                         request,
                         BAD_REQUEST,
-                        (!iae.getMessage().startsWith(OPEN_API_LOAD_ERROR) ? OPEN_API_LOAD_ERROR : "") + iae.getMessage(),
+                        (!iae.getMessage().startsWith(OPEN_API_LOAD_ERROR) ? OPEN_API_LOAD_ERROR + (isNotBlank(iae.getMessage()) ? ", " : "") : "") + iae.getMessage(),
                         MediaType.create("text", "plain").toString()
                     );
                 }

@@ -19,15 +19,22 @@ public class StringBodySerializer extends StdSerializer<StringBody> {
     @Override
     public void serialize(StringBody stringBody, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         boolean notFieldSetAndNotDefault = stringBody.getNot() != null && stringBody.getNot();
+        boolean optionalFieldSetAndNotDefault = stringBody.getOptional() != null && stringBody.getOptional();
         boolean subStringFieldNotDefault = stringBody.isSubString();
         boolean contentTypeFieldSet = stringBody.getContentType() != null;
-        if (notFieldSetAndNotDefault || contentTypeFieldSet || subStringFieldNotDefault) {
+        if (notFieldSetAndNotDefault || optionalFieldSetAndNotDefault || contentTypeFieldSet || subStringFieldNotDefault) {
             jgen.writeStartObject();
             if (notFieldSetAndNotDefault) {
                 jgen.writeBooleanField("not", true);
             }
+            if (optionalFieldSetAndNotDefault) {
+                jgen.writeBooleanField("optional", true);
+            }
             jgen.writeStringField("type", stringBody.getType().name());
             jgen.writeStringField("string", stringBody.getValue());
+            if (stringBody.getRawBytes() != null) {
+                jgen.writeObjectField("rawBytes", stringBody.getRawBytes());
+            }
             if (subStringFieldNotDefault) {
                 jgen.writeBooleanField("subString", true);
             }

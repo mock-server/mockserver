@@ -23,4 +23,10 @@ public class RegexBodySerializerTest {
                 is("{\"not\":true,\"type\":\"REGEX\",\"regex\":\"some[a-zA-Z]*\"}"));
     }
 
+    @Test
+    public void shouldSerializeRegexBodyWithOptional() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new RegexBody("some[a-zA-Z]*").withOptional(true)),
+                is("{\"optional\":true,\"type\":\"REGEX\",\"regex\":\"some[a-zA-Z]*\"}"));
+    }
+
 }

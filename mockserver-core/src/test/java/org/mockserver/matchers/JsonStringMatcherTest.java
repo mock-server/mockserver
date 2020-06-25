@@ -5,7 +5,7 @@ import org.mockserver.logging.MockServerLogger;
 
 import static org.junit.Assert.*;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.matchers.NotMatcher.not;
+import static org.mockserver.matchers.NotMatcher.notMatcher;
 
 /**
  * @author jamesdbloom
@@ -68,7 +68,7 @@ public class JsonStringMatcherTest {
             "}";
 
         // then
-        assertFalse(not(new JsonStringMatcher(new MockServerLogger(), "{" + NEW_LINE +
+        assertFalse(notMatcher(new JsonStringMatcher(new MockServerLogger(), "{" + NEW_LINE +
             "    \"menu\": {" + NEW_LINE +
             "        \"id\": \"file\"," + NEW_LINE +
             "        \"value\": \"File\"," + NEW_LINE +
@@ -271,7 +271,7 @@ public class JsonStringMatcherTest {
             "}";
 
         // then
-        assertTrue(not(new JsonStringMatcher(new MockServerLogger(), "{" + NEW_LINE +
+        assertTrue(notMatcher(new JsonStringMatcher(new MockServerLogger(), "{" + NEW_LINE +
             "    \"glossary\": {" + NEW_LINE +
             "        \"GlossDiv\": {" + NEW_LINE +
             "            \"title\": \"S\"," + NEW_LINE +

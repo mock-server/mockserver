@@ -5,7 +5,7 @@ import org.mockserver.logging.MockServerLogger;
 
 import static org.junit.Assert.*;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.matchers.NotMatcher.not;
+import static org.mockserver.matchers.NotMatcher.notMatcher;
 
 /**
  * @author jamesdbloom
@@ -71,9 +71,9 @@ public class JsonPathMatcherTest {
             "    }," + NEW_LINE +
             "    \"expensive\": 10" + NEW_LINE +
             "}";
-        assertFalse(not(new JsonPathMatcher(new MockServerLogger(),"$..book[?(@.price <= $['expensive'])]")).matches(null, matched));
-        assertFalse(not(new JsonPathMatcher(new MockServerLogger(),"$..book[?(@.isbn)]")).matches(null, matched));
-        assertFalse(not(new JsonPathMatcher(new MockServerLogger(),"$..bicycle[?(@.color)]")).matches(null, matched));
+        assertFalse(notMatcher(new JsonPathMatcher(new MockServerLogger(),"$..book[?(@.price <= $['expensive'])]")).matches(null, matched));
+        assertFalse(notMatcher(new JsonPathMatcher(new MockServerLogger(),"$..book[?(@.isbn)]")).matches(null, matched));
+        assertFalse(notMatcher(new JsonPathMatcher(new MockServerLogger(),"$..bicycle[?(@.color)]")).matches(null, matched));
     }
 
     @Test
@@ -150,9 +150,9 @@ public class JsonPathMatcherTest {
             "    }," + NEW_LINE +
             "    \"expensive\": 10" + NEW_LINE +
             "}";
-        assertTrue(not(new JsonPathMatcher(new MockServerLogger(),"$..book[?(@.price > $['expensive'])]")).matches(null, matched));
-        assertTrue(not(new JsonPathMatcher(new MockServerLogger(),"$..book[?(@.color)]")).matches(null, matched));
-        assertTrue(not(new JsonPathMatcher(new MockServerLogger(),"$..bicycle[?(@.isbn)]")).matches(null, matched));
+        assertTrue(notMatcher(new JsonPathMatcher(new MockServerLogger(),"$..book[?(@.price > $['expensive'])]")).matches(null, matched));
+        assertTrue(notMatcher(new JsonPathMatcher(new MockServerLogger(),"$..book[?(@.color)]")).matches(null, matched));
+        assertTrue(notMatcher(new JsonPathMatcher(new MockServerLogger(),"$..bicycle[?(@.isbn)]")).matches(null, matched));
     }
 
     @Test
