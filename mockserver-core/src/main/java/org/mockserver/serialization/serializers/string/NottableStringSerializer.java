@@ -12,7 +12,6 @@ import org.mockserver.serialization.ObjectMapperFactory;
 
 import java.io.IOException;
 
-import static org.mockserver.model.NottableString.NOT_CHAR;
 import static org.mockserver.model.NottableString.serialiseNottableString;
 
 /**
@@ -31,7 +30,7 @@ public class NottableStringSerializer extends StdSerializer<NottableString> {
         if (nottableString instanceof NottableSchemaString) {
             JsonNode jsonNode = OBJECT_MAPPER.readTree(nottableString.getValue());
             if (Boolean.TRUE.equals(nottableString.isNot()) && jsonNode instanceof ObjectNode) {
-                ((ObjectNode)jsonNode).put("not", true);
+                ((ObjectNode) jsonNode).put("not", true);
             }
             jgen.writeObject(jsonNode);
         } else {
