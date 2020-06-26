@@ -3,6 +3,9 @@ package org.mockserver.serialization.model;
 import org.junit.Test;
 import org.mockserver.model.Body;
 import org.mockserver.model.XPathBody;
+import org.mockserver.model.XmlBody;
+
+import java.nio.charset.StandardCharsets;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -31,6 +34,17 @@ public class XPathBodyDTOTest {
         // then
         assertThat(xPathBody.getValue(), is("some_body"));
         assertThat(xPathBody.getType(), is(Body.Type.XPATH));
+    }
+
+    @Test
+    public void shouldBuildCorrectObjectWithOptional() {
+        // when
+        XPathBody xPathBody = new XPathBodyDTO((XPathBody) new XPathBody("some_body").withOptional(true)).buildObject();
+
+        // then
+        assertThat(xPathBody.getValue(), is("some_body"));
+        assertThat(xPathBody.getType(), is(Body.Type.XPATH));
+        assertThat(xPathBody.getOptional(), is(true));
     }
 
     @Test

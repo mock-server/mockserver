@@ -25,6 +25,6 @@ public class JsonSchemaBodyDTO extends BodyDTO {
     }
 
     public JsonSchemaBody buildObject() {
-        return new JsonSchemaBody(getJson());
+        return (JsonSchemaBody) new JsonSchemaBody(getJson()).withOptional(getOptional());
     }
 }

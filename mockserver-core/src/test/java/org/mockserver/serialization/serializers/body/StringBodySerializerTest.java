@@ -25,42 +25,42 @@ public class StringBodySerializerTest {
     @Test
     public void shouldSerializeStringBodyDTOWithSubString() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBody("string_body", null, true, (MediaType) null)),
-            is("{\"type\":\"STRING\",\"string\":\"string_body\",\"rawBytes\":\"c3RyaW5nX2JvZHk=\",\"subString\":true}"));
+            is("{\"type\":\"STRING\",\"string\":\"string_body\",\"subString\":true}"));
     }
 
     @Test
     public void shouldSerializeStringBodyWithCharset() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBody("string_body", StandardCharsets.UTF_16)),
-                is("{\"type\":\"STRING\",\"string\":\"string_body\",\"rawBytes\":\"/v8AcwB0AHIAaQBuAGcAXwBiAG8AZAB5\",\"contentType\":\"text/plain; charset=utf-16\"}"));
+                is("{\"type\":\"STRING\",\"string\":\"string_body\",\"contentType\":\"text/plain; charset=utf-16\"}"));
     }
 
     @Test
     public void shouldSerializeStringBodyWithContentType() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBody("string_body", MediaType.ATOM_UTF_8)),
-                is("{\"type\":\"STRING\",\"string\":\"string_body\",\"rawBytes\":\"c3RyaW5nX2JvZHk=\",\"contentType\":\"application/atom+xml; charset=utf-8\"}"));
+                is("{\"type\":\"STRING\",\"string\":\"string_body\",\"contentType\":\"application/atom+xml; charset=utf-8\"}"));
     }
 
     @Test
     public void shouldSerializeStringBodyWithNot() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(not(new StringBody("string_body"))),
-                is("{\"not\":true,\"type\":\"STRING\",\"string\":\"string_body\",\"rawBytes\":\"c3RyaW5nX2JvZHk=\"}"));
+                is("{\"not\":true,\"type\":\"STRING\",\"string\":\"string_body\"}"));
     }
 
     @Test
     public void shouldSerializeStringBodyWithOptional() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBody("string_body").withOptional(true)),
-                is("{\"optional\":true,\"type\":\"STRING\",\"string\":\"string_body\",\"rawBytes\":\"c3RyaW5nX2JvZHk=\"}"));
+                is("{\"optional\":true,\"type\":\"STRING\",\"string\":\"string_body\"}"));
     }
 
     @Test
     public void shouldSerializeStringBodyWithCharsetAndNot() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(not(new StringBody("string_body", StandardCharsets.UTF_16))),
-                is("{\"not\":true,\"type\":\"STRING\",\"string\":\"string_body\",\"rawBytes\":\"/v8AcwB0AHIAaQBuAGcAXwBiAG8AZAB5\",\"contentType\":\"text/plain; charset=utf-16\"}"));
+                is("{\"not\":true,\"type\":\"STRING\",\"string\":\"string_body\",\"contentType\":\"text/plain; charset=utf-16\"}"));
     }
 
     @Test
     public void shouldSerializeStringBodyWithContentTypeAndNot() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(not(new StringBody("string_body", MediaType.ATOM_UTF_8))),
-                is("{\"not\":true,\"type\":\"STRING\",\"string\":\"string_body\",\"rawBytes\":\"c3RyaW5nX2JvZHk=\",\"contentType\":\"application/atom+xml; charset=utf-8\"}"));
+                is("{\"not\":true,\"type\":\"STRING\",\"string\":\"string_body\",\"contentType\":\"application/atom+xml; charset=utf-8\"}"));
     }
 }

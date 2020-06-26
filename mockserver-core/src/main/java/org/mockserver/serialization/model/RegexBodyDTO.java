@@ -25,6 +25,6 @@ public class RegexBodyDTO extends BodyDTO {
     }
 
     public RegexBody buildObject() {
-        return new RegexBody(getRegex());
+        return (RegexBody) new RegexBody(getRegex()).withOptional(getOptional());
     }
 }

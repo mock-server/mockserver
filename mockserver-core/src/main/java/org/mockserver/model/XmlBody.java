@@ -57,6 +57,7 @@ public class XmlBody extends BodyWithContentType<String> {
         return xml;
     }
 
+    @JsonIgnore
     public byte[] getRawBytes() {
         return rawBytes;
     }

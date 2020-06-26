@@ -426,6 +426,143 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
+    public void shouldReturnResponseByMatchingOptionalBody() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withBody(json("{" + NEW_LINE +
+                        "    \"id\": 1," + NEW_LINE +
+                        "    \"name\": \"A σπίτι door\"," + NEW_LINE +
+                        "    \"price\": 12.50," + NEW_LINE +
+                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
+                        "}").withOptional(true))
+            )
+            .respond(
+                response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                    .withBody("some_body")
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST")
+                    .withBody(json("{" + NEW_LINE +
+                        "    \"id\": 1," + NEW_LINE +
+                        "    \"extra ignored field\": \"some value\"," + NEW_LINE +
+                        "    \"name\": \"A σπίτι door\"," + NEW_LINE +
+                        "    \"price\": 12.50," + NEW_LINE +
+                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
+                        "}")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST"),
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST")
+                    .withBody(json("{" + NEW_LINE +
+                        "    \"id\": 1," + NEW_LINE +
+                        "    \"name\": \"A σπίτι door\"," + NEW_LINE +
+                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
+                        "}")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingOptionalParameterBody() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_pathRequest"))
+                    .withQueryStringParameters(
+                        param("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
+                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                    )
+                    .withBody(params(param("bodyParameterName", "bodyParameterValue"))
+                        .withOptional(true)
+                    )
+            )
+            .respond(
+                response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                    .withBody("some_body")
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_pathRequest"))
+                    .withQueryStringParameters(
+                        param("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
+                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                    )
+                    .withBody(params(param("bodyParameterName", "bodyParameterValue"))),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_pathRequest"))
+                    .withQueryStringParameters(
+                        param("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
+                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                    ),
+                headersToIgnore)
+        );
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_pathRequest"))
+                    .withQueryStringParameters(
+                        param("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
+                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                    )
+                    .withBody(params(param("bodyOtherParameterName", "bodyOtherParameterValue"))),
+                headersToIgnore)
+        );
+    }
+
+    @Test
     public void shouldReturnResponseByMatchingMultipleHeaders() {
         // when
         mockServerClient

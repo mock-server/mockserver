@@ -35,6 +35,6 @@ public class StringBodyDTO extends BodyWithContentTypeDTO {
     }
 
     public StringBody buildObject() {
-        return new StringBody(getString(), getRawBytes(), isSubString(), getMediaType());
+        return (StringBody) new StringBody(getString(), getRawBytes(), isSubString(), getMediaType()).withOptional(getOptional());
     }
 }

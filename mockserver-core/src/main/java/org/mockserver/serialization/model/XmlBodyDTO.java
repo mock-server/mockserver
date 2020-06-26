@@ -30,6 +30,6 @@ public class XmlBodyDTO extends BodyWithContentTypeDTO {
     }
 
     public XmlBody buildObject() {
-        return new XmlBody(getXml(), getRawBytes(), getMediaType());
+        return (XmlBody) new XmlBody(getXml(), getRawBytes(), getMediaType()).withOptional(getOptional());
     }
 }

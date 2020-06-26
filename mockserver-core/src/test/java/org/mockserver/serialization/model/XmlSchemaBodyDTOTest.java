@@ -2,6 +2,7 @@ package org.mockserver.serialization.model;
 
 import org.junit.Test;
 import org.mockserver.model.Body;
+import org.mockserver.model.XPathBody;
 import org.mockserver.model.XmlSchemaBody;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -32,6 +33,17 @@ public class XmlSchemaBodyDTOTest {
         // then
         assertThat(xmlSchemaBody.getValue(), is("some_body"));
         assertThat(xmlSchemaBody.getType(), is(Body.Type.XML_SCHEMA));
+    }
+
+    @Test
+    public void shouldBuildCorrectObjectWithOptional() {
+        // when
+        XmlSchemaBody xmlSchemaBody = new XmlSchemaBodyDTO((XmlSchemaBody) new XmlSchemaBody("some_body").withOptional(true)).buildObject();
+
+        // then
+        assertThat(xmlSchemaBody.getValue(), is("some_body"));
+        assertThat(xmlSchemaBody.getType(), is(Body.Type.XML_SCHEMA));
+        assertThat(xmlSchemaBody.getOptional(), is(true));
     }
 
     @Test

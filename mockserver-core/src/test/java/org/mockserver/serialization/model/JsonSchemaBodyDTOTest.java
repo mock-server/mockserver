@@ -3,9 +3,12 @@ package org.mockserver.serialization.model;
 import org.junit.Test;
 import org.mockserver.model.Body;
 import org.mockserver.model.JsonSchemaBody;
+import org.mockserver.model.Parameter;
+import org.mockserver.model.ParameterBody;
 
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 
@@ -33,6 +36,17 @@ public class JsonSchemaBodyDTOTest {
         // then
         assertThat(jsonSchemaBody.getValue(), is("some_body"));
         assertThat(jsonSchemaBody.getType(), is(Body.Type.JSON_SCHEMA));
+    }
+
+    @Test
+    public void shouldBuildCorrectObjectWithOptional() {
+        // when
+        JsonSchemaBody jsonSchemaBody = new JsonSchemaBodyDTO((JsonSchemaBody) new JsonSchemaBody("some_body").withOptional(true)).buildObject();
+
+        // then
+        assertThat(jsonSchemaBody.getValue(), is("some_body"));
+        assertThat(jsonSchemaBody.getType(), is(Body.Type.JSON_SCHEMA));
+        assertThat(jsonSchemaBody.getOptional(), is(true));
     }
 
     @Test

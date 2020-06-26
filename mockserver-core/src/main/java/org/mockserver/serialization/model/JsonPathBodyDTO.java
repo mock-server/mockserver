@@ -25,6 +25,6 @@ public class JsonPathBodyDTO extends BodyDTO {
     }
 
     public JsonPathBody buildObject() {
-        return new JsonPathBody(getJsonPath());
+        return (JsonPathBody) new JsonPathBody(getJsonPath()).withOptional(getOptional());
     }
 }

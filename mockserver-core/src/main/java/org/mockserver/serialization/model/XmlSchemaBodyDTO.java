@@ -25,6 +25,6 @@ public class XmlSchemaBodyDTO extends BodyDTO {
     }
 
     public XmlSchemaBody buildObject() {
-        return new XmlSchemaBody(getXml());
+        return (XmlSchemaBody) new XmlSchemaBody(getXml()).withOptional(getOptional());
     }
 }

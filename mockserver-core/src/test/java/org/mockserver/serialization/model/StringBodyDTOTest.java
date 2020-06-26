@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.mockserver.model.Body;
 import org.mockserver.model.MediaType;
 import org.mockserver.model.StringBody;
+import org.mockserver.model.XmlSchemaBody;
 
 import java.nio.charset.StandardCharsets;
 
@@ -99,6 +100,20 @@ public class StringBodyDTOTest {
         assertThat(stringBody.getType(), is(Body.Type.STRING));
         assertThat(stringBody.getContentType(), is(PLAIN_TEXT_UTF_8.withCharset(StandardCharsets.ISO_8859_1).toString()));
         assertThat(stringBody.getRawBytes(), is("some_body".getBytes(StandardCharsets.ISO_8859_1)));
+    }
+
+    @Test
+    public void shouldBuildCorrectObjectWithOptional() {
+        // when
+        StringBody stringBody = new StringBodyDTO((StringBody) new StringBody("some_body", null, true, MediaType.create("text", "plain").withCharset(StandardCharsets.ISO_8859_1)).withOptional(true)).buildObject();
+
+        // then
+        assertThat(stringBody.getValue(), is("some_body"));
+        assertThat(stringBody.isSubString(), is(true));
+        assertThat(stringBody.getType(), is(Body.Type.STRING));
+        assertThat(stringBody.getContentType(), is(PLAIN_TEXT_UTF_8.withCharset(StandardCharsets.ISO_8859_1).toString()));
+        assertThat(stringBody.getRawBytes(), is("some_body".getBytes(StandardCharsets.ISO_8859_1)));
+        assertThat(stringBody.getOptional(), is(true));
     }
 
     @Test

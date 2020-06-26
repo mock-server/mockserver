@@ -21,6 +21,6 @@ public class LogEventBodyDTO extends BodyWithContentTypeDTO {
 
     @Override
     public LogEventBody buildObject() {
-        return new LogEventBody(value);
+        return (LogEventBody) new LogEventBody(value).withOptional(getOptional());
     }
 }

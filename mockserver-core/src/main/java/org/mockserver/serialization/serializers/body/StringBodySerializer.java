@@ -32,9 +32,6 @@ public class StringBodySerializer extends StdSerializer<StringBody> {
             }
             jgen.writeStringField("type", stringBody.getType().name());
             jgen.writeStringField("string", stringBody.getValue());
-            if (stringBody.getRawBytes() != null) {
-                jgen.writeObjectField("rawBytes", stringBody.getRawBytes());
-            }
             if (subStringFieldNotDefault) {
                 jgen.writeBooleanField("subString", true);
             }

@@ -25,6 +25,6 @@ public class XPathBodyDTO extends BodyDTO {
     }
 
     public XPathBody buildObject() {
-        return new XPathBody(getXPath());
+        return (XPathBody) new XPathBody(getXPath()).withOptional(getOptional());
     }
 }

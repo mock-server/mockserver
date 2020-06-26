@@ -27,7 +27,7 @@ public class ParameterBodyDTO extends BodyDTO {
     }
 
     public ParameterBody buildObject() {
-        return new ParameterBody(parameters);
+        return (ParameterBody) new ParameterBody(parameters).withOptional(getOptional());
     }
 
 }

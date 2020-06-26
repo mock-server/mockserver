@@ -168,7 +168,6 @@ public class HttpResponseTest {
                 "  \"body\" : {" + NEW_LINE +
                 "    \"type\" : \"STRING\"," + NEW_LINE +
                 "    \"string\" : \"some_body\"," + NEW_LINE +
-                "    \"rawBytes\" : \"c29tZV9ib2R5\"," + NEW_LINE +
                 "    \"contentType\" : \"text/plain; charset=iso-8859-1\"" + NEW_LINE +
                 "  }," + NEW_LINE +
                 "  \"delay\" : {" + NEW_LINE +

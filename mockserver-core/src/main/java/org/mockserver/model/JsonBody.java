@@ -2,6 +2,7 @@ package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.serialization.ObjectMapperFactory;
 
@@ -109,6 +110,7 @@ public class JsonBody extends BodyWithContentType<String> {
         return json;
     }
 
+    @JsonIgnore
     public byte[] getRawBytes() {
         return rawBytes;
     }
