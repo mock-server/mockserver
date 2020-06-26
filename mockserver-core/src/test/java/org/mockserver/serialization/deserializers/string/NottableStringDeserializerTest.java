@@ -138,7 +138,7 @@ public class NottableStringDeserializerTest {
         assertThat(expectationDTO, is(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setPath(schemaString("{" + NEW_LINE +
+                    .setMethod(schemaString("{" + NEW_LINE +
                         "  \"type\" : \"string\"" + NEW_LINE +
                         "}"))
             )));
@@ -160,9 +160,9 @@ public class NottableStringDeserializerTest {
         assertThat(expectationDTO, is(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setPath(schemaString("{" + NEW_LINE +
+                    .setMethod(schemaString("{" + NEW_LINE +
                         "  \"type\" : \"string\"" + NEW_LINE +
-                        "}"))
+                        "}", true))
             )));
     }
 

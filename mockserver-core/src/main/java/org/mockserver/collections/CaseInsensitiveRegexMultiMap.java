@@ -11,13 +11,15 @@ import org.mockserver.model.NottableString;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-import static org.mockserver.collections.ImmutableEntry.*;
-import static org.mockserver.collections.SubSets.distinctSubSetsList;
+import static org.mockserver.collections.ImmutableEntry.entry;
+import static org.mockserver.collections.ImmutableEntry.listsEqual;
 import static org.mockserver.collections.SubSets.distinctSubSetsMap;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.NottableString.strings;
 import static org.slf4j.event.Level.DEBUG;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * MultiMap that uses case insensitive regex expression matching for keys and values
@@ -65,12 +67,26 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
     }
 
     public boolean containsAll(CaseInsensitiveRegexMultiMap matcherSubSet) {
+
+        List<ImmutableEntry> matchedEntries = entryList();
+        Multimap<Integer, List<ImmutableEntry>> allMatchedSubSets
+            = distinctSubSetsMap(matchedEntries, ArrayListMultimap.create(), matchedEntries.size() - 1);
+
+        if (MockServerLogger.isEnabled(TRACE)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(TRACE)
+                    .setMessageFormat("attempting to match subset from{}against multimap{}")
+                    .setArguments(allMatchedSubSets, matcherSubSet.entryList())
+
+            );
+        }
+
         if (isEmpty() && matcherSubSet.allKeysNotted()) {
+
             return true;
+
         } else if (noOptionals && matcherSubSet.isNoOptionals()) {
-            List<ImmutableEntry> matchedEntries = entryList();
-            Multimap<Integer, List<ImmutableEntry>> allMatchedSubSets
-                = distinctSubSetsMap(matchedEntries, ArrayListMultimap.create(), matchedEntries.size() - 1);
 
             List<ImmutableEntry> matcherEntries = matcherSubSet.entryList();
             for (List<ImmutableEntry> matchedSubSet : allMatchedSubSets.get(matcherEntries.size())) {
@@ -80,7 +96,7 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
                             new LogEntry()
                                 .setLogLevel(DEBUG)
                                 .setMessageFormat("multimap{}containsAll matched subset{}with{}")
-                                .setArguments(this, matcherEntries, matchedSubSet)
+                                .setArguments(this, matchedSubSet, matcherEntries)
 
                         );
                     }
@@ -97,31 +113,69 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
                 );
             }
         } else {
-            List<ImmutableEntry> matchedEntries = entryList();
-            List<List<ImmutableEntry>> allMatchedSubSets
-                = distinctSubSetsList(matchedEntries, new ArrayList<>(), matchedEntries.size() - 1);
+            boolean result = false;
 
-            List<ImmutableEntry> matcherEntries = matcherSubSet.entryList();
-            for (List<ImmutableEntry> matchedSubSet : allMatchedSubSets) {
-                if (listsEqualWithOptionals(matcherEntries, matchedSubSet)) {
+            // non-optionals
+            List<ImmutableEntry> matcherEntriesWithoutOptionals = matcherSubSet.entryList().stream().filter(entry -> !entry.getKey().isOptional()).collect(Collectors.toList());
+            for (List<ImmutableEntry> matchedSubSet : allMatchedSubSets.get(matcherEntriesWithoutOptionals.size())) {
+                if (listsEqual(matcherEntriesWithoutOptionals, matchedSubSet)) {
                     if (MockServerLogger.isEnabled(DEBUG)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(DEBUG)
-                                .setMessageFormat("multimap with optionals{}containsAll matched subset{}with{}")
-                                .setArguments(this, matcherEntries, matchedSubSet)
+                                .setMessageFormat("multimap{}containsAll matched subset of non-optionals{}with{}")
+                                .setArguments(this, matchedSubSet, matcherEntriesWithoutOptionals)
+
+                        );
+                    }
+                    result = true;
+                }
+            }
+
+            // optionals
+            if (result) {
+                List<ImmutableEntry> optionalMatcherEntries = matcherSubSet.entryList().stream().filter(entry -> entry.getKey().isOptional()).collect(Collectors.toList());
+                if (!optionalMatcherEntries.isEmpty()) {
+                    Set<ImmutableEntry> matchedSubSet = new HashSet<>();
+                    for (ImmutableEntry optionalMatcherEntry : optionalMatcherEntries) {
+                        for (ImmutableEntry matchedEntry : matchedEntries) {
+                            if (optionalMatcherEntry.equals(matchedEntry)) {
+                                matchedSubSet.add(matchedEntry);
+                            } else {
+                                if (MockServerLogger.isEnabled(DEBUG)) {
+                                    mockServerLogger.logEvent(
+                                        new LogEntry()
+                                            .setLogLevel(DEBUG)
+                                            .setMessageFormat("multimap{}failed to match optional{}with{}")
+                                            .setArguments(this, optionalMatcherEntry, matchedEntry)
+
+                                    );
+                                }
+                                return false;
+                            }
+                        }
+                    }
+                    if (MockServerLogger.isEnabled(DEBUG)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(DEBUG)
+                                .setMessageFormat("multimap{}containsAll matched subset of optionals{}with{}")
+                                .setArguments(this, matchedSubSet, optionalMatcherEntries)
 
                         );
                     }
                     return true;
+                } else {
+                    return true;
                 }
             }
+
             if (MockServerLogger.isEnabled(DEBUG)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(DEBUG)
-                        .setMessageFormat("multimap with optionals{}containsAll found no subset equal to{}from{}")
-                        .setArguments(this, matcherEntries, allMatchedSubSets)
+                        .setMessageFormat("multimap{}containsAll found no subset equal to{}from{}")
+                        .setArguments(this, matcherSubSet.entryList(), matchedEntries)
 
                 );
             }
@@ -133,6 +187,17 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
         if (!isEmpty()) {
             for (NottableString key : keySet()) {
                 if (!key.isNot()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public boolean allKeysOptional() {
+        if (!isEmpty()) {
+            for (NottableString key : keySet()) {
+                if (!key.isOptional()) {
                     return false;
                 }
             }
@@ -228,7 +293,11 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
         }
         List<NottableString> list = Collections.synchronizedList(new ArrayList<>());
         for (ImmutableEntry entry : entryList()) {
+            // TODO(jamesdbloom) can this use of reflection equals be optimised
             if (EqualsBuilder.reflectionEquals(entry.getKey(), key, "key")) {
+                if (key.isOptional()) {
+                    throw new IllegalArgumentException("multiple values for optional key are not allowed, value \"" + entry.getValue() + "\"already exists for \"" + key + "\"");
+                }
                 list.add(entry.getValue());
             }
         }

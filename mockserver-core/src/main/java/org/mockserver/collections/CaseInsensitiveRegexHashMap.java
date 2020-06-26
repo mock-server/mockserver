@@ -9,12 +9,14 @@ import org.mockserver.matchers.RegexStringMatcher;
 import org.mockserver.model.NottableString;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-import static org.mockserver.collections.ImmutableEntry.*;
-import static org.mockserver.collections.SubSets.distinctSubSetsList;
+import static org.mockserver.collections.ImmutableEntry.entry;
+import static org.mockserver.collections.ImmutableEntry.listsEqual;
 import static org.mockserver.collections.SubSets.distinctSubSetsMap;
 import static org.mockserver.model.NottableString.string;
 import static org.slf4j.event.Level.DEBUG;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * Map that uses case insensitive regex expression matching for keys and values
@@ -59,12 +61,26 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
     }
 
     public boolean containsAll(CaseInsensitiveRegexHashMap matcherSubSet) {
+
+        List<ImmutableEntry> matchedEntries = entryList();
+        Multimap<Integer, List<ImmutableEntry>> allMatchedSubSets
+            = distinctSubSetsMap(matchedEntries, ArrayListMultimap.create(), matchedEntries.size() - 1);
+
+        if (MockServerLogger.isEnabled(TRACE)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(TRACE)
+                    .setMessageFormat("attempting to match subset from{}against hashmap{}")
+                    .setArguments(allMatchedSubSets, matcherSubSet.entryList())
+
+            );
+        }
+
         if (isEmpty() && matcherSubSet.allKeysNotted()) {
+
             return true;
+
         } else if (noOptionals && matcherSubSet.isNoOptionals()) {
-            List<ImmutableEntry> matchedEntries = entryList();
-            Multimap<Integer, List<ImmutableEntry>> allMatchedSubSets
-                = distinctSubSetsMap(matchedEntries, ArrayListMultimap.create(), matchedEntries.size() - 1);
 
             List<ImmutableEntry> matcherEntries = matcherSubSet.entryList();
             for (List<ImmutableEntry> matchedSubSet : allMatchedSubSets.get(matcherEntries.size())) {
@@ -74,7 +90,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
                             new LogEntry()
                                 .setLogLevel(DEBUG)
                                 .setMessageFormat("hashmap{}containsAll matched subset{}with{}")
-                                .setArguments(this, matcherEntries, matchedSubSet)
+                                .setArguments(this, matchedSubSet, matcherEntries)
 
                         );
                     }
@@ -91,31 +107,69 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
                 );
             }
         } else {
-            List<ImmutableEntry> matchedEntries = entryList();
-            List<List<ImmutableEntry>> allMatchedSubSets
-                = distinctSubSetsList(matchedEntries, new ArrayList<>(), matchedEntries.size() - 1);
+            boolean result = false;
 
-            List<ImmutableEntry> matcherEntries = matcherSubSet.entryList();
-            for (List<ImmutableEntry> matchedSubSet : allMatchedSubSets) {
-                if (listsEqualWithOptionals(matcherEntries, matchedSubSet)) {
+            // non-optionals
+            List<ImmutableEntry> matcherEntriesWithoutOptionals = matcherSubSet.entryList().stream().filter(entry -> !entry.getKey().isOptional()).collect(Collectors.toList());
+            for (List<ImmutableEntry> matchedSubSet : allMatchedSubSets.get(matcherEntriesWithoutOptionals.size())) {
+                if (listsEqual(matcherEntriesWithoutOptionals, matchedSubSet)) {
                     if (MockServerLogger.isEnabled(DEBUG)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(DEBUG)
-                                .setMessageFormat("hashmap with optionals{}containsAll matched subset{}with{}")
-                                .setArguments(this, matcherEntries, matchedSubSet)
+                                .setMessageFormat("hashmap{}containsAll matched subset of non-optionals{}with{}")
+                                .setArguments(this, matchedSubSet, matcherEntriesWithoutOptionals)
+
+                        );
+                    }
+                    result = true;
+                }
+            }
+
+            // optionals
+            if (result) {
+                List<ImmutableEntry> optionalMatcherEntries = matcherSubSet.entryList().stream().filter(entry -> entry.getKey().isOptional()).collect(Collectors.toList());
+                if (!optionalMatcherEntries.isEmpty()) {
+                    Set<ImmutableEntry> matchedSubSet = new HashSet<>();
+                    for (ImmutableEntry optionalMatcherEntry : optionalMatcherEntries) {
+                        for (ImmutableEntry matchedEntry : matchedEntries) {
+                            if (optionalMatcherEntry.equals(matchedEntry)) {
+                                matchedSubSet.add(matchedEntry);
+                            } else {
+                                if (MockServerLogger.isEnabled(DEBUG)) {
+                                    mockServerLogger.logEvent(
+                                        new LogEntry()
+                                            .setLogLevel(DEBUG)
+                                            .setMessageFormat("hashmap{}failed to match optional{}with{}")
+                                            .setArguments(this, optionalMatcherEntry, matchedEntry)
+
+                                    );
+                                }
+                                return false;
+                            }
+                        }
+                    }
+                    if (MockServerLogger.isEnabled(DEBUG)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(DEBUG)
+                                .setMessageFormat("hashmap{}containsAll matched subset of optionals{}with{}")
+                                .setArguments(this, matchedSubSet, optionalMatcherEntries)
 
                         );
                     }
                     return true;
+                } else {
+                    return true;
                 }
             }
+
             if (MockServerLogger.isEnabled(DEBUG)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(DEBUG)
-                        .setMessageFormat("hashmap with optionals{}containsAll found no subset equal to{}from{}")
-                        .setArguments(this, matcherEntries, allMatchedSubSets)
+                        .setMessageFormat("hashmap{}containsAll found no subset equal to{}from{}")
+                        .setArguments(this, matcherSubSet.entryList(), matchedEntries)
 
                 );
             }
@@ -126,6 +180,15 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
     public boolean allKeysNotted() {
         for (NottableString key : keySet()) {
             if (!key.isNot()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean allKeysOptional() {
+        for (NottableString key : keySet()) {
+            if (!key.isOptional()) {
                 return false;
             }
         }

@@ -63,7 +63,13 @@ public class ImmutableEntry extends Pair<NottableString, NottableString> impleme
         }
         ImmutableEntry that = (ImmutableEntry) o;
         return regexStringMatcher.matches(key, that.key, true) &&
-            regexStringMatcher.matches(value, that.value, true);
+            regexStringMatcher.matches(value, that.value, true) ||
+            (
+                !regexStringMatcher.matches(key, that.key, true) &&
+                    (
+                        key.isOptional() || that.key.isOptional()
+                    )
+            );
     }
 
     @Override
@@ -91,7 +97,7 @@ public class ImmutableEntry extends Pair<NottableString, NottableString> impleme
         return matches;
     }
 
-    public static boolean listsEqualWithOptionals(List<ImmutableEntry> matcher, List<ImmutableEntry> matched) {
+    public static boolean listsEqualWithOptionals(RegexStringMatcher regexStringMatcher, List<ImmutableEntry> matcher, List<ImmutableEntry> matched) {
         Set<Integer> matchingMatchedIndexes = new HashSet<>();
         Set<Integer> matchingMatcherIndexes = new HashSet<>();
         Set<NottableString> matcherKeys = new HashSet<>();
@@ -107,10 +113,10 @@ public class ImmutableEntry extends Pair<NottableString, NottableString> impleme
                         if (matcherItem.equals(matchedItem)) {
                             matchingMatchedIndexes.add(j);
                             matchingMatcherIndexes.add(i);
-                        } else if (matcherItem.getKey().isOptional() && !matchedKeys.contains(matcherItem.getKey())) {
+                        } else if (matcherItem.getKey().isOptional() && !contains(regexStringMatcher, matchedKeys, matcherItem.getKey())) {
                             matchingMatchedIndexes.add(j);
                             matchingMatcherIndexes.add(i);
-                        } else if (matchedItem.getKey().isOptional() && !matcherKeys.contains(matchedItem.getKey())) {
+                        } else if (matchedItem.getKey().isOptional() && !contains(regexStringMatcher, matcherKeys, matchedItem.getKey())) {
                             matchingMatchedIndexes.add(j);
                             matchingMatcherIndexes.add(i);
                         }
@@ -119,5 +125,15 @@ public class ImmutableEntry extends Pair<NottableString, NottableString> impleme
             }
         }
         return matchingMatchedIndexes.size() == matched.size() && matchingMatcherIndexes.size() == matcher.size();
+    }
+
+    private static boolean contains(RegexStringMatcher regexStringMatcher, Set<NottableString> matchedKeys, NottableString matcherItem) {
+        boolean result = false;
+        for (NottableString matchedKey : matchedKeys) {
+            if (regexStringMatcher.matches(matchedKey, matcherItem, true)) {
+                return true;
+            }
+        }
+        return result;
     }
 }

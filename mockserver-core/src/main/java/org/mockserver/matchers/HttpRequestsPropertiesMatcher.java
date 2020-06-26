@@ -25,6 +25,7 @@ import org.mockserver.serialization.ObjectMapperFactory;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.AUTHORIZATION;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
@@ -154,17 +155,23 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
             }
         }
         // security schemes
-        Set<String> headerNames = new HashSet<>();
-        Set<String> headerValues = new HashSet<>();
-        buildSecurityHeaderValues(openAPI, headerNames, headerValues, openAPI.getSecurity());
-        buildSecurityHeaderValues(openAPI, headerNames, headerValues, methodOperationPair.getRight().getSecurity());
-        if (!headerNames.isEmpty() && !headerValues.isEmpty()) {
-            httpRequest.withHeader(Joiner.on("|").join(headerNames), Joiner.on("|").join(headerValues));
+        Map<String, Set<String>> headerMatches = new HashMap<>();
+        buildSecurityHeaderValues(openAPI, headerMatches, openAPI.getSecurity());
+        buildSecurityHeaderValues(openAPI, headerMatches, methodOperationPair.getRight().getSecurity());
+        if (!headerMatches.isEmpty()) {
+            if (headerMatches.keySet().size() > 1) {
+                for (Map.Entry<String, Set<String>> headerMatchEntry : headerMatches.entrySet()) {
+                    httpRequest.withHeader("?" + headerMatchEntry.getKey(), Joiner.on("|").join(headerMatchEntry.getValue()));
+                }
+                httpRequest.withHeader(Joiner.on("|").join(headerMatches.keySet()), ".*");
+            } else {
+                httpRequest.withHeader(Joiner.on("|").join(headerMatches.keySet()), Joiner.on("|").join(headerMatches.values().stream().flatMap(Collection::stream).collect(Collectors.toList())));
+            }
         }
         return httpRequest;
     }
 
-    private void buildSecurityHeaderValues(OpenAPI openAPI, Set<String> headerNames, Set<String> headerValue, List<SecurityRequirement> security) {
+    private void buildSecurityHeaderValues(OpenAPI openAPI, Map<String, Set<String>> headerMatches, List<SecurityRequirement> security) {
         if (security != null) {
             for (SecurityRequirement securityRequirement : security) {
                 if (securityRequirement != null) {
@@ -173,18 +180,32 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                             SecurityScheme securityScheme = openAPI.getComponents().getSecuritySchemes().get(securityRequirementName);
                             String scheme = securityScheme.getScheme();
                             switch (securityScheme.getType()) {
-                                case APIKEY:
-                                    if (isNotBlank(securityScheme.getName())) {
-                                        headerNames.add(securityScheme.getName());
-                                        headerValue.add(".*");
+                                case APIKEY: {
+                                    String headerName = securityScheme.getName();
+                                    if (isNotBlank(headerName)) {
+                                        Set<String> headerValues = headerMatches.get(headerName);
+                                        String headerValue = ".+";
+                                        if (headerValues != null) {
+                                            headerValues.add(headerValue);
+                                        } else {
+                                            headerMatches.put(headerName, new HashSet<>(Collections.singletonList(headerValue)));
+                                        }
                                     }
                                     break;
+                                }
                                 case HTTP:
                                 case OAUTH2:
-                                case OPENIDCONNECT:
-                                    headerNames.add(AUTHORIZATION.toString());
-                                    headerValue.add((isNotBlank(scheme) ? scheme : "") + ".*");
+                                case OPENIDCONNECT: {
+                                    String headerName = AUTHORIZATION.toString();
+                                    Set<String> headerValues = headerMatches.get(headerName);
+                                    String headerValue = (isNotBlank(scheme) ? scheme : "") + ".+";
+                                    if (headerValues != null) {
+                                        headerValues.add(headerValue);
+                                    } else {
+                                        headerMatches.put(headerName, new HashSet<>(Collections.singletonList(headerValue)));
+                                    }
                                     break;
+                                }
                             }
 
                         }

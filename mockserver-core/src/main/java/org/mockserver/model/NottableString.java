@@ -1,17 +1,24 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
+import org.mockserver.serialization.ObjectMapperFactory;
 
 import java.util.*;
 import java.util.regex.Pattern;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mockserver.model.NottableOptionalString.OPTIONAL_CHAR;
+import static org.mockserver.model.NottableOptionalString.optionalString;
 
 /**
  * @author jamesdbloom
  */
 public class NottableString extends ObjectWithJsonToString implements Comparable<NottableString> {
 
+    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
     public static final char NOT_CHAR = '!';
     private final String value;
     private final boolean isBlank;
@@ -87,7 +94,22 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
     }
 
     public static NottableString string(String value) {
-        return new NottableString(value);
+        Boolean not = null;
+        boolean optional = false;
+        if (isNotBlank(value)) {
+            if (value.charAt(0) == NOT_CHAR) {
+                not = true;
+                value = value.substring(1);
+            } else if (value.charAt(0) == OPTIONAL_CHAR) {
+                optional = true;
+                value = value.substring(1);
+            }
+        }
+        if (optional) {
+            return optionalString(value, not);
+        } else {
+            return new NottableString(value, not);
+        }
     }
 
     public static NottableString not(String value) {
@@ -200,21 +222,28 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
     }
 
     private boolean equalsSchema(NottableSchemaString schema, NottableString string) {
-        if (schema.getValue() == null && string.getValue() == null) {
+        if (schema.getValue() == null && string.value == null) {
             return true;
-        } else if (schema.getValue() == null || string.getValue() == null) {
+        } else if (schema.getValue() == null || string.value == null) {
             return false;
         } else {
-            return schema.matches(string.getValue());
+            return schema.matches(string.value);
+        }
+    }
+
+    private boolean equalsString(NottableString one, NottableString two) {
+        if (one.value == null && two.value == null) {
+            return true;
+        } else if (one.value == null || two.value == null) {
+            return false;
+        } else {
+            boolean reverse = (two.not != one.not) && (two.not || one.not);
+            return reverse != two.value.equals(one.value);
         }
     }
 
     private boolean equalsValue(NottableString other) {
-        if (other.getValue() == null) {
-            return this.value == null;
-        }
-        boolean reverse = (other.not != this.not) && (other.not || this.not);
-        return reverse != other.getValue().equals(this.value);
+        return equalsString(this, other);
     }
 
     @Override

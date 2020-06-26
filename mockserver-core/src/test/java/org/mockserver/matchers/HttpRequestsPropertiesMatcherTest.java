@@ -77,7 +77,6 @@ public class HttpRequestsPropertiesMatcherTest {
      */
 
     // METHOD
-
     @Test
     public void shouldMatchByMethod() {
         // given
@@ -3320,6 +3319,10 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
+                .withHeader("Authorization", "basic")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
                 .withHeader("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
@@ -3355,6 +3358,10 @@ public class HttpRequestsPropertiesMatcherTest {
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
                 .withHeader("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "bearer")
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -3394,6 +3401,10 @@ public class HttpRequestsPropertiesMatcherTest {
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
                 .withHeader("X-API-Key", UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("X-API-Key", "")
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -3518,6 +3529,10 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
+                .withHeader("Authorization", "bearer")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
                 .withHeader("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
@@ -3571,10 +3586,17 @@ public class HttpRequestsPropertiesMatcherTest {
             request()
                 .withHeader("X-API-Key", UUID.randomUUID().toString())
         ));
-        // cross match Authorization header with X-API-Key allowed value - TODO(jamesdbloom) how can this be prevented?
-        assertTrue(httpRequestsPropertiesMatcher.matches(
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "bearer")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
                 .withHeader("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("X-API-Key", "")
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -3627,10 +3649,17 @@ public class HttpRequestsPropertiesMatcherTest {
             request()
                 .withHeader("X-API-Key", UUID.randomUUID().toString())
         ));
-        // cross match Authorization header with X-API-Key allowed value - TODO(jamesdbloom) how can this be prevented?
-        assertTrue(httpRequestsPropertiesMatcher.matches(
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "bearer")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
                 .withHeader("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("X-API-Key", "")
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -3684,10 +3713,17 @@ public class HttpRequestsPropertiesMatcherTest {
             request()
                 .withHeader("X-API-Key", UUID.randomUUID().toString())
         ));
-        // cross match Authorization header with X-API-Key allowed value - TODO(jamesdbloom) how can this be prevented?
-        assertTrue(httpRequestsPropertiesMatcher.matches(
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "bearer")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
                 .withHeader("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("X-API-Key", "")
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()

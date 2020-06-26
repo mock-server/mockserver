@@ -15,6 +15,8 @@ public class HashMapMatcher extends NotMatcher<KeysAndValues> {
     private final CaseInsensitiveRegexHashMap matcher;
     private final KeysAndValues keysAndValues;
     private final boolean controlPlaneMatcher;
+    private Boolean allKeysNotted;
+    private Boolean allKeysOptional;
 
     HashMapMatcher(MockServerLogger mockServerLogger, KeysAndValues keysAndValues, boolean controlPlaneMatcher) {
         this.mockServerLogger = mockServerLogger;
@@ -33,7 +35,13 @@ public class HashMapMatcher extends NotMatcher<KeysAndValues> {
         if (matcher == null || matcher.isEmpty()) {
             result = true;
         } else if (matched == null || matched.isEmpty()) {
-            result = matcher.allKeysNotted();
+            if (allKeysNotted == null) {
+                allKeysNotted = matcher.allKeysNotted();
+            }
+            if (allKeysOptional == null) {
+                allKeysOptional = matcher.allKeysOptional();
+            }
+            result = allKeysNotted || allKeysOptional;
         } else {
             result = matched.toCaseInsensitiveRegexMultiMap(mockServerLogger, controlPlaneMatcher).containsAll(matcher);
         }

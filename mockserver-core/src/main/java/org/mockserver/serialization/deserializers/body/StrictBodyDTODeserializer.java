@@ -23,6 +23,7 @@ import java.util.Map;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.slf4j.event.Level.DEBUG;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -77,10 +78,10 @@ public class StrictBodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         try {
                             type = Body.Type.valueOf(String.valueOf(entry.getValue()));
                         } catch (IllegalArgumentException iae) {
-                            if (MockServerLogger.isEnabled(DEBUG)) {
+                            if (MockServerLogger.isEnabled(TRACE)) {
                                 MOCK_SERVER_LOGGER.logEvent(
                                     new LogEntry()
-                                        .setLogLevel(DEBUG)
+                                        .setLogLevel(TRACE)
                                         .setMessageFormat("ignoring invalid value for \"type\" field of \"" + entry.getValue() + "\"")
                                         .setThrowable(iae)
                                 );

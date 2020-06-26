@@ -34,18 +34,26 @@ public class NottableStringDeserializer extends StdDeserializer<NottableString> 
     public NottableString deserialize(JsonParser jsonParser, DeserializationContext ctxt) throws IOException {
         String nottableValue = null;
         JsonNode potentiallyJsonField = null;
+        String potentialJsonString = null;
         Boolean not = null;
         boolean optional = false;
         if (jsonParser.getCurrentToken() == JsonToken.START_OBJECT) {
             potentiallyJsonField = ctxt.readValue(jsonParser, JsonNode.class);
+            if (potentiallyJsonField.has("not")) {
+                not = potentiallyJsonField.get("not").asBoolean(false);
+                if (potentiallyJsonField instanceof ObjectNode) {
+                    ((ObjectNode) potentiallyJsonField).remove("not");
+                }
+            }
+            potentialJsonString = potentiallyJsonField.toPrettyString();
         } else if (jsonParser.getCurrentToken() == JsonToken.VALUE_STRING || jsonParser.getCurrentToken() == JsonToken.FIELD_NAME) {
             nottableValue = ctxt.readValue(jsonParser, String.class);
             if (isNotBlank(nottableValue)) {
                 try {
-                    String potentialJsonString;
                     if (nottableValue.charAt(0) == NOT_CHAR) {
                         not = true;
-                        potentialJsonString = nottableValue.substring(1);
+                        nottableValue = nottableValue.substring(1);
+                        potentialJsonString = nottableValue;
                     } else if (nottableValue.charAt(0) == OPTIONAL_CHAR) {
                         optional = true;
                         nottableValue = nottableValue.substring(1);
@@ -57,9 +65,10 @@ public class NottableStringDeserializer extends StdDeserializer<NottableString> 
                         potentiallyJsonField = OBJECT_MAPPER.readTree(potentialJsonString);
                         if (potentiallyJsonField.has("not")) {
                             not = potentiallyJsonField.get("not").asBoolean(false);
-                        }
-                        if (potentiallyJsonField instanceof ObjectNode) {
-                            ((ObjectNode) potentiallyJsonField).remove("not");
+                            if (potentiallyJsonField instanceof ObjectNode) {
+                                ((ObjectNode) potentiallyJsonField).remove("not");
+                            }
+                            potentialJsonString = potentiallyJsonField.toPrettyString();
                         }
                     }
                 } catch (Throwable throwable) {
@@ -67,21 +76,21 @@ public class NottableStringDeserializer extends StdDeserializer<NottableString> 
                 }
             }
         }
-        if (potentiallyJsonField != null) {
+        if (isNotBlank(potentialJsonString) && potentiallyJsonField != null) {
             if (potentiallyJsonField.isTextual()) {
                 if (optional) {
-                    return optionalString(potentiallyJsonField.asText(), false);
+                    return optionalString(potentialJsonString, false);
                 } else {
-                    return string(potentiallyJsonField.asText(), not);
+                    return string(potentialJsonString, not);
                 }
             } else {
-                return schemaString(potentiallyJsonField.toPrettyString(), not);
+                return schemaString(potentialJsonString, not);
             }
         } else if (nottableValue != null) {
             if (optional) {
-                return optionalString(nottableValue);
+                return optionalString(nottableValue, not);
             } else {
-                return string(nottableValue);
+                return string(nottableValue, not);
             }
         } else {
             return null;

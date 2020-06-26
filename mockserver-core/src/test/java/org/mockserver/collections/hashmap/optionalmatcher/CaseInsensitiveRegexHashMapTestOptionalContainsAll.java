@@ -19,57 +19,149 @@ public class CaseInsensitiveRegexHashMapTestOptionalContainsAll {
     @Test
     public void shouldContainAllSubSetMultipleKeyForOptionalKeys() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(true,
+        CaseInsensitiveRegexHashMap matcher = hashMap(true,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")},
             new NottableString[]{optionalString("keyThree"), string("keyThreeValue")}
         );
 
         // then
-        assertThat(hashMap.containsAll(hashMap(true,
+        assertThat(hashMap(true,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")}
-        )), is(true));
-        assertThat(hashMap.containsAll(hashMap(true,
+        ).containsAll(matcher), is(true));
+        assertThat(hashMap(true,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")},
             new NottableString[]{string("keyThree"), string("keyThreeValue")}
-        )), is(true));
-        assertThat(hashMap.containsAll(hashMap(true,
+        ).containsAll(matcher), is(true));
+        assertThat(hashMap(true,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")},
             new NottableString[]{string("keyThree"), string("keyThreeOtherValue")}
-        )), is(false));
+        ).containsAll(matcher), is(false));
     }
 
     @Test
     public void shouldContainAllSubSetMultipleKeyForOptionalKeysWithNottedValue() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(true,
+        CaseInsensitiveRegexHashMap matcher = hashMap(true,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")},
             new NottableString[]{optionalString("keyThree"), not("keyThreeValue")}
         );
 
         // then
-        assertThat(hashMap.containsAll(hashMap(true,
+        assertThat(hashMap(true,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")}
-        )), is(true));
-        assertThat(hashMap.containsAll(hashMap(true,
+        ).containsAll(matcher), is(true));
+        assertThat(hashMap(true,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")},
             new NottableString[]{string("keyThree"), string("keyThreeValue")}
-        )), is(false));
-        assertThat(hashMap.containsAll(hashMap(true,
+        ).containsAll(matcher), is(false));
+        assertThat(hashMap(true,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")},
             new NottableString[]{string("keyOtherThree"), string("keyThreeValue")}
-        )), is(true));
-        assertThat(hashMap.containsAll(hashMap(true,
+        ).containsAll(matcher), is(true));
+        assertThat(hashMap(true,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")},
             new NottableString[]{string("keyThree"), string("keyThreeOtherValue")}
-        )), is(true));
+        ).containsAll(matcher), is(true));
+    }
+
+    @Test
+    public void shouldContainAllSubSetMultipleKeyForAllOptionalKeys() {
+        // given
+        CaseInsensitiveRegexHashMap matcher = hashMap(true,
+            new NottableString[]{string("?keyOne"), string("keyOneValue")},
+            new NottableString[]{string("?keyTwo"), string("keyTwoValue")},
+            new NottableString[]{string("?keyThree"), string("keyThreeValue")}
+        );
+
+        // then - all three
+        assertThat(hashMap(true,
+            new NottableString[]{string("keyOne"), string("keyOneValue")},
+            new NottableString[]{string("keyTwo"), string("keyTwoValue")},
+            new NottableString[]{string("keyThree"), string("keyThreeValue")}
+        ).containsAll(matcher), is(true));
+        // then - any two
+        assertThat(hashMap(true,
+            new NottableString[]{string("keyOne"), string("keyOneValue")},
+            new NottableString[]{string("keyTwo"), string("keyTwoValue")}
+        ).containsAll(matcher), is(true));
+        assertThat(hashMap(true,
+            new NottableString[]{string("keyOne"), string("keyOneValue")},
+            new NottableString[]{string("keyThree"), string("keyThreeValue")}
+        ).containsAll(matcher), is(true));
+        assertThat(hashMap(true,
+            new NottableString[]{string("keyTwo"), string("keyTwoValue")},
+            new NottableString[]{string("keyThree"), string("keyThreeValue")}
+        ).containsAll(matcher), is(true));
+        assertThat(hashMap(true,
+            new NottableString[]{string("keyTwo"), string("keyTwoValue")},
+            new NottableString[]{string("keyOne"), string("keyOneValue")}
+        ).containsAll(matcher), is(true));
+        // then - any single value
+        assertThat(hashMap(true,
+            new NottableString[]{string("keyOne"), string("keyOneValue")}
+        ).containsAll(matcher), is(true));
+        assertThat(hashMap(true,
+            new NottableString[]{string("keyTwo"), string("keyTwoValue")}
+        ).containsAll(matcher), is(true));
+        assertThat(hashMap(true,
+            new NottableString[]{string("keyThree"), string("keyThreeValue")}
+        ).containsAll(matcher), is(true));
+        // then - empty
+        assertThat(hashMap(true,
+            new NottableString[0][]
+        ).containsAll(matcher), is(true));
+        // then - other value
+        assertThat(hashMap(true,
+            new NottableString[]{string("otherKey"), string("otherValue")}
+        ).containsAll(matcher), is(true));
+    }
+
+    @Test
+    public void shouldContainAllSubSetMultipleKeyForAllOptionalEitherOr() {
+        // given
+        CaseInsensitiveRegexHashMap matcher = hashMap(true,
+            new NottableString[]{string("?keyOne"), string("keyOneValue")},
+            new NottableString[]{string("?keyTwo"), string("keyTwoValue")},
+            new NottableString[]{string("keyOne|keyTwo"), string("key.*")}
+        );
+
+        // then - any two
+        assertThat(hashMap(true,
+            new NottableString[]{string("keyOne"), string("keyOneValue")},
+            new NottableString[]{string("keyTwo"), string("keyTwoValue")}
+        ).containsAll(matcher), is(true));
+        assertThat(hashMap(true,
+            new NottableString[]{string("keyTwo"), string("keyTwoValue")},
+            new NottableString[]{string("keyOne"), string("keyOneValue")}
+        ).containsAll(matcher), is(true));
+        // then - any single value
+        assertThat(hashMap(true,
+            new NottableString[]{string("keyOne"), string("keyOneValue")}
+        ).containsAll(matcher), is(true));
+        assertThat(hashMap(true,
+            new NottableString[]{string("keyTwo"), string("keyTwoValue")}
+        ).containsAll(matcher), is(true));
+        // then - not
+        assertThat(hashMap(true,
+            new NottableString[]{string("keyOne"), string("otherValue")}
+        ).containsAll(matcher), is(false));
+        assertThat(hashMap(true,
+            new NottableString[]{string("keyTwo"), string("otherValue")}
+        ).containsAll(matcher), is(false));
+        assertThat(hashMap(true,
+            new NottableString[]{string("otherKey"), string("otherValue")}
+        ).containsAll(matcher), is(false));
+        assertThat(hashMap(true,
+            new NottableString[0][]
+        ).containsAll(matcher), is(false));
     }
 }

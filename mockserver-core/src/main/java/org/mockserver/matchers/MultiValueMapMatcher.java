@@ -15,6 +15,8 @@ public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues> {
     private final CaseInsensitiveRegexMultiMap matcher;
     private final KeysToMultiValues keysToMultiValues;
     private final boolean controlPlaneMatcher;
+    private Boolean allKeysNotted;
+    private Boolean allKeysOptional;
 
     MultiValueMapMatcher(MockServerLogger mockServerLogger, KeysToMultiValues keysToMultiValues, boolean controlPlaneMatcher) {
         this.mockServerLogger = mockServerLogger;
@@ -33,7 +35,13 @@ public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues> {
         if (matcher == null || matcher.isEmpty()) {
             result = true;
         } else if (matched == null || matched.isEmpty()) {
-            result = matcher.allKeysNotted();
+            if (allKeysNotted == null) {
+                allKeysNotted = matcher.allKeysNotted();
+            }
+            if (allKeysOptional == null) {
+                allKeysOptional = matcher.allKeysOptional();
+            }
+            result = allKeysNotted || allKeysOptional;
         } else {
             result = matched.toCaseInsensitiveRegexMultiMap(mockServerLogger, controlPlaneMatcher).containsAll(matcher);
         }
