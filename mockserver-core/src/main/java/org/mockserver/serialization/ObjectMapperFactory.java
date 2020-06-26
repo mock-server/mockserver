@@ -22,6 +22,8 @@ import org.mockserver.serialization.serializers.condition.VerificationTimesDTOSe
 import org.mockserver.serialization.serializers.condition.VerificationTimesSerializer;
 import org.mockserver.serialization.serializers.expectation.OpenAPIExpectationDTOSerializer;
 import org.mockserver.serialization.serializers.expectation.OpenAPIExpectationSerializer;
+import org.mockserver.serialization.serializers.matcher.HttpRequestPropertiesMatcherSerializer;
+import org.mockserver.serialization.serializers.matcher.HttpRequestsPropertiesMatcherSerializer;
 import org.mockserver.serialization.serializers.request.HttpRequestDTOSerializer;
 import org.mockserver.serialization.serializers.request.OpenAPIDefinitionDTOSerializer;
 import org.mockserver.serialization.serializers.request.OpenAPIDefinitionSerializer;
@@ -215,7 +217,10 @@ public class ObjectMapperFactory {
             new ParametersSerializer(),
             new CookiesSerializer(),
             // log
-            new org.mockserver.serialization.serializers.log.LogEntrySerializer()
+            new org.mockserver.serialization.serializers.log.LogEntrySerializer(),
+            // matcher
+            new HttpRequestsPropertiesMatcherSerializer(),
+            new HttpRequestPropertiesMatcherSerializer()
         );
         Map<Class, JsonSerializer> jsonSerializersByType = new HashMap<>();
         for (JsonSerializer jsonSerializer : jsonSerializers) {

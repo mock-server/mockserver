@@ -39,6 +39,8 @@ import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.ERROR;
 
 public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
+
+    private static final ObjectWriter TO_STRING_OBJECT_WRITER = ObjectMapperFactory.createObjectMapper(true);
     private int hashCode;
     private OpenAPIDefinition openAPIDefinition;
     private List<HttpRequestPropertiesMatcher> httpRequestPropertiesMatchers;
@@ -46,6 +48,10 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
 
     protected HttpRequestsPropertiesMatcher(MockServerLogger mockServerLogger) {
         super(mockServerLogger);
+    }
+
+    public List<HttpRequestPropertiesMatcher> getHttpRequestPropertiesMatchers() {
+        return httpRequestPropertiesMatchers;
     }
 
     @Override
@@ -83,6 +89,15 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                 }
             }
             this.hashCode = 0;
+            if (MockServerLogger.isEnabled(DEBUG)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(DEBUG)
+                        .setHttpRequest(requestDefinition)
+                        .setMessageFormat("created request matcher{}for open api definition{}")
+                        .setArguments(this, requestDefinition)
+                );
+            }
             return true;
         } else {
             return false;
@@ -286,8 +301,7 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
     @Override
     public String toString() {
         try {
-            return ObjectMapperFactory
-                .createObjectMapper(true)
+            return TO_STRING_OBJECT_WRITER
                 .writeValueAsString(openAPIDefinition);
         } catch (Exception e) {
             return super.toString();

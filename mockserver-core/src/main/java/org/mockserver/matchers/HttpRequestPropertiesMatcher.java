@@ -2,10 +2,12 @@ package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.deserializers.body.StrictBodyDTODeserializer;
@@ -35,6 +37,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
     private static final String EXPECTATION_REQUEST_NOT_OPERATOR_IS_ENABLED = COMMA + NEW_LINE + "expectation's request 'not' operator is enabled";
     private static final String EXPECTATION_REQUEST_MATCHER_NOT_OPERATOR_IS_ENABLED = COMMA + NEW_LINE + "expectation's request matcher 'not' operator is enabled";
     private static final PathParametersParser pathParametersParser = new PathParametersParser();
+    private static final ObjectWriter TO_STRING_OBJECT_WRITER = ObjectMapperFactory.createObjectMapper(true);
     private int hashCode;
     private HttpRequest httpRequest;
     private RegexStringMatcher methodMatcher = null;
@@ -48,9 +51,14 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
     private BooleanMatcher sslMatcher = null;
     private ObjectMapper objectMapperWithStrictBodyDTODeserializer = ObjectMapperFactory.createObjectMapper(new StrictBodyDTODeserializer());
     private JsonSchemaBodyParser jsonSchemaBodyParser;
+    private MatcherBuilder matcherBuilder;
 
     public HttpRequestPropertiesMatcher(MockServerLogger mockServerLogger) {
         super(mockServerLogger);
+    }
+
+    public HttpRequest getHttpRequest() {
+        return httpRequest;
     }
 
     @Override
@@ -206,9 +214,11 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             }
             return overallMatch;
         } else if (requestDefinition instanceof OpenAPIDefinition) {
-            return true;
+            if (matcherBuilder == null) {
+                matcherBuilder = new MatcherBuilder(mockServerLogger);
+            }
             // TODO(jamesdbloom) control matching of HttpRequest against OpenAPI doesn't handle missing properties such as path or method
-            // return new MatcherBuilder(mockServerLogger).transformsToMatcher(new Expectation(requestDefinition)).matches(new MatchDifference(httpRequest), this.httpRequest);
+            return matcherBuilder.transformsToMatcher(new Expectation(requestDefinition)).matches(new MatchDifference(httpRequest), this.httpRequest);
         } else {
             return requestDefinition == null;
         }
@@ -430,8 +440,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
     @Override
     public String toString() {
         try {
-            return ObjectMapperFactory
-                .createObjectMapper(true)
+            return TO_STRING_OBJECT_WRITER
                 .writeValueAsString(httpRequest);
         } catch (Exception e) {
             return super.toString();

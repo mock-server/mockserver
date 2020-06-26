@@ -17,9 +17,9 @@ public class MatcherBuilder {
     }
 
     public HttpRequestMatcher transformsToMatcher(RequestDefinition requestDefinition) {
-        HttpRequestMatcher httpRequestMatcher = null;
+        HttpRequestMatcher httpRequestMatcher;
         if (requestDefinition instanceof OpenAPIDefinition) {
-            httpRequestMatcher = new OpenAPIMatcher(mockServerLogger);
+            httpRequestMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         } else {
             httpRequestMatcher = new HttpRequestPropertiesMatcher(mockServerLogger);
         }
@@ -28,9 +28,9 @@ public class MatcherBuilder {
     }
 
     public HttpRequestMatcher transformsToMatcher(Expectation expectation) {
-        HttpRequestMatcher httpRequestMatcher = null;
+        HttpRequestMatcher httpRequestMatcher;
         if (expectation.getHttpRequest() instanceof OpenAPIDefinition) {
-            httpRequestMatcher = new OpenAPIMatcher(mockServerLogger);
+            httpRequestMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
         } else {
             httpRequestMatcher = new HttpRequestPropertiesMatcher(mockServerLogger);
         }
