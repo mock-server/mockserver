@@ -187,7 +187,7 @@ public class HttpRequestHandlerTest {
     @Test
     public void shouldBindNewPorts() {
         // given
-        when(server.bindServerPorts(anyListOf(Integer.class))).thenReturn(Arrays.asList(1090, 1090));
+        when(server.bindServerPorts(anyList())).thenReturn(Arrays.asList(1090, 1090));
         HttpRequest statusRequest = request("/mockserver/bind")
             .withMethod("PUT")
             .withBody(portBindingSerializer.serialize(

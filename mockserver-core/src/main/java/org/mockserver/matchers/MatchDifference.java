@@ -2,7 +2,6 @@ package org.mockserver.matchers;
 
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.model.RequestDefinition;
 
 import java.util.ArrayList;
@@ -17,7 +16,7 @@ import static org.slf4j.event.Level.DEBUG;
 
 public class MatchDifference {
 
-    public static boolean DEBUG_ALL_MATCH_FAILURES = false;
+    public static boolean debugAllMatchFailures = false;
 
     public enum Field {
         METHOD("method"),

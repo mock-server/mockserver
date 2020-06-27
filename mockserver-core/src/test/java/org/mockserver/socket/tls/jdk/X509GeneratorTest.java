@@ -28,6 +28,7 @@ import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.*;
 import static org.mockserver.socket.tls.jdk.X509Generator.x509FromPEM;
 import static sun.security.x509.BasicConstraintsExtension.IS_CA;
 
+@SuppressWarnings({"RedundantSuppression", "deprecation", "removal"})
 public class X509GeneratorTest {
 
     private Integer KEY_SIZE = 512;

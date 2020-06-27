@@ -384,7 +384,7 @@ public class MockServerServletTest {
                     .withSecure(false)
             ),
             any(ServletResponseWriter.class),
-            isNull(ChannelHandlerContext.class),
+            isNull(),
             eq(ImmutableSet.of(
                 "local_address",
                 "localhost",
@@ -418,7 +418,7 @@ public class MockServerServletTest {
                     .withSecure(false)
             ),
             any(ServletResponseWriter.class),
-            isNull(ChannelHandlerContext.class),
+            isNull(),
             eq(ImmutableSet.of(
                 "local_address:666",
                 "localhost:666",
@@ -453,7 +453,7 @@ public class MockServerServletTest {
                     .withSecure(true)
             ),
             any(ServletResponseWriter.class),
-            isNull(ChannelHandlerContext.class),
+            isNull(),
             eq(ImmutableSet.of(
                 "local_address",
                 "localhost",
@@ -488,7 +488,7 @@ public class MockServerServletTest {
                     .withSecure(true)
             ),
             any(ServletResponseWriter.class),
-            isNull(ChannelHandlerContext.class),
+            isNull(),
             eq(ImmutableSet.of(
                 "local_address:666",
                 "localhost:666",

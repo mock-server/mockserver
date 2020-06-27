@@ -9,7 +9,6 @@ import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
 import org.mockserver.templates.engine.serializer.HttpTemplateOutputDeserializer;
 
 import javax.script.*;
-
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import org.slf4j.event.Level;
 
@@ -20,6 +19,7 @@ import static org.mockserver.log.model.LogEntry.LogMessageType.TEMPLATE_GENERATE
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings({"RedundantSuppression", "deprecation", "removal"})
 public class JavaScriptTemplateEngine implements TemplateEngine {
 
     private static ScriptEngine engine;

@@ -37,6 +37,7 @@ import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.*;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings({"RedundantSuppression", "deprecation", "removal"})
 public class X509Generator {
 
     private static final String BEGIN_CERTIFICATE = "-----BEGIN CERTIFICATE-----";

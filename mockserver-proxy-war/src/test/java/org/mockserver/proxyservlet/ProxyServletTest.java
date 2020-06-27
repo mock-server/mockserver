@@ -1,7 +1,6 @@
 package org.mockserver.proxyservlet;
 
 import com.google.common.collect.ImmutableSet;
-import io.netty.channel.ChannelHandlerContext;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -27,10 +26,11 @@ import org.slf4j.event.Level;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Date;
 
-import static org.apache.commons.codec.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -309,7 +309,7 @@ public class ProxyServletTest {
                     .withKeepAlive(true)
             ),
             any(ServletResponseWriter.class),
-            isNull(ChannelHandlerContext.class),
+            isNull(),
             eq(ImmutableSet.of(
                 "local_address",
                 "localhost",
@@ -339,7 +339,7 @@ public class ProxyServletTest {
                     .withKeepAlive(true)
             ),
             any(ServletResponseWriter.class),
-            isNull(ChannelHandlerContext.class),
+            isNull(),
             eq(ImmutableSet.of(
                 "local_address:666",
                 "localhost:666",
@@ -370,7 +370,7 @@ public class ProxyServletTest {
                     .withKeepAlive(true)
             ),
             any(ServletResponseWriter.class),
-            isNull(ChannelHandlerContext.class),
+            isNull(),
             eq(ImmutableSet.of(
                 "local_address",
                 "localhost",
@@ -401,7 +401,7 @@ public class ProxyServletTest {
                     .withKeepAlive(true)
             ),
             any(ServletResponseWriter.class),
-            isNull(ChannelHandlerContext.class),
+            isNull(),
             eq(ImmutableSet.of(
                 "local_address:666",
                 "localhost:666",

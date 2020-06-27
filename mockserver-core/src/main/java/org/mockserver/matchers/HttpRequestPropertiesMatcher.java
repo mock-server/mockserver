@@ -7,14 +7,12 @@ import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.deserializers.body.StrictBodyDTODeserializer;
 import org.mockserver.serialization.model.BodyDTO;
 import org.slf4j.event.Level;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -24,10 +22,9 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.matchersFailFast;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_MATCHED;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED;
-import static org.mockserver.matchers.MatchDifference.DEBUG_ALL_MATCH_FAILURES;
+import static org.mockserver.matchers.MatchDifference.debugAllMatchFailures;
 import static org.mockserver.matchers.MatchDifference.Field.*;
 import static org.mockserver.model.NottableString.string;
-import static org.slf4j.event.Level.DEBUG;
 
 /**
  * @author jamesdbloom
@@ -248,7 +245,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             } else if (this.httpRequest == null) {
                 return true;
             } else {
-                if (matchDifference == null && DEBUG_ALL_MATCH_FAILURES) {
+                if (matchDifference == null && debugAllMatchFailures) {
                     matchDifference = new MatchDifference(request);
                 }
                 MatchDifferenceCount matchDifferenceCount = new MatchDifferenceCount(request);

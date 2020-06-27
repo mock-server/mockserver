@@ -13,10 +13,10 @@ import static org.mockserver.model.HttpForward.forward;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings({"RedundantSuppression", "deprecation"})
 public class HttpForwardTest {
 
     @Test
-    @SuppressWarnings("AccessStaticViaInstance")
     public void shouldAlwaysCreateNewObject() {
         assertEquals(forward(), forward());
         assertNotSame(forward(), forward());

@@ -36,7 +36,7 @@ public class HttpResponseObjectCallbackActionHandlerTest {
 
         // then
         verify(mockWebSocketClientRegistry).registerResponseCallbackHandler(any(String.class), any(WebSocketResponseCallback.class));
-        verify(mockWebSocketClientRegistry).sendClientMessage(eq("some_clientId"), any(HttpRequest.class), isNull(HttpResponse.class));
+        verify(mockWebSocketClientRegistry).sendClientMessage(eq("some_clientId"), any(HttpRequest.class), isNull());
     }
 
     @Test
@@ -50,14 +50,14 @@ public class HttpResponseObjectCallbackActionHandlerTest {
         ResponseWriter mockResponseWriter = mock(ResponseWriter.class);
         when(mockHttpStateHandler.getWebSocketClientRegistry()).thenReturn(mockWebSocketClientRegistry);
         when(mockHttpStateHandler.getMockServerLogger()).thenReturn(new MockServerLogger());
-        when(mockWebSocketClientRegistry.sendClientMessage(eq("some_clientId"), any(HttpRequest.class), isNull(HttpResponse.class))).thenReturn(false);
+        when(mockWebSocketClientRegistry.sendClientMessage(eq("some_clientId"), any(HttpRequest.class), isNull())).thenReturn(false);
 
         // when
         new HttpResponseObjectCallbackActionHandler(mockHttpStateHandler).handle(mockActionHandler, httpObjectCallback, request, mockResponseWriter, true, null);
 
         // then
         verify(mockWebSocketClientRegistry).registerResponseCallbackHandler(any(String.class), any(WebSocketResponseCallback.class));
-        verify(mockWebSocketClientRegistry).sendClientMessage(eq("some_clientId"), any(HttpRequest.class), isNull(HttpResponse.class));
+        verify(mockWebSocketClientRegistry).sendClientMessage(eq("some_clientId"), any(HttpRequest.class), isNull());
         verify(mockActionHandler).writeResponseActionResponse(notFoundResponse().removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME), mockResponseWriter, request, httpObjectCallback, true);
     }
 }

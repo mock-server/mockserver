@@ -15,6 +15,7 @@ public class KeyAndCertificateFactoryFactory {
 
     private static final ClassLoader CLASS_LOADER = KeyAndCertificateFactoryFactory.class.getClassLoader();
 
+    @SuppressWarnings("unchecked")
     public static KeyAndCertificateFactory createKeyAndCertificateFactory(MockServerLogger mockServerLogger) {
         if (ConfigurationProperties.useBouncyCastleForKeyAndCertificateGeneration()) {
             Class<?> bouncyCastleProvider = null;
