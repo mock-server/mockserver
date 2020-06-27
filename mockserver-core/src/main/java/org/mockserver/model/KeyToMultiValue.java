@@ -53,6 +53,11 @@ public class KeyToMultiValue extends ObjectWithJsonToString {
         return values;
     }
 
+    public void replaceValues(List<NottableString> values) {
+        this.values.clear();
+        this.values.addAll(values);
+    }
+
     public void addValue(final String value) {
         addValue(string(value));
     }

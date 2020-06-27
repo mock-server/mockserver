@@ -1,7 +1,8 @@
-package org.mockserver.matchers;
+package org.mockserver.codec;
 
 import com.google.common.collect.ImmutableList;
 import org.junit.Test;
+import org.mockserver.codec.PathParametersDecoder;
 import org.mockserver.model.Parameter;
 
 import java.util.Arrays;
@@ -18,7 +19,7 @@ import static org.mockserver.model.Parameter.param;
 /**
  * See: https://swagger.io/docs/specification/serialization/
  */
-public class PathParametersParserTest {
+public class PathParametersDecoderTest {
 
     @Test
     public void shouldValidWithNoPathParameters() {
@@ -280,7 +281,7 @@ public class PathParametersParserTest {
     }
 
     private void shouldValidPath(String path, Parameter[] pathParameters, String error) {
-        assertThat(new PathParametersParser().validatePath(
+        assertThat(new PathParametersDecoder().validatePath(
             request()
                 .withPath(
                     path
@@ -532,7 +533,7 @@ public class PathParametersParserTest {
     }
 
     void shouldNormalisePath(String matcherPath, Parameter[] parameter, String expected) {
-        assertThat(new PathParametersParser().normalisePathWithParametersForMatching(
+        assertThat(new PathParametersDecoder().normalisePathWithParametersForMatching(
             request()
                 .withPath(
                     matcherPath
@@ -856,7 +857,7 @@ public class PathParametersParserTest {
     }
 
     void shouldRetrieveParameters(String matcherPath, Parameter[] parameter, String requestPath, List<Parameter> expected) {
-        assertThat(new PathParametersParser().retrievePathParameters(
+        assertThat(new PathParametersDecoder().retrievePathParameters(
             request()
                 .withPath(
                     matcherPath

@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
+import org.mockserver.codec.FormParameterDecoder;
+import org.mockserver.codec.JsonSchemaBodyDecoder;
+import org.mockserver.codec.PathParametersDecoder;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
@@ -37,7 +40,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
     private static final String REQUEST_NOT_OPERATOR_IS_ENABLED = COMMA + NEW_LINE + "request 'not' operator is enabled";
     private static final String EXPECTATION_REQUEST_NOT_OPERATOR_IS_ENABLED = COMMA + NEW_LINE + "expectation's request 'not' operator is enabled";
     private static final String EXPECTATION_REQUEST_MATCHER_NOT_OPERATOR_IS_ENABLED = COMMA + NEW_LINE + "expectation's request matcher 'not' operator is enabled";
-    private static final PathParametersParser pathParametersParser = new PathParametersParser();
+    private static final PathParametersDecoder pathParametersParser = new PathParametersDecoder();
     private static final ObjectWriter TO_STRING_OBJECT_WRITER = ObjectMapperFactory.createObjectMapper(true);
     private int hashCode;
     private HttpRequest httpRequest;
@@ -52,7 +55,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
     private BooleanMatcher keepAliveMatcher = null;
     private BooleanMatcher sslMatcher = null;
     private ObjectMapper objectMapperWithStrictBodyDTODeserializer = ObjectMapperFactory.createObjectMapper(new StrictBodyDTODeserializer());
-    private JsonSchemaBodyParser jsonSchemaBodyParser;
+    private JsonSchemaBodyDecoder jsonSchemaBodyParser;
     private MatcherBuilder matcherBuilder;
 
     public HttpRequestPropertiesMatcher(MockServerLogger mockServerLogger) {
@@ -85,7 +88,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                 withCookies(httpRequest.getCookies());
                 withKeepAlive(httpRequest.isKeepAlive());
                 withSsl(httpRequest.isSecure());
-                this.jsonSchemaBodyParser = new JsonSchemaBodyParser(mockServerLogger, expectation, httpRequest);
+                this.jsonSchemaBodyParser = new JsonSchemaBodyDecoder(mockServerLogger, expectation, httpRequest);
             }
             return true;
         } else {
@@ -293,6 +296,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                         return false;
                     }
 
+                    splitParameters(httpRequest.getQueryStringParameters(), request.getQueryStringParameters());
                     boolean queryStringParametersMatches = matches(QUERY_PARAMETERS, matchDifference, queryStringParameterMatcher, request.getQueryStringParameters());
                     if (failFast(queryStringParameterMatcher, matchDifference, matchDifferenceCount, becauseBuilder, queryStringParametersMatches, QUERY_PARAMETERS)) {
                         return false;
@@ -315,6 +319,20 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             }
         }
         return false;
+    }
+
+    private void splitParameters(Parameters matcher, Parameters matched) {
+        if (matcher != null && matched != null) {
+            for (Parameter matcherEntry : matcher.getEntries()) {
+                if (matcherEntry.getStyle() != null && !matcherEntry.getStyle().isExploded()) {
+                    for (Parameter matchedEntry : matched.getEntries()) {
+                        if (matcherEntry.getName().getValue().equals(matchedEntry.getName().getValue())) {
+                            matchedEntry.replaceValues(new FormParameterDecoder(mockServerLogger).splitOnDelimiter(matcherEntry.getStyle(), matchedEntry.getValues()));
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private boolean failFast(Matcher<?> matcher, MatchDifference matchDifference, MatchDifferenceCount matchDifferenceCount, StringBuilder becauseBuilder, boolean fieldMatches, MatchDifference.Field fieldName) {
@@ -428,7 +446,14 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                 bodyMatcher instanceof JsonPathMatcher
             ) {
                 // json body matcher
-                bodyMatches = matches(BODY, context, bodyMatcher, jsonSchemaBodyParser.convertToJson(request, context, bodyMatcher));
+                try {
+                    bodyMatches = matches(BODY, context, bodyMatcher, jsonSchemaBodyParser.convertToJson(request, bodyMatcher));
+                } catch (IllegalArgumentException iae) {
+                    if (context != null) {
+                        context.addDifference(mockServerLogger, iae, iae.getMessage());
+                    }
+                    bodyMatches = matches(BODY, context, bodyMatcher, request.getBodyAsString());
+                }
             } else {
                 bodyMatches = matches(BODY, context, bodyMatcher, request.getBodyAsString());
             }

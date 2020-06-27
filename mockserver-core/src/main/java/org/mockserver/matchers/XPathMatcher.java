@@ -11,6 +11,7 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mockserver.matchers.StringToXmlDocumentParser.ErrorLevel.prettyPrint;
 import static org.slf4j.event.Level.DEBUG;
 
 /**
@@ -55,9 +56,9 @@ public class XPathMatcher extends BodyMatcher<String> {
             result = true;
         } else if (matched != null) {
             try {
-                result = (Boolean) xpathExpression.evaluate(stringToXmlDocumentParser.buildDocument(matched, (matchedInException, throwable) -> {
+                result = (Boolean) xpathExpression.evaluate(stringToXmlDocumentParser.buildDocument(matched, (matchedInException, throwable, level) -> {
                     if (context != null) {
-                        context.addDifference(mockServerLogger, throwable, "xpath match failed expected:{}found:{}failed because:{}", matcher, matched, throwable.getMessage());
+                        context.addDifference(mockServerLogger, throwable, "xpath match failed expected:{}found:{}failed because " + prettyPrint(level) + ":{}", matcher, matched, throwable.getMessage());
                     }
                 }), XPathConstants.BOOLEAN);
             } catch (Throwable throwable) {

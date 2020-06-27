@@ -1,4 +1,4 @@
-package org.mockserver.matchers;
+package org.mockserver.codec;
 
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.NottableString;
@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 import static org.mockserver.model.NottableString.string;
 
-public class PathParametersParser {
+public class PathParametersDecoder {
 
     private static final Pattern PATH_VARIABLE_NAME_PATTERN = Pattern.compile("\\{[.;]?([^}*]+)\\*?}");
 

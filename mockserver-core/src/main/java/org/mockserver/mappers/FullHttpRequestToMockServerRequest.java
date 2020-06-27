@@ -7,7 +7,7 @@ import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import org.mockserver.codec.BodyDecoderEncoder;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.matchers.FormParameterParser;
+import org.mockserver.codec.FormParameterDecoder;
 import org.mockserver.model.Cookies;
 import org.mockserver.model.Headers;
 import org.mockserver.model.HttpRequest;
@@ -28,13 +28,13 @@ public class FullHttpRequestToMockServerRequest {
     private final MockServerLogger mockServerLogger;
     private final BodyDecoderEncoder bodyDecoderEncoder;
     private final boolean isSecure;
-    private final FormParameterParser formParameterParser;
+    private final FormParameterDecoder formParameterParser;
 
     public FullHttpRequestToMockServerRequest(MockServerLogger mockServerLogger, boolean isSecure) {
         this.mockServerLogger = mockServerLogger;
         this.bodyDecoderEncoder = new BodyDecoderEncoder();
         this.isSecure = isSecure;
-        formParameterParser = new FormParameterParser(mockServerLogger);
+        formParameterParser = new FormParameterDecoder(mockServerLogger);
     }
 
     public HttpRequest mapFullHttpRequestToMockServerRequest(FullHttpRequest fullHttpRequest) {
@@ -75,7 +75,7 @@ public class FullHttpRequestToMockServerRequest {
 
     private void setQueryString(HttpRequest httpRequest, FullHttpRequest fullHttpRequest) {
         if (fullHttpRequest.uri().contains("?")) {
-            httpRequest.withQueryStringParameters(formParameterParser.retrieveFormParameters(fullHttpRequest.uri()));
+            httpRequest.withQueryStringParameters(formParameterParser.retrieveFormParameters(fullHttpRequest.uri(), true));
         }
     }
 

@@ -34,6 +34,9 @@ import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.NottableOptionalString.optionalString;
 import static org.mockserver.model.NottableSchemaString.schemaString;
 import static org.mockserver.model.NottableString.string;
+import static org.mockserver.model.Parameter.Style;
+import static org.mockserver.model.Parameter.Style.*;
+import static org.mockserver.model.Parameter.param;
 import static org.mockserver.openapi.OpenAPISerialiser.OPEN_API_LOAD_ERROR;
 import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.ERROR;
@@ -140,25 +143,57 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                         if (Boolean.TRUE.equals(parameter.getAllowReserved())) {
                             throw new IllegalArgumentException("allowReserved field is not supported on parameters, found on operation: \"" + methodOperationPair.getRight().getOperationId() + "\" method: \"" + methodOperationPair.getLeft() + "\" parameter: \"" + name + "\" in: \"" + parameter.getIn() + "\"");
                         }
+                        Style style = null;
                         switch (parameter.getStyle()) {
                             case MATRIX:
+                                if (parameter.getExplode()) {
+                                    style = MATRIX_EXPLODE;
+                                } else {
+                                    style = MATRIX;
+                                }
                                 break;
                             case LABEL:
+                                if (parameter.getExplode()) {
+                                    style = LABEL_EXPLODE;
+                                } else {
+                                    style = LABEL;
+                                }
                                 break;
                             case FORM:
+                                if (parameter.getExplode()) {
+                                    style = FORM_EXPLODE;
+                                } else {
+                                    style = FORM;
+                                }
                                 break;
                             case SIMPLE:
+                                if (parameter.getExplode()) {
+                                    style = SIMPLE_EXPLODE;
+                                } else {
+                                    style = SIMPLE;
+                                }
                                 break;
                             case SPACEDELIMITED:
+                                if (parameter.getExplode()) {
+                                    style = SPACE_DELIMITED_EXPLODE;
+                                } else {
+                                    style = SPACE_DELIMITED;
+                                }
                                 break;
                             case PIPEDELIMITED:
+                                if (parameter.getExplode()) {
+                                    style = PIPE_DELIMITED_EXPLODE;
+                                } else {
+                                    style = PIPE_DELIMITED;
+                                }
                                 break;
                             case DEEPOBJECT:
+                                style = DEEP_OBJECT;
                                 break;
                         }
                         switch (parameter.getIn()) {
                             case "query": {
-                                httpRequest.withQueryStringParameter(name, schemaString(OBJECT_WRITER.writeValueAsString(schema)));
+                                httpRequest.withQueryStringParameter(param(name, schemaString(OBJECT_WRITER.writeValueAsString(schema))).withStyle(style));
                                 break;
                             }
                             case "header": {

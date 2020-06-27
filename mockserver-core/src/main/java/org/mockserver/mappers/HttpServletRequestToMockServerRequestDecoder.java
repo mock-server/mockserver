@@ -4,7 +4,7 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import org.mockserver.codec.BodyServletDecoderEncoder;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.matchers.FormParameterParser;
+import org.mockserver.codec.FormParameterDecoder;
 import org.mockserver.model.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -20,11 +20,11 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 public class HttpServletRequestToMockServerRequestDecoder {
 
     private final BodyServletDecoderEncoder bodyDecoderEncoder;
-    private final FormParameterParser formParameterParser;
+    private final FormParameterDecoder formParameterParser;
 
     public HttpServletRequestToMockServerRequestDecoder(MockServerLogger mockServerLogger) {
         bodyDecoderEncoder = new BodyServletDecoderEncoder(mockServerLogger);
-        formParameterParser = new FormParameterParser(mockServerLogger);
+        formParameterParser = new FormParameterDecoder(mockServerLogger);
     }
 
     public HttpRequest mapHttpServletRequestToMockServerRequest(HttpServletRequest httpServletRequest) {
@@ -54,7 +54,7 @@ public class HttpServletRequestToMockServerRequestDecoder {
     private void setQueryString(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
         Parameters parameters;
         if (isNotEmpty(httpServletRequest.getQueryString())) {
-            parameters = formParameterParser.retrieveFormParameters(httpServletRequest.getQueryString());
+            parameters = formParameterParser.retrieveFormParameters(httpServletRequest.getQueryString(), false);
         } else {
             parameters = new Parameters();
         }
