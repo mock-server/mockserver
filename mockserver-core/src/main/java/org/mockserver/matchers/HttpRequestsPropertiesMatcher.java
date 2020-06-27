@@ -44,6 +44,7 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
     private int hashCode;
     private OpenAPIDefinition openAPIDefinition;
     private List<HttpRequestPropertiesMatcher> httpRequestPropertiesMatchers;
+    private List<HttpRequest> httpRequests;
     private static final ObjectWriter OBJECT_WRITER = ObjectMapperFactory.createObjectMapper(new JsonNodeExampleSerializer()).writerWithDefaultPrettyPrinter();
 
     protected HttpRequestsPropertiesMatcher(MockServerLogger mockServerLogger) {
@@ -55,12 +56,18 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
     }
 
     @Override
+    public List<HttpRequest> getHttpRequests() {
+        return httpRequests;
+    }
+
+    @Override
     public boolean apply(RequestDefinition requestDefinition) {
         OpenAPIDefinition openAPIDefinition = requestDefinition instanceof OpenAPIDefinition ? (OpenAPIDefinition) requestDefinition : null;
         if (this.openAPIDefinition == null || !this.openAPIDefinition.equals(openAPIDefinition)) {
             this.openAPIDefinition = openAPIDefinition;
             if (openAPIDefinition != null && isNotBlank(openAPIDefinition.getSpecUrlOrPayload())) {
                 httpRequestPropertiesMatchers = new ArrayList<>();
+                httpRequests = new ArrayList<>();
                 OpenAPISerialiser openAPISerialiser = new OpenAPISerialiser(mockServerLogger);
                 try {
                     OpenAPI openAPI = openAPISerialiser.buildOpenAPI(openAPIDefinition.getSpecUrlOrPayload(), true);
@@ -133,6 +140,22 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                         if (Boolean.TRUE.equals(parameter.getAllowReserved())) {
                             throw new IllegalArgumentException("allowReserved field is not supported on parameters, found on operation: \"" + methodOperationPair.getRight().getOperationId() + "\" method: \"" + methodOperationPair.getLeft() + "\" parameter: \"" + name + "\" in: \"" + parameter.getIn() + "\"");
                         }
+                        switch (parameter.getStyle()) {
+                            case MATRIX:
+                                break;
+                            case LABEL:
+                                break;
+                            case FORM:
+                                break;
+                            case SIMPLE:
+                                break;
+                            case SPACEDELIMITED:
+                                break;
+                            case PIPEDELIMITED:
+                                break;
+                            case DEEPOBJECT:
+                                break;
+                        }
                         switch (parameter.getIn()) {
                             case "query": {
                                 httpRequest.withQueryStringParameter(name, schemaString(OBJECT_WRITER.writeValueAsString(schema)));
@@ -154,14 +177,14 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                                 mockServerLogger.logEvent(
                                     new LogEntry()
                                         .setLogLevel(ERROR)
-                                        .setMessageFormat("unknown value for parameter in property, expected \"query\", \"header\", \"path\" or \"cookie\" found \"" + parameter.getIn() + "\"")
+                                        .setMessageFormat("unknown value for the parameter in property, expected \"query\", \"header\", \"path\" or \"cookie\" found \"" + parameter.getIn() + "\"")
                                 );
                         }
                     } catch (IOException exception) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(ERROR)
-                                .setMessageFormat("exception while creating adding parameter{}from schema{}")
+                                .setMessageFormat("exception while creating adding parameter{}from the schema{}")
                                 .setArguments(parameter, openAPIDefinition)
                                 .setThrowable(exception)
                         );
@@ -170,23 +193,51 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
             }
         }
         // security schemes
-        Map<String, Set<String>> headerMatches = new HashMap<>();
-        buildSecurityHeaderValues(openAPI, headerMatches, openAPI.getSecurity());
-        buildSecurityHeaderValues(openAPI, headerMatches, methodOperationPair.getRight().getSecurity());
-        if (!headerMatches.isEmpty()) {
-            if (headerMatches.keySet().size() > 1) {
-                for (Map.Entry<String, Set<String>> headerMatchEntry : headerMatches.entrySet()) {
+        Map<String, Set<String>> headerRequirements = new HashMap<>();
+        Map<String, Set<String>> queryStringParameterRequirements = new HashMap<>();
+        Map<String, Set<String>> cookieRequirements = new HashMap<>();
+        buildSecurityValues(openAPI, headerRequirements, queryStringParameterRequirements, cookieRequirements, openAPI.getSecurity());
+        buildSecurityValues(openAPI, headerRequirements, queryStringParameterRequirements, cookieRequirements, methodOperationPair.getRight().getSecurity());
+        if (!headerRequirements.isEmpty()) {
+            if (headerRequirements.keySet().size() > 1) {
+                for (Map.Entry<String, Set<String>> headerMatchEntry : headerRequirements.entrySet()) {
                     httpRequest.withHeader("?" + headerMatchEntry.getKey(), Joiner.on("|").join(headerMatchEntry.getValue()));
                 }
-                httpRequest.withHeader(Joiner.on("|").join(headerMatches.keySet()), ".*");
+                httpRequest.withHeader(Joiner.on("|").join(headerRequirements.keySet()), ".*");
+            } else if (!queryStringParameterRequirements.isEmpty() || !cookieRequirements.isEmpty()) {
+                httpRequest.withHeader("?" + Joiner.on("|").join(headerRequirements.keySet()), Joiner.on("|").join(headerRequirements.values().stream().flatMap(Collection::stream).collect(Collectors.toList())));
             } else {
-                httpRequest.withHeader(Joiner.on("|").join(headerMatches.keySet()), Joiner.on("|").join(headerMatches.values().stream().flatMap(Collection::stream).collect(Collectors.toList())));
+                httpRequest.withHeader(Joiner.on("|").join(headerRequirements.keySet()), Joiner.on("|").join(headerRequirements.values().stream().flatMap(Collection::stream).collect(Collectors.toList())));
+            }
+        }
+        if (!queryStringParameterRequirements.isEmpty()) {
+            if (queryStringParameterRequirements.keySet().size() > 1) {
+                for (Map.Entry<String, Set<String>> queryStringParameterMatchEntry : queryStringParameterRequirements.entrySet()) {
+                    httpRequest.withQueryStringParameter("?" + queryStringParameterMatchEntry.getKey(), Joiner.on("|").join(queryStringParameterMatchEntry.getValue()));
+                }
+                httpRequest.withQueryStringParameter(Joiner.on("|").join(queryStringParameterRequirements.keySet()), ".*");
+            } else if (!headerRequirements.isEmpty() || !cookieRequirements.isEmpty()) {
+                httpRequest.withQueryStringParameter("?" + Joiner.on("|").join(queryStringParameterRequirements.keySet()), Joiner.on("|").join(queryStringParameterRequirements.values().stream().flatMap(Collection::stream).collect(Collectors.toList())));
+            } else {
+                httpRequest.withQueryStringParameter(Joiner.on("|").join(queryStringParameterRequirements.keySet()), Joiner.on("|").join(queryStringParameterRequirements.values().stream().flatMap(Collection::stream).collect(Collectors.toList())));
+            }
+        }
+        if (!cookieRequirements.isEmpty()) {
+            if (cookieRequirements.keySet().size() > 1) {
+                for (Map.Entry<String, Set<String>> cookieMatchEntry : cookieRequirements.entrySet()) {
+                    httpRequest.withCookie("?" + cookieMatchEntry.getKey(), Joiner.on("|").join(cookieMatchEntry.getValue()));
+                }
+                httpRequest.withCookie(Joiner.on("|").join(cookieRequirements.keySet()), ".*");
+            } else if (!queryStringParameterRequirements.isEmpty() || !headerRequirements.isEmpty()) {
+                httpRequest.withCookie("?" + Joiner.on("|").join(cookieRequirements.keySet()), Joiner.on("|").join(cookieRequirements.values().stream().flatMap(Collection::stream).collect(Collectors.toList())));
+            } else {
+                httpRequest.withCookie(Joiner.on("|").join(cookieRequirements.keySet()), Joiner.on("|").join(cookieRequirements.values().stream().flatMap(Collection::stream).collect(Collectors.toList())));
             }
         }
         return httpRequest;
     }
 
-    private void buildSecurityHeaderValues(OpenAPI openAPI, Map<String, Set<String>> headerMatches, List<SecurityRequirement> security) {
+    private void buildSecurityValues(OpenAPI openAPI, Map<String, Set<String>> headerRequirements, Map<String, Set<String>> queryStringParameterRequirements, Map<String, Set<String>> cookieRequirements, List<SecurityRequirement> security) {
         if (security != null) {
             for (SecurityRequirement securityRequirement : security) {
                 if (securityRequirement != null) {
@@ -196,14 +247,40 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                             String scheme = securityScheme.getScheme();
                             switch (securityScheme.getType()) {
                                 case APIKEY: {
-                                    String headerName = securityScheme.getName();
-                                    if (isNotBlank(headerName)) {
-                                        Set<String> headerValues = headerMatches.get(headerName);
-                                        String headerValue = ".+";
-                                        if (headerValues != null) {
-                                            headerValues.add(headerValue);
-                                        } else {
-                                            headerMatches.put(headerName, new HashSet<>(Collections.singletonList(headerValue)));
+                                    String parameterName = securityScheme.getName();
+                                    if (isNotBlank(parameterName)) {
+                                        switch (securityScheme.getIn() != null ? securityScheme.getIn() : SecurityScheme.In.HEADER) {
+                                            case COOKIE: {
+                                                Set<String> cookieValues = cookieRequirements.get(parameterName);
+                                                String cookieValue = ".+";
+                                                if (cookieValues != null) {
+                                                    cookieValues.add(cookieValue);
+                                                } else {
+                                                    cookieRequirements.put(parameterName, new HashSet<>(Collections.singletonList(cookieValue)));
+                                                }
+                                                break;
+                                            }
+                                            case QUERY: {
+                                                Set<String> queryStringParameterValues = queryStringParameterRequirements.get(parameterName);
+                                                String queryStringParameterValue = ".+";
+                                                if (queryStringParameterValues != null) {
+                                                    queryStringParameterValues.add(queryStringParameterValue);
+                                                } else {
+                                                    queryStringParameterRequirements.put(parameterName, new HashSet<>(Collections.singletonList(queryStringParameterValue)));
+                                                }
+                                                break;
+                                            }
+                                            default:
+                                            case HEADER: {
+                                                Set<String> headerValues = headerRequirements.get(parameterName);
+                                                String headerValue = ".+";
+                                                if (headerValues != null) {
+                                                    headerValues.add(headerValue);
+                                                } else {
+                                                    headerRequirements.put(parameterName, new HashSet<>(Collections.singletonList(headerValue)));
+                                                }
+                                                break;
+                                            }
                                         }
                                     }
                                     break;
@@ -211,13 +288,39 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                                 case HTTP:
                                 case OAUTH2:
                                 case OPENIDCONNECT: {
-                                    String headerName = AUTHORIZATION.toString();
-                                    Set<String> headerValues = headerMatches.get(headerName);
-                                    String headerValue = (isNotBlank(scheme) ? scheme : "") + ".+";
-                                    if (headerValues != null) {
-                                        headerValues.add(headerValue);
-                                    } else {
-                                        headerMatches.put(headerName, new HashSet<>(Collections.singletonList(headerValue)));
+                                    String parameterName = AUTHORIZATION.toString();
+                                    switch (securityScheme.getIn() != null ? securityScheme.getIn() : SecurityScheme.In.HEADER) {
+                                        case COOKIE: {
+                                            Set<String> cookieValues = cookieRequirements.get(parameterName);
+                                            String cookieValue = (isNotBlank(scheme) ? scheme : "") + ".+";
+                                            if (cookieValues != null) {
+                                                cookieValues.add(cookieValue);
+                                            } else {
+                                                cookieRequirements.put(parameterName, new HashSet<>(Collections.singletonList(cookieValue)));
+                                            }
+                                            break;
+                                        }
+                                        case QUERY: {
+                                            Set<String> queryStringParameterValues = queryStringParameterRequirements.get(parameterName);
+                                            String queryStringParameterValue = (isNotBlank(scheme) ? scheme : "") + ".+";
+                                            if (queryStringParameterValues != null) {
+                                                queryStringParameterValues.add(queryStringParameterValue);
+                                            } else {
+                                                queryStringParameterRequirements.put(parameterName, new HashSet<>(Collections.singletonList(queryStringParameterValue)));
+                                            }
+                                            break;
+                                        }
+                                        default:
+                                        case HEADER: {
+                                            Set<String> headerValues = headerRequirements.get(parameterName);
+                                            String headerValue = (isNotBlank(scheme) ? scheme : "") + ".+";
+                                            if (headerValues != null) {
+                                                headerValues.add(headerValue);
+                                            } else {
+                                                headerRequirements.put(parameterName, new HashSet<>(Collections.singletonList(headerValue)));
+                                            }
+                                            break;
+                                        }
                                     }
                                     break;
                                 }
@@ -250,7 +353,7 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(ERROR)
-                            .setMessageFormat("exception while creating adding request body{}from schema{}")
+                            .setMessageFormat("exception while creating adding request body{}from the schema{}")
                             .setArguments(mediaType.getSchema(), openAPIDefinition)
                             .setThrowable(throwable)
                     );
@@ -261,6 +364,7 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
     }
 
     private void addRequestMatcher(OpenAPIDefinition openAPIDefinition, Pair<String, Operation> methodOperationPair, HttpRequest httpRequest, String contentType) {
+        httpRequests.add(httpRequest);
         HttpRequestPropertiesMatcher httpRequestPropertiesMatcher = new HttpRequestPropertiesMatcher(mockServerLogger);
         httpRequestPropertiesMatcher.update(httpRequest);
         httpRequestPropertiesMatcher.setControlPlaneMatcher(controlPlaneMatcher);
@@ -280,7 +384,7 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
             for (HttpRequestPropertiesMatcher httpRequestPropertiesMatcher : httpRequestPropertiesMatchers) {
                 if (matchDifference == null) {
                     if (MockServerLogger.isEnabled(DEBUG) && requestDefinition instanceof HttpRequest) {
-                        matchDifference = new MatchDifference((HttpRequest) requestDefinition);
+                        matchDifference = new MatchDifference(requestDefinition);
                     }
                     result = httpRequestPropertiesMatcher.matches(matchDifference, requestDefinition);
                 } else {

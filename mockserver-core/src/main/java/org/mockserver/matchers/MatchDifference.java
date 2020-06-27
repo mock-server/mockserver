@@ -3,6 +3,7 @@ package org.mockserver.matchers;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.RequestDefinition;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,8 @@ import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.slf4j.event.Level.DEBUG;
 
 public class MatchDifference {
+
+    public static boolean DEBUG_ALL_MATCH_FAILURES = false;
 
     public enum Field {
         METHOD("method"),
@@ -40,11 +43,11 @@ public class MatchDifference {
         }
     }
 
-    private final HttpRequest httpRequest;
+    private final RequestDefinition httpRequest;
     private final Map<Field, List<String>> differences = new ConcurrentHashMap<>();
     private Field fieldName;
 
-    public MatchDifference(HttpRequest httpRequest) {
+    public MatchDifference(RequestDefinition httpRequest) {
         this.httpRequest = httpRequest;
     }
 
@@ -83,7 +86,7 @@ public class MatchDifference {
         return addDifference(fieldName, messageFormat, arguments);
     }
 
-    public HttpRequest getHttpRequest() {
+    public RequestDefinition getHttpRequest() {
         return httpRequest;
     }
 

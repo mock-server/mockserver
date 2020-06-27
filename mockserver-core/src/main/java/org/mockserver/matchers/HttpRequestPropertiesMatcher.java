@@ -14,6 +14,9 @@ import org.mockserver.serialization.deserializers.body.StrictBodyDTODeserializer
 import org.mockserver.serialization.model.BodyDTO;
 import org.slf4j.event.Level;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -21,6 +24,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.matchersFailFast;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_MATCHED;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED;
+import static org.mockserver.matchers.MatchDifference.DEBUG_ALL_MATCH_FAILURES;
 import static org.mockserver.matchers.MatchDifference.Field.*;
 import static org.mockserver.model.NottableString.string;
 import static org.slf4j.event.Level.DEBUG;
@@ -40,6 +44,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
     private static final ObjectWriter TO_STRING_OBJECT_WRITER = ObjectMapperFactory.createObjectMapper(true);
     private int hashCode;
     private HttpRequest httpRequest;
+    private List<HttpRequest> httpRequests;
     private RegexStringMatcher methodMatcher = null;
     private RegexStringMatcher pathMatcher = null;
     private MultiValueMapMatcher pathParameterMatcher = null;
@@ -62,11 +67,17 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
     }
 
     @Override
+    public List<HttpRequest> getHttpRequests() {
+        return httpRequests;
+    }
+
+    @Override
     public boolean apply(RequestDefinition requestDefinition) {
         HttpRequest httpRequest = requestDefinition instanceof HttpRequest ? (HttpRequest) requestDefinition : null;
         if (this.httpRequest == null || !this.httpRequest.equals(httpRequest)) {
             this.hashCode = 0;
             this.httpRequest = httpRequest;
+            this.httpRequests = Collections.singletonList(this.httpRequest);
             if (httpRequest != null) {
                 withMethod(httpRequest.getMethod());
                 withPath(httpRequest);
@@ -217,8 +228,14 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             if (matcherBuilder == null) {
                 matcherBuilder = new MatcherBuilder(mockServerLogger);
             }
-            // TODO(jamesdbloom) control matching of HttpRequest against OpenAPI doesn't handle missing properties such as path or method
-            return matcherBuilder.transformsToMatcher(new Expectation(requestDefinition)).matches(new MatchDifference(httpRequest), this.httpRequest);
+            boolean overallMatch = false;
+            for (HttpRequest request : matcherBuilder.transformsToMatcher(requestDefinition).getHttpRequests()) {
+                if (matches(request)) {
+                    overallMatch = true;
+                    break;
+                }
+            }
+            return overallMatch;
         } else {
             return requestDefinition == null;
         }
@@ -231,7 +248,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             } else if (this.httpRequest == null) {
                 return true;
             } else {
-                if (MockServerLogger.isEnabled(DEBUG) && matchDifference == null) {
+                if (matchDifference == null && DEBUG_ALL_MATCH_FAILURES) {
                     matchDifference = new MatchDifference(request);
                 }
                 MatchDifferenceCount matchDifferenceCount = new MatchDifferenceCount(request);

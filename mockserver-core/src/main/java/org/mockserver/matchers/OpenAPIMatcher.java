@@ -15,6 +15,8 @@ import org.mockserver.openapi.OpenAPISerialiser;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.slf4j.event.Level;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -34,11 +36,17 @@ public class OpenAPIMatcher extends AbstractHttpRequestMatcher {
     private static OpenAPISerialiser openAPISerialiser;
     private int hashCode;
     private OpenAPIDefinition openAPIDefinition;
+    private List<HttpRequest> httpRequests = Collections.emptyList();
     private OpenApiInteractionValidator openApiInteractionValidator;
     private String definitionAsString;
 
     public OpenAPIMatcher(MockServerLogger mockServerLogger) {
         super(mockServerLogger);
+    }
+
+    @Override
+    public List<HttpRequest> getHttpRequests() {
+        return httpRequests;
     }
 
     @Override
@@ -110,7 +118,7 @@ public class OpenAPIMatcher extends AbstractHttpRequestMatcher {
             StringBuilder becauseBuilder = new StringBuilder();
             overallMatch = buildBecause(context, becauseBuilder, validationReport);
             if (!controlPlaneMatcher) {
-                HttpRequest httpRequest = context != null ? context.getHttpRequest() : null;
+                RequestDefinition httpRequest = context != null ? context.getHttpRequest() : null;
                 if (overallMatch) {
                     mockServerLogger.logEvent(
                         new LogEntry()

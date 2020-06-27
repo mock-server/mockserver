@@ -1,12 +1,15 @@
 package org.mockserver.mappers;
 
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import org.mockserver.codec.BodyDecoderEncoder;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.*;
+import org.mockserver.matchers.FormParameterParser;
+import org.mockserver.model.Cookies;
+import org.mockserver.model.Headers;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.url.URLParser;
 import org.slf4j.event.Level;
@@ -25,11 +28,13 @@ public class FullHttpRequestToMockServerRequest {
     private final MockServerLogger mockServerLogger;
     private final BodyDecoderEncoder bodyDecoderEncoder;
     private final boolean isSecure;
+    private final FormParameterParser formParameterParser;
 
     public FullHttpRequestToMockServerRequest(MockServerLogger mockServerLogger, boolean isSecure) {
         this.mockServerLogger = mockServerLogger;
         this.bodyDecoderEncoder = new BodyDecoderEncoder();
         this.isSecure = isSecure;
+        formParameterParser = new FormParameterParser(mockServerLogger);
     }
 
     public HttpRequest mapFullHttpRequestToMockServerRequest(FullHttpRequest fullHttpRequest) {
@@ -39,10 +44,7 @@ public class FullHttpRequestToMockServerRequest {
                 setMethod(httpRequest, fullHttpRequest);
 
                 setPath(httpRequest, fullHttpRequest);
-                if (fullHttpRequest.uri().contains("?")) {
-                    setQueryString(httpRequest, new QueryStringDecoder(fullHttpRequest.uri()));
-                }
-
+                setQueryString(httpRequest, fullHttpRequest);
                 setHeaders(httpRequest, fullHttpRequest);
                 setCookies(httpRequest, fullHttpRequest);
                 setBody(httpRequest, fullHttpRequest);
@@ -71,20 +73,10 @@ public class FullHttpRequestToMockServerRequest {
         httpRequest.withPath(URLParser.returnPath(fullHttpRequest.uri()));
     }
 
-    private void setQueryString(HttpRequest httpRequest, QueryStringDecoder queryStringDecoder) {
-        Parameters parameters = new Parameters();
-        try {
-            parameters.withEntries(queryStringDecoder.parameters());
-        } catch (IllegalArgumentException iae) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(Level.ERROR)
-                    .setHttpRequest(httpRequest)
-                    .setMessageFormat("exception while parsing query string")
-                    .setArguments(iae)
-            );
+    private void setQueryString(HttpRequest httpRequest, FullHttpRequest fullHttpRequest) {
+        if (fullHttpRequest.uri().contains("?")) {
+            httpRequest.withQueryStringParameters(formParameterParser.retrieveFormParameters(fullHttpRequest.uri()));
         }
-        httpRequest.withQueryStringParameters(parameters);
     }
 
     private void setHeaders(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {

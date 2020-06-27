@@ -3288,8 +3288,10 @@ public class HttpRequestsPropertiesMatcherTest {
 
     // SECURITY SCHEMES
 
+    // HEADER (SECURITY SCHEMES)
+
     @Test
-    public void shouldMatchBySecuritySchemeWithBasic() {
+    public void shouldMatchBySecuritySchemeInHeaderWithBasic() {
         // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
 
@@ -3331,7 +3333,7 @@ public class HttpRequestsPropertiesMatcherTest {
     }
 
     @Test
-    public void shouldMatchBySecuritySchemeWithBearer() {
+    public void shouldMatchBySecuritySchemeInHeaderWithBearer() {
         // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
 
@@ -3373,7 +3375,7 @@ public class HttpRequestsPropertiesMatcherTest {
     }
 
     @Test
-    public void shouldMatchBySecuritySchemeWithApiKey() {
+    public void shouldMatchBySecuritySchemeInHeaderWithApiKey() {
         // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
 
@@ -3412,7 +3414,7 @@ public class HttpRequestsPropertiesMatcherTest {
     }
 
     @Test
-    public void shouldMatchBySecuritySchemeWithOpenIdConnect() {
+    public void shouldMatchBySecuritySchemeInHeaderWithOpenIdConnect() {
         // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
 
@@ -3448,7 +3450,7 @@ public class HttpRequestsPropertiesMatcherTest {
     }
 
     @Test
-    public void shouldMatchBySecuritySchemeWithOAuth2() {
+    public void shouldMatchBySecuritySchemeInHeaderWithOAuth2() {
         // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
 
@@ -3491,7 +3493,7 @@ public class HttpRequestsPropertiesMatcherTest {
     }
 
     @Test
-    public void shouldMatchBySecuritySchemeWithMultiAuthorizationHeaderSchemes() {
+    public void shouldMatchBySecuritySchemeInHeaderWithMultiAuthorizationHeaderSchemes() {
         // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
 
@@ -3541,7 +3543,7 @@ public class HttpRequestsPropertiesMatcherTest {
     }
 
     @Test
-    public void shouldMatchBySecuritySchemeWithMultiSchemesIncludingAPIKey() {
+    public void shouldMatchBySecuritySchemeInHeaderWithMultiSchemesIncludingAPIKey() {
         // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
 
@@ -3604,7 +3606,7 @@ public class HttpRequestsPropertiesMatcherTest {
     }
 
     @Test
-    public void shouldMatchByDefaultSecuritySchemeWithMultiSchemesIncludingAPIKey() {
+    public void shouldMatchByDefaultSecuritySchemeInHeaderWithMultiSchemesIncludingAPIKey() {
         // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
 
@@ -3667,7 +3669,7 @@ public class HttpRequestsPropertiesMatcherTest {
     }
 
     @Test
-    public void shouldMatchByDefaultSecuritySchemeWithMultiSchemesIncludingAPIKeyWithOperationOverride() {
+    public void shouldMatchByDefaultSecuritySchemeInHeaderWithMultiSchemesIncludingAPIKeyWithOperationOverride() {
         // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
 
@@ -3727,6 +3729,998 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
+        ));
+    }
+
+    // QUERY STRING PARAMETER (SECURITY SCHEMES)
+
+    @Test
+    public void shouldMatchBySecuritySchemeInQueryStringParameterWithBasic() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - BasicAuth: []" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    BasicAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      scheme: basic" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "basic " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "basic")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchBySecuritySchemeInQueryStringParameterWithBearer() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - BearerAuth: []" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    BearerAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      scheme: bearer" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "bearer")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchBySecuritySchemeInQueryStringParameterWithApiKey() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - ApiKeyAuth: []" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    ApiKeyAuth:" + NEW_LINE +
+                    "      type: apiKey" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      name: X-API-Key" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("X-API-Key", UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("X-API-Key", "")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchBySecuritySchemeInQueryStringParameterWithOpenIdConnect() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - OpenID:" + NEW_LINE +
+                    "            - read" + NEW_LINE +
+                    "            - write" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    OpenID:" + NEW_LINE +
+                    "      type: openIdConnect" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      openIdConnectUrl: https://example.com/.well-known/openid-configuration" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchBySecuritySchemeInQueryStringParameterWithOAuth2() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - OAuth2:" + NEW_LINE +
+                    "            - read" + NEW_LINE +
+                    "            - write" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    OAuth2:" + NEW_LINE +
+                    "      type: oauth2" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      flows:" + NEW_LINE +
+                    "        authorizationCode:" + NEW_LINE +
+                    "          authorizationUrl: https://example.com/oauth/authorize" + NEW_LINE +
+                    "          tokenUrl: https://example.com/oauth/token" + NEW_LINE +
+                    "          scopes:" + NEW_LINE +
+                    "            read: Grants read access" + NEW_LINE +
+                    "            write: Grants write access" + NEW_LINE +
+                    "            admin: Grants access to admin operations"
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchBySecuritySchemeInQueryStringParameterWithMultiAuthorizationQueryStringParameterSchemes() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - BasicAuth: []" + NEW_LINE +
+                    "        - BearerAuth: []" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    BasicAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      scheme: basic" + NEW_LINE +
+                    "    BearerAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      scheme: bearer" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "basic " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "bearer")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchBySecuritySchemeInQueryStringParameterWithMultiSchemesIncludingAPIKey() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - BasicAuth: []" + NEW_LINE +
+                    "        - BearerAuth: []" + NEW_LINE +
+                    "        - ApiKeyAuth: []" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    BasicAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      scheme: basic" + NEW_LINE +
+                    "    BearerAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      scheme: bearer" + NEW_LINE +
+                    "    ApiKeyAuth:" + NEW_LINE +
+                    "      type: apiKey" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      name: X-API-Key" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "basic " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("X-API-Key", UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "bearer")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("X-API-Key", "")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchByDefaultSecuritySchemeInQueryStringParameterWithMultiSchemesIncludingAPIKey() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "security:" + NEW_LINE +
+                    "  - BasicAuth: []" + NEW_LINE +
+                    "  - BearerAuth: []" + NEW_LINE +
+                    "  - ApiKeyAuth: []" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    BasicAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      scheme: basic" + NEW_LINE +
+                    "    BearerAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      scheme: bearer" + NEW_LINE +
+                    "    ApiKeyAuth:" + NEW_LINE +
+                    "      type: apiKey" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      name: X-API-Key" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "basic " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("X-API-Key", UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "bearer")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("X-API-Key", "")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchByDefaultSecuritySchemeInQueryStringParameterWithMultiSchemesIncludingAPIKeyWithOperationOverride() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "security:" + NEW_LINE +
+                    "  - BasicAuth: []" + NEW_LINE +
+                    "  - BearerAuth: []" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - ApiKeyAuth: []" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    BasicAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      scheme: basic" + NEW_LINE +
+                    "    BearerAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      scheme: bearer" + NEW_LINE +
+                    "    ApiKeyAuth:" + NEW_LINE +
+                    "      type: apiKey" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      name: X-API-Key" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "basic " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("X-API-Key", UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "bearer")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("X-API-Key", "")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    // COOKIE (SECURITY SCHEMES)
+
+    @Test
+    public void shouldMatchBySecuritySchemeInCookieWithBasic() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - BasicAuth: []" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    BasicAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      in: cookie" + NEW_LINE +
+                    "      scheme: basic" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "basic " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "basic")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchBySecuritySchemeInCookieWithBearer() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - BearerAuth: []" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    BearerAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      in: cookie" + NEW_LINE +
+                    "      scheme: bearer" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "bearer")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchBySecuritySchemeInCookieWithApiKey() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - ApiKeyAuth: []" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    ApiKeyAuth:" + NEW_LINE +
+                    "      type: apiKey" + NEW_LINE +
+                    "      in: cookie" + NEW_LINE +
+                    "      name: X-API-Key" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("X-API-Key", UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("X-API-Key", "")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchBySecuritySchemeInCookieWithOpenIdConnect() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - OpenID:" + NEW_LINE +
+                    "            - read" + NEW_LINE +
+                    "            - write" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    OpenID:" + NEW_LINE +
+                    "      type: openIdConnect" + NEW_LINE +
+                    "      in: cookie" + NEW_LINE +
+                    "      openIdConnectUrl: https://example.com/.well-known/openid-configuration" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchBySecuritySchemeInCookieWithOAuth2() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - OAuth2:" + NEW_LINE +
+                    "            - read" + NEW_LINE +
+                    "            - write" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    OAuth2:" + NEW_LINE +
+                    "      type: oauth2" + NEW_LINE +
+                    "      in: cookie" + NEW_LINE +
+                    "      flows:" + NEW_LINE +
+                    "        authorizationCode:" + NEW_LINE +
+                    "          authorizationUrl: https://example.com/oauth/authorize" + NEW_LINE +
+                    "          tokenUrl: https://example.com/oauth/token" + NEW_LINE +
+                    "          scopes:" + NEW_LINE +
+                    "            read: Grants read access" + NEW_LINE +
+                    "            write: Grants write access" + NEW_LINE +
+                    "            admin: Grants access to admin operations"
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchBySecuritySchemeInCookieWithMultiAuthorizationCookieSchemes() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - BasicAuth: []" + NEW_LINE +
+                    "        - BearerAuth: []" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    BasicAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      in: cookie" + NEW_LINE +
+                    "      scheme: basic" + NEW_LINE +
+                    "    BearerAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      in: cookie" + NEW_LINE +
+                    "      scheme: bearer" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "basic " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "bearer")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchBySecuritySchemeInCookieWithMultiSchemesIncludingAPIKey() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - BasicAuth: []" + NEW_LINE +
+                    "        - BearerAuth: []" + NEW_LINE +
+                    "        - ApiKeyAuth: []" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    BasicAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      in: cookie" + NEW_LINE +
+                    "      scheme: basic" + NEW_LINE +
+                    "    BearerAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      in: cookie" + NEW_LINE +
+                    "      scheme: bearer" + NEW_LINE +
+                    "    ApiKeyAuth:" + NEW_LINE +
+                    "      type: apiKey" + NEW_LINE +
+                    "      in: cookie" + NEW_LINE +
+                    "      name: X-API-Key" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "basic " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("X-API-Key", UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "bearer")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("X-API-Key", "")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchByDefaultSecuritySchemeInCookieWithMultiSchemesIncludingAPIKey() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "security:" + NEW_LINE +
+                    "  - BasicAuth: []" + NEW_LINE +
+                    "  - BearerAuth: []" + NEW_LINE +
+                    "  - ApiKeyAuth: []" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    BasicAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      in: cookie" + NEW_LINE +
+                    "      scheme: basic" + NEW_LINE +
+                    "    BearerAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      in: cookie" + NEW_LINE +
+                    "      scheme: bearer" + NEW_LINE +
+                    "    ApiKeyAuth:" + NEW_LINE +
+                    "      type: apiKey" + NEW_LINE +
+                    "      in: cookie" + NEW_LINE +
+                    "      name: X-API-Key" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "basic " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("X-API-Key", UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "bearer")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("X-API-Key", "")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    @Test
+    public void shouldMatchByDefaultSecuritySchemeInCookieWithMultiSchemesIncludingAPIKeyWithOperationOverride() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "security:" + NEW_LINE +
+                    "  - BasicAuth: []" + NEW_LINE +
+                    "  - BearerAuth: []" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      security:" + NEW_LINE +
+                    "        - ApiKeyAuth: []" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    BasicAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      in: cookie" + NEW_LINE +
+                    "      scheme: basic" + NEW_LINE +
+                    "    BearerAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      in: cookie" + NEW_LINE +
+                    "      scheme: bearer" + NEW_LINE +
+                    "    ApiKeyAuth:" + NEW_LINE +
+                    "      type: apiKey" + NEW_LINE +
+                    "      in: cookie" + NEW_LINE +
+                    "      name: X-API-Key" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "basic " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("X-API-Key", UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "bearer")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("X-API-Key", "")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+    }
+
+    // HEADER & QUERY STRING PARAMETER & COOKIE (SECURITY SCHEMES)
+
+    @Test
+    public void shouldMatchByDefaultSecuritySchemeInMultipleWithMultiSchemesIncludingAPIKey() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "security:" + NEW_LINE +
+                    "  - BasicAuth: []" + NEW_LINE +
+                    "  - BearerAuth: []" + NEW_LINE +
+                    "  - ApiKeyAuth: []" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "components:" + NEW_LINE +
+                    "  securitySchemes:" + NEW_LINE +
+                    "    BasicAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      scheme: basic" + NEW_LINE +
+                    "    BearerAuth:" + NEW_LINE +
+                    "      type: http" + NEW_LINE +
+                    "      in: cookie" + NEW_LINE +
+                    "      scheme: bearer" + NEW_LINE +
+                    "    ApiKeyAuth:" + NEW_LINE +
+                    "      type: apiKey" + NEW_LINE +
+                    "      in: query" + NEW_LINE +
+                    "      name: X-API-Key" + NEW_LINE
+                )
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "basic " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("X-API-Key", UUID.randomUUID().toString())
+        ));
+        // TODO(limitation): if multiple security requirements in different parameters types and missing
+        //                   from all request will still match as each parameter is an optional match
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "bearer " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "bearer")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "basic " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withCookie("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withQueryStringParameter("X-API-Key", "")
         ));
     }
 

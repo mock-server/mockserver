@@ -2,7 +2,6 @@ package org.mockserver.matchers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
-import io.netty.handler.codec.http.QueryStringDecoder;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
@@ -20,6 +19,7 @@ import static java.lang.Long.parseLong;
 import static java.util.jar.Attributes.Name.CONTENT_TYPE;
 import static java.util.stream.Collectors.toList;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXCEPTION;
+import static org.mockserver.model.NottableString.serialiseNottableString;
 
 public class JsonSchemaBodyParser {
 
@@ -29,11 +29,13 @@ public class JsonSchemaBodyParser {
     private final MockServerLogger mockServerLogger;
     private final Expectation expectation;
     private final HttpRequest httpRequest;
+    private final FormParameterParser formParameterParser;
 
     public JsonSchemaBodyParser(MockServerLogger mockServerLogger, Expectation expectation, HttpRequest httpRequest) {
         this.mockServerLogger = mockServerLogger;
         this.expectation = expectation;
         this.httpRequest = httpRequest;
+        formParameterParser = new FormParameterParser(mockServerLogger);
     }
 
     public String convertToJson(HttpRequest request, MatchDifference context, BodyMatcher<?> bodyMatcher) {
@@ -60,9 +62,10 @@ public class JsonSchemaBodyParser {
             }
         } else if (contentType.contains(APPLICATION_X_WWW_FORM_URLENCODED)) {
             ObjectNode objectNode = new ObjectNode(JsonNodeFactory.instance);
-            new QueryStringDecoder("?" + request.getBodyAsString())
-                .parameters()
-                .forEach((key, values) -> objectNode.set(key, toJsonObject(values)));
+            formParameterParser
+                .retrieveFormParameters(request.getBodyAsString())
+                .getEntries()
+                .forEach(parameter -> objectNode.set(serialiseNottableString(parameter.getName()), toJsonObject(serialiseNottableString(parameter.getValues()))));
             bodyAsJson = objectNode.toPrettyString();
         }
         return bodyAsJson;
