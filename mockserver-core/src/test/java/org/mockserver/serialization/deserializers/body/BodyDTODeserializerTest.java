@@ -1,5 +1,6 @@
 package org.mockserver.serialization.deserializers.body;
 
+import com.google.common.collect.ImmutableMap;
 import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
 import org.mockserver.matchers.MatchType;
@@ -1441,6 +1442,37 @@ public class BodyDTODeserializerTest {
                 new HttpRequestDTO()
                     .setBody(new JsonSchemaBodyDTO(new JsonSchemaBody(jsonSchema)))
             ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJsonWithJsonSchemaBodyWithParameterStyles() throws IOException {
+        // given
+        String jsonSchema = "{" + NEW_LINE +
+            "  \"type\" : \"object\"," + NEW_LINE +
+            "  \"properties\" : {" + NEW_LINE +
+            "    \"id\" : {" + NEW_LINE +
+            "      \"type\" : \"integer\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"required\" : [ \"id\" ]" + NEW_LINE +
+            "}";
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\" : {\"type\":\"JSON_SCHEMA\",\"jsonSchema\":" + jsonSchema + ",\"parameterStyles\":{\"pipeDelimitedParameter\":\"PIPE_DELIMITED\"}}" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                    new HttpRequestDTO()
+                        .setBody(new JsonSchemaBodyDTO(new JsonSchemaBody(jsonSchema)
+                            .withParameterStyles(ImmutableMap.of("pipeDelimitedParameter", ParameterStyle.PIPE_DELIMITED))
+                        ))),
+            expectationDTO);
     }
 
     @Test

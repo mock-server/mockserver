@@ -2851,62 +2851,6 @@ public class HttpRequestsPropertiesMatcherTest {
         }
     }
 
-    @Test
-    @Ignore("replace with test that covers newly supported logic")
-    public void shouldThrowExceptionForRequestBodyWithEncoding() {
-        // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
-
-        try {
-            // when
-            httpRequestsPropertiesMatcher.update(new Expectation(
-                new OpenAPIDefinition()
-                    .withSpecUrlOrPayload("---" + NEW_LINE +
-                        "openapi: 3.0.0" + NEW_LINE +
-                        "paths:" + NEW_LINE +
-                        "  \"/somePath\":" + NEW_LINE +
-                        "    post:" + NEW_LINE +
-                        "      operationId: someOperation" + NEW_LINE +
-                        "      requestBody:" + NEW_LINE +
-                        "        required: true" + NEW_LINE +
-                        "        content:" + NEW_LINE +
-                        "          application/x-www-form-urlencoded:" + NEW_LINE +
-                        "            schema:" + NEW_LINE +
-                        "              type: object" + NEW_LINE +
-                        "              required:" + NEW_LINE +
-                        "                - id" + NEW_LINE +
-                        "                - name" + NEW_LINE +
-                        "              properties:" + NEW_LINE +
-                        "                id:" + NEW_LINE +
-                        "                  type: integer" + NEW_LINE +
-                        "                  format: int64" + NEW_LINE +
-                        "                name:" + NEW_LINE +
-                        "                  type: string" + NEW_LINE +
-                        "            encoding:" + NEW_LINE +
-                        "              color:" + NEW_LINE +
-                        "                style: form" + NEW_LINE +
-                        "                explode: false" + NEW_LINE +
-                        "          application/xml:" + NEW_LINE +
-                        "            schema:" + NEW_LINE +
-                        "              type: object" + NEW_LINE +
-                        "              required:" + NEW_LINE +
-                        "                - id" + NEW_LINE +
-                        "                - name" + NEW_LINE +
-                        "              properties:" + NEW_LINE +
-                        "                id:" + NEW_LINE +
-                        "                  type: integer" + NEW_LINE +
-                        "                  format: int64" + NEW_LINE +
-                        "                name:" + NEW_LINE +
-                        "                  type: string" + NEW_LINE)
-            ));
-
-            // then
-            fail("expected exception");
-        } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload, encoding is not supported on requestBody, found on operation: \"someOperation\" method: \"POST\""));
-        }
-    }
-
     // - JSON BODY (via JsonSchema)
 
     @Test
@@ -4076,6 +4020,223 @@ public class HttpRequestsPropertiesMatcherTest {
             request()
                 .withHeader("content-type", "application/x-www-form-urlencoded")
                 .withBody("id=abc&name=1")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByFormBodyWithFormEncoding() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        content:" + NEW_LINE +
+                    "          application/x-www-form-urlencoded:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: array" + NEW_LINE +
+                    "                  items:" + NEW_LINE +
+                    "                    type: integer" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: array" + NEW_LINE +
+                    "                  items:" + NEW_LINE +
+                    "                    type: string" + NEW_LINE +
+                    "            encoding:" + NEW_LINE +
+                    "              id:" + NEW_LINE +
+                    "                style: form" + NEW_LINE +
+                    "                explode: false" + NEW_LINE +
+                    "              name:" + NEW_LINE +
+                    "                style: form" + NEW_LINE +
+                    "                explode: true" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=1,2,3&name=abc&name=def")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/x-www-form-urlencoded; charset=utf-8")
+                .withBody("id=1,2,3&name=abc&name=def")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=1,2,3&name=1&name=def")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=a,2,3&name=abc&name=def")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByFormBodyWithSpaceDelimitedEncoding() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        content:" + NEW_LINE +
+                    "          application/x-www-form-urlencoded:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: array" + NEW_LINE +
+                    "                  items:" + NEW_LINE +
+                    "                    type: integer" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: array" + NEW_LINE +
+                    "                  items:" + NEW_LINE +
+                    "                    type: string" + NEW_LINE +
+                    "            encoding:" + NEW_LINE +
+                    "              id:" + NEW_LINE +
+                    "                style: spaceDelimited" + NEW_LINE +
+                    "                explode: false" + NEW_LINE +
+                    "              name:" + NEW_LINE +
+                    "                style: spaceDelimited" + NEW_LINE +
+                    "                explode: true" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=1%202%203&name=abc&name=def")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=1+2+3&name=abc&name=def")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=1 2 3&name=abc&name=def")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=1%202%203&name=1&name=def")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=1+2+3&name=1&name=def")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=1 2 3&name=1&name=def")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=a%202%203&name=abc&name=def")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=a+2+3&name=abc&name=def")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=a 2 3&name=abc&name=def")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByFormBodyWithPipeDelimitedEncoding() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    post:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      requestBody:" + NEW_LINE +
+                    "        required: true" + NEW_LINE +
+                    "        content:" + NEW_LINE +
+                    "          application/x-www-form-urlencoded:" + NEW_LINE +
+                    "            schema:" + NEW_LINE +
+                    "              type: object" + NEW_LINE +
+                    "              required:" + NEW_LINE +
+                    "                - id" + NEW_LINE +
+                    "                - name" + NEW_LINE +
+                    "              properties:" + NEW_LINE +
+                    "                id:" + NEW_LINE +
+                    "                  type: array" + NEW_LINE +
+                    "                  items:" + NEW_LINE +
+                    "                    type: integer" + NEW_LINE +
+                    "                name:" + NEW_LINE +
+                    "                  type: array" + NEW_LINE +
+                    "                  items:" + NEW_LINE +
+                    "                    type: string" + NEW_LINE +
+                    "            encoding:" + NEW_LINE +
+                    "              id:" + NEW_LINE +
+                    "                style: pipeDelimited" + NEW_LINE +
+                    "                explode: false" + NEW_LINE +
+                    "              name:" + NEW_LINE +
+                    "                style: pipeDelimited" + NEW_LINE +
+                    "                explode: true" + NEW_LINE)
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=1|2|3&name=abc&name=def")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/x-www-form-urlencoded; charset=utf-8")
+                .withBody("id=1|2|3&name=abc&name=def")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=1|2|3&name=1&name=def")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withHeader("content-type", "application/x-www-form-urlencoded")
+                .withBody("id=a|2|3&name=abc&name=def")
         ));
     }
 

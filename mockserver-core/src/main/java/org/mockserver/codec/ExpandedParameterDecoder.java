@@ -50,6 +50,21 @@ public class ExpandedParameterDecoder {
         return parameters.withEntries(parameterMap);
     }
 
+    public void splitParameters(Parameters matcher, Parameters matched) {
+        if (matcher != null && matched != null) {
+            for (Parameter matcherEntry : matcher.getEntries()) {
+                if (matcherEntry.getName().getStyle() != null && matcherEntry.getName().getStyle().isExploded()) {
+                    for (Parameter matchedEntry : matched.getEntries()) {
+                        if (matcherEntry.getName().getValue().equals(matchedEntry.getName().getValue())) {
+                            matchedEntry.replaceValues(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(matcherEntry.getName().getStyle(), matcherEntry.getName().getValue(), matchedEntry.getValues()));
+                            matched.replaceEntry(matchedEntry);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public List<NottableString> splitOnDelimiter(ParameterStyle style, String name, List<NottableString> values) {
         if (isNotBlank(style.getRegex())) {
             List<NottableString> splitValues = new ArrayList<>();

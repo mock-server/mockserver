@@ -42,6 +42,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
     private static final String EXPECTATION_REQUEST_MATCHER_NOT_OPERATOR_IS_ENABLED = COMMA + NEW_LINE + "expectation's request matcher 'not' operator is enabled";
     private static final PathParametersDecoder pathParametersParser = new PathParametersDecoder();
     private static final ObjectWriter TO_STRING_OBJECT_WRITER = ObjectMapperFactory.createObjectMapper(true);
+    private final ExpandedParameterDecoder expandedParameterDecoder;
     private int hashCode;
     private HttpRequest httpRequest;
     private List<HttpRequest> httpRequests;
@@ -60,6 +61,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
 
     public HttpRequestPropertiesMatcher(MockServerLogger mockServerLogger) {
         super(mockServerLogger);
+        expandedParameterDecoder = new ExpandedParameterDecoder(mockServerLogger);
     }
 
     public HttpRequest getHttpRequest() {
@@ -155,7 +157,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                     break;
                 case JSON_SCHEMA:
                     JsonSchemaBody jsonSchemaBody = (JsonSchemaBody) body;
-                    bodyMatcher = new JsonSchemaMatcher(mockServerLogger, jsonSchemaBody.getValue()).withParameterStyle(jsonSchemaBody.getParameterStyle());
+                    bodyMatcher = new JsonSchemaMatcher(mockServerLogger, jsonSchemaBody.getValue()).withParameterStyle(jsonSchemaBody.getParameterStyles());
                     break;
                 case JSON_PATH:
                     JsonPathBody jsonPathBody = (JsonPathBody) body;
@@ -291,7 +293,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                     }
 
                     if (!controlPlaneMatcher) {
-                        splitParameters(httpRequest.getPathParameters(), request.getPathParameters());
+                        expandedParameterDecoder.splitParameters(httpRequest.getPathParameters(), request.getPathParameters());
                     }
                     MultiValueMapMatcher pathParameterMatcher = controlPlaneMatcher ? new MultiValueMapMatcher(mockServerLogger, request.getPathParameters(), controlPlaneMatcher) : this.pathParameterMatcher;
                     boolean pathParametersMatches = matches(PATH_PARAMETERS, matchDifference, pathParameterMatcher, pathParameters);
@@ -300,7 +302,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                     }
 
                     if (!controlPlaneMatcher) {
-                        splitParameters(httpRequest.getQueryStringParameters(), request.getQueryStringParameters());
+                        expandedParameterDecoder.splitParameters(httpRequest.getQueryStringParameters(), request.getQueryStringParameters());
                     }
                     boolean queryStringParametersMatches = matches(QUERY_PARAMETERS, matchDifference, queryStringParameterMatcher, request.getQueryStringParameters());
                     if (failFast(queryStringParameterMatcher, matchDifference, matchDifferenceCount, becauseBuilder, queryStringParametersMatches, QUERY_PARAMETERS)) {
@@ -324,21 +326,6 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             }
         }
         return false;
-    }
-
-    private void splitParameters(Parameters matcher, Parameters matched) {
-        if (matcher != null && matched != null) {
-            for (Parameter matcherEntry : matcher.getEntries()) {
-                if (matcherEntry.getName().getStyle() != null && matcherEntry.getName().getStyle().isExploded()) {
-                    for (Parameter matchedEntry : matched.getEntries()) {
-                        if (matcherEntry.getName().getValue().equals(matchedEntry.getName().getValue())) {
-                            matchedEntry.replaceValues(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(matcherEntry.getName().getStyle(), matcherEntry.getName().getValue(), matchedEntry.getValues()));
-                            matched.replaceEntry(matchedEntry);
-                        }
-                    }
-                }
-            }
-        }
     }
 
     private boolean failFast(Matcher<?> matcher, MatchDifference matchDifference, MatchDifferenceCount matchDifferenceCount, StringBuilder becauseBuilder, boolean fieldMatches, MatchDifference.Field fieldName) {

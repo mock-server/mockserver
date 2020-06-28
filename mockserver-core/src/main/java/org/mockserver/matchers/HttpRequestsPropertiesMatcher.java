@@ -428,7 +428,7 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                     }
                 }
                 try {
-                    httpRequest.withBody(jsonSchema(OBJECT_WRITER.writeValueAsString(mediaType.getSchema())).withStyle(parameterStyle).withOptional(!required));
+                    httpRequest.withBody(jsonSchema(OBJECT_WRITER.writeValueAsString(mediaType.getSchema())).withParameterStyles(parameterStyle).withOptional(!required));
                 } catch (Throwable throwable) {
                     mockServerLogger.logEvent(
                         new LogEntry()

@@ -69,6 +69,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
         boolean subString = false;
         MatchType matchType = JsonBody.DEFAULT_MATCH_TYPE;
         Parameters parameters = null;
+        Map<String, ParameterStyle> parameterStyles = null;
         if (currentToken == JsonToken.START_OBJECT) {
             @SuppressWarnings("unchecked") Map<Object, Object> body = (Map<Object, Object>) ctxt.readValue(jsonParser, Map.class);
             for (Map.Entry<Object, Object> entry : body.entrySet()) {
@@ -142,6 +143,23 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                     if (key.equalsIgnoreCase("subString")) {
                         try {
                             subString = Boolean.parseBoolean(String.valueOf(entry.getValue()));
+                        } catch (IllegalArgumentException uce) {
+                            if (MockServerLogger.isEnabled(DEBUG)) {
+                                MOCK_SERVER_LOGGER.logEvent(
+                                    new LogEntry()
+                                        .setLogLevel(DEBUG)
+                                        .setMessageFormat("ignoring unsupported boolean with value \"" + entry.getValue() + "\"")
+                                        .setThrowable(uce)
+                                );
+                            }
+                        }
+                    }
+                    if (key.equalsIgnoreCase("parameterStyles") && entry.getValue() instanceof Map) {
+                        try {
+                            parameterStyles = new HashMap<>();
+                            for (Map.Entry<?, ?> parameterStyle : ((Map<?, ?>) entry.getValue()).entrySet()) {
+                                parameterStyles.put(String.valueOf(parameterStyle.getKey()), ParameterStyle.valueOf(String.valueOf(parameterStyle.getValue())));
+                            }
                         } catch (IllegalArgumentException uce) {
                             if (MockServerLogger.isEnabled(DEBUG)) {
                                 MOCK_SERVER_LOGGER.logEvent(
@@ -229,7 +247,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                             break;
                         }
                     case JSON_SCHEMA:
-                        result = new JsonSchemaBodyDTO(new JsonSchemaBody(valueJsonValue), not);
+                        result = new JsonSchemaBodyDTO(new JsonSchemaBody(valueJsonValue).withParameterStyles(parameterStyles), not);
                         break;
                     case JSON_PATH:
                         result = new JsonPathBodyDTO(new JsonPathBody(valueJsonValue), not);
