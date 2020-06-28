@@ -21,6 +21,11 @@ public class Parameters extends KeysToMultiValues<Parameter, Parameters> {
         return new Parameter(name, values);
     }
 
+    public Parameters withKeyMatchStyle(KeyMatchStyle keyMatchStyle) {
+        super.withKeyMatchStyle(keyMatchStyle);
+        return this;
+    }
+
     @SuppressWarnings("MethodDoesntCallSuperMethod")
     public Parameters clone() {
         return new Parameters().withEntries(getEntries());

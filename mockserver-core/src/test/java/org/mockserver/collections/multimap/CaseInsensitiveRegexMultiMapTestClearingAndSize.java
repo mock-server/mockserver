@@ -2,6 +2,7 @@ package org.mockserver.collections.multimap;
 
 import org.junit.Test;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
+import org.mockserver.model.KeyMatchStyle;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -16,9 +17,11 @@ public class CaseInsensitiveRegexMultiMapTestClearingAndSize {
     public void shouldReturnSize() {
         // when
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"},
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
-                new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"},
+            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
+            new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
@@ -29,7 +32,10 @@ public class CaseInsensitiveRegexMultiMapTestClearingAndSize {
     @Test
     public void shouldReturnSizeWhenEmpty() {
         // when
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(true, new String[]{});
+        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{});
 
         // then
         assertThat(multiMap.size(), is(0));
@@ -40,9 +46,11 @@ public class CaseInsensitiveRegexMultiMapTestClearingAndSize {
     public void shouldClear() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"},
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
-                new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"},
+            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
+            new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // when

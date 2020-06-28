@@ -7,7 +7,7 @@ import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import org.mockserver.codec.BodyDecoderEncoder;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.codec.FormParameterDecoder;
+import org.mockserver.codec.ExpandedParameterDecoder;
 import org.mockserver.model.Cookies;
 import org.mockserver.model.Headers;
 import org.mockserver.model.HttpRequest;
@@ -23,18 +23,18 @@ import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
 /**
  * @author jamesdbloom
  */
-public class FullHttpRequestToMockServerRequest {
+public class FullHttpRequestToMockServerHttpRequest {
 
     private final MockServerLogger mockServerLogger;
     private final BodyDecoderEncoder bodyDecoderEncoder;
     private final boolean isSecure;
-    private final FormParameterDecoder formParameterParser;
+    private final ExpandedParameterDecoder formParameterParser;
 
-    public FullHttpRequestToMockServerRequest(MockServerLogger mockServerLogger, boolean isSecure) {
+    public FullHttpRequestToMockServerHttpRequest(MockServerLogger mockServerLogger, boolean isSecure) {
         this.mockServerLogger = mockServerLogger;
         this.bodyDecoderEncoder = new BodyDecoderEncoder();
         this.isSecure = isSecure;
-        formParameterParser = new FormParameterDecoder(mockServerLogger);
+        formParameterParser = new ExpandedParameterDecoder(mockServerLogger);
     }
 
     public HttpRequest mapFullHttpRequestToMockServerRequest(FullHttpRequest fullHttpRequest) {

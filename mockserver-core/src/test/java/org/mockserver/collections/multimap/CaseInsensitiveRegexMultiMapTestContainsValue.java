@@ -2,6 +2,7 @@ package org.mockserver.collections.multimap;
 
 import org.junit.Test;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
+import org.mockserver.model.KeyMatchStyle;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -16,7 +17,9 @@ public class CaseInsensitiveRegexMultiMapTestContainsValue {
     public void singleValuedMapShouldContainValueForSingleValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"}
         );
 
         // then
@@ -27,9 +30,11 @@ public class CaseInsensitiveRegexMultiMapTestContainsValue {
     public void multiValuedMapShouldContainValueForSingleValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"},
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
-                new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"},
+            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
+            new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
@@ -40,7 +45,9 @@ public class CaseInsensitiveRegexMultiMapTestContainsValue {
     public void singleValuedMapShouldContainValueForMultipleValues() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
         // then
@@ -52,9 +59,11 @@ public class CaseInsensitiveRegexMultiMapTestContainsValue {
     public void multiValuedMapShouldContainValueForMultipleValues() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"},
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
-                new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"},
+            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
+            new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
@@ -66,7 +75,9 @@ public class CaseInsensitiveRegexMultiMapTestContainsValue {
     public void singleValuedMapShouldNotContainValueForSingleValueWithValueMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"}
         );
 
         // then
@@ -77,9 +88,11 @@ public class CaseInsensitiveRegexMultiMapTestContainsValue {
     public void multiValuedMapShouldNotContainValueForSingleValueWithValueMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"},
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
-                new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"},
+            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
+            new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
@@ -90,7 +103,9 @@ public class CaseInsensitiveRegexMultiMapTestContainsValue {
     public void singleValuedMapShouldNotContainValueForMultipleValuesWithValueMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
         // then
@@ -102,9 +117,11 @@ public class CaseInsensitiveRegexMultiMapTestContainsValue {
     public void multiValuedMapShouldNotContainValueForMultipleValuesWithValueMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"},
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
-                new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"},
+            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
+            new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then

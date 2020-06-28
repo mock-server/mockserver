@@ -2,6 +2,7 @@ package org.mockserver.collections.multimap.optionalmatcher;
 
 import org.junit.Test;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
+import org.mockserver.model.KeyMatchStyle;
 import org.mockserver.model.NottableString;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -19,23 +20,31 @@ public class CaseInsensitiveRegexMultiMapTestOptionalContainsAll {
     @Test
     public void shouldContainAllSubSetMultipleKeyForOptionalKeys() {
         // given
-        CaseInsensitiveRegexMultiMap matcher = multiMap(true,
+        CaseInsensitiveRegexMultiMap matcher = multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")},
             new NottableString[]{optionalString("keyThree"), string("keyThreeValue")}
         );
 
         // then
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")}
         ).containsAll(matcher), is(true));
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")},
             new NottableString[]{string("keyThree"), string("keyThreeValue")}
         ).containsAll(matcher), is(true));
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")},
             new NottableString[]{string("keyThree"), string("keyThreeOtherValue")}
@@ -45,28 +54,38 @@ public class CaseInsensitiveRegexMultiMapTestOptionalContainsAll {
     @Test
     public void shouldContainAllSubSetMultipleKeyForOptionalKeysWithNottedValue() {
         // given
-        CaseInsensitiveRegexMultiMap matcher = multiMap(true,
+        CaseInsensitiveRegexMultiMap matcher = multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")},
             new NottableString[]{optionalString("keyThree"), not("keyThreeValue")}
         );
 
         // then
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")}
         ).containsAll(matcher), is(true));
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")},
             new NottableString[]{string("keyThree"), string("keyThreeValue")}
         ).containsAll(matcher), is(false));
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")},
             new NottableString[]{string("keyOtherThree"), string("keyThreeValue")}
         ).containsAll(matcher), is(true));
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")},
             new NottableString[]{string("keyThree"), string("keyThreeOtherValue")}
@@ -76,51 +95,73 @@ public class CaseInsensitiveRegexMultiMapTestOptionalContainsAll {
     @Test
     public void shouldContainAllSubSetMultipleKeyForAllOptionalKeys() {
         // given
-        CaseInsensitiveRegexMultiMap matcher = multiMap(true,
+        CaseInsensitiveRegexMultiMap matcher = multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("?keyOne"), string("keyOneValue")},
             new NottableString[]{string("?keyTwo"), string("keyTwoValue")},
             new NottableString[]{string("?keyThree"), string("keyThreeValue")}
         );
 
         // then - all three
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")},
             new NottableString[]{string("keyThree"), string("keyThreeValue")}
         ).containsAll(matcher), is(true));
         // then - any two
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")}
         ).containsAll(matcher), is(true));
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyThree"), string("keyThreeValue")}
         ).containsAll(matcher), is(true));
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyTwo"), string("keyTwoValue")},
             new NottableString[]{string("keyThree"), string("keyThreeValue")}
         ).containsAll(matcher), is(true));
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyTwo"), string("keyTwoValue")},
             new NottableString[]{string("keyOne"), string("keyOneValue")}
         ).containsAll(matcher), is(true));
         // then - any single value
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyOne"), string("keyOneValue")}
         ).containsAll(matcher), is(true));
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyTwo"), string("keyTwoValue")}
         ).containsAll(matcher), is(true));
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyThree"), string("keyThreeValue")}
         ).containsAll(matcher), is(true));
         // then - empty
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[0][]
         ).containsAll(matcher), is(true));
         // then - other value
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("otherKey"), string("otherValue")}
         ).containsAll(matcher), is(true));
     }
@@ -128,39 +169,57 @@ public class CaseInsensitiveRegexMultiMapTestOptionalContainsAll {
     @Test
     public void shouldContainAllSubSetMultipleKeyForAllOptionalEitherOr() {
         // given
-        CaseInsensitiveRegexMultiMap matcher = multiMap(true,
+        CaseInsensitiveRegexMultiMap matcher = multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("?keyOne"), string("keyOneValue")},
             new NottableString[]{string("?keyTwo"), string("keyTwoValue")},
             new NottableString[]{string("keyOne|keyTwo"), string("key.*")}
         );
 
         // then - any two
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")}
         ).containsAll(matcher), is(true));
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyTwo"), string("keyTwoValue")},
             new NottableString[]{string("keyOne"), string("keyOneValue")}
         ).containsAll(matcher), is(true));
         // then - any single value
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyOne"), string("keyOneValue")}
         ).containsAll(matcher), is(true));
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyTwo"), string("keyTwoValue")}
         ).containsAll(matcher), is(true));
         // then - not
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyOne"), string("otherValue")}
         ).containsAll(matcher), is(false));
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyTwo"), string("otherValue")}
         ).containsAll(matcher), is(false));
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[]{string("otherKey"), string("otherValue")}
         ).containsAll(matcher), is(false));
-        assertThat(multiMap(true,
+        assertThat(multiMap(
+            true,
+            KeyMatchStyle.SUB_SET,
             new NottableString[0][]
         ).containsAll(matcher), is(false));
     }

@@ -2,6 +2,7 @@ package org.mockserver.serialization.serializers.collections;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
 import org.junit.Test;
+import org.mockserver.model.KeyMatchStyle;
 import org.mockserver.model.Parameters;
 import org.mockserver.serialization.ObjectMapperFactory;
 
@@ -23,7 +24,7 @@ public class ParametersSerializerTest {
     private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
 
     @Test
-    public void shouldAllowSingleObjectForArray() throws IOException {
+    public void shouldSerializeCompleteObject() throws IOException {
         // given
         String expectedString = "{" + NEW_LINE +
             "  \"some_name\" : [ \"some_value\", \"some_other_value\" ]," + NEW_LINE +
@@ -32,11 +33,52 @@ public class ParametersSerializerTest {
 
         // when
         String actualString = objectWriter
-            .writeValueAsString(new Parameters().withEntries(
+            .writeValueAsString(new Parameters(
                 param(string("some_name"), Arrays.asList(string("some_value"), string("some_other_value"))),
                 param(string("some_other_name"), string("some_value")),
                 param(string("some_other_name"), not("some_other_value"))
             ));
+
+        // then
+        assertThat(actualString, is(expectedString));
+    }
+
+    @Test
+    public void shouldSerializeCompleteObjectWithMatchingKeyKetMatch() throws IOException {
+        // given
+        String expectedString = "{" + NEW_LINE +
+            "  \"keyMatchStyle\" : \"MATCHING_KEY\"," + NEW_LINE +
+            "  \"some_name\" : [ \"some_value\", \"some_other_value\" ]," + NEW_LINE +
+            "  \"some_other_name\" : [ \"some_value\", \"!some_other_value\" ]" + NEW_LINE +
+            "}";
+
+        // when
+        String actualString = objectWriter
+            .writeValueAsString(new Parameters(
+                param(string("some_name"), Arrays.asList(string("some_value"), string("some_other_value"))),
+                param(string("some_other_name"), string("some_value")),
+                param(string("some_other_name"), not("some_other_value"))
+            ).withKeyMatchStyle(KeyMatchStyle.MATCHING_KEY));
+
+        // then
+        assertThat(actualString, is(expectedString));
+    }
+
+    @Test
+    public void shouldSerializeCompleteObjectWithSubSetKeyMatch() throws IOException {
+        // given
+        String expectedString = "{" + NEW_LINE +
+            "  \"some_name\" : [ \"some_value\", \"some_other_value\" ]," + NEW_LINE +
+            "  \"some_other_name\" : [ \"some_value\", \"!some_other_value\" ]" + NEW_LINE +
+            "}";
+
+        // when
+        String actualString = objectWriter
+            .writeValueAsString(new Parameters(
+                param(string("some_name"), Arrays.asList(string("some_value"), string("some_other_value"))),
+                param(string("some_other_name"), string("some_value")),
+                param(string("some_other_name"), not("some_other_value"))
+            ).withKeyMatchStyle(KeyMatchStyle.SUB_SET));
 
         // then
         assertThat(actualString, is(expectedString));

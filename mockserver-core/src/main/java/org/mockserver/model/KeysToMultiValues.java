@@ -16,11 +16,17 @@ import static org.mockserver.model.NottableString.*;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends KeysToMultiValues> extends ObjectWithJsonToString {
 
+    private KeyMatchStyle keyMatchStyle = KeyMatchStyle.SUB_SET;
+
     private final Multimap<NottableString, NottableString> listMultimap = LinkedHashMultimap.create();
     private final K k = (K) this;
 
-    private CaseInsensitiveRegexMultiMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, final List<T> entries, boolean controlPlaneMatcher) {
-        CaseInsensitiveRegexMultiMap caseInsensitiveRegexMultiMap = new CaseInsensitiveRegexMultiMap(mockServerLogger, controlPlaneMatcher);
+    public CaseInsensitiveRegexMultiMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher) {
+        return toCaseInsensitiveRegexMultiMap(mockServerLogger, getEntries(), controlPlaneMatcher, keyMatchStyle);
+    }
+
+    private CaseInsensitiveRegexMultiMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, final List<T> entries, boolean controlPlaneMatcher, KeyMatchStyle keyMatchStyle) {
+        CaseInsensitiveRegexMultiMap caseInsensitiveRegexMultiMap = new CaseInsensitiveRegexMultiMap(mockServerLogger, controlPlaneMatcher, keyMatchStyle);
         if (entries != null) {
             for (KeyToMultiValue keyToMultiValue : entries) {
                 for (NottableString value : keyToMultiValue.getValues()) {
@@ -32,6 +38,16 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     }
 
     public abstract T build(final NottableString name, final Collection<NottableString> values);
+
+    public KeyMatchStyle getKeyMatchStyle() {
+        return keyMatchStyle;
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
+    public KeysToMultiValues<T, K> withKeyMatchStyle(KeyMatchStyle keyMatchStyle) {
+        this.keyMatchStyle = keyMatchStyle;
+        return this;
+    }
 
     public K withEntries(final Map<String, List<String>> entries) {
         listMultimap.clear();
@@ -121,7 +137,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    K replaceEntry(final T entry) {
+    public K replaceEntry(final T entry) {
         if (entry != null) {
             remove(entry.getName());
             listMultimap.putAll(entry.getName(), entry.getValues());
@@ -130,7 +146,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    K replaceEntry(final String name, final String... values) {
+    public K replaceEntry(final String name, final String... values) {
         if (ArrayUtils.isNotEmpty(values)) {
             remove(name);
             listMultimap.putAll(string(name), deserializeNottableStrings(values));
@@ -224,10 +240,6 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
             }
         }
         return false;
-    }
-
-    public CaseInsensitiveRegexMultiMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher) {
-        return toCaseInsensitiveRegexMultiMap(mockServerLogger, this.getEntries(), controlPlaneMatcher);
     }
 
     public boolean isEmpty() {

@@ -7,7 +7,6 @@ import org.mockserver.model.NottableString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.collections.CaseInsensitiveRegexHashMap.hashMap;
-import static org.mockserver.model.NottableOptionalString.optionalString;
 import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
 

@@ -32,9 +32,4 @@ public class NottableOptionalString extends NottableString {
         return true;
     }
 
-    @Override
-    public String toString() {
-        return OPTIONAL_CHAR + super.toString();
-    }
-
 }

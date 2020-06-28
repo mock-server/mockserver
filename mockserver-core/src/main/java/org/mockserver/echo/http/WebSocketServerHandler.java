@@ -7,7 +7,7 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
-import org.mockserver.codec.MockServerServerCodec;
+import org.mockserver.codec.MockServerHttpServerCodec;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.uuid.UUIDService;
@@ -87,7 +87,7 @@ public class WebSocketServerHandler extends ChannelInboundHandlerAdapter {
                     ctx.channel().newPromise()
                 )
                 .addListener((ChannelFutureListener) future -> {
-                    ctx.pipeline().remove(MockServerServerCodec.class);
+                    ctx.pipeline().remove(MockServerHttpServerCodec.class);
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.TRACE)

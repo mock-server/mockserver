@@ -3,6 +3,7 @@ package org.mockserver.collections.multimap;
 import org.junit.Test;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.KeyMatchStyle;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -18,12 +19,14 @@ public class CaseInsensitiveRegexMultiMapTestOptionalOnlySingleValuePerKey {
     public void shouldThrowExceptionForStaticBuilder() {
         try {
             assertThat(multiMap(
-                true, new String[]{"?keyOne", "keyOne_valueOne", "keyOne_valueTwo"}
+                true,
+                KeyMatchStyle.SUB_SET,
+                new String[]{"?keyOne", "keyOne_valueOne", "keyOne_valueTwo"}
             ).allKeysOptional(), is(true));
 
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("multiple values for optional key are not allowed, value \"keyOne_valueOne\"already exists for \"?keyOne\""));
+            assertThat(iae.getMessage(), is("multiple values for optional key are not allowed, value \"keyOne_valueOne\" already exists for \"?keyOne\""));
         }
     }
 
@@ -39,7 +42,7 @@ public class CaseInsensitiveRegexMultiMapTestOptionalOnlySingleValuePerKey {
 
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("multiple values for optional key are not allowed, value \"keyOne_valueOne\"already exists for \"?keyOne\""));
+            assertThat(iae.getMessage(), is("multiple values for optional key are not allowed, value \"keyOne_valueOne\" already exists for \"?keyOne\""));
         }
     }
 

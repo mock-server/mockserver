@@ -22,7 +22,7 @@ public class CookiesSerializerTest {
     private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
 
     @Test
-    public void shouldAllowSingleObjectForArray() throws IOException {
+    public void shouldSerializeCompleteObject() throws IOException {
         // given
         String expectedString = "{" + NEW_LINE +
             "  \"some_name\" : \"some_value\"," + NEW_LINE +
@@ -31,7 +31,7 @@ public class CookiesSerializerTest {
 
         // when
         String actualString = objectWriter
-            .writeValueAsString(new Cookies().withEntries(
+            .writeValueAsString(new Cookies(
                 cookie(string("some_name"), string("some_value")),
                 cookie(string("some_other_name"), string("some_value")),
                 cookie(string("some_other_name"), not("some_other_value"))

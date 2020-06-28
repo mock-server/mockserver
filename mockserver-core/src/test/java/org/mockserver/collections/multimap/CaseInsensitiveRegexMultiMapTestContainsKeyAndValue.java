@@ -2,6 +2,7 @@ package org.mockserver.collections.multimap;
 
 import org.junit.Test;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
+import org.mockserver.model.KeyMatchStyle;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -16,7 +17,9 @@ public class CaseInsensitiveRegexMultiMapTestContainsKeyAndValue {
     public void singleValuedMapShouldContainKeyAndValueForSingleValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"}
         );
 
         // then
@@ -27,9 +30,11 @@ public class CaseInsensitiveRegexMultiMapTestContainsKeyAndValue {
     public void multiValuedMapShouldContainKeyAndValueForSingleValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"},
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
-                new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"},
+            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
+            new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
@@ -40,7 +45,9 @@ public class CaseInsensitiveRegexMultiMapTestContainsKeyAndValue {
     public void singleValuedMapShouldContainKeyAndValueForMultipleValues() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
         // then
@@ -52,9 +59,11 @@ public class CaseInsensitiveRegexMultiMapTestContainsKeyAndValue {
     public void multiValuedMapShouldContainKeyAndValueForMultipleValues() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"},
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
-                new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"},
+            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
+            new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
@@ -66,7 +75,9 @@ public class CaseInsensitiveRegexMultiMapTestContainsKeyAndValue {
     public void singleValuedMapShouldNotContainKeyAndValueForSingleValueWithKeyMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"}
         );
 
         // then
@@ -77,7 +88,9 @@ public class CaseInsensitiveRegexMultiMapTestContainsKeyAndValue {
     public void singleValuedMapShouldNotContainKeyAndValueForSingleValueWithValueMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"}
         );
 
         // then
@@ -88,7 +101,9 @@ public class CaseInsensitiveRegexMultiMapTestContainsKeyAndValue {
     public void singleValuedMapShouldNotContainKeyAndValueForSingleValueWithKeyAndValueMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"}
         );
 
         // then
@@ -99,9 +114,11 @@ public class CaseInsensitiveRegexMultiMapTestContainsKeyAndValue {
     public void multiValuedMapShouldNotContainKeyAndValueForSingleValueWithKeyMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"},
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
-                new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"},
+            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
+            new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
@@ -112,9 +129,11 @@ public class CaseInsensitiveRegexMultiMapTestContainsKeyAndValue {
     public void multiValuedMapShouldNotContainKeyAndValueForSingleValueWithValueMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"},
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
-                new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"},
+            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
+            new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
@@ -125,9 +144,11 @@ public class CaseInsensitiveRegexMultiMapTestContainsKeyAndValue {
     public void multiValuedMapShouldNotContainKeyAndValueForSingleValueWithKeyAndValueMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"},
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
-                new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"},
+            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
+            new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
@@ -138,7 +159,9 @@ public class CaseInsensitiveRegexMultiMapTestContainsKeyAndValue {
     public void singleValuedMapShouldNotContainKeyAndValueForMultipleValuesWithKeyMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
         // then
@@ -150,7 +173,9 @@ public class CaseInsensitiveRegexMultiMapTestContainsKeyAndValue {
     public void singleValuedMapShouldNotContainKeyAndValueForMultipleValuesWithValueMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
         // then
@@ -162,7 +187,9 @@ public class CaseInsensitiveRegexMultiMapTestContainsKeyAndValue {
     public void singleValuedMapShouldNotContainKeyAndValueForMultipleValuesWithKeyAndValueMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
         // then
@@ -174,9 +201,11 @@ public class CaseInsensitiveRegexMultiMapTestContainsKeyAndValue {
     public void multiValuedMapShouldNotContainKeyAndValueForMultipleValuesWithKeyMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"},
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
-                new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"},
+            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
+            new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
@@ -188,9 +217,11 @@ public class CaseInsensitiveRegexMultiMapTestContainsKeyAndValue {
     public void multiValuedMapShouldNotContainKeyAndValueForMultipleValuesWithValueMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"},
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
-                new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"},
+            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
+            new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
@@ -202,9 +233,11 @@ public class CaseInsensitiveRegexMultiMapTestContainsKeyAndValue {
     public void multiValuedMapShouldNotContainKeyAndValueForMultipleValuesWithKeyAndValueMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"},
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
-                new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"},
+            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
+            new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then

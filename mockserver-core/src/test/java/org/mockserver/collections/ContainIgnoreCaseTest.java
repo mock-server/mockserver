@@ -4,7 +4,7 @@ import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
 
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 import static org.mockserver.collections.ContainIgnoreCase.containsIgnoreCase;
 
 /**

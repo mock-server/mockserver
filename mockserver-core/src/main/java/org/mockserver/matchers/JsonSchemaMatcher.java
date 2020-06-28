@@ -3,7 +3,10 @@ package org.mockserver.matchers;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.ParameterStyle;
 import org.mockserver.validator.jsonschema.JsonSchemaValidator;
+
+import java.util.Map;
 
 /**
  * See http://json-schema.org/
@@ -15,11 +18,21 @@ public class JsonSchemaMatcher extends BodyMatcher<String> {
     private final MockServerLogger mockServerLogger;
     private String matcher;
     private JsonSchemaValidator jsonSchemaValidator;
+    private Map<String, ParameterStyle> parameterStyle;
 
     JsonSchemaMatcher(MockServerLogger mockServerLogger, String matcher) {
         this.mockServerLogger = mockServerLogger;
         this.matcher = matcher;
         jsonSchemaValidator = new JsonSchemaValidator(mockServerLogger, matcher);
+    }
+
+    public Map<String, ParameterStyle> getParameterStyle() {
+        return parameterStyle;
+    }
+
+    public JsonSchemaMatcher withParameterStyle(Map<String, ParameterStyle> parameterStyle) {
+        this.parameterStyle = parameterStyle;
+        return this;
     }
 
     public boolean matches(final MatchDifference context, String matched) {
@@ -55,5 +68,4 @@ public class JsonSchemaMatcher extends BodyMatcher<String> {
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
         return EXCLUDED_FIELDS;
     }
-
 }

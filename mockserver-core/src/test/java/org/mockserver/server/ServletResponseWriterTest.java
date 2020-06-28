@@ -5,7 +5,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
+import org.mockserver.mappers.MockServerHttpResponseToHttpServletResponseEncoder;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.servlet.responsewriter.ServletResponseWriter;
@@ -26,7 +26,7 @@ import static org.mockserver.model.JsonBody.json;
 public class ServletResponseWriterTest {
 
     @Mock
-    private MockServerResponseToHttpServletResponseEncoder mockServerResponseToHttpServletResponseEncoder;
+    private MockServerHttpResponseToHttpServletResponseEncoder mockServerResponseToHttpServletResponseEncoder;
     @InjectMocks
     private ServletResponseWriter servletResponseWriter;
     private MockHttpServletResponse httpServletResponse;

@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.file.FileReader;
 import org.mockserver.logging.MockServerLogger;
@@ -49,6 +50,7 @@ public class HttpRequestsPropertiesMatcherTest {
      * - override of common all paths at all methods
      * - override of common all paths at operation
      * - override of common all methods at operation
+     * - TODO(jamesdbloom) The label and matrix styles are sometimes used with partial path parameters, such as /users{id}, because the parameter values get prefixed.
      * <p>
      * Test Pattern For Body Fields:
      * - requestBody (see: https://swagger.io/docs/specification/describing-request-body/)
@@ -498,6 +500,494 @@ public class HttpRequestsPropertiesMatcherTest {
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
                 .withPath("/somePath/a")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPathWithSimplePathParameter() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath/{someParam}\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: path" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          style: simple" + NEW_LINE +
+                    "          explode: false" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 1")
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/1,2,3")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/1")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/1,2,3,4")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/0,1,2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/a,1,2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPathWithSimpleExplodedPathParameter() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath/{someParam*}\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: path" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          style: simple" + NEW_LINE +
+                    "          explode: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 1")
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/1,2,3")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/1")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/1,2,3,4")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/0,1,2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/a,1,2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPathWithLabelPathParameter() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath/{.someParam}\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: path" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          style: label" + NEW_LINE +
+                    "          explode: false" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 1")
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/.1,2,3")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/.1")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/.1,2,3,4")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/.0,1,2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/.a,1,2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPathWithLabelExplodedPathParameter() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath/{.someParam}\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: path" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          style: label" + NEW_LINE +
+                    "          explode: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 1")
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/.1.2.3")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/.1")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/.1.2.3.4")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/.0.1.2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/.a.1.2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPathWithMatrixPathParameter() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath/{;someParam}\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: path" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          style: matrix" + NEW_LINE +
+                    "          explode: false" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 1")
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/;someParam=1,2,3")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/;someParam=1")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/;someParam=1,2,3,4")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/;someOtherParam=1,2,3")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/;someParam=0,1,2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/;someParam=a,1,2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPathWithMatrixExplodedPathParameter() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath/{;someParam*}\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: path" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          style: matrix" + NEW_LINE +
+                    "          explode: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 1")
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/;someParam=1;someParam=2;someParam=3")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/;someParam=1")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/;someParam=1;someParam=2;someParam=3;someParam=4")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/;someOtherParam=1;someOtherParam=2;someOtherParam=3")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/;someParam=0;someParam=1;someParam=2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/;someParam=a;someParam=1;someParam=2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPathWithSimpleAndLabelExplodedPathParameter() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath/{someSimpleParam}/{someLabelParam}\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: path" + NEW_LINE +
+                    "          name: someSimpleParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          style: simple" + NEW_LINE +
+                    "          explode: false" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 1" + NEW_LINE +
+                    "        - in: path" + NEW_LINE +
+                    "          name: someLabelParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          style: label" + NEW_LINE +
+                    "          explode: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 1")
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/1,2,3/.1.2.3")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/1/.1.2.3")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/1,2,3/.1")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/1/.1")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/1,2,3/.1.2.3.4")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/1,2,3,4/.1.2.3")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/1,2,3,4/.1.2.3.4")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/1,2,3/.0.1.2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/0,1,2/.1.2.3")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/0,1,2/.0.1.2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/1,2,3/.a.1.2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/a,1,2/.1.2.3")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/a,1,2/.a.1.2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPathWithLabelAndMatrixExplodedPathParameter() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath/{.someLabelParam}/{;someMatrixParam*}\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: path" + NEW_LINE +
+                    "          name: someLabelParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          style: label" + NEW_LINE +
+                    "          explode: false" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 1" + NEW_LINE +
+                    "        - in: path" + NEW_LINE +
+                    "          name: someMatrixParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          style: matrix" + NEW_LINE +
+                    "          explode: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 1")
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/.1,2,3/;someMatrixParam=1;someMatrixParam=2;someMatrixParam=3")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/.1/;someMatrixParam=1")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/.1,2,3,4/;someMatrixParam=1;someMatrixParam=2;someMatrixParam=3;someMatrixParam=4")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/.1,2,3/;someMatrixParam=0;someMatrixParam=1;someMatrixParam=2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/.0,1,2/;someMatrixParam=1;someMatrixParam=2;someMatrixParam=3")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/.0,1,2/;someMatrixParam=0;someMatrixParam=1;someMatrixParam=2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/.1,2,3/;someMatrixParam=a;someMatrixParam=1;someMatrixParam=2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/.a,1,2/;someMatrixParam=1;someMatrixParam=2;someMatrixParam=3")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath/.a,1,2/;someMatrixParam=a;someMatrixParam=1;someMatrixParam=2")
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -985,6 +1475,582 @@ public class HttpRequestsPropertiesMatcherTest {
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
                 .withQueryStringParameter("someOtherParam", "1")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPathWithFormQueryStringParameter() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: query" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          style: form" + NEW_LINE +
+                    "          explode: false" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 1")
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "1,2,3")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "1")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "1,2,3,4")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "0,1,2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "a,1,2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPathWithFormExplodedQueryStringParameter() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: query" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          style: form" + NEW_LINE +
+                    "          explode: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 1")
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "1", "2", "3")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "1")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "1", "2", "3", "4")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "0", "1", "2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "a", "1", "2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPathWithSpaceDelimitedQueryStringParameter() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: query" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          style: spaceDelimited" + NEW_LINE +
+                    "          explode: false" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 1")
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "1%202%203")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "1 2 3")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "1+2+3")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "1")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "1%202%203%204")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "1 2 3 4")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "1+2+3+4")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "0%201%202")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "0 1 2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "0+1+2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "a%202%203")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "a 2 3")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "a+2+3")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPathWithSpaceDelimitedExplodedQueryStringParameter() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: query" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          style: spaceDelimited" + NEW_LINE +
+                    "          explode: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 1")
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "1", "2", "3")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "1")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "1", "2", "3", "4")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "0", "1", "2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "a", "1", "2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPathWithPipeDelimitedQueryStringParameter() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: query" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          style: pipeDelimited" + NEW_LINE +
+                    "          explode: false" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 1")
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "1|2|3")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "1")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "1|2|3|4")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "0|1|2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "a|1|2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPathWithPipeDelimitedExplodedQueryStringParameter() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: query" + NEW_LINE +
+                    "          name: someParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          style: pipeDelimited" + NEW_LINE +
+                    "          explode: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 1")
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "1", "2", "3")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "1")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "1", "2", "3", "4")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "0", "1", "2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someParam", "a", "1", "2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPathWithFormExplodedAndPipeDelimitedQueryStringParameter() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: query" + NEW_LINE +
+                    "          name: someFormParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          style: form" + NEW_LINE +
+                    "          explode: true" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 1" + NEW_LINE +
+                    "        - in: query" + NEW_LINE +
+                    "          name: someSpaceDelimitedParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          style: pipeDelimited" + NEW_LINE +
+                    "          explode: false" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 1")
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someFormParam", "1", "2", "3")
+                .withQueryStringParameter("someSpaceDelimitedParam", "1|2|3")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someFormParam", "1")
+                .withQueryStringParameter("someSpaceDelimitedParam", "1")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someFormParam", "1", "2", "3", "4")
+                .withQueryStringParameter("someSpaceDelimitedParam", "1|2|3|4")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someFormParam", "0", "1", "2")
+                .withQueryStringParameter("someSpaceDelimitedParam", "1|2|3")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someFormParam", "1", "2", "3")
+                .withQueryStringParameter("someSpaceDelimitedParam", "0|1|2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someFormParam", "0", "1", "2")
+                .withQueryStringParameter("someSpaceDelimitedParam", "0|1|2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someFormParam", "a", "1", "2")
+                .withQueryStringParameter("someSpaceDelimitedParam", "1|2|3")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someFormParam", "1", "2", "3")
+                .withQueryStringParameter("someSpaceDelimitedParam", "a|1|2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someFormParam", "a", "1", "2")
+                .withQueryStringParameter("someSpaceDelimitedParam", "a|1|2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+        ));
+    }
+
+    @Test
+    public void shouldMatchByPathWithSpaceDelimitedAndPipeDelimitedQueryStringParameter() {
+        // given
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+
+        // when
+        httpRequestsPropertiesMatcher.update(new Expectation(
+            new OpenAPIDefinition()
+                .withSpecUrlOrPayload("---" + NEW_LINE +
+                    "openapi: 3.0.0" + NEW_LINE +
+                    "paths:" + NEW_LINE +
+                    "  \"/somePath\":" + NEW_LINE +
+                    "    get:" + NEW_LINE +
+                    "      operationId: someOperation" + NEW_LINE +
+                    "      parameters:" + NEW_LINE +
+                    "        - in: query" + NEW_LINE +
+                    "          name: someSpaceDelimitedParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          style: spaceDelimited" + NEW_LINE +
+                    "          explode: false" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 1" + NEW_LINE +
+                    "        - in: query" + NEW_LINE +
+                    "          name: somePipeDelimitedParam" + NEW_LINE +
+                    "          required: true" + NEW_LINE +
+                    "          style: pipeDelimited" + NEW_LINE +
+                    "          explode: false" + NEW_LINE +
+                    "          schema:" + NEW_LINE +
+                    "            type: integer" + NEW_LINE +
+                    "            minimum: 1")
+        ));
+
+        // then
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someSpaceDelimitedParam", "1%202%203")
+                .withQueryStringParameter("somePipeDelimitedParam", "1|2|3")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someSpaceDelimitedParam", "1 2 3")
+                .withQueryStringParameter("somePipeDelimitedParam", "1|2|3")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someSpaceDelimitedParam", "1")
+                .withQueryStringParameter("somePipeDelimitedParam", "1")
+        ));
+        assertTrue(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someSpaceDelimitedParam", "1+2+3+4")
+                .withQueryStringParameter("somePipeDelimitedParam", "1|2|3|4")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someSpaceDelimitedParam", "0+1+2")
+                .withQueryStringParameter("somePipeDelimitedParam", "1|2|3")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someSpaceDelimitedParam", "1+2+3")
+                .withQueryStringParameter("somePipeDelimitedParam", "0|1|2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someSpaceDelimitedParam", "0+1+2")
+                .withQueryStringParameter("somePipeDelimitedParam", "0|1|2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someSpaceDelimitedParam", "a%201%202")
+                .withQueryStringParameter("somePipeDelimitedParam", "1|2|3")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someSpaceDelimitedParam", "1%202%203")
+                .withQueryStringParameter("somePipeDelimitedParam", "a|1|2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
+                .withQueryStringParameter("someSpaceDelimitedParam", "a%201%202")
+                .withQueryStringParameter("somePipeDelimitedParam", "a|1|2")
+        ));
+        assertFalse(httpRequestsPropertiesMatcher.matches(
+            request()
+                .withPath("/somePath")
         ));
     }
 
@@ -1786,6 +2852,7 @@ public class HttpRequestsPropertiesMatcherTest {
     }
 
     @Test
+    @Ignore("replace with test that covers newly supported logic")
     public void shouldThrowExceptionForRequestBodyWithEncoding() {
         // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
@@ -4795,7 +5862,7 @@ public class HttpRequestsPropertiesMatcherTest {
                 " in 'reader', line 8, column 8:" + NEW_LINE +
                 "    servers" + NEW_LINE +
                 "           ^" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 " at [Source: (StringReader); line: 8, column: 1]"));
         }
     }
@@ -5028,11 +6095,11 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertThat(matches, is(false));
         assertThat(matchDifference.getDifferences(METHOD), containsInAnyOrder("  string or regex match failed expected:" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "    GET" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "   found:" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "    PUT" + NEW_LINE));
         assertThat(matchDifference.getDifferences(PATH), nullValue());
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
@@ -5102,20 +6169,23 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "    {" + NEW_LINE +
+            "      \"keyMatchStyle\" : \"MATCHING_KEY\"," + NEW_LINE +
             "      \"X-Request-ID\" : [ {" + NEW_LINE +
-            "        \"type\" : \"string\"," + NEW_LINE +
-            "        \"format\" : \"uuid\"" + NEW_LINE +
+            "        \"schema\" : {" + NEW_LINE +
+            "          \"type\" : \"string\"," + NEW_LINE +
+            "          \"format\" : \"uuid\"" + NEW_LINE +
+            "        }" + NEW_LINE +
             "      } ]" + NEW_LINE +
             "    }" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "   found:" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "    none" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "   failed because:" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "    none is not a subset" + NEW_LINE));
         assertThat(matchDifference.getDifferences(BODY), nullValue());
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
@@ -5149,20 +6219,23 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "    {" + NEW_LINE +
+            "      \"keyMatchStyle\" : \"MATCHING_KEY\"," + NEW_LINE +
             "      \"X-Request-ID\" : [ {" + NEW_LINE +
-            "        \"type\" : \"string\"," + NEW_LINE +
-            "        \"format\" : \"uuid\"" + NEW_LINE +
+            "        \"schema\" : {" + NEW_LINE +
+            "          \"type\" : \"string\"," + NEW_LINE +
+            "          \"format\" : \"uuid\"" + NEW_LINE +
+            "        }" + NEW_LINE +
             "      } ]" + NEW_LINE +
             "    }" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "   found:" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "    none" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "   failed because:" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "    none is not a subset" + NEW_LINE));
         assertThat(matchDifference.getDifferences(BODY), nullValue());
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
@@ -5191,50 +6264,53 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertThat(matches, is(false));
         assertThat(matchDifference.getDifferences(PATH), containsInAnyOrder("  string or regex match failed expected:" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 "    /pets" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 "   found:" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 "    /some/path" + NEW_LINE,
             "  string or regex match failed expected:" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 "    /pets/.*" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 "   found:" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 "    /some/path" + NEW_LINE));
         assertThat(matchDifference.getDifferences(METHOD), containsInAnyOrder("  string or regex match failed expected:" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 "    POST" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 "   found:" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 "    GET" + NEW_LINE,
             "  string or regex match failed expected:" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 "    POST" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 "   found:" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 "    GET" + NEW_LINE));
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "    {" + NEW_LINE +
+            "      \"keyMatchStyle\" : \"MATCHING_KEY\"," + NEW_LINE +
             "      \"X-Request-ID\" : [ {" + NEW_LINE +
-            "        \"type\" : \"string\"," + NEW_LINE +
-            "        \"format\" : \"uuid\"" + NEW_LINE +
+            "        \"schema\" : {" + NEW_LINE +
+            "          \"type\" : \"string\"," + NEW_LINE +
+            "          \"format\" : \"uuid\"" + NEW_LINE +
+            "        }" + NEW_LINE +
             "      } ]" + NEW_LINE +
             "    }" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "   found:" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "    none" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "   failed because:" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "    none is not a subset" + NEW_LINE));
         assertThat(matchDifference.getDifferences(BODY), nullValue());
         assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
@@ -5274,7 +6350,7 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), nullValue());
         String bodyError = "  json schema match failed expected:" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "    {" + NEW_LINE +
             "      \"required\" : [ \"id\", \"name\" ]," + NEW_LINE +
             "      \"type\" : \"object\"," + NEW_LINE +
@@ -5291,17 +6367,17 @@ public class HttpRequestsPropertiesMatcherTest {
             "        }" + NEW_LINE +
             "      }" + NEW_LINE +
             "    }" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "   found:" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "    {" + NEW_LINE +
             "        \"id\": \"invalid_id_format\", " + NEW_LINE +
             "        \"name\": \"scruffles\", " + NEW_LINE +
             "        \"tag\": \"dog\"" + NEW_LINE +
             "    }" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "   failed because:" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "    2 errors:" + NEW_LINE +
             "     - field: \"/id\" for schema: \"/properties/id\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])\"" + NEW_LINE +
             "     - schema: \"/properties/id\" has error: \"format attribute \"int64\" not supported\"" + NEW_LINE;
@@ -5337,11 +6413,11 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertThat(matches, is(false));
         String methodError = "  string or regex match failed expected:" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "    GET" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "   found:" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "    POST" + NEW_LINE;
         assertThat(matchDifference.getDifferences(METHOD), containsInAnyOrder(methodError, methodError, methodError));
         assertThat(matchDifference.getDifferences(PATH), nullValue());
@@ -5349,7 +6425,7 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), nullValue());
         String bodyError = "  json schema match failed expected:" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "    {" + NEW_LINE +
             "      \"required\" : [ \"id\", \"name\" ]," + NEW_LINE +
             "      \"type\" : \"object\"," + NEW_LINE +
@@ -5366,17 +6442,17 @@ public class HttpRequestsPropertiesMatcherTest {
             "        }" + NEW_LINE +
             "      }" + NEW_LINE +
             "    }" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "   found:" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "    {" + NEW_LINE +
             "        \"id\": \"invalid_id_format\", " + NEW_LINE +
             "        \"name\": \"scruffles\", " + NEW_LINE +
             "        \"tag\": \"dog\"" + NEW_LINE +
             "    }" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "   failed because:" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "    2 errors:" + NEW_LINE +
             "     - field: \"/id\" for schema: \"/properties/id\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])\"" + NEW_LINE +
             "     - schema: \"/properties/id\" has error: \"format attribute \"int64\" not supported\"" + NEW_LINE;
@@ -5417,7 +6493,7 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), nullValue());
         String schemaValidationError = "  json schema match failed expected:" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "    {" + NEW_LINE +
             "      \"required\" : [ \"id\", \"name\" ]," + NEW_LINE +
             "      \"type\" : \"object\"," + NEW_LINE +
@@ -5434,17 +6510,17 @@ public class HttpRequestsPropertiesMatcherTest {
             "        }" + NEW_LINE +
             "      }" + NEW_LINE +
             "    }" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "   found:" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "    {" + NEW_LINE +
             "        \"id\": \"invalid_id_format\", " + NEW_LINE +
             "        \"name\": \"scruffles\", " + NEW_LINE +
             "        \"tag\": \"dog\"" + NEW_LINE +
             "    }" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "   failed because:" + NEW_LINE +
-            "" + NEW_LINE +
+            NEW_LINE +
             "    2 errors:" + NEW_LINE +
             "     - field: \"/id\" for schema: \"/properties/id\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])\"" + NEW_LINE +
             "     - schema: \"/properties/id\" has error: \"format attribute \"int64\" not supported\"" + NEW_LINE;

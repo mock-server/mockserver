@@ -7,7 +7,7 @@ import org.mockserver.model.BinaryMessage;
 
 import java.util.List;
 
-public class MockServerBinaryToNettyRequestEncoder extends MessageToMessageEncoder<BinaryMessage> {
+public class MockServerBinaryToNettyBinaryRequestEncoder extends MessageToMessageEncoder<BinaryMessage> {
     @Override
     protected void encode(ChannelHandlerContext ctx, BinaryMessage binaryMessage, List<Object> out) {
         out.add(Unpooled.copiedBuffer(binaryMessage.getBytes()));

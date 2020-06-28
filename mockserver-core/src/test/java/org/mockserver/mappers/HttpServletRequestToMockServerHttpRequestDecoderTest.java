@@ -21,7 +21,7 @@ import static org.mockserver.model.NottableString.string;
  * @author jamesdbloom
  */
 @SuppressWarnings("unchecked")
-public class HttpServletRequestToMockServerRequestDecoderTest {
+public class HttpServletRequestToMockServerHttpRequestDecoderTest {
 
     @Test
     public void shouldMapHttpServletRequestToHttpRequest() {
@@ -37,7 +37,7 @@ public class HttpServletRequestToMockServerRequestDecoderTest {
         httpServletRequest.setContent("bodyParameterNameOne=bodyParameterValueOne_One&bodyParameterNameOne=bodyParameterValueOne_Two&bodyParameterNameTwo=bodyParameterValueTwo_One".getBytes(UTF_8));
 
         // when
-        HttpRequest httpRequest = new HttpServletRequestToMockServerRequestDecoder(new MockServerLogger()).mapHttpServletRequestToMockServerRequest(httpServletRequest);
+        HttpRequest httpRequest = new HttpServletRequestToMockServerHttpRequestDecoder(new MockServerLogger()).mapHttpServletRequestToMockServerRequest(httpServletRequest);
 
         // then
         assertEquals(string("/requestURI"), httpRequest.getPath());
@@ -71,7 +71,7 @@ public class HttpServletRequestToMockServerRequestDecoderTest {
         httpServletRequest.setContent("".getBytes(UTF_8));
 
         // when
-        HttpRequest httpRequest = new HttpServletRequestToMockServerRequestDecoder(new MockServerLogger()).mapHttpServletRequestToMockServerRequest(httpServletRequest);
+        HttpRequest httpRequest = new HttpServletRequestToMockServerHttpRequestDecoder(new MockServerLogger()).mapHttpServletRequestToMockServerRequest(httpServletRequest);
 
         // then
         assertEquals(string("/pathInfo"), httpRequest.getPath());
@@ -90,6 +90,6 @@ public class HttpServletRequestToMockServerRequestDecoderTest {
         when(httpServletRequest.getInputStream()).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
-        new HttpServletRequestToMockServerRequestDecoder(new MockServerLogger()).mapHttpServletRequestToMockServerRequest(httpServletRequest);
+        new HttpServletRequestToMockServerHttpRequestDecoder(new MockServerLogger()).mapHttpServletRequestToMockServerRequest(httpServletRequest);
     }
 }

@@ -9,7 +9,7 @@ import java.util.List;
 
 import static org.mockserver.model.BinaryMessage.bytes;
 
-public class NettyBinaryToMockServerResponseDecoder extends MessageToMessageDecoder<ByteBuf> {
+public class NettyBinaryToMockServerBinaryResponseDecoder extends MessageToMessageDecoder<ByteBuf> {
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf byteBuf, List<Object> out) {
         out.add(bytes(ByteBufUtil.getBytes(byteBuf)));

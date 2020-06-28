@@ -14,6 +14,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.NottableOptionalString.optionalString;
 import static org.mockserver.model.NottableSchemaString.schemaString;
 import static org.mockserver.model.NottableString.string;
+import static org.mockserver.model.ParameterStyle.MATRIX;
 
 /**
  * @author jamesdbloom
@@ -27,8 +28,12 @@ public class NottableStringDeserializerTest {
     }
 
     @Test
-    public void shouldDeserializeNotNottableString() throws IOException {
+    public void shouldDeserializeNottedString() throws IOException {
         assertThat(ObjectMapperFactory.createObjectMapper().readValue("\"!some_string\"", NottableString.class),
+            is(NottableString.not("some_string")));
+        assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"not\":true,\"value\":\"some_string\"}", NottableString.class),
+            is(NottableString.not("some_string")));
+        assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"not\":true,\"optional\":false,\"value\":\"some_string\"}", NottableString.class),
             is(NottableString.not("some_string")));
     }
 
@@ -36,18 +41,39 @@ public class NottableStringDeserializerTest {
     public void shouldDeserializeOptionalString() throws IOException {
         assertThat(ObjectMapperFactory.createObjectMapper().readValue("\"?some_string\"", NottableString.class),
             is(optionalString("some_string")));
+        assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"optional\":true,\"value\":\"some_string\"}", NottableString.class),
+            is(optionalString("some_string")));
+        assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"not\":false,\"optional\":true,\"value\":\"some_string\"}", NottableString.class),
+            is(optionalString("some_string")));
     }
 
     @Test
-    public void shouldDeserializeOptionalNottedString() throws IOException {
+    public void shouldDeserializeNottedOptionalString() throws IOException {
         assertThat(ObjectMapperFactory.createObjectMapper().readValue("\"?!some_string\"", NottableString.class),
             is(optionalString("some_string", true)));
+        assertThat(ObjectMapperFactory.createObjectMapper().readValue("\"!?some_string\"", NottableString.class),
+            is(optionalString("some_string", true)));
+        assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"not\":true,\"optional\":true,\"value\":\"some_string\"}", NottableString.class),
+            is(string("?!some_string")));
+    }
+
+    @Test
+    public void shouldDeserializeStyledOptionalString() throws IOException {
+        assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"optional\":true,\"style\":\"MATRIX\",\"value\":\"some_string\"}", NottableString.class),
+            is(string("?some_string").withStyle(MATRIX)));
+        assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"not\":false,\"optional\":true,\"style\":\"MATRIX\",\"value\":\"some_string\"}", NottableString.class),
+            is(string("?some_string").withStyle(MATRIX)));
+    }
+
+    @Test
+    public void shouldDeserializeStyledNottedOptionalString() throws IOException {
+        assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"not\":true,\"optional\":true,\"style\":\"MATRIX\",\"value\":\"some_string\"}", NottableString.class),
+            is(string("?!some_string").withStyle(MATRIX)));
     }
 
     @Test
     public void shouldDeserializeSchemaString() throws IOException {
-        NottableString actual = ObjectMapperFactory.createObjectMapper().readValue("{\"type\":\"string\"}", NottableString.class);
-        assertThat(actual,
+        assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"schema\":{\"type\":\"string\"}}", NottableString.class),
             is(schemaString("{" + NEW_LINE +
                 "  \"type\" : \"string\"" + NEW_LINE +
                 "}")));
@@ -55,11 +81,26 @@ public class NottableStringDeserializerTest {
 
     @Test
     public void shouldDeserializeNottedSchemaString() throws IOException {
-        NottableString actual = ObjectMapperFactory.createObjectMapper().readValue("{\"type\":\"string\",\"not\":true}", NottableString.class);
-        assertThat(actual,
+        assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"not\":true,\"schema\":{\"type\":\"string\"}}", NottableString.class),
             is(schemaString("{" + NEW_LINE +
                 "  \"type\" : \"string\"" + NEW_LINE +
                 "}", true)));
+    }
+
+    @Test
+    public void shouldDeserializeStyledSchemaString() throws IOException {
+        assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"not\":true,\"style\":\"MATRIX\",\"schema\":{\"type\":\"string\"}}", NottableString.class),
+            is(schemaString("{" + NEW_LINE +
+                "  \"type\" : \"string\"" + NEW_LINE +
+                "}", true).withStyle(MATRIX)));
+    }
+
+    @Test
+    public void shouldDeserializeNottedStyledSchemaString() throws IOException {
+        assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"not\":true,\"style\":\"MATRIX\",\"schema\":{\"type\":\"string\"}}", NottableString.class),
+            is(schemaString("{" + NEW_LINE +
+                "  \"type\" : \"string\"" + NEW_LINE +
+                "}", true).withStyle(MATRIX)));
     }
 
     @Test
@@ -79,6 +120,25 @@ public class NottableStringDeserializerTest {
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("HEAD"))
+            )));
+    }
+
+    @Test
+    public void shouldParseJSONWithMethodWithEmptyString() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"method\" : \"\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertThat(expectationDTO, is(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
             )));
     }
 
@@ -127,7 +187,7 @@ public class NottableStringDeserializerTest {
         // given
         String json = ("{" + NEW_LINE +
             "    \"httpRequest\": {" + NEW_LINE +
-            "        \"method\": { \"type\": \"string\" }" + NEW_LINE +
+            "        \"method\": {\"schema\":{\"type\":\"string\"}}" + NEW_LINE +
             "    }" + NEW_LINE +
             "}");
 
@@ -149,7 +209,7 @@ public class NottableStringDeserializerTest {
         // given
         String json = ("{" + NEW_LINE +
             "    \"httpRequest\": {" + NEW_LINE +
-            "        \"method\": {\"type\":\"string\",\"not\":true}" + NEW_LINE +
+            "        \"method\": {\"not\":true,\"schema\":{\"type\":\"string\"}}" + NEW_LINE +
             "    }" + NEW_LINE +
             "}");
 
@@ -163,6 +223,26 @@ public class NottableStringDeserializerTest {
                     .setMethod(schemaString("{" + NEW_LINE +
                         "  \"type\" : \"string\"" + NEW_LINE +
                         "}", true))
+            )));
+    }
+
+    @Test
+    public void shouldParseJSONWithStyledMethod() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"method\": {\"style\":\"MATRIX\",\"value\":\"HEAD\"}" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertThat(expectationDTO, is(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("HEAD").withStyle(MATRIX))
             )));
     }
 
@@ -231,7 +311,7 @@ public class NottableStringDeserializerTest {
         // given
         String json = ("{" + NEW_LINE +
             "    \"httpRequest\": {" + NEW_LINE +
-            "        \"path\": { \"type\": \"string\" }" + NEW_LINE +
+            "        \"path\": {\"schema\":{\"type\":\"string\"}}" + NEW_LINE +
             "    }" + NEW_LINE +
             "}");
 
@@ -253,7 +333,7 @@ public class NottableStringDeserializerTest {
         // given
         String json = ("{" + NEW_LINE +
             "    \"httpRequest\": {" + NEW_LINE +
-            "        \"path\": {\"type\":\"string\",\"not\":true}" + NEW_LINE +
+            "        \"path\": {\"not\":true,\"schema\":{\"type\":\"string\"}}" + NEW_LINE +
             "    }" + NEW_LINE +
             "}");
 

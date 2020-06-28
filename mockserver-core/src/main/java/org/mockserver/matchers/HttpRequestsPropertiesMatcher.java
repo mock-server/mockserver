@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Joiner;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.media.Encoding;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.Parameter;
@@ -14,10 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.NottableString;
-import org.mockserver.model.OpenAPIDefinition;
-import org.mockserver.model.RequestDefinition;
+import org.mockserver.model.*;
 import org.mockserver.openapi.OpenAPISerialiser;
 import org.mockserver.openapi.examples.JsonNodeExampleSerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
@@ -34,9 +32,7 @@ import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.NottableOptionalString.optionalString;
 import static org.mockserver.model.NottableSchemaString.schemaString;
 import static org.mockserver.model.NottableString.string;
-import static org.mockserver.model.Parameter.Style;
-import static org.mockserver.model.Parameter.Style.*;
-import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.ParameterStyle.*;
 import static org.mockserver.openapi.OpenAPISerialiser.OPEN_API_LOAD_ERROR;
 import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.ERROR;
@@ -136,72 +132,24 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                     );
                 if (schema != null) {
                     try {
-                        NottableString name = parameter.getRequired() != null && parameter.getRequired() ? string(parameter.getName()) : optionalString(parameter.getName());
+                        NottableString name = (parameter.getRequired() != null && parameter.getRequired() ? string(parameter.getName()) : optionalString(parameter.getName())).withStyle(parameterStyle(parameter.getExplode(), parameter.getStyle()));
                         if (parameter.getAllowEmptyValue() != null && parameter.getAllowEmptyValue()) {
                             schema.nullable(true);
                         }
                         if (Boolean.TRUE.equals(parameter.getAllowReserved())) {
                             throw new IllegalArgumentException("allowReserved field is not supported on parameters, found on operation: \"" + methodOperationPair.getRight().getOperationId() + "\" method: \"" + methodOperationPair.getLeft() + "\" parameter: \"" + name + "\" in: \"" + parameter.getIn() + "\"");
                         }
-                        Style style = null;
-                        switch (parameter.getStyle()) {
-                            case MATRIX:
-                                if (parameter.getExplode()) {
-                                    style = MATRIX_EXPLODE;
-                                } else {
-                                    style = MATRIX;
-                                }
-                                break;
-                            case LABEL:
-                                if (parameter.getExplode()) {
-                                    style = LABEL_EXPLODE;
-                                } else {
-                                    style = LABEL;
-                                }
-                                break;
-                            case FORM:
-                                if (parameter.getExplode()) {
-                                    style = FORM_EXPLODE;
-                                } else {
-                                    style = FORM;
-                                }
-                                break;
-                            case SIMPLE:
-                                if (parameter.getExplode()) {
-                                    style = SIMPLE_EXPLODE;
-                                } else {
-                                    style = SIMPLE;
-                                }
-                                break;
-                            case SPACEDELIMITED:
-                                if (parameter.getExplode()) {
-                                    style = SPACE_DELIMITED_EXPLODE;
-                                } else {
-                                    style = SPACE_DELIMITED;
-                                }
-                                break;
-                            case PIPEDELIMITED:
-                                if (parameter.getExplode()) {
-                                    style = PIPE_DELIMITED_EXPLODE;
-                                } else {
-                                    style = PIPE_DELIMITED;
-                                }
-                                break;
-                            case DEEPOBJECT:
-                                style = DEEP_OBJECT;
-                                break;
-                        }
                         switch (parameter.getIn()) {
+                            case "path": {
+                                httpRequest.withPathParameter(name, schemaString(OBJECT_WRITER.writeValueAsString(schema)));
+                                break;
+                            }
                             case "query": {
-                                httpRequest.withQueryStringParameter(param(name, schemaString(OBJECT_WRITER.writeValueAsString(schema))).withStyle(style));
+                                httpRequest.withQueryStringParameter(name, schemaString(OBJECT_WRITER.writeValueAsString(schema)));
                                 break;
                             }
                             case "header": {
                                 httpRequest.withHeader(name, schemaString(OBJECT_WRITER.writeValueAsString(schema)));
-                                break;
-                            }
-                            case "path": {
-                                httpRequest.withPathParameter(name, schemaString(OBJECT_WRITER.writeValueAsString(schema)));
                                 break;
                             }
                             case "cookie": {
@@ -225,6 +173,16 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                         );
                     }
                 }
+            }
+            // set matching key matching style to ensure all values are matched against any schema (not just one)
+            if (httpRequest.getPathParameters() != null) {
+                httpRequest.getPathParameters().withKeyMatchStyle(KeyMatchStyle.MATCHING_KEY);
+            }
+            if (httpRequest.getQueryStringParameters() != null) {
+                httpRequest.getQueryStringParameters().withKeyMatchStyle(KeyMatchStyle.MATCHING_KEY);
+            }
+            if (httpRequest.getHeaders() != null) {
+                httpRequest.getHeaders().withKeyMatchStyle(KeyMatchStyle.MATCHING_KEY);
             }
         }
         // security schemes
@@ -270,6 +228,89 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
             }
         }
         return httpRequest;
+    }
+
+    private ParameterStyle parameterStyle(Boolean explode, Parameter.StyleEnum style) {
+        ParameterStyle result = null;
+        switch (style) {
+            case MATRIX:
+                if (explode) {
+                    result = MATRIX_EXPLODED;
+                } else {
+                    result = MATRIX;
+                }
+                break;
+            case LABEL:
+                if (explode) {
+                    result = LABEL_EXPLODED;
+                } else {
+                    result = LABEL;
+                }
+                break;
+            case FORM:
+                if (explode) {
+                    result = FORM_EXPLODED;
+                } else {
+                    result = FORM;
+                }
+                break;
+            case SIMPLE:
+                if (explode) {
+                    result = SIMPLE_EXPLODED;
+                } else {
+                    result = SIMPLE;
+                }
+                break;
+            case SPACEDELIMITED:
+                if (explode) {
+                    result = SPACE_DELIMITED_EXPLODED;
+                } else {
+                    result = SPACE_DELIMITED;
+                }
+                break;
+            case PIPEDELIMITED:
+                if (explode) {
+                    result = PIPE_DELIMITED_EXPLODED;
+                } else {
+                    result = PIPE_DELIMITED;
+                }
+                break;
+            case DEEPOBJECT:
+                result = DEEP_OBJECT;
+                break;
+        }
+        return result;
+    }
+
+    private ParameterStyle parameterStyle(Boolean explode, Encoding.StyleEnum style) {
+        ParameterStyle result = null;
+        switch (style) {
+            case FORM:
+                if (explode) {
+                    result = FORM_EXPLODED;
+                } else {
+                    result = FORM;
+                }
+                break;
+            case SPACE_DELIMITED:
+                if (explode) {
+                    result = SPACE_DELIMITED_EXPLODED;
+                } else {
+                    result = SPACE_DELIMITED;
+                }
+                break;
+            case PIPE_DELIMITED:
+                if (explode) {
+                    result = PIPE_DELIMITED_EXPLODED;
+                } else {
+                    result = PIPE_DELIMITED;
+                }
+                break;
+            case DEEP_OBJECT:
+                result = DEEP_OBJECT;
+                break;
+        }
+        return result;
     }
 
     private void buildSecurityValues(OpenAPI openAPI, Map<String, Set<String>> headerRequirements, Map<String, Set<String>> queryStringParameterRequirements, Map<String, Set<String>> cookieRequirements, List<SecurityRequirement> security) {
@@ -379,11 +420,15 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                 httpRequest.withHeader(CONTENT_TYPE.toString(), contentType.replaceAll("\\*", ".*") + ".*");
             }
             if (mediaType != null && mediaType.getSchema() != null) {
+                Map<String, ParameterStyle> parameterStyle = null;
                 if (mediaType.getEncoding() != null) {
-                    throw new IllegalArgumentException("encoding is not supported on requestBody, found on operation: \"" + methodOperationPair.getRight().getOperationId() + "\" method: \"" + methodOperationPair.getLeft() + "\"");
+                    parameterStyle = new HashMap<>();
+                    for (Map.Entry<String, Encoding> encodingEntry : mediaType.getEncoding().entrySet()) {
+                        parameterStyle.put(encodingEntry.getKey(), parameterStyle(encodingEntry.getValue().getExplode(), encodingEntry.getValue().getStyle()));
+                    }
                 }
                 try {
-                    httpRequest.withBody(jsonSchema(OBJECT_WRITER.writeValueAsString(mediaType.getSchema())).withOptional(!required));
+                    httpRequest.withBody(jsonSchema(OBJECT_WRITER.writeValueAsString(mediaType.getSchema())).withStyle(parameterStyle).withOptional(!required));
                 } catch (Throwable throwable) {
                     mockServerLogger.logEvent(
                         new LogEntry()

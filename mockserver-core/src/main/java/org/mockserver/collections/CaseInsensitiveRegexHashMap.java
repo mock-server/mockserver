@@ -60,7 +60,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
         return noOptionals;
     }
 
-    public boolean containsAll(CaseInsensitiveRegexHashMap matcherSubSet) {
+    public boolean containsAll(CaseInsensitiveRegexHashMap matcher) {
 
         List<ImmutableEntry> matchedEntries = entryList();
         Multimap<Integer, List<ImmutableEntry>> allMatchedSubSets
@@ -71,18 +71,19 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
                 new LogEntry()
                     .setLogLevel(TRACE)
                     .setMessageFormat("attempting to match subset from{}against hashmap{}")
-                    .setArguments(allMatchedSubSets, matcherSubSet.entryList())
+                    .setArguments(allMatchedSubSets, matcher.entryList())
 
             );
         }
 
-        if (isEmpty() && matcherSubSet.allKeysNotted()) {
+        if (isEmpty() && matcher.allKeysNotted()) {
 
             return true;
 
-        } else if (noOptionals && matcherSubSet.isNoOptionals()) {
+        } else if (noOptionals && matcher.isNoOptionals()) {
 
-            List<ImmutableEntry> matcherEntries = matcherSubSet.entryList();
+            // all non-optionals
+            List<ImmutableEntry> matcherEntries = matcher.entryList();
             for (List<ImmutableEntry> matchedSubSet : allMatchedSubSets.get(matcherEntries.size())) {
                 if (listsEqual(matcherEntries, matchedSubSet)) {
                     if (MockServerLogger.isEnabled(DEBUG)) {
@@ -107,10 +108,12 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
                 );
             }
         } else {
+
+            // some optionals exist
             boolean result = false;
 
-            // non-optionals
-            List<ImmutableEntry> matcherEntriesWithoutOptionals = matcherSubSet.entryList().stream().filter(entry -> !entry.getKey().isOptional()).collect(Collectors.toList());
+            // first check non-optionals
+            List<ImmutableEntry> matcherEntriesWithoutOptionals = matcher.entryList().stream().filter(entry -> !entry.getKey().isOptional()).collect(Collectors.toList());
             for (List<ImmutableEntry> matchedSubSet : allMatchedSubSets.get(matcherEntriesWithoutOptionals.size())) {
                 if (listsEqual(matcherEntriesWithoutOptionals, matchedSubSet)) {
                     if (MockServerLogger.isEnabled(DEBUG)) {
@@ -126,9 +129,9 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
                 }
             }
 
-            // optionals
+            // then check optionals
             if (result) {
-                List<ImmutableEntry> optionalMatcherEntries = matcherSubSet.entryList().stream().filter(entry -> entry.getKey().isOptional()).collect(Collectors.toList());
+                List<ImmutableEntry> optionalMatcherEntries = matcher.entryList().stream().filter(entry -> entry.getKey().isOptional()).collect(Collectors.toList());
                 if (!optionalMatcherEntries.isEmpty()) {
                     Set<ImmutableEntry> matchedSubSet = new HashSet<>();
                     for (ImmutableEntry optionalMatcherEntry : optionalMatcherEntries) {
@@ -169,7 +172,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
                     new LogEntry()
                         .setLogLevel(DEBUG)
                         .setMessageFormat("hashmap{}containsAll found no subset equal to{}from{}")
-                        .setArguments(this, matcherSubSet.entryList(), matchedEntries)
+                        .setArguments(this, matcher.entryList(), matchedEntries)
 
                 );
             }

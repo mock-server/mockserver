@@ -20,10 +20,13 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.JsonPathBody.jsonPath;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
+import static org.mockserver.model.KeyMatchStyle.MATCHING_KEY;
+import static org.mockserver.model.KeyMatchStyle.SUB_SET;
 import static org.mockserver.model.Not.not;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.Parameter.schemaParam;
 import static org.mockserver.model.ParameterBody.params;
+import static org.mockserver.model.ParameterStyle.*;
 import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.XPathBody.xpath;
@@ -1297,6 +1300,437 @@ public class HttpRequestPropertiesMatcherTest {
         )).matches(null, new HttpRequest().withQueryStringParameters(
             new Parameter("someKey", "someValueOne", "someValueTwo"),
             new Parameter("someKeyTwo", "someValueOne", "someValueTwo")
+        )));
+    }
+
+    @Test
+    public void shouldMatchQueryStringFormStyleParameter() {
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1,1,1")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1,1,1")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM),
+                new Parameter("someKeyTwo", "a")
+                    .withStyle(FORM)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "1,1,1"),
+            new Parameter("someKeyTwo", "a,a,a")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1,1,1", "1,1,1")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1,2,3", "1,2,3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM)
+            ).withKeyMatchStyle(SUB_SET)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1,2,3", "1,2,3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM)
+            )
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1,2,3", "1,2,3")
+        )));
+    }
+
+    @Test
+    public void shouldMatchQueryStringFormExpandedStyleParameter() {
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1","1","1")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1","1","1")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM_EXPLODED),
+                new Parameter("someKeyTwo", "a")
+                    .withStyle(FORM_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "1","1","1"),
+            new Parameter("someKeyTwo", "a","a","a")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1","1","1", "1","1","1")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1","2","3", "1","2","3")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1","2","3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM_EXPLODED)
+            ).withKeyMatchStyle(SUB_SET)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1","2","3", "1","2","3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM_EXPLODED)
+            )
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1","2","3", "1","2","3")
+        )));
+    }
+
+    @Test
+    public void shouldMatchQueryStringSpaceDelimitedStyleParameter() {
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1%201%201")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1+1+1")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1 1 1")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1%201%201")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1+1+1")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1 1 1")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED),
+                new Parameter("someKeyTwo", "a")
+                    .withStyle(SPACE_DELIMITED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "1+1+1"),
+            new Parameter("someKeyTwo", "a+a+a")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1+1+1", "1+1+1")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1+2+3", "1+2+3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED)
+            ).withKeyMatchStyle(SUB_SET)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1%202%203", "1%202%203")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED)
+            ).withKeyMatchStyle(SUB_SET)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1+2+3", "1+2+3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED)
+            ).withKeyMatchStyle(SUB_SET)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1 2 3", "1 2 3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED)
+            )
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1%202%203", "1%202%203")
+        )));
+    }
+
+    @Test
+    public void shouldMatchQueryStringSpaceDelimitedExpandedStyleParameter() {
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1","1","1")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1","1","1")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED_EXPLODED),
+                new Parameter("someKeyTwo", "a")
+                    .withStyle(SPACE_DELIMITED_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "1","1","1"),
+            new Parameter("someKeyTwo", "a","a","a")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1","1","1", "1","1","1")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1","2","3", "1","2","3")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1","2","3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED_EXPLODED)
+            ).withKeyMatchStyle(SUB_SET)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1","2","3", "1","2","3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED_EXPLODED)
+            )
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1","2","3", "1","2","3")
+        )));
+    }
+
+    @Test
+    public void shouldMatchQueryStringPipeDelimitedStyleParameter() {
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(PIPE_DELIMITED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1|1|1")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1|1|1")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(PIPE_DELIMITED),
+                new Parameter("someKeyTwo", "a")
+                    .withStyle(PIPE_DELIMITED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "1|1|1"),
+            new Parameter("someKeyTwo", "a|a|a")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(PIPE_DELIMITED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1|1|1", "1|1|1")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(PIPE_DELIMITED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1|2|3", "1|2|3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(PIPE_DELIMITED)
+            ).withKeyMatchStyle(SUB_SET)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1|2|3", "1|2|3")
+        )));
+    }
+
+    @Test
+    public void shouldMatchQueryStringPipeDelimitedExpandedStyleParameter() {
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(PIPE_DELIMITED_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1","1","1")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1","1","1")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(PIPE_DELIMITED_EXPLODED),
+                new Parameter("someKeyTwo", "a")
+                    .withStyle(PIPE_DELIMITED_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "1","1","1"),
+            new Parameter("someKeyTwo", "a","a","a")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(PIPE_DELIMITED_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1","1","1", "1","1","1")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(PIPE_DELIMITED_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1","2","3", "1","2","3")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1","2","3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(PIPE_DELIMITED_EXPLODED)
+            ).withKeyMatchStyle(SUB_SET)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1","2","3", "1","2","3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(PIPE_DELIMITED_EXPLODED)
+            )
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1","2","3", "1","2","3")
         )));
     }
 

@@ -737,7 +737,7 @@ public class PathParametersDecoderTest {
             },
             "/users/.3.4.5",
             Collections.singletonList(
-                param("id", "3", "4", "5")
+                param("id", "3.4.5")
             )
         );
         shouldRetrieveParameters(
@@ -758,8 +758,8 @@ public class PathParametersDecoderTest {
             },
             "/users/.3.4.5/.bob.bill.tony",
             Arrays.asList(
-                param("id", "3", "4", "5"),
-                param("name", "bob", "bill", "tony")
+                param("id", "3.4.5"),
+                param("name", "bob.bill.tony")
             )
         );
     }
@@ -829,7 +829,7 @@ public class PathParametersDecoderTest {
             },
             "/users/;id=3;id=4;id=5",
             Collections.singletonList(
-                param("id", "3", "4", "5")
+                param("id", "3;id=4;id=5")
             )
         );
         shouldRetrieveParameters(
@@ -850,8 +850,8 @@ public class PathParametersDecoderTest {
             },
             "/users/;id=3;id=4;id=5/;name=bob;name=bill;name=tony",
             Arrays.asList(
-                param("id", "3", "4", "5"),
-                param("name", "bob", "bill", "tony")
+                param("id", "3;id=4;id=5"),
+                param("name", "bob;name=bill;name=tony")
             )
         );
     }

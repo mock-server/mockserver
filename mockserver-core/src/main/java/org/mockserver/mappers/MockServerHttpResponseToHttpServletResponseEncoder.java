@@ -17,11 +17,11 @@ import static io.netty.handler.codec.http.HttpHeaderNames.*;
 /**
  * @author jamesdbloom
  */
-public class MockServerResponseToHttpServletResponseEncoder {
+public class MockServerHttpResponseToHttpServletResponseEncoder {
 
     private final BodyServletDecoderEncoder bodyDecoderEncoder;
 
-    public MockServerResponseToHttpServletResponseEncoder(MockServerLogger mockServerLogger) {
+    public MockServerHttpResponseToHttpServletResponseEncoder(MockServerLogger mockServerLogger) {
         bodyDecoderEncoder = new BodyServletDecoderEncoder(mockServerLogger);
     }
 

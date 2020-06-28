@@ -8,8 +8,6 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import java.io.UnsupportedEncodingException;
-
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertEquals;
@@ -18,7 +16,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author jamesdbloom
  */
-public class MockServerResponseToHttpServletResponseEncoderCookieHeaderTest {
+public class MockServerHttpResponseToHttpServletResponseEncoderCookieHeaderTest {
 
     @Test
     public void shouldOnlyMapACookieIfThereIsNoSetCookieHeader() {
@@ -40,7 +38,7 @@ public class MockServerResponseToHttpServletResponseEncoderCookieHeaderTest {
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
 
         // when
-        new MockServerResponseToHttpServletResponseEncoder(new MockServerLogger()).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+        new MockServerHttpResponseToHttpServletResponseEncoder(new MockServerLogger()).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
 
         // then
         assertEquals(HttpStatusCode.OK_200.code(), httpServletResponse.getStatus());

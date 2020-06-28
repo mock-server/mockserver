@@ -15,12 +15,12 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 /**
  * @author jamesdbloom
  */
-public class FullHttpResponseToMockServerResponse {
+public class FullHttpResponseToMockServerHttpResponse {
 
     private final MockServerLogger mockServerLogger;
     private final BodyDecoderEncoder bodyDecoderEncoder;
 
-    public FullHttpResponseToMockServerResponse(MockServerLogger mockServerLogger) {
+    public FullHttpResponseToMockServerHttpResponse(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
         this.bodyDecoderEncoder = new BodyDecoderEncoder();
     }

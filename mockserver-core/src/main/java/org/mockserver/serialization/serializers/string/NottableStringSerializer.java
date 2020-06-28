@@ -1,10 +1,8 @@
 package org.mockserver.serialization.serializers.string;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.mockserver.model.NottableSchemaString;
 import org.mockserver.model.NottableString;
@@ -28,14 +26,27 @@ public class NottableStringSerializer extends StdSerializer<NottableString> {
     @Override
     public void serialize(NottableString nottableString, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         if (nottableString instanceof NottableSchemaString) {
-            JsonNode jsonNode = OBJECT_MAPPER.readTree(nottableString.getValue());
-            if (Boolean.TRUE.equals(nottableString.isNot()) && jsonNode instanceof ObjectNode) {
-                ((ObjectNode) jsonNode).put("not", true);
-            }
-            jgen.writeObject(jsonNode);
+            writeObject(nottableString, jgen, "schema", OBJECT_MAPPER.readTree(nottableString.getValue()));
+        } else if (nottableString.getStyle() != null) {
+            writeObject(nottableString, jgen, "value", nottableString.getValue());
         } else {
             jgen.writeString(serialiseNottableString(nottableString));
         }
+    }
+
+    private void writeObject(NottableString nottableString, JsonGenerator jgen, String valueFieldName, Object value) throws IOException {
+        jgen.writeStartObject();
+        if (Boolean.TRUE.equals(nottableString.isNot())) {
+            jgen.writeBooleanField("not", true);
+        }
+        if (Boolean.TRUE.equals(nottableString.isOptional())) {
+            jgen.writeBooleanField("optional", true);
+        }
+        if (nottableString.getStyle() != null) {
+            jgen.writeObjectField("style", nottableString.getStyle());
+        }
+        jgen.writeObjectField(valueFieldName, value);
+        jgen.writeEndObject();
     }
 
 }

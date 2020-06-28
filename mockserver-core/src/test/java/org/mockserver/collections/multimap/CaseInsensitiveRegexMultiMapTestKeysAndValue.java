@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.RegexStringMatcher;
+import org.mockserver.model.KeyMatchStyle;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
@@ -20,7 +21,9 @@ public class CaseInsensitiveRegexMultiMapTestKeysAndValue {
     public void shouldReturnKeys() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"},
             new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
@@ -32,7 +35,9 @@ public class CaseInsensitiveRegexMultiMapTestKeysAndValue {
     public void shouldReturnValues() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"},
             new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
@@ -44,7 +49,9 @@ public class CaseInsensitiveRegexMultiMapTestKeysAndValue {
     public void shouldReturnEntrySet() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"},
             new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
         RegexStringMatcher regexStringMatcher = new RegexStringMatcher(new MockServerLogger(), false);
@@ -61,7 +68,9 @@ public class CaseInsensitiveRegexMultiMapTestKeysAndValue {
     public void shouldReturnEntryList() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new String[]{"keyOne", "keyOne_valueOne"},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new String[]{"keyOne", "keyOne_valueOne"},
             new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
         RegexStringMatcher regexStringMatcher = new RegexStringMatcher(new MockServerLogger(), false);

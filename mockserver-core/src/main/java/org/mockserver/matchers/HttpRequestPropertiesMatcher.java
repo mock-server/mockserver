@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
-import org.mockserver.codec.FormParameterDecoder;
+import org.mockserver.codec.ExpandedParameterDecoder;
 import org.mockserver.codec.JsonSchemaBodyDecoder;
 import org.mockserver.codec.PathParametersDecoder;
 import org.mockserver.log.model.LogEntry;
@@ -25,8 +25,8 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.matchersFailFast;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_MATCHED;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED;
-import static org.mockserver.matchers.MatchDifference.debugAllMatchFailures;
 import static org.mockserver.matchers.MatchDifference.Field.*;
+import static org.mockserver.matchers.MatchDifference.debugAllMatchFailures;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -155,7 +155,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                     break;
                 case JSON_SCHEMA:
                     JsonSchemaBody jsonSchemaBody = (JsonSchemaBody) body;
-                    bodyMatcher = new JsonSchemaMatcher(mockServerLogger, jsonSchemaBody.getValue());
+                    bodyMatcher = new JsonSchemaMatcher(mockServerLogger, jsonSchemaBody.getValue()).withParameterStyle(jsonSchemaBody.getParameterStyle());
                     break;
                 case JSON_PATH:
                     JsonPathBody jsonPathBody = (JsonPathBody) body;
@@ -290,13 +290,18 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                         return false;
                     }
 
+                    if (!controlPlaneMatcher) {
+                        splitParameters(httpRequest.getPathParameters(), request.getPathParameters());
+                    }
                     MultiValueMapMatcher pathParameterMatcher = controlPlaneMatcher ? new MultiValueMapMatcher(mockServerLogger, request.getPathParameters(), controlPlaneMatcher) : this.pathParameterMatcher;
                     boolean pathParametersMatches = matches(PATH_PARAMETERS, matchDifference, pathParameterMatcher, pathParameters);
                     if (failFast(pathParameterMatcher, matchDifference, matchDifferenceCount, becauseBuilder, pathParametersMatches, PATH_PARAMETERS)) {
                         return false;
                     }
 
-                    splitParameters(httpRequest.getQueryStringParameters(), request.getQueryStringParameters());
+                    if (!controlPlaneMatcher) {
+                        splitParameters(httpRequest.getQueryStringParameters(), request.getQueryStringParameters());
+                    }
                     boolean queryStringParametersMatches = matches(QUERY_PARAMETERS, matchDifference, queryStringParameterMatcher, request.getQueryStringParameters());
                     if (failFast(queryStringParameterMatcher, matchDifference, matchDifferenceCount, becauseBuilder, queryStringParametersMatches, QUERY_PARAMETERS)) {
                         return false;
@@ -324,10 +329,11 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
     private void splitParameters(Parameters matcher, Parameters matched) {
         if (matcher != null && matched != null) {
             for (Parameter matcherEntry : matcher.getEntries()) {
-                if (matcherEntry.getStyle() != null && !matcherEntry.getStyle().isExploded()) {
+                if (matcherEntry.getName().getStyle() != null && matcherEntry.getName().getStyle().isExploded()) {
                     for (Parameter matchedEntry : matched.getEntries()) {
                         if (matcherEntry.getName().getValue().equals(matchedEntry.getName().getValue())) {
-                            matchedEntry.replaceValues(new FormParameterDecoder(mockServerLogger).splitOnDelimiter(matcherEntry.getStyle(), matchedEntry.getValues()));
+                            matchedEntry.replaceValues(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(matcherEntry.getName().getStyle(), matcherEntry.getName().getValue(), matchedEntry.getValues()));
+                            matched.replaceEntry(matchedEntry);
                         }
                     }
                 }

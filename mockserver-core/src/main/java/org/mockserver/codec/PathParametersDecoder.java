@@ -70,7 +70,7 @@ public class PathParametersDecoder {
                     if (pathParameterName.matches()) {
                         String parameterName = pathParameterName.group(1);
                         List<String> parameterValues = new ArrayList<>();
-                        Matcher pathParameterValue = Pattern.compile("[.;]?(?:" + parameterName + "=)?([^.,;]+)[.,;]?").matcher(matchedPathParts[i]);
+                        Matcher pathParameterValue = Pattern.compile("[.;]?(?:" + parameterName + "=)?([^,]++)[.,;]?").matcher(matchedPathParts[i]);
                         while (pathParameterValue.find()) {
                             parameterValues.add(pathParameterValue.group(1));
                         }

@@ -8,7 +8,7 @@ import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
-import org.mockserver.codec.MockServerServerCodec;
+import org.mockserver.codec.MockServerHttpServerCodec;
 import org.mockserver.dashboard.DashboardWebSocketServerHandler;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -94,7 +94,7 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
                     )
                     .addListener((ChannelFutureListener) future -> {
                         ctx.pipeline().remove(DashboardWebSocketServerHandler.class);
-                        ctx.pipeline().remove(MockServerServerCodec.class);
+                        ctx.pipeline().remove(MockServerHttpServerCodec.class);
                         ctx.pipeline().remove(HttpRequestHandler.class);
                         mockServerLogger.logEvent(
                             new LogEntry()

@@ -28,15 +28,15 @@ import static org.mockserver.model.StringBody.exact;
  * @author jamesdbloom
  */
 @SuppressWarnings("rawtypes")
-public class NettyToMockServerResponseDecoderTest {
+public class NettyHttpToMockServerHttpResponseDecoderTest {
 
-    private NettyHttpToMockServerResponseDecoder mockServerResponseDecoder;
+    private NettyHttpToMockServerHttpResponseDecoder mockServerResponseDecoder;
     private List<Object> output;
     private FullHttpResponse fullHttpResponse;
 
     @Before
     public void setupFixture() {
-        mockServerResponseDecoder = new NettyHttpToMockServerResponseDecoder(new MockServerLogger());
+        mockServerResponseDecoder = new NettyHttpToMockServerHttpResponseDecoder(new MockServerLogger());
         output = new ArrayList<>();
     }
 

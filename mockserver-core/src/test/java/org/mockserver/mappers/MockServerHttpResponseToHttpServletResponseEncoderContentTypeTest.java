@@ -20,7 +20,7 @@ import static org.mockserver.model.XmlBody.xml;
 /**
  * @author jamesdbloom
  */
-public class MockServerResponseToHttpServletResponseEncoderContentTypeTest {
+public class MockServerHttpResponseToHttpServletResponseEncoderContentTypeTest {
 
     @Test
     public void shouldReturnNoDefaultContentTypeWhenNoBodySpecified() {
@@ -29,7 +29,7 @@ public class MockServerResponseToHttpServletResponseEncoderContentTypeTest {
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
 
         // when
-        new MockServerResponseToHttpServletResponseEncoder(new MockServerLogger()).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+        new MockServerHttpResponseToHttpServletResponseEncoder(new MockServerLogger()).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
 
         // then
         assertNull(httpServletResponse.getHeader("Content-Type"));
@@ -42,7 +42,7 @@ public class MockServerResponseToHttpServletResponseEncoderContentTypeTest {
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
 
         // when
-        new MockServerResponseToHttpServletResponseEncoder(new MockServerLogger()).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+        new MockServerHttpResponseToHttpServletResponseEncoder(new MockServerLogger()).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
 
         // then
         assertEquals("text/plain; charset=us-ascii", httpServletResponse.getHeader("Content-Type"));
@@ -55,7 +55,7 @@ public class MockServerResponseToHttpServletResponseEncoderContentTypeTest {
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
 
         // when
-        new MockServerResponseToHttpServletResponseEncoder(new MockServerLogger()).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+        new MockServerHttpResponseToHttpServletResponseEncoder(new MockServerLogger()).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
 
         // then
         assertEquals("application/atom+xml; charset=utf-8", httpServletResponse.getHeader("Content-Type"));
@@ -68,7 +68,7 @@ public class MockServerResponseToHttpServletResponseEncoderContentTypeTest {
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
 
         // when
-        new MockServerResponseToHttpServletResponseEncoder(new MockServerLogger()).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+        new MockServerHttpResponseToHttpServletResponseEncoder(new MockServerLogger()).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
 
         // then
         assertThat(httpServletResponse.getHeader("Content-Type"), nullValue());
@@ -81,7 +81,7 @@ public class MockServerResponseToHttpServletResponseEncoderContentTypeTest {
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
 
         // when
-        new MockServerResponseToHttpServletResponseEncoder(new MockServerLogger()).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+        new MockServerHttpResponseToHttpServletResponseEncoder(new MockServerLogger()).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
 
         // then
         assertThat(httpServletResponse.getHeader("Content-Type"), is("application/json; charset=utf-8"));
@@ -94,7 +94,7 @@ public class MockServerResponseToHttpServletResponseEncoderContentTypeTest {
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
 
         // when
-        new MockServerResponseToHttpServletResponseEncoder(new MockServerLogger()).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+        new MockServerHttpResponseToHttpServletResponseEncoder(new MockServerLogger()).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
 
         // then
         assertNull(httpServletResponse.getHeader("Content-Type"));
@@ -109,7 +109,7 @@ public class MockServerResponseToHttpServletResponseEncoderContentTypeTest {
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
 
         // when
-        new MockServerResponseToHttpServletResponseEncoder(new MockServerLogger()).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+        new MockServerHttpResponseToHttpServletResponseEncoder(new MockServerLogger()).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
 
         // then
         assertEquals("some/value", httpServletResponse.getHeader("Content-Type"));

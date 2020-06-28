@@ -31,15 +31,15 @@ import static org.mockserver.model.StringBody.exact;
  * @author jamesdbloom
  */
 @SuppressWarnings("rawtypes")
-public class NettyToMockServerRequestDecoderTest {
+public class NettyHttpToMockServerHttpRequestDecoderTest {
 
-    private NettyHttpToMockServerRequestDecoder mockServerRequestDecoder;
+    private NettyHttpToMockServerHttpRequestDecoder mockServerRequestDecoder;
     private List<Object> output;
     private FullHttpRequest fullHttpRequest;
 
     @Before
     public void setupFixture() {
-        mockServerRequestDecoder = new NettyHttpToMockServerRequestDecoder(new MockServerLogger(), false);
+        mockServerRequestDecoder = new NettyHttpToMockServerHttpRequestDecoder(new MockServerLogger(), false);
         output = new ArrayList<>();
     }
 
@@ -60,9 +60,9 @@ public class NettyToMockServerRequestDecoderTest {
     public void shouldDecodeQueryParameters() {
         // given
         String uri = "/uri?" +
-            "queryStringParameterNameOne=queryStringParameterValueOne_One&" +
-            "queryStringParameterNameOne=queryStringParameterValueOne_Two&" +
-            "queryStringParameterNameTwo=queryStringParameterValueTwo_One";
+            "queryStringParameterNameOne=queryStringParameterValueOne_One" +
+            "&queryStringParameterNameOne=queryStringParameterValueOne_Two" +
+            "&queryStringParameterNameTwo=queryStringParameterValueTwo_One";
         fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri);
 
         // when
@@ -72,6 +72,44 @@ public class NettyToMockServerRequestDecoderTest {
         List<Parameter> queryStringParameters = ((HttpRequest) output.get(0)).getQueryStringParameterList();
         assertThat(queryStringParameters, containsInAnyOrder(
             param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+            param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+        ));
+    }
+
+    @Test
+    public void shouldNotSplitQueryParametersCommaDelimited() {
+        // given
+        String uri = "/uri?" +
+            "queryStringParameterNameOne=queryStringParameterValueOne_One,queryStringParameterValueOne_Two" +
+            "&queryStringParameterNameTwo=queryStringParameterValueTwo_One";
+        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri);
+
+        // when
+        mockServerRequestDecoder.decode(null, fullHttpRequest, output);
+
+        // then
+        List<Parameter> queryStringParameters = ((HttpRequest) output.get(0)).getQueryStringParameterList();
+        assertThat(queryStringParameters, containsInAnyOrder(
+            param("queryStringParameterNameOne", "queryStringParameterValueOne_One,queryStringParameterValueOne_Two"),
+            param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+        ));
+    }
+
+    @Test
+    public void shouldNotSplitQueryParametersPipeDelimited() {
+        // given
+        String uri = "/uri?" +
+            "queryStringParameterNameOne=queryStringParameterValueOne_One|queryStringParameterValueOne_Two" +
+            "&queryStringParameterNameTwo=queryStringParameterValueTwo_One";
+        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri);
+
+        // when
+        mockServerRequestDecoder.decode(null, fullHttpRequest, output);
+
+        // then
+        List<Parameter> queryStringParameters = ((HttpRequest) output.get(0)).getQueryStringParameterList();
+        assertThat(queryStringParameters, containsInAnyOrder(
+            param("queryStringParameterNameOne", "queryStringParameterValueOne_One|queryStringParameterValueOne_Two"),
             param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
         ));
     }

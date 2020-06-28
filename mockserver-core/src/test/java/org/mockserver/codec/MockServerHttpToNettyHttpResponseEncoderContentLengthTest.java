@@ -23,15 +23,15 @@ import static org.mockserver.model.StringBody.exact;
 /**
  * @author jamesdbloom
  */
-public class MockServerToNettyResponseEncoderContentLengthTest {
+public class MockServerHttpToNettyHttpResponseEncoderContentLengthTest {
 
-    private MockServerHttpToNettyResponseEncoder mockServerResponseEncoder;
+    private MockServerHttpToNettyHttpResponseEncoder mockServerResponseEncoder;
     private List<Object> output;
     private HttpResponse httpResponse;
 
     @Before
     public void setupFixture() {
-        mockServerResponseEncoder = new MockServerHttpToNettyResponseEncoder(new MockServerLogger());
+        mockServerResponseEncoder = new MockServerHttpToNettyHttpResponseEncoder(new MockServerLogger());
         output = new ArrayList<>();
         httpResponse = response();
     }

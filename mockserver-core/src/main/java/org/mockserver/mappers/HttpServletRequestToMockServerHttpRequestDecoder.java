@@ -4,7 +4,7 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import org.mockserver.codec.BodyServletDecoderEncoder;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.codec.FormParameterDecoder;
+import org.mockserver.codec.ExpandedParameterDecoder;
 import org.mockserver.model.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -17,14 +17,14 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 /**
  * @author jamesdbloom
  */
-public class HttpServletRequestToMockServerRequestDecoder {
+public class HttpServletRequestToMockServerHttpRequestDecoder {
 
     private final BodyServletDecoderEncoder bodyDecoderEncoder;
-    private final FormParameterDecoder formParameterParser;
+    private final ExpandedParameterDecoder formParameterParser;
 
-    public HttpServletRequestToMockServerRequestDecoder(MockServerLogger mockServerLogger) {
+    public HttpServletRequestToMockServerHttpRequestDecoder(MockServerLogger mockServerLogger) {
         bodyDecoderEncoder = new BodyServletDecoderEncoder(mockServerLogger);
-        formParameterParser = new FormParameterDecoder(mockServerLogger);
+        formParameterParser = new ExpandedParameterDecoder(mockServerLogger);
     }
 
     public HttpRequest mapHttpServletRequestToMockServerRequest(HttpServletRequest httpServletRequest) {

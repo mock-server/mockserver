@@ -141,7 +141,7 @@ public class HttpProxyUnificationInitializerSOCKSErrorTest {
                 "HttpObjectAggregator#0",
                 "CallbackWebSocketServerHandler#0",
                 "DashboardWebSocketServerHandler#0",
-                "MockServerServerCodec#0",
+                "MockServerHttpServerCodec#0",
                 "HttpRequestHandler#0",
                 "DefaultChannelPipeline$TailContext#0"
             ));
@@ -153,7 +153,7 @@ public class HttpProxyUnificationInitializerSOCKSErrorTest {
                 "HttpObjectAggregator#0",
                 "CallbackWebSocketServerHandler#0",
                 "DashboardWebSocketServerHandler#0",
-                "MockServerServerCodec#0",
+                "MockServerHttpServerCodec#0",
                 "HttpRequestHandler#0",
                 "DefaultChannelPipeline$TailContext#0"
             ));

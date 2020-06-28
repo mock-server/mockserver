@@ -7,7 +7,7 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
+import org.mockserver.mappers.HttpServletRequestToMockServerHttpRequestDecoder;
 import org.mockserver.mock.HttpState;
 import org.mockserver.mock.action.http.HttpActionHandler;
 import org.mockserver.model.HttpRequest;
@@ -48,7 +48,7 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
     // serializers
     private PortBindingSerializer portBindingSerializer;
     // mappers
-    private HttpServletRequestToMockServerRequestDecoder httpServletRequestToMockServerRequestDecoder;
+    private HttpServletRequestToMockServerHttpRequestDecoder httpServletRequestToMockServerRequestDecoder;
     // mockserver
     private HttpActionHandler actionHandler;
     private EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop"));
@@ -56,7 +56,7 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
     @SuppressWarnings("WeakerAccess")
     public MockServerServlet() {
         this.mockServerLogger = new MockServerLogger(MockServerEventLog.class);
-        this.httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerRequestDecoder(this.mockServerLogger);
+        this.httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerHttpRequestDecoder(this.mockServerLogger);
         this.scheduler = new Scheduler(mockServerLogger);
         this.httpStateHandler = new HttpState(this.mockServerLogger, this.scheduler);
         this.mockServerLogger = httpStateHandler.getMockServerLogger();

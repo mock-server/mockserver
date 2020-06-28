@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import org.mockserver.model.KeyMatchStyle;
 import org.mockserver.model.KeysToMultiValues;
 import org.mockserver.model.NottableString;
 
@@ -14,7 +15,7 @@ import static org.mockserver.model.NottableString.string;
 /**
  * @author jamesdbloom
  */
-public abstract class KeysToMultiValuesDeserializer<T extends KeysToMultiValues> extends StdDeserializer<T> {
+public abstract class KeysToMultiValuesDeserializer<T extends KeysToMultiValues<?, ?>> extends StdDeserializer<T> {
 
     KeysToMultiValuesDeserializer(Class<T> valueClass) {
         super(valueClass);
@@ -41,6 +42,10 @@ public abstract class KeysToMultiValuesDeserializer<T extends KeysToMultiValues>
             switch (token) {
                 case FIELD_NAME:
                     key = string(jsonParser.getText());
+                    if ("keyMatchStyle".equals(key.getValue())) {
+                        jsonParser.nextToken();
+                        enteries.withKeyMatchStyle(ctxt.readValue(jsonParser, KeyMatchStyle.class));
+                    }
                     break;
                 case START_ARRAY:
                     enteries.withEntry(key, ctxt.readValue(jsonParser, NottableString[].class));

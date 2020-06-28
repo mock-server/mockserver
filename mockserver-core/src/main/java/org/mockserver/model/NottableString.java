@@ -1,10 +1,8 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
-import org.mockserver.serialization.ObjectMapperFactory;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -12,13 +10,13 @@ import java.util.regex.Pattern;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.NottableOptionalString.OPTIONAL_CHAR;
 import static org.mockserver.model.NottableOptionalString.optionalString;
+import static org.mockserver.model.ParameterStyle.DEEP_OBJECT;
 
 /**
  * @author jamesdbloom
  */
 public class NottableString extends ObjectWithJsonToString implements Comparable<NottableString> {
 
-    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
     public static final char NOT_CHAR = '!';
     private final String value;
     private final boolean isBlank;
@@ -27,6 +25,7 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
     private final String json;
     private Pattern pattern;
     private Pattern lowercasePattern;
+    private ParameterStyle style;
 
     NottableString(String value, Boolean not) {
         this.value = value;
@@ -37,11 +36,7 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
             this.not = Boolean.FALSE;
         }
         this.hashCode = Objects.hash(this.value, this.not);
-        if (this.not) {
-            this.json = NOT_CHAR + this.value;
-        } else {
-            this.json = !this.isBlank ? this.value : "";
-        }
+        this.json = (this.isOptional() ? "" + OPTIONAL_CHAR : "") + (this.not ? "" + NOT_CHAR : "") + (!this.isBlank ? this.value : "");
     }
 
     NottableString(String value) {
@@ -54,11 +49,7 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
             this.not = Boolean.FALSE;
         }
         this.hashCode = Objects.hash(this.value, this.not);
-        if (this.not) {
-            this.json = NOT_CHAR + this.value;
-        } else {
-            this.json = !this.isBlank ? this.value : "";
-        }
+        this.json = (this.isOptional() ? "" + OPTIONAL_CHAR : "") + (this.not ? "" + NOT_CHAR : "") + (!this.isBlank ? this.value : "");
     }
 
     public static List<NottableString> deserializeNottableStrings(String... strings) {
@@ -152,6 +143,18 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
 
     public boolean isOptional() {
         return false;
+    }
+
+    public ParameterStyle getStyle() {
+        return style;
+    }
+
+    public NottableString withStyle(ParameterStyle style) {
+        if (style.equals(DEEP_OBJECT)) {
+            throw new IllegalArgumentException("deep object style is not supported");
+        }
+        this.style = style;
+        return this;
     }
 
     NottableString capitalize() {

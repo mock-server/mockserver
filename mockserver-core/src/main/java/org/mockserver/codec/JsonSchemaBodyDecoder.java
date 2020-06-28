@@ -6,9 +6,13 @@ import com.google.common.base.Joiner;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.BodyMatcher;
+import org.mockserver.matchers.JsonSchemaMatcher;
 import org.mockserver.matchers.StringToXmlDocumentParser;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.Parameter;
+import org.mockserver.model.ParameterStyle;
+import org.mockserver.model.Parameters;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.slf4j.event.Level;
 import org.w3c.dom.Document;
@@ -36,13 +40,13 @@ public class JsonSchemaBodyDecoder {
     private final MockServerLogger mockServerLogger;
     private final Expectation expectation;
     private final HttpRequest httpRequest;
-    private final FormParameterDecoder formParameterParser;
+    private final ExpandedParameterDecoder formParameterParser;
 
     public JsonSchemaBodyDecoder(MockServerLogger mockServerLogger, Expectation expectation, HttpRequest httpRequest) {
         this.mockServerLogger = mockServerLogger;
         this.expectation = expectation;
         this.httpRequest = httpRequest;
-        formParameterParser = new FormParameterDecoder(mockServerLogger);
+        formParameterParser = new ExpandedParameterDecoder(mockServerLogger);
     }
 
     public String convertToJson(HttpRequest request, BodyMatcher<?> bodyMatcher) {
@@ -79,13 +83,31 @@ public class JsonSchemaBodyDecoder {
             }
         } else if (contentType.contains(APPLICATION_X_WWW_FORM_URLENCODED)) {
             ObjectNode objectNode = new ObjectNode(JsonNodeFactory.instance);
-            formParameterParser
-                .retrieveFormParameters(request.getBodyAsString(), false)
+            Parameters parameters = formParameterParser
+                .retrieveFormParameters(request.getBodyAsString(), false);
+            if (bodyMatcher instanceof JsonSchemaMatcher) {
+                splitParameters(((JsonSchemaMatcher) bodyMatcher).getParameterStyle(), parameters);
+            }
+            parameters
                 .getEntries()
                 .forEach(parameter -> objectNode.set(serialiseNottableString(parameter.getName()), toJsonObject(serialiseNottableString(parameter.getValues()))));
             bodyAsJson = objectNode.toPrettyString();
         }
         return bodyAsJson;
+    }
+
+
+    private void splitParameters(Map<String, ParameterStyle> parameterStyles, Parameters bodyParameters) {
+        if (parameterStyles != null && bodyParameters != null) {
+            for (Map.Entry<String, ParameterStyle> parameterStyleEntry : parameterStyles.entrySet()) {
+                for (Parameter bodyParameterEntry : bodyParameters.getEntries()) {
+                    if (parameterStyleEntry.getKey().equals(bodyParameterEntry.getName().getValue())) {
+                        bodyParameterEntry.replaceValues(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(parameterStyleEntry.getValue(), parameterStyleEntry.getKey(), bodyParameterEntry.getValues()));
+                        bodyParameters.replaceEntry(bodyParameterEntry);
+                    }
+                }
+            }
+        }
     }
 
     @SuppressWarnings({"unchecked"})

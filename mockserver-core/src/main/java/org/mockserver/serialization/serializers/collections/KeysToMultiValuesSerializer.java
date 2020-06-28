@@ -3,6 +3,7 @@ package org.mockserver.serialization.serializers.collections;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import org.mockserver.model.KeyMatchStyle;
 import org.mockserver.model.KeyToMultiValue;
 import org.mockserver.model.KeysToMultiValues;
 import org.mockserver.model.NottableString;
@@ -24,6 +25,9 @@ public abstract class KeysToMultiValuesSerializer<T extends KeysToMultiValues<? 
     @Override
     public void serialize(T collection, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         jgen.writeStartObject();
+        if (collection.getKeyMatchStyle() != null && collection.getKeyMatchStyle() != KeyMatchStyle.SUB_SET) {
+            jgen.writeObjectField("keyMatchStyle", collection.getKeyMatchStyle());
+        }
         for (NottableString key : collection.keySet()) {
             jgen.writeFieldName(serialiseNottableString(key));
             Collection<NottableString> values = collection.getValues(key);

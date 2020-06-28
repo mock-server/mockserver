@@ -3,7 +3,7 @@ package org.mockserver.codec;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.FullHttpResponse;
-import org.mockserver.mappers.FullHttpResponseToMockServerResponse;
+import org.mockserver.mappers.FullHttpResponseToMockServerHttpResponse;
 import org.mockserver.logging.MockServerLogger;
 
 import java.util.List;
@@ -11,12 +11,12 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class NettyHttpToMockServerResponseDecoder extends MessageToMessageDecoder<FullHttpResponse> {
+public class NettyHttpToMockServerHttpResponseDecoder extends MessageToMessageDecoder<FullHttpResponse> {
 
-    private final FullHttpResponseToMockServerResponse fullHttpResponseToMockServerResponse;
+    private final FullHttpResponseToMockServerHttpResponse fullHttpResponseToMockServerResponse;
 
-    NettyHttpToMockServerResponseDecoder(MockServerLogger mockServerLogger) {
-        fullHttpResponseToMockServerResponse = new FullHttpResponseToMockServerResponse(mockServerLogger);
+    NettyHttpToMockServerHttpResponseDecoder(MockServerLogger mockServerLogger) {
+        fullHttpResponseToMockServerResponse = new FullHttpResponseToMockServerHttpResponse(mockServerLogger);
     }
 
     @Override

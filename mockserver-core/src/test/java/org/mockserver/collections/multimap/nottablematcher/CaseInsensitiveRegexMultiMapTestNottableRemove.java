@@ -2,6 +2,7 @@ package org.mockserver.collections.multimap.nottablematcher;
 
 import org.junit.Test;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
+import org.mockserver.model.KeyMatchStyle;
 import org.mockserver.model.NottableString;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -23,9 +24,11 @@ public class CaseInsensitiveRegexMultiMapTestNottableRemove {
     public void shouldRemoveSingleValueEntry() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
-                new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
-                new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
+            new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
+            new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
         );
 
         // when
@@ -42,9 +45,11 @@ public class CaseInsensitiveRegexMultiMapTestNottableRemove {
     public void shouldRemoveSingleValueEntryWithNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
-                new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
-                new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
+            new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
+            new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
         );
 
         // when
@@ -61,9 +66,11 @@ public class CaseInsensitiveRegexMultiMapTestNottableRemove {
     public void shouldRemoveMultiValueEntry() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
-                new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
-                new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
+            new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
+            new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
         );
 
         // when
@@ -80,9 +87,11 @@ public class CaseInsensitiveRegexMultiMapTestNottableRemove {
     public void shouldRemoveMultiValueEntryWithNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
-                new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
-                new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
+            new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
+            new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
         );
 
         // when
@@ -99,9 +108,11 @@ public class CaseInsensitiveRegexMultiMapTestNottableRemove {
     public void shouldRemoveNotMatchingEntry() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
-                new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
-                new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
+            new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
+            new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
         );
 
         // when
@@ -118,9 +129,11 @@ public class CaseInsensitiveRegexMultiMapTestNottableRemove {
     public void shouldRemoveNotMatchingEntryWithNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
-                new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
-                new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
+            new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
+            new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
         );
 
         // when
@@ -137,9 +150,11 @@ public class CaseInsensitiveRegexMultiMapTestNottableRemove {
     public void shouldRemoveAllSingleValueEntry() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
-                new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
-                new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
+            new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
+            new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
         );
 
         // when
@@ -156,9 +171,11 @@ public class CaseInsensitiveRegexMultiMapTestNottableRemove {
     public void shouldRemoveAllSingleValueEntryWithNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
-                new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
-                new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
+            new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
+            new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
         );
 
         // when
@@ -175,9 +192,11 @@ public class CaseInsensitiveRegexMultiMapTestNottableRemove {
     public void shouldRemoveAllMultiValueEntry() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
-                new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
-                new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
+            new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
+            new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
         );
 
         // when
@@ -194,9 +213,11 @@ public class CaseInsensitiveRegexMultiMapTestNottableRemove {
     public void shouldRemoveAllMultiValueEntryWithNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
-                new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
-                new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
+            new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
+            new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
         );
 
         // when
@@ -213,9 +234,11 @@ public class CaseInsensitiveRegexMultiMapTestNottableRemove {
     public void shouldRemoveAllNoMatchingEntry() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
-                new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
-                new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
+            new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
+            new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
         );
 
         // when
@@ -232,9 +255,11 @@ public class CaseInsensitiveRegexMultiMapTestNottableRemove {
     public void shouldRemoveAllNoMatchingEntryWithNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
-                new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
-                new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
+            new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
+            new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
         );
 
         // when

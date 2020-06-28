@@ -4,19 +4,19 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.FullHttpRequest;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mappers.FullHttpRequestToMockServerRequest;
+import org.mockserver.mappers.FullHttpRequestToMockServerHttpRequest;
 
 import java.util.List;
 
 /**
  * @author jamesdbloom
  */
-public class NettyHttpToMockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRequest> {
+public class NettyHttpToMockServerHttpRequestDecoder extends MessageToMessageDecoder<FullHttpRequest> {
 
-    private final FullHttpRequestToMockServerRequest fullHttpRequestToMockServerRequest;
+    private final FullHttpRequestToMockServerHttpRequest fullHttpRequestToMockServerRequest;
 
-    public NettyHttpToMockServerRequestDecoder(MockServerLogger mockServerLogger, boolean isSecure) {
-        fullHttpRequestToMockServerRequest = new FullHttpRequestToMockServerRequest(mockServerLogger, isSecure);
+    public NettyHttpToMockServerHttpRequestDecoder(MockServerLogger mockServerLogger, boolean isSecure) {
+        fullHttpRequestToMockServerRequest = new FullHttpRequestToMockServerHttpRequest(mockServerLogger, isSecure);
     }
 
     @Override

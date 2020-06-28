@@ -15,7 +15,7 @@ import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.closurecallback.websocketregistry.CallbackWebSocketServerHandler;
-import org.mockserver.codec.MockServerServerCodec;
+import org.mockserver.codec.MockServerHttpServerCodec;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.dashboard.DashboardWebSocketServerHandler;
 import org.mockserver.lifecycle.LifeCycle;
@@ -249,7 +249,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         } else {
             addLastIfNotPresent(pipeline, new CallbackWebSocketServerHandler(httpStateHandler));
             addLastIfNotPresent(pipeline, new DashboardWebSocketServerHandler(httpStateHandler, isSslEnabledUpstream(ctx.channel())));
-            addLastIfNotPresent(pipeline, new MockServerServerCodec(mockServerLogger, isSslEnabledUpstream(ctx.channel())));
+            addLastIfNotPresent(pipeline, new MockServerHttpServerCodec(mockServerLogger, isSslEnabledUpstream(ctx.channel())));
             addLastIfNotPresent(pipeline, new HttpRequestHandler(server, httpStateHandler, actionHandler));
             pipeline.remove(this);
 

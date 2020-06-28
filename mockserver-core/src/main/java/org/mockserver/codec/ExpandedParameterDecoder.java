@@ -5,6 +5,7 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.NottableString;
 import org.mockserver.model.Parameter;
+import org.mockserver.model.ParameterStyle;
 import org.mockserver.model.Parameters;
 import org.slf4j.event.Level;
 
@@ -15,18 +16,18 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.NottableOptionalString.optionalString;
 import static org.mockserver.model.NottableString.string;
 
-public class FormParameterDecoder {
+public class ExpandedParameterDecoder {
 
-    private static final Pattern QUOTED_PARAMETER_VALUE = Pattern.compile("^[\"']+(.*)[\"']+$");
+    private static final Pattern QUOTED_PARAMETER_VALUE = Pattern.compile("\\s*^[\"']+(.*)[\"']+\\s*$");
+    private static final Pattern JSON_VALUE = Pattern.compile("(?s)^\\s*[{\\[].*[}\\]]\\s*$");
 
     private final MockServerLogger mockServerLogger;
 
-    public FormParameterDecoder(MockServerLogger mockServerLogger) {
+    public ExpandedParameterDecoder(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
     }
 
@@ -35,7 +36,6 @@ public class FormParameterDecoder {
         Map<String, List<String>> parameterMap = new HashMap<>();
         if (isNotBlank(parameterString)) {
             try {
-
                 parameterMap.putAll(new QueryStringDecoder(parameterString, parameterString.contains("/") || hasPath).parameters());
             } catch (IllegalArgumentException iae) {
                 mockServerLogger.logEvent(
@@ -50,7 +50,7 @@ public class FormParameterDecoder {
         return parameters.withEntries(parameterMap);
     }
 
-    public List<NottableString> splitOnDelimiter(Parameter.Style style, List<NottableString> values) {
+    public List<NottableString> splitOnDelimiter(ParameterStyle style, String name, List<NottableString> values) {
         if (isNotBlank(style.getRegex())) {
             List<NottableString> splitValues = new ArrayList<>();
             for (NottableString value : values) {
@@ -61,8 +61,8 @@ public class FormParameterDecoder {
                     } else {
                         splitValues.add(string(quotedValue.group(1), value.isNot()));
                     }
-                } else {
-                    for (String splitValue : value.getValue().split(style.getRegex())) {
+                } else if (!JSON_VALUE.matcher(value.getValue()).matches()) {
+                    for (String splitValue : value.getValue().split(style.getRegex().replaceAll("<name>", name))) {
                         if (value.isOptional()) {
                             splitValues.add(optionalString(splitValue, value.isNot()));
                         } else {

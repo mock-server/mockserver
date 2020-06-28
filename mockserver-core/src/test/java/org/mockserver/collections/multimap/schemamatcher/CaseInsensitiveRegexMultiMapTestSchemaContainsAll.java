@@ -2,6 +2,7 @@ package org.mockserver.collections.multimap.schemamatcher;
 
 import org.junit.Test;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
+import org.mockserver.model.KeyMatchStyle;
 import org.mockserver.model.NottableString;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -30,29 +31,39 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
     public void shouldContainAllExactMatchSingleKeyAndSingleValueForSchemaKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new NottableString[]{schemaString(stringLengthSchema), string("keyOne_valueOne")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{schemaString(stringLengthSchema), string("keyOne_valueOne")}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), string("keyOne_valueOne")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), string("keyOne_valueOne")}
         )), is(true));
 
         // and then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("a"), string("keyOne_valueOne")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("a"), string("keyOne_valueOne")}
         )), is(false));
 
         // NOT-ED
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{not("abc"), string("keyOne_valueOne")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("abc"), string("keyOne_valueOne")}
         )), is(false));
 
         // and then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{not("a"), string("keyOne_valueOne")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("a"), string("keyOne_valueOne")}
         )), is(true));
     }
 
@@ -60,29 +71,39 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
     public void shouldContainAllExactMatchSingleKeyAndSingleValueForSchemaValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new NottableString[]{string("keyOne"), schemaString(stringLengthSchema)}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("keyOne"), schemaString(stringLengthSchema)}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("keyOne"), string("abc")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("keyOne"), string("abc")}
         )), is(true));
 
         // and then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("keyOne"), string("a")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("keyOne"), string("a")}
         )), is(false));
 
         // NOT-ED
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("keyOne"), not("abc")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("keyOne"), not("abc")}
         )), is(false));
 
         // and then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("keyOne"), not("a")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("keyOne"), not("a")}
         )), is(true));
     }
 
@@ -90,49 +111,67 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
     public void shouldContainAllExactMatchSingleKeyAndSingleValueForSchemaKeyAndValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new NottableString[]{schemaString(stringLengthSchema), schemaString(stringLengthSchema)}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{schemaString(stringLengthSchema), schemaString(stringLengthSchema)}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), string("abc")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), string("abc")}
         )), is(true));
 
         // and then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("a"), string("a")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("a"), string("a")}
         )), is(false));
 
         // and then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), string("a")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), string("a")}
         )), is(false));
 
         // and then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("a"), string("abc")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("a"), string("abc")}
         )), is(false));
 
         // NOT-ED
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), not("abc")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), not("abc")}
         )), is(false));
 
         // and then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{not("a"), not("a")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("a"), not("a")}
         )), is(true));
 
         // and then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), not("a")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), not("a")}
         )), is(true));
 
         // and then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{not("a"), string("abc")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("a"), string("abc")}
         )), is(true));
     }
 
@@ -140,30 +179,40 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
     public void shouldContainAllSubSetSingleKeyAndSingleValueForSchemaKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new NottableString[]{schemaString(stringLengthSchema), string("keyOne_valueOne")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{schemaString(stringLengthSchema), string("keyOne_valueOne")},
             new NottableString[]{schemaString(emailPatternSchema), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), string("keyOne_valueOne")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), string("keyOne_valueOne")}
         )), is(true));
 
         // and then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("a"), string("keyOne_valueOne")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("a"), string("keyOne_valueOne")}
         )), is(false));
 
         // NOT-ED
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{not("abc"), string("keyOne_valueOne")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("abc"), string("keyOne_valueOne")}
         )), is(false));
 
         // and then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{not("a"), string("keyOne_valueOne")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("a"), string("keyOne_valueOne")}
         )), is(true));
     }
 
@@ -171,30 +220,40 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
     public void shouldContainAllSubSetSingleKeyAndSingleValueForSchemaValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new NottableString[]{string("keyOne"), schemaString(stringLengthSchema)},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("keyOne"), schemaString(stringLengthSchema)},
             new NottableString[]{string("keyTwo"), schemaString(emailPatternSchema)}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("keyOne"), string("abc")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("keyOne"), string("abc")}
         )), is(true));
 
         // and then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("keyOne"), string("a")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("keyOne"), string("a")}
         )), is(false));
 
         // NOT-ED
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("keyOne"), not("abc")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("keyOne"), not("abc")}
         )), is(false));
 
         // and then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("keyOne"), not("a")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("keyOne"), not("a")}
         )), is(true));
     }
 
@@ -202,50 +261,68 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
     public void shouldContainAllSubSetSingleKeyAndSingleValueForSchemaKeyAndValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new NottableString[]{schemaString(stringLengthSchema), schemaString(stringLengthSchema)},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{schemaString(stringLengthSchema), schemaString(stringLengthSchema)},
             new NottableString[]{schemaString(emailPatternSchema), schemaString(emailPatternSchema)}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), string("abc")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), string("abc")}
         )), is(true));
 
         // and then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("a"), string("a")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("a"), string("a")}
         )), is(false));
 
         // and then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), string("a")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), string("a")}
         )), is(false));
 
         // and then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("a"), string("abc")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("a"), string("abc")}
         )), is(false));
 
         // NOT-ED
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), not("abc")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), not("abc")}
         )), is(false));
 
         // and then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{not("a"), not("a")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("a"), not("a")}
         )), is(true));
 
         // and then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), not("a")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), not("a")}
         )), is(true));
 
         // and then
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{not("a"), string("abc")}
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("a"), string("abc")}
         )), is(true));
     }
 
@@ -253,31 +330,41 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
     public void shouldContainAllExactMatchSingleKeyAndMultipleValuesForSchemaKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new NottableString[]{schemaString(stringLengthSchema), string("keyOne_valueOne")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{schemaString(stringLengthSchema), string("keyOne_valueOne")},
             new NottableString[]{schemaString(emailPatternSchema), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         );
 
         // then - matches
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), string("keyOne_valueOne")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), string("keyOne_valueOne")},
             new NottableString[]{string("someone@mockserver.com"), string("keyTwo_valueTwo")}
         )), is(true));
 
         // and then - key string lengths don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("a"), string("keyOne_valueOne")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("a"), string("keyOne_valueOne")},
             new NottableString[]{string("someone@mockserver.com"), string("keyTwo_valueTwo")}
         )), is(false));
 
         // and then - key email don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), string("keyOne_valueOne")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), string("keyOne_valueOne")},
             new NottableString[]{string("abcdef"), string("keyTwo_valueTwo")}
         )), is(false));
 
         // and then - both key string length and key email don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("a"), string("keyOne_valueOne")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("a"), string("keyOne_valueOne")},
             new NottableString[]{string("abcdef"), string("keyTwo_valueTwo")}
         )), is(false));
 
@@ -285,25 +372,33 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
 
         // then - doesn't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{not("abc"), string("keyOne_valueOne")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("abc"), string("keyOne_valueOne")},
             new NottableString[]{not("someone@mockserver.com"), string("keyTwo_valueTwo")}
         )), is(false));
 
         // and then - key string lengths don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{not("a"), string("keyOne_valueOne")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("a"), string("keyOne_valueOne")},
             new NottableString[]{string("someone@mockserver.com"), string("keyTwo_valueTwo")}
         )), is(true));
 
         // and then - key email don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), string("keyOne_valueOne")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), string("keyOne_valueOne")},
             new NottableString[]{not("abcdef"), string("keyTwo_valueTwo")}
         )), is(true));
 
         // and then - both key string length and key email don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{not("a"), string("keyOne_valueOne")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("a"), string("keyOne_valueOne")},
             new NottableString[]{not("abcdef"), string("keyTwo_valueTwo")}
         )), is(true));
     }
@@ -312,31 +407,41 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
     public void shouldContainAllExactMatchSingleKeyAndMultipleValuesForSchemaValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new NottableString[]{string("keyOne"), schemaString(stringLengthSchema)},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("keyOne"), schemaString(stringLengthSchema)},
             new NottableString[]{string("keyTwo"), schemaString(emailPatternSchema)}
         );
 
         // then - matches
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("keyOne"), string("abc")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("keyOne"), string("abc")},
             new NottableString[]{string("keyTwo"), string("someone@mockserver.com")}
         )), is(true));
 
         // and then - key string lengths don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("keyOne"), string("a")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("keyOne"), string("a")},
             new NottableString[]{string("keyTwo"), string("someone@mockserver.com")}
         )), is(false));
 
         // and then - key email don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("keyOne"), string("abc")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("keyOne"), string("abc")},
             new NottableString[]{string("keyTwo"), string("abcdef")}
         )), is(false));
 
         // and then - both key string length and key email don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("keyOne"), string("a")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("keyOne"), string("a")},
             new NottableString[]{string("keyTwo"), string("abcdef")}
         )), is(false));
 
@@ -344,25 +449,33 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
 
         // then - doesn't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("keyOne"), not("abc")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("keyOne"), not("abc")},
             new NottableString[]{string("keyTwo"), not("someone@mockserver.com")}
         )), is(false));
 
         // and then - value string lengths don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("keyOne"), not("a")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("keyOne"), not("a")},
             new NottableString[]{string("keyTwo"), string("someone@mockserver.com")}
         )), is(true));
 
         // and then - value email don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("keyOne"), string("abc")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("keyOne"), string("abc")},
             new NottableString[]{string("keyTwo"), not("abcdef")}
         )), is(true));
 
         // and then - both value string length and value email don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("keyOne"), not("a")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("keyOne"), not("a")},
             new NottableString[]{string("keyTwo"), not("abcdef")}
         )), is(true));
     }
@@ -371,13 +484,17 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
     public void shouldContainAllExactMatchSingleKeyAndMultipleValuesForSchemaKeyAndValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-            true, new NottableString[]{schemaString(stringLengthSchema), schemaString(stringLengthSchema)},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{schemaString(stringLengthSchema), schemaString(stringLengthSchema)},
             new NottableString[]{schemaString(emailPatternSchema), schemaString(emailPatternSchema)}
         );
 
         // then - matches
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), string("abc")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), string("abc")},
             new NottableString[]{string("someone@mockserver.com"), string("someone@mockserver.com")}
         )), is(true));
 
@@ -385,19 +502,25 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
 
         // and then - both string lengths don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("a"), string("a")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("a"), string("a")},
             new NottableString[]{string("someone@mockserver.com"), string("someone@mockserver.com")}
         )), is(false));
 
         // and then - both emails don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), string("abc")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), string("abc")},
             new NottableString[]{string("abcdef"), string("abcdef")}
         )), is(false));
 
         // and then - both string lengths and emails don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("a"), string("a")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("a"), string("a")},
             new NottableString[]{string("abcdef"), string("abcdef")}
         )), is(false));
 
@@ -405,19 +528,25 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
 
         // and then - key string lengths don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("a"), string("abc")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("a"), string("abc")},
             new NottableString[]{string("someone@mockserver.com"), string("someone@mockserver.com")}
         )), is(false));
 
         // and then - key email don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), string("abc")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), string("abc")},
             new NottableString[]{string("abcdef"), string("someone@mockserver.com")}
         )), is(false));
 
         // and then - both key string length and key email don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("a"), string("abc")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("a"), string("abc")},
             new NottableString[]{string("abcdef"), string("someone@mockserver.com")}
         )), is(false));
 
@@ -426,19 +555,25 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
 
         // and then - key string lengths don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), string("a")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), string("a")},
             new NottableString[]{string("someone@mockserver.com"), string("someone@mockserver.com")}
         )), is(false));
 
         // and then - key email don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), string("abc")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), string("abc")},
             new NottableString[]{string("someone@mockserver.com"), string("abcdef")}
         )), is(false));
 
         // and then - both key string length and key email don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), string("a")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), string("a")},
             new NottableString[]{string("someone@mockserver.com"), string("abcdef")}
         )), is(false));
 
@@ -446,19 +581,25 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
 
         // then - does match (not-ed both)
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{not("abc"), not("abc")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("abc"), not("abc")},
             new NottableString[]{not("someone@mockserver.com"), not("someone@mockserver.com")}
         )), is(true));
 
         // then - doesn't match (not-ed keys)
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{not("abc"), string("abc")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("abc"), string("abc")},
             new NottableString[]{not("someone@mockserver.com"), string("someone@mockserver.com")}
         )), is(false));
 
         // then - doesn't match (not-ed values)
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), not("abc")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), not("abc")},
             new NottableString[]{string("someone@mockserver.com"), not("someone@mockserver.com")}
         )), is(false));
 
@@ -466,19 +607,25 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
 
         // and then - both string lengths don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{not("a"), not("a")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("a"), not("a")},
             new NottableString[]{string("someone@mockserver.com"), string("someone@mockserver.com")}
         )), is(true));
 
         // and then - both emails don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), string("abc")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), string("abc")},
             new NottableString[]{not("abcdef"), not("abcdef")}
         )), is(true));
 
         // and then - both string lengths and emails don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{not("a"), not("a")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("a"), not("a")},
             new NottableString[]{not("abcdef"), not("abcdef")}
         )), is(true));
 
@@ -486,19 +633,25 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
 
         // and then - key string lengths don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{not("a"), string("abc")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("a"), string("abc")},
             new NottableString[]{string("someone@mockserver.com"), string("someone@mockserver.com")}
         )), is(true));
 
         // and then - key email don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), string("abc")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), string("abc")},
             new NottableString[]{not("abcdef"), string("someone@mockserver.com")}
         )), is(true));
 
         // and then - both key string length and key email don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{not("a"), string("abc")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{not("a"), string("abc")},
             new NottableString[]{not("abcdef"), string("someone@mockserver.com")}
         )), is(true));
 
@@ -507,19 +660,25 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
 
         // and then - value string lengths don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), not("a")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), not("a")},
             new NottableString[]{string("someone@mockserver.com"), string("someone@mockserver.com")}
         )), is(true));
 
         // and then - value email don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), string("abc")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), string("abc")},
             new NottableString[]{string("someone@mockserver.com"), not("abcdef")}
         )), is(true));
 
         // and then - both value string length and value email don't match
         assertThat(multiMap.containsAll(multiMap(
-            true, new NottableString[]{string("abc"), not("a")},
+            true,
+            KeyMatchStyle.SUB_SET,
+            new NottableString[]{string("abc"), not("a")},
             new NottableString[]{string("someone@mockserver.com"), not("abcdef")}
         )), is(true));
     }
