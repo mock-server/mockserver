@@ -30,14 +30,26 @@ public abstract class KeysToMultiValuesSerializer<T extends KeysToMultiValues<? 
         }
         for (NottableString key : collection.keySet()) {
             jgen.writeFieldName(serialiseNottableString(key));
-            Collection<NottableString> values = collection.getValues(key);
-            jgen.writeStartArray(values.size());
-            for (NottableString nottableString : values) {
-                jgen.writeObject(nottableString);
+            if (key.getParameterStyle() != null) {
+                jgen.writeStartObject();
+                jgen.writeObjectField("parameterStyle", key.getParameterStyle());
+                jgen.writeFieldName("values");
+                writeValuesArray(collection, jgen, key);
+                jgen.writeEndObject();
+            } else {
+                writeValuesArray(collection, jgen, key);
             }
-            jgen.writeEndArray();
         }
         jgen.writeEndObject();
+    }
+
+    private void writeValuesArray(T collection, JsonGenerator jgen, NottableString key) throws IOException {
+        Collection<NottableString> values = collection.getValues(key);
+        jgen.writeStartArray(values.size());
+        for (NottableString nottableString : values) {
+            jgen.writeObject(nottableString);
+        }
+        jgen.writeEndArray();
     }
 
 }

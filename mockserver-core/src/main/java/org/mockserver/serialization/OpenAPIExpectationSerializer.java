@@ -3,6 +3,7 @@ package org.mockserver.serialization;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Joiner;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.OpenAPIExpectation;
@@ -16,6 +17,7 @@ import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.validator.jsonschema.JsonSchemaOpenAPIExpectationValidator.jsonSchemaOpenAPIExpectationValidator;
 import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 
@@ -111,7 +113,7 @@ public class OpenAPIExpectationSerializer implements Serializer<OpenAPIExpectati
                             .setArguments(jsonOpenAPIExpectation)
                             .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonOpenAPIExpectation + "] for OpenAPIExpectation", throwable);
+                    throw new RuntimeException("exception while parsing [" + jsonOpenAPIExpectation + "] for OpenAPIExpectation", throwable);
                 }
                 return expectation;
             } else {
@@ -122,7 +124,7 @@ public class OpenAPIExpectationSerializer implements Serializer<OpenAPIExpectati
                         .setMessageFormat("validation failed:{}expectation:{}")
                         .setArguments(validationErrors, jsonOpenAPIExpectation)
                 );
-                throw new IllegalArgumentException(validationErrors);
+                 throw new IllegalArgumentException(StringUtils.removeEndIgnoreCase(formatLogMessage("incorrect openapi expectation json format for:{}schema validation errors:{}", jsonOpenAPIExpectation , validationErrors), "\n"));
             }
         }
     }
@@ -149,7 +151,7 @@ public class OpenAPIExpectationSerializer implements Serializer<OpenAPIExpectati
                 }
                 if (!validationErrorsList.isEmpty()) {
                     if (validationErrorsList.size() > 1) {
-                        throw new IllegalArgumentException(("[" + NEW_LINE + Joiner.on("," + NEW_LINE).join(validationErrorsList)).replaceAll(NEW_LINE, NEW_LINE + "  ") + NEW_LINE + "]");
+                        throw new IllegalArgumentException(("[" + NEW_LINE + Joiner.on("," + NEW_LINE + NEW_LINE).join(validationErrorsList)).replaceAll(NEW_LINE, NEW_LINE + "  ") + NEW_LINE + "]");
                     } else {
                         throw new IllegalArgumentException(validationErrorsList.get(0));
                     }

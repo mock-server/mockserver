@@ -127,12 +127,12 @@ public abstract class AbstractProxyIntegrationTest {
             // when
             // - send GET request for headers only
             output.write(("" +
-                "GET " + addContextToPath("test_headers_only") + " HTTP/1.1\r\n" +
-                "Host: 127.0.0.1:" + getServerPort() + "\r\n" +
-                "x-test: test_headers_only\r\n" +
-                "Content-Length: 0\r\n" +
-                "Connection: keep-alive\r\n" +
-                "\r\n"
+                "GET " + addContextToPath("test_headers_only") + " HTTP/1.1\r" + NEW_LINE +
+                "Host: 127.0.0.1:" + getServerPort() + "\r" + NEW_LINE +
+                "x-test: test_headers_only\r" + NEW_LINE +
+                "Content-Length: 0\r" + NEW_LINE +
+                "Connection: keep-alive\r" + NEW_LINE +
+                "\r" + NEW_LINE
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
@@ -149,11 +149,11 @@ public abstract class AbstractProxyIntegrationTest {
 
             // - send GET request for headers and body
             output.write(("" +
-                "GET " + addContextToPath("test_headers_and_body") + " HTTP/1.1\r\n" +
-                "Host: 127.0.0.1:" + getServerPort() + "\r\n" +
-                "Content-Length: " + "an_example_body".getBytes(StandardCharsets.UTF_8).length + "\r\n" +
-                "x-test: test_headers_and_body\r\n" +
-                "\r\n" +
+                "GET " + addContextToPath("test_headers_and_body") + " HTTP/1.1\r" + NEW_LINE +
+                "Host: 127.0.0.1:" + getServerPort() + "\r" + NEW_LINE +
+                "Content-Length: " + "an_example_body".getBytes(StandardCharsets.UTF_8).length + "\r" + NEW_LINE +
+                "x-test: test_headers_and_body\r" + NEW_LINE +
+                "\r" + NEW_LINE +
                 "an_example_body"
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
@@ -296,10 +296,10 @@ public abstract class AbstractProxyIntegrationTest {
             // when
             // - send GET request
             output.write(("" +
-                "GET " + addContextToPath("not_found") + " HTTP/1.1\r\n" +
-                "Host: 127.0.0.1:" + getServerPort() + "\r\n" +
-                "Connection: close\r\n" +
-                "\r\n"
+                "GET " + addContextToPath("not_found") + " HTTP/1.1\r" + NEW_LINE +
+                "Host: 127.0.0.1:" + getServerPort() + "\r" + NEW_LINE +
+                "Connection: close\r" + NEW_LINE +
+                "\r" + NEW_LINE
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
@@ -900,19 +900,29 @@ public abstract class AbstractProxyIntegrationTest {
 
         // then
         assertThat(httpResponse.getStatusCode(), is(400));
-        assertThat(httpResponse.getBodyAsString(), is("10 errors:" + NEW_LINE +
-            " - field: \"/keepAlive\" for schema: \"httpRequest/properties/keepAlive\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"boolean\"])\"" + NEW_LINE +
-            " - field: \"/method\" for schema: \"stringOrJsonSchema\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
-            " - field: \"/method\" for schema: \"stringOrJsonSchema/oneOf/0\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
-            " - field: \"/method\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-            " - field: \"/path\" for schema: \"stringOrJsonSchema\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
-            " - field: \"/path\" for schema: \"stringOrJsonSchema/oneOf/0\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
-            " - field: \"/path\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-            " - oneOf of the following must be specified [\"httpRequest\", \"openAPIDefinition\"] but found 0 without errors" + NEW_LINE +
-            " - schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
-            " - schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"keepAlive\",\"method\",\"path\"]\"" + NEW_LINE +
-            NEW_LINE +
-            OPEN_API_SPECIFICATION_URL));
+        assertThat(httpResponse.getBodyAsString(), is("incorrect request matcher json format for:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  {" + NEW_LINE +
+            "      \"path\" : 500," + NEW_LINE +
+            "      \"method\" : true," + NEW_LINE +
+            "      \"keepAlive\" : \"false\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "" + NEW_LINE +
+            " schema validation errors:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  10 errors:" + NEW_LINE +
+            "   - field: \"/keepAlive\" for schema: \"httpRequest/properties/keepAlive\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"boolean\"])\"" + NEW_LINE +
+            "   - field: \"/method\" for schema: \"stringOrJsonSchema\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
+            "   - field: \"/method\" for schema: \"stringOrJsonSchema/oneOf/0\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
+            "   - field: \"/method\" for schema: \"stringOrJsonSchema/oneOf/1\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            "   - field: \"/path\" for schema: \"stringOrJsonSchema\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
+            "   - field: \"/path\" for schema: \"stringOrJsonSchema/oneOf/0\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
+            "   - field: \"/path\" for schema: \"stringOrJsonSchema/oneOf/1\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            "   - oneOf of the following must be specified [\"httpRequest\", \"openAPIDefinition\"] but found 0 without errors" + NEW_LINE +
+            "   - schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
+            "   - schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"keepAlive\",\"method\",\"path\"]\"" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  " + OPEN_API_SPECIFICATION_URL));
     }
 
     @Test
@@ -933,10 +943,21 @@ public abstract class AbstractProxyIntegrationTest {
 
         // then
         assertThat(httpResponse.getStatusCode(), is(400));
-        assertThat(httpResponse.getBodyAsString(), is("1 error:" + NEW_LINE +
-            " - field: \"/times\" for schema: \"verificationTimes\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-            NEW_LINE +
-            OPEN_API_SPECIFICATION_URL));
+        assertThat(httpResponse.getBodyAsString(), is("incorrect verification json format for:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  {" + NEW_LINE +
+            "      \"httpRequest\": {" + NEW_LINE +
+            "          \"path\": \"/simple\"" + NEW_LINE +
+            "      }, " + NEW_LINE +
+            "      \"times\": 1" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "" + NEW_LINE +
+            " schema validation errors:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  1 error:" + NEW_LINE +
+            "   - field: \"/times\" for schema: \"verificationTimes\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  " + OPEN_API_SPECIFICATION_URL));
     }
 
     @Test
@@ -959,9 +980,22 @@ public abstract class AbstractProxyIntegrationTest {
 
         // then
         assertThat(httpResponse.getStatusCode(), is(400));
-        assertThat(httpResponse.getBodyAsString(), is("1 error:" + NEW_LINE +
-            " - object instance has properties which are not allowed by the schema: [\"httpRequest\"]" + NEW_LINE +
-            NEW_LINE +
-            OPEN_API_SPECIFICATION_URL));
+        assertThat(httpResponse.getBodyAsString(), is("incorrect verification sequence json format for:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  {" + NEW_LINE +
+            "      \"httpRequest\": {" + NEW_LINE +
+            "          \"path\": false" + NEW_LINE +
+            "      }," + NEW_LINE +
+            "      \"httpRequest\": {" + NEW_LINE +
+            "          \"path\": 10" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "" + NEW_LINE +
+            " schema validation errors:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  1 error:" + NEW_LINE +
+            "   - object instance has properties which are not allowed by the schema: [\"httpRequest\"]" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  " + OPEN_API_SPECIFICATION_URL));
     }
 }

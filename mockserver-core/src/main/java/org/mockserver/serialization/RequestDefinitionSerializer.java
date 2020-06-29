@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Joiner;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -22,6 +23,7 @@ import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.validator.jsonschema.JsonSchemaRequestDefinitionValidator.jsonSchemaRequestDefinitionValidator;
 import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 
@@ -131,7 +133,7 @@ public class RequestDefinitionSerializer implements Serializer<RequestDefinition
                             .setArguments(jsonRequestDefinition)
                             .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonRequestDefinition + "] for RequestDefinition", throwable);
+                    throw new RuntimeException("exception while parsing [" + jsonRequestDefinition + "] for RequestDefinition", throwable);
                 }
             } else if (jsonRequestDefinition.contains("\"openAPIDefinition\"")) {
                 try {
@@ -147,7 +149,7 @@ public class RequestDefinitionSerializer implements Serializer<RequestDefinition
                             .setArguments(jsonRequestDefinition)
                             .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonRequestDefinition + "] for RequestDefinition", throwable);
+                    throw new RuntimeException("exception while parsing [" + jsonRequestDefinition + "] for RequestDefinition", throwable);
                 }
             }
             String validationErrors = getValidator().isValid(jsonRequestDefinition);
@@ -166,7 +168,7 @@ public class RequestDefinitionSerializer implements Serializer<RequestDefinition
                             .setArguments(jsonRequestDefinition)
                             .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonRequestDefinition + "] for RequestDefinition", throwable);
+                    throw new RuntimeException("exception while parsing [" + jsonRequestDefinition + "] for RequestDefinition", throwable);
                 }
                 return requestDefinition;
             } else {
@@ -176,7 +178,7 @@ public class RequestDefinitionSerializer implements Serializer<RequestDefinition
                         .setMessageFormat("validation failed:{}request:{}")
                         .setArguments(validationErrors, jsonRequestDefinition)
                 );
-                throw new IllegalArgumentException(validationErrors);
+                 throw new IllegalArgumentException(StringUtils.removeEndIgnoreCase(formatLogMessage("incorrect request matcher json format for:{}schema validation errors:{}", jsonRequestDefinition , validationErrors), "\n"));
             }
         }
     }

@@ -27,7 +27,7 @@ public class NottableStringSerializer extends StdSerializer<NottableString> {
     public void serialize(NottableString nottableString, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         if (nottableString instanceof NottableSchemaString) {
             writeObject(nottableString, jgen, "schema", OBJECT_MAPPER.readTree(nottableString.getValue()));
-        } else if (nottableString.getStyle() != null) {
+        } else if (nottableString.getParameterStyle() != null) {
             writeObject(nottableString, jgen, "value", nottableString.getValue());
         } else {
             jgen.writeString(serialiseNottableString(nottableString));
@@ -42,8 +42,8 @@ public class NottableStringSerializer extends StdSerializer<NottableString> {
         if (Boolean.TRUE.equals(nottableString.isOptional())) {
             jgen.writeBooleanField("optional", true);
         }
-        if (nottableString.getStyle() != null) {
-            jgen.writeObjectField("style", nottableString.getStyle());
+        if (nottableString.getParameterStyle() != null) {
+            jgen.writeObjectField("parameterStyle", nottableString.getParameterStyle());
         }
         jgen.writeObjectField(valueFieldName, value);
         jgen.writeEndObject();

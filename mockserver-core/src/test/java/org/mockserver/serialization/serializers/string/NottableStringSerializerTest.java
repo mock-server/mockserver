@@ -33,7 +33,7 @@ public class NottableStringSerializerTest {
                     return string("some_string").withStyle(MATRIX);
                 }
             }),
-            is("{\"value\":{\"style\":\"MATRIX\",\"value\":\"some_string\"}}"));
+            is("{\"value\":{\"parameterStyle\":\"MATRIX\",\"value\":\"some_string\"}}"));
     }
 
     @Test
@@ -138,7 +138,7 @@ public class NottableStringSerializerTest {
                     string("some_string")
                         .withStyle(MATRIX)
                 ),
-            is("{\"style\":\"MATRIX\",\"value\":\"some_string\"}"));
+            is("{\"parameterStyle\":\"MATRIX\",\"value\":\"some_string\"}"));
     }
 
     @Test
@@ -151,7 +151,7 @@ public class NottableStringSerializerTest {
                         "}")
                         .withStyle(MATRIX)
                 ),
-            is("{\"style\":\"MATRIX\",\"schema\":{\"type\":\"string\"}}"));
+            is("{\"parameterStyle\":\"MATRIX\",\"schema\":{\"type\":\"string\"}}"));
     }
 
     @Test
@@ -161,7 +161,7 @@ public class NottableStringSerializerTest {
                     string("some_string", true)
                         .withStyle(MATRIX)
                 ),
-            is("{\"not\":true,\"style\":\"MATRIX\",\"value\":\"some_string\"}"));
+            is("{\"not\":true,\"parameterStyle\":\"MATRIX\",\"value\":\"some_string\"}"));
     }
 
     @Test
@@ -171,12 +171,12 @@ public class NottableStringSerializerTest {
                     optionalString("some_string", true)
                         .withStyle(MATRIX)
                 ),
-            is("{\"not\":true,\"optional\":true,\"style\":\"MATRIX\",\"value\":\"some_string\"}"));
+            is("{\"not\":true,\"optional\":true,\"parameterStyle\":\"MATRIX\",\"value\":\"some_string\"}"));
         assertThat(ObjectMapperFactory.createObjectMapper()
                 .writeValueAsString(
                     string("?!some_string")
                         .withStyle(MATRIX)
                 ),
-            is("{\"not\":true,\"optional\":true,\"style\":\"MATRIX\",\"value\":\"some_string\"}"));
+            is("{\"not\":true,\"optional\":true,\"parameterStyle\":\"MATRIX\",\"value\":\"some_string\"}"));
     }
 }

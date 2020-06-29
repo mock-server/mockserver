@@ -1,15 +1,15 @@
 {
-    "title": "verification",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-        "httpRequest": {
-            "$ref": "#/definitions/requestDefinition"
-        },
-        "times": {
-            "$ref": "#/definitions/verificationTimes"
-        }
+  "title": "verification",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "httpRequest": {
+      "$ref": "#/definitions/requestDefinition"
     },
-    "definitions": {
+    "times": {
+      "$ref": "#/definitions/verificationTimes"
     }
+  },
+  "definitions": {
+  }
 }

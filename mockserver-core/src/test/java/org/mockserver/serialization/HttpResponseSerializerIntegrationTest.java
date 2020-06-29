@@ -28,6 +28,7 @@ import static org.mockserver.model.Header.header;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.XmlBody.xml;
+import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 
 /**
  * @author jamesdbloom
@@ -48,8 +49,19 @@ public class HttpResponseSerializerIntegrationTest {
 
         // then
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("1 error:" + NEW_LINE +
-            " - object instance has properties which are not allowed by the schema: [\"extra_field\"]");
+        thrown.expectMessage("incorrect response json format for:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  {" + NEW_LINE +
+            "      \"statusCode\": 123," + NEW_LINE +
+            "      \"extra_field\": \"extra_value\"" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "" + NEW_LINE +
+            " schema validation errors:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  1 error:" + NEW_LINE +
+            "   - object instance has properties which are not allowed by the schema: [\"extra_field\"]" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  " + OPEN_API_SPECIFICATION_URL);
 
         // when
         new HttpResponseSerializer(new MockServerLogger()).deserialize(requestBytes);

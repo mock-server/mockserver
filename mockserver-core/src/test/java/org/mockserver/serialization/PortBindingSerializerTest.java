@@ -59,7 +59,7 @@ public class PortBindingSerializerTest {
     public void deserializeHandleException() throws IOException {
         // given
         thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while parsing PortBinding for [requestBytes]");
+        thrown.expectMessage("exception while parsing PortBinding for [requestBytes]");
         // and
         when(objectMapper.readValue(eq("requestBytes"), same(PortBinding.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
 

@@ -25,7 +25,7 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
     private final String json;
     private Pattern pattern;
     private Pattern lowercasePattern;
-    private ParameterStyle style;
+    private ParameterStyle parameterStyle;
 
     NottableString(String value, Boolean not) {
         this.value = value;
@@ -145,15 +145,15 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
         return false;
     }
 
-    public ParameterStyle getStyle() {
-        return style;
+    public ParameterStyle getParameterStyle() {
+        return parameterStyle;
     }
 
     public NottableString withStyle(ParameterStyle style) {
         if (style.equals(DEEP_OBJECT)) {
             throw new IllegalArgumentException("deep object style is not supported");
         }
-        this.style = style;
+        this.parameterStyle = style;
         return this;
     }
 

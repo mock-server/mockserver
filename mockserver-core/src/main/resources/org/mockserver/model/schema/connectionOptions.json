@@ -1,28 +1,28 @@
 {
-    "title": "connection options",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-        "suppressContentLengthHeader": {
-            "type": "boolean"
-        },
-        "contentLengthHeaderOverride": {
-            "type": "integer"
-        },
-        "suppressConnectionHeader": {
-            "type": "boolean"
-        },
-        "chunkSize": {
-            "type": "integer"
-        },
-        "keepAliveOverride": {
-            "type": "boolean"
-        },
-        "closeSocket": {
-            "type": "boolean"
-        },
-        "closeSocketDelay": {
-            "$ref": "#/definitions/delay"
-        }
+  "title": "connection options",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "suppressContentLengthHeader": {
+      "type": "boolean"
+    },
+    "contentLengthHeaderOverride": {
+      "type": "integer"
+    },
+    "suppressConnectionHeader": {
+      "type": "boolean"
+    },
+    "chunkSize": {
+      "type": "integer"
+    },
+    "keepAliveOverride": {
+      "type": "boolean"
+    },
+    "closeSocket": {
+      "type": "boolean"
+    },
+    "closeSocketDelay": {
+      "$ref": "#/definitions/delay"
     }
+  }
 }

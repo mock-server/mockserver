@@ -1,5 +1,6 @@
 package org.mockserver.testing.integration.mock;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Uninterruptibles;
 import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
@@ -493,6 +494,268 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
+    public void shouldReturnResponseByMatchingBodyWithSpaceDelimitedParameters() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withBody(jsonSchema("{" + NEW_LINE +
+                        "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                        "    \"title\": \"Product\"," + NEW_LINE +
+                        "    \"type\": \"object\"," + NEW_LINE +
+                        "    \"properties\": {" + NEW_LINE +
+                        "        \"id\": {" + NEW_LINE +
+                        "            \"type\": \"integer\"" + NEW_LINE +
+                        "        }," + NEW_LINE +
+                        "        \"name\": {" + NEW_LINE +
+                        "            \"type\": \"string\"" + NEW_LINE +
+                        "        }," + NEW_LINE +
+                        "        \"price\": {" + NEW_LINE +
+                        "            \"type\": \"number\"," + NEW_LINE +
+                        "            \"minimum\": 0," + NEW_LINE +
+                        "            \"exclusiveMinimum\": true" + NEW_LINE +
+                        "        }," + NEW_LINE +
+                        "        \"tags\": {" + NEW_LINE +
+                        "            \"type\": \"array\"," + NEW_LINE +
+                        "            \"items\": {" + NEW_LINE +
+                        "                \"type\": \"string\"" + NEW_LINE +
+                        "            }," + NEW_LINE +
+                        "            \"minItems\": 1," + NEW_LINE +
+                        "            \"maxItems\": 3," + NEW_LINE +
+                        "            \"uniqueItems\": true" + NEW_LINE +
+                        "        }" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                        "}").withParameterStyles(ImmutableMap.of("tags", ParameterStyle.SPACE_DELIMITED)))
+            )
+            .respond(
+                response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                    .withBody("some_body")
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST")
+                    .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .withBody("" +
+                        "id=1" +
+                        "&name=A+green+door" +
+                        "&price=12.5" +
+                        "&tags=home+green"),
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST")
+                    .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .withBody("" +
+                        "id=1" +
+                        "&name=A+green+door" +
+                        "&price=12.5" +
+                        "&tags=home+green+door+book+expensive"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingQueryParametersWithPipeDelimitedParameters() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some/path")
+                    .withQueryStringParameters(new Parameters(
+                        schemaParam("variableO[a-z]{2}", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"variableOneV[a-z]{4}$\"" + NEW_LINE +
+                            "}").withStyle(ParameterStyle.PIPE_DELIMITED),
+                        schemaParam("?variableTwo", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"variableTwoV[a-z]{4}$\"" + NEW_LINE +
+                            "}").withStyle(ParameterStyle.PIPE_DELIMITED)
+                    ).withKeyMatchStyle(KeyMatchStyle.MATCHING_KEY))
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc" +
+                        "&variableTwo=variableTwoValue|variableTwoValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValab" +
+                        "&variableTwo=variableTwoValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaax|variableOneValbb|variableOneValcc")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaa|variableOneValbbx|variableOneValcc")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaa|variableOneValbb|variableOneValccx")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc" +
+                        "&variableTwo=variableTwoOtherValue|variableTwoValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc" +
+                        "&variableTwo=variableTwoValue|variableTwoOtherValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaax|variableOneValbb|variableOneValcc" +
+                        "&variableTwo=variableTwoValue|variableTwoOtherValue")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingPathParametersWithMatrixStyleParameters() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some/path/{variableOne}/{variableTwo}")
+                    .withPathParameters(new Parameters(
+                        schemaParam("variableO[a-z]{2}", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"variableOneV[a-z]{4}$\"" + NEW_LINE +
+                            "}").withStyle(ParameterStyle.MATRIX_EXPLODED),
+                        schemaParam("variableTwo", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"variableTwoV[a-z]{4}$\"" + NEW_LINE +
+                            "}").withStyle(ParameterStyle.MATRIX)
+                    ).withKeyMatchStyle(KeyMatchStyle.MATCHING_KEY))
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "/;variableOne=variableOneValaa;variableOne=variableOneValbb;variableOne=variableOneValcc" +
+                        "/;variableTwo=variableTwoValue,variableTwoValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "/;variableOne=variableOneValab" +
+                        "/;variableTwo=variableTwoValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "/;variableOne=variableOneValaa;variableOne=variableOneValbb;variableOne=variableOneValcc" +
+                        "/;variableTwo=variableTwoOtherValue,variableTwoValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "/;variableOne=variableOneValaa;variableOne=variableOneValbb;variableOne=variableOneValcc" +
+                        "/;variableTwo=variableTwoValue,variableTwoOtherValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "/;variableOne=variableOneValaax;variableOne=variableOneValbb;variableOne=variableOneValcc" +
+                        "/;variableTwo=variableTwoValue,variableTwoOtherValue")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
     public void shouldReturnResponseByMatchingOptionalParameterBody() {
         // when
         mockServerClient
@@ -563,7 +826,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
-    public void shouldReturnResponseByMatchingMultipleHeaders() {
+    public void shouldReturnResponseByMatchingMultipleHeadersWithKeyMatchDefault() {
         // when
         mockServerClient
             .when(
@@ -597,8 +860,107 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withHeader("headerNameTwo", "headerValueTwo"),
                 headersToIgnore)
         );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withHeader("headerNameOne", "headerValueOne", "headerOtherValueOne")
+                    .withHeader("headerNameTwo", "headerValueTwo"),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withHeader("headerNameOne", "headerValueOne")
+                    .withHeader("headerNameTwo", "headerValueTwo", "headerOtherValueTwo"),
+                headersToIgnore)
+        );
 
         // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withHeader("headerNameOne", "headerValueOne"),
+                headersToIgnore)
+        );
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withHeader("headerNameTwo", "headerValueTwo"),
+                headersToIgnore)
+        );
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request(),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingMultipleHeadersWithKeyMatchByKey() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withHeaders(
+                        new Headers(
+                            schemaHeader(
+                                "headerNameOne", "{" + NEW_LINE +
+                                    "   \"type\": \"string\"," + NEW_LINE +
+                                    "   \"pattern\": \"^headerValueO[a-z]{2}$\"" + NEW_LINE +
+                                    "}"
+                            ),
+                            schemaHeader(
+                                "headerNameTwo", "{" + NEW_LINE +
+                                    "   \"type\": \"string\"," + NEW_LINE +
+                                    "   \"pattern\": \"^headerValueT[a-z]{2}$\"" + NEW_LINE +
+                                    "}"
+                            )
+                        ).withKeyMatchStyle(KeyMatchStyle.MATCHING_KEY)
+                    )
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withHeader("headerNameOne", "headerValueOne")
+                    .withHeader("headerNameTwo", "headerValueTwo"),
+                headersToIgnore)
+        );
+
+        // then - no match
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withHeader("headerNameOne", "headerValueOne", "headerOtherValueOne")
+                    .withHeader("headerNameTwo", "headerValueTwo"),
+                headersToIgnore)
+        );
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withHeader("headerNameOne", "headerValueOne")
+                    .withHeader("headerNameTwo", "headerValueTwo", "headerOtherValueTwo"),
+                headersToIgnore)
+        );
         assertEquals(
             localNotFoundResponse(),
             makeRequest(
@@ -2182,15 +2544,12 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         mockServerClient.when(request().withBody(jsonSchema("{" + NEW_LINE +
             "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
             "    \"title\": \"Product\"," + NEW_LINE +
-            "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
             "    \"type\": \"object\"," + NEW_LINE +
             "    \"properties\": {" + NEW_LINE +
             "        \"id\": {" + NEW_LINE +
-            "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
             "            \"type\": \"integer\"" + NEW_LINE +
             "        }," + NEW_LINE +
             "        \"name\": {" + NEW_LINE +
-            "            \"description\": \"Name of the product\"," + NEW_LINE +
             "            \"type\": \"string\"" + NEW_LINE +
             "        }," + NEW_LINE +
             "        \"price\": {" + NEW_LINE +
@@ -3820,15 +4179,12 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         mockServerClient.when(request().withBody(jsonSchema("{" + NEW_LINE +
             "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
             "    \"title\": \"Product\"," + NEW_LINE +
-            "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
             "    \"type\": \"object\"," + NEW_LINE +
             "    \"properties\": {" + NEW_LINE +
             "        \"id\": {" + NEW_LINE +
-            "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
             "            \"type\": \"integer\"" + NEW_LINE +
             "        }," + NEW_LINE +
             "        \"name\": {" + NEW_LINE +
-            "            \"description\": \"Name of the product\"," + NEW_LINE +
             "            \"type\": \"string\"" + NEW_LINE +
             "        }," + NEW_LINE +
             "        \"price\": {" + NEW_LINE +
@@ -5616,15 +5972,12 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         JsonSchemaBody jsonSchemaBodyOne = jsonSchema("{" + NEW_LINE +
             "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
             "    \"title\": \"Product\"," + NEW_LINE +
-            "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
             "    \"type\": \"object\"," + NEW_LINE +
             "    \"properties\": {" + NEW_LINE +
             "        \"id\": {" + NEW_LINE +
-            "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
             "            \"type\": \"integer\"" + NEW_LINE +
             "        }," + NEW_LINE +
             "        \"name\": {" + NEW_LINE +
-            "            \"description\": \"Name of the product\"," + NEW_LINE +
             "            \"type\": \"string\"" + NEW_LINE +
             "        }," + NEW_LINE +
             "        \"price\": {" + NEW_LINE +

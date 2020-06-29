@@ -35,7 +35,7 @@ public class NottableStringDeserializer extends StdDeserializer<NottableString> 
             Boolean optional = null;
             String value = null;
             JsonNode schema = null;
-            ParameterStyle style = null;
+            ParameterStyle parameterStyle = null;
 
             while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
                 String fieldName = jsonParser.getCurrentName();
@@ -51,9 +51,9 @@ public class NottableStringDeserializer extends StdDeserializer<NottableString> 
                 } else if ("schema".equals(fieldName)) {
                     jsonParser.nextToken();
                     schema = ctxt.readValue(jsonParser, JsonNode.class);
-                } else if ("style".equals(fieldName)) {
+                } else if ("parameterStyle".equals(fieldName)) {
                     jsonParser.nextToken();
-                    style = ctxt.readValue(jsonParser, ParameterStyle.class);
+                    parameterStyle = ctxt.readValue(jsonParser, ParameterStyle.class);
                 }
             }
 
@@ -66,8 +66,8 @@ public class NottableStringDeserializer extends StdDeserializer<NottableString> 
                 result = string(value, not);
             }
 
-            if (result != null && style != null) {
-                result.withStyle(style);
+            if (result != null && parameterStyle != null) {
+                result.withStyle(parameterStyle);
             }
 
             return result;

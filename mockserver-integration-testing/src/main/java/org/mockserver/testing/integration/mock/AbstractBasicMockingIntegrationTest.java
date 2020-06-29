@@ -2172,21 +2172,40 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
 
         // then
         assertThat(httpResponse.getStatusCode(), is(400));
-        assertThat(httpResponse.getBodyAsString(), is("12 errors:" + NEW_LINE +
-            " - object instance has properties which are not allowed by the schema: [\"incorrectField\"]" + NEW_LINE +
-            " - oneOf of the following must be specified [\"httpResponse\", \"httpResponseTemplate\", \"httpResponseObjectCallback\", \"httpResponseClassCallback\", \"httpForward\", \"httpForwardTemplate\", \"httpForwardObjectCallback\", \"httpForwardClassCallback\", \"httpOverrideForwardedRequest\", \"httpError\"] but found 0 without errors" + NEW_LINE +
-            " - schema: \"/oneOf/0\" has error: \"object has missing required properties ([\"httpResponse\"])\"" + NEW_LINE +
-            " - schema: \"/oneOf/1\" has error: \"object has missing required properties ([\"httpResponseTemplate\"])\"" + NEW_LINE +
-            " - schema: \"/oneOf/2\" has error: \"object has missing required properties ([\"httpResponseObjectCallback\"])\"" + NEW_LINE +
-            " - schema: \"/oneOf/3\" has error: \"object has missing required properties ([\"httpResponseClassCallback\"])\"" + NEW_LINE +
-            " - schema: \"/oneOf/4\" has error: \"object has missing required properties ([\"httpForward\"])\"" + NEW_LINE +
-            " - schema: \"/oneOf/5\" has error: \"object has missing required properties ([\"httpForwardTemplate\"])\"" + NEW_LINE +
-            " - schema: \"/oneOf/6\" has error: \"object has missing required properties ([\"httpForwardObjectCallback\"])\"" + NEW_LINE +
-            " - schema: \"/oneOf/7\" has error: \"object has missing required properties ([\"httpForwardClassCallback\"])\"" + NEW_LINE +
-            " - schema: \"/oneOf/8\" has error: \"object has missing required properties ([\"httpOverrideForwardedRequest\"])\"" + NEW_LINE +
-            " - schema: \"/oneOf/9\" has error: \"object has missing required properties ([\"httpError\"])\"" + NEW_LINE +
-            NEW_LINE +
-            OPEN_API_SPECIFICATION_URL));
+        assertThat(httpResponse.getBodyAsString(), is("incorrect expectation json format for:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  {" + NEW_LINE +
+            "    \"httpRequest\" : {" + NEW_LINE +
+            "      \"path\" : \"/path_one\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"incorrectField\" : {" + NEW_LINE +
+            "      \"body\" : \"some_body_one\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"times\" : {" + NEW_LINE +
+            "      \"remainingTimes\" : 1" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"timeToLive\" : {" + NEW_LINE +
+            "      \"unlimited\" : true" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "" + NEW_LINE +
+            " schema validation errors:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  12 errors:" + NEW_LINE +
+            "   - object instance has properties which are not allowed by the schema: [\"incorrectField\"]" + NEW_LINE +
+            "   - oneOf of the following must be specified [\"httpResponse\", \"httpResponseTemplate\", \"httpResponseObjectCallback\", \"httpResponseClassCallback\", \"httpForward\", \"httpForwardTemplate\", \"httpForwardObjectCallback\", \"httpForwardClassCallback\", \"httpOverrideForwardedRequest\", \"httpError\"] but found 0 without errors" + NEW_LINE +
+            "   - schema: \"/oneOf/0\" has error: \"object has missing required properties ([\"httpResponse\"])\"" + NEW_LINE +
+            "   - schema: \"/oneOf/1\" has error: \"object has missing required properties ([\"httpResponseTemplate\"])\"" + NEW_LINE +
+            "   - schema: \"/oneOf/2\" has error: \"object has missing required properties ([\"httpResponseObjectCallback\"])\"" + NEW_LINE +
+            "   - schema: \"/oneOf/3\" has error: \"object has missing required properties ([\"httpResponseClassCallback\"])\"" + NEW_LINE +
+            "   - schema: \"/oneOf/4\" has error: \"object has missing required properties ([\"httpForward\"])\"" + NEW_LINE +
+            "   - schema: \"/oneOf/5\" has error: \"object has missing required properties ([\"httpForwardTemplate\"])\"" + NEW_LINE +
+            "   - schema: \"/oneOf/6\" has error: \"object has missing required properties ([\"httpForwardObjectCallback\"])\"" + NEW_LINE +
+            "   - schema: \"/oneOf/7\" has error: \"object has missing required properties ([\"httpForwardClassCallback\"])\"" + NEW_LINE +
+            "   - schema: \"/oneOf/8\" has error: \"object has missing required properties ([\"httpOverrideForwardedRequest\"])\"" + NEW_LINE +
+            "   - schema: \"/oneOf/9\" has error: \"object has missing required properties ([\"httpError\"])\"" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  " + OPEN_API_SPECIFICATION_URL));
     }
 
     @Test
@@ -2206,19 +2225,29 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
 
         // then
         assertThat(httpResponse.getStatusCode(), is(400));
-        assertThat(httpResponse.getBodyAsString(), is("10 errors:" + NEW_LINE +
-            " - field: \"/keepAlive\" for schema: \"httpRequest/properties/keepAlive\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"boolean\"])\"" + NEW_LINE +
-            " - field: \"/method\" for schema: \"stringOrJsonSchema\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
-            " - field: \"/method\" for schema: \"stringOrJsonSchema/oneOf/0\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
-            " - field: \"/method\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-            " - field: \"/path\" for schema: \"stringOrJsonSchema\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
-            " - field: \"/path\" for schema: \"stringOrJsonSchema/oneOf/0\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
-            " - field: \"/path\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-            " - oneOf of the following must be specified [\"httpRequest\", \"openAPIDefinition\"] but found 0 without errors" + NEW_LINE +
-            " - schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
-            " - schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"keepAlive\",\"method\",\"path\"]\"" + NEW_LINE +
-            NEW_LINE +
-            OPEN_API_SPECIFICATION_URL));
+        assertThat(httpResponse.getBodyAsString(), is("incorrect request matcher json format for:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  {" + NEW_LINE +
+            "      \"path\" : 500," + NEW_LINE +
+            "      \"method\" : true," + NEW_LINE +
+            "      \"keepAlive\" : \"false\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "" + NEW_LINE +
+            " schema validation errors:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  10 errors:" + NEW_LINE +
+            "   - field: \"/keepAlive\" for schema: \"httpRequest/properties/keepAlive\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"boolean\"])\"" + NEW_LINE +
+            "   - field: \"/method\" for schema: \"stringOrJsonSchema\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
+            "   - field: \"/method\" for schema: \"stringOrJsonSchema/oneOf/0\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
+            "   - field: \"/method\" for schema: \"stringOrJsonSchema/oneOf/1\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            "   - field: \"/path\" for schema: \"stringOrJsonSchema\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
+            "   - field: \"/path\" for schema: \"stringOrJsonSchema/oneOf/0\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
+            "   - field: \"/path\" for schema: \"stringOrJsonSchema/oneOf/1\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            "   - oneOf of the following must be specified [\"httpRequest\", \"openAPIDefinition\"] but found 0 without errors" + NEW_LINE +
+            "   - schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
+            "   - schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"keepAlive\",\"method\",\"path\"]\"" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  " + OPEN_API_SPECIFICATION_URL));
     }
 
     @Test

@@ -1,8 +1,8 @@
 {
-    "title": "list of expectations",
-    "type": "array",
-    "additionalProperties": false,
-    "items": {
-        "$ref": "#/definitions/expectation"
-    }
+  "title": "list of expectations",
+  "type": "array",
+  "additionalProperties": false,
+  "items": {
+    "$ref": "#/definitions/expectation"
+  }
 }

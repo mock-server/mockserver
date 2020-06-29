@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Joiner;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
@@ -17,6 +18,7 @@ import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.validator.jsonschema.JsonSchemaHttpResponseValidator.jsonSchemaHttpResponseValidator;
 import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 
@@ -104,7 +106,7 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                             .setArguments(jsonHttpResponse)
                             .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonHttpResponse + "] for HttpResponse", throwable);
+                    throw new RuntimeException("exception while parsing [" + jsonHttpResponse + "] for HttpResponse", throwable);
                 }
             }
             String validationErrors = getValidator().isValid(jsonHttpResponse);
@@ -123,7 +125,7 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                             .setArguments(jsonHttpResponse)
                             .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonHttpResponse + "] for HttpResponse", throwable);
+                    throw new RuntimeException("exception while parsing [" + jsonHttpResponse + "] for HttpResponse", throwable);
                 }
                 return httpResponse;
             } else {
@@ -134,7 +136,7 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                         .setMessageFormat("validation failed:{}response:{}")
                         .setArguments(validationErrors, jsonHttpResponse)
                 );
-                throw new IllegalArgumentException(validationErrors);
+                 throw new IllegalArgumentException(StringUtils.removeEndIgnoreCase(formatLogMessage("incorrect response json format for:{}schema validation errors:{}", jsonHttpResponse , validationErrors), "\n"));
             }
         }
     }

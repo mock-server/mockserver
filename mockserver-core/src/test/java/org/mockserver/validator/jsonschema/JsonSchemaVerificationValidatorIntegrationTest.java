@@ -171,10 +171,10 @@ public class JsonSchemaVerificationValidatorIntegrationTest {
             is(
                 "4 errors:" + NEW_LINE +
                     " - field: \"/method\" for schema: \"stringOrJsonSchema/oneOf/0\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
-                    " - field: \"/method\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/method\" for schema: \"stringOrJsonSchema/oneOf/1\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
                     " - field: \"/path\" for schema: \"stringOrJsonSchema/oneOf/0\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
-                    " - field: \"/path\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    NEW_LINE +
+                    " - field: \"/path\" for schema: \"stringOrJsonSchema/oneOf/1\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    "" + NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));
     }

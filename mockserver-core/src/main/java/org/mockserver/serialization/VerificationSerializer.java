@@ -2,6 +2,7 @@ package org.mockserver.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.serialization.model.VerificationDTO;
@@ -11,6 +12,7 @@ import org.slf4j.event.Level;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.log.model.LogEntry.LogMessageType.VERIFICATION_FAILED;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
@@ -75,7 +77,7 @@ public class VerificationSerializer implements Serializer<Verification> {
                             .setArguments(jsonVerification)
                             .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonVerification + "] for Verification", throwable);
+                    throw new RuntimeException("exception while parsing [" + jsonVerification + "] for Verification", throwable);
                 }
                 return verification;
             } else {
@@ -87,7 +89,7 @@ public class VerificationSerializer implements Serializer<Verification> {
                         .setMessageFormat("validation failed:{}verification:{}")
                         .setArguments(validationErrors, jsonVerification)
                 );
-                throw new IllegalArgumentException(validationErrors);
+                 throw new IllegalArgumentException(StringUtils.removeEndIgnoreCase(formatLogMessage("incorrect verification json format for:{}schema validation errors:{}", jsonVerification , validationErrors), "\n"));
             }
         }
     }

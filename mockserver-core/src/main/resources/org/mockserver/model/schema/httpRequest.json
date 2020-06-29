@@ -1,39 +1,39 @@
 {
-    "title": "request properties matcher",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-        "secure": {
-            "type": "boolean"
-        },
-        "keepAlive": {
-            "type": "boolean"
-        },
-        "method": {
-            "$ref": "#/definitions/stringOrJsonSchema"
-        },
-        "path": {
-            "$ref": "#/definitions/stringOrJsonSchema"
-        },
-        "pathParameters": {
-            "$ref": "#/definitions/keyToMultiValue"
-        },
-        "queryStringParameters": {
-            "$ref": "#/definitions/keyToMultiValue"
-        },
-        "body": {
-            "$ref": "#/definitions/body"
-        },
-        "headers": {
-            "$ref": "#/definitions/keyToMultiValue"
-        },
-        "cookies": {
-            "$ref": "#/definitions/keyToValue"
-        },
-        "socketAddress": {
-            "$ref": "#/definitions/socketAddress"
-        }
+  "title": "request properties matcher",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "secure": {
+      "type": "boolean"
     },
-    "definitions": {
+    "keepAlive": {
+      "type": "boolean"
+    },
+    "method": {
+      "$ref": "#/definitions/stringOrJsonSchema"
+    },
+    "path": {
+      "$ref": "#/definitions/stringOrJsonSchema"
+    },
+    "pathParameters": {
+      "$ref": "#/definitions/keyToMultiValue"
+    },
+    "queryStringParameters": {
+      "$ref": "#/definitions/keyToMultiValue"
+    },
+    "body": {
+      "$ref": "#/definitions/body"
+    },
+    "headers": {
+      "$ref": "#/definitions/keyToMultiValue"
+    },
+    "cookies": {
+      "$ref": "#/definitions/keyToValue"
+    },
+    "socketAddress": {
+      "$ref": "#/definitions/socketAddress"
     }
+  },
+  "definitions": {
+  }
 }

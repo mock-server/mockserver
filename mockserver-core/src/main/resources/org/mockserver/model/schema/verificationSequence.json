@@ -1,16 +1,16 @@
 {
-    "title": "verification sequence",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-        "httpRequests": {
-            "type": "array",
-            "additionalProperties": false,
-            "items": {
-                "$ref": "#/definitions/requestDefinition"
-            }
-        }
-    },
-    "definitions": {
+  "title": "verification sequence",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "httpRequests": {
+      "type": "array",
+      "additionalProperties": false,
+      "items": {
+        "$ref": "#/definitions/requestDefinition"
+      }
     }
+  },
+  "definitions": {
+  }
 }

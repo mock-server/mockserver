@@ -1,29 +1,29 @@
 {
-    "oneOf": [
-        {
-            "type": "array",
-            "additionalProperties": false,
-            "items": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                    "name": {
-                        "type": "string"
-                    },
-                    "value": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        {
-            "type": "object",
-            "additionalProperties": false,
-            "patternProperties": {
-                "^\\S+$": {
-                    "$ref": "#/definitions/stringOrJsonSchema"
-                }
-            }
+  "oneOf": [
+    {
+      "type": "array",
+      "additionalProperties": false,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
         }
-    ]
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^\\S+$": {
+          "$ref": "#/definitions/stringOrJsonSchema"
+        }
+      }
+    }
+  ]
 }

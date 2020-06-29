@@ -1,24 +1,24 @@
 {
-    "title": "host and port to forward to",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-        "delay": {
-            "$ref": "#/definitions/delay"
-        },
-        "host": {
-            "type": "string"
-        },
-        "port": {
-            "type": "integer"
-        },
-        "scheme": {
-            "enum": [
-                "HTTP",
-                "HTTPS"
-            ]
-        }
+  "title": "host and port to forward to",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "delay": {
+      "$ref": "#/definitions/delay"
     },
-    "definitions": {
+    "host": {
+      "type": "string"
+    },
+    "port": {
+      "type": "integer"
+    },
+    "scheme": {
+      "enum": [
+        "HTTP",
+        "HTTPS"
+      ]
     }
+  },
+  "definitions": {
+  }
 }

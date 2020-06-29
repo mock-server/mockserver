@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Joiner;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequestAndHttpResponse;
@@ -17,6 +18,7 @@ import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.validator.jsonschema.JsonSchemaHttpRequestAndHttpResponseValidator.jsonSchemaHttpRequestAndHttpResponseValidator;
 import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 
@@ -105,7 +107,7 @@ public class HttpRequestAndHttpResponseSerializer implements Serializer<HttpRequ
                             .setArguments(jsonHttpRequest)
                             .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonHttpRequest + "] for HttpRequestAndHttpResponse", throwable);
+                    throw new RuntimeException("exception while parsing [" + jsonHttpRequest + "] for HttpRequestAndHttpResponse", throwable);
                 }
             }
             String validationErrors = getValidator().isValid(jsonHttpRequest);
@@ -124,7 +126,7 @@ public class HttpRequestAndHttpResponseSerializer implements Serializer<HttpRequ
                             .setArguments(jsonHttpRequest)
                             .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonHttpRequest + "] for HttpRequestAndHttpResponse", throwable);
+                    throw new RuntimeException("exception while parsing [" + jsonHttpRequest + "] for HttpRequestAndHttpResponse", throwable);
                 }
                 return httpRequestAndHttpResponse;
             } else {
@@ -135,7 +137,7 @@ public class HttpRequestAndHttpResponseSerializer implements Serializer<HttpRequ
                         .setMessageFormat("validation failed:{}request:{}")
                         .setArguments(validationErrors, jsonHttpRequest)
                 );
-                throw new IllegalArgumentException(validationErrors);
+                 throw new IllegalArgumentException(StringUtils.removeEndIgnoreCase(formatLogMessage("incorrect json format for:{}schema validation errors:{}", jsonHttpRequest , validationErrors), "\n"));
             }
         }
     }

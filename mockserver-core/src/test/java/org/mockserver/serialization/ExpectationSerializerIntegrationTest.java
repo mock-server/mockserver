@@ -87,13 +87,28 @@ public class ExpectationSerializerIntegrationTest {
             fail("expected exception to be thrown");
         } catch (Throwable throwable) {
             assertThat(throwable, instanceOf(IllegalArgumentException.class));
-            assertThat(throwable.getMessage(), is("4 errors:" + NEW_LINE +
-                " - field: \"/httpRequest\" for schema: \"httpRequest\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
-                " - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
-                " - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"]\"" + NEW_LINE +
-                " - field: \"/httpResponse\" for schema: \"httpResponse\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
-                NEW_LINE +
-                "See: https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x for OpenAPI Specification"));
+            assertThat(throwable.getMessage(), is("incorrect expectation json format for:" + NEW_LINE +
+                "" + NEW_LINE +
+                "  {" + NEW_LINE +
+                "    \"httpRequest\" : {" + NEW_LINE +
+                "      \"path\" : \"somePath\"," + NEW_LINE +
+                "      \"extra_field\" : \"extra_value\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"httpResponse\" : {" + NEW_LINE +
+                "      \"body\" : \"someBody\"," + NEW_LINE +
+                "      \"extra_field\" : \"extra_value\"" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "" + NEW_LINE +
+                " schema validation errors:" + NEW_LINE +
+                "" + NEW_LINE +
+                "  4 errors:" + NEW_LINE +
+                "   - field: \"/httpRequest\" for schema: \"httpRequest\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
+                "   - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
+                "   - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"]\"" + NEW_LINE +
+                "   - field: \"/httpResponse\" for schema: \"httpResponse\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
+                "  " + NEW_LINE +
+                "  " + OPEN_API_SPECIFICATION_URL));
         }
     }
 
@@ -200,27 +215,74 @@ public class ExpectationSerializerIntegrationTest {
         } catch (Throwable throwable) {
             assertThat(throwable, instanceOf(IllegalArgumentException.class));
             assertThat(throwable.getMessage(), is("[" + NEW_LINE +
-                "  4 errors:" + NEW_LINE +
-                "   - field: \"/httpRequest\" for schema: \"httpRequest\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
-                "   - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
-                "   - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"]\"" + NEW_LINE +
-                "   - field: \"/httpResponse\" for schema: \"httpResponse\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
+                "  incorrect expectation json format for:" + NEW_LINE +
                 "  " + NEW_LINE +
-                "  " + OPEN_API_SPECIFICATION_URL + "," + NEW_LINE +
-                "  4 errors:" + NEW_LINE +
-                "   - field: \"/httpRequest\" for schema: \"httpRequest\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
-                "   - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
-                "   - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"]\"" + NEW_LINE +
-                "   - field: \"/httpResponse\" for schema: \"httpResponse\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
+                "    {" + NEW_LINE +
+                "      \"httpRequest\" : {" + NEW_LINE +
+                "        \"path\" : \"somePath\"," + NEW_LINE +
+                "        \"extra_field\" : \"extra_value\"" + NEW_LINE +
+                "      }," + NEW_LINE +
+                "      \"httpResponse\" : {" + NEW_LINE +
+                "        \"body\" : \"someBody\"," + NEW_LINE +
+                "        \"extra_field\" : \"extra_value\"" + NEW_LINE +
+                "      }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "  " + NEW_LINE +
-                "  " + OPEN_API_SPECIFICATION_URL + "," + NEW_LINE +
-                "  4 errors:" + NEW_LINE +
-                "   - field: \"/httpRequest\" for schema: \"httpRequest\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
-                "   - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
-                "   - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"]\"" + NEW_LINE +
-                "   - field: \"/httpResponse\" for schema: \"httpResponse\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
+                "   schema validation errors:" + NEW_LINE +
                 "  " + NEW_LINE +
-                "  " + OPEN_API_SPECIFICATION_URL + NEW_LINE +
+                "    4 errors:" + NEW_LINE +
+                "     - field: \"/httpRequest\" for schema: \"httpRequest\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
+                "     - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
+                "     - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"]\"" + NEW_LINE +
+                "     - field: \"/httpResponse\" for schema: \"httpResponse\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
+                "    " + NEW_LINE +
+                "    " + OPEN_API_SPECIFICATION_URL + "," + NEW_LINE +
+                "  " + NEW_LINE +
+                "  incorrect expectation json format for:" + NEW_LINE +
+                "  " + NEW_LINE +
+                "    {" + NEW_LINE +
+                "      \"httpRequest\" : {" + NEW_LINE +
+                "        \"path\" : \"somePath\"," + NEW_LINE +
+                "        \"extra_field\" : \"extra_value\"" + NEW_LINE +
+                "      }," + NEW_LINE +
+                "      \"httpResponse\" : {" + NEW_LINE +
+                "        \"body\" : \"someBody\"," + NEW_LINE +
+                "        \"extra_field\" : \"extra_value\"" + NEW_LINE +
+                "      }" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  " + NEW_LINE +
+                "   schema validation errors:" + NEW_LINE +
+                "  " + NEW_LINE +
+                "    4 errors:" + NEW_LINE +
+                "     - field: \"/httpRequest\" for schema: \"httpRequest\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
+                "     - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
+                "     - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"]\"" + NEW_LINE +
+                "     - field: \"/httpResponse\" for schema: \"httpResponse\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
+                "    " + NEW_LINE +
+                "    " + OPEN_API_SPECIFICATION_URL + "," + NEW_LINE +
+                "  " + NEW_LINE +
+                "  incorrect expectation json format for:" + NEW_LINE +
+                "  " + NEW_LINE +
+                "    {" + NEW_LINE +
+                "      \"httpRequest\" : {" + NEW_LINE +
+                "        \"path\" : \"somePath\"," + NEW_LINE +
+                "        \"extra_field\" : \"extra_value\"" + NEW_LINE +
+                "      }," + NEW_LINE +
+                "      \"httpResponse\" : {" + NEW_LINE +
+                "        \"body\" : \"someBody\"," + NEW_LINE +
+                "        \"extra_field\" : \"extra_value\"" + NEW_LINE +
+                "      }" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  " + NEW_LINE +
+                "   schema validation errors:" + NEW_LINE +
+                "  " + NEW_LINE +
+                "    4 errors:" + NEW_LINE +
+                "     - field: \"/httpRequest\" for schema: \"httpRequest\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
+                "     - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
+                "     - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"]\"" + NEW_LINE +
+                "     - field: \"/httpResponse\" for schema: \"httpResponse\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
+                "    " + NEW_LINE +
+                "    " + OPEN_API_SPECIFICATION_URL + NEW_LINE +
                 "]"));
         }
     }

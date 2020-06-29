@@ -1,37 +1,83 @@
 {
-    "oneOf": [
-        {
+  "oneOf": [
+    {
+      "type": "array",
+      "additionalProperties": false,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "values": {
             "type": "array",
             "additionalProperties": false,
             "items": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                    "name": {
-                        "type": "string"
-                    },
-                    "values": {
-                        "type": "array",
-                        "additionalProperties": false,
-                        "items": {
-                            "type": "string"
-                        }
-                    }
-                }
+              "type": "string"
             }
-        },
-        {
-            "type": "object",
-            "additionalProperties": false,
-            "patternProperties": {
-                "^\\S+$": {
-                    "type": "array",
-                    "additionalProperties": false,
-                    "items": {
-                        "$ref": "#/definitions/stringOrJsonSchema"
-                    }
-                }
-            }
+          }
         }
-    ]
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "keyMatchStyle": {
+          "type": "string",
+          "enum": [
+            "MATCHING_KEY",
+            "SUB_SET"
+          ],
+          "default": "SUB_SET"
+        }
+      },
+      "patternProperties": {
+        "^(?!keyMatchStyle)\\S+$": {
+          "oneOf": [
+            {
+              "type": "array",
+              "additionalProperties": false,
+              "items": {
+                "$ref": "#/definitions/stringOrJsonSchema"
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "parameterStyle": {
+                  "type": "string",
+                  "enum": [
+                    "SIMPLE",
+                    "SIMPLE_EXPLODED",
+                    "LABEL",
+                    "LABEL_EXPLODED",
+                    "MATRIX",
+                    "MATRIX_EXPLODED",
+                    "FORM_EXPLODED",
+                    "FORM",
+                    "SPACE_DELIMITED_EXPLODED",
+                    "SPACE_DELIMITED",
+                    "PIPE_DELIMITED_EXPLODED",
+                    "PIPE_DELIMITED",
+                    "DEEP_OBJECT"
+                  ],
+                  "default": ""
+                },
+                "values": {
+                  "type": "array",
+                  "additionalProperties": false,
+                  "items": {
+                    "$ref": "#/definitions/stringOrJsonSchema"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
 }

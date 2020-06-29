@@ -97,7 +97,7 @@ public class LogEventRequestAndResponseSerializer {
                         .setArguments(jsonHttpRequestAndHttpResponse)
                         .setThrowable(throwable)
                 );
-                throw new RuntimeException("Exception while parsing [" + jsonHttpRequestAndHttpResponse + "] for HttpRequestAndHttpResponse", throwable);
+                throw new  RuntimeException("exception while parsing [" + jsonHttpRequestAndHttpResponse + "] for HttpRequestAndHttpResponse", throwable);
             }
             return httpRequestAndHttpResponse;
         }

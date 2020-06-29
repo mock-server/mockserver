@@ -18,6 +18,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.mock.OpenAPIExpectation.openAPIExpectation;
+import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 
 /**
  * @author jamesdbloom
@@ -42,8 +43,23 @@ public class OpenAPIExpectationSerializerIntegrationTest {
 
         // then
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("1 error:" + NEW_LINE +
-            " - object instance has properties which are not allowed by the schema: [\"extra_field\"]");
+        thrown.expectMessage("incorrect openapi expectation json format for:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  {" + NEW_LINE +
+            "    \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_simple_example.json\"," + NEW_LINE +
+            "    \"extra_field\": \"extra_value\"," + NEW_LINE +
+            "    \"operationsAndResponses\" : {" + NEW_LINE +
+            "      \"listPets\" : \"200\"," + NEW_LINE +
+            "      \"createPets\" : \"201\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "" + NEW_LINE +
+            " schema validation errors:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  1 error:" + NEW_LINE +
+            "   - object instance has properties which are not allowed by the schema: [\"extra_field\"]" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  " + OPEN_API_SPECIFICATION_URL);
 
         // when
         new OpenAPIExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);

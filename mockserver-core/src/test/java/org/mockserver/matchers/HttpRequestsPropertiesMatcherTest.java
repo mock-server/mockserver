@@ -6333,12 +6333,15 @@ public class HttpRequestsPropertiesMatcherTest {
             NEW_LINE +
             "    {" + NEW_LINE +
             "      \"keyMatchStyle\" : \"MATCHING_KEY\"," + NEW_LINE +
-            "      \"X-Request-ID\" : [ {" + NEW_LINE +
-            "        \"schema\" : {" + NEW_LINE +
-            "          \"type\" : \"string\"," + NEW_LINE +
-            "          \"format\" : \"uuid\"" + NEW_LINE +
-            "        }" + NEW_LINE +
-            "      } ]" + NEW_LINE +
+            "      \"X-Request-ID\" : {" + NEW_LINE +
+            "        \"parameterStyle\" : \"SIMPLE\"," + NEW_LINE +
+            "        \"values\" : [ {" + NEW_LINE +
+            "          \"schema\" : {" + NEW_LINE +
+            "            \"type\" : \"string\"," + NEW_LINE +
+            "            \"format\" : \"uuid\"" + NEW_LINE +
+            "          }" + NEW_LINE +
+            "        } ]" + NEW_LINE +
+            "      }" + NEW_LINE +
             "    }" + NEW_LINE +
             NEW_LINE +
             "   found:" + NEW_LINE +
@@ -6383,12 +6386,15 @@ public class HttpRequestsPropertiesMatcherTest {
             NEW_LINE +
             "    {" + NEW_LINE +
             "      \"keyMatchStyle\" : \"MATCHING_KEY\"," + NEW_LINE +
-            "      \"X-Request-ID\" : [ {" + NEW_LINE +
-            "        \"schema\" : {" + NEW_LINE +
-            "          \"type\" : \"string\"," + NEW_LINE +
-            "          \"format\" : \"uuid\"" + NEW_LINE +
-            "        }" + NEW_LINE +
-            "      } ]" + NEW_LINE +
+            "      \"X-Request-ID\" : {" + NEW_LINE +
+            "        \"parameterStyle\" : \"SIMPLE\"," + NEW_LINE +
+            "        \"values\" : [ {" + NEW_LINE +
+            "          \"schema\" : {" + NEW_LINE +
+            "            \"type\" : \"string\"," + NEW_LINE +
+            "            \"format\" : \"uuid\"" + NEW_LINE +
+            "          }" + NEW_LINE +
+            "        } ]" + NEW_LINE +
+            "      }" + NEW_LINE +
             "    }" + NEW_LINE +
             NEW_LINE +
             "   found:" + NEW_LINE +
@@ -6458,12 +6464,15 @@ public class HttpRequestsPropertiesMatcherTest {
             NEW_LINE +
             "    {" + NEW_LINE +
             "      \"keyMatchStyle\" : \"MATCHING_KEY\"," + NEW_LINE +
-            "      \"X-Request-ID\" : [ {" + NEW_LINE +
-            "        \"schema\" : {" + NEW_LINE +
-            "          \"type\" : \"string\"," + NEW_LINE +
-            "          \"format\" : \"uuid\"" + NEW_LINE +
-            "        }" + NEW_LINE +
-            "      } ]" + NEW_LINE +
+            "      \"X-Request-ID\" : {" + NEW_LINE +
+            "        \"parameterStyle\" : \"SIMPLE\"," + NEW_LINE +
+            "        \"values\" : [ {" + NEW_LINE +
+            "          \"schema\" : {" + NEW_LINE +
+            "            \"type\" : \"string\"," + NEW_LINE +
+            "            \"format\" : \"uuid\"" + NEW_LINE +
+            "          }" + NEW_LINE +
+            "        } ]" + NEW_LINE +
+            "      }" + NEW_LINE +
             "    }" + NEW_LINE +
             NEW_LINE +
             "   found:" + NEW_LINE +
