@@ -215,7 +215,7 @@ public class HttpActionHandler {
                             response.removeHeader(httpStateHandler.getUniqueLoopPreventionHeaderName());
                             mockServerLogger.logEvent(
                                 new LogEntry()
-                                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                                    .setType(NO_MATCH_RESPONSE)
                                     .setLogLevel(Level.INFO)
                                     .setHttpRequest(request)
                                     .setHttpResponse(notFoundResponse())
@@ -416,7 +416,7 @@ public class HttpActionHandler {
         } else if (isNotBlank(error)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                    .setType(NO_MATCH_RESPONSE)
                     .setLogLevel(Level.INFO)
                     .setHttpRequest(request)
                     .setHttpResponse(notFoundResponse())
@@ -426,7 +426,7 @@ public class HttpActionHandler {
         } else {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                    .setType(NO_MATCH_RESPONSE)
                     .setLogLevel(Level.INFO)
                     .setHttpRequest(request)
                     .setHttpResponse(notFoundResponse())

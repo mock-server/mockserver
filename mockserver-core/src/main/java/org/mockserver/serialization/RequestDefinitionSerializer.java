@@ -172,13 +172,7 @@ public class RequestDefinitionSerializer implements Serializer<RequestDefinition
                 }
                 return requestDefinition;
             } else {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(Level.ERROR)
-                        .setMessageFormat("validation failed:{}request:{}")
-                        .setArguments(validationErrors, jsonRequestDefinition)
-                );
-                 throw new IllegalArgumentException(StringUtils.removeEndIgnoreCase(formatLogMessage("incorrect request matcher json format for:{}schema validation errors:{}", jsonRequestDefinition , validationErrors), "\n"));
+                throw new IllegalArgumentException(StringUtils.removeEndIgnoreCase(formatLogMessage("incorrect request matcher json format for:{}schema validation errors:{}", jsonRequestDefinition, validationErrors), "\n"));
             }
         }
     }

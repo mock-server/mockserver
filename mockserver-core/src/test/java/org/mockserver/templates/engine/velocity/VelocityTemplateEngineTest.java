@@ -1,5 +1,7 @@
 package org.mockserver.templates.engine.velocity;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -11,11 +13,11 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.serialization.model.HttpResponseDTO;
 
 import javax.script.ScriptException;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -40,6 +42,8 @@ import static org.slf4j.event.Level.INFO;
  */
 public class VelocityTemplateEngineTest {
 
+    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
+
     @Rule
     public final ExpectedException exception = ExpectedException.none();
 
@@ -57,7 +61,7 @@ public class VelocityTemplateEngineTest {
     }
 
     @Test
-    public void shouldHandleHttpRequestsWithVelocityResponseTemplateFirstExample() {
+    public void shouldHandleHttpRequestsWithVelocityResponseTemplateFirstExample() throws JsonProcessingException {
         // given
         String template = "#if ( $request.method == 'POST' && $request.path == '/somePath' )" + NEW_LINE +
             "    {" + NEW_LINE +
@@ -90,11 +94,11 @@ public class VelocityTemplateEngineTest {
                 .setLogLevel(INFO)
                 .setHttpRequest(request)
                 .setMessageFormat("generated output:{}from template:{}for request:{}")
-                .setArguments("" +
+                .setArguments(OBJECT_MAPPER.readTree("" +
                         "    {" + NEW_LINE +
                         "        'statusCode': 200," + NEW_LINE +
                         "        'body': \"{'name': 'value'}\"" + NEW_LINE +
-                        "    }" + NEW_LINE,
+                        "    }" + NEW_LINE),
                     template,
                     request
                 )
@@ -102,7 +106,7 @@ public class VelocityTemplateEngineTest {
     }
 
     @Test
-    public void shouldHandleHttpRequestsWithVelocityResponseTemplateSecondExample() {
+    public void shouldHandleHttpRequestsWithVelocityResponseTemplateSecondExample() throws JsonProcessingException {
         // given
         String template = "#if ( $request.method == 'POST' && $request.path == '/somePath' )" + NEW_LINE +
             "    {" + NEW_LINE +
@@ -134,11 +138,11 @@ public class VelocityTemplateEngineTest {
                 .setLogLevel(INFO)
                 .setHttpRequest(request)
                 .setMessageFormat("generated output:{}from template:{}for request:{}")
-                .setArguments("" +
+                .setArguments(OBJECT_MAPPER.readTree("" +
                         "    {" + NEW_LINE +
                         "        'statusCode': 406," + NEW_LINE +
                         "        'body': \"some_body\"" + NEW_LINE +
-                        "    }" + NEW_LINE,
+                        "    }" + NEW_LINE),
                     template,
                     request
                 )
@@ -146,7 +150,7 @@ public class VelocityTemplateEngineTest {
     }
 
     @Test
-    public void shouldHandleHttpRequestsWithVelocityForwardTemplateFirstExample() {
+    public void shouldHandleHttpRequestsWithVelocityForwardTemplateFirstExample() throws JsonProcessingException {
         // given
         String template = "{" + NEW_LINE +
             "    'path' : \"/somePath\"," + NEW_LINE +
@@ -186,7 +190,7 @@ public class VelocityTemplateEngineTest {
                 .setLogLevel(INFO)
                 .setHttpRequest(request)
                 .setMessageFormat("generated output:{}from template:{}for request:{}")
-                .setArguments("" +
+                .setArguments(OBJECT_MAPPER.readTree("" +
                         "{" + NEW_LINE +
                         "    'path' : \"/somePath\"," + NEW_LINE +
                         "    'cookies' : [ {" + NEW_LINE +
@@ -199,7 +203,7 @@ public class VelocityTemplateEngineTest {
                         "    'keepAlive' : true," + NEW_LINE +
                         "    'secure' : true," + NEW_LINE +
                         "    'body' : \"some_body\"" + NEW_LINE +
-                        "}",
+                        "}"),
                     template,
                     request
                 )
@@ -207,7 +211,7 @@ public class VelocityTemplateEngineTest {
     }
 
     @Test
-    public void shouldHandleHttpRequestsWithVelocityForwardTemplateSecondExample() {
+    public void shouldHandleHttpRequestsWithVelocityForwardTemplateSecondExample() throws JsonProcessingException {
         // given
         String template = "{" + NEW_LINE +
             "    'path' : \"/somePath\"," + NEW_LINE +
@@ -244,19 +248,19 @@ public class VelocityTemplateEngineTest {
                 .setLogLevel(INFO)
                 .setHttpRequest(request)
                 .setMessageFormat("generated output:{}from template:{}for request:{}")
-                .setArguments("" +
-                    "{" + NEW_LINE +
-                    "    'path' : \"/somePath\"," + NEW_LINE +
-                    "    'queryStringParameters' : [ {" + NEW_LINE +
-                    "        'name' : \"queryParameter\"," + NEW_LINE +
-                    "        'values' : [ \"someValue\" ]" + NEW_LINE +
-                    "    } ]," + NEW_LINE +
-                    "    'headers' : [ {" + NEW_LINE +
-                    "        'name' : \"Host\"," + NEW_LINE +
-                    "        'values' : [ \"localhost:1090\" ]" + NEW_LINE +
-                    "    } ]," + NEW_LINE +
-                    "    'body': \"{'name': 'value'}\"" + NEW_LINE +
-                    "}",
+                .setArguments(OBJECT_MAPPER.readTree("" +
+                        "{" + NEW_LINE +
+                        "    'path' : \"/somePath\"," + NEW_LINE +
+                        "    'queryStringParameters' : [ {" + NEW_LINE +
+                        "        'name' : \"queryParameter\"," + NEW_LINE +
+                        "        'values' : [ \"someValue\" ]" + NEW_LINE +
+                        "    } ]," + NEW_LINE +
+                        "    'headers' : [ {" + NEW_LINE +
+                        "        'name' : \"Host\"," + NEW_LINE +
+                        "        'values' : [ \"localhost:1090\" ]" + NEW_LINE +
+                        "    } ]," + NEW_LINE +
+                        "    'body': \"{'name': 'value'}\"" + NEW_LINE +
+                        "}"),
                     template,
                     request
                 )

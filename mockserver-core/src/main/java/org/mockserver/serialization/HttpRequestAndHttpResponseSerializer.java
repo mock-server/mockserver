@@ -130,14 +130,7 @@ public class HttpRequestAndHttpResponseSerializer implements Serializer<HttpRequ
                 }
                 return httpRequestAndHttpResponse;
             } else {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(Level.ERROR)
-                        .setHttpRequest(null)
-                        .setMessageFormat("validation failed:{}request:{}")
-                        .setArguments(validationErrors, jsonHttpRequest)
-                );
-                 throw new IllegalArgumentException(StringUtils.removeEndIgnoreCase(formatLogMessage("incorrect json format for:{}schema validation errors:{}", jsonHttpRequest , validationErrors), "\n"));
+                throw new IllegalArgumentException(StringUtils.removeEndIgnoreCase(formatLogMessage("incorrect json format for:{}schema validation errors:{}", jsonHttpRequest, validationErrors), "\n"));
             }
         }
     }

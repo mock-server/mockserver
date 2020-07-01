@@ -141,15 +141,10 @@
             <artifactId>json-path</artifactId>
         </dependency>
 
-        <!-- swagger -->
+        <!-- open api -->
         <dependency>
             <groupId>io.swagger.parser.v3</groupId>
             <artifactId>swagger-parser</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.oai</groupId>
-            <artifactId>swagger-request-validator-core</artifactId>
-            <version>2.10.0</version>
         </dependency>
 
         <!-- xml -->

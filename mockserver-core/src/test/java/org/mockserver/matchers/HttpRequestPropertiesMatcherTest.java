@@ -5061,7 +5061,8 @@ public class HttpRequestPropertiesMatcherTest {
                 .withStyle(SPACE_DELIMITED)
         ))).matches(null, new HttpRequest().withBody(params(
             new Parameter("someKey", "1%202%203", "1%202%203")
-        ))));        assertFalse(update(new HttpRequest().withBody(
+        ))));
+        assertFalse(update(new HttpRequest().withBody(
             params(
                 new Parameter("someKey", "1")
                     .withStyle(SPACE_DELIMITED)

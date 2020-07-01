@@ -1,6 +1,5 @@
 package org.mockserver.matchers;
 
-import com.atlassian.oai.validator.OpenApiInteractionValidator;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Joiner;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -84,13 +83,6 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                             }));
                 } catch (Throwable throwable) {
                     String message = (StringUtils.isBlank(throwable.getMessage()) || !throwable.getMessage().contains(OPEN_API_LOAD_ERROR) ? OPEN_API_LOAD_ERROR + (isNotBlank(throwable.getMessage()) ? ", " : "") : "") + throwable.getMessage();
-                    if (throwable instanceof OpenApiInteractionValidator.ApiLoadException) {
-                        OpenApiInteractionValidator.ApiLoadException apiLoadException = (OpenApiInteractionValidator.ApiLoadException) throwable;
-                        if (!apiLoadException.getParseMessages().isEmpty()) {
-                            message += String.join(" and ", apiLoadException.getParseMessages()).trim();
-                        }
-
-                    }
                     throw new IllegalArgumentException(message, throwable);
                 }
             }
@@ -448,10 +440,13 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
         HttpRequestPropertiesMatcher httpRequestPropertiesMatcher = new HttpRequestPropertiesMatcher(mockServerLogger);
         httpRequestPropertiesMatcher.update(httpRequest);
         httpRequestPropertiesMatcher.setControlPlaneMatcher(controlPlaneMatcher);
+        int maxUrlOrPathLength = 40;
+        int urlOrPathLength = openAPIDefinition.getSpecUrlOrPayload().length();
+        String urlOrPath = (urlOrPathLength > maxUrlOrPathLength ? "..." : "") + openAPIDefinition.getSpecUrlOrPayload().substring(urlOrPathLength > maxUrlOrPathLength ? urlOrPathLength - maxUrlOrPathLength : urlOrPathLength);
         httpRequestPropertiesMatcher.setDescription("" +
-            "for swagger " +
-            (openAPIDefinition.getSpecUrlOrPayload().endsWith(".json") || openAPIDefinition.getSpecUrlOrPayload().endsWith(".yaml") ? "\"" + openAPIDefinition.getSpecUrlOrPayload() + "\" " : "") +
-            "operation \"" + methodOperationPair.getValue().getOperationId() + "\"" +
+            " open api" +
+            (openAPIDefinition.getSpecUrlOrPayload().endsWith(".json") || openAPIDefinition.getSpecUrlOrPayload().endsWith(".yaml") ? " \"" + urlOrPath + "\"" : "") +
+            (isNotBlank(methodOperationPair.getValue().getOperationId()) ? " operation \"" + methodOperationPair.getValue().getOperationId() + "\"" : "") +
             (isNotBlank(contentType) ? " content-type \"" + contentType + "\"" : "")
         );
         httpRequestPropertiesMatchers.add(httpRequestPropertiesMatcher);

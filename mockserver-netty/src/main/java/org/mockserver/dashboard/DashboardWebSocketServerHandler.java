@@ -1,7 +1,9 @@
 package org.mockserver.dashboard;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
@@ -15,16 +17,16 @@ import io.netty.util.ReferenceCountUtil;
 import org.mockserver.collections.CircularHashMap;
 import org.mockserver.dashboard.model.DashboardLogEntryDTO;
 import org.mockserver.dashboard.serializers.DashboardLogEntryDTOSerializer;
+import org.mockserver.dashboard.serializers.DescriptionProcessor;
+import org.mockserver.dashboard.serializers.DescriptionSerializer;
 import org.mockserver.dashboard.serializers.ThrowableSerializer;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.matchers.TimeToLive;
-import org.mockserver.matchers.Times;
-import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpState;
 import org.mockserver.mock.RequestMatchers;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.OpenAPIDefinition;
 import org.mockserver.model.RequestDefinition;
 import org.mockserver.serialization.HttpRequestSerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
@@ -43,7 +45,8 @@ import java.util.stream.Collectors;
 import static com.google.common.net.HttpHeaders.HOST;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
-import static org.mockserver.log.model.LogEntry.LogMessageType.*;
+import static org.mockserver.log.model.LogEntry.LogMessageType.FORWARDED_REQUEST;
+import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
@@ -52,13 +55,9 @@ import static org.mockserver.model.HttpRequest.request;
 @ChannelHandler.Sharable
 public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapter implements MockServerLogListener, MockServerMatcherListener {
 
-    private static final Predicate<DashboardLogEntryDTO> requestLogPredicate = input
+    private static final Predicate<DashboardLogEntryDTO> recordedRequestsPredicate = input
         -> input.getType() == RECEIVED_REQUEST;
-    private static final Predicate<DashboardLogEntryDTO> requestResponseLogPredicate = input
-        -> input.getType() == EXPECTATION_RESPONSE
-        || input.getType() == EXPECTATION_NOT_MATCHED_RESPONSE
-        || input.getType() == FORWARDED_REQUEST;
-    private static final Predicate<DashboardLogEntryDTO> recordedExpectationLogPredicate = input
+    private static final Predicate<DashboardLogEntryDTO> proxiedRequestsPredicate = input
         -> input.getType() == FORWARDED_REQUEST;
     private static final AttributeKey<Boolean> CHANNEL_UPGRADED_FOR_UI_WEB_SOCKET = AttributeKey.valueOf("CHANNEL_UPGRADED_FOR_UI_WEB_SOCKET");
     private static final String UPGRADE_CHANNEL_FOR_UI_WEB_SOCKET_URI = "/_mockserver_ui_websocket";
@@ -149,13 +148,14 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
             requestMatchers.registerListener(this);
         }
         String webSocketURL = (sslEnabledUpstream ? "wss" : "ws") + "://" + httpRequest.headers().get(HOST) + UPGRADE_CHANNEL_FOR_UI_WEB_SOCKET_URI;
-        mockServerLogger.logEvent(
-            new LogEntry()
-                .setType(DEBUG)
-                .setLogLevel(Level.DEBUG)
-                .setMessageFormat("upgraded dashboard connection to support web sockets on url{}")
-                .setArguments(webSocketURL)
-        );
+        if (MockServerLogger.isEnabled(Level.TRACE)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(Level.TRACE)
+                    .setMessageFormat("upgraded dashboard connection to support web sockets on url{}")
+                    .setArguments(webSocketURL)
+            );
+        }
         handshaker = new WebSocketServerHandshakerFactory(
             webSocketURL,
             null,
@@ -175,6 +175,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
         if (objectMapper == null) {
             objectMapper = ObjectMapperFactory.createObjectMapper(
                 new DashboardLogEntryDTOSerializer(),
+                new DescriptionSerializer(),
                 new ThrowableSerializer()
             );
         }
@@ -214,7 +215,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
                 clientRegistry.put(ctx, httpRequest);
                 sendUpdate(httpRequest, ctx);
             } catch (IllegalArgumentException iae) {
-                sendMessage(ctx, ImmutableMap.of("error", iae.getMessage()));
+                sendMessage(ctx, null, ImmutableMap.of("error", iae.getMessage()), 2);
             }
         } else if (frame instanceof PingWebSocketFrame) {
             ctx.write(new PongWebSocketFrame(frame.content().retain()));
@@ -223,13 +224,12 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
         }
     }
 
-    private void sendMessage(ChannelHandlerContext ctx, ImmutableMap<String, Object> message) {
+    private void sendMessage(ChannelHandlerContext ctx, RequestDefinition httpRequest, ImmutableMap<String, Object> message, int retryCount) {
         if (semaphore.tryAcquire()) {
             scheduler.submit(() -> {
                 try {
-                    ctx.writeAndFlush(new TextWebSocketFrame(
-                        objectMapper.writeValueAsString(message)
-                    ));
+                    String text = objectMapper.writeValueAsString(message);
+                    ctx.writeAndFlush(new TextWebSocketFrame(text));
                 } catch (JsonProcessingException jpe) {
                     mockServerLogger.logEvent(
                         new LogEntry()
@@ -239,7 +239,21 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
                     );
                 }
             });
+        } else if (retryCount >= 0) {
+            scheduler.submit(() -> {
+                try {
+                    TimeUnit.MILLISECONDS.sleep(200);
+                } catch (InterruptedException ignore) {
+                }
+                if (httpRequest != null) {
+                    sendUpdate(httpRequest, ctx, retryCount - 1);
+                } else {
+                    sendMessage(ctx, null, message, retryCount - 1);
+                }
+            });
+
         }
+
     }
 
     @Override
@@ -280,63 +294,81 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
         }
     }
 
-    private void sendUpdate(RequestDefinition httpRequest, ChannelHandlerContext channelHandlerContext) {
+    private void sendUpdate(RequestDefinition httpRequest, ChannelHandlerContext ctx) {
+        sendUpdate(httpRequest, ctx, 2);
+    }
+
+    private void sendUpdate(RequestDefinition httpRequest, ChannelHandlerContext ctx, int retryCount) {
+        DescriptionProcessor activeExpectationsDescriptionProcessor = new DescriptionProcessor();
+        DescriptionProcessor logMessagesDescriptionProcessor = new DescriptionProcessor();
+        DescriptionProcessor recordedRequestsDescriptionProcessor = new DescriptionProcessor();
+        DescriptionProcessor proxiedRequestsDescriptionProcessor = new DescriptionProcessor();
         mockServerEventLog
             .retrieveLogEntriesInReverse(
                 httpRequest,
                 logEntry -> true,
                 DashboardLogEntryDTO::new,
                 reverseLogEventsStream -> {
-                    List<Map<String, Object>> recordedExpectations = new ArrayList<>();
+                    List<ImmutableMap<String, Object>> activeExpectations = requestMatchers
+                        .retrieveRequestMatchers(httpRequest)
+                        .stream()
+                        .limit(UI_UPDATE_ITEM_LIMIT)
+                        .map(requestMatcher -> {
+                            JsonNode expectationJsonNode = objectMapper.valueToTree(requestMatcher.getExpectation());
+                            if (requestMatcher.getExpectation().getHttpRequest() instanceof OpenAPIDefinition) {
+                                JsonNode httpRequestJsonNode = expectationJsonNode.get("httpRequest");
+                                if (httpRequestJsonNode instanceof ObjectNode) {
+                                    ((ObjectNode) httpRequestJsonNode).set("requestMatchers", objectMapper.valueToTree(requestMatcher.getHttpRequests()));
+                                }
+                            }
+                            return ImmutableMap.of(
+                                "key", requestMatcher.getExpectation().getId(),
+                                "description", activeExpectationsDescriptionProcessor.description(requestMatcher.getExpectation().getHttpRequest()),
+                                "value", expectationJsonNode
+                            );
+                        })
+                        .collect(Collectors.toList());
+                    List<Map<String, Object>> proxiedRequests = new ArrayList<>();
                     List<Map<String, Object>> recordedRequests = new ArrayList<>();
-                    List<DashboardLogEntryDTO> recordedRequestResponses = new ArrayList<>();
                     List<DashboardLogEntryDTO> logMessages = new ArrayList<>();
                     reverseLogEventsStream
                         .forEach(logEntryDTO -> {
-                            if (recordedExpectationLogPredicate.test(logEntryDTO)
-                                && recordedExpectations.size() < UI_UPDATE_ITEM_LIMIT) {
-                                recordedExpectations.add(
-                                    ImmutableMap.of(
-                                        "key", logEntryDTO.getId(),
-                                        "value", new Expectation(logEntryDTO.getHttpRequest(), Times.once(), TimeToLive.unlimited(), 0)
-                                            .thenRespond(logEntryDTO.getHttpResponse())
-                                    )
-                                );
+                            if (logMessages.size() < UI_UPDATE_ITEM_LIMIT) {
+                                logMessages
+                                    .add(
+                                        logEntryDTO
+                                            .setDescription(logMessagesDescriptionProcessor.description(logEntryDTO))
+                                    );
                             }
-                            if (requestLogPredicate.test(logEntryDTO)
-                                && recordedRequests.size() < UI_UPDATE_ITEM_LIMIT) {
-                                RequestDefinition[] httpRequests = logEntryDTO.getHttpRequests();
-                                for (int i = 0; i < httpRequests.length; i++) {
+                            if (recordedRequestsPredicate.test(logEntryDTO) && recordedRequests.size() < UI_UPDATE_ITEM_LIMIT) {
+                                for (RequestDefinition request : logEntryDTO.getHttpRequests()) {
                                     recordedRequests.add(ImmutableMap.of(
-                                        "key", logEntryDTO.getId() + i,
-                                        "value", httpRequests[i]
+                                        "key", logEntryDTO.getId() + "_request",
+                                        "description", recordedRequestsDescriptionProcessor.description(logEntryDTO.getHttpRequest()),
+                                        "value", request
                                     ));
                                 }
                             }
-                            if (requestResponseLogPredicate.test(logEntryDTO)
-                                && recordedRequestResponses.size() < UI_UPDATE_ITEM_LIMIT) {
-                                recordedRequestResponses.add(logEntryDTO);
+                            if (proxiedRequestsPredicate.test(logEntryDTO) && proxiedRequests.size() < UI_UPDATE_ITEM_LIMIT) {
+                                proxiedRequests.add(ImmutableMap.of(
+                                    "key", logEntryDTO.getId() + "_proxied",
+                                    "description", proxiedRequestsDescriptionProcessor.description(logEntryDTO.getHttpRequest()),
+                                    "value", ImmutableMap.of(
+                                        "httpRequest", logEntryDTO.getHttpRequest(),
+                                        "httpResponse", logEntryDTO.getHttpResponse()
+                                    )
+                                ));
                             }
-                            if (logMessages.size() < UI_UPDATE_ITEM_LIMIT) {
-                                logMessages.add(logEntryDTO);
-                            }
+
                         });
-                    sendMessage(channelHandlerContext, ImmutableMap.of(
-                        "activeExpectations", requestMatchers
-                            .retrieveActiveExpectations(httpRequest)
-                            .stream()
-                            .limit(UI_UPDATE_ITEM_LIMIT)
-                            .map(expectation -> ImmutableMap.of(
-                                "key", expectation.getId(),
-                                "value", expectation
-                            ))
-                            .collect(Collectors.toList()),
-                        "recordedExpectations", recordedExpectations,
+                    sendMessage(ctx, httpRequest, ImmutableMap.of(
+                        "logMessages", logMessages,
+                        "activeExpectations", activeExpectations,
                         "recordedRequests", recordedRequests,
-                        "recordedRequestResponses", recordedRequestResponses,
-                        "logMessages", logMessages
-                    ));
+                        "proxiedRequests", proxiedRequests // reverse
+                    ), retryCount);
                 }
             );
     }
+
 }

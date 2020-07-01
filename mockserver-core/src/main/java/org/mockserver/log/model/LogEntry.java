@@ -49,8 +49,9 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     private Runnable consumer;
 
     private String messageFormat;
-    private Object[] arguments;
     private String message;
+    private Object[] arguments;
+    private String because;
 
     public LogEntry() {
 
@@ -75,8 +76,9 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         throwable = null;
         consumer = null;
         messageFormat = null;
-        arguments = null;
         message = null;
+        arguments = null;
+        because = null;
     }
 
     public Level getLogLevel() {
@@ -249,6 +251,18 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         return this;
     }
 
+    @JsonIgnore
+    public String getMessage() {
+        if (message == null) {
+            if (arguments != null) {
+                message = formatLogMessage(messageFormat, arguments);
+            } else {
+                message = messageFormat;
+            }
+        }
+        return message;
+    }
+
     public Object[] getArguments() {
         return arguments;
     }
@@ -273,16 +287,13 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         return this;
     }
 
-    @JsonIgnore
-    public String getMessage() {
-        if (message == null) {
-            if (arguments != null) {
-                message = formatLogMessage(messageFormat, arguments);
-            } else {
-                message = messageFormat;
-            }
-        }
-        return message;
+    public String getBecause() {
+        return because;
+    }
+
+    public LogEntry setBecause(String because) {
+        this.because = because;
+        return this;
     }
 
     private RequestDefinition updateBody(RequestDefinition requestDefinition) {
@@ -372,6 +383,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
             .setExpectation(getExpectation())
             .setMessageFormat(getMessageFormat())
             .setArguments(getArguments())
+            .setBecause(getBecause())
             .setThrowable(getThrowable())
             .setConsumer(getConsumer());
     }
@@ -388,6 +400,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
             .setExpectation(getExpectation())
             .setMessageFormat(getMessageFormat())
             .setArguments(getArguments())
+            .setBecause(getBecause())
             .setThrowable(getThrowable())
             .setConsumer(getConsumer());
         clear();
@@ -408,9 +421,9 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         REMOVED_EXPECTATION,
         RECEIVED_REQUEST,
         EXPECTATION_RESPONSE,
-        EXPECTATION_NOT_MATCHED_RESPONSE,
         EXPECTATION_MATCHED,
         EXPECTATION_NOT_MATCHED,
+        NO_MATCH_RESPONSE,
         VERIFICATION,
         VERIFICATION_FAILED,
         FORWARDED_REQUEST,

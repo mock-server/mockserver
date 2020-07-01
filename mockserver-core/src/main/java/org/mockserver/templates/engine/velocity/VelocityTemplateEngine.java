@@ -1,10 +1,13 @@
 package org.mockserver.templates.engine.velocity;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.velocity.script.VelocityScriptEngineFactory;
 import org.mockserver.log.model.LogEntry;
-import org.mockserver.serialization.model.DTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.serialization.ObjectMapperFactory;
+import org.mockserver.serialization.model.DTO;
 import org.mockserver.templates.engine.TemplateEngine;
 import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
 import org.mockserver.templates.engine.serializer.HttpTemplateOutputDeserializer;
@@ -27,6 +30,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
 
     private static final ScriptEngineManager manager = new ScriptEngineManager();
     private static final ScriptEngine engine;
+    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
     private final MockServerLogger logFormatter;
     private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer;
 
@@ -49,13 +53,25 @@ public class VelocityTemplateEngine implements TemplateEngine {
             context.setWriter(writer);
             context.setAttribute("request", new HttpRequestTemplateObject(request), ScriptContext.ENGINE_SCOPE);
             engine.eval(template, context);
+            JsonNode generatedObject = null;
+            try {
+                generatedObject = OBJECT_MAPPER.readTree(writer.toString());
+            } catch (Throwable throwable) {
+                logFormatter.logEvent(
+                    new LogEntry()
+                        .setLogLevel(Level.DEBUG)
+                        .setHttpRequest(request)
+                        .setMessageFormat("exception deserialising generated content:{}into json node for request:{}")
+                        .setArguments(writer.toString(), request)
+                );
+            }
             logFormatter.logEvent(
                 new LogEntry()
                     .setType(TEMPLATE_GENERATED)
                     .setLogLevel(Level.INFO)
                     .setHttpRequest(request)
                     .setMessageFormat("generated output:{}from template:{}for request:{}")
-                    .setArguments(writer.toString(), template, request)
+                    .setArguments(generatedObject != null ? generatedObject : writer.toString(), template, request)
             );
             result = httpTemplateOutputDeserializer.deserializer(request, writer.toString(), dtoClass);
         } catch (Exception e) {

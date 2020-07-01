@@ -214,6 +214,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                     );
                 } else {
                     becauseBuilder.replace(0, 1, "");
+                    String because = becauseBuilder.toString();
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setType(EXPECTATION_NOT_MATCHED)
@@ -221,7 +222,8 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                             .setHttpRequest(request)
                             .setExpectation(this.expectation)
                             .setMessageFormat(this.expectation == null ? didNotMatchRequestBecause : becauseBuilder.length() > 0 ? didNotMatchExpectationBecause : didNotMatchExpectationWithoutBecause)
-                            .setArguments(request, (this.expectation == null ? this : this.expectation.clone()), becauseBuilder.toString())
+                            .setArguments(request, (this.expectation == null ? this : this.expectation.clone()), because)
+                            .setBecause(because)
                     );
                 }
             }
@@ -263,9 +265,8 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                     Parameters pathParameters = null;
                     boolean pathMatches;
                     try {
-                        pathParameters = controlPlaneMatcher ? pathParametersParser.retrievePathParameters(request, httpRequest) : pathParametersParser.retrievePathParameters(httpRequest, request);
-                        NottableString path = controlPlaneMatcher ? pathParametersParser.normalisePathWithParametersForMatching(request) : request.getPath();
-                        pathMatches = StringUtils.isBlank(request.getPath().getValue()) || matches(PATH, matchDifference, pathMatcher, path);
+                        pathParameters = controlPlaneMatcher ? pathParametersParser.extractPathParameters(request, httpRequest) : pathParametersParser.extractPathParameters(httpRequest, request);
+                        pathMatches = StringUtils.isBlank(request.getPath().getValue()) || matches(PATH, matchDifference, pathMatcher, controlPlaneMatcher ? pathParametersParser.normalisePathWithParametersForMatching(request) : request.getPath());
                     } catch (IllegalArgumentException iae) {
                         if (matchDifference != null) {
                             matchDifference.currentField(PATH);

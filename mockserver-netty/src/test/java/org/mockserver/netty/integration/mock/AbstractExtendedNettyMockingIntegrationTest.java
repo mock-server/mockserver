@@ -120,6 +120,190 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     }
 
     @Test
+    public void shouldReturnResponseByMatchingQueryParametersWithPipeDelimitedParameters() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some/path")
+                    .withQueryStringParameters(new Parameters(
+                        schemaParam("variableO[a-z]{2}", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"variableOneV[a-z]{4}$\"" + NEW_LINE +
+                            "}").withStyle(ParameterStyle.PIPE_DELIMITED),
+                        schemaParam("?variableTwo", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"variableTwoV[a-z]{4}$\"" + NEW_LINE +
+                            "}").withStyle(ParameterStyle.PIPE_DELIMITED)
+                    ).withKeyMatchStyle(KeyMatchStyle.MATCHING_KEY))
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc" +
+                        "&variableTwo=variableTwoValue|variableTwoValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValab" +
+                        "&variableTwo=variableTwoValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaax|variableOneValbb|variableOneValcc")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaa|variableOneValbbx|variableOneValcc")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaa|variableOneValbb|variableOneValccx")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc" +
+                        "&variableTwo=variableTwoOtherValue|variableTwoValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc" +
+                        "&variableTwo=variableTwoValue|variableTwoOtherValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaax|variableOneValbb|variableOneValcc" +
+                        "&variableTwo=variableTwoValue|variableTwoOtherValue")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingPathParametersWithMatrixStyleParameters() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some/path/{variableOne}/{variableTwo}")
+                    .withPathParameters(new Parameters(
+                        schemaParam("variableO[a-z]{2}", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"variableOneV[a-z]{4}$\"" + NEW_LINE +
+                            "}").withStyle(ParameterStyle.MATRIX_EXPLODED),
+                        schemaParam("variableTwo", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"variableTwoV[a-z]{4}$\"" + NEW_LINE +
+                            "}").withStyle(ParameterStyle.MATRIX)
+                    ).withKeyMatchStyle(KeyMatchStyle.MATCHING_KEY))
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "/;variableOne=variableOneValaa;variableOne=variableOneValbb;variableOne=variableOneValcc" +
+                        "/;variableTwo=variableTwoValue,variableTwoValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "/;variableOne=variableOneValab" +
+                        "/;variableTwo=variableTwoValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "/;variableOne=variableOneValaa;variableOne=variableOneValbb;variableOne=variableOneValcc" +
+                        "/;variableTwo=variableTwoOtherValue,variableTwoValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "/;variableOne=variableOneValaa;variableOne=variableOneValbb;variableOne=variableOneValcc" +
+                        "/;variableTwo=variableTwoValue,variableTwoOtherValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "/;variableOne=variableOneValaax;variableOne=variableOneValbb;variableOne=variableOneValcc" +
+                        "/;variableTwo=variableTwoValue,variableTwoOtherValue")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
     public void shouldRespondByObjectCallbackViaWebSocket() throws Exception {
         viaWebSocket(() -> {
             // when

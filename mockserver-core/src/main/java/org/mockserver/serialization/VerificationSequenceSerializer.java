@@ -13,8 +13,6 @@ import org.slf4j.event.Level;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
-import static org.mockserver.log.model.LogEntry.LogMessageType.VERIFICATION_FAILED;
-import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 import static org.mockserver.validator.jsonschema.JsonSchemaVerificationSequenceValidator.jsonSchemaVerificationSequenceValidator;
 
@@ -81,15 +79,7 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
                 }
                 return verificationSequence;
             } else {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setType(VERIFICATION_FAILED)
-                        .setLogLevel(Level.INFO)
-                        .setHttpRequest(request())
-                        .setMessageFormat("validation failed:{}verification sequence:{}")
-                        .setArguments(validationErrors, jsonVerificationSequence)
-                );
-                 throw new IllegalArgumentException(StringUtils.removeEndIgnoreCase(formatLogMessage("incorrect verification sequence json format for:{}schema validation errors:{}", jsonVerificationSequence , validationErrors), "\n"));
+                throw new IllegalArgumentException(StringUtils.removeEndIgnoreCase(formatLogMessage("incorrect verification sequence json format for:{}schema validation errors:{}", jsonVerificationSequence, validationErrors), "\n"));
             }
         }
     }

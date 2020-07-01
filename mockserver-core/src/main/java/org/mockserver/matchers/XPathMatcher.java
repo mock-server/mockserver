@@ -35,8 +35,9 @@ public class XPathMatcher extends BodyMatcher<String> {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(DEBUG)
-                            .setMessageFormat("error while creating xpath expression for [" + matcher + "] assuming matcher not xpath - " + xpee.getMessage())
-                            .setArguments(xpee)
+                            .setMessageFormat("error while creating xpath expression for{}assuming matcher not xpath{}")
+                            .setArguments(matcher, xpee.getMessage())
+                            .setThrowable(xpee)
                     );
                 }
             }

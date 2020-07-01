@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - defaulted charset for XML and JSON to UTF8 as per rfc3470 and rfc8259
 - version matching logic for client now only matches on major and minor version and not bug fix version
 - improved handling of body matching for control plane to clearly separate control plane and data plan matching
+- simplified and improved stability for UI by moving all data processing into back-end and other simplifications 
 
 ### Fixed
 - fixed but with environment variable configuration for long, integer and integer list values

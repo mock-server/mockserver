@@ -46,7 +46,7 @@ import static java.util.Collections.unmodifiableSet;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.tlsMutualAuthenticationRequired;
 import static org.mockserver.exception.ExceptionHandling.*;
-import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED_RESPONSE;
+import static org.mockserver.log.model.LogEntry.LogMessageType.NO_MATCH_RESPONSE;
 import static org.mockserver.logging.MockServerLogger.isEnabled;
 import static org.mockserver.mock.action.http.HttpActionHandler.REMOTE_SOCKET;
 import static org.mockserver.model.HttpResponse.response;
@@ -154,11 +154,12 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     }
 
     private void logStage(ChannelHandlerContext ctx, String message) {
-        if (isEnabled(Level.DEBUG)) {
+        if (isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setLogLevel(Level.DEBUG)
-                    .setMessageFormat(message + " for channel: " + ctx.channel() + "pipeline: " + ctx.pipeline().names())
+                    .setLogLevel(Level.TRACE)
+                    .setMessageFormat(message + " for channel:{}pipeline:{}")
+                    .setArguments(ctx.channel().toString(), ctx.pipeline().names())
             );
         }
     }
@@ -232,7 +233,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                 .withHeader("Connection", "Upgrade");
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                    .setType(NO_MATCH_RESPONSE)
                     .setLogLevel(Level.INFO)
                     .setMessageFormat("no tls for connection:{}returning response:{}")
                     .setArguments(ctx.channel().localAddress(), httpResponse)

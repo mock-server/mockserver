@@ -1,12 +1,10 @@
 package org.mockserver.openapi;
 
-import com.atlassian.oai.validator.util.ContentTypeUtils;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.examples.Example;
 import io.swagger.v3.oas.models.headers.Header;
 import io.swagger.v3.oas.models.media.MediaType;
-import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.parser.OpenAPIResolver;
 import io.swagger.v3.parser.OpenAPIV3Parser;
@@ -133,7 +131,7 @@ public class OpenAPIConverter {
                             .ifPresent(mediaType -> {
                                 Example example = findExample(mediaType);
                                 if (example != null) {
-                                    if (ContentTypeUtils.isJsonContentType(contentType.getKey())) {
+                                    if (isJsonContentType(contentType.getKey())) {
                                         response.withBody(json(serialise(example.getValue())));
                                     } else {
                                         response.withBody(String.valueOf(example.getValue()));
@@ -144,7 +142,7 @@ public class OpenAPIConverter {
                                         response.withBody(((StringExample) generatedExample).getValue());
                                     } else {
                                         String serialise = serialise(ExampleBuilder.fromSchema(mediaType.getSchema(), openAPI.getComponents().getSchemas()));
-                                        if (ContentTypeUtils.isJsonContentType(contentType.getKey())) {
+                                        if (isJsonContentType(contentType.getKey())) {
                                             response.withBody(json(serialise));
                                         } else {
                                             response.withBody(serialise);
@@ -155,6 +153,10 @@ public class OpenAPIConverter {
                     });
             });
         return response;
+    }
+
+    public static boolean isJsonContentType(String contentType) {
+        return org.mockserver.model.MediaType.parse(contentType).isJson();
     }
 
     private Example findExample(Header value) {

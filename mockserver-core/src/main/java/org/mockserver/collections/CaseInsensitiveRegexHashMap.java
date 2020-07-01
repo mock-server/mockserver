@@ -90,7 +90,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(DEBUG)
-                                .setMessageFormat("hashmap{}containsAll matched subset{}with{}")
+                                .setMessageFormat("hashmap{}containsAll subset{}in{}")
                                 .setArguments(this, matchedSubSet, matcherEntries)
 
                         );
@@ -120,7 +120,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(DEBUG)
-                                .setMessageFormat("hashmap{}containsAll matched subset of non-optionals{}with{}")
+                                .setMessageFormat("hashmap{}containsAll subset of non-optionals{}in{}")
                                 .setArguments(this, matchedSubSet, matcherEntriesWithoutOptionals)
 
                         );
@@ -156,7 +156,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(DEBUG)
-                                .setMessageFormat("hashmap{}containsAll matched subset of optionals{}with{}")
+                                .setMessageFormat("hashmap{}containsAll subset of optionals{}in{}")
                                 .setArguments(this, matchedSubSet, optionalMatcherEntries)
 
                         );

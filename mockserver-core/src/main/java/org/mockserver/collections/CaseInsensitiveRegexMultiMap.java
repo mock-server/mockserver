@@ -104,7 +104,7 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
                                 mockServerLogger.logEvent(
                                     new LogEntry()
                                         .setLogLevel(DEBUG)
-                                        .setMessageFormat("multimap{}containsAll matched subset{}with{}")
+                                        .setMessageFormat("multimap{}containsAll subset{}in{}")
                                         .setArguments(this, matchedSubSet, matcherEntries)
 
                                 );
@@ -134,7 +134,7 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
                                 mockServerLogger.logEvent(
                                     new LogEntry()
                                         .setLogLevel(DEBUG)
-                                        .setMessageFormat("multimap{}containsAll matched subset of non-optionals{}with{}")
+                                        .setMessageFormat("multimap{}containsAll subset of non-optionals{}in{}")
                                         .setArguments(this, matchedSubSet, matcherEntriesWithoutOptionals)
 
                                 );
@@ -177,7 +177,7 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
                                 mockServerLogger.logEvent(
                                     new LogEntry()
                                         .setLogLevel(DEBUG)
-                                        .setMessageFormat("multimap{}containsAll matched subset of optionals{}with{}")
+                                        .setMessageFormat("multimap{}containsAll subset of optionals{}in{}")
                                         .setArguments(this, matchedSubSet, optionalMatcherEntries)
 
                                 );

@@ -138,7 +138,7 @@ public class ProxyServlet extends HttpServlet implements ServletContextListener 
                 new LogEntry()
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(request)
-                    .setMessageFormat("exception processing:{}error:{}")
+                    .setMessageFormat("exception processing request:{}error:{}")
                     .setArguments(request, iae.getMessage())
             );
             // send request without API CORS headers

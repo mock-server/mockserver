@@ -152,8 +152,8 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
                             new LogEntry()
                                 .setLogLevel(Level.ERROR)
                                 .setHttpRequest(request)
-                                .setMessageFormat("exception processing:{}")
-                                .setArguments(request)
+                                .setMessageFormat("exception processing request:{}error:{}")
+                                .setArguments(request, throwable.getMessage())
                                 .setThrowable(throwable)
                         );
                     }
@@ -165,7 +165,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
                 new LogEntry()
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(request)
-                    .setMessageFormat("exception processing:{}error:{}")
+                    .setMessageFormat("exception processing request:{}error:{}")
                     .setArguments(request, iae.getMessage())
             );
             // send request without API CORS headers

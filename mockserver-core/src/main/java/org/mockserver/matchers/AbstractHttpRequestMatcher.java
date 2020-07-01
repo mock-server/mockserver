@@ -10,13 +10,12 @@ import static org.mockserver.character.Character.NEW_LINE;
 
 public abstract class AbstractHttpRequestMatcher extends NotMatcher<RequestDefinition> implements HttpRequestMatcher {
 
-    protected static final String REQUEST_DID_NOT_MATCH = "request:{}didn't match request matcher";
-    protected static final String EXPECTATION_DID_NOT_MATCH = "request:{}didn't match expectation";
+    protected static final String REQUEST_DID_NOT_MATCH = "request:{}didn't match";
+    protected static final String REQUEST_MATCHER = " request matcher";
+    protected static final String EXPECTATION = " expectation";
     protected static final String BECAUSE = ":{}because:{}";
-    protected static final String EXPECTATION_DID_NOT_MATCH_WITHOUT_BECAUSE = "request:{}didn't match expectation:{}";
-    protected static final String WITHOUT_BECAUSE = ":{}";
     protected static final String REQUEST_DID_MATCH = "request:{}matched request:{}";
-    protected static final String EXPECTATION_DID_MATCH = "request:{}matched expectation:{}";
+    protected static final String EXPECTATION_DID_MATCH = "request:{}matched" + EXPECTATION + ":{}";
     protected static final String DID_NOT_MATCH = " didn't match";
     protected static final String MATCHED = " matched";
     protected static final String COLON_NEW_LINE = ": " + NEW_LINE;
@@ -28,12 +27,18 @@ public abstract class AbstractHttpRequestMatcher extends NotMatcher<RequestDefin
     private boolean responseInProgress = false;
     protected boolean controlPlaneMatcher;
     protected Expectation expectation;
-    protected String didNotMatchRequestBecause = REQUEST_DID_NOT_MATCH + BECAUSE;
-    protected String didNotMatchExpectationBecause = EXPECTATION_DID_NOT_MATCH + BECAUSE;
-    protected String didNotMatchExpectationWithoutBecause = EXPECTATION_DID_NOT_MATCH_WITHOUT_BECAUSE + WITHOUT_BECAUSE;
+    protected String didNotMatchRequestBecause = REQUEST_DID_NOT_MATCH + REQUEST_MATCHER + BECAUSE;
+    protected String didNotMatchExpectationBecause = REQUEST_DID_NOT_MATCH + EXPECTATION + BECAUSE;
+    protected String didNotMatchExpectationWithoutBecause = REQUEST_DID_NOT_MATCH + EXPECTATION;
 
     protected AbstractHttpRequestMatcher(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
+    }
+
+    public void setDescription(String description) {
+        didNotMatchRequestBecause = REQUEST_DID_NOT_MATCH + description + REQUEST_MATCHER + BECAUSE;
+        didNotMatchExpectationBecause = REQUEST_DID_NOT_MATCH + description + EXPECTATION + BECAUSE;
+        didNotMatchExpectationWithoutBecause = REQUEST_DID_NOT_MATCH + description + EXPECTATION;
     }
 
     @Override
@@ -61,12 +66,6 @@ public abstract class AbstractHttpRequestMatcher extends NotMatcher<RequestDefin
 
     public void setControlPlaneMatcher(boolean controlPlaneMatcher) {
         this.controlPlaneMatcher = controlPlaneMatcher;
-    }
-
-    public void setDescription(String description) {
-        didNotMatchRequestBecause = REQUEST_DID_NOT_MATCH + " " + description.trim() + BECAUSE;
-        didNotMatchExpectationBecause = EXPECTATION_DID_NOT_MATCH + " " + description.trim() + BECAUSE;
-        didNotMatchExpectationWithoutBecause = EXPECTATION_DID_NOT_MATCH_WITHOUT_BECAUSE + " " + description.trim() + WITHOUT_BECAUSE;
     }
 
     abstract boolean apply(RequestDefinition requestDefinition);

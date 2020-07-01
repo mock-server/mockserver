@@ -114,7 +114,7 @@ public class MockServerEventLogTest {
             );
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                    .setType(NO_MATCH_RESPONSE)
             );
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -142,7 +142,7 @@ public class MockServerEventLogTest {
             assertThat(retrieveRequestResponseMessageLogEntries(null), contains(
                 new LogEntry()
                     .setLogLevel(INFO)
-                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                    .setType(NO_MATCH_RESPONSE)
                     .setHttpRequests(new RequestDefinition[0]),
                 new LogEntry()
                     .setLogLevel(INFO)
@@ -176,7 +176,7 @@ public class MockServerEventLogTest {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(INFO)
-                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                    .setType(NO_MATCH_RESPONSE)
                     .setHttpRequest(request("request_one"))
                     .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
                     .setMessageFormat("no expectation for:{}returning response:{}")
@@ -235,7 +235,7 @@ public class MockServerEventLogTest {
                 new LogEntry()
                     .setEpochTime(TimeService.currentTimeMillis())
                     .setLogLevel(INFO)
-                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                    .setType(NO_MATCH_RESPONSE)
                     .setHttpRequest(request("request_one"))
                     .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
                     .setMessageFormat("no expectation for:{}returning response:{}")
@@ -268,7 +268,7 @@ public class MockServerEventLogTest {
                     .setArguments(request("request_one")),
                 new LogEntry()
                     .setLogLevel(INFO)
-                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                    .setType(NO_MATCH_RESPONSE)
                     .setHttpRequest(request("request_one"))
                     .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
                     .setMessageFormat("no expectation for:{}returning response:{}")
@@ -328,7 +328,7 @@ public class MockServerEventLogTest {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(INFO)
-                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                    .setType(NO_MATCH_RESPONSE)
                     .setHttpRequest(request("request_one"))
                     .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
                     .setMessageFormat("no expectation for:{}returning response:{}")
@@ -386,7 +386,7 @@ public class MockServerEventLogTest {
                 new LogEntry()
                     .setEpochTime(TimeService.currentTimeMillis())
                     .setLogLevel(INFO)
-                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                    .setType(NO_MATCH_RESPONSE)
                     .setHttpRequest(request("request_one"))
                     .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
                     .setMessageFormat("no expectation for:{}returning response:{}")
@@ -402,7 +402,7 @@ public class MockServerEventLogTest {
                     .setArguments(request("request_one")),
                 new LogEntry()
                     .setLogLevel(INFO)
-                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                    .setType(NO_MATCH_RESPONSE)
                     .setHttpRequest(request("request_one"))
                     .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
                     .setMessageFormat("no expectation for:{}returning response:{}")
@@ -422,7 +422,7 @@ public class MockServerEventLogTest {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(INFO)
-                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                    .setType(NO_MATCH_RESPONSE)
                     .setHttpRequest(request("request_one"))
                     .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
                     .setMessageFormat("no expectation for:{}returning response:{}")
@@ -495,7 +495,7 @@ public class MockServerEventLogTest {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(INFO)
-                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                    .setType(NO_MATCH_RESPONSE)
                     .setHttpRequest(request("request_one"))
                     .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
                     .setMessageFormat("no expectation for:{}returning response:{}")
@@ -619,7 +619,7 @@ public class MockServerEventLogTest {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(INFO)
-                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                    .setType(NO_MATCH_RESPONSE)
                     .setHttpRequest(request("request_one"))
                     .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
                     .setMessageFormat("no expectation for:{}returning response:{}")

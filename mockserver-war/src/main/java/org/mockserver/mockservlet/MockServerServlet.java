@@ -138,7 +138,7 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
                 new LogEntry()
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(request)
-                    .setMessageFormat("exception processing:{}error:{}")
+                    .setMessageFormat("exception processing request:{}error:{}")
                     .setArguments(request, iae.getMessage())
             );
             // send request without API CORS headers

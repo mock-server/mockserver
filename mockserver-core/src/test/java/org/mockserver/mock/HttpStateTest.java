@@ -1369,7 +1369,7 @@ public class HttpStateTest {
         httpState.log(
             new LogEntry()
                 .setLogLevel(INFO)
-                .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                .setType(NO_MATCH_RESPONSE)
                 .setHttpRequest(request("request_one"))
                 .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
                 .setMessageFormat("no expectation for:{}returning response:{}")
@@ -1420,7 +1420,7 @@ public class HttpStateTest {
         httpState.log(
             new LogEntry()
                 .setLogLevel(INFO)
-                .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                .setType(NO_MATCH_RESPONSE)
                 .setHttpRequest(request("request_one"))
                 .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
                 .setMessageFormat("no expectation for:{}returning response:{}")
@@ -1451,7 +1451,7 @@ public class HttpStateTest {
                 "  {" + NEW_LINE +
                 "    \"logLevel\" : \"INFO\"," + NEW_LINE +
                 "    \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\"," + NEW_LINE +
-                "    \"type\" : \"EXPECTATION_NOT_MATCHED_RESPONSE\"," + NEW_LINE +
+                "    \"type\" : \"NO_MATCH_RESPONSE\"," + NEW_LINE +
                 "    \"httpRequest\" : {" + NEW_LINE +
                 "      \"path\" : \"request_one\"" + NEW_LINE +
                 "    }," + NEW_LINE +
@@ -1718,7 +1718,7 @@ public class HttpStateTest {
             httpState.log(
                 new LogEntry()
                     .setLogLevel(INFO)
-                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                    .setType(NO_MATCH_RESPONSE)
                     .setHttpRequest(request("request_one"))
                     .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
                     .setMessageFormat("no expectation for:{}returning response:{}")
@@ -1890,7 +1890,7 @@ public class HttpStateTest {
             httpState.log(
                 new LogEntry()
                     .setLogLevel(INFO)
-                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                    .setType(NO_MATCH_RESPONSE)
                     .setHttpRequest(request("request_one"))
                     .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
                     .setMessageFormat("no expectation for:{}returning response:{}")

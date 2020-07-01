@@ -2,7 +2,6 @@ package org.mockserver.codec;
 
 import com.google.common.collect.ImmutableList;
 import org.junit.Test;
-import org.mockserver.codec.PathParametersDecoder;
 import org.mockserver.model.Parameter;
 
 import java.util.Arrays;
@@ -857,7 +856,7 @@ public class PathParametersDecoderTest {
     }
 
     void shouldRetrieveParameters(String matcherPath, Parameter[] parameter, String requestPath, List<Parameter> expected) {
-        assertThat(new PathParametersDecoder().retrievePathParameters(
+        assertThat(new PathParametersDecoder().extractPathParameters(
             request()
                 .withPath(
                     matcherPath

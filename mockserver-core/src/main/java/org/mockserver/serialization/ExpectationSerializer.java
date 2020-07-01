@@ -129,13 +129,6 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                 }
                 return expectation;
             } else {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(Level.ERROR)
-                        .setHttpRequest(null)
-                        .setMessageFormat("validation failed:{}expectation:{}")
-                        .setArguments(validationErrors, jsonExpectation)
-                );
                 throw new IllegalArgumentException(StringUtils.removeEndIgnoreCase(formatLogMessage("incorrect expectation json format for:{}schema validation errors:{}", jsonExpectation, validationErrors), "\n"));
             }
         }

@@ -1,10 +1,12 @@
 package org.mockserver.codec;
 
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.NottableString;
 import org.mockserver.model.Parameters;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -56,14 +58,14 @@ public class PathParametersDecoder {
         return result;
     }
 
-    public Parameters retrievePathParameters(HttpRequest matcher, HttpRequest matched) {
+    public Parameters extractPathParameters(HttpRequest matcher, HttpRequest matched) {
         Parameters parsedParameters = matched.getPathParameters() != null ? matched.getPathParameters() : new Parameters();
-        if (matcher.getPath() != null && matched.getPath() != null) {
+        if (matcher.getPath() != null && !matcher.getPath().isBlank()) {
             if (matcher.getPathParameters() != null && !matcher.getPathParameters().isEmpty()) {
-                String[] matcherPathParts = matcher.getPath().getValue().split("/");
-                String[] matchedPathParts = matched.getPath().getValue().split("/");
+                String[] matcherPathParts = getPathParts(matcher.getPath());
+                String[] matchedPathParts = getPathParts(matched.getPath());
                 if (matcherPathParts.length != matchedPathParts.length) {
-                    throw new IllegalArgumentException("matcher path " + matcher.getPath().getValue() + " has " + matcherPathParts.length + " parts but matched path " + matched.getPath().getValue() + " has " + matchedPathParts.length + " parts ");
+                    throw new IllegalArgumentException("expected path " + matcher.getPath().getValue() + " has " + matcherPathParts.length + " parts but path " + matched.getPath().getValue() + " has " + matchedPathParts.length + " parts ");
                 }
                 for (int i = 0; i < matcherPathParts.length; i++) {
                     Matcher pathParameterName = PATH_VARIABLE_NAME_PATTERN.matcher(matcherPathParts[i]);
@@ -82,5 +84,9 @@ public class PathParametersDecoder {
         // ensure actions have path parameters available to them
         matched.withPathParameters(parsedParameters);
         return parsedParameters;
+    }
+
+    private String[] getPathParts(NottableString path) {
+        return path != null ? Arrays.stream(StringUtils.removeStart(path.getValue(), "/").split("/")).filter(StringUtils::isNotBlank).toArray(String[]::new) : new String[0];
     }
 }

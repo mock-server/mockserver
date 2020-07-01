@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Parameter;
 import org.mockserver.model.ParameterStyle;
+import org.mockserver.model.Parameters;
 
 import java.util.Arrays;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.List;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.iterableWithSize;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
+import static org.hamcrest.core.Is.is;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.Parameter.param;
 
@@ -887,6 +889,58 @@ public class ExpandedParameterDecoderTest {
         } else {
             assertThat(actual, iterableWithSize(0));
         }
+    }
+
+    // BY PARAMETERS
+
+    @Test
+    public void shouldSplitByMatchParameters() {
+        // given
+        Parameters matcher = new Parameters(
+            param(string("some_name"), string("1")).withStyle(ParameterStyle.SPACE_DELIMITED),
+            param(string("some_other_name"), string("a")).withStyle(ParameterStyle.MATRIX_EXPLODED),
+            param(string("some_other_name_two"), string("value")).withStyle(ParameterStyle.PIPE_DELIMITED)
+        );
+        Parameters matched = new Parameters(
+            param(string("some_name"), string("1%202 3+4")),
+            param(string("some_other_name"), string("a;some_other_name=b;some_other_name=c")),
+            param(string("some_other_name_two"), string("one|two|three"))
+        );
+
+        // when
+        new ExpandedParameterDecoder(mockServerLogger).splitParameters(matcher, matched);
+
+        // then
+        assertThat(matched, is(new Parameters(
+            param("some_name", "1", "2", "3", "4"),
+            param("some_other_name", "a", "b", "c"),
+            param("some_other_name_two", "one", "two", "three")
+        )));
+    }
+
+    @Test
+    public void shouldSplitByMatchParametersAndMatchByRegex() {
+        // given
+        Parameters matcher = new Parameters(
+            param(string("some_name"), string("1")).withStyle(ParameterStyle.SPACE_DELIMITED),
+            param(string("some_other_[a-z]{2}me"), string("a")).withStyle(ParameterStyle.FORM),
+            param(string("some_other_name_.*"), string("value")).withStyle(ParameterStyle.PIPE_DELIMITED)
+        );
+        Parameters matched = new Parameters(
+            param(string("some_name"), string("1%202 3+4")),
+            param(string("some_other_name"), string("a,b,c")),
+            param(string("some_other_name_two"), string("one|two|three"))
+        );
+
+        // when
+        new ExpandedParameterDecoder(mockServerLogger).splitParameters(matcher, matched);
+
+        // then
+        assertThat(matched, is(new Parameters(
+            param("some_name", "1", "2", "3", "4"),
+            param("some_other_name", "a", "b", "c"),
+            param("some_other_name_two", "one", "two", "three")
+        )));
     }
 
 }

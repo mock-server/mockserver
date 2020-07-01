@@ -90,16 +90,7 @@ public class LRUCache<K, V> {
             Entry<V> entry = map.get(key);
             if (entry != null) {
                 if (entry.getExpiryInMillis() > System.currentTimeMillis()) {
-                    V value = entry.updateExpiryInMillis(expiryInMillis(entry.getTtlInMillis())).getValue();
-                    if (MockServerLogger.isEnabled(TRACE)) {
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setLogLevel(TRACE)
-                                .setMessageFormat("retrieved entry from the cache{}for key{}")
-                                .setArguments(value, key)
-                        );
-                    }
-                    return value;
+                    return entry.updateExpiryInMillis(expiryInMillis(entry.getTtlInMillis())).getValue();
                 } else {
                     delete(key);
                 }

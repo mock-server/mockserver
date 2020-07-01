@@ -117,14 +117,7 @@ public class OpenAPIExpectationSerializer implements Serializer<OpenAPIExpectati
                 }
                 return expectation;
             } else {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(Level.ERROR)
-                        .setHttpRequest(null)
-                        .setMessageFormat("validation failed:{}expectation:{}")
-                        .setArguments(validationErrors, jsonOpenAPIExpectation)
-                );
-                 throw new IllegalArgumentException(StringUtils.removeEndIgnoreCase(formatLogMessage("incorrect openapi expectation json format for:{}schema validation errors:{}", jsonOpenAPIExpectation , validationErrors), "\n"));
+                throw new IllegalArgumentException(StringUtils.removeEndIgnoreCase(formatLogMessage("incorrect openapi expectation json format for:{}schema validation errors:{}", jsonOpenAPIExpectation, validationErrors), "\n"));
             }
         }
     }

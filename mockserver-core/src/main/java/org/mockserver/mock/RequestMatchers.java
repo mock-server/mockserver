@@ -274,6 +274,21 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         }
     }
 
+    public List<HttpRequestMatcher> retrieveRequestMatchers(RequestDefinition requestDefinition) {
+        if (requestDefinition == null) {
+            return new ArrayList<>(httpRequestMatchers);
+        } else {
+            List<HttpRequestMatcher> httpRequestMatchers = new ArrayList<>();
+            HttpRequestMatcher requestMatcher = matcherBuilder.transformsToMatcher(requestDefinition);
+            for (HttpRequestMatcher httpRequestMatcher : getHttpRequestMatchersCopy()) {
+                if (requestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest())) {
+                    httpRequestMatchers.add(httpRequestMatcher);
+                }
+            }
+            return httpRequestMatchers;
+        }
+    }
+
     public boolean isEmpty() {
         return httpRequestMatchers.isEmpty();
     }

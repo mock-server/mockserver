@@ -46,7 +46,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         -> input.getType() == RECEIVED_REQUEST;
     private static final Predicate<LogEntry> requestResponseLogPredicate = input
         -> input.getType() == EXPECTATION_RESPONSE
-        || input.getType() == EXPECTATION_NOT_MATCHED_RESPONSE
+        || input.getType() == NO_MATCH_RESPONSE
         || input.getType() == FORWARDED_REQUEST;
     private static final Predicate<LogEntry> recordedExpectationLogPredicate = input
         -> input.getType() == FORWARDED_REQUEST;
