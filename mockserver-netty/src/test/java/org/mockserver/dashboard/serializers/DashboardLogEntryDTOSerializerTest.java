@@ -5,29 +5,18 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import org.junit.Test;
 import org.mockserver.dashboard.model.DashboardLogEntryDTO;
 import org.mockserver.log.model.LogEntry;
-import org.mockserver.matchers.TimeToLive;
-import org.mockserver.matchers.Times;
-import org.mockserver.mock.Expectation;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.slf4j.event.Level;
 
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockserver.model.HttpError.error;
+import static org.hamcrest.core.Is.is;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.model.JsonBody.json;
 
 public class DashboardLogEntryDTOSerializerTest {
 
     // TODO(jamesdbloom)
-    //    LogEntry Serialisation
-    //    arguments type:
-    //    - because
-    //    - multiline string
-    //    - singleline string
-    //    - json
     //    List Construction (to serialised: payload, key, type, description & value)
     //    - log entries
     //    - expectations with http request
@@ -38,99 +27,587 @@ public class DashboardLogEntryDTOSerializerTest {
 
     final ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true,
         new DashboardLogEntryDTOSerializer(),
+        new DescriptionSerializer(),
         new ThrowableSerializer()
     );
 
+    private Description getDescription(LogEntry logEntry) {
+        return new LogMessageDescription(logEntry.getTimestamp(), logEntry.getType().name(), new DescriptionProcessor());
+    }
+
     @Test
-    public void shouldSerialiseFullEvent() throws JsonProcessingException {
+    public void shouldSerialiseEventWithSingleLineStringArgument() throws JsonProcessingException {
         // given
         LogEntry logEntry = new LogEntry()
             .setLogLevel(Level.WARN)
-            .setEpochTime(System.currentTimeMillis())
+            .setEpochTime(1593582678216L)
             .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
-            .setHttpRequests(new HttpRequest[]{request("request_one"), request("request_two")})
-            .setHttpResponse(response("response_one"))
-            .setHttpError(error().withDropConnection(true))
-            .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_one")))
             .setMessageFormat("some random{}formatted string{}")
-            .setArguments("one", "two")
-            .setThrowable(new RuntimeException("TEST_EXCEPTION"));
+            .setArguments(
+                "one",
+                "two"
+            );
 
         // when
-        String json = objectWriter.writeValueAsString(new DashboardLogEntryDTO(logEntry));
+        String json = objectWriter.writeValueAsString(new DashboardLogEntryDTO(logEntry).setDescription(getDescription(logEntry)));
 
         // then
-        assertThat(json, containsString("{\n" +
-            "  \"key\" : \"" + logEntry.id() + "_log\",\n" +
-            "  \"value\" : {\n" +
-            "    \"style\" : {\n" +
-            "      \"paddingBottom\" : \"4px\",\n" +
-            "      \"whiteSpace\" : \"nowrap\",\n" +
-            "      \"overflow\" : \"auto\",\n" +
-            "      \"color\" : \"rgb(241, 186, 27)\",\n" +
-            "      \"paddingTop\" : \"4px\"\n" +
-            "    },\n" +
-            "    \"messageParts\" : [ {\n" +
-            "      \"key\" : \"" + logEntry.id() + "_0msg\",\n" +
-            "      \"value\" : \"some random\"\n" +
-            "    }, {\n" +
-            "      \"key\" : \"" + logEntry.id() + "_0arg\",\n" +
-            "      \"multiline\" : false,\n" +
-            "      \"argument\" : true,\n" +
-            "      \"value\" : \"one\"\n" +
-            "    }, {\n" +
-            "      \"key\" : \"" + logEntry.id() + "_1msg\",\n" +
-            "      \"value\" : \"formatted string\"\n" +
-            "    }, {\n" +
-            "      \"key\" : \"" + logEntry.id() + "_1arg\",\n" +
-            "      \"multiline\" : false,\n" +
-            "      \"argument\" : true,\n" +
-            "      \"value\" : \"two\"\n" +
-            "    } ]\n" +
-            "  }\n" +
+        assertThat(json, is("{" + NEW_LINE +
+            "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
+            "  \"value\" : {" + NEW_LINE +
+            "    \"description\" : \"2020-07-01 06:51:18.216 TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"style\" : {" + NEW_LINE +
+            "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
+            "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
+            "      \"overflow\" : \"auto\"," + NEW_LINE +
+            "      \"color\" : \"rgb(241, 186, 27)\"," + NEW_LINE +
+            "      \"paddingTop\" : \"4px\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"messageParts\" : [ {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0msg\"," + NEW_LINE +
+            "      \"value\" : \"some random\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0arg\"," + NEW_LINE +
+            "      \"multiline\" : false," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : \"one\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_1msg\"," + NEW_LINE +
+            "      \"value\" : \"formatted string\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_1arg\"," + NEW_LINE +
+            "      \"multiline\" : false," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : \"two\"" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }" + NEW_LINE +
             "}"));
     }
 
     @Test
-    public void shouldSerialiseStringBody() throws JsonProcessingException {
+    public void shouldSerialiseEventWithMultiLineStringArgumentAsFirst() throws JsonProcessingException {
         // given
         LogEntry logEntry = new LogEntry()
             .setLogLevel(Level.WARN)
-            .setEpochTime(System.currentTimeMillis())
-            .setType(LogEntry.LogMessageType.FORWARDED_REQUEST)
-            .setHttpRequests(new HttpRequest[]{
-                request("request_one")
-                    .withBody(json("{\"derivationMode\":\"HASHED\",\"deviceUrn\":\"411323184fd0c2bf724713149de137f4dde072c1fd31f0e29256800a1b2c1afc\",\"ciphertextBytesFormat\":\"JSON\"}")),
-                request("request_two")
-                    .withBody("some random string body")
-            })
-            .setHttpResponse(
-                response("response_one")
-                    .withBody(json("{\"derivationMode\":\"HASHED\",\"deviceUrn\":\"411323184fd0c2bf724713149de137f4dde072c1fd31f0e29256800a1b2c1afc\",\"ciphertextBytesFormat\":\"JSON\"}"))
-            )
-            .setExpectation(
-                new Expectation(request("request_one")
-                    .withBody("some random string body"), Times.once(), TimeToLive.unlimited(), 0)
-                    .withId("key_one")
-                    .thenRespond(response("response_one")
-                        .withBody(json("{\"derivationMode\":\"HASHED\",\"deviceUrn\":\"411323184fd0c2bf724713149de137f4dde072c1fd31f0e29256800a1b2c1afc\",\"ciphertextBytesFormat\":\"JSON\"}")))
+            .setEpochTime(1593582678216L)
+            .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
+            .setMessageFormat("some random{}formatted string{}")
+            .setArguments(
+                "line one" + NEW_LINE +
+                    "line two" + NEW_LINE +
+                    "line three",
+                "two"
             );
 
         // when
-        String json = objectWriter.writeValueAsString(new DashboardLogEntryDTO(logEntry));
+        String json = objectWriter.writeValueAsString(new DashboardLogEntryDTO(logEntry).setDescription(getDescription(logEntry)));
 
         // then
-        assertThat(json, containsString("{\n" +
-            "  \"key\" : \"" + logEntry.id() + "_log\",\n" +
-            "  \"value\" : {\n" +
-            "    \"style\" : {\n" +
-            "      \"paddingBottom\" : \"4px\",\n" +
-            "      \"whiteSpace\" : \"nowrap\",\n" +
-            "      \"overflow\" : \"auto\",\n" +
-            "      \"color\" : \"rgb(152, 208, 255)\",\n" +
-            "      \"paddingTop\" : \"4px\"\n" +
-            "    }\n" +
-            "  }\n" +
+        assertThat(json, is("{" + NEW_LINE +
+            "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
+            "  \"value\" : {" + NEW_LINE +
+            "    \"description\" : \"2020-07-01 06:51:18.216 TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"style\" : {" + NEW_LINE +
+            "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
+            "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
+            "      \"overflow\" : \"auto\"," + NEW_LINE +
+            "      \"color\" : \"rgb(241, 186, 27)\"," + NEW_LINE +
+            "      \"paddingTop\" : \"4px\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"messageParts\" : [ {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0msg\"," + NEW_LINE +
+            "      \"value\" : \"some random\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0arg\"," + NEW_LINE +
+            "      \"multiline\" : true," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : [ \"line one\", \"line two\", \"line three\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_1msg\"," + NEW_LINE +
+            "      \"value\" : \"formatted string\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_1arg\"," + NEW_LINE +
+            "      \"multiline\" : false," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : \"two\"" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}"));
+    }
+
+    @Test
+    public void shouldSerialiseEventWithMultiLineStringArgumentAsAll() throws JsonProcessingException {
+        // given
+        LogEntry logEntry = new LogEntry()
+            .setLogLevel(Level.WARN)
+            .setEpochTime(1593582678216L)
+            .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
+            .setMessageFormat("some random{}formatted string{}")
+            .setArguments(
+                "line one_one" + NEW_LINE +
+                    "line one_two" + NEW_LINE +
+                    "line one_three",
+                "line two_one" + NEW_LINE +
+                    "line two_two" + NEW_LINE +
+                    "line two_three"
+            );
+
+        // when
+        String json = objectWriter.writeValueAsString(new DashboardLogEntryDTO(logEntry).setDescription(getDescription(logEntry)));
+
+        // then
+        assertThat(json, is("{" + NEW_LINE +
+            "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
+            "  \"value\" : {" + NEW_LINE +
+            "    \"description\" : \"2020-07-01 06:51:18.216 TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"style\" : {" + NEW_LINE +
+            "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
+            "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
+            "      \"overflow\" : \"auto\"," + NEW_LINE +
+            "      \"color\" : \"rgb(241, 186, 27)\"," + NEW_LINE +
+            "      \"paddingTop\" : \"4px\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"messageParts\" : [ {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0msg\"," + NEW_LINE +
+            "      \"value\" : \"some random\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0arg\"," + NEW_LINE +
+            "      \"multiline\" : true," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : [ \"line one_one\", \"line one_two\", \"line one_three\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_1msg\"," + NEW_LINE +
+            "      \"value\" : \"formatted string\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_1arg\"," + NEW_LINE +
+            "      \"multiline\" : true," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : [ \"line two_one\", \"line two_two\", \"line two_three\" ]" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}"));
+    }
+
+    @Test
+    public void shouldSerialiseEventWithBecauseArgumentAsFirst() throws JsonProcessingException {
+        // given
+        LogEntry logEntry = new LogEntry()
+            .setLogLevel(Level.WARN)
+            .setEpochTime(1593582678216L)
+            .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
+            .setMessageFormat("some random{}formatted string{}")
+            .setArguments(
+                "line one" + NEW_LINE +
+                    "line two" + NEW_LINE +
+                    "line three",
+                "two"
+            )
+            .setBecause(
+                "line one" + NEW_LINE +
+                    "line two" + NEW_LINE +
+                    "line three"
+            );
+
+        // when
+        String json = objectWriter.writeValueAsString(new DashboardLogEntryDTO(logEntry).setDescription(getDescription(logEntry)));
+
+        // then
+        assertThat(json, is("{" + NEW_LINE +
+            "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
+            "  \"value\" : {" + NEW_LINE +
+            "    \"description\" : \"2020-07-01 06:51:18.216 TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"style\" : {" + NEW_LINE +
+            "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
+            "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
+            "      \"overflow\" : \"auto\"," + NEW_LINE +
+            "      \"color\" : \"rgb(241, 186, 27)\"," + NEW_LINE +
+            "      \"paddingTop\" : \"4px\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"messageParts\" : [ {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0msg\"," + NEW_LINE +
+            "      \"value\" : \"some random\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0arg\"," + NEW_LINE +
+            "      \"because\" : true," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : [ \"line one\", \"line two\", \"line three\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_1msg\"," + NEW_LINE +
+            "      \"value\" : \"formatted string\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_1arg\"," + NEW_LINE +
+            "      \"multiline\" : false," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : \"two\"" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}"));
+    }
+
+    @Test
+    public void shouldSerialiseEventWithBecauseArgumentAsLast() throws JsonProcessingException {
+        // given
+        LogEntry logEntry = new LogEntry()
+            .setLogLevel(Level.WARN)
+            .setEpochTime(1593582678216L)
+            .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
+            .setMessageFormat("some random{}formatted string{}")
+            .setArguments(
+                "one",
+                "line one" + NEW_LINE +
+                    "line two" + NEW_LINE +
+                    "line three"
+            )
+            .setBecause(
+                "line one" + NEW_LINE +
+                    "line two" + NEW_LINE +
+                    "line three"
+            );
+
+        // when
+        String json = objectWriter.writeValueAsString(new DashboardLogEntryDTO(logEntry).setDescription(getDescription(logEntry)));
+
+        // then
+        assertThat(json, is("{" + NEW_LINE +
+            "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
+            "  \"value\" : {" + NEW_LINE +
+            "    \"description\" : \"2020-07-01 06:51:18.216 TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"style\" : {" + NEW_LINE +
+            "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
+            "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
+            "      \"overflow\" : \"auto\"," + NEW_LINE +
+            "      \"color\" : \"rgb(241, 186, 27)\"," + NEW_LINE +
+            "      \"paddingTop\" : \"4px\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"messageParts\" : [ {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0msg\"," + NEW_LINE +
+            "      \"value\" : \"some random\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0arg\"," + NEW_LINE +
+            "      \"multiline\" : false," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : \"one\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_1msg\"," + NEW_LINE +
+            "      \"value\" : \"formatted string\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_1arg\"," + NEW_LINE +
+            "      \"because\" : true," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : [ \"line one\", \"line two\", \"line three\" ]" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}"));
+    }
+
+    @Test
+    public void shouldSerialiseEventWithBecauseArgumentNotMatching() throws JsonProcessingException {
+        // given
+        LogEntry logEntry = new LogEntry()
+            .setLogLevel(Level.WARN)
+            .setEpochTime(1593582678216L)
+            .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
+            .setMessageFormat("some random{}formatted string{}")
+            .setArguments(
+                "one",
+                "line one" + NEW_LINE +
+                    "line two" + NEW_LINE +
+                    "line three"
+            )
+            .setBecause(
+                "other line one" + NEW_LINE +
+                    "other line two" + NEW_LINE +
+                    "other line three"
+            );
+
+        // when
+        String json = objectWriter.writeValueAsString(new DashboardLogEntryDTO(logEntry).setDescription(getDescription(logEntry)));
+
+        // then
+        assertThat(json, is("{" + NEW_LINE +
+            "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
+            "  \"value\" : {" + NEW_LINE +
+            "    \"description\" : \"2020-07-01 06:51:18.216 TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"style\" : {" + NEW_LINE +
+            "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
+            "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
+            "      \"overflow\" : \"auto\"," + NEW_LINE +
+            "      \"color\" : \"rgb(241, 186, 27)\"," + NEW_LINE +
+            "      \"paddingTop\" : \"4px\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"messageParts\" : [ {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0msg\"," + NEW_LINE +
+            "      \"value\" : \"some random\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0arg\"," + NEW_LINE +
+            "      \"multiline\" : false," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : \"one\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_1msg\"," + NEW_LINE +
+            "      \"value\" : \"formatted string\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_1arg\"," + NEW_LINE +
+            "      \"multiline\" : true," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : [ \"line one\", \"line two\", \"line three\" ]" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}"));
+    }
+
+    @Test
+    public void shouldSerialiseEventWithObjectArgumentAsFirst() throws JsonProcessingException {
+        // given
+        LogEntry logEntry = new LogEntry()
+            .setLogLevel(Level.WARN)
+            .setEpochTime(1593582678216L)
+            .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
+            .setMessageFormat("some random{}formatted string{}")
+            .setArguments(
+                request().withPath("somePath"),
+                "two"
+            );
+
+        // when
+        String json = objectWriter.writeValueAsString(new DashboardLogEntryDTO(logEntry).setDescription(getDescription(logEntry)));
+
+        // then
+        assertThat(json, is("{" + NEW_LINE +
+            "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
+            "  \"value\" : {" + NEW_LINE +
+            "    \"description\" : \"2020-07-01 06:51:18.216 TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"style\" : {" + NEW_LINE +
+            "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
+            "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
+            "      \"overflow\" : \"auto\"," + NEW_LINE +
+            "      \"color\" : \"rgb(241, 186, 27)\"," + NEW_LINE +
+            "      \"paddingTop\" : \"4px\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"messageParts\" : [ {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0msg\"," + NEW_LINE +
+            "      \"value\" : \"some random\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0arg\"," + NEW_LINE +
+            "      \"json\" : true," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : {" + NEW_LINE +
+            "        \"path\" : \"somePath\"" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_1msg\"," + NEW_LINE +
+            "      \"value\" : \"formatted string\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_1arg\"," + NEW_LINE +
+            "      \"multiline\" : false," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : \"two\"" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}"));
+    }
+
+    @Test
+    public void shouldSerialiseEventWithObjectArgumentAsAll() throws JsonProcessingException {
+        // given
+        LogEntry logEntry = new LogEntry()
+            .setLogLevel(Level.WARN)
+            .setEpochTime(1593582678216L)
+            .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
+            .setMessageFormat("some random{}formatted string{}")
+            .setArguments(
+                request().withPath("somePath"),
+                response().withBody("someBody")
+            );
+
+        // when
+        String json = objectWriter.writeValueAsString(new DashboardLogEntryDTO(logEntry).setDescription(getDescription(logEntry)));
+
+        // then
+        assertThat(json, is("{" + NEW_LINE +
+            "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
+            "  \"value\" : {" + NEW_LINE +
+            "    \"description\" : \"2020-07-01 06:51:18.216 TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"style\" : {" + NEW_LINE +
+            "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
+            "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
+            "      \"overflow\" : \"auto\"," + NEW_LINE +
+            "      \"color\" : \"rgb(241, 186, 27)\"," + NEW_LINE +
+            "      \"paddingTop\" : \"4px\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"messageParts\" : [ {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0msg\"," + NEW_LINE +
+            "      \"value\" : \"some random\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0arg\"," + NEW_LINE +
+            "      \"json\" : true," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : {" + NEW_LINE +
+            "        \"path\" : \"somePath\"" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_1msg\"," + NEW_LINE +
+            "      \"value\" : \"formatted string\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_1arg\"," + NEW_LINE +
+            "      \"json\" : true," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : {" + NEW_LINE +
+            "        \"body\" : \"someBody\"" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}"));
+    }
+
+    @Test
+    public void shouldSerialiseEventWithTooManyArguments() throws JsonProcessingException {
+        // given
+        LogEntry logEntry = new LogEntry()
+            .setLogLevel(Level.WARN)
+            .setEpochTime(1593582678216L)
+            .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
+            .setMessageFormat("some random{}formatted string{}")
+            .setArguments(
+                "one",
+                "two",
+                "three"
+            );
+
+        // when
+        String json = objectWriter.writeValueAsString(new DashboardLogEntryDTO(logEntry).setDescription(getDescription(logEntry)));
+
+        // then
+        assertThat(json, is("{" + NEW_LINE +
+            "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
+            "  \"value\" : {" + NEW_LINE +
+            "    \"description\" : \"2020-07-01 06:51:18.216 TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"style\" : {" + NEW_LINE +
+            "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
+            "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
+            "      \"overflow\" : \"auto\"," + NEW_LINE +
+            "      \"color\" : \"rgb(241, 186, 27)\"," + NEW_LINE +
+            "      \"paddingTop\" : \"4px\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"messageParts\" : [ {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0msg\"," + NEW_LINE +
+            "      \"value\" : \"some random\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0arg\"," + NEW_LINE +
+            "      \"multiline\" : false," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : \"one\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_1msg\"," + NEW_LINE +
+            "      \"value\" : \"formatted string\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_1arg\"," + NEW_LINE +
+            "      \"multiline\" : false," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : \"two\"" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}"));
+    }
+
+    @Test
+    public void shouldSerialiseEventWithTooFewArguments() throws JsonProcessingException {
+        // given
+        LogEntry logEntry = new LogEntry()
+            .setLogLevel(Level.WARN)
+            .setEpochTime(1593582678216L)
+            .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
+            .setMessageFormat("some random{}formatted string{}with extra part{}")
+            .setArguments(
+                "one",
+                "two"
+            );
+
+        // when
+        String json = objectWriter.writeValueAsString(new DashboardLogEntryDTO(logEntry).setDescription(getDescription(logEntry)));
+
+        // then
+        assertThat(json, is("{" + NEW_LINE +
+            "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
+            "  \"value\" : {" + NEW_LINE +
+            "    \"description\" : \"2020-07-01 06:51:18.216 TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"style\" : {" + NEW_LINE +
+            "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
+            "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
+            "      \"overflow\" : \"auto\"," + NEW_LINE +
+            "      \"color\" : \"rgb(241, 186, 27)\"," + NEW_LINE +
+            "      \"paddingTop\" : \"4px\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"messageParts\" : [ {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0msg\"," + NEW_LINE +
+            "      \"value\" : \"some random\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0arg\"," + NEW_LINE +
+            "      \"multiline\" : false," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : \"one\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_1msg\"," + NEW_LINE +
+            "      \"value\" : \"formatted string\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_1arg\"," + NEW_LINE +
+            "      \"multiline\" : false," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : \"two\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_2msg\"," + NEW_LINE +
+            "      \"value\" : \"with extra part\"" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}"));
+    }
+
+    @Test
+    public void shouldSerialiseEventWithMultiLineString() throws JsonProcessingException {
+        // given
+        LogEntry logEntry = new LogEntry()
+            .setLogLevel(Level.WARN)
+            .setEpochTime(1593582678216L)
+            .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
+            .setMessageFormat("some\n random{}formatted\n string{}")
+            .setArguments(
+                "one",
+                "two"
+            );
+
+        // when
+        String json = objectWriter.writeValueAsString(new DashboardLogEntryDTO(logEntry).setDescription(getDescription(logEntry)));
+
+        // then
+        assertThat(json, is("{" + NEW_LINE +
+            "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
+            "  \"value\" : {" + NEW_LINE +
+            "    \"description\" : \"2020-07-01 06:51:18.216 TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"style\" : {" + NEW_LINE +
+            "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
+            "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
+            "      \"overflow\" : \"auto\"," + NEW_LINE +
+            "      \"color\" : \"rgb(241, 186, 27)\"," + NEW_LINE +
+            "      \"paddingTop\" : \"4px\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"messageParts\" : [ {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0msg\"," + NEW_LINE +
+            "      \"value\" : \"some\\n random\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0arg\"," + NEW_LINE +
+            "      \"multiline\" : false," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : \"one\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_1msg\"," + NEW_LINE +
+            "      \"value\" : \"formatted\\n string\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_1arg\"," + NEW_LINE +
+            "      \"multiline\" : false," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : \"two\"" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }" + NEW_LINE +
             "}"));
     }
 }

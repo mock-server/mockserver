@@ -64,7 +64,7 @@ public class OpenAPIConverter {
             .collect(Collectors.toList());
     }
 
-    public OpenAPI buildOpenAPI(String specUrlOrPayload) {
+    public static OpenAPI buildOpenAPI(String specUrlOrPayload) {
         if (specUrlOrPayload.endsWith(".json") || specUrlOrPayload.endsWith(".yaml")) {
             try {
                 return resolve(new OpenAPIV3Parser().read(specUrlOrPayload));
@@ -82,7 +82,7 @@ public class OpenAPIConverter {
         }
     }
 
-    private OpenAPI resolve(OpenAPI openAPI) {
+    private static OpenAPI resolve(OpenAPI openAPI) {
         openAPI = new OpenAPIResolver(openAPI).resolve();
         new ResolverFully().resolveFully(openAPI);
         return openAPI;

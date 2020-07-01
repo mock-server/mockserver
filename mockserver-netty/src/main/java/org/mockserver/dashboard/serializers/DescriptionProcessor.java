@@ -1,10 +1,11 @@
 package org.mockserver.dashboard.serializers;
 
+import io.swagger.v3.oas.models.OpenAPI;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.dashboard.model.DashboardLogEntryDTO;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
 import org.mockserver.model.OpenAPIDefinition;
+import org.mockserver.openapi.OpenAPIConverter;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -29,23 +30,25 @@ public class DescriptionProcessor {
         Description description = null;
         if (object instanceof HttpRequest) {
             HttpRequest httpRequest = (HttpRequest) object;
-            description = new HttpObjectDescription(httpRequest.getMethod().getValue(), httpRequest.getPath().getValue(), this, false);
-            if (description.length() >= maxHttpRequestLength) {
-                maxHttpRequestLength = description.length();
-            }
-        } else if (object instanceof HttpResponse) {
-            HttpResponse httpResponse = (HttpResponse) object;
-            description = new HttpObjectDescription(String.valueOf(httpResponse.getStatusCode()), httpResponse.getReasonPhrase(), this, false);
+            description = new RequestDefinitionDescription(httpRequest.getMethod().getValue(), httpRequest.getPath().getValue(), this, false);
             if (description.length() >= maxHttpRequestLength) {
                 maxHttpRequestLength = description.length();
             }
         } else if (object instanceof OpenAPIDefinition) {
             OpenAPIDefinition openAPIDefinition = (OpenAPIDefinition) object;
-            String operationId = openAPIDefinition.getOperationId();
+            String operationId = isNotBlank(openAPIDefinition.getOperationId()) ? openAPIDefinition.getOperationId() : "";
             String specUrlOrPayload = openAPIDefinition.getSpecUrlOrPayload().trim();
-            description = new HttpObjectDescription(specUrlOrPayload.endsWith(".json") || specUrlOrPayload.endsWith(".yaml") ? StringUtils.substringAfterLast(specUrlOrPayload, "/") : "spec", isNotBlank(operationId) ? operationId : "", this, true);
-            if (description.length() >= maxOpenAPILength) {
-                maxOpenAPILength = description.length();
+            if (specUrlOrPayload.endsWith(".json") || specUrlOrPayload.endsWith(".yaml")) {
+                description = new RequestDefinitionDescription(StringUtils.substringAfterLast(specUrlOrPayload, "/"), operationId, this, true);
+                if (description.length() >= maxOpenAPILength) {
+                    maxOpenAPILength = description.length();
+                }
+            } else {
+                OpenAPI openAPI = OpenAPIConverter.buildOpenAPI(specUrlOrPayload);
+                description = new RequestDefinitionObjectDescription("spec:", openAPI,  operationId, this);
+                if (description.length() >= maxOpenAPILength) {
+                    maxOpenAPILength = description.length();
+                }
             }
         } else if (object instanceof DashboardLogEntryDTO) {
             DashboardLogEntryDTO logEntryDTO = (DashboardLogEntryDTO) object;

@@ -14,6 +14,6 @@ public class DescriptionSerializer extends StdSerializer<Description> {
 
     @Override
     public void serialize(Description value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-        gen.writeString(value.toString());
+        gen.writeObject(value.toObject());
     }
 }

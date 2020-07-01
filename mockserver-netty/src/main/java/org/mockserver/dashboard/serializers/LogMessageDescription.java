@@ -19,7 +19,7 @@ public class LogMessageDescription implements Description {
         return length + 1;
     }
 
-    public String toString() {
+    public String toObject() {
         return firstPart + " " + secondPart + StringUtils.repeat(" ", descriptionProcessor.getMaxLogEventLength() - length + 1) + " ";
     }
 }

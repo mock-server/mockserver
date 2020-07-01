@@ -4,6 +4,6 @@ public interface Description {
 
     int length();
 
-    String toString();
+    Object toObject();
 
 }
