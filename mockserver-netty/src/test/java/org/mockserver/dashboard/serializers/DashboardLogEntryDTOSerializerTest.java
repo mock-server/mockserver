@@ -2,11 +2,15 @@ package org.mockserver.dashboard.serializers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.mockserver.dashboard.model.DashboardLogEntryDTO;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.slf4j.event.Level;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -31,8 +35,11 @@ public class DashboardLogEntryDTOSerializerTest {
         new ThrowableSerializer()
     );
 
+    private final long epochTime = 1593582678216L;
+    private final String timeStamp = StringUtils.substringAfter(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date(epochTime)), "-");
+
     private Description getDescription(LogEntry logEntry) {
-        return new LogMessageDescription(logEntry.getTimestamp(), logEntry.getType().name(), new DescriptionProcessor());
+        return new LogMessageDescription(StringUtils.substringAfter(logEntry.getTimestamp(), "-"), logEntry.getType().name(), new DescriptionProcessor());
     }
 
     @Test
@@ -40,7 +47,7 @@ public class DashboardLogEntryDTOSerializerTest {
         // given
         LogEntry logEntry = new LogEntry()
             .setLogLevel(Level.WARN)
-            .setEpochTime(1593582678216L)
+            .setEpochTime(epochTime)
             .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
             .setMessageFormat("some random{}formatted string{}")
             .setArguments(
@@ -55,7 +62,7 @@ public class DashboardLogEntryDTOSerializerTest {
         assertThat(json, is("{" + NEW_LINE +
             "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
             "  \"value\" : {" + NEW_LINE +
-            "    \"description\" : \"2020-07-01 06:51:18.216 TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"description\" : \"" + timeStamp + " TEMPLATE_GENERATED \"," + NEW_LINE +
             "    \"style\" : {" + NEW_LINE +
             "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
             "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
@@ -89,7 +96,7 @@ public class DashboardLogEntryDTOSerializerTest {
         // given
         LogEntry logEntry = new LogEntry()
             .setLogLevel(Level.WARN)
-            .setEpochTime(1593582678216L)
+            .setEpochTime(epochTime)
             .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
             .setMessageFormat("some random{}formatted string{}")
             .setArguments(
@@ -106,7 +113,7 @@ public class DashboardLogEntryDTOSerializerTest {
         assertThat(json, is("{" + NEW_LINE +
             "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
             "  \"value\" : {" + NEW_LINE +
-            "    \"description\" : \"2020-07-01 06:51:18.216 TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"description\" : \"" + timeStamp + " TEMPLATE_GENERATED \"," + NEW_LINE +
             "    \"style\" : {" + NEW_LINE +
             "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
             "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
@@ -140,7 +147,7 @@ public class DashboardLogEntryDTOSerializerTest {
         // given
         LogEntry logEntry = new LogEntry()
             .setLogLevel(Level.WARN)
-            .setEpochTime(1593582678216L)
+            .setEpochTime(epochTime)
             .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
             .setMessageFormat("some random{}formatted string{}")
             .setArguments(
@@ -159,7 +166,7 @@ public class DashboardLogEntryDTOSerializerTest {
         assertThat(json, is("{" + NEW_LINE +
             "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
             "  \"value\" : {" + NEW_LINE +
-            "    \"description\" : \"2020-07-01 06:51:18.216 TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"description\" : \"" + timeStamp + " TEMPLATE_GENERATED \"," + NEW_LINE +
             "    \"style\" : {" + NEW_LINE +
             "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
             "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
@@ -193,7 +200,7 @@ public class DashboardLogEntryDTOSerializerTest {
         // given
         LogEntry logEntry = new LogEntry()
             .setLogLevel(Level.WARN)
-            .setEpochTime(1593582678216L)
+            .setEpochTime(epochTime)
             .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
             .setMessageFormat("some random{}formatted string{}")
             .setArguments(
@@ -215,7 +222,7 @@ public class DashboardLogEntryDTOSerializerTest {
         assertThat(json, is("{" + NEW_LINE +
             "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
             "  \"value\" : {" + NEW_LINE +
-            "    \"description\" : \"2020-07-01 06:51:18.216 TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"description\" : \"" + timeStamp + " TEMPLATE_GENERATED \"," + NEW_LINE +
             "    \"style\" : {" + NEW_LINE +
             "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
             "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
@@ -249,7 +256,7 @@ public class DashboardLogEntryDTOSerializerTest {
         // given
         LogEntry logEntry = new LogEntry()
             .setLogLevel(Level.WARN)
-            .setEpochTime(1593582678216L)
+            .setEpochTime(epochTime)
             .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
             .setMessageFormat("some random{}formatted string{}")
             .setArguments(
@@ -271,7 +278,7 @@ public class DashboardLogEntryDTOSerializerTest {
         assertThat(json, is("{" + NEW_LINE +
             "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
             "  \"value\" : {" + NEW_LINE +
-            "    \"description\" : \"2020-07-01 06:51:18.216 TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"description\" : \"" + timeStamp + " TEMPLATE_GENERATED \"," + NEW_LINE +
             "    \"style\" : {" + NEW_LINE +
             "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
             "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
@@ -305,7 +312,7 @@ public class DashboardLogEntryDTOSerializerTest {
         // given
         LogEntry logEntry = new LogEntry()
             .setLogLevel(Level.WARN)
-            .setEpochTime(1593582678216L)
+            .setEpochTime(epochTime)
             .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
             .setMessageFormat("some random{}formatted string{}")
             .setArguments(
@@ -327,7 +334,7 @@ public class DashboardLogEntryDTOSerializerTest {
         assertThat(json, is("{" + NEW_LINE +
             "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
             "  \"value\" : {" + NEW_LINE +
-            "    \"description\" : \"2020-07-01 06:51:18.216 TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"description\" : \"" + timeStamp + " TEMPLATE_GENERATED \"," + NEW_LINE +
             "    \"style\" : {" + NEW_LINE +
             "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
             "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
@@ -361,7 +368,7 @@ public class DashboardLogEntryDTOSerializerTest {
         // given
         LogEntry logEntry = new LogEntry()
             .setLogLevel(Level.WARN)
-            .setEpochTime(1593582678216L)
+            .setEpochTime(epochTime)
             .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
             .setMessageFormat("some random{}formatted string{}")
             .setArguments(
@@ -376,7 +383,7 @@ public class DashboardLogEntryDTOSerializerTest {
         assertThat(json, is("{" + NEW_LINE +
             "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
             "  \"value\" : {" + NEW_LINE +
-            "    \"description\" : \"2020-07-01 06:51:18.216 TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"description\" : \"" + timeStamp + " TEMPLATE_GENERATED \"," + NEW_LINE +
             "    \"style\" : {" + NEW_LINE +
             "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
             "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
@@ -412,7 +419,7 @@ public class DashboardLogEntryDTOSerializerTest {
         // given
         LogEntry logEntry = new LogEntry()
             .setLogLevel(Level.WARN)
-            .setEpochTime(1593582678216L)
+            .setEpochTime(epochTime)
             .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
             .setMessageFormat("some random{}formatted string{}")
             .setArguments(
@@ -427,7 +434,7 @@ public class DashboardLogEntryDTOSerializerTest {
         assertThat(json, is("{" + NEW_LINE +
             "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
             "  \"value\" : {" + NEW_LINE +
-            "    \"description\" : \"2020-07-01 06:51:18.216 TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"description\" : \"" + timeStamp + " TEMPLATE_GENERATED \"," + NEW_LINE +
             "    \"style\" : {" + NEW_LINE +
             "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
             "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
@@ -465,7 +472,7 @@ public class DashboardLogEntryDTOSerializerTest {
         // given
         LogEntry logEntry = new LogEntry()
             .setLogLevel(Level.WARN)
-            .setEpochTime(1593582678216L)
+            .setEpochTime(epochTime)
             .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
             .setMessageFormat("some random{}formatted string{}")
             .setArguments(
@@ -481,7 +488,7 @@ public class DashboardLogEntryDTOSerializerTest {
         assertThat(json, is("{" + NEW_LINE +
             "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
             "  \"value\" : {" + NEW_LINE +
-            "    \"description\" : \"2020-07-01 06:51:18.216 TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"description\" : \"" + timeStamp + " TEMPLATE_GENERATED \"," + NEW_LINE +
             "    \"style\" : {" + NEW_LINE +
             "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
             "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
@@ -515,7 +522,7 @@ public class DashboardLogEntryDTOSerializerTest {
         // given
         LogEntry logEntry = new LogEntry()
             .setLogLevel(Level.WARN)
-            .setEpochTime(1593582678216L)
+            .setEpochTime(epochTime)
             .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
             .setMessageFormat("some random{}formatted string{}with extra part{}")
             .setArguments(
@@ -530,7 +537,7 @@ public class DashboardLogEntryDTOSerializerTest {
         assertThat(json, is("{" + NEW_LINE +
             "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
             "  \"value\" : {" + NEW_LINE +
-            "    \"description\" : \"2020-07-01 06:51:18.216 TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"description\" : \"" + timeStamp + " TEMPLATE_GENERATED \"," + NEW_LINE +
             "    \"style\" : {" + NEW_LINE +
             "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
             "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
@@ -567,7 +574,7 @@ public class DashboardLogEntryDTOSerializerTest {
         // given
         LogEntry logEntry = new LogEntry()
             .setLogLevel(Level.WARN)
-            .setEpochTime(1593582678216L)
+            .setEpochTime(epochTime)
             .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
             .setMessageFormat("some\n random{}formatted\n string{}")
             .setArguments(
@@ -582,7 +589,7 @@ public class DashboardLogEntryDTOSerializerTest {
         assertThat(json, is("{" + NEW_LINE +
             "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
             "  \"value\" : {" + NEW_LINE +
-            "    \"description\" : \"2020-07-01 06:51:18.216 TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"description\" : \"" + timeStamp + " TEMPLATE_GENERATED \"," + NEW_LINE +
             "    \"style\" : {" + NEW_LINE +
             "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
             "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
