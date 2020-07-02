@@ -2,12 +2,15 @@ package org.mockserver.dashboard.serializers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.mockserver.dashboard.model.DashboardLogEntryDTO;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.serialization.ObjectMapperFactory;
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -25,14 +28,17 @@ public class DescriptionProcessorTest {
         new ThrowableSerializer()
     );
 
+    private final long epochTime = 1593582678216L;
+    private final String timeStamp = StringUtils.substringAfter(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date(epochTime)), "-");
+
     @Test
     public void shouldSerialiseMultipleLogMessageDescriptions() throws JsonProcessingException {
         // given
         DescriptionProcessor descriptionProcessor = new DescriptionProcessor();
         List<Description> logMessageDescriptions = Arrays.asList(
-            descriptionProcessor.description(new DashboardLogEntryDTO(new LogEntry().setEpochTime(1593582678216L).setType(EXPECTATION_RESPONSE))),
-            descriptionProcessor.description(new DashboardLogEntryDTO(new LogEntry().setEpochTime(1593582678216L).setType(DEBUG))),
-            descriptionProcessor.description(new DashboardLogEntryDTO(new LogEntry().setEpochTime(1593582678216L).setType(TEMPLATE_GENERATED)))
+            descriptionProcessor.description(new DashboardLogEntryDTO(new LogEntry().setEpochTime(epochTime).setType(EXPECTATION_RESPONSE))),
+            descriptionProcessor.description(new DashboardLogEntryDTO(new LogEntry().setEpochTime(epochTime).setType(DEBUG))),
+            descriptionProcessor.description(new DashboardLogEntryDTO(new LogEntry().setEpochTime(epochTime).setType(TEMPLATE_GENERATED)))
         );
 
         // when
@@ -40,9 +46,9 @@ public class DescriptionProcessorTest {
 
         // then
         assertThat(json, is("[ " +
-            "\"07-01 06:51:18.216 EXPECTATION_RESPONSE   \", " +
-            "\"07-01 06:51:18.216 DEBUG                  \", " +
-            "\"07-01 06:51:18.216 TEMPLATE_GENERATED     \" " +
+            "\"" + timeStamp + " EXPECTATION_RESPONSE   \", " +
+            "\"" + timeStamp + " DEBUG                  \", " +
+            "\"" + timeStamp + " TEMPLATE_GENERATED     \" " +
             "]"));
     }
 
