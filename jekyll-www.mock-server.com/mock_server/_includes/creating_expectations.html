@@ -87,36 +87,74 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 
 <p>The are two types of <strong>request matcher</strong>:</p>
 <ul>
-    <li><strong>request properties matcher</strong> - that match requests using HTTP properties such as <strong>method</strong>, <strong>path</strong> or <strong>body</strong></li>
-    <li><strong>OpenApi request matcher</strong> - that match requests using an <a href="https://swagger.io/docs/specification/about/"><strong>OpenAPI</strong></a> or <a href="https://swagger.io/docs/specification/2-0/what-is-swagger/"><strong>Swagger</strong></a> definition</li>
+    <li><strong><a href="#request_properties_matchers">request properties matcher</a></strong> - that match requests using HTTP properties such as <strong>method</strong>, <strong>path</strong> or <strong>body</strong></li>
+    <li><strong><a href="#request_openapi_matchers">open api request matcher</a></strong> - that match requests using an <a href="https://swagger.io/docs/specification/about/"><strong>OpenAPI</strong></a> definition</li>
 </ul>
 
 <a id="request_properties_matchers" class="anchor" href="#request_properties_matchers">&nbsp;</a>
 
-<p>A <strong>request properties matcher</strong> can contain any of the following property matchers:</p>
+<p>A <strong>request properties matcher</strong> matches requests using one or more of the following properties:</p>
 
 <ul>
-    <li><strong>method</strong> - string value as a <a href="#button_match_request_by_cookies_and_query_parameters">plain text</a>, <a href="#button_match_request_by_method_regex">regular expression</a> or <a href="#button_match_request_by_not_matching_method">negated matcher</a></li>
-    <li><strong>path</strong> - string value as a <a href="#button_match_request_by_path">plain text</a>, <a href="#button_match_request_by_regex_path">regular expression</a> or <a href="#button_match_request_by_not_matching_path">negated matcher</a></li>
-    <li><strong>query string</strong> - key to multiple values as a <a href="#button_match_request_by_cookies_and_query_parameters">plain text</a>, <a href="#button_match_request_by_query_parameter_name_regex">regular expression</a> or negated matcher</li>
-    <li><strong>headers</strong> - key to multiple values as a <a href="#button_match_request_by_headers">plain text</a>, <a href="#button_match_request_by_header_name_regex">regular expression</a> or <a href="#button_match_request_by_not_matching_header_value">negated matcher</a></li>
-    <li><strong>cookies</strong> - key to value as a <a href="#button_match_request_by_cookies_and_query_parameters">plain text</a>, regular expression or negated matcher</li>
-    <li><strong>body</strong>
+    <li><strong>method</strong> - string value</li>
+    <li><strong>path</strong> - string value</li>
+    <li><strong>path parameters</strong> - key to multi-values</li>
+    <li><strong>query string parameters</strong> - key to multi-values</li>
+    <li><strong>headers</strong> - key to multi-values</li>
+    <li><strong>cookies</strong> - key to value</li>
+    <li><strong>body</strong> - string, key to multiple values or object value</li>
+    <li><strong>secure</strong> - boolean value, true for HTTPS</li>
+</ul>
+
+<p>Matching for <strong>all properties</strong> can be done using:</p>
+
+<ul>
+    <li><strong>string value</strong> for example: <a href="#button_match_request_by_query_parameter_name_regex">method</a>, <a href="#button_match_request_by_path">path</a>, <a href="#button_match_request_by_cookies_and_query_parameters">query parameters</a>, <a href="#button_match_request_by_headers">headers</a>, <a href="#button_match_request_by_cookies_and_query_parameters">cookies</a></li>
+    <li><strong>regex value</strong> for example: <a href="#button_match_request_by_method_regex">method</a>, <a href="#button_match_request_by_regex_path">path</a>, path parameters, <!-- TODO --><a href="#button_match_request_by_query_parameter_name_regex">query parameters</a>, <a href="#button_match_request_by_header_name_regex">headers</a></li>
+    <li><strong>json schema</strong> for example: path parameters, <!-- TODO -->query parameters, <!-- TODO -->headers<!-- TODO -->, cookies<!-- TODO --></li>
+    <li><strong>optional value</strong> for example: path parameters, <!-- TODO -->query parameters, <!-- TODO -->headers<!-- TODO either / or header see shouldReturnResponseByMatchingOptionalHeaderWithEitherOr -->, cookies<!-- TODO --></li>
+    <li><strong>negated value</strong> for example: <a href="#button_match_request_by_not_matching_method">method</a>, <a href="#button_match_request_by_not_matching_path">path</a>, <a href="#button_match_request_by_not_matching_header_value">headers</a></li>
+</ul>
+
+<p>Matching for <strong>key to multi-values</strong> (i.e. headers, query parameters and path parameters) can be done using two type of matches:</p>
+<ul>
+    <li><strong>sub set <!-- TODO --></strong> (default) - matches if the request property contains a matching sub set (considering optional keys), therefore there is <strong>at least one matching value</strong> for each non-optional key or optional key if present</li>
+    <li><strong>matching key <!-- TODO --></strong> - matches if the request property contains only matching values  (considering optional keys), therefore <strong>all values must match</strong> for each non-optional key or optional key if present</li>
+</ul>
+
+<p>Matching for <strong>bodies</strong> can be done using:</p>
+
+<ul>
+    <li><strong><a href="#button_match_request_by_body_in_utf16">plain text</a></strong> (i.e. exact match)</li>
+    <li><strong><a href="#button_match_request_by_regex_body">regular expression</a></strong> - see <a href="https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">Java regex syntax</a></li>
+    <li><strong><a href="#button_match_request_by_body_with_json_exactly">JSON</a></strong> - supports:
         <ul>
-            <li><strong><a href="#button_match_request_by_body_in_utf16">plain text</a></strong> (i.e. exact match)</li>
-            <li><strong><a href="#button_match_request_by_regex_body">regular expression</a></strong></li>
-            <li><strong><a href="#button_match_request_by_body_with_json_exactly">JSON</a></strong> - supports both <strong>STRICT</strong> which matches all fields, order of arrays and no additional fields allowed, and <strong>ONLY_MATCHING_FIELDS</strong> which only matches fields provided in the request matcher</li>
-            <li><strong><a href="#button_match_request_by_body_with_json_schema">JSON Schema</a></strong></li>
-            <li><strong><a href="#button_match_request_by_body_with_json_path">JsonPath</a></strong> - matches if at least one value returned by expression</li>
-            <li><strong><a href="#button_match_request_by_body_with_xml">XML</a></strong></li>
-            <li><strong><a href="#button_match_request_by_body_with_xml_schema">XML Schema</a></strong></li>
-            <li><strong><a href="#button_match_request_by_body_with_xpath">XPath</a></strong> - matches if at least one value returned by expression</li>
-            <li><strong><a href="#button_match_request_by_form_submission_body">form fields</a></strong> (i.e. body parameters)</li>
-            <li><strong><a href="#button_match_request_by_binary_body">binary</a></strong></li>
-            <li><strong><a href="#button_match_request_by_not_matching_body_with_xpath">negated matcher</a></strong></li>
-        </ul>
-    </li>
-    <li><strong>secure</strong> - true if the request was made using HTTPS</li>
+            <li><strong>matchType</strong> to control which fields get matched:
+                <ul>
+                    <li><strong>STRICT</strong> matches all fields, order of arrays and no additional fields allowed</li>
+                    <li><strong>ONLY_MATCHING_FIELDS</strong> only matches fields provided in the request matcher</li>
+                </ul></li>
+            <li><strong>JSONUnit placeholders</strong> to allow fields or values to be ignored or matched by type for example:
+                <ul>
+                    <li><strong>${json-unit.ignore-element}</strong> ignore a field</li>
+                    <li><strong>${json-unit.any-boolean}</strong> match a field as any boolean</li>
+                </ul>see <a href="https://github.com/lukas-krecan/JsonUnit">JSONUnit documentation</a> for full details</li>
+        </ul></li>
+    <li><strong><a href="#button_match_request_by_body_with_json_schema">JSON Schema</a></strong> - see <a href="https://json-schema.org/">JSON Schema documentation</a></li>
+    <li><strong><a href="#button_match_request_by_body_with_json_path">JsonPath</a></strong> - matches if at least one value is returned by the expression, see <a href="https://github.com/json-path/JsonPath">JsonPath documentation</a></li>
+    <li><strong><a href="#button_match_request_by_body_with_xml">XML</a></strong> - supports:
+        <ul>
+            <li><strong>XMLUnit placeholders</strong> to allow fields or elements to be ignored or matched by type for example:
+                <ul>
+                    <li><strong>${xmlunit.ignore}</strong> ignore an element</li>
+                    <li><strong>${xmlunit.isNumber}</strong> match an element or attribute as a number</li>
+                </ul>see <a href="https://github.com/xmlunit/user-guide/wiki/Placeholders">XMLUnit documentation</a> for full details</li>
+        </ul></li>
+    <li><strong><a href="#button_match_request_by_body_with_xml_schema">XML Schema</a></strong> - see <a href="https://www.w3.org/standards/xml/schema.html">XML Schema documentation</a></li>
+    <li><strong><a href="#button_match_request_by_body_with_xpath">XPath</a></strong> - matches if at least one value returned by expression, see <a href="https://www.w3.org/TR/2017/REC-xpath-31-20170321/">XPath specification</a></li>
+    <li><strong><a href="#button_match_request_by_form_submission_body">form fields</a></strong> (i.e. body parameters)</li>
+    <li><strong><a href="#button_match_request_by_binary_body">binary</a></strong></li>
+    <li><strong><a href="#button_match_request_by_not_matching_body_with_xpath">negated matcher</a></strong></li>
 </ul>
 
 <button id="button_request" class="accordion title"><strong>Request Properties Matcher Code Examples</strong></button>
@@ -129,7 +167,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 <p>An <strong>OpenApi request matcher</strong> can contain any of the following fields:</p>
 
 <ul>
-    <li><strong>specUrlOrPayload</strong> - mandatory value containing an <a href="https://swagger.io/docs/specification/basic-structure/"><strong>OpenAPI v3</strong></a> or <a href="https://swagger.io/docs/specification/2-0/basic-structure/"><strong>Swagger v2</strong></a> specifications in either JSON or YAML format as an:
+    <li><strong>specUrlOrPayload</strong> - mandatory value containing an <a href="https://swagger.io/docs/specification/basic-structure/"><strong>OpenAPI v3</strong></a> specifications in either JSON or YAML format as an:
         <ul>
             <li><strong><a href="#button_match_by_openapi_url">HTTP/HTTPS URL</a></strong></li>
             <li><strong><a href="#button_match_by_openapi_filepath">File URL</a></strong></li>
