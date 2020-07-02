@@ -1123,78 +1123,11 @@ public class HttpRequestPropertiesMatcherLogTest {
     }
 
     @Test
-    public void doesNotMatchIncorrectPathName() {
-        boolean originalMatchersFailFast = matchersFailFast();
-        try {
-            // given
-            assertFalse(match(request().withPathParameters(new Parameter("someKey", "someValue")), request().withPathParameter(new Parameter("someOtherKey", "someValue"))));
-
-            // then
-            HttpResponse response = httpStateHandler
-                .retrieve(
-                    request()
-                        .withQueryStringParameter("type", "logs")
-                );
-            assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
-                    NEW_LINE +
-                    "  {" + NEW_LINE +
-                    "    \"pathParameters\" : {" + NEW_LINE +
-                    "      \"someOtherKey\" : [ \"someValue\" ]" + NEW_LINE +
-                    "    }" + NEW_LINE +
-                    "  }" + NEW_LINE +
-                    NEW_LINE +
-                    " didn't match request matcher:" + NEW_LINE +
-                    NEW_LINE +
-                    "  {" + NEW_LINE +
-                    "    \"pathParameters\" : {" + NEW_LINE +
-                    "      \"someKey\" : [ \"someValue\" ]" + NEW_LINE +
-                    "    }" + NEW_LINE +
-                    "  }" + NEW_LINE +
-                    NEW_LINE +
-                    " because:" + NEW_LINE +
-                    NEW_LINE +
-                    "  method matched" + NEW_LINE +
-                    "  path matched" + NEW_LINE +
-                    "  body matched" + NEW_LINE +
-                    "  headers matched" + NEW_LINE +
-                    "  cookies matched" + NEW_LINE +
-                    "  pathParameters didn't match: " + NEW_LINE +
-                    "  " + NEW_LINE +
-                    "    multimap subset match failed expected:" + NEW_LINE +
-                    "  " + NEW_LINE +
-                    "      {" + NEW_LINE +
-                    "        \"someKey\" : [ \"someValue\" ]" + NEW_LINE +
-                    "      }" + NEW_LINE +
-                    "  " + NEW_LINE +
-                    "     found:" + NEW_LINE +
-                    "  " + NEW_LINE +
-                    "      {" + NEW_LINE +
-                    "        \"someOtherKey\" : [ \"someValue\" ]" + NEW_LINE +
-                    "      }" + NEW_LINE +
-                    "  " + NEW_LINE +
-                    "     failed because:" + NEW_LINE +
-                    "  " + NEW_LINE +
-                    "      multimap is not a subset" + NEW_LINE +
-                    NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
-                    NEW_LINE
-            ));
-        } finally {
-            matchersFailFast(originalMatchersFailFast);
-        }
-    }
-
-    @Test
     public void doesNotMatchIncorrectPathValue() {
         boolean originalMatchersFailFast = matchersFailFast();
         try {
             // given
-            assertFalse(match(request().withPathParameters(new Parameter("someKey", "someValue")), request().withPathParameter(new Parameter("someKey", "someOtherValue"))));
+            assertFalse(match(request().withPath("/{someKey}").withPathParameters(new Parameter("someKey", "someValue")), request().withPath("/someOtherValue").withPathParameter(new Parameter("someKey", "someOtherValue"))));
 
             // then
             HttpResponse response = httpStateHandler
@@ -1206,6 +1139,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                 LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
+                    "    \"path\" : \"/someOtherValue\"," + NEW_LINE +
                     "    \"pathParameters\" : {" + NEW_LINE +
                     "      \"someKey\" : [ \"someOtherValue\" ]" + NEW_LINE +
                     "    }" + NEW_LINE +
@@ -1214,6 +1148,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                     " didn't match request matcher:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
+                    "    \"path\" : \"/{someKey}\"," + NEW_LINE +
                     "    \"pathParameters\" : {" + NEW_LINE +
                     "      \"someKey\" : [ \"someValue\" ]" + NEW_LINE +
                     "    }" + NEW_LINE +

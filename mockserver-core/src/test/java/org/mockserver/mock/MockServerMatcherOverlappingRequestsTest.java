@@ -30,8 +30,8 @@ public class MockServerMatcherOverlappingRequestsTest {
     @Before
     public void prepareTestFixture() {
         httpResponse = new HttpResponse[]{
-                new HttpResponse(),
-                new HttpResponse()
+            new HttpResponse(),
+            new HttpResponse()
         };
         MockServerLogger mockLogFormatter = mock(MockServerLogger.class);
         WebSocketClientRegistry webSocketClientRegistry = mock(WebSocketClientRegistry.class);

@@ -1,7 +1,6 @@
 package org.mockserver.mockservlet;
 
 import com.google.common.collect.ImmutableSet;
-import io.netty.channel.ChannelHandlerContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;

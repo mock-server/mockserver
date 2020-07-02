@@ -453,6 +453,8 @@ public class HttpState {
 
     public boolean handle(HttpRequest request, ResponseWriter responseWriter, boolean warDeployment) {
 
+        request.withLogCorrelationId(UUID.randomUUID().toString());
+
         if (MockServerLogger.isEnabled(Level.TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()

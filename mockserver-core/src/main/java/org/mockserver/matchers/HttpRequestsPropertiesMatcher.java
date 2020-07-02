@@ -455,10 +455,11 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
     @Override
     public boolean matches(MatchDifference matchDifference, RequestDefinition requestDefinition) {
         boolean result = false;
+        String logCorrelationId = matchDifference != null ? matchDifference.getLogCorrelationId() : UUID.randomUUID().toString();
         if (httpRequestPropertiesMatchers != null && !httpRequestPropertiesMatchers.isEmpty()) {
             for (HttpRequestPropertiesMatcher httpRequestPropertiesMatcher : httpRequestPropertiesMatchers) {
                 if (matchDifference == null) {
-                    if (MockServerLogger.isEnabled(DEBUG) && requestDefinition instanceof HttpRequest) {
+                    if (MatchDifference.debugAllMatchFailures && requestDefinition instanceof HttpRequest) {
                         matchDifference = new MatchDifference(requestDefinition);
                     }
                     result = httpRequestPropertiesMatcher.matches(matchDifference, requestDefinition);

@@ -34,6 +34,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         "throwable"
     };
     private String id;
+    private String correlationId;
     private Level logLevel = Level.INFO;
     public static final DateFormat LOG_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     private long epochTime = TimeService.currentTimeMillis();
@@ -67,9 +68,11 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
 
     public void clear() {
         logLevel = Level.INFO;
+        correlationId = null;
         epochTime = -1;
-        httpRequests = null;
         timestamp = null;
+        type = null;
+        httpRequests = null;
         httpResponse = null;
         httpError = null;
         expectation = null;
@@ -116,6 +119,15 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
 
     public LogEntry setType(LogEntry.LogMessageType type) {
         this.type = type;
+        return this;
+    }
+
+    public String getCorrelationId() {
+        return correlationId;
+    }
+
+    public LogEntry setCorrelationId(String correlationId) {
+        this.correlationId = correlationId;
         return this;
     }
 
@@ -174,6 +186,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
 
     public LogEntry setHttpRequest(RequestDefinition httpRequest) {
         if (httpRequest != null) {
+            setCorrelationId(httpRequest.getLogCorrelationId());
             this.httpRequests = new RequestDefinition[]{httpRequest};
         } else {
             this.httpRequests = new RequestDefinition[]{request()};
@@ -377,6 +390,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
             .setType(getType())
             .setLogLevel(getLogLevel())
             .setEpochTime(getEpochTime())
+            .setCorrelationId(getCorrelationId())
             .setHttpRequests(getHttpRequests())
             .setHttpResponse(getHttpResponse())
             .setHttpError(getHttpError())
@@ -394,6 +408,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
             .setType(getType())
             .setLogLevel(getLogLevel())
             .setEpochTime(getEpochTime())
+            .setCorrelationId(getCorrelationId())
             .setHttpRequests(getHttpRequests())
             .setHttpResponse(getHttpResponse())
             .setHttpError(getHttpError())

@@ -1,13 +1,13 @@
 {
-  "main.css": "/mockserver/dashboard/static/css/main.d45972f9.chunk.css",
-  "main.js": "/mockserver/dashboard/static/js/main.fa6b1251.chunk.js",
-  "main.js.map": "/mockserver/dashboard/static/js/main.fa6b1251.chunk.js.map",
+  "main.css": "/mockserver/dashboard/static/css/main.477cab2a.chunk.css",
+  "main.js": "/mockserver/dashboard/static/js/main.f1bd1fad.chunk.js",
+  "main.js.map": "/mockserver/dashboard/static/js/main.f1bd1fad.chunk.js.map",
   "runtime~main.js": "/mockserver/dashboard/static/js/runtime~main.7ef15c85.js",
   "runtime~main.js.map": "/mockserver/dashboard/static/js/runtime~main.7ef15c85.js.map",
   "static/js/2.1c7a191f.chunk.js": "/mockserver/dashboard/static/js/2.1c7a191f.chunk.js",
   "static/js/2.1c7a191f.chunk.js.map": "/mockserver/dashboard/static/js/2.1c7a191f.chunk.js.map",
   "index.html": "/mockserver/dashboard/index.html",
-  "precache-manifest.91e9adb6e82580fa8efba0a93642a9e4.js": "/mockserver/dashboard/precache-manifest.91e9adb6e82580fa8efba0a93642a9e4.js",
+  "precache-manifest.c1a5d6717d047148d5330e304919a02e.js": "/mockserver/dashboard/precache-manifest.c1a5d6717d047148d5330e304919a02e.js",
   "service-worker.js": "/mockserver/dashboard/service-worker.js",
-  "static/css/main.d45972f9.chunk.css.map": "/mockserver/dashboard/static/css/main.d45972f9.chunk.css.map"
+  "static/css/main.477cab2a.chunk.css.map": "/mockserver/dashboard/static/css/main.477cab2a.chunk.css.map"
 }

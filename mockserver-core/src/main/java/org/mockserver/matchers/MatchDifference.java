@@ -56,6 +56,7 @@ public class MatchDifference {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(DEBUG)
+                    .setCorrelationId(httpRequest.getLogCorrelationId())
                     .setMessageFormat(messageFormat)
                     .setArguments(arguments)
                     .setThrowable(throwable)
@@ -87,6 +88,10 @@ public class MatchDifference {
 
     public RequestDefinition getHttpRequest() {
         return httpRequest;
+    }
+
+    public String getLogCorrelationId() {
+        return httpRequest.getLogCorrelationId();
     }
 
     @SuppressWarnings("UnusedReturnValue")

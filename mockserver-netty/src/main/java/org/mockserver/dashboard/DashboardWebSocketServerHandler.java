@@ -4,11 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.*;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.websocketx.*;
@@ -16,10 +14,8 @@ import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
 import org.mockserver.collections.CircularHashMap;
 import org.mockserver.dashboard.model.DashboardLogEntryDTO;
-import org.mockserver.dashboard.serializers.DashboardLogEntryDTOSerializer;
-import org.mockserver.dashboard.serializers.DescriptionProcessor;
-import org.mockserver.dashboard.serializers.DescriptionSerializer;
-import org.mockserver.dashboard.serializers.ThrowableSerializer;
+import org.mockserver.dashboard.model.DashboardLogEntryDTOGroup;
+import org.mockserver.dashboard.serializers.*;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -35,7 +31,8 @@ import org.mockserver.ui.MockServerMatcherListener;
 import org.mockserver.ui.MockServerMatcherNotifier;
 import org.slf4j.event.Level;
 
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -44,6 +41,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.net.HttpHeaders.HOST;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
 import static org.mockserver.log.model.LogEntry.LogMessageType.FORWARDED_REQUEST;
 import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
@@ -68,7 +66,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     private final HttpState httpStateHandler;
     private HttpRequestSerializer httpRequestSerializer;
     private WebSocketServerHandshaker handshaker;
-    private final Map<ChannelHandlerContext, HttpRequest> clientRegistry = new CircularHashMap<>(100);
+    private final Map<ChannelOutboundInvoker, HttpRequest> clientRegistry = new CircularHashMap<>(100);
     private RequestMatchers requestMatchers;
     private MockServerEventLog mockServerEventLog;
     private ThreadPoolExecutor scheduler;
@@ -79,6 +77,11 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
         this.httpStateHandler = httpStateHandler;
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.sslEnabledUpstream = sslEnabledUpstream;
+    }
+
+    @VisibleForTesting
+    public Map<ChannelOutboundInvoker, HttpRequest> getClientRegistry() {
+        return clientRegistry;
     }
 
     @Override
@@ -175,6 +178,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
         if (objectMapper == null) {
             objectMapper = ObjectMapperFactory.createObjectMapper(
                 new DashboardLogEntryDTOSerializer(),
+                new DashboardLogEntryDTOGroupSerializer(),
                 new DescriptionSerializer(),
                 new ThrowableSerializer()
             );
@@ -213,7 +217,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
             try {
                 HttpRequest httpRequest = httpRequestSerializer.deserialize(((TextWebSocketFrame) frame).text());
                 clientRegistry.put(ctx, httpRequest);
-                sendUpdate(httpRequest, ctx);
+                sendUpdate(ctx, httpRequest);
             } catch (IllegalArgumentException iae) {
                 sendMessage(ctx, null, ImmutableMap.of("error", iae.getMessage()), 2);
             }
@@ -224,7 +228,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
         }
     }
 
-    private void sendMessage(ChannelHandlerContext ctx, RequestDefinition httpRequest, ImmutableMap<String, Object> message, int retryCount) {
+    private void sendMessage(ChannelOutboundInvoker ctx, RequestDefinition httpRequest, ImmutableMap<String, Object> message, int retryCount) {
         if (semaphore.tryAcquire()) {
             scheduler.submit(() -> {
                 try {
@@ -246,7 +250,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
                 } catch (InterruptedException ignore) {
                 }
                 if (httpRequest != null) {
-                    sendUpdate(httpRequest, ctx, retryCount - 1);
+                    sendUpdate(ctx, httpRequest, retryCount - 1);
                 } else {
                     sendMessage(ctx, null, message, retryCount - 1);
                 }
@@ -282,23 +286,23 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
 
     @Override
     public void updated(MockServerEventLog mockServerLog) {
-        for (Map.Entry<ChannelHandlerContext, HttpRequest> registryEntry : clientRegistry.entrySet()) {
-            sendUpdate(registryEntry.getValue(), registryEntry.getKey());
+        for (Map.Entry<ChannelOutboundInvoker, HttpRequest> registryEntry : clientRegistry.entrySet()) {
+            sendUpdate(registryEntry.getKey(), registryEntry.getValue());
         }
     }
 
     @Override
     public void updated(RequestMatchers requestMatchers, MockServerMatcherNotifier.Cause cause) {
-        for (Map.Entry<ChannelHandlerContext, HttpRequest> registryEntry : clientRegistry.entrySet()) {
-            sendUpdate(registryEntry.getValue(), registryEntry.getKey());
+        for (Map.Entry<ChannelOutboundInvoker, HttpRequest> registryEntry : clientRegistry.entrySet()) {
+            sendUpdate(registryEntry.getKey(), registryEntry.getValue());
         }
     }
 
-    private void sendUpdate(RequestDefinition httpRequest, ChannelHandlerContext ctx) {
-        sendUpdate(httpRequest, ctx, 2);
+    private void sendUpdate(ChannelOutboundInvoker ctx, RequestDefinition httpRequest) {
+        sendUpdate(ctx, httpRequest, 2);
     }
 
-    private void sendUpdate(RequestDefinition httpRequest, ChannelHandlerContext ctx, int retryCount) {
+    private void sendUpdate(ChannelOutboundInvoker ctx, RequestDefinition httpRequest, int retryCount) {
         DescriptionProcessor activeExpectationsDescriptionProcessor = new DescriptionProcessor();
         DescriptionProcessor logMessagesDescriptionProcessor = new DescriptionProcessor();
         DescriptionProcessor recordedRequestsDescriptionProcessor = new DescriptionProcessor();
@@ -328,17 +332,25 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
                             );
                         })
                         .collect(Collectors.toList());
-                    List<Map<String, Object>> proxiedRequests = new ArrayList<>();
-                    List<Map<String, Object>> recordedRequests = new ArrayList<>();
-                    List<DashboardLogEntryDTO> logMessages = new ArrayList<>();
+                    List<Map<String, Object>> proxiedRequests = new LinkedList<>();
+                    List<Map<String, Object>> recordedRequests = new LinkedList<>();
+                    List<Object> logMessages = new LinkedList<>();
+                    Map<String, DashboardLogEntryDTOGroup> logEntryGroups = new HashMap<>();
                     reverseLogEventsStream
                         .forEach(logEntryDTO -> {
                             if (logMessages.size() < UI_UPDATE_ITEM_LIMIT) {
-                                logMessages
-                                    .add(
-                                        logEntryDTO
-                                            .setDescription(logMessagesDescriptionProcessor.description(logEntryDTO))
-                                    );
+                                DashboardLogEntryDTO dashboardLogEntryDTO = logEntryDTO.setDescription(logMessagesDescriptionProcessor.description(logEntryDTO));
+                                if (isNotBlank(logEntryDTO.getCorrelationId())) {
+                                    DashboardLogEntryDTOGroup logEntryGroup = logEntryGroups.get(logEntryDTO.getCorrelationId());
+                                    if (logEntryGroup == null) {
+                                        logEntryGroup = new DashboardLogEntryDTOGroup(logMessagesDescriptionProcessor);
+                                        logEntryGroups.put(logEntryDTO.getCorrelationId(), logEntryGroup);
+                                        logMessages.add(logEntryGroup);
+                                    }
+                                    logEntryGroup.getLogEntryDTOS().add(dashboardLogEntryDTO);
+                                } else {
+                                    logMessages.add(dashboardLogEntryDTO);
+                                }
                             }
                             if (recordedRequestsPredicate.test(logEntryDTO) && recordedRequests.size() < UI_UPDATE_ITEM_LIMIT) {
                                 for (RequestDefinition request : logEntryDTO.getHttpRequests()) {

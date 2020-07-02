@@ -47,11 +47,11 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LOG_DATE_FORMAT;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.mock.action.http.HttpActionHandler.REMOTE_SOCKET;
-import static org.mockserver.netty.HttpRequestHandler.LOCAL_HOST_HEADERS;
-import static org.mockserver.netty.HttpRequestHandler.PROXYING;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
+import static org.mockserver.netty.HttpRequestHandler.LOCAL_HOST_HEADERS;
+import static org.mockserver.netty.HttpRequestHandler.PROXYING;
 
 /**
  * @author jamesdbloom

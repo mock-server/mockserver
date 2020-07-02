@@ -20,6 +20,7 @@ public class DashboardLogEntryDTO extends ObjectWithJsonToString {
         "timestamp",
     };
     private String id;
+    private String correlationId;
     private String timestamp;
     private LogEntry.LogMessageType type;
     private RequestDefinition[] httpRequests;
@@ -31,8 +32,16 @@ public class DashboardLogEntryDTO extends ObjectWithJsonToString {
 
     private Description description;
 
+    public DashboardLogEntryDTO(String id, String correlationId, String timestamp, LogEntry.LogMessageType type) {
+        setId(id);
+        setCorrelationId(correlationId);
+        setTimestamp(timestamp);
+        setType(type);
+    }
+
     public DashboardLogEntryDTO(LogEntry logEntry) {
         setId(logEntry.id());
+        setCorrelationId(logEntry.getCorrelationId());
         setTimestamp(logEntry.getTimestamp());
         setType(logEntry.getType());
         setHttpRequests(logEntry.getHttpUpdatedRequests());
@@ -48,6 +57,14 @@ public class DashboardLogEntryDTO extends ObjectWithJsonToString {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getCorrelationId() {
+        return correlationId;
+    }
+
+    public void setCorrelationId(String correlationId) {
+        this.correlationId = correlationId;
     }
 
     public String getTimestamp() {

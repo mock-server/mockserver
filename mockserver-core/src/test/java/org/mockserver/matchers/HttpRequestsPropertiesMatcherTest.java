@@ -1,6 +1,5 @@
 package org.mockserver.matchers;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.file.FileReader;
 import org.mockserver.logging.MockServerLogger;
@@ -6202,7 +6201,16 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertThat(matches, is(false));
         assertThat(matchDifference.getDifferences(METHOD), nullValue());
-        assertThat(matchDifference.getDifferences(PATH), containsInAnyOrder("  expected path /pets/{petId} has 2 parts but path /pets has 1 parts "));
+        assertThat(matchDifference.getDifferences(PATH), containsInAnyOrder(
+            "  string or regex match failed expected:" + NEW_LINE +
+                NEW_LINE +
+                "    /pets/.*" + NEW_LINE +
+                NEW_LINE +
+                "   found:" + NEW_LINE +
+                NEW_LINE +
+                "    /pets" + NEW_LINE,
+            "  expected path /pets/{petId} has 2 parts but path /pets has 1 parts "
+        ));
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), nullValue());
@@ -6294,7 +6302,16 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertThat(matches, is(false));
         assertThat(matchDifference.getDifferences(METHOD), nullValue());
-        assertThat(matchDifference.getDifferences(PATH), containsInAnyOrder("  expected path /pets/{petId} has 2 parts but path /wrong has 1 parts "));
+        assertThat(matchDifference.getDifferences(PATH), containsInAnyOrder(
+            "  string or regex match failed expected:" + NEW_LINE +
+                NEW_LINE +
+                "    /pets/.*" + NEW_LINE +
+                NEW_LINE +
+                "   found:" + NEW_LINE +
+                NEW_LINE +
+                "    /wrong" + NEW_LINE,
+            "  expected path /pets/{petId} has 2 parts but path /wrong has 1 parts "
+        ));
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
         assertThat(matchDifference.getDifferences(HEADERS), nullValue());

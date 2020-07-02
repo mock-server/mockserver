@@ -139,7 +139,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      *     "format": "ipv4"
      * }
      * </pre>
-     *
+     * <p>
      * For full details of JSON Schema see, https://json-schema.org/understanding-json-schema/reference/string.html
      *
      * @param method the HTTP method to match on as a JSON Schema
@@ -222,7 +222,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      *     "format": "ipv4"
      * }
      * </pre>
-     *
+     * <p>
      * For full details of JSON Schema see, https://json-schema.org/understanding-json-schema/reference/string.html
      *
      * @param path the path to match on as a JSON Schema
@@ -647,6 +647,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
             return null;
         }
     }
+
     @JsonIgnore
     public String getBodyAsJsonOrXmlString() {
         if (body != null) {

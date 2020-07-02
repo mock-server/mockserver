@@ -60,7 +60,7 @@ public class MockServerMatcherManageExpectationsTest {
     public void shouldRemoveMultipleExpiredExpectations() throws InterruptedException {
         // when
         requestMatchers.add(new Expectation(request().withPath("somePath"), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0L), 0)
-                    .thenRespond(response().withBody("someBody")), API);
+            .thenRespond(response().withBody("someBody")), API);
         Expectation expectationToExpireAfter3Seconds =
             new Expectation(request().withPath("somePath"), Times.unlimited(), TimeToLive.exactly(MILLISECONDS, 1500L), 0)
                 .thenRespond(response().withBody("someBodyOtherBody"));

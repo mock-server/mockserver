@@ -61,6 +61,10 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
     }
 
     public boolean containsAll(CaseInsensitiveRegexHashMap matcher) {
+        return containsAll(matcher, null);
+    }
+
+    public boolean containsAll(CaseInsensitiveRegexHashMap matcher, String logCorrelationId) {
 
         List<ImmutableEntry> matchedEntries = entryList();
         Multimap<Integer, List<ImmutableEntry>> allMatchedSubSets
@@ -70,6 +74,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(TRACE)
+                    .setCorrelationId(logCorrelationId)
                     .setMessageFormat("attempting to match subset from{}against hashmap{}")
                     .setArguments(allMatchedSubSets, matcher.entryList())
 
@@ -90,6 +95,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(DEBUG)
+                                .setCorrelationId(logCorrelationId)
                                 .setMessageFormat("hashmap{}containsAll subset{}in{}")
                                 .setArguments(this, matchedSubSet, matcherEntries)
 
@@ -102,6 +108,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(DEBUG)
+                        .setCorrelationId(logCorrelationId)
                         .setMessageFormat("hashmap{}containsAll found no subset equal to{}from{}")
                         .setArguments(this, matcherEntries, allMatchedSubSets)
 
@@ -120,6 +127,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(DEBUG)
+                                .setCorrelationId(logCorrelationId)
                                 .setMessageFormat("hashmap{}containsAll subset of non-optionals{}in{}")
                                 .setArguments(this, matchedSubSet, matcherEntriesWithoutOptionals)
 
@@ -143,6 +151,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
                                     mockServerLogger.logEvent(
                                         new LogEntry()
                                             .setLogLevel(DEBUG)
+                                            .setCorrelationId(logCorrelationId)
                                             .setMessageFormat("hashmap{}failed to match optional{}with{}")
                                             .setArguments(this, optionalMatcherEntry, matchedEntry)
 
@@ -156,6 +165,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(DEBUG)
+                                .setCorrelationId(logCorrelationId)
                                 .setMessageFormat("hashmap{}containsAll subset of optionals{}in{}")
                                 .setArguments(this, matchedSubSet, optionalMatcherEntries)
 
@@ -171,6 +181,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(DEBUG)
+                        .setCorrelationId(logCorrelationId)
                         .setMessageFormat("hashmap{}containsAll found no subset equal to{}from{}")
                         .setArguments(this, matcher.entryList(), matchedEntries)
 

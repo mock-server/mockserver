@@ -12,6 +12,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 public class DescriptionProcessor {
     private int maxHttpRequestLength;
     private int maxOpenAPILength;
+    private int maxOpenAPIObjectLength;
     private int maxLogEventLength;
 
     public int getMaxHttpRequestLength() {
@@ -20,6 +21,10 @@ public class DescriptionProcessor {
 
     public int getMaxOpenAPILength() {
         return maxOpenAPILength;
+    }
+
+    public int getMaxOpenAPIObjectLength() {
+        return maxOpenAPIObjectLength;
     }
 
     public int getMaxLogEventLength() {
@@ -45,9 +50,9 @@ public class DescriptionProcessor {
                 }
             } else {
                 OpenAPI openAPI = OpenAPIConverter.buildOpenAPI(specUrlOrPayload);
-                description = new RequestDefinitionObjectDescription("spec:", openAPI,  operationId, this);
-                if (description.length() >= maxOpenAPILength) {
-                    maxOpenAPILength = description.length();
+                description = new RequestDefinitionObjectDescription("spec:", openAPI, operationId, this);
+                if (description.length() >= maxOpenAPIObjectLength) {
+                    maxOpenAPIObjectLength = description.length();
                 }
             }
         } else if (object instanceof DashboardLogEntryDTO) {

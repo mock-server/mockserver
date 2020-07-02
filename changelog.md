@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support for nullable keyword in JSON Schemas (part of Open API specification not JSON Schema specification)
 - matching xml bodies against JSON Schema matchers
 - matching parameter bodies against JSON Schema matchers
+- grouping of log events in UI to simplify analysis of expectation matches / non matches for a request
 
 ### Changed
 - reduced time range of CA certificates to increase likelihood they will be accepted by strict systems (i.e. VMWare vCenter Server)

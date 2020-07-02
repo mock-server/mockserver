@@ -60,24 +60,22 @@ public class PathParametersDecoder {
 
     public Parameters extractPathParameters(HttpRequest matcher, HttpRequest matched) {
         Parameters parsedParameters = matched.getPathParameters() != null ? matched.getPathParameters() : new Parameters();
-        if (matcher.getPath() != null && !matcher.getPath().isBlank()) {
-            if (matcher.getPathParameters() != null && !matcher.getPathParameters().isEmpty()) {
-                String[] matcherPathParts = getPathParts(matcher.getPath());
-                String[] matchedPathParts = getPathParts(matched.getPath());
-                if (matcherPathParts.length != matchedPathParts.length) {
-                    throw new IllegalArgumentException("expected path " + matcher.getPath().getValue() + " has " + matcherPathParts.length + " parts but path " + matched.getPath().getValue() + " has " + matchedPathParts.length + " parts ");
-                }
-                for (int i = 0; i < matcherPathParts.length; i++) {
-                    Matcher pathParameterName = PATH_VARIABLE_NAME_PATTERN.matcher(matcherPathParts[i]);
-                    if (pathParameterName.matches()) {
-                        String parameterName = pathParameterName.group(1);
-                        List<String> parameterValues = new ArrayList<>();
-                        Matcher pathParameterValue = Pattern.compile("[.;]?(?:" + parameterName + "=)?([^,]++)[.,;]?").matcher(matchedPathParts[i]);
-                        while (pathParameterValue.find()) {
-                            parameterValues.add(pathParameterValue.group(1));
-                        }
-                        parsedParameters.withEntry(parameterName, parameterValues);
+        if (matcher.getPathParameters() != null && !matcher.getPathParameters().isEmpty()) {
+            String[] matcherPathParts = getPathParts(matcher.getPath());
+            String[] matchedPathParts = getPathParts(matched.getPath());
+            if (matcherPathParts.length != matchedPathParts.length) {
+                throw new IllegalArgumentException("expected path " + matcher.getPath().getValue() + " has " + matcherPathParts.length + " parts but path " + matched.getPath().getValue() + " has " + matchedPathParts.length + " parts ");
+            }
+            for (int i = 0; i < matcherPathParts.length; i++) {
+                Matcher pathParameterName = PATH_VARIABLE_NAME_PATTERN.matcher(matcherPathParts[i]);
+                if (pathParameterName.matches()) {
+                    String parameterName = pathParameterName.group(1);
+                    List<String> parameterValues = new ArrayList<>();
+                    Matcher pathParameterValue = Pattern.compile("[.;]?(?:" + parameterName + "=)?([^,]++)[.,;]?").matcher(matchedPathParts[i]);
+                    while (pathParameterValue.find()) {
+                        parameterValues.add(pathParameterValue.group(1));
                     }
+                    parsedParameters.withEntry(parameterName, parameterValues);
                 }
             }
         }

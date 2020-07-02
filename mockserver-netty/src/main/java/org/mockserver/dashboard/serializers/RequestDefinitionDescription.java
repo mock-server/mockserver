@@ -10,9 +10,19 @@ public class RequestDefinitionDescription implements Description {
     final DescriptionProcessor descriptionProcessor;
 
     public RequestDefinitionDescription(String firstPart, String secondPart, DescriptionProcessor descriptionProcessor, boolean openAPI) {
-        this.firstPart = firstPart;
-        this.secondPart = secondPart;
         this.openAPI = openAPI;
+        if (firstPart.length() + secondPart.length() > MAX_LENGTH) {
+            if (secondPart.length() > firstPart.length()) {
+                this.firstPart = firstPart;
+                this.secondPart = StringUtils.abbreviate(secondPart, MAX_LENGTH - firstPart.length());
+            } else {
+                this.firstPart = StringUtils.abbreviate(firstPart, MAX_LENGTH - secondPart.length());
+                this.secondPart = secondPart;
+            }
+        } else {
+            this.firstPart = firstPart;
+            this.secondPart = secondPart;
+        }
         this.length = firstPart.length() + secondPart.length();
         this.descriptionProcessor = descriptionProcessor;
     }

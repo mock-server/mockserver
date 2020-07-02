@@ -43,7 +43,7 @@ public class HashMapMatcher extends NotMatcher<KeysAndValues> {
             }
             result = allKeysNotted || allKeysOptional;
         } else {
-            result = matched.toCaseInsensitiveRegexMultiMap(mockServerLogger, controlPlaneMatcher).containsAll(matcher);
+            result = matched.toCaseInsensitiveRegexMultiMap(mockServerLogger, controlPlaneMatcher).containsAll(matcher, context != null ? context.getLogCorrelationId() : null);
         }
 
         if (!result && context != null) {

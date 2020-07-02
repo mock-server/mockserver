@@ -207,6 +207,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                         new LogEntry()
                             .setType(EXPECTATION_MATCHED)
                             .setLogLevel(Level.INFO)
+                            .setCorrelationId(requestDefinition.getLogCorrelationId())
                             .setHttpRequest(request)
                             .setExpectation(this.expectation)
                             .setMessageFormat(this.expectation == null ? REQUEST_DID_MATCH : EXPECTATION_DID_MATCH)
@@ -219,6 +220,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                         new LogEntry()
                             .setType(EXPECTATION_NOT_MATCHED)
                             .setLogLevel(Level.INFO)
+                            .setCorrelationId(requestDefinition.getLogCorrelationId())
                             .setHttpRequest(request)
                             .setExpectation(this.expectation)
                             .setMessageFormat(this.expectation == null ? didNotMatchRequestBecause : becauseBuilder.length() > 0 ? didNotMatchExpectationBecause : didNotMatchExpectationWithoutBecause)
@@ -252,7 +254,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             } else if (this.httpRequest == null) {
                 return true;
             } else {
-                if (matchDifference == null && debugAllMatchFailures) {
+                if (debugAllMatchFailures && matchDifference == null) {
                     matchDifference = new MatchDifference(request);
                 }
                 MatchDifferenceCount matchDifferenceCount = new MatchDifferenceCount(request);
@@ -262,17 +264,18 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                         return false;
                     }
 
+                    boolean pathMatches = StringUtils.isBlank(request.getPath().getValue()) || matches(PATH, matchDifference, pathMatcher, controlPlaneMatcher ? pathParametersParser.normalisePathWithParametersForMatching(request) : request.getPath());
                     Parameters pathParameters = null;
-                    boolean pathMatches;
                     try {
                         pathParameters = controlPlaneMatcher ? pathParametersParser.extractPathParameters(request, httpRequest) : pathParametersParser.extractPathParameters(httpRequest, request);
-                        pathMatches = StringUtils.isBlank(request.getPath().getValue()) || matches(PATH, matchDifference, pathMatcher, controlPlaneMatcher ? pathParametersParser.normalisePathWithParametersForMatching(request) : request.getPath());
                     } catch (IllegalArgumentException iae) {
-                        if (matchDifference != null) {
-                            matchDifference.currentField(PATH);
-                            matchDifference.addDifference(mockServerLogger, iae.getMessage());
+                        if (!httpRequest.getPath().isBlank()) {
+                            if (matchDifference != null) {
+                                matchDifference.currentField(PATH);
+                                matchDifference.addDifference(mockServerLogger, iae.getMessage());
+                            }
+                            pathMatches = false;
                         }
-                        pathMatches = false;
                     }
                     if (failFast(pathMatcher, matchDifference, matchDifferenceCount, becauseBuilder, pathMatches, PATH)) {
                         return false;
@@ -293,11 +296,14 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                         return false;
                     }
 
-                    if (!controlPlaneMatcher) {
-                        expandedParameterDecoder.splitParameters(httpRequest.getPathParameters(), request.getPathParameters());
+                    boolean pathParametersMatches = true;
+                    if (!httpRequest.getPath().isBlank()) {
+                        if (!controlPlaneMatcher) {
+                            expandedParameterDecoder.splitParameters(httpRequest.getPathParameters(), request.getPathParameters());
+                        }
+                        MultiValueMapMatcher pathParameterMatcher = controlPlaneMatcher ? new MultiValueMapMatcher(mockServerLogger, request.getPathParameters(), controlPlaneMatcher) : this.pathParameterMatcher;
+                        pathParametersMatches = matches(PATH_PARAMETERS, matchDifference, pathParameterMatcher, pathParameters);
                     }
-                    MultiValueMapMatcher pathParameterMatcher = controlPlaneMatcher ? new MultiValueMapMatcher(mockServerLogger, request.getPathParameters(), controlPlaneMatcher) : this.pathParameterMatcher;
-                    boolean pathParametersMatches = matches(PATH_PARAMETERS, matchDifference, pathParameterMatcher, pathParameters);
                     if (failFast(pathParameterMatcher, matchDifference, matchDifferenceCount, becauseBuilder, pathParametersMatches, PATH_PARAMETERS)) {
                         return false;
                     }

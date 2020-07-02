@@ -25,7 +25,7 @@ public class RequestDefinitionObjectDescription implements Description {
             "json", true,
             "object", object,
             "first", first,
-            "second", StringUtils.repeat(" ", descriptionProcessor.getMaxOpenAPILength() - length() + 1)  + second
+            "second", StringUtils.repeat(" ", descriptionProcessor.getMaxOpenAPIObjectLength() - length() + 1) + second
         );
     }
 }
