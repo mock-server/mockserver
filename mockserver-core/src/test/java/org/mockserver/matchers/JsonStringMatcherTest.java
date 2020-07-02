@@ -49,6 +49,42 @@ public class JsonStringMatcherTest {
     }
 
     @Test
+    public void shouldMatchExactMatchingJsonWithPlaceholder() {
+        // given
+        String matched = "" +
+            "{" + NEW_LINE +
+            "    \"menu\": {" + NEW_LINE +
+            "        \"id\": \"file\"," + NEW_LINE +
+            "        \"optional\": true," + NEW_LINE +
+            "        \"popup\": {" + NEW_LINE +
+            "            \"menuitem\": [" + NEW_LINE +
+            "                {" + NEW_LINE +
+            "                    \"value\": \"Close\"," + NEW_LINE +
+            "                    \"onclick\": \"CloseDoc()\"" + NEW_LINE +
+            "                }" + NEW_LINE +
+            "            ]" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}";
+
+        // then
+        assertTrue(new JsonStringMatcher(new MockServerLogger(), "{" + NEW_LINE +
+            "    \"menu\": {" + NEW_LINE +
+            "        \"id\": \"file\"," + NEW_LINE +
+            "        \"optional\": \"${json-unit.any-boolean}\"," + NEW_LINE +
+            "        \"popup\": {" + NEW_LINE +
+            "            \"menuitem\": [" + NEW_LINE +
+            "                {" + NEW_LINE +
+            "                    \"value\": \"${json-unit.ignore-element}\"," + NEW_LINE +
+            "                    \"onclick\": \"CloseDoc()\"" + NEW_LINE +
+            "                }" + NEW_LINE +
+            "            ]" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}", MatchType.ONLY_MATCHING_FIELDS).matches(null, matched));
+    }
+
+    @Test
     public void shouldNotMatchExactMatchingJson() {
         // given
         String matched = "" +
