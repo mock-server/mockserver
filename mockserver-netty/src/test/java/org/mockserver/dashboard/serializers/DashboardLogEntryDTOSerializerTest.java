@@ -20,17 +20,9 @@ import static org.mockserver.model.HttpResponse.response;
 
 public class DashboardLogEntryDTOSerializerTest {
 
-    // TODO(jamesdbloom)
-    //    List Construction (to serialised: payload, key, type, description & value)
-    //    - log entries
-    //    - expectations with http request
-    //    - expectations with open api
-    //    - recorded requests
-    //    - proxied requests
-    //    - request filtering (i.e. by path and method)
-
     final ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true,
         new DashboardLogEntryDTOSerializer(),
+        new DashboardLogEntryDTOGroupSerializer(),
         new DescriptionSerializer(),
         new ThrowableSerializer()
     );

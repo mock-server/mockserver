@@ -58,6 +58,11 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
 
     }
 
+    private LogEntry setId(String id) {
+        this.id = id;
+        return this;
+    }
+
     @JsonIgnore
     public String id() {
         if (id == null) {
@@ -67,6 +72,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     }
 
     public void clear() {
+        id = null;
         logLevel = Level.INFO;
         correlationId = null;
         epochTime = -1;
@@ -387,6 +393,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     @SuppressWarnings("MethodDoesntCallSuperMethod")
     public LogEntry clone() {
         return new LogEntry()
+            .setId(id())
             .setType(getType())
             .setLogLevel(getLogLevel())
             .setEpochTime(getEpochTime())
@@ -405,6 +412,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     @Override
     public void translateTo(LogEntry event, long sequence) {
         event
+            .setId(id())
             .setType(getType())
             .setLogLevel(getLogLevel())
             .setEpochTime(getEpochTime())

@@ -3,6 +3,7 @@ package org.mockserver.dashboard;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -60,10 +61,12 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     private static final AttributeKey<Boolean> CHANNEL_UPGRADED_FOR_UI_WEB_SOCKET = AttributeKey.valueOf("CHANNEL_UPGRADED_FOR_UI_WEB_SOCKET");
     private static final String UPGRADE_CHANNEL_FOR_UI_WEB_SOCKET_URI = "/_mockserver_ui_websocket";
     private static final int UI_UPDATE_ITEM_LIMIT = 50;
+    private static ObjectWriter objectWriter;
     private static ObjectMapper objectMapper;
+    private final boolean prettyPrint;
     private final MockServerLogger mockServerLogger;
     private final boolean sslEnabledUpstream;
-    private final HttpState httpStateHandler;
+    private final HttpState httpState;
     private HttpRequestSerializer httpRequestSerializer;
     private WebSocketServerHandshaker handshaker;
     private final Map<ChannelOutboundInvoker, HttpRequest> clientRegistry = new CircularHashMap<>(100);
@@ -73,10 +76,11 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     private ScheduledExecutorService throttleExecutorService;
     private Semaphore semaphore;
 
-    public DashboardWebSocketServerHandler(HttpState httpStateHandler, boolean sslEnabledUpstream) {
-        this.httpStateHandler = httpStateHandler;
-        this.mockServerLogger = httpStateHandler.getMockServerLogger();
+    public DashboardWebSocketServerHandler(HttpState httpState, boolean sslEnabledUpstream, boolean prettyPrint) {
+        this.httpState = httpState;
+        this.mockServerLogger = httpState.getMockServerLogger();
         this.sslEnabledUpstream = sslEnabledUpstream;
+        this.prettyPrint = prettyPrint;
     }
 
     @VisibleForTesting
@@ -144,12 +148,6 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     }
 
     private void upgradeChannel(final ChannelHandlerContext ctx, FullHttpRequest httpRequest) {
-        if (mockServerEventLog == null) {
-            mockServerEventLog = httpStateHandler.getMockServerLog();
-            mockServerEventLog.registerListener(this);
-            requestMatchers = httpStateHandler.getRequestMatchers();
-            requestMatchers.registerListener(this);
-        }
         String webSocketURL = (sslEnabledUpstream ? "wss" : "ws") + "://" + httpRequest.headers().get(HOST) + UPGRADE_CHANNEL_FOR_UI_WEB_SOCKET_URI;
         if (MockServerLogger.isEnabled(Level.TRACE)) {
             mockServerLogger.logEvent(
@@ -175,13 +173,29 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
                 ctx.channel().newPromise()
             ).addListener((ChannelFutureListener) future -> clientRegistry.put(ctx, request()));
         }
-        if (objectMapper == null) {
+        registerListeners();
+    }
+
+    @VisibleForTesting
+    protected DashboardWebSocketServerHandler registerListeners() {
+        if (mockServerEventLog == null) {
+            mockServerEventLog = httpState.getMockServerLog();
+            mockServerEventLog.registerListener(this);
+            requestMatchers = httpState.getRequestMatchers();
+            requestMatchers.registerListener(this);
+        }
+        if (objectWriter == null) {
             objectMapper = ObjectMapperFactory.createObjectMapper(
                 new DashboardLogEntryDTOSerializer(),
                 new DashboardLogEntryDTOGroupSerializer(),
                 new DescriptionSerializer(),
                 new ThrowableSerializer()
             );
+            if (prettyPrint) {
+                objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
+            } else {
+                objectWriter = objectMapper.writer();
+            }
         }
         if (httpRequestSerializer == null) {
             httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
@@ -208,6 +222,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
                 semaphore.release(1);
             }
         }, 0, 1, SECONDS);
+        return this;
     }
 
     private void handleWebSocketFrame(final ChannelHandlerContext ctx, WebSocketFrame frame) {
@@ -232,7 +247,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
         if (semaphore.tryAcquire()) {
             scheduler.submit(() -> {
                 try {
-                    String text = objectMapper.writeValueAsString(message);
+                    String text = objectWriter.writeValueAsString(message);
                     ctx.writeAndFlush(new TextWebSocketFrame(text));
                 } catch (JsonProcessingException jpe) {
                     mockServerLogger.logEvent(
@@ -338,40 +353,55 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
                     Map<String, DashboardLogEntryDTOGroup> logEntryGroups = new HashMap<>();
                     reverseLogEventsStream
                         .forEach(logEntryDTO -> {
-                            if (logMessages.size() < UI_UPDATE_ITEM_LIMIT) {
-                                DashboardLogEntryDTO dashboardLogEntryDTO = logEntryDTO.setDescription(logMessagesDescriptionProcessor.description(logEntryDTO));
-                                if (isNotBlank(logEntryDTO.getCorrelationId())) {
-                                    DashboardLogEntryDTOGroup logEntryGroup = logEntryGroups.get(logEntryDTO.getCorrelationId());
-                                    if (logEntryGroup == null) {
-                                        logEntryGroup = new DashboardLogEntryDTOGroup(logMessagesDescriptionProcessor);
-                                        logEntryGroups.put(logEntryDTO.getCorrelationId(), logEntryGroup);
-                                        logMessages.add(logEntryGroup);
+                            if (logEntryDTO != null) {
+                                if (logMessages.size() < UI_UPDATE_ITEM_LIMIT) {
+                                    DashboardLogEntryDTO dashboardLogEntryDTO = logEntryDTO.setDescription(logMessagesDescriptionProcessor.description(logEntryDTO));
+                                    if (isNotBlank(logEntryDTO.getCorrelationId())) {
+                                        DashboardLogEntryDTOGroup logEntryGroup = logEntryGroups.get(logEntryDTO.getCorrelationId());
+                                        if (logEntryGroup == null) {
+                                            logEntryGroup = new DashboardLogEntryDTOGroup(logMessagesDescriptionProcessor);
+                                            logEntryGroups.put(logEntryDTO.getCorrelationId(), logEntryGroup);
+                                            logMessages.add(logEntryGroup);
+                                        }
+                                        logEntryGroup.getLogEntryDTOS().add(dashboardLogEntryDTO);
+                                    } else {
+                                        logMessages.add(dashboardLogEntryDTO);
                                     }
-                                    logEntryGroup.getLogEntryDTOS().add(dashboardLogEntryDTO);
-                                } else {
-                                    logMessages.add(dashboardLogEntryDTO);
+                                }
+                                if (recordedRequestsPredicate.test(logEntryDTO) && recordedRequests.size() < UI_UPDATE_ITEM_LIMIT) {
+                                    for (RequestDefinition request : logEntryDTO.getHttpRequests()) {
+                                        if (request != null) {
+                                            Map<String, Object> entry = new HashMap<>();
+                                            entry.put("key", logEntryDTO.getId() + "_request");
+                                            Description description = recordedRequestsDescriptionProcessor.description(logEntryDTO.getHttpRequest());
+                                            if (description != null) {
+                                                entry.put("description", description);
+                                            }
+                                            entry.put("value", request);
+                                            recordedRequests.add(entry);
+                                        }
+                                    }
+                                }
+                                if (proxiedRequestsPredicate.test(logEntryDTO) && proxiedRequests.size() < UI_UPDATE_ITEM_LIMIT) {
+                                    Map<String, Object> value = new HashMap<>();
+                                    if (logEntryDTO.getHttpRequest() != null) {
+                                        value.put("httpRequest", logEntryDTO.getHttpRequest());
+                                    }
+                                    if (logEntryDTO.getHttpResponse() != null) {
+                                        value.put("httpResponse", logEntryDTO.getHttpResponse());
+                                    }
+                                    Map<String, Object> entry = new HashMap<>();
+                                    entry.put("key", logEntryDTO.getId() + "_proxied");
+                                    Description description = proxiedRequestsDescriptionProcessor.description(logEntryDTO.getHttpRequest());
+                                    if (description != null) {
+                                        entry.put("description", description);
+                                    }
+                                    entry.put("value", value);
+                                    if (!value.isEmpty()) {
+                                        proxiedRequests.add(entry);
+                                    }
                                 }
                             }
-                            if (recordedRequestsPredicate.test(logEntryDTO) && recordedRequests.size() < UI_UPDATE_ITEM_LIMIT) {
-                                for (RequestDefinition request : logEntryDTO.getHttpRequests()) {
-                                    recordedRequests.add(ImmutableMap.of(
-                                        "key", logEntryDTO.getId() + "_request",
-                                        "description", recordedRequestsDescriptionProcessor.description(logEntryDTO.getHttpRequest()),
-                                        "value", request
-                                    ));
-                                }
-                            }
-                            if (proxiedRequestsPredicate.test(logEntryDTO) && proxiedRequests.size() < UI_UPDATE_ITEM_LIMIT) {
-                                proxiedRequests.add(ImmutableMap.of(
-                                    "key", logEntryDTO.getId() + "_proxied",
-                                    "description", proxiedRequestsDescriptionProcessor.description(logEntryDTO.getHttpRequest()),
-                                    "value", ImmutableMap.of(
-                                        "httpRequest", logEntryDTO.getHttpRequest(),
-                                        "httpResponse", logEntryDTO.getHttpResponse()
-                                    )
-                                ));
-                            }
-
                         });
                     sendMessage(ctx, httpRequest, ImmutableMap.of(
                         "logMessages", logMessages,
