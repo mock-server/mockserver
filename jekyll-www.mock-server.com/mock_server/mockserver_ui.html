@@ -19,16 +19,31 @@ sitemap:
     <li><strong><a href="#ui_proxied_requests_section">proxied requests</a></strong></li>
 </ul>
 
+<p>The UI can be view by opening the path</p>
+<span class="ui_link"><strong>http(s)://&lt;host&gt;:&lt;port&gt;/mockserver/dashboard</strong></span>
+
+<p>For example if MockServer is running on <strong>localhost</strong> on port <strong>1080</strong> use <strong>http://localhost:1080/mockserver/dashboard</strong></p>
 
 <a id="ui_logs_section" class="anchor" href="#ui_logs_section">&nbsp;</a>
 
 <h2>Logs</h2>
 
+<p>The logs section list all the logs events recorded by MockServer, including errors, request matching, exception creation, deletion, etc, as shown below:</p>
+
 <a href="/images/LogMessageUISection.png" target="_blank"><img class="ui_image" src="/images/LogMessageUISection.png" alt="Log Message UI Section"></a>
+
+<p>To simplify the process of understand how each request is handled and which expectation have or have not been matched all logs events for a single request are grouped together.</p>
+
+<p>In addition, to simplify the process or understand why a given expectation has or has not been matched a <strong>because</strong> section is shown for any <strong>EXPECTATION_NOT_MATCHED</strong> this can be expanded to show the full details of which properties did or did not match.</p>
+<p>If <a href="/mock_server/debugging_issues.html#logging-levels">logLevel</a> is set to <strong>DEBUG</strong> then a detailed reason will be included as shown in the white text below.</p>
+
+<a href="/images/LogMessageUIExpectationNotMatched.png" target="_blank"><img class="ui_image" src="/images/LogMessageUIExpectationNotMatched.png" alt="Log Message UI Expectation Not Matched"></a>
 
 <a id="ui_active_expectations_section" class="anchor" href="#ui_active_expectations_section">&nbsp;</a>
 
 <h2>Active Expectations</h2>
+
+<p>The active expectations section shows all active expectations in the order they are applied, taking into account all factors such as when the expectation was created, its <strong>priority</strong>, its <strong>timeToLive</strong> and its <strong>times</strong></p>
 
 <a href="/images/ActiveExpectationsUISection.png" target="_blank"><img class="ui_image" src="/images/ActiveExpectationsUISection.png" alt="Active Expectations UI Section"></a>
 
@@ -36,10 +51,15 @@ sitemap:
 
 <h2>Received Requests</h2>
 
+<p>The received request section shows all request received in the order were received.</p>
+<p>The list includes request that are matched against an expectation, requests that are proxied and request that are not proxied or matched against any expectation.</p>
+
 <a href="/images/ReceivedRequestsUISection.png" target="_blank"><img class="ui_image_half_width" src="/images/ReceivedRequestsUISection.png" alt="Received Requests UI Section"></a>
 
 <a id="ui_proxied_requests_section" class="anchor" href="#ui_proxied_requests_section">&nbsp;</a>
 
 <h2>Proxied Requests</h2>
+
+<p>The proxied requests section shows request that have been proxied the corresponding response returned.</p>
 
 <a href="/images/ProxiedRequestUISection.png" target="_blank"><img class="ui_image_half_width" src="/images/ProxiedRequestUISection.png" alt="Proxied Requests UI Section"></a>
