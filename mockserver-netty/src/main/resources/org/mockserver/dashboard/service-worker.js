@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/3.6.3/workbox-sw.js");
 
 importScripts(
-    "/mockserver/dashboard/precache-manifest.c1a5d6717d047148d5330e304919a02e.js"
+  "/mockserver/dashboard/precache-manifest.6a320c756e65aca08624956620ee2c2e.js"
 );
 
 workbox.clientsClaim();
@@ -29,6 +29,6 @@ workbox.precaching.suppressWarnings();
 workbox.precaching.precacheAndRoute(self.__precacheManifest, {});
 
 workbox.routing.registerNavigationRoute("/mockserver/dashboard/index.html", {
-
-    blacklist: [/^\/_/, /\/[^\/]+\.[^\/]+$/],
+  
+  blacklist: [/^\/_/,/\/[^\/]+\.[^\/]+$/],
 });
