@@ -137,6 +137,13 @@ public class HttpState {
                     break;
             }
         } catch (IllegalArgumentException iae) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("exception handling request:{}error:{}")
+                    .setArguments(request, iae.getMessage())
+                    .setThrowable(iae)
+            );
             throw new IllegalArgumentException("\"" + request.getFirstQueryStringParameter("type") + "\" is not a valid value for \"type\" parameter, only the following values are supported " + Arrays.stream(ClearType.values()).map(input -> input.name().toLowerCase()).collect(Collectors.toList()));
         }
         System.gc();
@@ -159,6 +166,13 @@ public class HttpState {
                 SECONDS.sleep(10);
                 memoryMonitoring.logMemoryMetrics();
             } catch (InterruptedException ie) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(Level.ERROR)
+                        .setMessageFormat("exception handling reset request:{}")
+                        .setArguments(ie.getMessage())
+                        .setThrowable(ie)
+                );
                 ie.printStackTrace();
             }
         });
@@ -416,10 +430,24 @@ public class HttpState {
 
                 try {
                     return httpResponseFuture.get(maxFutureTimeout(), MILLISECONDS);
-                } catch (ExecutionException | InterruptedException | TimeoutException e) {
-                    throw new RuntimeException("Exception retrieving state for " + request, e);
+                } catch (ExecutionException | InterruptedException | TimeoutException ex) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(Level.ERROR)
+                            .setMessageFormat("exception handling request:{}error:{}")
+                            .setArguments(request, ex.getMessage())
+                            .setThrowable(ex)
+                    );
+                    throw new RuntimeException("Exception retrieving state for " + request, ex);
                 }
             } catch (IllegalArgumentException iae) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(Level.ERROR)
+                        .setMessageFormat("exception handling request:{}error:{}")
+                        .setArguments(request, iae.getMessage())
+                        .setThrowable(iae)
+                );
                 if (iae.getMessage().contains(RetrieveType.class.getSimpleName())) {
                     throw new IllegalArgumentException("\"" + request.getFirstQueryStringParameter("type") + "\" is not a valid value for \"type\" parameter, only the following values are supported " + Arrays.stream(RetrieveType.values()).map(input -> input.name().toLowerCase()).collect(Collectors.toList()));
                 } else {
@@ -494,6 +522,13 @@ public class HttpState {
                         .withStatusCode(CREATED.code())
                         .withBody(getExpectationSerializer().serialize(upsertedExpectations), MediaType.JSON_UTF_8), true);
                 } catch (IllegalArgumentException iae) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(Level.ERROR)
+                            .setMessageFormat("exception handling request for open api expectation:{}error:{}")
+                            .setArguments(request, iae.getMessage())
+                            .setThrowable(iae)
+                    );
                     responseWriter.writeResponse(
                         request,
                         BAD_REQUEST,
@@ -567,7 +602,14 @@ public class HttpState {
 
             try {
                 return canHandle.get(maxFutureTimeout(), MILLISECONDS);
-            } catch (InterruptedException | ExecutionException | TimeoutException ignore) {
+            } catch (InterruptedException | ExecutionException | TimeoutException ex) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(Level.ERROR)
+                        .setMessageFormat("exception handling request:{}error:{}")
+                        .setArguments(request, ex.getMessage())
+                        .setThrowable(ex)
+                );
                 return false;
             }
 
