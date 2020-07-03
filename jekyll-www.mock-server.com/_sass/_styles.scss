@@ -82,6 +82,18 @@ a img.action_image {
     padding-left: 10%;
 }
 
+a img.ui_image {
+    max-width: 1700px;
+    width: 98%;
+    padding: 1%;
+}
+
+a img.ui_image_half_width {
+    max-width: 1700px;
+    width: 50%;
+    padding: 1%;
+}
+
 /*
 The `#menu` `<div>` is the parent `<div>` that contains the `.pure-menu` that
 appears on the left side of the page.
