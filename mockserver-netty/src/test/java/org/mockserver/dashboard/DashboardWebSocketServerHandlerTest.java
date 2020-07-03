@@ -914,16 +914,16 @@ public class DashboardWebSocketServerHandlerTest {
             "      \"httpRequest\" : {" + NEW_LINE +
             "        \"path\" : \"one\"" + NEW_LINE +
             "      }," + NEW_LINE +
+            "      \"httpResponse\" : {" + NEW_LINE +
+            "        \"statusCode\" : 200," + NEW_LINE +
+            "        \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+            "        \"body\" : \"one\"" + NEW_LINE +
+            "      }," + NEW_LINE +
             "      \"times\" : {" + NEW_LINE +
             "        \"unlimited\" : true" + NEW_LINE +
             "      }," + NEW_LINE +
             "      \"timeToLive\" : {" + NEW_LINE +
             "        \"unlimited\" : true" + NEW_LINE +
-            "      }," + NEW_LINE +
-            "      \"httpResponse\" : {" + NEW_LINE +
-            "        \"statusCode\" : 200," + NEW_LINE +
-            "        \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-            "        \"body\" : \"one\"" + NEW_LINE +
             "      }" + NEW_LINE +
             "    }" + NEW_LINE +
             "  }, {" + NEW_LINE +
@@ -935,16 +935,16 @@ public class DashboardWebSocketServerHandlerTest {
             "      \"httpRequest\" : {" + NEW_LINE +
             "        \"path\" : \"two\"" + NEW_LINE +
             "      }," + NEW_LINE +
+            "      \"httpResponse\" : {" + NEW_LINE +
+            "        \"statusCode\" : 200," + NEW_LINE +
+            "        \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+            "        \"body\" : \"two\"" + NEW_LINE +
+            "      }," + NEW_LINE +
             "      \"times\" : {" + NEW_LINE +
             "        \"unlimited\" : true" + NEW_LINE +
             "      }," + NEW_LINE +
             "      \"timeToLive\" : {" + NEW_LINE +
             "        \"unlimited\" : true" + NEW_LINE +
-            "      }," + NEW_LINE +
-            "      \"httpResponse\" : {" + NEW_LINE +
-            "        \"statusCode\" : 200," + NEW_LINE +
-            "        \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-            "        \"body\" : \"two\"" + NEW_LINE +
             "      }" + NEW_LINE +
             "    }" + NEW_LINE +
             "  }, {" + NEW_LINE +
@@ -956,16 +956,16 @@ public class DashboardWebSocketServerHandlerTest {
             "      \"httpRequest\" : {" + NEW_LINE +
             "        \"path\" : \"three\"" + NEW_LINE +
             "      }," + NEW_LINE +
+            "      \"httpResponse\" : {" + NEW_LINE +
+            "        \"statusCode\" : 200," + NEW_LINE +
+            "        \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+            "        \"body\" : \"three\"" + NEW_LINE +
+            "      }," + NEW_LINE +
             "      \"times\" : {" + NEW_LINE +
             "        \"unlimited\" : true" + NEW_LINE +
             "      }," + NEW_LINE +
             "      \"timeToLive\" : {" + NEW_LINE +
             "        \"unlimited\" : true" + NEW_LINE +
-            "      }," + NEW_LINE +
-            "      \"httpResponse\" : {" + NEW_LINE +
-            "        \"statusCode\" : 200," + NEW_LINE +
-            "        \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-            "        \"body\" : \"three\"" + NEW_LINE +
             "      }" + NEW_LINE +
             "    }" + NEW_LINE +
             "  } ]" + NEW_LINE +

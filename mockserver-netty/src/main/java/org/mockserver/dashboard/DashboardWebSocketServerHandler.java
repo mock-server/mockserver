@@ -27,6 +27,7 @@ import org.mockserver.model.OpenAPIDefinition;
 import org.mockserver.model.RequestDefinition;
 import org.mockserver.serialization.HttpRequestSerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
+import org.mockserver.serialization.model.ExpectationDTO;
 import org.mockserver.ui.MockServerLogListener;
 import org.mockserver.ui.MockServerMatcherListener;
 import org.mockserver.ui.MockServerMatcherNotifier;
@@ -333,7 +334,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
                         .stream()
                         .limit(UI_UPDATE_ITEM_LIMIT)
                         .map(requestMatcher -> {
-                            JsonNode expectationJsonNode = objectMapper.valueToTree(requestMatcher.getExpectation());
+                            JsonNode expectationJsonNode = objectMapper.valueToTree(new ExpectationDTO(requestMatcher.getExpectation()));
                             if (requestMatcher.getExpectation().getHttpRequest() instanceof OpenAPIDefinition) {
                                 JsonNode httpRequestJsonNode = expectationJsonNode.get("httpRequest");
                                 if (httpRequestJsonNode instanceof ObjectNode) {

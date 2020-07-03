@@ -6,6 +6,7 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.serialization.model.*;
 
+import static java.nio.charset.StandardCharsets.UTF_16;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.jar.Attributes.Name.CONTENT_TYPE;
 import static junit.framework.TestCase.assertEquals;
@@ -2772,16 +2773,16 @@ public class HttpRequestPropertiesMatcherTest {
                 "   \"some_other_field\": \"some_other_value\" " +
                 "}"
         )).matches(null, new HttpRequest().withBody(
-            new JsonBodyDTO(json("{ \"some_field\": \"some_value\" }")).toString()
+            new JsonBodyDTO(json("{ \"some_field\": \"some_value\" }", MediaType.APPLICATION_JSON)).toString()
         )));
         assertTrue(updateForControlPlane(new HttpRequest().withBody(
             json("" +
                 "{ " +
                 "   \"some_field\": \"some_value\", " +
                 "   \"some_other_field\": \"some_other_value\" " +
-                "}")
+                "}", MediaType.APPLICATION_JSON)
         )).matches(null, new HttpRequest().withBody(
-            new JsonBodyDTO(json("{ \"some_field\": \"some_value\" }")).toString()
+            new JsonBodyDTO(json("{ \"some_field\": \"some_value\" }", MediaType.APPLICATION_JSON)).toString()
         )));
         assertFalse(update(new HttpRequest().withBody(
             "" +
@@ -2790,16 +2791,16 @@ public class HttpRequestPropertiesMatcherTest {
                 "   \"some_other_field\": \"some_other_value\" " +
                 "}"
         )).matches(null, new HttpRequest().withBody(
-            new JsonBodyDTO(json("{ \"some_field\": \"some_value\" }")).toString()
+            new JsonBodyDTO(json("{ \"some_field\": \"some_value\" }", MediaType.APPLICATION_JSON)).toString()
         )));
         assertFalse(update(new HttpRequest().withBody(
             json("" +
                 "{ " +
                 "   \"some_field\": \"some_value\", " +
                 "   \"some_other_field\": \"some_other_value\" " +
-                "}")
+                "}", MediaType.APPLICATION_JSON)
         )).matches(null, new HttpRequest().withBody(
-            new JsonBodyDTO(json("{ \"some_field\": \"some_value\" }")).toString()
+            new JsonBodyDTO(json("{ \"some_field\": \"some_value\" }", MediaType.APPLICATION_JSON)).toString()
         )));
     }
 
@@ -2833,46 +2834,46 @@ public class HttpRequestPropertiesMatcherTest {
             json("" +
                 "{" + NEW_LINE +
                 "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
-                "}" + NEW_LINE)
+                "}" + NEW_LINE, MediaType.APPLICATION_JSON)
         )).matches(null, new HttpRequest().withBody(
             new JsonBodyDTO(json("" +
                 "{" + NEW_LINE +
                 "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
-                "}" + NEW_LINE)).toString()
+                "}" + NEW_LINE, MediaType.APPLICATION_JSON)).toString()
         )));
         assertTrue(updateForControlPlane(new HttpRequest().withBody(
             json("" +
                 "{" + NEW_LINE +
                 "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
-                "}" + NEW_LINE)
+                "}" + NEW_LINE, MediaType.APPLICATION_JSON)
         )).matches(null, new HttpRequest().withBody(
             new JsonBodyDTO(json("" +
                 "{" + NEW_LINE +
                 "  \"digests\" : [ ]" + NEW_LINE +
-                "}" + NEW_LINE)).toString()
+                "}" + NEW_LINE, MediaType.APPLICATION_JSON)).toString()
         )));
         assertFalse(updateForControlPlane(new HttpRequest().withBody(
             json("" +
                 "{" + NEW_LINE +
                 "  \"digests\" : [ ]" + NEW_LINE +
-                "}" + NEW_LINE)
+                "}" + NEW_LINE, MediaType.APPLICATION_JSON)
         )).matches(null, new HttpRequest().withBody(
             new JsonBodyDTO(json("" +
                 "{" + NEW_LINE +
                 "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
-                "}" + NEW_LINE)).toString()
+                "}" + NEW_LINE, MediaType.APPLICATION_JSON)).toString()
         )));
         // doesn't work as serialised BodyDTO for non-control-plane
         assertFalse(update(new HttpRequest().withBody(
             json("" +
                 "{" + NEW_LINE +
                 "  \"digests\" : [ ]" + NEW_LINE +
-                "}" + NEW_LINE)
+                "}" + NEW_LINE, MediaType.APPLICATION_JSON)
         )).matches(null, new HttpRequest().withBody(
             new JsonBodyDTO(json("" +
                 "{" + NEW_LINE +
                 "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
-                "}" + NEW_LINE)).toString()
+                "}" + NEW_LINE, MediaType.APPLICATION_JSON)).toString()
         )));
     }
 
@@ -2883,36 +2884,36 @@ public class HttpRequestPropertiesMatcherTest {
                 "{ " +
                 "   \"some_field\": \"我说中国话\", " +
                 "   \"some_other_field\": \"some_other_value\" " +
-                "}", UTF_8
+                "}", UTF_16
         )).matches(null, new HttpRequest().withHeader(CONTENT_TYPE.toString(), MediaType.APPLICATION_JSON_UTF_8.toString()).withBody(
-            new JsonBodyDTO(json("{ \"some_field\": \"我说中国话\" }", UTF_8, MatchType.ONLY_MATCHING_FIELDS)).toString()
+            new JsonBodyDTO(json("{ \"some_field\": \"我说中国话\" }", UTF_16, MatchType.ONLY_MATCHING_FIELDS)).toString()
         )));
         assertTrue(updateForControlPlane(new HttpRequest().withBody(
             json("" +
                 "{ " +
                 "   \"some_field\": \"我说中国话\", " +
                 "   \"some_other_field\": \"some_other_value\" " +
-                "}", UTF_8)
+                "}", UTF_16)
         )).matches(null, new HttpRequest().withHeader(CONTENT_TYPE.toString(), MediaType.APPLICATION_JSON_UTF_8.toString()).withBody(
-            new JsonBodyDTO(json("{ \"some_field\": \"我说中国话\" }", UTF_8, MatchType.ONLY_MATCHING_FIELDS)).toString()
+            new JsonBodyDTO(json("{ \"some_field\": \"我说中国话\" }", UTF_16, MatchType.ONLY_MATCHING_FIELDS)).toString()
         )));
         assertFalse(update(new HttpRequest().withHeader(CONTENT_TYPE.toString(), MediaType.APPLICATION_JSON_UTF_8.toString()).withBody(
             "" +
                 "{ " +
                 "   \"some_field\": \"我说中国话\", " +
                 "   \"some_other_field\": \"some_other_value\" " +
-                "}", UTF_8
+                "}", UTF_16
         )).matches(null, new HttpRequest().withHeader(CONTENT_TYPE.toString(), MediaType.APPLICATION_JSON_UTF_8.toString()).withBody(
-            new JsonBodyDTO(json("{ \"some_field\": \"我说中国话\" }", UTF_8, MatchType.ONLY_MATCHING_FIELDS)).toString()
+            new JsonBodyDTO(json("{ \"some_field\": \"我说中国话\" }", UTF_16, MatchType.ONLY_MATCHING_FIELDS)).toString()
         )));
         assertFalse(update(new HttpRequest().withBody(
             json("" +
                 "{ " +
                 "   \"some_field\": \"我说中国话\", " +
                 "   \"some_other_field\": \"some_other_value\" " +
-                "}", UTF_8)
+                "}", UTF_16)
         )).matches(null, new HttpRequest().withBody(
-            new JsonBodyDTO(json("{ \"some_field\": \"我说中国话\" }", UTF_8, MatchType.ONLY_MATCHING_FIELDS)).toString()
+            new JsonBodyDTO(json("{ \"some_field\": \"我说中国话\" }", UTF_16, MatchType.ONLY_MATCHING_FIELDS)).toString()
         )));
     }
 

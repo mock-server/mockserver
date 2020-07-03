@@ -23,24 +23,32 @@ public class JsonBodyDTOSerializer extends StdSerializer<JsonBodyDTO> {
 
     @Override
     public void serialize(JsonBodyDTO jsonBodyDTO, JsonGenerator jgen, SerializerProvider provider) throws IOException {
-        jgen.writeStartObject();
-        if (jsonBodyDTO.getNot() != null && jsonBodyDTO.getNot()) {
-            jgen.writeBooleanField("not", jsonBodyDTO.getNot());
+        boolean notNonDefault = jsonBodyDTO.getNot() != null && jsonBodyDTO.getNot();
+        boolean optionalNonDefault = jsonBodyDTO.getOptional() != null && jsonBodyDTO.getOptional();
+        boolean contentTypeNonDefault = jsonBodyDTO.getContentType() != null && !jsonBodyDTO.getContentType().equals(JsonBody.DEFAULT_JSON_CONTENT_TYPE.toString());
+        boolean matchTypeNonDefault = jsonBodyDTO.getMatchType() != JsonBody.DEFAULT_MATCH_TYPE;
+        if (notNonDefault || optionalNonDefault || contentTypeNonDefault || matchTypeNonDefault) {
+            jgen.writeStartObject();
+            if (notNonDefault) {
+                jgen.writeBooleanField("not", jsonBodyDTO.getNot());
+            }
+            if (optionalNonDefault) {
+                jgen.writeBooleanField("optional", jsonBodyDTO.getOptional());
+            }
+            if (contentTypeNonDefault) {
+                jgen.writeStringField("contentType", jsonBodyDTO.getContentType());
+            }
+            jgen.writeStringField("type", jsonBodyDTO.getType().name());
+            jgen.writeObjectField("json", OBJECT_MAPPER.readTree(jsonBodyDTO.getJson()));
+            if (jsonBodyDTO.getRawBytes() != null) {
+                jgen.writeObjectField("rawBytes", jsonBodyDTO.getRawBytes());
+            }
+            if (matchTypeNonDefault) {
+                jgen.writeStringField("matchType", jsonBodyDTO.getMatchType().name());
+            }
+            jgen.writeEndObject();
+        } else {
+            jgen.writeObject(OBJECT_MAPPER.readTree(jsonBodyDTO.getJson()));
         }
-        if (jsonBodyDTO.getOptional() != null && jsonBodyDTO.getOptional()) {
-            jgen.writeBooleanField("optional", jsonBodyDTO.getOptional());
-        }
-        if (jsonBodyDTO.getContentType() != null && !jsonBodyDTO.getContentType().equals(JsonBody.DEFAULT_JSON_CONTENT_TYPE.toString())) {
-            jgen.writeStringField("contentType", jsonBodyDTO.getContentType());
-        }
-        jgen.writeStringField("type", jsonBodyDTO.getType().name());
-        jgen.writeObjectField("json", OBJECT_MAPPER.readTree(jsonBodyDTO.getJson()));
-        if (jsonBodyDTO.getRawBytes() != null) {
-            jgen.writeObjectField("rawBytes", jsonBodyDTO.getRawBytes());
-        }
-        if (jsonBodyDTO.getMatchType() != JsonBody.DEFAULT_MATCH_TYPE) {
-            jgen.writeStringField("matchType", jsonBodyDTO.getMatchType().name());
-        }
-        jgen.writeEndObject();
     }
 }
