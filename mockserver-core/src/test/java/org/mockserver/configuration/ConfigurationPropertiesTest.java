@@ -789,6 +789,28 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldSetAndReadLaunchUIForLogLevelDebug() {
+        boolean originalSetting = launchUIForLogLevelDebug();
+        try {
+            // when
+            launchUIForLogLevelDebug(true);
+
+            // then
+            assertTrue(launchUIForLogLevelDebug());
+            assertEquals("true", System.getProperty("mockserver.launchUIForLogLevelDebug"));
+
+            // when
+            launchUIForLogLevelDebug(false);
+
+            // then
+            assertFalse(launchUIForLogLevelDebug());
+            assertEquals("false", System.getProperty("mockserver.launchUIForLogLevelDebug"));
+        } finally {
+            launchUIForLogLevelDebug(originalSetting);
+        }
+    }
+
+    @Test
     public void shouldSetAndReadMatchersFailFast() {
         boolean originalSetting = matchersFailFast();
         try {

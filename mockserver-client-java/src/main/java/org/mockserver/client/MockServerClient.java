@@ -20,7 +20,9 @@ import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
 
+import java.awt.*;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -220,6 +222,62 @@ public class MockServerClient implements Stoppable {
 
     private HttpResponse sendRequest(HttpRequest request) {
         return sendRequest(request, false);
+    }
+
+    /**
+     * Launch UI and wait the default period to allow the UI to launch and start collecting logs,
+     * this ensures that the log are visible in the UI even if MockServer is shutdown by a test
+     * shutdown function, such as After, AfterClass, AfterAll, etc
+     */
+    public MockServerClient openUI() {
+        return openUI(SECONDS, 2);
+    }
+
+    /**
+     * Launch UI and wait a specified period to allow the UI to launch and start collecting logs,
+     * this ensures that the log are visible in the UI even if MockServer is shutdown by a test
+     * shutdown function, such as After, AfterClass, AfterAll, etc
+     *
+     * @param timeUnit TimeUnit the time unit, for example TimeUnit.SECONDS
+     * @param delay    the number of time units to delay before the function returns to ensure the UI is receiving logs
+     */
+    public MockServerClient openUI(TimeUnit timeUnit, long delay) {
+        try {
+            Desktop desktop = Desktop.getDesktop();
+            if (desktop != null) {
+                if (desktop.isSupported(Desktop.Action.BROWSE)) {
+                    desktop.browse(new URI("http" + (Boolean.TRUE.equals(secure) ? "s" : "") + "://" + host + ":" + port() + "/mockserver/dashboard"));
+                    timeUnit.sleep(delay);
+                } else {
+                    if (MockServerLogger.isEnabled(WARN)) {
+                        MOCK_SERVER_LOGGER.logEvent(
+                            new LogEntry()
+                                .setLogLevel(WARN)
+                                .setMessageFormat("browse to URL not supported by the desktop instance from JVM")
+                        );
+                    }
+                }
+            } else {
+                if (MockServerLogger.isEnabled(WARN)) {
+                    MOCK_SERVER_LOGGER.logEvent(
+                        new LogEntry()
+                            .setLogLevel(WARN)
+                            .setMessageFormat("unable to obtain the desktop instance from JVM")
+                    );
+                }
+            }
+        } catch (Throwable throwable) {
+            if (MockServerLogger.isEnabled(ERROR)) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setLogLevel(ERROR)
+                        .setMessageFormat("exception while attempting to launch UI" + (isNotBlank(throwable.getMessage()) ? " " + throwable.getMessage() : ""))
+                        .setThrowable(throwable)
+                );
+            }
+            throw new ClientException("exception while attempting to launch UI" + (isNotBlank(throwable.getMessage()) ? " " + throwable.getMessage() : ""));
+        }
+        return this;
     }
 
     /**

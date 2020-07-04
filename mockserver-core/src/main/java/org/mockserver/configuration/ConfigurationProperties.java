@@ -107,6 +107,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_METRICS_ENABLED = "mockserver.metricsEnabled";
     private static final String MOCKSERVER_DISABLE_SYSTEM_OUT = "mockserver.disableSystemOut";
     private static final String MOCKSERVER_DETAILED_MATCH_FAILURES = "mockserver.detailedMatchFailures";
+    private static final String MOCKSERVER_LAUNCH_UI_FOR_LOG_LEVEL_DEBUG = "mockserver.launchUIForLogLevelDebug";
     private static final String MOCKSERVER_MATCHERS_FAIL_FAST = "mockserver.matchersFailFast";
     private static final String MOCKSERVER_LOCAL_BOUND_IP = "mockserver.localBoundIP";
     private static final String MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION = "mockserver.attemptToProxyIfNoMatchingExpectation";
@@ -207,7 +208,7 @@ public class ConfigurationProperties {
     private static String javaLoggerLogLevel = getSLF4JOrJavaLoggerToJavaLoggerLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, "MOCKSERVER_LOG_LEVEL", DEFAULT_LOG_LEVEL).toUpperCase());
     private static boolean metricsEnabled = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_METRICS_ENABLED, "MOCKSERVER_METRICS_ENABLED", "" + false));
     private static boolean disableSystemOut = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DISABLE_SYSTEM_OUT, "MOCKSERVER_DISABLE_SYSTEM_OUT", "" + false));
-    private static boolean detailedMatchFailures = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DETAILED_MATCH_FAILURES, "MOCKSERVER_DETAILED_MATCH_FAILURES", "" + true));
+    private static boolean detailedMatchFailures = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_LAUNCH_UI_FOR_LOG_LEVEL_DEBUG, "MOCKSERVER_DETAILED_MATCH_FAILURES", "" + true));
     private static boolean matchersFailFast = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DETAILED_MATCH_FAILURES, "MOCKSERVER_DETAILED_MATCH_FAILURES", "" + true));
     private static boolean attemptToProxyIfNoMatchingExpectation = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION, "MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION", "" + true));
     private static boolean enableMTLS = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_REQUIRED, "MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_REQUIRED", DEFAULT_TLS_MUTUAL_AUTHENTICATION_REQUIRED));
@@ -792,6 +793,19 @@ public class ConfigurationProperties {
     public static void detailedMatchFailures(boolean enable) {
         System.setProperty(MOCKSERVER_DETAILED_MATCH_FAILURES, "" + enable);
         detailedMatchFailures = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DETAILED_MATCH_FAILURES, "MOCKSERVER_DETAILED_MATCH_FAILURES", "" + true));
+    }
+
+    public static boolean launchUIForLogLevelDebug() {
+        return Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_LAUNCH_UI_FOR_LOG_LEVEL_DEBUG, "MOCKSERVER_LAUNCH_UI_FOR_LOG_LEVEL_DEBUG", "" + true));
+    }
+
+    /**
+     * If true (the default) the ClientAndServer constructor will open the UI in the default browser when the log level is set to DEBUG.
+     *
+     * @param enable enabled ClientAndServer constructor launching UI when log level is DEBUG
+     */
+    public static void launchUIForLogLevelDebug(boolean enable) {
+        System.setProperty(MOCKSERVER_LAUNCH_UI_FOR_LOG_LEVEL_DEBUG, "" + enable);
     }
 
     public static boolean matchersFailFast() {

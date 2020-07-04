@@ -27,8 +27,8 @@ public abstract class Action<T extends Action> extends ObjectWithJsonToString {
     /**
      * The delay before responding with this request as a Delay object, for example new Delay(TimeUnit.SECONDS, 3)
      *
-     * @param timeUnit a the time unit, for example TimeUnit.SECONDS
-     * @param value    a the number of time units to delay the response
+     * @param timeUnit the time unit, for example TimeUnit.SECONDS
+     * @param value    the number of time units to delay the response
      */
     public T withDelay(TimeUnit timeUnit, long value) {
         this.delay = new Delay(timeUnit, value);
