@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - matching xml bodies against JSON Schema matchers
 - matching parameter bodies against JSON Schema matchers
 - grouping of log events in UI to simplify analysis of expectation matches / non matches for a request
+- added extra log messages to indicate progress for large json expectation initializers
+- added log messages for invalid control plane request to make control plane errors clearer in the UI
 
 ### Changed
 - reduced time range of CA certificates to increase likelihood they will be accepted by strict systems (i.e. VMWare vCenter Server)
