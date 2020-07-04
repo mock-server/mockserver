@@ -28,7 +28,7 @@
 
    NOTE: It may take a few minutes for the LoadBalancer IP to be available.
          You can watch the status of by running 'kubectl get svc -w {{ template "chart.name" . }}'
-   export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ template "chart.fullname" . }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+   export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ template "chart.fullname" . }} -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
    export MOCKSERVER_HOST=$SERVICE_IP:{{ .Values.service.port }}
    echo http://$MOCKSERVER_HOST
 
