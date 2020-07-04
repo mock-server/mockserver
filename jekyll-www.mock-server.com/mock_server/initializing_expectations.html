@@ -13,9 +13,9 @@ sitemap:
 <p>To ensure expectations are available as soon as MockServer is started it is possible to use an expectation initializer, there are three options:</p>
 
 <ul>
-    <li><strong>initializer class</strong> loaded from the classpath to construct an array of expectations</li>
-    <li><strong>initializer JSON file</strong> loaded from the filesystem containing a serialised array of expectations</li>
-    <li><strong>maven plugin initializer class</strong> loaded from the classpath to add expectations using the MockServerClient</li>
+    <li><strong><a href="#expectation_initializer_class">initializer class</a></strong> loaded from the classpath to construct an array of expectations</li>
+    <li><strong><a href="#expectation_initializer_json">initializer JSON file</a></strong> loaded from the filesystem containing a serialised array of expectations</li>
+    <li><strong><a href="#maven_plugin_expectation_initializer_class">maven plugin initializer class</a></strong> loaded from the classpath to add expectations using the MockServerClient</li>
 </ul>
 
 <p><strong>Note:</strong> all three options require the class or file to be available to the MockServer, i.e. in the local classpath or filesystem.  To remotely initialise the MockServer a client is required to connect to the MockServer after it has started and submit one or more expectations.</p>
