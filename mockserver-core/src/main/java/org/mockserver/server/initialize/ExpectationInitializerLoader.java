@@ -1,6 +1,7 @@
 package org.mockserver.server.initialize;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
@@ -15,7 +16,7 @@ import java.lang.reflect.Constructor;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
-import static org.slf4j.event.Level.WARN;
+import static org.slf4j.event.Level.*;
 
 /**
  * @author jamesdbloom
@@ -43,6 +44,15 @@ public class ExpectationInitializerLoader {
         try {
             String initializationClass = ConfigurationProperties.initializationClass();
             if (isNotBlank(initializationClass)) {
+                if (MockServerLogger.isEnabled(INFO)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(SERVER_CONFIGURATION)
+                            .setLogLevel(INFO)
+                            .setMessageFormat("loading class initialization file:{}")
+                            .setArguments(initializationClass)
+                    );
+                }
                 ClassLoader contextClassLoader = ExpectationInitializerLoader.class.getClassLoader();
                 if (contextClassLoader != null && isNotEmpty(initializationClass)) {
                     Constructor<?> initializerClassConstructor = contextClassLoader.loadClass(initializationClass).getDeclaredConstructor();
@@ -61,8 +71,26 @@ public class ExpectationInitializerLoader {
     private Expectation[] retrieveExpectationsFromJson() {
         String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
         if (isNotBlank(initializationJsonPath)) {
+            if (MockServerLogger.isEnabled(INFO)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(SERVER_CONFIGURATION)
+                        .setLogLevel(INFO)
+                        .setMessageFormat("loading JSON initialization file:{}")
+                        .setArguments(initializationJsonPath)
+                );
+            }
             try {
                 String jsonExpectations = FileReader.readFileFromClassPathOrPath(initializationJsonPath);
+                if (MockServerLogger.isEnabled(DEBUG)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(SERVER_CONFIGURATION)
+                            .setLogLevel(DEBUG)
+                            .setMessageFormat("loaded JSON initialization file:{}content:{}")
+                            .setArguments(initializationJsonPath, StringUtils.abbreviate(jsonExpectations, 1000))
+                    );
+                }
                 if (isNotBlank(jsonExpectations)) {
                     return expectationSerializer.deserializeArray(jsonExpectations, true);
                 } else {
