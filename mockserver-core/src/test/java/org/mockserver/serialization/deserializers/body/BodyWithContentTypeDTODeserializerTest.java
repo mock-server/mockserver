@@ -20,6 +20,33 @@ import static org.mockserver.model.StringBody.exact;
 public class BodyWithContentTypeDTODeserializerTest {
 
     @Test
+    public void shouldParseJsonBodyWithInvalidType() throws IOException {
+        // given
+        String json = ("{\"httpResponse\":{\"body\":{\"type\":\"info\",\"body\":[{\"info\":{\"address\":\"192.168.0.0\",\"os\":\"Windows\",\"name\":\"HOMEPC\",\"version\":\"XP SP3\",\"key\":\"WINXPSP3H\"}}],\"timestamp\":\"2020-02-19T08:09:32.802\"}}}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpResponse(
+                new HttpResponseDTO().setBody(new JsonBodyDTO(json("{\n" +
+                    "  \"type\" : \"info\",\n" +
+                    "  \"body\" : [ {\n" +
+                    "    \"info\" : {\n" +
+                    "      \"address\" : \"192.168.0.0\",\n" +
+                    "      \"os\" : \"Windows\",\n" +
+                    "      \"name\" : \"HOMEPC\",\n" +
+                    "      \"version\" : \"XP SP3\",\n" +
+                    "      \"key\" : \"WINXPSP3H\"\n" +
+                    "    }\n" +
+                    "  } ],\n" +
+                    "  \"timestamp\" : \"2020-02-19T08:09:32.802\"\n" +
+                    "}")))
+            ), expectationDTO);
+    }
+
+    @Test
     public void shouldParseJsonWithInvalidBody() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
