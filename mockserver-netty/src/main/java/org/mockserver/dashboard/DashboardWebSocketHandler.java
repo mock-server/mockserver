@@ -53,7 +53,7 @@ import static org.mockserver.model.HttpRequest.request;
  * @author jamesdbloom
  */
 @ChannelHandler.Sharable
-public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapter implements MockServerLogListener, MockServerMatcherListener {
+public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter implements MockServerLogListener, MockServerMatcherListener {
 
     private static final Predicate<DashboardLogEntryDTO> recordedRequestsPredicate = input
         -> input.getType() == RECEIVED_REQUEST;
@@ -77,7 +77,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     private ScheduledExecutorService throttleExecutorService;
     private Semaphore semaphore;
 
-    public DashboardWebSocketServerHandler(HttpState httpState, boolean sslEnabledUpstream, boolean prettyPrint) {
+    public DashboardWebSocketHandler(HttpState httpState, boolean sslEnabledUpstream, boolean prettyPrint) {
         this.httpState = httpState;
         this.mockServerLogger = httpState.getMockServerLogger();
         this.sslEnabledUpstream = sslEnabledUpstream;
@@ -178,7 +178,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     }
 
     @VisibleForTesting
-    protected DashboardWebSocketServerHandler registerListeners() {
+    protected DashboardWebSocketHandler registerListeners() {
         if (mockServerEventLog == null) {
             mockServerEventLog = httpState.getMockServerLog();
             mockServerEventLog.registerListener(this);

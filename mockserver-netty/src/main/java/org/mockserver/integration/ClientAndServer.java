@@ -78,11 +78,11 @@ public class ClientAndServer extends MockServerClient {
      * shutdown function, such as After, AfterClass, AfterAll, etc
      *
      * @param timeUnit TimeUnit the time unit, for example TimeUnit.SECONDS
-     * @param delay    the number of time units to delay before the function returns to ensure the UI is receiving logs
+     * @param pause    the number of time units to delay before the function returns to ensure the UI is receiving logs
      */
     @Override
-    public ClientAndServer openUI(TimeUnit timeUnit, long delay) {
-        super.openUI(timeUnit, delay);
+    public ClientAndServer openUI(TimeUnit timeUnit, long pause) {
+        super.openUI(timeUnit, pause);
         return this;
     }
 

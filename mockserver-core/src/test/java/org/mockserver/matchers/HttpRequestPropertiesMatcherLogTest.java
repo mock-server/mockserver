@@ -93,11 +93,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                 "  {" + NEW_LINE +
                 "    \"method\" : \"HEAD\"" + NEW_LINE +
                 "  }" + NEW_LINE +
-                NEW_LINE +
-                "------------------------------------" + NEW_LINE +
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                NEW_LINE +
-                "  { }" + NEW_LINE +
                 NEW_LINE
         ));
     }
@@ -159,11 +154,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                 "  " + NEW_LINE +
                 "      POST" + NEW_LINE +
                 NEW_LINE +
-                NEW_LINE +
-                "------------------------------------" + NEW_LINE +
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                NEW_LINE +
-                "  { }" + NEW_LINE +
                 NEW_LINE
         ));
     }
@@ -237,11 +227,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                 "  " + NEW_LINE +
                 "      POST" + NEW_LINE +
                 NEW_LINE +
-                NEW_LINE +
-                "------------------------------------" + NEW_LINE +
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                NEW_LINE +
-                "  { }" + NEW_LINE +
                 NEW_LINE
         ));
     }
@@ -350,11 +335,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      false" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -478,11 +458,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      false" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -565,11 +540,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                 "  " + NEW_LINE +
                 "      null" + NEW_LINE +
                 NEW_LINE +
-                NEW_LINE +
-                "------------------------------------" + NEW_LINE +
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                NEW_LINE +
-                "  { }" + NEW_LINE +
                 NEW_LINE
         ));
     }
@@ -654,11 +624,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "      null" + NEW_LINE +
                     "  " + NEW_LINE +
                     "  sslMatches matched" + NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -766,11 +731,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "      null" + NEW_LINE +
                     "  " + NEW_LINE +
                     "  sslMatches matched" + NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -857,11 +817,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      null" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -907,11 +862,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      OPTIONS" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -957,11 +907,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      POST" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -1008,11 +953,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      /dWM/dWM+ZA==" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -1059,11 +999,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      pathsome" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -1110,11 +1045,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      somePath" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -1179,11 +1109,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      multimap is not a subset" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -1247,11 +1172,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      multimap is not a subset" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -1315,11 +1235,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      multimap is not a subset" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -1380,11 +1295,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      multimap is not a subset" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -1445,11 +1355,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      multimap is not a subset" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -1497,11 +1402,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      bodysome" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -1547,11 +1447,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "  " + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -1612,11 +1507,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      xpath did not evaluate to truthy" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -1684,11 +1574,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      Expected child nodelist length '2' but was '1' - comparing <element...> at /element[1] to <element...> at /element[1]" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -1843,11 +1728,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      cvc-complex-type.2.4.a: Invalid content was found starting with element 'heading'. One of '{from}' is expected." + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -1915,11 +1795,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      missing element at \"some_field\"" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -2079,11 +1954,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "      1 error:" + NEW_LINE +
                     "       - field: \"/tags\" for schema: \"/properties/tags\" has error: \"array is too short: must have at least 1 elements but instance has 0 elements\"" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -2209,11 +2079,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      json path did not evaluate to truthy" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -2276,11 +2141,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "        6d756368206d756368206c6f6e67657220736f2074686174207468652062696e" + NEW_LINE +
                     "        61727920646174612069732077726170706564" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -2341,11 +2201,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      multimap is not a subset" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -2406,11 +2261,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      multimap is not a subset" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {
@@ -2472,11 +2322,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  " + NEW_LINE +
                     "      map is not a subset" + NEW_LINE +
                     NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  { }" + NEW_LINE +
                     NEW_LINE
             ));
         } finally {

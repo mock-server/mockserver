@@ -293,13 +293,6 @@ public class HttpRequestHandlerTest {
                     "      \"body\" : \"response_one\"" + NEW_LINE +
                     "    }" + NEW_LINE +
                     "  }" + NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                    NEW_LINE +
-                    "  {" + NEW_LINE +
-                    "    \"path\" : \"request_one\"" + NEW_LINE +
-                    "  }" + NEW_LINE +
                     NEW_LINE))
             );
         } finally {

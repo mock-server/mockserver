@@ -48,6 +48,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     private Expectation expectation;
     private Throwable throwable;
     private Runnable consumer;
+    private boolean deleted = false;
 
     private String messageFormat;
     private String message;
@@ -84,6 +85,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         expectation = null;
         throwable = null;
         consumer = null;
+        deleted = false;
         messageFormat = null;
         message = null;
         arguments = null;
@@ -261,6 +263,15 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         return this;
     }
 
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public LogEntry setDeleted(boolean deleted) {
+        this.deleted = deleted;
+        return this;
+    }
+
     public String getMessageFormat() {
         return messageFormat;
     }
@@ -406,7 +417,8 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
             .setArguments(getArguments())
             .setBecause(getBecause())
             .setThrowable(getThrowable())
-            .setConsumer(getConsumer());
+            .setConsumer(getConsumer())
+            .setDeleted(isDeleted());
     }
 
     @Override
@@ -425,7 +437,8 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
             .setArguments(getArguments())
             .setBecause(getBecause())
             .setThrowable(getThrowable())
-            .setConsumer(getConsumer());
+            .setConsumer(getConsumer())
+            .setDeleted(isDeleted());
         clear();
     }
 
@@ -449,6 +462,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         NO_MATCH_RESPONSE,
         VERIFICATION,
         VERIFICATION_FAILED,
+        VERIFICATION_PASSED,
         FORWARDED_REQUEST,
         TEMPLATE_GENERATED,
         SERVER_CONFIGURATION,

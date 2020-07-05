@@ -17,7 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.mockserver.closurecallback.websocketregistry.CallbackWebSocketServerHandler;
 import org.mockserver.codec.MockServerHttpServerCodec;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.dashboard.DashboardWebSocketServerHandler;
+import org.mockserver.dashboard.DashboardWebSocketHandler;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.LoggingHandler;
@@ -249,7 +249,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                 .addListener((ChannelFuture future) -> future.channel().disconnect().awaitUninterruptibly());
         } else {
             addLastIfNotPresent(pipeline, new CallbackWebSocketServerHandler(httpStateHandler));
-            addLastIfNotPresent(pipeline, new DashboardWebSocketServerHandler(httpStateHandler, isSslEnabledUpstream(ctx.channel()), false));
+            addLastIfNotPresent(pipeline, new DashboardWebSocketHandler(httpStateHandler, isSslEnabledUpstream(ctx.channel()), false));
             addLastIfNotPresent(pipeline, new MockServerHttpServerCodec(mockServerLogger, isSslEnabledUpstream(ctx.channel())));
             addLastIfNotPresent(pipeline, new HttpRequestHandler(server, httpStateHandler, actionHandler));
             pipeline.remove(this);

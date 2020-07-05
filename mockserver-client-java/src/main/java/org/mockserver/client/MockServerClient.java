@@ -230,7 +230,7 @@ public class MockServerClient implements Stoppable {
      * shutdown function, such as After, AfterClass, AfterAll, etc
      */
     public MockServerClient openUI() {
-        return openUI(SECONDS, 2);
+        return openUI(SECONDS, 1);
     }
 
     /**
@@ -239,15 +239,15 @@ public class MockServerClient implements Stoppable {
      * shutdown function, such as After, AfterClass, AfterAll, etc
      *
      * @param timeUnit TimeUnit the time unit, for example TimeUnit.SECONDS
-     * @param delay    the number of time units to delay before the function returns to ensure the UI is receiving logs
+     * @param pause    the number of time units to delay before the function returns to ensure the UI is receiving logs
      */
-    public MockServerClient openUI(TimeUnit timeUnit, long delay) {
+    public MockServerClient openUI(TimeUnit timeUnit, long pause) {
         try {
             Desktop desktop = Desktop.getDesktop();
             if (desktop != null) {
                 if (desktop.isSupported(Desktop.Action.BROWSE)) {
                     desktop.browse(new URI("http" + (Boolean.TRUE.equals(secure) ? "s" : "") + "://" + host + ":" + port() + "/mockserver/dashboard"));
-                    timeUnit.sleep(delay);
+                    timeUnit.sleep(pause);
                 } else {
                     if (MockServerLogger.isEnabled(WARN)) {
                         MOCK_SERVER_LOGGER.logEvent(

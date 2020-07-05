@@ -10,7 +10,7 @@ sitemap:
   lastmod: 2019-11-10T08:00:00+01:00
 ---
 
-<p>MockServer has a UI that can be used to view the internal state and logs within MockServer, including:.</p>
+<p>MockServer has a UI that can be used to view the internal state within MockServer, including:</p>
 
 <ul>
     <li><strong><a href="#ui_logs_section">logs</a></strong></li>
@@ -34,9 +34,9 @@ sitemap:
 
 <p>The UI is launched using the default browser which the JVM determines from the operating system.</p>
 
-<p>The <span class="keyword">openUI()</span> method sleeps for 2 seconds to allow the UI to launch and start collecting logs, this ensures that the log are visible in the UI even if MockServer is shutdown by a test shutdown function, such as After, AfterClass, AfterAll, etc.  The delay period can be configured using the method <span class="keyword">openUI(TimeUnit timeUnit, long delay)</span>.</p>
+<p>The <span class="keyword">openUI()</span> method pauses for 1 second after launching the browser to allow the UI to launch and start collecting logs, this ensures that the log are visible in the UI even if MockServer is shutdown quickly by a test shutdown function, such as After, AfterClass, AfterAll, etc. The pause period can be configured using the method <span class="keyword">openUI(TimeUnit timeUnit, long pause)</span>.</p>
 
-<p>If the <a href="/mock_server/debugging_issues.html#logging-levels">logLevel</a> is set to <span class="string_literal">DEBUG</span> the <span class="this_value">ClientAndServer</span> constructor or static factor methods will launch the UI.  This automatic launching of the UI can be disabled using the <strong><a href="/mock_server/configuration_properties.html#button_configuration_launch_ui__debug">detailedMatchFailures</a></strong> configuration property.</p>
+<p>To simplify debugging request matching when multiple instances of MockServer are created if the <a href="/mock_server/debugging_issues.html#logging-levels">logLevel</a> is set to <span class="string_literal">DEBUG</span> and the <strong><a href="/mock_server/configuration_properties.html#button_configuration_launch_ui__debug">launchUIForLogLevelDebug</a></strong> configuration property is enabled (default: false) the <span class="this_value">ClientAndServer</span> constructor or static factor methods will launch the UI so that it is possible to see all logs events for every instance of MockServer.</p>
 
 <a id="ui_logs_section" class="anchor" href="#ui_logs_section">&nbsp;</a>
 

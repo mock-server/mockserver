@@ -30,7 +30,7 @@ import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
-public class DashboardWebSocketServerHandlerTest {
+public class DashboardWebSocketHandlerTest {
 
     // TODO(jamesdbloom)
     //    - request filtering (i.e. by path and method)
@@ -977,11 +977,11 @@ public class DashboardWebSocketServerHandlerTest {
 
     private void shouldRenderLogEntriesCorrectly(List<LogEntry> logEntries, List<Expectation> expectations, String renderedList) throws InterruptedException, ExecutionException, TimeoutException {
         // given
-        MockServerLogger mockServerLogger = new MockServerLogger(DashboardWebSocketServerHandlerTest.class);
+        MockServerLogger mockServerLogger = new MockServerLogger(DashboardWebSocketHandlerTest.class);
         Scheduler scheduler = new Scheduler(mockServerLogger);
         HttpState httpState = new HttpState(mockServerLogger, scheduler);
-        DashboardWebSocketServerHandler handler =
-            new DashboardWebSocketServerHandler(httpState, false, true)
+        DashboardWebSocketHandler handler =
+            new DashboardWebSocketHandler(httpState, false, true)
                 .registerListeners();
         MockChannelHandlerContext mockChannelHandlerContext = new MockChannelHandlerContext();
         handler.getClientRegistry().put(mockChannelHandlerContext, request());
