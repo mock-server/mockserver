@@ -32,4 +32,8 @@ public class Cookie extends KeyAndValue {
     public static Cookie optionalCookie(String name, String value) {
         return new Cookie(optionalString(name), string(value));
     }
+
+    public static Cookie optionalCookie(String name, NottableString value) {
+        return new Cookie(optionalString(name), value);
+    }
 }

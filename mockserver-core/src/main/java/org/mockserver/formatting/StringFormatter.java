@@ -1,5 +1,9 @@
 package org.mockserver.formatting;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import io.netty.buffer.ByteBufUtil;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,6 +15,8 @@ import static org.mockserver.character.Character.NEW_LINE;
 public class StringFormatter {
 
     private static final Map<Integer, String> INDENTS = new HashMap<>();
+    private static final Splitter fixedLengthSplitter = Splitter.fixedLength(64);
+    private static final Joiner newLineJoiner = Joiner.on(NEW_LINE);
 
     static {
         INDENTS.put(0, "");
@@ -71,5 +77,9 @@ public class StringFormatter {
             }
         }
         return logMessage.toString();
+    }
+
+    public static String formatBytes(byte[] bytes) {
+        return newLineJoiner.join(fixedLengthSplitter.split(ByteBufUtil.hexDump(bytes)));
     }
 }

@@ -324,7 +324,8 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
         }
     }
 
-    private void sendUpdate(ChannelOutboundInvoker ctx, RequestDefinition httpRequest) {
+    @VisibleForTesting
+    void sendUpdate(ChannelOutboundInvoker ctx, RequestDefinition httpRequest) {
         sendUpdate(ctx, httpRequest, 2);
     }
 

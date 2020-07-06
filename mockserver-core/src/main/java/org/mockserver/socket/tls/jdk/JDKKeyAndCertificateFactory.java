@@ -17,8 +17,8 @@ import java.util.Arrays;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.preventCertificateDynamicUpdate;
+import static org.mockserver.socket.tls.PEMToFile.*;
 import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.*;
-import static org.mockserver.socket.tls.jdk.X509Generator.*;
 import static org.slf4j.event.Level.*;
 
 /**
@@ -50,8 +50,8 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
                         .setKeyPairSize(ROOT_KEY_SIZE)
                 );
 
-                saveCertificateAuthorityPEMToFile(certificateAuthorityX509AndPrivateKey.getCert(), certificateAuthorityX509CertificatePath(), "X509 Certificate");
-                saveCertificateAuthorityPEMToFile(certificateAuthorityX509AndPrivateKey.getPrivateKey(), certificateAuthorityPrivateKeyPath(), "Private Key");
+                saveAsPEMFile(certificateAuthorityX509AndPrivateKey.getCert(), certificateAuthorityX509CertificatePath(), "Certificate Authority X509 Certificate");
+                saveAsPEMFile(certificateAuthorityX509AndPrivateKey.getPrivateKey(), certificateAuthorityPrivateKeyPath(), "Certificate Authority Private Key");
             } catch (Exception e) {
                 mockServerLogger.logEvent(
                     new LogEntry()
@@ -63,12 +63,12 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
         }
     }
 
-    private void saveCertificateAuthorityPEMToFile(String pem, String absolutePath, String type) throws IOException {
+    private void saveAsPEMFile(String pem, String absolutePath, String type) throws IOException {
         if (MockServerLogger.isEnabled(DEBUG)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(DEBUG)
-                    .setMessageFormat("created dynamic Certificate Authority " + type + " PEM file at{}")
+                    .setMessageFormat("created dynamic " + type + " PEM file at{}")
                     .setArguments(absolutePath)
             );
         }
@@ -218,8 +218,8 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
                     );
                 }
                 if (preventCertificateDynamicUpdate()) {
-                    saveCertificateAuthorityPEMToFile(x509AndPrivateKey.getCert(), x509CertificatePath(), "X509 Certificate");
-                    saveCertificateAuthorityPEMToFile(x509AndPrivateKey.getPrivateKey(), privateKeyPath(), "Private Key");
+                    saveAsPEMFile(x509AndPrivateKey.getCert(), x509CertificatePath(), "X509 Certificate");
+                    saveAsPEMFile(x509AndPrivateKey.getPrivateKey(), privateKeyPath(), "Private Key");
                 }
             } catch (Exception e) {
                 mockServerLogger.logEvent(

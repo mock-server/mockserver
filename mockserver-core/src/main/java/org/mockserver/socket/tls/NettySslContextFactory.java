@@ -7,7 +7,6 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.socket.tls.jdk.JDKKeyAndCertificateFactory;
 import org.mockserver.socket.tls.jdk.X509Generator;
 import org.slf4j.event.Level;
 
@@ -26,6 +25,8 @@ import java.util.function.Supplier;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.socket.tls.KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory;
+import static org.mockserver.socket.tls.PEMToFile.privateKeyFromPEMFile;
+import static org.mockserver.socket.tls.PEMToFile.x509ChainFromPEMFile;
 
 /**
  * @author jamesdbloom
@@ -83,7 +84,7 @@ public class NettySslContextFactory {
 
     private PrivateKey forwardProxyPrivateKey() {
         if (isNotBlank(ConfigurationProperties.forwardProxyPrivateKey())) {
-            return X509Generator.privateKeyFromPEMFile(ConfigurationProperties.forwardProxyPrivateKey());
+            return privateKeyFromPEMFile(ConfigurationProperties.forwardProxyPrivateKey());
         } else {
             return keyAndCertificateFactory.privateKey();
         }
@@ -91,7 +92,7 @@ public class NettySslContextFactory {
 
     private X509Certificate[] forwardProxyCertificateChain() {
         if (isNotBlank(ConfigurationProperties.forwardProxyCertificateChain())) {
-            return X509Generator.x509ChainFromPEMFile(ConfigurationProperties.forwardProxyCertificateChain()).toArray(new X509Certificate[0]);
+            return x509ChainFromPEMFile(ConfigurationProperties.forwardProxyCertificateChain()).toArray(new X509Certificate[0]);
         } else {
             return new X509Certificate[]{
                 keyAndCertificateFactory.x509Certificate(),
@@ -118,7 +119,7 @@ public class NettySslContextFactory {
         ArrayList<X509Certificate> x509Certificates = new ArrayList<>();
         x509Certificates.add(keyAndCertificateFactory.x509Certificate());
         x509Certificates.add(keyAndCertificateFactory.certificateAuthorityX509Certificate());
-        x509Certificates.addAll(X509Generator.x509ChainFromPEMFile(forwardProxyTLSCustomTrustX509Certificates()));
+        x509Certificates.addAll(x509ChainFromPEMFile(forwardProxyTLSCustomTrustX509Certificates()));
         return x509Certificates.toArray(new X509Certificate[0]);
     }
 
@@ -154,7 +155,7 @@ public class NettySslContextFactory {
 
     private X509Certificate[] trustCertificateChain() {
         if (isNotBlank(ConfigurationProperties.tlsMutualAuthenticationCertificateChain())) {
-            List<X509Certificate> x509Certificates = X509Generator.x509ChainFromPEMFile(tlsMutualAuthenticationCertificateChain());
+            List<X509Certificate> x509Certificates = x509ChainFromPEMFile(tlsMutualAuthenticationCertificateChain());
             x509Certificates.add(keyAndCertificateFactory.x509Certificate());
             x509Certificates.add(keyAndCertificateFactory.certificateAuthorityX509Certificate());
             return x509Certificates.toArray(new X509Certificate[0]);

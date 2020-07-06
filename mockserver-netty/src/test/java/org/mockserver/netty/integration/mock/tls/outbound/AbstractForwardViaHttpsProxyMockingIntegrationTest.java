@@ -31,6 +31,8 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.model.HttpTemplate.template;
+import static org.mockserver.socket.tls.PEMToFile.privateKeyFromPEMFile;
+import static org.mockserver.socket.tls.PEMToFile.x509FromPEMFile;
 import static org.mockserver.verify.Verification.verification;
 
 /**
@@ -45,13 +47,13 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
         if (trustNoneTLSEchoServer == null) {
             trustNoneTLSEchoServer = new EchoServer(SslContextBuilder
                 .forServer(
-                    X509Generator.privateKeyFromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/leaf-key-pkcs8.pem"),
-                    X509Generator.x509FromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/leaf-cert.pem"),
-                    X509Generator.x509FromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/ca.pem")
+                    privateKeyFromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/leaf-key-pkcs8.pem"),
+                    x509FromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/leaf-cert.pem"),
+                    x509FromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/ca.pem")
                 )
                 .trustManager(
-                    X509Generator.x509FromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/leaf-cert.pem"),
-                    X509Generator.x509FromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/ca.pem")
+                    x509FromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/leaf-cert.pem"),
+                    x509FromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/ca.pem")
                 )
                 .clientAuth(ClientAuth.REQUIRE)
                 .build());

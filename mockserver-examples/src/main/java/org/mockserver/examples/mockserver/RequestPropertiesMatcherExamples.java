@@ -134,25 +134,6 @@ public class RequestPropertiesMatcherExamples {
             );
     }
 
-    public static void main(String[] args) throws InterruptedException {
-        ConfigurationProperties.logLevel("DEBUG");
-        new ClientAndServer()
-            .openUI()
-            .when(
-                request()
-                    .withMethod("GET")
-                    .withPath("/view/cart")
-                    .withQueryStringParameters(
-                        schemaParam("cartId", "{ \"type\": \"string\", \"format\": \"uuid\" }")
-                    )
-            )
-            .respond(
-                response()
-                    .withBody("some_response_body")
-            );
-        MINUTES.sleep(5);
-    }
-
     public void matchRequestByPathAndPathParametersAndQueryParametersName() {
         new MockServerClient("localhost", 1080)
             .when(
@@ -202,7 +183,7 @@ public class RequestPropertiesMatcherExamples {
             );
     }
 
-    public void matchRequestByQueryParameterNameRegex() {
+    public void matchRequestByQueryParameterRegexName() {
         new MockServerClient("localhost", 1080)
             .when(
                 request()
@@ -453,10 +434,10 @@ public class RequestPropertiesMatcherExamples {
                     .withMethod("GET")
                     .withPath("/view/cart")
                     .withCookies(
-                        schemaCookie("session", "4930456C-C718-476F-971F-CB8E047AB349")
+                        schemaCookie("session", "{ \"type\": \"string\", \"format\": \"uuid\" }")
                     )
                     .withQueryStringParameters(
-                        schemaParam("cartId", "055CA455-1DF7-45BB-8535-4F83E7266092")
+                        schemaParam("cartId", "{ \"type\": \"string\", \"format\": \"uuid\" }")
                     )
             )
             .respond(
@@ -471,10 +452,10 @@ public class RequestPropertiesMatcherExamples {
                 request()
                     .withPath("/view/cart")
                     .withCookies(
-                        optionalCookie("session", "4930456C-C718-476F-971F-CB8E047AB349")
+                        optionalCookie("session", schemaString("{ \"type\": \"string\", \"format\": \"uuid\" }"))
                     )
                     .withQueryStringParameters(
-                        schemaParam("cartId", "055CA455-1DF7-45BB-8535-4F83E7266092")
+                        schemaParam("cartId", "{ \"type\": \"string\", \"format\": \"uuid\" }")
                     )
             )
             .respond(
@@ -618,6 +599,27 @@ public class RequestPropertiesMatcherExamples {
             );
     }
 
+    public void matchRequestByBodyWithXmlWithPlaceholders() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withBody(
+                        xml("<bookstore>" + System.lineSeparator() +
+                            "   <book nationality=\"ITALIAN\" category=\"COOKING\">" + System.lineSeparator() +
+                            "       <title lang=\"en\">Everyday Italian</title>" + System.lineSeparator() +
+                            "       <author>${xmlunit.ignore}</author>" + System.lineSeparator() +
+                            "       <year>${xmlunit.isNumber}</year>" + System.lineSeparator() +
+                            "       <price>30.00</price>" + System.lineSeparator() +
+                            "   </book>" + System.lineSeparator() +
+                            "</bookstore>")
+                    )
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+    }
+
     public void matchRequestByBodyWithXmlSchema() {
         new MockServerClient("localhost", 1080)
             .when(
@@ -718,8 +720,8 @@ public class RequestPropertiesMatcherExamples {
                         json("{" + System.lineSeparator() +
                                 "    \"id\": 1," + System.lineSeparator() +
                                 "    \"name\": \"A green door\"," + System.lineSeparator() +
-                                "    \"price\": ${json-unit.ignore-element}," + System.lineSeparator() +
-                                "    \"enabled\": ${json-unit.any-boolean}," + System.lineSeparator() +
+                                "    \"price\": \"${json-unit.ignore-element}\"," + System.lineSeparator() +
+                                "    \"enabled\": \"${json-unit.any-boolean}\"," + System.lineSeparator() +
                                 "    \"tags\": [\"home\", \"green\"]" + System.lineSeparator() +
                                 "}",
                             MatchType.ONLY_MATCHING_FIELDS

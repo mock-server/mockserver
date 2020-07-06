@@ -9,7 +9,7 @@ import org.slf4j.event.Level;
 import java.lang.reflect.Constructor;
 
 /**
- * @author jamesdbloom, ganskef
+ * @author jamesdbloom
  */
 public class KeyAndCertificateFactoryFactory {
 
@@ -47,6 +47,11 @@ public class KeyAndCertificateFactoryFactory {
             try {
                 Class<KeyAndCertificateFactory> keyAndCertificateFactorClass = (Class<KeyAndCertificateFactory>) CLASS_LOADER.loadClass("org.mockserver.socket.tls.bouncycastle.BCKeyAndCertificateFactory");
                 Constructor<KeyAndCertificateFactory> keyAndCertificateFactorConstructor = keyAndCertificateFactorClass.getDeclaredConstructor(MockServerLogger.class);
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(Level.INFO)
+                        .setMessageFormat("using Bouncy Castle for X.509 Certificate and Private Key generation")
+                );
                 return keyAndCertificateFactorConstructor.newInstance(mockServerLogger);
             } catch (Throwable throwable) {
                 mockServerLogger.logEvent(

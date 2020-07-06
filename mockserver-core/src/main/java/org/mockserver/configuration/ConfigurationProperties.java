@@ -500,17 +500,16 @@ public class ConfigurationProperties {
      * - avoiding bugs in the X509 creation logic Java JDK (i.e. such as the format of SAN and CN)
      * <p>
      * When enabling this setting the following dependencies must be provided on the classpath (they are not included with MockServer)
-     * <dependency>
-     * <groupId>org.bouncycastle</groupId>
-     * <artifactId>bcprov-jdk15on</artifactId>
-     * <version>1.65</version>
-     * </dependency>
-     * <dependency>
-     * <groupId>org.bouncycastle</groupId>
-     * <artifactId>bcpkix-jdk15on</artifactId>
-     * <version>1.65</version>
-     * </dependency>
-     * </p>
+     * <pre>&lt;dependency&gt;
+     *   &lt;groupId&gt;org.bouncycastle&lt;/groupId&gt;
+     *   &lt;artifactId&gt;bcprov-jdk15on&lt;/artifactId&gt;
+     *   &lt;version&gt;1.65&lt;/version&gt;
+     * &lt;/dependency&gt;
+     * &lt;dependency&gt;
+     *   &lt;groupId&gt;org.bouncycastle&lt;/groupId&gt;
+     *   &lt;artifactId&gt;bcpkix-jdk15on&lt;/artifactId&gt;
+     *   &lt;version&gt;1.65&lt;/version&gt;
+     * &lt;/dependency&gt;</pre>
      *
      * @param enable enable BouncyCastle instead of the Java JDK to generate Certificate and Keys
      */
