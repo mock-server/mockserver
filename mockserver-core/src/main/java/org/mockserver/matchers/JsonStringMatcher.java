@@ -75,7 +75,7 @@ public class JsonStringMatcher extends BodyMatcher<String> {
                         .similar();
                 } catch (Throwable throwable) {
                     if (context != null) {
-                        context.addDifference(mockServerLogger, throwable, "exception while perform json  match failed expected:{}found:{}", this.matcher, matched);
+                        context.addDifference(mockServerLogger, throwable, "exception while perform json match failed expected:{}found:{}", this.matcher, matched);
                     }
                 }
 

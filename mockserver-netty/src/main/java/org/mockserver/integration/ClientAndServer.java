@@ -114,12 +114,8 @@ public class ClientAndServer extends MockServerClient {
         super.stop();
     }
 
-    /**
-     * @deprecated use getLocalPort instead of getPort
-     */
-    @Deprecated
     public Integer getPort() {
-        return getLocalPort();
+        return mockServer.getLocalPort();
     }
 
     public Integer getLocalPort() {

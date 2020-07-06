@@ -77,7 +77,7 @@ public class DashboardLogEntryDTOGroupSerializerTest {
             "      \"key\" : \"" + logEntry.id() + "_0arg\"," + NEW_LINE +
             "      \"multiline\" : false," + NEW_LINE +
             "      \"argument\" : true," + NEW_LINE +
-            "      \"value\" : \"one\"" + NEW_LINE +
+            "      \"value\" : \"\\\"one\\\"\"" + NEW_LINE +
             "    }, {" + NEW_LINE +
             "      \"key\" : \"" + logEntry.id() + "_1msg\"," + NEW_LINE +
             "      \"value\" : \"formatted string\"" + NEW_LINE +
@@ -85,7 +85,7 @@ public class DashboardLogEntryDTOGroupSerializerTest {
             "      \"key\" : \"" + logEntry.id() + "_1arg\"," + NEW_LINE +
             "      \"multiline\" : false," + NEW_LINE +
             "      \"argument\" : true," + NEW_LINE +
-            "      \"value\" : \"two\"" + NEW_LINE +
+            "      \"value\" : \"\\\"two\\\"\"" + NEW_LINE +
             "    } ]" + NEW_LINE +
             "  }" + NEW_LINE +
             "}"));
@@ -153,7 +153,7 @@ public class DashboardLogEntryDTOGroupSerializerTest {
             "        \"key\" : \"" + logEntryForwardRequest.id() + "_0arg\",\n" +
             "        \"multiline\" : false,\n" +
             "        \"argument\" : true,\n" +
-            "        \"value\" : \"one\"\n" +
+            "        \"value\" : \"\\\"one\\\"\"\n" +
             "      }, {\n" +
             "        \"key\" : \"" + logEntryForwardRequest.id() + "_1msg\",\n" +
             "        \"value\" : \"formatted string\"\n" +
@@ -161,7 +161,7 @@ public class DashboardLogEntryDTOGroupSerializerTest {
             "        \"key\" : \"" + logEntryForwardRequest.id() + "_1arg\",\n" +
             "        \"multiline\" : false,\n" +
             "        \"argument\" : true,\n" +
-            "        \"value\" : \"two\"\n" +
+            "        \"value\" : \"\\\"two\\\"\"\n" +
             "      } ]\n" +
             "    }\n" +
             "  }, {\n" +
@@ -182,7 +182,7 @@ public class DashboardLogEntryDTOGroupSerializerTest {
             "        \"key\" : \"" + logEntryExpectationNotMatched.id() + "_0arg\",\n" +
             "        \"multiline\" : false,\n" +
             "        \"argument\" : true,\n" +
-            "        \"value\" : \"one\"\n" +
+            "        \"value\" : \"\\\"one\\\"\"\n" +
             "      }, {\n" +
             "        \"key\" : \"" + logEntryExpectationNotMatched.id() + "_1msg\",\n" +
             "        \"value\" : \"formatted string\"\n" +
@@ -190,7 +190,7 @@ public class DashboardLogEntryDTOGroupSerializerTest {
             "        \"key\" : \"" + logEntryExpectationNotMatched.id() + "_1arg\",\n" +
             "        \"multiline\" : false,\n" +
             "        \"argument\" : true,\n" +
-            "        \"value\" : \"two\"\n" +
+            "        \"value\" : \"\\\"two\\\"\"\n" +
             "      } ]\n" +
             "    }\n" +
             "  } ]\n" +

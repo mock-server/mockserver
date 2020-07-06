@@ -98,7 +98,7 @@ public class XmlSchemaMatcherTest {
             assertFalse(xmlSchemaMatcher.matches(new MatchDifference(request()), xml));
 
             // then
-            verify(logger).debug("xml schema match failed expected:" + NEW_LINE +
+            verify(logger).trace("xml schema match failed expected:" + NEW_LINE +
                     NEW_LINE +
                     "  <?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
                     "  <xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
@@ -149,7 +149,7 @@ public class XmlSchemaMatcherTest {
             assertFalse(xmlSchemaMatcher.matches(new MatchDifference(request()), xml));
 
             // then
-            verify(logger).debug("xml schema match failed expected:" + NEW_LINE +
+            verify(logger).trace("xml schema match failed expected:" + NEW_LINE +
                     NEW_LINE +
                     "  <?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
                     "  <xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +

@@ -59,7 +59,7 @@ public class DashboardLogEntryDTOSerializer extends StdSerializer<DashboardLogEn
                                 "key", logEntry.getId() + "_" + i + "arg",
                                 "multiline", split.length > 1,
                                 "argument", true,
-                                "value", split.length > 1 ? split : split[0]
+                                "value", split.length > 1 ? split : "\"" + split[0] + "\""
                             ));
                         }
                     } else {
@@ -67,10 +67,22 @@ public class DashboardLogEntryDTOSerializer extends StdSerializer<DashboardLogEn
                             "key", logEntry.getId() + "_" + i + "arg",
                             "json", true,
                             "argument", true,
-                            "value", arguments[i]
+                            "value", arguments[i] != null ? arguments[i] : "\"\""
                         ));
                     }
                 }
+            }
+            if (logEntry.getThrowable() != null) {
+                messageParts.add(ImmutableMap.of(
+                    "key", logEntry.getId() + "_throwable_msg",
+                    "value", "exception:"
+                ));
+                messageParts.add(ImmutableMap.of(
+                    "key", logEntry.getId() + "_throwable_value",
+                    "multiline", true,
+                    "argument", true,
+                    "value", logEntry.getThrowable()
+                ));
             }
             jsonGenerator.writeObjectField("messageParts", messageParts);
         }
@@ -88,7 +100,7 @@ public class DashboardLogEntryDTOSerializer extends StdSerializer<DashboardLogEn
             case RUNNABLE:
                 break;
             case TRACE:
-                style.put("color", "rgb(255, 255, 255)");
+                style.put("color", "rgb(215, 216, 154)");
                 style.put("style.whiteSpace", "pre-wrap");
                 break;
             case DEBUG:

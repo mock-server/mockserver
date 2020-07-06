@@ -26,7 +26,6 @@ import static org.mockserver.configuration.ConfigurationProperties.matchersFailF
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_MATCHED;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED;
 import static org.mockserver.matchers.MatchDifference.Field.*;
-import static org.mockserver.matchers.MatchDifference.debugAllMatchFailures;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -236,7 +235,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             }
             boolean overallMatch = false;
             for (HttpRequest request : matcherBuilder.transformsToMatcher(requestDefinition).getHttpRequests()) {
-                if (matches(request)) {
+                if (matches(request.cloneWithLogCorrelationId())) {
                     overallMatch = true;
                     break;
                 }
@@ -254,7 +253,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             } else if (this.httpRequest == null) {
                 return true;
             } else {
-                if (debugAllMatchFailures && matchDifference == null) {
+                if (MockServerLogger.isEnabled(Level.TRACE) && matchDifference == null) {
                     matchDifference = new MatchDifference(request);
                 }
                 MatchDifferenceCount matchDifferenceCount = new MatchDifferenceCount(request);

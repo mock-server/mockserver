@@ -1,5 +1,6 @@
 package org.mockserver.model;
 
+import static org.mockserver.model.NottableOptionalString.optionalString;
 import static org.mockserver.model.NottableSchemaString.schemaString;
 import static org.mockserver.model.NottableString.string;
 
@@ -26,5 +27,9 @@ public class Cookie extends KeyAndValue {
 
     public static Cookie schemaCookie(String name, String value) {
         return new Cookie(string(name), schemaString(value));
+    }
+
+    public static Cookie optionalCookie(String name, String value) {
+        return new Cookie(optionalString(name), string(value));
     }
 }

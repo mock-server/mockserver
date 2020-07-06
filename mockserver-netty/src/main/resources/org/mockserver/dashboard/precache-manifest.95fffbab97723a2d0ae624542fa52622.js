@@ -1,11 +1,11 @@
 self.__precacheManifest = [
   {
-    "revision": "1ac4098525effff20ae7",
+    "revision": "3abebc794a384c48ce67",
     "url": "/mockserver/dashboard/static/css/main.477cab2a.chunk.css"
   },
   {
-    "revision": "1ac4098525effff20ae7",
-    "url": "/mockserver/dashboard/static/js/main.7deb3a84.chunk.js"
+    "revision": "3abebc794a384c48ce67",
+    "url": "/mockserver/dashboard/static/js/main.474c8a2a.chunk.js"
   },
   {
     "revision": "687d6cbfb3d163092fb7",
@@ -16,7 +16,7 @@ self.__precacheManifest = [
     "url": "/mockserver/dashboard/static/js/2.1c7a191f.chunk.js"
   },
   {
-    "revision": "6d995353f073711b5e7708cec8f675f1",
+    "revision": "3d5b344b6995302e8291c3893e0cef7b",
     "url": "/mockserver/dashboard/index.html"
   }
 ];

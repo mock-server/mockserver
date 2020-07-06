@@ -6209,7 +6209,7 @@ public class HttpRequestsPropertiesMatcherTest {
                 "   found:" + NEW_LINE +
                 NEW_LINE +
                 "    /pets" + NEW_LINE,
-            "  expected path /pets/{petId} has 2 parts but path /pets has 1 parts "
+            "  expected path /pets/{petId} has 2 parts but path /pets has 1 part "
         ));
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());
@@ -6310,7 +6310,7 @@ public class HttpRequestsPropertiesMatcherTest {
                 "   found:" + NEW_LINE +
                 NEW_LINE +
                 "    /wrong" + NEW_LINE,
-            "  expected path /pets/{petId} has 2 parts but path /wrong has 1 parts "
+            "  expected path /pets/{petId} has 2 parts but path /wrong has 1 part "
         ));
         assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(matchDifference.getDifferences(COOKIES), nullValue());

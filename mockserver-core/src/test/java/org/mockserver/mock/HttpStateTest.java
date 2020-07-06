@@ -880,6 +880,11 @@ public class HttpStateTest {
                             .withQueryStringParameter("type", "logs")
                     ),
                 is(response().withBody("" +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - cleared logs that match:" + NEW_LINE +
+                        "" + NEW_LINE +
+                        "  {}" + NEW_LINE +
+                        "" + NEW_LINE +
+                        "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
@@ -900,11 +905,6 @@ public class HttpStateTest {
                         "      \"body\" : \"response_one\"" + NEW_LINE +
                         "    }" + NEW_LINE +
                         "  }" + NEW_LINE +
-                        NEW_LINE +
-                        "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing expectations and logs that match:" + NEW_LINE +
-                        NEW_LINE +
-                        "  {}" + NEW_LINE +
                         NEW_LINE,
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
             );
@@ -1000,6 +1000,13 @@ public class HttpStateTest {
                         NEW_LINE +
                         " message" + NEW_LINE +
                         "------------------------------------" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - cleared logs that match:" + NEW_LINE +
+                        "" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"path\" : \"request_four\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
+                        "" + NEW_LINE +
+                        "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
@@ -1022,7 +1029,7 @@ public class HttpStateTest {
                         "  }" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing expectations and logs that match:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - cleared expectations that match:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"path\" : \"request_four\"" + NEW_LINE +
@@ -1109,7 +1116,7 @@ public class HttpStateTest {
                             .withQueryStringParameter("type", "logs")
                     ),
                 is(response().withBody("" +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing logs that match:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - cleared logs that match:" + NEW_LINE +
                         NEW_LINE +
                         "  {}" + NEW_LINE +
                         NEW_LINE,

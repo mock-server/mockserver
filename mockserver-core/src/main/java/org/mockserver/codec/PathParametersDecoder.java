@@ -1,5 +1,6 @@
 package org.mockserver.codec;
 
+import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.NottableString;
@@ -16,7 +17,7 @@ import static org.mockserver.model.NottableString.string;
 
 public class PathParametersDecoder {
 
-    private static final Pattern PATH_VARIABLE_NAME_PATTERN = Pattern.compile("\\{[.;]?([^}*]+)\\*?}");
+    private static final Pattern PATH_VARIABLE_NAME_PATTERN = Pattern.compile("\\{[.;]?([^*]+)\\*?}");
 
     public String validatePath(HttpRequest matcher) {
         String error = "";
@@ -45,8 +46,16 @@ public class PathParametersDecoder {
             if (matcher.getPathParameters() != null && !matcher.getPathParameters().isEmpty()) {
                 String value = matcher.getPath().getValue();
                 if (value.contains("{")) {
-                    value = PATH_VARIABLE_NAME_PATTERN.matcher(value).replaceAll(".*");
-                    result = string(value);
+                    List<String> pathParts = new ArrayList<>();
+                    for (String pathPart : matcher.getPath().getValue().split("/")) {
+                        Matcher pathParameterName = PATH_VARIABLE_NAME_PATTERN.matcher(pathPart);
+                        if (pathParameterName.matches()) {
+                            pathParts.add(".*");
+                        } else {
+                            pathParts.add(pathPart);
+                        }
+                    }
+                    result = string(Joiner.on("/").join(pathParts) + (value.endsWith("/") ? "/" : ""));
                 } else {
                     result = matcher.getPath();
                 }
@@ -64,7 +73,7 @@ public class PathParametersDecoder {
             String[] matcherPathParts = getPathParts(matcher.getPath());
             String[] matchedPathParts = getPathParts(matched.getPath());
             if (matcherPathParts.length != matchedPathParts.length) {
-                throw new IllegalArgumentException("expected path " + matcher.getPath().getValue() + " has " + matcherPathParts.length + " parts but path " + matched.getPath().getValue() + " has " + matchedPathParts.length + " parts ");
+                throw new IllegalArgumentException("expected path " + matcher.getPath().getValue() + " has " + matcherPathParts.length + " parts but path " + matched.getPath().getValue() + " has " + matchedPathParts.length + " part" + (matchedPathParts.length > 1 ? "s " : " "));
             }
             for (int i = 0; i < matcherPathParts.length; i++) {
                 Matcher pathParameterName = PATH_VARIABLE_NAME_PATTERN.matcher(matcherPathParts[i]);

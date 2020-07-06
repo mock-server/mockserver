@@ -83,7 +83,7 @@ public class ConcurrencyBasicResponseMockingIntegrationTest {
                     .withMethod("POST")
                     .withPath("/my/echo")
                     .withBody(requestBody),
-                new InetSocketAddress("localhost", clientAndServer.getLocalPort())
+                new InetSocketAddress("localhost", clientAndServer.getPort())
             ).get(20, TimeUnit.MINUTES);
             Assert.assertEquals(requestBody, httpResponse.getBodyAsString());
         } catch (Exception ex) {

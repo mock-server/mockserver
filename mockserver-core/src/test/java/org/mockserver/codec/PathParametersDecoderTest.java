@@ -306,6 +306,28 @@ public class PathParametersDecoderTest {
     }
 
     @Test
+    public void shouldNormalisePathParametersForRegexKeys() {
+        shouldNormalisePath(
+            "/some/path/{[A-z]{0,10}}",
+            new Parameter[]{
+                param("[A-z]{0,10}", "055CA455-1DF7-45BB-8535-4F83E7266092")
+            },
+            "/some/path/.*"
+        );
+    }
+
+    @Test
+    public void shouldNormalisePathParametersForPathEndWithSlash() {
+        shouldNormalisePath(
+            "/some/path/{[A-z]{0,10}}/",
+            new Parameter[]{
+                param("[A-z]{0,10}", "055CA455-1DF7-45BB-8535-4F83E7266092")
+            },
+            "/some/path/.*/"
+        );
+    }
+
+    @Test
     public void shouldNormalisePathParametersForStyleSimpleAndExplodedFalse() {
         shouldNormalisePath(
             "/users/{id}",

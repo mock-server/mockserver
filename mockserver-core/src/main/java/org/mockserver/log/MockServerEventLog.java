@@ -34,6 +34,7 @@ import java.util.stream.StreamSupport;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.logging.MockServerLogger.writeToSystemOut;
 import static org.mockserver.model.HttpRequest.request;
@@ -169,20 +170,21 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         }
     }
 
-    public void clear(RequestDefinition httpRequest) {
+    public void clear(RequestDefinition requestDefinition) {
         CompletableFuture<String> future = new CompletableFuture<>();
         final boolean markAsDeletedOnly = MockServerLogger.isEnabled(Level.DEBUG);
         disruptor.publishEvent(new LogEntry()
             .setType(RUNNABLE)
             .setConsumer(() -> {
-                RequestDefinition matcher = httpRequest != null ? httpRequest : request();
+                String logCorrelationId = UUID.randomUUID().toString();
+                RequestDefinition matcher = requestDefinition != null ? requestDefinition : request().withLogCorrelationId(logCorrelationId);
                 HttpRequestMatcher requestMatcher = matcherBuilder.transformsToMatcher(matcher);
                 for (LogEntry logEntry : new LinkedList<>(eventLog)) {
                     RequestDefinition[] requests = logEntry.getHttpRequests();
                     boolean matches = false;
                     if (requests != null) {
                         for (RequestDefinition request : requests) {
-                            if (requestMatcher.matches(request)) {
+                            if (requestMatcher.matches(request.cloneWithLogCorrelationId())) {
                                 matches = true;
                             }
                         }
@@ -197,6 +199,15 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                         }
                     }
                 }
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(CLEARED)
+                        .setLogLevel(Level.INFO)
+                        .setCorrelationId(logCorrelationId)
+                        .setHttpRequest(requestDefinition)
+                        .setMessageFormat("cleared logs that match:{}")
+                        .setArguments((requestDefinition == null ? "{}" : requestDefinition))
+                );
                 future.complete("done");
                 notifyListeners(this);
             })
@@ -275,10 +286,11 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         disruptor.publishEvent(new LogEntry()
             .setType(RUNNABLE)
             .setConsumer(() -> {
+                RequestDefinition requestDefinitionMatcher = requestDefinition != null ? requestDefinition : request().withLogCorrelationId(UUID.randomUUID().toString());
                 HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(requestDefinition);
                 consumer.accept(this.eventLog
                     .stream()
-                    .filter(logItem -> logItem.matches(httpRequestMatcher))
+                    .filter(logItem -> logItem.matches(httpRequestMatcher, requestDefinitionMatcher.getLogCorrelationId()))
                     .filter(logEntryPredicate)
                 );
             })
@@ -289,10 +301,11 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         disruptor.publishEvent(new LogEntry()
             .setType(RUNNABLE)
             .setConsumer(() -> {
-                HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(requestDefinition);
+                RequestDefinition requestDefinitionMatcher = requestDefinition != null ? requestDefinition : request().withLogCorrelationId(UUID.randomUUID().toString());
+                HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(requestDefinitionMatcher);
                 consumer.accept(this.eventLog
                     .stream()
-                    .filter(logItem -> logItem.matches(httpRequestMatcher))
+                    .filter(logItem -> logItem.matches(httpRequestMatcher, requestDefinitionMatcher.getLogCorrelationId()))
                     .filter(logEntryPredicate)
                     .map(logEntryMapper)
                 );
@@ -300,15 +313,15 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         );
     }
 
-    public <T> void retrieveLogEntriesInReverse(RequestDefinition httpRequest, Predicate<LogEntry> logEntryPredicate, Function<LogEntry, T> logEntryMapper, Consumer<Stream<T>> consumer) {
+    public <T> void retrieveLogEntriesInReverseForUI(RequestDefinition requestDefinition, Predicate<LogEntry> logEntryPredicate, Function<LogEntry, T> logEntryMapper, Consumer<Stream<T>> consumer) {
         disruptor.publishEvent(new LogEntry()
             .setType(RUNNABLE)
             .setConsumer(() -> {
-                HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
+                HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(requestDefinition);
                 consumer.accept(
                     StreamSupport
                         .stream(Spliterators.spliteratorUnknownSize(this.eventLog.descendingIterator(), 0), false)
-                        .filter(logItem -> logItem.matches(httpRequestMatcher))
+                        .filter(logItem -> logItem.matches(httpRequestMatcher, null))
                         .filter(logEntryPredicate)
                         .map(logEntryMapper)
                 );
@@ -335,35 +348,47 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                     .setArguments(verification)
             );
             retrieveRequests(verification.getHttpRequest().withLogCorrelationId(logCorrelationId), httpRequests -> {
-                if (!verification.getTimes().matches(httpRequests.size())) {
-                    retrieveRequests(null, allRequests -> {
-                        String failureMessage;
-                        String serializedRequestToBeVerified = requestDefinitionSerializer.serialize(true, verification.getHttpRequest());
-                        String serializedAllRequestInLog = allRequests.size() == 1 ? requestDefinitionSerializer.serialize(true, allRequests.get(0)) : requestDefinitionSerializer.serialize(true, allRequests);
-                        failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
-                        final Object[] arguments = new Object[]{verification.getHttpRequest(), allRequests.size() == 1 ? allRequests.get(0) : allRequests};
+                try {
+                    if (!verification.getTimes().matches(httpRequests.size())) {
+                        retrieveRequests(null, allRequests -> {
+                            String failureMessage;
+                            String serializedRequestToBeVerified = requestDefinitionSerializer.serialize(true, verification.getHttpRequest());
+                            String serializedAllRequestInLog = allRequests.size() == 1 ? requestDefinitionSerializer.serialize(true, allRequests.get(0)) : requestDefinitionSerializer.serialize(true, allRequests);
+                            failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
+                            final Object[] arguments = new Object[]{verification.getHttpRequest(), allRequests.size() == 1 ? allRequests.get(0) : allRequests};
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setType(VERIFICATION_FAILED)
+                                    .setLogLevel(Level.INFO)
+                                    .setCorrelationId(logCorrelationId)
+                                    .setHttpRequest(verification.getHttpRequest())
+                                    .setMessageFormat("request not found " + verification.getTimes() + ", expected:{}but was:{}")
+                                    .setArguments(arguments)
+                            );
+                            resultConsumer.accept(failureMessage);
+                        });
+                    } else {
                         mockServerLogger.logEvent(
                             new LogEntry()
-                                .setType(VERIFICATION_FAILED)
+                                .setType(VERIFICATION_PASSED)
                                 .setLogLevel(Level.INFO)
                                 .setCorrelationId(logCorrelationId)
                                 .setHttpRequest(verification.getHttpRequest())
-                                .setMessageFormat("request not found " + verification.getTimes() + ", expected:{}but was:{}")
-                                .setArguments(arguments)
+                                .setMessageFormat("request:{}found " + verification.getTimes())
+                                .setArguments(verification.getHttpRequest())
                         );
-                        resultConsumer.accept(failureMessage);
-                    });
-                } else {
+                        resultConsumer.accept("");
+                    }
+                } catch (Throwable throwable) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(VERIFICATION_PASSED)
-                            .setLogLevel(Level.INFO)
+                            .setType(EXCEPTION)
                             .setCorrelationId(logCorrelationId)
-                            .setHttpRequest(verification.getHttpRequest())
-                            .setMessageFormat("request:{}found " + verification.getTimes())
-                            .setArguments(verification.getHttpRequest())
+                            .setMessageFormat("exception:{} while processing verification:{}")
+                            .setArguments(throwable.getMessage(), verification)
+                            .setThrowable(throwable)
                     );
-                    resultConsumer.accept("");
+                    resultConsumer.accept("exception while processing verification" + (isNotBlank(throwable.getMessage()) ? " " + throwable.getMessage() : ""));
                 }
             });
         } else {
@@ -380,60 +405,72 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     public void verify(VerificationSequence verificationSequence, Consumer<String> resultConsumer) {
         final String logCorrelationId = UUID.randomUUID().toString();
         retrieveRequests(null, allRequests -> {
-            if (verificationSequence != null) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setType(VERIFICATION)
-                        .setLogLevel(Level.INFO)
-                        .setCorrelationId(logCorrelationId)
-                        .setHttpRequests(verificationSequence.getHttpRequests().toArray(new RequestDefinition[0]))
-                        .setMessageFormat("verifying sequence that match:{}")
-                        .setArguments(verificationSequence)
-                );
-                String failureMessage = "";
-                int requestLogCounter = 0;
-                for (RequestDefinition verificationHttpRequest : verificationSequence.getHttpRequests()) {
-                    if (verificationHttpRequest != null) {
-                        verificationHttpRequest.withLogCorrelationId(logCorrelationId);
-                        HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(verificationHttpRequest);
-                        boolean foundRequest = false;
-                        for (; !foundRequest && requestLogCounter < allRequests.size(); requestLogCounter++) {
-                            if (httpRequestMatcher.matches(allRequests.get(requestLogCounter))) {
-                                // move on to next request
-                                foundRequest = true;
-                            }
-                        }
-                        if (!foundRequest) {
-                            String serializedRequestToBeVerified = requestDefinitionSerializer.serialize(true, verificationSequence.getHttpRequests());
-                            String serializedAllRequestInLog = allRequests.size() == 1 ? requestDefinitionSerializer.serialize(true, allRequests.get(0)) : requestDefinitionSerializer.serialize(true, allRequests);
-                            failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
-                            final Object[] arguments = new Object[]{verificationSequence.getHttpRequests(), allRequests.size() == 1 ? allRequests.get(0) : allRequests};
-                            mockServerLogger.logEvent(
-                                new LogEntry()
-                                    .setType(VERIFICATION_FAILED)
-                                    .setLogLevel(Level.INFO)
-                                    .setCorrelationId(logCorrelationId)
-                                    .setHttpRequests(verificationSequence.getHttpRequests().toArray(new RequestDefinition[0]))
-                                    .setMessageFormat("request sequence not found, expected:{}but was:{}")
-                                    .setArguments(arguments)
-                            );
-                            break;
-                        }
-                    }
-                }
-                if (isBlank(failureMessage)) {
+            try {
+                if (verificationSequence != null) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(VERIFICATION_PASSED)
+                            .setType(VERIFICATION)
                             .setLogLevel(Level.INFO)
                             .setCorrelationId(logCorrelationId)
-                            .setMessageFormat("request sequence found:{}")
-                            .setArguments(verificationSequence.getHttpRequests())
+                            .setHttpRequests(verificationSequence.getHttpRequests().toArray(new RequestDefinition[0]))
+                            .setMessageFormat("verifying sequence that match:{}")
+                            .setArguments(verificationSequence)
                     );
+                    String failureMessage = "";
+                    int requestLogCounter = 0;
+                    for (RequestDefinition verificationHttpRequest : verificationSequence.getHttpRequests()) {
+                        if (verificationHttpRequest != null) {
+                            verificationHttpRequest.withLogCorrelationId(logCorrelationId);
+                            HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(verificationHttpRequest);
+                            boolean foundRequest = false;
+                            for (; !foundRequest && requestLogCounter < allRequests.size(); requestLogCounter++) {
+                                if (httpRequestMatcher.matches(allRequests.get(requestLogCounter).cloneWithLogCorrelationId())) {
+                                    // move on to next request
+                                    foundRequest = true;
+                                }
+                            }
+                            if (!foundRequest) {
+                                String serializedRequestToBeVerified = requestDefinitionSerializer.serialize(true, verificationSequence.getHttpRequests());
+                                String serializedAllRequestInLog = allRequests.size() == 1 ? requestDefinitionSerializer.serialize(true, allRequests.get(0)) : requestDefinitionSerializer.serialize(true, allRequests);
+                                failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
+                                final Object[] arguments = new Object[]{verificationSequence.getHttpRequests(), allRequests.size() == 1 ? allRequests.get(0) : allRequests};
+                                mockServerLogger.logEvent(
+                                    new LogEntry()
+                                        .setType(VERIFICATION_FAILED)
+                                        .setLogLevel(Level.INFO)
+                                        .setCorrelationId(logCorrelationId)
+                                        .setHttpRequests(verificationSequence.getHttpRequests().toArray(new RequestDefinition[0]))
+                                        .setMessageFormat("request sequence not found, expected:{}but was:{}")
+                                        .setArguments(arguments)
+                                );
+                                break;
+                            }
+                        }
+                    }
+                    if (isBlank(failureMessage)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setType(VERIFICATION_PASSED)
+                                .setLogLevel(Level.INFO)
+                                .setCorrelationId(logCorrelationId)
+                                .setMessageFormat("request sequence found:{}")
+                                .setArguments(verificationSequence.getHttpRequests())
+                        );
+                    }
+                    resultConsumer.accept(failureMessage);
+                } else {
+                    resultConsumer.accept("");
                 }
-                resultConsumer.accept(failureMessage);
-            } else {
-                resultConsumer.accept("");
+            } catch (Throwable throwable) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(EXCEPTION)
+                        .setCorrelationId(logCorrelationId)
+                        .setMessageFormat("exception:{} while processing verification sequence:{}")
+                        .setArguments(throwable.getMessage(), verificationSequence)
+                        .setThrowable(throwable)
+                );
+                resultConsumer.accept("exception while processing verification sequence" + (isNotBlank(throwable.getMessage()) ? " " + throwable.getMessage() : ""));
             }
         });
     }

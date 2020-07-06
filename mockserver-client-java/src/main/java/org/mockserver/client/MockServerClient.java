@@ -165,6 +165,10 @@ public class MockServerClient implements Stoppable {
         return contextPath;
     }
 
+    public Integer getPort() {
+        return port();
+    }
+
     @SuppressWarnings("DuplicatedCode")
     private String calculatePath(String path) {
         String cleanedPath = "/mockserver/" + path;

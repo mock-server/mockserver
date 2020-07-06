@@ -21,6 +21,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
@@ -470,7 +471,11 @@ public class MockServerEventLogTest {
             // then
             assertThat(retrieveRequests(null), empty());
             assertThat(retrieveRecordedExpectations(null), empty());
-            assertThat(retrieveMessageLogEntries(null), empty());
+            assertThat(retrieveMessageLogEntries(null), contains(new LogEntry()
+                .setType(CLEARED)
+                .setHttpRequest(request())
+                .setMessageFormat("cleared logs that match:{}")
+                .setArguments("{}")));
             assertThat(retrieveRequestLogEntries(), empty());
             assertThat(retrieveRequestResponseMessageLogEntries(null), empty());
         } finally {
@@ -535,47 +540,51 @@ public class MockServerEventLogTest {
             // then
             assertThat(retrieveRequests(null), empty());
             assertThat(retrieveRecordedExpectations(null), empty());
-            assertThat(retrieveMessageLogEntries(null), contains(
-                new LogEntry()
-                    .setDeleted(true)
-                    .setLogLevel(INFO)
-                    .setType(NO_MATCH_RESPONSE)
-                    .setHttpRequest(request("request_one"))
-                    .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
-                    .setMessageFormat("no expectation for:{}returning response:{}")
-                    .setArguments(request("request_one"), notFoundResponse()),
-                new LogEntry()
-                    .setDeleted(true)
-                    .setLogLevel(INFO)
-                    .setType(EXPECTATION_RESPONSE)
-                    .setHttpRequest(request("request_two"))
-                    .setHttpResponse(response("response_two"))
-                    .setMessageFormat("returning error:{}for request:{}for action:{}")
-                    .setArguments(request("request_two"), response("response_two"), response("response_two")),
-                new LogEntry()
-                    .setDeleted(true)
-                    .setType(EXPECTATION_MATCHED)
-                    .setLogLevel(INFO)
-                    .setHttpRequest(request("request_one"))
-                    .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
-                    .setMessageFormat("request:{}matched expectation:{}")
-                    .setArguments(request("request_one"), new Expectation(request("request_one")).thenRespond(response("response_two"))),
-                new LogEntry()
-                    .setDeleted(true)
-                    .setType(EXPECTATION_MATCHED)
-                    .setLogLevel(INFO)
-                    .setHttpRequest(request("request_two"))
-                    .setExpectation(new Expectation(request("request_two")).thenRespond(response("response_two")))
-                    .setMessageFormat("request:{}matched expectation:{}")
-                    .setArguments(request("request_two"), new Expectation(request("request_two")).thenRespond(response("response_two"))),
-                new LogEntry()
-                    .setDeleted(true)
-                    .setType(TRACE)
-                    .setHttpRequest(request("request_four"))
-                    .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
-                    .setMessageFormat("some random{}message")
-                    .setArguments("argument_one")
-            ));
+            List<LogEntry> actual = retrieveMessageLogEntries(null);
+            assertThat(actual.get(0), is(new LogEntry()
+                .setDeleted(true)
+                .setLogLevel(INFO)
+                .setType(NO_MATCH_RESPONSE)
+                .setHttpRequest(request("request_one"))
+                .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
+                .setMessageFormat("no expectation for:{}returning response:{}")
+                .setArguments(request("request_one"), notFoundResponse())));
+            assertThat(actual.get(1), is(new LogEntry()
+                .setDeleted(true)
+                .setLogLevel(INFO)
+                .setType(EXPECTATION_RESPONSE)
+                .setHttpRequest(request("request_two"))
+                .setHttpResponse(response("response_two"))
+                .setMessageFormat("returning error:{}for request:{}for action:{}")
+                .setArguments(request("request_two"), response("response_two"), response("response_two"))));
+            assertThat(actual.get(2), is(new LogEntry()
+                .setDeleted(true)
+                .setType(EXPECTATION_MATCHED)
+                .setLogLevel(INFO)
+                .setHttpRequest(request("request_one"))
+                .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
+                .setMessageFormat("request:{}matched expectation:{}")
+                .setArguments(request("request_one"), new Expectation(request("request_one")).thenRespond(response("response_two")))));
+            assertThat(actual.get(3), is(new LogEntry()
+                .setDeleted(true)
+                .setType(EXPECTATION_MATCHED)
+                .setLogLevel(INFO)
+                .setHttpRequest(request("request_two"))
+                .setExpectation(new Expectation(request("request_two")).thenRespond(response("response_two")))
+                .setMessageFormat("request:{}matched expectation:{}")
+                .setArguments(request("request_two"), new Expectation(request("request_two")).thenRespond(response("response_two")))));
+            assertThat(actual.get(4), is(new LogEntry()
+                .setDeleted(true)
+                .setType(TRACE)
+                .setHttpRequest(request("request_four"))
+                .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
+                .setMessageFormat("some random{}message")
+                .setArguments("argument_one")));
+            assertThat(actual.get(5), is(new LogEntry()
+                .setType(CLEARED)
+                .setHttpRequest(request())
+                .setMessageFormat("cleared logs that match:{}")
+                .setArguments("{}")));
             assertThat(retrieveRequestLogEntries(), empty());
             assertThat(retrieveRequestResponseMessageLogEntries(null), contains(
                 new LogEntry()
@@ -675,7 +684,6 @@ public class MockServerEventLogTest {
             ));
             assertThat(retrieveRequestResponseMessageLogEntries(null), contains(
                 new LogEntry()
-                    .setEpochTime(TimeService.currentTimeMillis())
                     .setLogLevel(INFO)
                     .setType(EXPECTATION_RESPONSE)
                     .setHttpRequest(request("request_two"))
@@ -692,8 +700,7 @@ public class MockServerEventLogTest {
             assertThat(retrieveRecordedExpectations(null), contains(
                 new Expectation(request("request_five"), Times.once(), TimeToLive.unlimited(), 0).thenRespond(response("response_five"))
             ));
-            List<LogEntry> actual = retrieveMessageLogEntries(null);
-            assertThat(actual, contains(
+            assertThat(retrieveMessageLogEntries(null), contains(
                 new LogEntry()
                     .setLogLevel(INFO)
                     .setType(RECEIVED_REQUEST)
@@ -725,7 +732,12 @@ public class MockServerEventLogTest {
                     .setType(FORWARDED_REQUEST)
                     .setHttpRequest(request("request_five"))
                     .setHttpResponse(response("response_five"))
-                    .setExpectation(request("request_five"), response("response_five"))
+                    .setExpectation(request("request_five"), response("response_five")),
+                new LogEntry()
+                    .setType(CLEARED)
+                    .setHttpRequest(request("request_one"))
+                    .setMessageFormat("cleared logs that match:{}")
+                    .setArguments(request("request_one"))
             ));
         } finally {
             ConfigurationProperties.logLevel(originalLevel.name());
@@ -833,55 +845,58 @@ public class MockServerEventLogTest {
                 new Expectation(request("request_five"), Times.once(), TimeToLive.unlimited(), 0).thenRespond(response("response_five"))
             ));
             List<LogEntry> actual = retrieveMessageLogEntries(null);
-            assertThat(actual, contains(
-                new LogEntry()
-                    .setDeleted(true)
-                    .setLogLevel(INFO)
-                    .setType(RECEIVED_REQUEST)
-                    .setHttpRequest(request("request_one"))
-                    .setMessageFormat("received request:{}")
-                    .setArguments(request("request_one")),
-                new LogEntry()
-                    .setDeleted(true)
-                    .setLogLevel(INFO)
-                    .setType(NO_MATCH_RESPONSE)
-                    .setHttpRequest(request("request_one"))
-                    .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
-                    .setMessageFormat("no expectation for:{}returning response:{}")
-                    .setArguments(request("request_one"), notFoundResponse()),
-                new LogEntry()
-                    .setLogLevel(INFO)
-                    .setType(RECEIVED_REQUEST)
-                    .setHttpRequest(request("request_two"))
-                    .setMessageFormat("received request:{}")
-                    .setArguments(request("request_two")),
-                new LogEntry()
-                    .setType(EXPECTATION_MATCHED)
-                    .setLogLevel(INFO)
-                    .setHttpRequest(request("request_two"))
-                    .setExpectation(new Expectation(request("request_two")).thenRespond(response("response_two")))
-                    .setMessageFormat("request:{}matched expectation:{}")
-                    .setArguments(request("request_two"), new Expectation(request("request_two")).thenRespond(response("response_two"))),
-                new LogEntry()
-                    .setType(EXPECTATION_RESPONSE)
-                    .setLogLevel(INFO)
-                    .setHttpRequest(request("request_two"))
-                    .setHttpResponse(response("response_two"))
-                    .setMessageFormat("request:{}matched expectation:{}")
-                    .setMessageFormat("returning response:{}for request:{}for action:{}")
-                    .setArguments(request("request_two"), response("response_two"), response("response_two")),
-                new LogEntry()
-                    .setType(TRACE)
-                    .setHttpRequest(request("request_four"))
-                    .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
-                    .setMessageFormat("some random{}message")
-                    .setArguments("argument_one"),
-                new LogEntry()
-                    .setType(FORWARDED_REQUEST)
-                    .setHttpRequest(request("request_five"))
-                    .setHttpResponse(response("response_five"))
-                    .setExpectation(request("request_five"), response("response_five"))
-            ));
+            assertThat(actual.get(0), is(new LogEntry()
+                .setDeleted(true)
+                .setLogLevel(INFO)
+                .setType(RECEIVED_REQUEST)
+                .setHttpRequest(request("request_one"))
+                .setMessageFormat("received request:{}")
+                .setArguments(request("request_one"))));
+            assertThat(actual.get(1), is(new LogEntry()
+                .setDeleted(true)
+                .setLogLevel(INFO)
+                .setType(NO_MATCH_RESPONSE)
+                .setHttpRequest(request("request_one"))
+                .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
+                .setMessageFormat("no expectation for:{}returning response:{}")
+                .setArguments(request("request_one"), notFoundResponse())));
+            assertThat(actual.get(2), is(new LogEntry()
+                .setLogLevel(INFO)
+                .setType(RECEIVED_REQUEST)
+                .setHttpRequest(request("request_two"))
+                .setMessageFormat("received request:{}")
+                .setArguments(request("request_two"))));
+            assertThat(actual.get(3), is(new LogEntry()
+                .setType(EXPECTATION_MATCHED)
+                .setLogLevel(INFO)
+                .setHttpRequest(request("request_two"))
+                .setExpectation(new Expectation(request("request_two")).thenRespond(response("response_two")))
+                .setMessageFormat("request:{}matched expectation:{}")
+                .setArguments(request("request_two"), new Expectation(request("request_two")).thenRespond(response("response_two")))));
+            assertThat(actual.get(4), is(new LogEntry()
+                .setType(EXPECTATION_RESPONSE)
+                .setLogLevel(INFO)
+                .setHttpRequest(request("request_two"))
+                .setHttpResponse(response("response_two"))
+                .setMessageFormat("request:{}matched expectation:{}")
+                .setMessageFormat("returning response:{}for request:{}for action:{}")
+                .setArguments(request("request_two"), response("response_two"), response("response_two"))));
+            assertThat(actual.get(5), is(new LogEntry()
+                .setType(TRACE)
+                .setHttpRequest(request("request_four"))
+                .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
+                .setMessageFormat("some random{}message")
+                .setArguments("argument_one")));
+            assertThat(actual.get(6), is(new LogEntry()
+                .setType(FORWARDED_REQUEST)
+                .setHttpRequest(request("request_five"))
+                .setHttpResponse(response("response_five"))
+                .setExpectation(request("request_five"), response("response_five"))));
+            assertThat(actual.get(7), is(new LogEntry()
+                .setType(CLEARED)
+                .setHttpRequest(request("request_one"))
+                .setMessageFormat("cleared logs that match:{}")
+                .setArguments(request("request_one"))));
         } finally {
             ConfigurationProperties.logLevel(originalLevel.name());
         }

@@ -12,6 +12,7 @@ import org.slf4j.event.Level;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -69,7 +70,7 @@ public class DashboardLogEntryDTOSerializerTest {
             "      \"key\" : \"" + logEntry.id() + "_0arg\"," + NEW_LINE +
             "      \"multiline\" : false," + NEW_LINE +
             "      \"argument\" : true," + NEW_LINE +
-            "      \"value\" : \"one\"" + NEW_LINE +
+            "      \"value\" : \"\\\"one\\\"\"" + NEW_LINE +
             "    }, {" + NEW_LINE +
             "      \"key\" : \"" + logEntry.id() + "_1msg\"," + NEW_LINE +
             "      \"value\" : \"formatted string\"" + NEW_LINE +
@@ -77,7 +78,7 @@ public class DashboardLogEntryDTOSerializerTest {
             "      \"key\" : \"" + logEntry.id() + "_1arg\"," + NEW_LINE +
             "      \"multiline\" : false," + NEW_LINE +
             "      \"argument\" : true," + NEW_LINE +
-            "      \"value\" : \"two\"" + NEW_LINE +
+            "      \"value\" : \"\\\"two\\\"\"" + NEW_LINE +
             "    } ]" + NEW_LINE +
             "  }" + NEW_LINE +
             "}"));
@@ -128,7 +129,7 @@ public class DashboardLogEntryDTOSerializerTest {
             "      \"key\" : \"" + logEntry.id() + "_1arg\"," + NEW_LINE +
             "      \"multiline\" : false," + NEW_LINE +
             "      \"argument\" : true," + NEW_LINE +
-            "      \"value\" : \"two\"" + NEW_LINE +
+            "      \"value\" : \"\\\"two\\\"\"" + NEW_LINE +
             "    } ]" + NEW_LINE +
             "  }" + NEW_LINE +
             "}"));
@@ -237,7 +238,7 @@ public class DashboardLogEntryDTOSerializerTest {
             "      \"key\" : \"" + logEntry.id() + "_1arg\"," + NEW_LINE +
             "      \"multiline\" : false," + NEW_LINE +
             "      \"argument\" : true," + NEW_LINE +
-            "      \"value\" : \"two\"" + NEW_LINE +
+            "      \"value\" : \"\\\"two\\\"\"" + NEW_LINE +
             "    } ]" + NEW_LINE +
             "  }" + NEW_LINE +
             "}"));
@@ -285,7 +286,7 @@ public class DashboardLogEntryDTOSerializerTest {
             "      \"key\" : \"" + logEntry.id() + "_0arg\"," + NEW_LINE +
             "      \"multiline\" : false," + NEW_LINE +
             "      \"argument\" : true," + NEW_LINE +
-            "      \"value\" : \"one\"" + NEW_LINE +
+            "      \"value\" : \"\\\"one\\\"\"" + NEW_LINE +
             "    }, {" + NEW_LINE +
             "      \"key\" : \"" + logEntry.id() + "_1msg\"," + NEW_LINE +
             "      \"value\" : \"formatted string\"" + NEW_LINE +
@@ -341,7 +342,7 @@ public class DashboardLogEntryDTOSerializerTest {
             "      \"key\" : \"" + logEntry.id() + "_0arg\"," + NEW_LINE +
             "      \"multiline\" : false," + NEW_LINE +
             "      \"argument\" : true," + NEW_LINE +
-            "      \"value\" : \"one\"" + NEW_LINE +
+            "      \"value\" : \"\\\"one\\\"\"" + NEW_LINE +
             "    }, {" + NEW_LINE +
             "      \"key\" : \"" + logEntry.id() + "_1msg\"," + NEW_LINE +
             "      \"value\" : \"formatted string\"" + NEW_LINE +
@@ -400,7 +401,7 @@ public class DashboardLogEntryDTOSerializerTest {
             "      \"key\" : \"" + logEntry.id() + "_1arg\"," + NEW_LINE +
             "      \"multiline\" : false," + NEW_LINE +
             "      \"argument\" : true," + NEW_LINE +
-            "      \"value\" : \"two\"" + NEW_LINE +
+            "      \"value\" : \"\\\"two\\\"\"" + NEW_LINE +
             "    } ]" + NEW_LINE +
             "  }" + NEW_LINE +
             "}"));
@@ -495,7 +496,7 @@ public class DashboardLogEntryDTOSerializerTest {
             "      \"key\" : \"" + logEntry.id() + "_0arg\"," + NEW_LINE +
             "      \"multiline\" : false," + NEW_LINE +
             "      \"argument\" : true," + NEW_LINE +
-            "      \"value\" : \"one\"" + NEW_LINE +
+            "      \"value\" : \"\\\"one\\\"\"" + NEW_LINE +
             "    }, {" + NEW_LINE +
             "      \"key\" : \"" + logEntry.id() + "_1msg\"," + NEW_LINE +
             "      \"value\" : \"formatted string\"" + NEW_LINE +
@@ -503,7 +504,7 @@ public class DashboardLogEntryDTOSerializerTest {
             "      \"key\" : \"" + logEntry.id() + "_1arg\"," + NEW_LINE +
             "      \"multiline\" : false," + NEW_LINE +
             "      \"argument\" : true," + NEW_LINE +
-            "      \"value\" : \"two\"" + NEW_LINE +
+            "      \"value\" : \"\\\"two\\\"\"" + NEW_LINE +
             "    } ]" + NEW_LINE +
             "  }" + NEW_LINE +
             "}"));
@@ -544,7 +545,7 @@ public class DashboardLogEntryDTOSerializerTest {
             "      \"key\" : \"" + logEntry.id() + "_0arg\"," + NEW_LINE +
             "      \"multiline\" : false," + NEW_LINE +
             "      \"argument\" : true," + NEW_LINE +
-            "      \"value\" : \"one\"" + NEW_LINE +
+            "      \"value\" : \"\\\"one\\\"\"" + NEW_LINE +
             "    }, {" + NEW_LINE +
             "      \"key\" : \"" + logEntry.id() + "_1msg\"," + NEW_LINE +
             "      \"value\" : \"formatted string\"" + NEW_LINE +
@@ -552,7 +553,7 @@ public class DashboardLogEntryDTOSerializerTest {
             "      \"key\" : \"" + logEntry.id() + "_1arg\"," + NEW_LINE +
             "      \"multiline\" : false," + NEW_LINE +
             "      \"argument\" : true," + NEW_LINE +
-            "      \"value\" : \"two\"" + NEW_LINE +
+            "      \"value\" : \"\\\"two\\\"\"" + NEW_LINE +
             "    }, {" + NEW_LINE +
             "      \"key\" : \"" + logEntry.id() + "_2msg\"," + NEW_LINE +
             "      \"value\" : \"with extra part\"" + NEW_LINE +
@@ -596,7 +597,7 @@ public class DashboardLogEntryDTOSerializerTest {
             "      \"key\" : \"" + logEntry.id() + "_0arg\"," + NEW_LINE +
             "      \"multiline\" : false," + NEW_LINE +
             "      \"argument\" : true," + NEW_LINE +
-            "      \"value\" : \"one\"" + NEW_LINE +
+            "      \"value\" : \"\\\"one\\\"\"" + NEW_LINE +
             "    }, {" + NEW_LINE +
             "      \"key\" : \"" + logEntry.id() + "_1msg\"," + NEW_LINE +
             "      \"value\" : \"formatted\\n string\"" + NEW_LINE +
@@ -604,9 +605,47 @@ public class DashboardLogEntryDTOSerializerTest {
             "      \"key\" : \"" + logEntry.id() + "_1arg\"," + NEW_LINE +
             "      \"multiline\" : false," + NEW_LINE +
             "      \"argument\" : true," + NEW_LINE +
-            "      \"value\" : \"two\"" + NEW_LINE +
+            "      \"value\" : \"\\\"two\\\"\"" + NEW_LINE +
             "    } ]" + NEW_LINE +
             "  }" + NEW_LINE +
             "}"));
+    }
+
+    @Test
+    public void shouldSerialiseEventWithThrowable() throws JsonProcessingException {
+        // given
+        LogEntry logEntry = new LogEntry()
+            .setLogLevel(Level.WARN)
+            .setEpochTime(epochTime)
+            .setType(LogEntry.LogMessageType.TEMPLATE_GENERATED)
+            .setMessageFormat("some message")
+            .setThrowable(new RuntimeException("TEST EXCEPTION"));
+
+        // when
+        String json = objectWriter.writeValueAsString(new DashboardLogEntryDTO(logEntry).setDescription(getDescription(logEntry)));
+
+        // then
+        assertThat(json, containsString("{" + NEW_LINE +
+            "  \"key\" : \"" + logEntry.id() + "_log\"," + NEW_LINE +
+            "  \"value\" : {" + NEW_LINE +
+            "    \"description\" : \"" + timeStamp + " TEMPLATE_GENERATED \"," + NEW_LINE +
+            "    \"style\" : {" + NEW_LINE +
+            "      \"paddingBottom\" : \"4px\"," + NEW_LINE +
+            "      \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
+            "      \"overflow\" : \"auto\"," + NEW_LINE +
+            "      \"color\" : \"rgb(241, 186, 27)\"," + NEW_LINE +
+            "      \"paddingTop\" : \"4px\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"messageParts\" : [ {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_0msg\"," + NEW_LINE +
+            "      \"value\" : \"some message\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_throwable_msg\"," + NEW_LINE +
+            "      \"value\" : \"exception:\"" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"key\" : \"" + logEntry.id() + "_throwable_value\"," + NEW_LINE +
+            "      \"multiline\" : true," + NEW_LINE +
+            "      \"argument\" : true," + NEW_LINE +
+            "      \"value\" : [ \"java.lang.RuntimeException: TEST EXCEPTION\", \"\\tat org.mockserver.dashboard.serializers.DashboardLogEntryDTOSerializerTest.shouldSerialiseEventWithThrowable"));
     }
 }

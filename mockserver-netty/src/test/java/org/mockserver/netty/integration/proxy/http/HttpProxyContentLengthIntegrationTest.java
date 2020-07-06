@@ -13,7 +13,8 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.scheduler.Scheduler;
 
-import static java.util.concurrent.TimeUnit.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -91,12 +92,12 @@ public class HttpProxyContentLengthIntegrationTest {
             clientEventLoopGroup,
             proxyConfiguration(
                 ProxyConfiguration.Type.HTTPS,
-                "localhost:" + proxyClientAndServer.getLocalPort()
+                "localhost:" + proxyClientAndServer.getPort()
             ), false)
             .sendRequest(
                 request()
                     .withPath("/noContentLengthHeader")
-                    .withHeader("Host", "localhost:" + targetClientAndServer.getLocalPort())
+                    .withHeader("Host", "localhost:" + targetClientAndServer.getPort())
             )
             .get(10, SECONDS);
 

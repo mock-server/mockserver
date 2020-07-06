@@ -203,10 +203,24 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         if (requestDefinition != null) {
             HttpRequestMatcher clearHttpRequestMatcher = matcherBuilder.transformsToMatcher(requestDefinition);
             for (HttpRequestMatcher httpRequestMatcher : getHttpRequestMatchersCopy()) {
-                if (clearHttpRequestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest())) {
+                RequestDefinition request = httpRequestMatcher
+                    .getExpectation()
+                    .getHttpRequest()
+                    .clone()
+                    .withLogCorrelationId(requestDefinition.getLogCorrelationId());
+                if (clearHttpRequestMatcher.matches(request)) {
                     removeHttpRequestMatcher(httpRequestMatcher);
                 }
             }
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(CLEARED)
+                    .setLogLevel(Level.INFO)
+                    .setCorrelationId(requestDefinition.getLogCorrelationId())
+                    .setHttpRequest(requestDefinition)
+                    .setMessageFormat("cleared expectations that match:{}")
+                    .setArguments(requestDefinition)
+            );
         } else {
             reset();
         }

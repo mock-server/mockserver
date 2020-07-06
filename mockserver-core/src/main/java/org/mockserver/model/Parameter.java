@@ -3,6 +3,7 @@ package org.mockserver.model;
 import java.util.Arrays;
 import java.util.Collection;
 
+import static org.mockserver.model.NottableOptionalString.optionalString;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -44,6 +45,14 @@ public class Parameter extends KeyToMultiValue {
 
     public static Parameter schemaParam(String name, String... values) {
         return new Parameter(string(name), Arrays.stream(values).map(NottableSchemaString::schemaString).toArray(NottableString[]::new));
+    }
+
+    public static Parameter schemaParam(NottableString name, String... values) {
+        return new Parameter(name, Arrays.stream(values).map(NottableSchemaString::schemaString).toArray(NottableString[]::new));
+    }
+
+    public static Parameter optionalParam(String name, String... values) {
+        return new Parameter(optionalString(name), Arrays.stream(values).map(NottableString::string).toArray(NottableString[]::new));
     }
 
     public Parameter withStyle(ParameterStyle style) {

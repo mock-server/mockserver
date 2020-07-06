@@ -7,7 +7,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.client.NettyHttpClient;
-import org.mockserver.closurecallback.websocketregistry.LocalCallbackRegistry;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -122,7 +121,7 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
                     .withMethod("POST")
                     .withPath("/my/echo" + counter)
                     .withBody(requestBody),
-                new InetSocketAddress("localhost", clientAndServer.getLocalPort())
+                new InetSocketAddress("localhost", clientAndServer.getPort())
             ).get(20, TimeUnit.MINUTES);
             assertThat(httpResponse.getBodyAsString(), is(requestBody));
             completableFuture.complete(httpResponse.getBodyAsString());

@@ -18,6 +18,7 @@ import org.mockserver.model.*;
 import org.mockserver.openapi.OpenAPISerialiser;
 import org.mockserver.openapi.examples.JsonNodeExampleSerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
+import org.slf4j.event.Level;
 
 import java.io.IOException;
 import java.util.*;
@@ -33,8 +34,8 @@ import static org.mockserver.model.NottableSchemaString.schemaString;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.ParameterStyle.*;
 import static org.mockserver.openapi.OpenAPISerialiser.OPEN_API_LOAD_ERROR;
-import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.ERROR;
+import static org.slf4j.event.Level.TRACE;
 
 public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
 
@@ -87,10 +88,10 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                 }
             }
             this.hashCode = 0;
-            if (MockServerLogger.isEnabled(DEBUG)) {
+            if (MockServerLogger.isEnabled(TRACE)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setLogLevel(DEBUG)
+                        .setLogLevel(TRACE)
                         .setHttpRequest(requestDefinition)
                         .setMessageFormat("created request matcher{}for open api definition{}")
                         .setArguments(this, requestDefinition)
@@ -459,7 +460,7 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
         if (httpRequestPropertiesMatchers != null && !httpRequestPropertiesMatchers.isEmpty()) {
             for (HttpRequestPropertiesMatcher httpRequestPropertiesMatcher : httpRequestPropertiesMatchers) {
                 if (matchDifference == null) {
-                    if (MatchDifference.debugAllMatchFailures && requestDefinition instanceof HttpRequest) {
+                    if (MockServerLogger.isEnabled(Level.TRACE) && requestDefinition instanceof HttpRequest) {
                         matchDifference = new MatchDifference(requestDefinition);
                     }
                     result = httpRequestPropertiesMatcher.matches(matchDifference, requestDefinition);

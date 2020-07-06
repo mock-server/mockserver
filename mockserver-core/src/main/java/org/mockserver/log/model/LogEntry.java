@@ -17,22 +17,19 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Objects;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
  * @author jamesdbloom
  */
-public class LogEntry extends ObjectWithJsonToString implements EventTranslator<LogEntry> {
+public class LogEntry implements EventTranslator<LogEntry> {
 
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
-    private static final String[] EXCLUDED_FIELDS = {
-        "id",
-        "timestamp",
-        "message",
-        "throwable"
-    };
+    private int hashCode;
     private String id;
     private String correlationId;
     private Level logLevel = Level.INFO;
@@ -164,7 +161,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     }
 
     @JsonIgnore
-    public boolean matches(HttpRequestMatcher matcher) {
+    public boolean matches(HttpRequestMatcher matcher, String logCorrelationId) {
         if (matcher == null) {
             return true;
         }
@@ -172,7 +169,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
             return true;
         }
         for (RequestDefinition httpRequest : httpRequests) {
-            if (matcher.matches(httpRequest)) {
+            if (matcher.matches(httpRequest.cloneWithLogCorrelationId())) {
                 return true;
             }
         }
@@ -194,7 +191,9 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
 
     public LogEntry setHttpRequest(RequestDefinition httpRequest) {
         if (httpRequest != null) {
-            setCorrelationId(httpRequest.getLogCorrelationId());
+            if (isNotBlank(httpRequest.getLogCorrelationId())) {
+                setCorrelationId(httpRequest.getLogCorrelationId());
+            }
             this.httpRequests = new RequestDefinition[]{httpRequest};
         } else {
             this.httpRequests = new RequestDefinition[]{request()};
@@ -306,6 +305,8 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
                         return updateBody((HttpRequest) argument);
                     } else if (argument instanceof HttpResponse) {
                         return updateBody((HttpResponse) argument);
+                    } else if (argument == null) {
+                        return "";
                     } else {
                         return argument;
                     }
@@ -442,6 +443,53 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         clear();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (hashCode() != o.hashCode()) {
+            return false;
+        }
+        LogEntry logEntry = (LogEntry) o;
+        return epochTime == logEntry.epochTime &&
+            deleted == logEntry.deleted &&
+            type == logEntry.type &&
+            logLevel == logEntry.logLevel &&
+            Objects.equals(messageFormat, logEntry.messageFormat) &&
+            Objects.equals(httpResponse, logEntry.httpResponse) &&
+            Objects.equals(httpError, logEntry.httpError) &&
+            Objects.equals(expectation, logEntry.expectation) &&
+            Objects.equals(consumer, logEntry.consumer) &&
+            Arrays.equals(arguments, logEntry.arguments) &&
+            Arrays.equals(httpRequests, logEntry.httpRequests);
+    }
+
+    @Override
+    public int hashCode() {
+        if (hashCode == 0) {
+            int result = Objects.hash(epochTime, deleted, type, logLevel, messageFormat, httpResponse, httpError, expectation, consumer);
+            result = 31 * result + Arrays.hashCode(arguments);
+            result = 31 * result + Arrays.hashCode(httpRequests);
+            hashCode = result;
+        }
+        return hashCode;
+    }
+
+    @Override
+    public String toString() {
+        try {
+            return ObjectMapperFactory
+                .createObjectMapper(true)
+                .writeValueAsString(this);
+        } catch (Exception e) {
+            return super.toString();
+        }
+    }
+
     public enum LogMessageType {
         RUNNABLE,
         TRACE,
@@ -466,10 +514,5 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         FORWARDED_REQUEST,
         TEMPLATE_GENERATED,
         SERVER_CONFIGURATION,
-    }
-
-    @Override
-    protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return EXCLUDED_FIELDS;
     }
 }

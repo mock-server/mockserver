@@ -42,6 +42,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.google.common.net.HttpHeaders.HOST;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
@@ -61,7 +62,7 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
         -> input.getType() == FORWARDED_REQUEST;
     private static final AttributeKey<Boolean> CHANNEL_UPGRADED_FOR_UI_WEB_SOCKET = AttributeKey.valueOf("CHANNEL_UPGRADED_FOR_UI_WEB_SOCKET");
     private static final String UPGRADE_CHANNEL_FOR_UI_WEB_SOCKET_URI = "/_mockserver_ui_websocket";
-    private static final int UI_UPDATE_ITEM_LIMIT = 50;
+    private static final int UI_UPDATE_ITEM_LIMIT = 100;
     private static ObjectWriter objectWriter;
     private static ObjectMapper objectMapper;
     private final boolean prettyPrint;
@@ -179,12 +180,6 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
 
     @VisibleForTesting
     protected DashboardWebSocketHandler registerListeners() {
-        if (mockServerEventLog == null) {
-            mockServerEventLog = httpState.getMockServerLog();
-            mockServerEventLog.registerListener(this);
-            requestMatchers = httpState.getRequestMatchers();
-            requestMatchers.registerListener(this);
-        }
         if (objectWriter == null) {
             objectMapper = ObjectMapperFactory.createObjectMapper(
                 new DashboardLogEntryDTOSerializer(),
@@ -223,6 +218,21 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
                 semaphore.release(1);
             }
         }, 0, 1, SECONDS);
+        if (mockServerEventLog == null) {
+            mockServerEventLog = httpState.getMockServerLog();
+            mockServerEventLog.registerListener(this);
+            requestMatchers = httpState.getRequestMatchers();
+            requestMatchers.registerListener(this);
+            scheduler.submit(() -> {
+                try {
+                    MILLISECONDS.sleep(100);
+                } catch (InterruptedException ignore) {
+                }
+                // ensure any exception added during initialisation are caught
+                updated(mockServerEventLog);
+                updated(requestMatchers, null);
+            });
+        }
         return this;
     }
 
@@ -324,7 +334,7 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
         DescriptionProcessor recordedRequestsDescriptionProcessor = new DescriptionProcessor();
         DescriptionProcessor proxiedRequestsDescriptionProcessor = new DescriptionProcessor();
         mockServerEventLog
-            .retrieveLogEntriesInReverse(
+            .retrieveLogEntriesInReverseForUI(
                 httpRequest,
                 logEntry -> true,
                 DashboardLogEntryDTO::new,

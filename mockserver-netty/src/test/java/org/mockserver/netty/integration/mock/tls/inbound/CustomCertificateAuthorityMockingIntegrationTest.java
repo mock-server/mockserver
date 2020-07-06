@@ -30,7 +30,7 @@ public class CustomCertificateAuthorityMockingIntegrationTest extends AbstractBa
         certificateAuthorityPrivateKey("org/mockserver/netty/integration/tls/ca-key-pkcs8.pem");
 
         mockServerClient = startClientAndServer();
-        mockServerPort = ((ClientAndServer) mockServerClient).getLocalPort();
+        mockServerPort = mockServerClient.getPort();
     }
 
     @AfterClass

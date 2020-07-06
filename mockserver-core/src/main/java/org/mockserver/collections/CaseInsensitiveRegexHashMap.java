@@ -15,7 +15,6 @@ import static org.mockserver.collections.ImmutableEntry.entry;
 import static org.mockserver.collections.ImmutableEntry.listsEqual;
 import static org.mockserver.collections.SubSets.distinctSubSetsMap;
 import static org.mockserver.model.NottableString.string;
-import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.TRACE;
 
 /**
@@ -91,10 +90,10 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
             List<ImmutableEntry> matcherEntries = matcher.entryList();
             for (List<ImmutableEntry> matchedSubSet : allMatchedSubSets.get(matcherEntries.size())) {
                 if (listsEqual(matcherEntries, matchedSubSet)) {
-                    if (MockServerLogger.isEnabled(DEBUG)) {
+                    if (MockServerLogger.isEnabled(TRACE)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
-                                .setLogLevel(DEBUG)
+                                .setLogLevel(TRACE)
                                 .setCorrelationId(logCorrelationId)
                                 .setMessageFormat("hashmap{}containsAll subset{}in{}")
                                 .setArguments(this, matchedSubSet, matcherEntries)
@@ -104,10 +103,10 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
                     return true;
                 }
             }
-            if (MockServerLogger.isEnabled(DEBUG)) {
+            if (MockServerLogger.isEnabled(TRACE)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setLogLevel(DEBUG)
+                        .setLogLevel(TRACE)
                         .setCorrelationId(logCorrelationId)
                         .setMessageFormat("hashmap{}containsAll found no subset equal to{}from{}")
                         .setArguments(this, matcherEntries, allMatchedSubSets)
@@ -123,10 +122,10 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
             List<ImmutableEntry> matcherEntriesWithoutOptionals = matcher.entryList().stream().filter(entry -> !entry.getKey().isOptional()).collect(Collectors.toList());
             for (List<ImmutableEntry> matchedSubSet : allMatchedSubSets.get(matcherEntriesWithoutOptionals.size())) {
                 if (listsEqual(matcherEntriesWithoutOptionals, matchedSubSet)) {
-                    if (MockServerLogger.isEnabled(DEBUG)) {
+                    if (MockServerLogger.isEnabled(TRACE)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
-                                .setLogLevel(DEBUG)
+                                .setLogLevel(TRACE)
                                 .setCorrelationId(logCorrelationId)
                                 .setMessageFormat("hashmap{}containsAll subset of non-optionals{}in{}")
                                 .setArguments(this, matchedSubSet, matcherEntriesWithoutOptionals)
@@ -147,10 +146,10 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
                             if (optionalMatcherEntry.equals(matchedEntry)) {
                                 matchedSubSet.add(matchedEntry);
                             } else {
-                                if (MockServerLogger.isEnabled(DEBUG)) {
+                                if (MockServerLogger.isEnabled(TRACE)) {
                                     mockServerLogger.logEvent(
                                         new LogEntry()
-                                            .setLogLevel(DEBUG)
+                                            .setLogLevel(TRACE)
                                             .setCorrelationId(logCorrelationId)
                                             .setMessageFormat("hashmap{}failed to match optional{}with{}")
                                             .setArguments(this, optionalMatcherEntry, matchedEntry)
@@ -161,10 +160,10 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
                             }
                         }
                     }
-                    if (MockServerLogger.isEnabled(DEBUG)) {
+                    if (MockServerLogger.isEnabled(TRACE)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
-                                .setLogLevel(DEBUG)
+                                .setLogLevel(TRACE)
                                 .setCorrelationId(logCorrelationId)
                                 .setMessageFormat("hashmap{}containsAll subset of optionals{}in{}")
                                 .setArguments(this, matchedSubSet, optionalMatcherEntries)
@@ -177,10 +176,10 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
                 }
             }
 
-            if (MockServerLogger.isEnabled(DEBUG)) {
+            if (MockServerLogger.isEnabled(TRACE)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setLogLevel(DEBUG)
+                        .setLogLevel(TRACE)
                         .setCorrelationId(logCorrelationId)
                         .setMessageFormat("hashmap{}containsAll found no subset equal to{}from{}")
                         .setArguments(this, matcher.entryList(), matchedEntries)

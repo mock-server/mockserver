@@ -109,7 +109,6 @@ public class OpenAPIDefinition extends RequestDefinition {
         return this;
     }
 
-    @SuppressWarnings("MethodDoesntCallSuperMethod")
     public OpenAPIDefinition clone() {
         return not(openAPI(), not)
             .withSpecUrlOrPayload(specUrlOrPayload)

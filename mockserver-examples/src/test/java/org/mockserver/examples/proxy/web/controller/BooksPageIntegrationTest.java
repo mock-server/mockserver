@@ -10,7 +10,6 @@ import org.mockserver.examples.proxy.web.controller.pageobjects.BooksPage;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.Header;
 import org.mockserver.model.Parameter;
-import org.mockserver.socket.PortFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -49,9 +48,9 @@ public abstract class BooksPageIntegrationTest {
     public static void startProxy() {
         proxy = ClientAndServer.startClientAndServer();
         System.setProperty("http.proxyHost", "127.0.0.1");
-        System.setProperty("http.proxyPort", String.valueOf(proxy.getLocalPort()));
+        System.setProperty("http.proxyPort", String.valueOf(proxy.getPort()));
         mockServer = startClientAndServer();
-        System.setProperty("bookService.port", String.valueOf(mockServer.getLocalPort()));
+        System.setProperty("bookService.port", String.valueOf(mockServer.getPort()));
     }
 
     @AfterClass

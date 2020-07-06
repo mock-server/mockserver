@@ -69,7 +69,7 @@ public class HttpProxyChainedIntegrationTest {
             String password = UUID.randomUUID().toString();
             ConfigurationProperties.proxyAuthenticationUsername(username);
             ConfigurationProperties.proxyAuthenticationPassword(password);
-            ConfigurationProperties.forwardHttpsProxy("localhost:" + targetClientAndServer.getLocalPort());
+            ConfigurationProperties.forwardHttpsProxy("localhost:" + targetClientAndServer.getPort());
             ConfigurationProperties.forwardProxyAuthenticationUsername(username);
             ConfigurationProperties.forwardProxyAuthenticationPassword(password);
             proxyClientAndServer = startClientAndServer();

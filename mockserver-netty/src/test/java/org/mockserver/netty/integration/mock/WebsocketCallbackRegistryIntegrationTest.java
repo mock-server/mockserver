@@ -54,7 +54,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
 
     @Override
     public int getServerPort() {
-        return ((ClientAndServer) mockServerClient).getLocalPort();
+        return mockServerClient.getPort();
     }
 
     @Test // same JVM due to dynamic calls to static Metrics class
@@ -640,7 +640,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
 
                 for (int counter = 0; counter < 500; ++counter) {
                     try {
-                        URL url = new URL("http://localhost:" + proxy.getLocalPort() + "/api/v1/employees");
+                        URL url = new URL("http://localhost:" + proxy.getPort() + "/api/v1/employees");
                         HttpURLConnection con = (HttpURLConnection) url.openConnection();
                         con.setRequestMethod("GET");
                         con.setRequestProperty("Counter", "" + counter);
@@ -712,7 +712,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
 
             for (int counter = 0; counter < 500; ++counter) {
                 try {
-                    URL url = new URL("http://localhost:" + proxy.getLocalPort() + "/api/v1/employees");
+                    URL url = new URL("http://localhost:" + proxy.getPort() + "/api/v1/employees");
                     HttpURLConnection con = (HttpURLConnection) url.openConnection();
                     con.setRequestMethod("GET");
                     con.setRequestProperty("Counter", "" + counter);
@@ -774,7 +774,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
 
             for (int counter = 0; counter < 500; ++counter) {
                 try {
-                    URL url = new URL("http://localhost:" + proxy.getLocalPort() + "/api/v1/employees");
+                    URL url = new URL("http://localhost:" + proxy.getPort() + "/api/v1/employees");
                     HttpURLConnection con = (HttpURLConnection) url.openConnection();
                     con.setRequestMethod("GET");
                     con.setRequestProperty("Counter", "" + counter);

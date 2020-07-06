@@ -1,8 +1,12 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.mockserver.logging.MockServerLogger;
+import org.slf4j.event.Level;
 
-public class RequestDefinition extends Not {
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
+public abstract class RequestDefinition extends Not {
 
     private String logCorrelationId;
 
@@ -14,6 +18,12 @@ public class RequestDefinition extends Not {
     public RequestDefinition withLogCorrelationId(String logCorrelationId) {
         this.logCorrelationId = logCorrelationId;
         return this;
+    }
+
+    public abstract RequestDefinition clone();
+
+    public RequestDefinition cloneWithLogCorrelationId() {
+        return MockServerLogger.isEnabled(Level.TRACE) && isNotBlank(getLogCorrelationId()) ? clone().withLogCorrelationId(getLogCorrelationId()) : this;
     }
 
     @Override

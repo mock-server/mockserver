@@ -120,7 +120,7 @@ public class BinaryProxyIntegrationTest {
                     .sendRequest(
                         bytes(randomRequestBytes),
                         true,
-                        new InetSocketAddress(proxyClientAndServer.getLocalPort()),
+                        new InetSocketAddress(proxyClientAndServer.getPort()),
                         (int) SECONDS.toMillis(10)
                     );
 
@@ -162,7 +162,7 @@ public class BinaryProxyIntegrationTest {
             .sendRequest(
                 bytes(randomRequestBytes),
                 true,
-                new InetSocketAddress(clientAndServer.getLocalPort()),
+                new InetSocketAddress(clientAndServer.getPort()),
                 (int) SECONDS.toMillis(10)
             )
             .get(10, SECONDS);

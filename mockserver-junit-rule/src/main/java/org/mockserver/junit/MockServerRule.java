@@ -24,7 +24,7 @@ public class MockServerRule implements TestRule {
     /**
      * Start the MockServer prior to test execution and stop the MockServer after the tests have completed.
      * This constructor dynamically allocates a free port for the MockServer to use.
-     *
+     * <p>
      * If the test class contains a MockServerClient field it is set with a client configured for the created MockServer.
      *
      * @param target an instance of the test being executed
@@ -36,7 +36,7 @@ public class MockServerRule implements TestRule {
     /**
      * Start the MockServer prior to test execution and stop the MockServer after the tests have completed.
      * This constructor dynamically allocates a free port for the MockServer to use.
-     *
+     * <p>
      * If the test class contains a MockServerClient field it is set with a client configured for the created MockServer.
      *
      * @param target       an instance of the test being executed
@@ -51,7 +51,7 @@ public class MockServerRule implements TestRule {
     /**
      * Start the proxy prior to test execution and stop the proxy after the tests have completed.
      * This constructor dynamically create a MockServer that accepts HTTP(s) requests on the specified port
-     *
+     * <p>
      * If the test class contains a MockServerClient field it is set with a client configured for the created MockServer.
      *
      * @param target an instance of the test being executed
@@ -79,7 +79,7 @@ public class MockServerRule implements TestRule {
     public Integer getPort() {
         Integer port = null;
         if (clientAndServer != null) {
-            port = clientAndServer.getLocalPort();
+            port = clientAndServer.getPort();
         } else if (ports.length > 0) {
             port = ports[0];
         }

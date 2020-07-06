@@ -106,40 +106,13 @@ public class HttpState {
             switch (type) {
                 case LOG:
                     mockServerLog.clear(requestDefinition);
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setType(CLEARED)
-                            .setLogLevel(Level.INFO)
-                            .setCorrelationId(logCorrelationId)
-                            .setHttpRequest(requestDefinition)
-                            .setMessageFormat("clearing logs that match:{}")
-                            .setArguments((requestDefinition == null ? "{}" : requestDefinition))
-                    );
                     break;
                 case EXPECTATIONS:
                     requestMatchers.clear(requestDefinition);
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setType(CLEARED)
-                            .setLogLevel(Level.INFO)
-                            .setCorrelationId(logCorrelationId)
-                            .setHttpRequest(requestDefinition)
-                            .setMessageFormat("clearing expectations that match:{}")
-                            .setArguments((requestDefinition == null ? "{}" : requestDefinition))
-                    );
                     break;
                 case ALL:
                     mockServerLog.clear(requestDefinition);
                     requestMatchers.clear(requestDefinition);
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setType(CLEARED)
-                            .setLogLevel(Level.INFO)
-                            .setCorrelationId(logCorrelationId)
-                            .setHttpRequest(requestDefinition)
-                            .setMessageFormat("clearing expectations and logs that match:{}")
-                            .setArguments((requestDefinition == null ? "{}" : requestDefinition))
-                    );
                     break;
             }
         } catch (IllegalArgumentException iae) {

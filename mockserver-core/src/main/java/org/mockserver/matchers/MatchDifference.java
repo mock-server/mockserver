@@ -12,11 +12,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.mockserver.configuration.ConfigurationProperties.detailedMatchFailures;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
-import static org.slf4j.event.Level.DEBUG;
+import static org.slf4j.event.Level.TRACE;
 
 public class MatchDifference {
-
-    public static boolean debugAllMatchFailures = false;
 
     public enum Field {
         METHOD("method"),
@@ -52,10 +50,11 @@ public class MatchDifference {
 
     @SuppressWarnings("UnusedReturnValue")
     public MatchDifference addDifference(MockServerLogger mockServerLogger, Throwable throwable, String messageFormat, Object... arguments) {
-        if (MockServerLogger.isEnabled(DEBUG)) {
+        if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setLogLevel(DEBUG)
+                    .setLogLevel(TRACE)
+                    .setHttpRequest(httpRequest)
                     .setCorrelationId(httpRequest.getLogCorrelationId())
                     .setMessageFormat(messageFormat)
                     .setArguments(arguments)

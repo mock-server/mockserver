@@ -10,6 +10,7 @@ import org.mockserver.model.RequestDefinition;
 
 import java.util.Map;
 
+import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 import static org.mockserver.model.HttpRequest.request;
 
 @SuppressWarnings({"UnusedReturnValue", "unused"})
@@ -28,6 +29,7 @@ public class DashboardLogEntryDTO extends ObjectWithJsonToString {
     private Map<String, String> style;
     private String messageFormat;
     private Object[] arguments;
+    private String[] throwable;
     private String because;
 
     private Description description;
@@ -48,6 +50,9 @@ public class DashboardLogEntryDTO extends ObjectWithJsonToString {
         setHttpResponse(logEntry.getHttpUpdatedResponse());
         setMessageFormat(logEntry.getMessageFormat());
         setArguments(logEntry.getArguments());
+        if (logEntry.getThrowable() != null) {
+            setThrowable(getStackTrace(logEntry.getThrowable()).split(System.lineSeparator()));
+        }
         setBecause(logEntry.getBecause());
     }
 
@@ -145,6 +150,14 @@ public class DashboardLogEntryDTO extends ObjectWithJsonToString {
     public DashboardLogEntryDTO setArguments(Object... arguments) {
         this.arguments = arguments;
         return this;
+    }
+
+    public String[] getThrowable() {
+        return throwable;
+    }
+
+    public void setThrowable(String[] throwable) {
+        this.throwable = throwable;
     }
 
     @JsonIgnore

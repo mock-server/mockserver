@@ -18,12 +18,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.FORWARDED_REQUEST;
 import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
@@ -36,7 +35,7 @@ public class DashboardWebSocketHandlerTest {
     //    - request filtering (i.e. by path and method)
 
     @Test
-    public void shouldSerialiseBasicMessageOnlyEvents() throws ExecutionException, InterruptedException, TimeoutException {
+    public void shouldSerialiseBasicMessageOnlyEvents() throws InterruptedException {
         // given
         List<LogEntry> logEntries = Arrays.asList(
             new LogEntry()
@@ -82,7 +81,7 @@ public class DashboardWebSocketHandlerTest {
             "        \"key\" : \"" + logEntries.get(0).id() + "_0arg\"," + NEW_LINE +
             "        \"multiline\" : false," + NEW_LINE +
             "        \"argument\" : true," + NEW_LINE +
-            "        \"value\" : \"argumentOne\"" + NEW_LINE +
+            "        \"value\" : \"\\\"argumentOne\\\"\"" + NEW_LINE +
             "      }, {" + NEW_LINE +
             "        \"key\" : \"" + logEntries.get(0).id() + "_1msg\"," + NEW_LINE +
             "        \"value\" : \"messagePartTwo:\"" + NEW_LINE +
@@ -90,18 +89,93 @@ public class DashboardWebSocketHandlerTest {
             "        \"key\" : \"" + logEntries.get(0).id() + "_1arg\"," + NEW_LINE +
             "        \"multiline\" : false," + NEW_LINE +
             "        \"argument\" : true," + NEW_LINE +
-            "        \"value\" : \"argumentTwo\"" + NEW_LINE +
+            "        \"value\" : \"\\\"argumentTwo\\\"\"" + NEW_LINE +
             "      } ]" + NEW_LINE +
             "    }" + NEW_LINE +
             "  } ]" + NEW_LINE +
             "}";
 
         // then
-        shouldRenderLogEntriesCorrectly(logEntries, Collections.emptyList(), renderedList);
+        shouldRenderLogEntriesCorrectly(false, logEntries, Collections.emptyList(), renderedList);
     }
 
     @Test
-    public void shouldSerialiseEventsWithRequest() throws ExecutionException, InterruptedException, TimeoutException {
+    public void shouldSerialiseMessageWithException() throws InterruptedException {
+        // given
+        List<LogEntry> logEntries = Arrays.asList(
+            new LogEntry()
+                .setMessageFormat("messagePartOne:{}messagePartTwo:{}")
+                .setArguments("argumentOne", "argumentTwo"),
+            new LogEntry()
+                .setMessageFormat("messageFormat")
+                .setThrowable(new RuntimeException("TEST EXCEPTION"))
+        );
+        String[] renderedList = new String[]{
+            "{" + NEW_LINE +
+                "  \"logMessages\" : [ {" + NEW_LINE +
+                "    \"key\" : \"" + logEntries.get(1).id() + "_log\"," + NEW_LINE +
+                "    \"value\" : {" + NEW_LINE +
+                "      \"description\" : \"" + StringUtils.substringAfter(logEntries.get(1).getTimestamp(), "-") + " INFO   \"," + NEW_LINE +
+                "      \"style\" : {" + NEW_LINE +
+                "        \"style.whiteSpace\" : \"pre-wrap\"," + NEW_LINE +
+                "        \"paddingBottom\" : \"4px\"," + NEW_LINE +
+                "        \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
+                "        \"overflow\" : \"auto\"," + NEW_LINE +
+                "        \"color\" : \"rgb(59,122,87)\"," + NEW_LINE +
+                "        \"paddingTop\" : \"4px\"" + NEW_LINE +
+                "      }," + NEW_LINE +
+                "      \"messageParts\" : [ {" + NEW_LINE +
+                "        \"key\" : \"" + logEntries.get(1).id() + "_0msg\"," + NEW_LINE +
+                "        \"value\" : \"messageFormat\"" + NEW_LINE +
+                "      }, {" + NEW_LINE +
+                "        \"key\" : \"" + logEntries.get(1).id() + "_throwable_msg\"," + NEW_LINE +
+                "        \"value\" : \"exception:\"" + NEW_LINE +
+                "      }, {" + NEW_LINE +
+                "        \"key\" : \"" + logEntries.get(1).id() + "_throwable_value\"," + NEW_LINE +
+                "        \"multiline\" : true," + NEW_LINE +
+                "        \"argument\" : true," + NEW_LINE +
+                "        \"value\" : [ \"java.lang.RuntimeException: TEST EXCEPTION\", \"\\tat org.mockserver.dashboard.DashboardWebSocketHandlerTest.shouldSerialiseMessageWithException",
+            "      } ]" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  }, {" + NEW_LINE +
+                "    \"key\" : \"" + logEntries.get(0).id() + "_log\"," + NEW_LINE +
+                "    \"value\" : {" + NEW_LINE +
+                "      \"description\" : \"" + StringUtils.substringAfter(logEntries.get(0).getTimestamp(), "-") + " INFO   \"," + NEW_LINE +
+                "      \"style\" : {" + NEW_LINE +
+                "        \"style.whiteSpace\" : \"pre-wrap\"," + NEW_LINE +
+                "        \"paddingBottom\" : \"4px\"," + NEW_LINE +
+                "        \"whiteSpace\" : \"nowrap\"," + NEW_LINE +
+                "        \"overflow\" : \"auto\"," + NEW_LINE +
+                "        \"color\" : \"rgb(59,122,87)\"," + NEW_LINE +
+                "        \"paddingTop\" : \"4px\"" + NEW_LINE +
+                "      }," + NEW_LINE +
+                "      \"messageParts\" : [ {" + NEW_LINE +
+                "        \"key\" : \"" + logEntries.get(0).id() + "_0msg\"," + NEW_LINE +
+                "        \"value\" : \"messagePartOne:\"" + NEW_LINE +
+                "      }, {" + NEW_LINE +
+                "        \"key\" : \"" + logEntries.get(0).id() + "_0arg\"," + NEW_LINE +
+                "        \"multiline\" : false," + NEW_LINE +
+                "        \"argument\" : true," + NEW_LINE +
+                "        \"value\" : \"\\\"argumentOne\\\"\"" + NEW_LINE +
+                "      }, {" + NEW_LINE +
+                "        \"key\" : \"" + logEntries.get(0).id() + "_1msg\"," + NEW_LINE +
+                "        \"value\" : \"messagePartTwo:\"" + NEW_LINE +
+                "      }, {" + NEW_LINE +
+                "        \"key\" : \"" + logEntries.get(0).id() + "_1arg\"," + NEW_LINE +
+                "        \"multiline\" : false," + NEW_LINE +
+                "        \"argument\" : true," + NEW_LINE +
+                "        \"value\" : \"\\\"argumentTwo\\\"\"" + NEW_LINE +
+                "      } ]" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  } ]" + NEW_LINE +
+                "}"};
+
+        // then
+        shouldRenderLogEntriesCorrectly(true, logEntries, Collections.emptyList(), renderedList);
+    }
+
+    @Test
+    public void shouldSerialiseEventsWithRequest() throws InterruptedException {
         // given
         List<LogEntry> logEntries = Arrays.asList(
             new LogEntry()
@@ -149,7 +223,7 @@ public class DashboardWebSocketHandlerTest {
             "        \"key\" : \"" + logEntries.get(0).id() + "_0arg\"," + NEW_LINE +
             "        \"multiline\" : false," + NEW_LINE +
             "        \"argument\" : true," + NEW_LINE +
-            "        \"value\" : \"argumentOne\"" + NEW_LINE +
+            "        \"value\" : \"\\\"argumentOne\\\"\"" + NEW_LINE +
             "      }, {" + NEW_LINE +
             "        \"key\" : \"" + logEntries.get(0).id() + "_1msg\"," + NEW_LINE +
             "        \"value\" : \"messagePartTwo:\"" + NEW_LINE +
@@ -157,18 +231,18 @@ public class DashboardWebSocketHandlerTest {
             "        \"key\" : \"" + logEntries.get(0).id() + "_1arg\"," + NEW_LINE +
             "        \"multiline\" : false," + NEW_LINE +
             "        \"argument\" : true," + NEW_LINE +
-            "        \"value\" : \"argumentTwo\"" + NEW_LINE +
+            "        \"value\" : \"\\\"argumentTwo\\\"\"" + NEW_LINE +
             "      } ]" + NEW_LINE +
             "    }" + NEW_LINE +
             "  } ]" + NEW_LINE +
             "}";
 
         // then
-        shouldRenderLogEntriesCorrectly(logEntries, Collections.emptyList(), renderedList);
+        shouldRenderLogEntriesCorrectly(false, logEntries, Collections.emptyList(), renderedList);
     }
 
     @Test
-    public void shouldSerialiseRollUpEventsWithCorrelationId() throws ExecutionException, InterruptedException, TimeoutException {
+    public void shouldSerialiseRollUpEventsWithCorrelationId() throws InterruptedException {
         // given
         String logCorrelationId = UUID.randomUUID().toString();
         List<LogEntry> logEntries = Arrays.asList(
@@ -233,7 +307,7 @@ public class DashboardWebSocketHandlerTest {
             "          \"key\" : \"" + logEntries.get(0).id() + "_0arg\"," + NEW_LINE +
             "          \"multiline\" : false," + NEW_LINE +
             "          \"argument\" : true," + NEW_LINE +
-            "          \"value\" : \"argumentOne\"" + NEW_LINE +
+            "          \"value\" : \"\\\"argumentOne\\\"\"" + NEW_LINE +
             "        }, {" + NEW_LINE +
             "          \"key\" : \"" + logEntries.get(0).id() + "_1msg\"," + NEW_LINE +
             "          \"value\" : \"messagePartTwo:\"" + NEW_LINE +
@@ -241,7 +315,7 @@ public class DashboardWebSocketHandlerTest {
             "          \"key\" : \"" + logEntries.get(0).id() + "_1arg\"," + NEW_LINE +
             "          \"multiline\" : false," + NEW_LINE +
             "          \"argument\" : true," + NEW_LINE +
-            "          \"value\" : \"argumentTwo\"" + NEW_LINE +
+            "          \"value\" : \"\\\"argumentTwo\\\"\"" + NEW_LINE +
             "        } ]" + NEW_LINE +
             "      }" + NEW_LINE +
             "    } ]" + NEW_LINE +
@@ -249,11 +323,11 @@ public class DashboardWebSocketHandlerTest {
             "}";
 
         // then
-        shouldRenderLogEntriesCorrectly(logEntries, Collections.emptyList(), renderedList);
+        shouldRenderLogEntriesCorrectly(false, logEntries, Collections.emptyList(), renderedList);
     }
 
     @Test
-    public void shouldSerialiseRollUpEventsWithSameCorrelationIdAndNotWarpEventsWithUniqueCorrelationId() throws ExecutionException, InterruptedException, TimeoutException {
+    public void shouldSerialiseRollUpEventsWithSameCorrelationIdAndNotWarpEventsWithUniqueCorrelationId() throws InterruptedException {
         // given
         String logCorrelationIdShared = UUID.randomUUID().toString();
         String logCorrelationIdOne = UUID.randomUUID().toString();
@@ -362,11 +436,11 @@ public class DashboardWebSocketHandlerTest {
             "}";
 
         // then
-        shouldRenderLogEntriesCorrectly(logEntries, Collections.emptyList(), renderedList);
+        shouldRenderLogEntriesCorrectly(false, logEntries, Collections.emptyList(), renderedList);
     }
 
     @Test
-    public void shouldSerialiseEventsWithoutFields() throws ExecutionException, InterruptedException, TimeoutException {
+    public void shouldSerialiseEventsWithoutFields() throws InterruptedException {
         // given
         List<LogEntry> logEntries = Arrays.asList(
             new LogEntry()
@@ -453,11 +527,11 @@ public class DashboardWebSocketHandlerTest {
             "}";
 
         // then
-        shouldRenderLogEntriesCorrectly(logEntries, Collections.emptyList(), renderedList);
+        shouldRenderLogEntriesCorrectly(false, logEntries, Collections.emptyList(), renderedList);
     }
 
     @Test
-    public void shouldSerialiseRecordedRequests() throws ExecutionException, InterruptedException, TimeoutException {
+    public void shouldSerialiseRecordedRequests() throws InterruptedException {
         // given
         List<LogEntry> logEntries = Arrays.asList(
             new LogEntry()
@@ -571,11 +645,11 @@ public class DashboardWebSocketHandlerTest {
             "}";
 
         // then
-        shouldRenderLogEntriesCorrectly(logEntries, Collections.emptyList(), renderedList);
+        shouldRenderLogEntriesCorrectly(false, logEntries, Collections.emptyList(), renderedList);
     }
 
     @Test
-    public void shouldSerialiseRecordedRequestsEventsWithoutFields() throws ExecutionException, InterruptedException, TimeoutException {
+    public void shouldSerialiseRecordedRequestsEventsWithoutFields() throws InterruptedException {
         // given
         List<LogEntry> logEntries = Arrays.asList(
             new LogEntry()
@@ -639,11 +713,11 @@ public class DashboardWebSocketHandlerTest {
             "}";
 
         // then
-        shouldRenderLogEntriesCorrectly(logEntries, Collections.emptyList(), renderedList);
+        shouldRenderLogEntriesCorrectly(false, logEntries, Collections.emptyList(), renderedList);
     }
 
     @Test
-    public void shouldSerialiseForwardedRequests() throws ExecutionException, InterruptedException, TimeoutException {
+    public void shouldSerialiseForwardedRequests() throws InterruptedException {
         // given
         List<LogEntry> logEntries = Arrays.asList(
             new LogEntry()
@@ -789,11 +863,11 @@ public class DashboardWebSocketHandlerTest {
             "}";
 
         // then
-        shouldRenderLogEntriesCorrectly(logEntries, Collections.emptyList(), renderedList);
+        shouldRenderLogEntriesCorrectly(false, logEntries, Collections.emptyList(), renderedList);
     }
 
     @Test
-    public void shouldSerialiseForwardedRequestsForEventsWithoutFields() throws ExecutionException, InterruptedException, TimeoutException {
+    public void shouldSerialiseForwardedRequestsForEventsWithoutFields() throws InterruptedException {
         // given
         List<LogEntry> logEntries = Arrays.asList(
             new LogEntry()
@@ -893,11 +967,11 @@ public class DashboardWebSocketHandlerTest {
             "}";
 
         // then
-        shouldRenderLogEntriesCorrectly(logEntries, Collections.emptyList(), renderedList);
+        shouldRenderLogEntriesCorrectly(false, logEntries, Collections.emptyList(), renderedList);
     }
 
     @Test
-    public void shouldSerialiseExpectations() throws ExecutionException, InterruptedException, TimeoutException {
+    public void shouldSerialiseExpectations() throws InterruptedException {
         // given
         List<Expectation> expectations = Arrays.asList(
             new Expectation(request("one")).thenRespond(response("one")),
@@ -972,10 +1046,10 @@ public class DashboardWebSocketHandlerTest {
             "}";
 
         // then
-        shouldRenderLogEntriesCorrectly(Collections.emptyList(), expectations, renderedList);
+        shouldRenderLogEntriesCorrectly(true, Collections.emptyList(), expectations, renderedList);
     }
 
-    private void shouldRenderLogEntriesCorrectly(List<LogEntry> logEntries, List<Expectation> expectations, String renderedList) throws InterruptedException, ExecutionException, TimeoutException {
+    private void shouldRenderLogEntriesCorrectly(boolean contains, List<LogEntry> logEntries, List<Expectation> expectations, String... renderListSections) throws InterruptedException {
         // given
         MockServerLogger mockServerLogger = new MockServerLogger(DashboardWebSocketHandlerTest.class);
         Scheduler scheduler = new Scheduler(mockServerLogger);
@@ -1003,7 +1077,9 @@ public class DashboardWebSocketHandlerTest {
 
         // then
         TextWebSocketFrame textWebSocketFrame = mockChannelHandlerContext.textWebSocketFrame;
-        assertThat(textWebSocketFrame.text(), containsString(renderedList));
+        for (String renderListSection : renderListSections) {
+            assertThat(textWebSocketFrame.text(), contains ? containsString(renderListSection) : is(renderListSection));
+        }
     }
 
     public static class MockChannelHandlerContext extends EmbeddedChannel {

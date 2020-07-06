@@ -61,7 +61,7 @@ public class MockServerRuleTestWithMocks {
 
         initMocks(this);
 
-        when(mockClientAndServer.getLocalPort()).thenReturn(httpPort);
+        when(mockClientAndServer.getPort()).thenReturn(httpPort);
         when(mockClientAndServer.getLocalPorts()).thenReturn(Arrays.asList(httpPort + 1, httpPort + 2));
         when(clientAndServerFactory.newClientAndServer()).thenReturn(mockClientAndServer);
     }

@@ -4,11 +4,15 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.JsonBody;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.JsonBodyDTO;
-import org.mockserver.model.JsonBody;
 
 import java.io.IOException;
+
+import static org.mockserver.log.model.LogEntry.LogMessageType.EXCEPTION;
 
 /**
  * @author jamesdbloom
@@ -39,7 +43,17 @@ public class JsonBodyDTOSerializer extends StdSerializer<JsonBodyDTO> {
                 jgen.writeStringField("contentType", jsonBodyDTO.getContentType());
             }
             jgen.writeStringField("type", jsonBodyDTO.getType().name());
-            jgen.writeObjectField("json", OBJECT_MAPPER.readTree(jsonBodyDTO.getJson()));
+            try {
+                jgen.writeObjectField("json", OBJECT_MAPPER.readTree(jsonBodyDTO.getJson()));
+            } catch (Throwable throwable) {
+                new MockServerLogger().logEvent(
+                    new LogEntry()
+                        .setType(EXCEPTION)
+                        .setMessageFormat("exception:{} while deserialising JsonBodyDTO with json:{}")
+                        .setArguments(throwable.getMessage(), jsonBodyDTO.getJson())
+                        .setThrowable(throwable)
+                );
+            }
             if (jsonBodyDTO.getRawBytes() != null) {
                 jgen.writeObjectField("rawBytes", jsonBodyDTO.getRawBytes());
             }

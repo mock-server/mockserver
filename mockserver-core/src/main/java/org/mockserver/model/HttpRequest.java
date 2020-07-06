@@ -943,7 +943,6 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         }
     }
 
-    @SuppressWarnings("MethodDoesntCallSuperMethod")
     public HttpRequest clone() {
         return not(request(), not)
             .withMethod(method)
