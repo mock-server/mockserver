@@ -9,7 +9,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>mockserver-examples</artifactId>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
 
     <name>MockServer Examples</name>
     <description>An example project demonstration tests using the mock server and proxy</description>
