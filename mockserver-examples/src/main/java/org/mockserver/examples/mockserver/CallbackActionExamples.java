@@ -24,7 +24,7 @@ import static org.mockserver.model.HttpStatusCode.ACCEPTED_202;
  */
 public class CallbackActionExamples {
 
-    public void responseClassCallback() {
+    public void responseClassCallbackWithClass() {
         new ClientAndServer(1080)
             .when(
                 request()
@@ -36,7 +36,19 @@ public class CallbackActionExamples {
             );
     }
 
-    public void forwardClassCallback() {
+    public void responseClassCallbackWithString() {
+        new ClientAndServer(1080)
+            .when(
+                request()
+                    .withPath("/some.*")
+            )
+            .respond(
+                callback()
+                    .withCallbackClass("org.mockserver.examples.mockserver.CallbackActionExamples$TestExpectationResponseCallback")
+            );
+    }
+
+    public void forwardClassCallbackWithClass() {
         new ClientAndServer(1080)
             .when(
                 request()
@@ -45,6 +57,18 @@ public class CallbackActionExamples {
             .forward(
                 callback()
                     .withCallbackClass(CallbackActionExamples.TestExpectationForwardCallback.class)
+            );
+    }
+
+    public void forwardClassCallbackWithString() {
+        new ClientAndServer(1080)
+            .when(
+                request()
+                    .withPath("/some.*")
+            )
+            .forward(
+                callback()
+                    .withCallbackClass("org.mockserver.examples.mockserver.CallbackActionExamples$TestExpectationForwardCallback")
             );
     }
 
