@@ -49,7 +49,11 @@ sitemap:
 <p>To simplify the process of understand how each request is handled and which expectation have or have not been matched all logs events for a single request are grouped together.</p>
 
 <p>In addition, to simplify the process or understand why a given expectation has or has not been matched a <strong>because</strong> section is shown for any <strong>EXPECTATION_NOT_MATCHED</strong> this can be expanded to show the full details of which properties did or did not match.</p>
-<p>If <a href="/mock_server/debugging_issues.html#logging-levels">logLevel</a> is set to <span class="string_literal">DEBUG</span> then a detailed reason will be included as shown in the white text below.</p>
+<p>When <a href="/mock_server/debugging_issues.html#logging-levels">logLevel</a> is set to <span class="string_literal">DEBUG</span>:</p>
+<ul>
+    <li>a detailed reason will be included (see white text in image below)</li>
+    <li><a href="/mock_server/clearing_and_resetting.html">clear</a> does not delete logs from the event log, this allows the UI to continue to display logs that would have otherwise been deleted to improve the ability to debug issues</li>
+</ul>
 
 <img class="ui_image" src="/images/LogMessageUIExpectationNotMatched.png" alt="Log Message UI Expectation Not Matched">
 

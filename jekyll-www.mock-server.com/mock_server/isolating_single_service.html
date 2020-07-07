@@ -14,11 +14,11 @@ sitemap:
 
 <p>For example a single page application may load static resources such as HTML, CSS and JavaScript from a web server and also make AJAX calls to one or more separate services, as follows:</p>
 
-<p><a href="../images/single_page_application.png" target="_blank"><img src="../images/single_page_application.png" alt="Single Page Application" style="max-width:100%;"></a></p>
+<p><img src="../images/single_page_application.png" alt="Single Page Application" style="max-width:100%;"></p>
 
 <p>To isolate a single AJAX service, for development or debugging, the MockServer can selectively forward specific requests to a local instance of the service:</p>
 
-<p><a href="../images/isolate_single_service_with_mockserver.png" target="_blank"><img src="../images/isolate_single_service_with_mockserver.png" alt="Isolating Single Service" style="max-width:100%;"></a></p>
+<p><img src="../images/isolate_single_service_with_mockserver.png" alt="Isolating Single Service" style="max-width:100%;"></p>
 
 <p>One of the simplest ways to do this is using Node.js. In the example below all requests matching path <span class="inline_code string_literal">"/rest.*"</span> (i.e. starting with <strong>/rest</strong>) will go to the local machine on port
 	<strong>8080</strong> whereas all other requests will go to a remote machine (i.e. a load balancer or remote server) on ip <strong>192.168.50.10</strong> and port <strong>443</strong>.</p>

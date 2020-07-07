@@ -48,28 +48,28 @@ layout: default
 <ul>
 	<li>
         <strong>return a "mock" <a href="/mock_server/creating_expectations.html#mock_response">response</a></strong> when a request matches an <a href="/mock_server/creating_expectations.html">expectation</a>
-        <p><a href="images/expectation_response_action.png" target="_blank"><img class="action_image" src="images/expectation_response_action.png" alt="Response Action Expectation"></a></p>
+        <p><img class="action_image" src="images/expectation_response_action.png" alt="Response Action Expectation"></p>
     </li>
 	<li>
         <strong><a href="/mock_server/creating_expectations.html#mock_forward">forward</a> a request</strong> when the request matches an <a href="/mock_server/creating_expectations.html">expectation</a> (i.e. a dynamic port forwarding proxy)
-        <p><a href="images/expectation_forward_action.png" target="_blank"><img class="action_image" src="images/expectation_forward_action.png" alt="Forward Action Expectation"></a></p>
+        <p><img class="action_image" src="images/expectation_forward_action.png" alt="Forward Action Expectation"></p>
     </li>
 	<li>
         <strong>execute a <a href="/mock_server/creating_expectations.html#callback">callback</a></strong> when a request matches an <a href="/mock_server/creating_expectations.html">expectation</a>, allowing the response to be created dynamically
-        <p><a href="images/expectation_callback_action.png" target="_blank"><img class="action_image" src="images/expectation_callback_action.png" alt="Callback Action Expectation"></a></p>
+        <p><img class="action_image" src="images/expectation_callback_action.png" alt="Callback Action Expectation"></p>
     </li>
 
     <li>
         <strong>return an <a href="/mock_server/creating_expectations.html#mock_error">invalid response</a></strong> or close the connection when a request matches an <a href="/mock_server/creating_expectations.html">expectation</a>
-        <p><a href="images/expectation_error_action.png" target="_blank"><img class="action_image" src="images/expectation_error_action.png" alt="Error Action Expectation"></a></p>
+        <p><img class="action_image" src="images/expectation_error_action.png" alt="Error Action Expectation"></p>
     </li>
 	<li>
         <strong><a href="/mock_server/verification.html">verify</a> requests</strong> have been sent (i.e. as a test assertion)
-        <p><a href="images/verification.png" target="_blank"><img class="action_image" src="images/verification.png" alt="Verification"></a></p>
+        <p><img class="action_image" src="images/verification.png" alt="Verification"></p>
     </li>
     <li>
         <strong><a href="/mock_server/verification.html">retrieve</a> logs</strong>, <strong>requests</strong> or <strong>expectations</strong> to help debug
-        <p><a href="images/retrieve_logs.png" target="_blank"><img class="action_image" src="images/retrieve_logs.png" alt="Retrieve Logs"></a></p>
+        <p><img class="action_image" src="images/retrieve_logs.png" alt="Retrieve Logs"></p>
     </li>
 </ul>
 
@@ -176,21 +176,21 @@ layout: default
 
 <p>Given a system with service dependencies, as follows:</p>
 
-<p><a href="images/system_in_production.png" target="_blank"><img src="images/system_in_production.png" alt="System In Production" style="max-width:100%;"></a></p>
+<p><img src="images/system_in_production.png" alt="System In Production" style="max-width:100%;"></p>
 
 <p>MockServer could be used to mock the service dependencies, as follows:</p>
 
-<p><a href="images/system_under_test_with_mockserver.png" target="_blank"><img itemprop="image" src="images/system_under_test_with_mockserver.png" alt="Mocking service dependencies with MockServer" style="max-width:100%;"></a></p>
+<p><img itemprop="image" src="images/system_under_test_with_mockserver.png" alt="Mocking service dependencies with MockServer" style="max-width:100%;"></p>
 
 <p><strong>Isolating Single Service / Application</strong></p>
 
 <p>A single page application may load static resources such as HTML, CSS and JavaScript from a web server and also make AJAX calls to one or more separate services, as follows:</p>
 
-<p><a href="images/single_page_application.png" target="_blank"><img src="images/single_page_application.png" alt="Single Page Application" style="max-width:100%;"></a></p>
+<p><img src="images/single_page_application.png" alt="Single Page Application" style="max-width:100%;"></p>
 
 <p>To isolate a single AJAX service, for development or debugging, the MockServer can selectively forward specific requests to local instance of the service:</p>
 
-<p><a href="images/isolate_single_service_with_mockserver.png" target="_blank"><img src="images/isolate_single_service_with_mockserver.png" alt="Isolating Single Service" style="max-width:100%;"></a></p>
+<p><img src="images/isolate_single_service_with_mockserver.png" alt="Isolating Single Service" style="max-width:100%;"></p>
 
 <p>Using MockServer as a content routing load balancer is described in more detail in the section called <a href="/mock_server/isolating_single_service.html">Isolate Single Service</a>.</p>
 
@@ -227,10 +227,10 @@ layout: default
 
 <p>MockServer can record all proxied requests, as follows:</p>
 
-<p><a href="images/recording_requests_with_mockserver_proxy.png" target="_blank"><img src="images/recording_requests_with_mockserver_proxy.png" alt="Recording service requests with MockServer Proxy" style="max-width:100%;"></a></p>
+<p><img src="images/recording_requests_with_mockserver_proxy.png" alt="Recording service requests with MockServer Proxy" style="max-width:100%;"></p>
 
 <p><strong>Verifying Request</strong></p>
 
 <p>MockServer can verify proxied service requests, as follows:</p>
 
-<p><a href="images/system_under_test_with_mockserver_proxy.png" target="_blank"><img src="images/system_under_test_with_mockserver_proxy.png" alt="Verifying service requests with MockServer Proxy" style="max-width:100%;"></a></p>
+<p><img src="images/system_under_test_with_mockserver_proxy.png" alt="Verifying service requests with MockServer Proxy" style="max-width:100%;"></p>
