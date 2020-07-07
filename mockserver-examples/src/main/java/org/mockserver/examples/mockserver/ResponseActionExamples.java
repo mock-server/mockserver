@@ -41,33 +41,6 @@ public class ResponseActionExamples {
             );
     }
 
-    public void responseLiteralWithHeader() {
-        new MockServerClient("localhost", 1080)
-            // this request matcher matches every request
-            .when(
-                request()
-            )
-            .respond(
-                response()
-                    .withBody("some_response_body")
-                    .withHeader("Content-Type", "plain/text")
-            );
-    }
-
-    public void responseLiteralWithCookie() {
-        new MockServerClient("localhost", 1080)
-            // this request matcher matches every request
-            .when(
-                request()
-            )
-            .respond(
-                response()
-                    .withBody("some_response_body")
-                    .withHeader("Content-Type", "plain/text")
-                    .withCookie("Session", "97d43b1e-fe03-4855-926a-f448eddac32f")
-            );
-    }
-
     public void responseLiteralWithUTF16BodyResponse() {
         new MockServerClient("localhost", 1080)
             // this request matcher matches every request
@@ -97,6 +70,33 @@ public class ResponseActionExamples {
             );
     }
 
+    public void responseLiteralWithHeader() {
+        new MockServerClient("localhost", 1080)
+            // this request matcher matches every request
+            .when(
+                request()
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+                    .withHeader("Content-Type", "plain/text")
+            );
+    }
+
+    public void responseLiteralWithCookie() {
+        new MockServerClient("localhost", 1080)
+            // this request matcher matches every request
+            .when(
+                request()
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+                    .withHeader("Content-Type", "plain/text")
+                    .withCookie("Session", "97d43b1e-fe03-4855-926a-f448eddac32f")
+            );
+    }
+
     public void responseLiteralWithStatusCodeAndReasonPhraseOnly() {
         new MockServerClient("localhost", 1080)
             .when(
@@ -114,8 +114,8 @@ public class ResponseActionExamples {
     public void respondDifferentlyForTheSameRequest() {
         MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
 
-        // respond once with 200, then respond twice with 204, then
-        // respond with 404 as no remaining active expectations
+// respond once with 200, then respond twice with 204, then
+// respond with 404 as no remaining active expectations
         mockServerClient
             .when(
                 request()

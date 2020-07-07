@@ -2,8 +2,6 @@ package org.mockserver.examples.mockserver;
 
 import org.apache.commons.io.IOUtils;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.integration.ClientAndServer;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
@@ -14,7 +12,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.Cookie.optionalCookie;
 import static org.mockserver.model.Cookie.schemaCookie;
@@ -138,7 +135,7 @@ public class RequestPropertiesMatcherExamples {
         new MockServerClient("localhost", 1080)
             .when(
                 request()
-                    .withPath("/some/path")
+                    .withPath("/some/path/{cartId}")
                     .withPathParameters(
                         param("cartId", "055CA455-1DF7-45BB-8535-4F83E7266092")
                     )
@@ -433,11 +430,11 @@ public class RequestPropertiesMatcherExamples {
                 request()
                     .withMethod("GET")
                     .withPath("/view/cart")
-                    .withCookies(
-                        schemaCookie("session", "{ \"type\": \"string\", \"format\": \"uuid\" }")
-                    )
                     .withQueryStringParameters(
                         schemaParam("cartId", "{ \"type\": \"string\", \"format\": \"uuid\" }")
+                    )
+                    .withCookies(
+                        schemaCookie("session", "{ \"type\": \"string\", \"format\": \"uuid\" }")
                     )
             )
             .respond(
@@ -536,30 +533,30 @@ public class RequestPropertiesMatcherExamples {
                     .withBody("some_response_body")
             );
 
-        // matches a request with the following body:
-        /*
-        <?xml version="1.0" encoding="ISO-8859-1"?>
-        <bookstore>
-          <book category="COOKING">
-            <title lang="en">Everyday Italian</title>
-            <author>Giada De Laurentiis</author>
-            <year>2005</year>
-            <price>30.00</price>
-          </book>
-          <book category="CHILDREN">
-            <title lang="en">Harry Potter</title>
-            <author>J K. Rowling</author>
-            <year>2005</year>
-            <price>29.99</price>
-          </book>
-          <book category="WEB">
-            <title lang="en">Learning XML</title>
-            <author>Erik T. Ray</author>
-            <year>2003</year>
-            <price>31.95</price>
-          </book>
-        </bookstore>
-         */
+// matches a request with the following body:
+/*
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<bookstore>
+  <book category="COOKING">
+    <title lang="en">Everyday Italian</title>
+    <author>Giada De Laurentiis</author>
+    <year>2005</year>
+    <price>30.00</price>
+  </book>
+  <book category="CHILDREN">
+    <title lang="en">Harry Potter</title>
+    <author>J K. Rowling</author>
+    <year>2005</year>
+    <price>29.99</price>
+  </book>
+  <book category="WEB">
+    <title lang="en">Learning XML</title>
+    <author>Erik T. Ray</author>
+    <year>2003</year>
+    <price>31.95</price>
+  </book>
+</bookstore>
+ */
     }
 
     public void matchRequestByNotMatchingBodyWithXPath() {

@@ -165,6 +165,111 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
+<button id="button_response_literal_with_header" class="accordion">json response with header</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    // this request matcher matches every request
+    .when(
+        request()
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+            .withHeader("Content-Type", "plain/text")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    // if no request matcher is specified then every request matched
+    "httpResponse": {
+        "headers": {
+            "Content-Type": ["plain/text"]
+        },
+        "body": "some_response_body"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT http://localhost:1080/mockserver/expectation -H "Content-Type: application/json; charset=utf-8" --data '{
+    "httpResponse": {
+        "headers": {
+            "Content-Type": ["plain/text"]
+        },
+        "body": "some_response_body"
+    }
+}'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+<button id="button_response_literal_with_cookie" class="accordion">json response with cookie</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    // this request matcher matches every request
+    .when(
+        request()
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+            .withHeader("Content-Type", "plain/text")
+            .withCookie("Session", "97d43b1e-fe03-4855-926a-f448eddac32f")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    // if no request matcher is specified then every request matched
+    "httpResponse": {
+        "headers": {
+            "Content-Type": ["plain/text"]
+        },
+        "cookies": {
+            "Session": "97d43b1e-fe03-4855-926a-f448eddac32f"
+        },
+        "body": "some_response_body"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT http://localhost:1080/mockserver/expectation -H "Content-Type: application/json; charset=utf-8" --data '{
+    "httpResponse": {
+        "headers": {
+            "Content-Type": ["plain/text"]
+        },
+        "cookies": {
+            "Session": "97d43b1e-fe03-4855-926a-f448eddac32f"
+        },
+        "body": "some_response_body"
+    }
+}'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 <button id="button_response_literal_status_code_and_reason_phrase" class="accordion">literal response with status code and reason phrase</button>
 <div class="panel">
     <button class="accordion inner">Java</button>

@@ -2,7 +2,6 @@ package org.mockserver.examples.mockserver;
 
 import org.mockserver.client.MockServerClient;
 import org.mockserver.model.Format;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.model.RequestDefinition;
 
 import static org.mockserver.model.HttpRequest.request;

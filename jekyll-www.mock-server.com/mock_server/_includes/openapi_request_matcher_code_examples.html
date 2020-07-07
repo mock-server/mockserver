@@ -194,7 +194,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
-<button id="button_match_by_inline_openapi_json" class="accordion">match request by openapi loaded by string literal</button>
+<button id="button_match_by_inline_openapi_json" class="accordion">match request by openapi loaded by json string literal</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
@@ -237,7 +237,7 @@ try {
 }</code></pre>
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
-    <button class="accordion inner">REST API</button>
+    <button class="accordion inner">REST API using cat</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d "{
     \"httpRequest\": {
@@ -247,6 +247,712 @@ try {
         \"body\": \"some_response_body\"
     }
 }"</code></pre>
+    <button class="accordion inner">REST API inline json</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest" : {
+      "specUrlOrPayload" : {
+        "openapi" : "3.0.0",
+        "info" : {
+          "version" : "1.0.0",
+          "title" : "Swagger Petstore",
+          "license" : {
+            "name" : "MIT"
+          }
+        },
+        "servers" : [ {
+          "url" : "http://petstore.swagger.io/v1"
+        } ],
+        "paths" : {
+          "/pets" : {
+            "get" : {
+              "summary" : "List all pets",
+              "operationId" : "listPets",
+              "tags" : [ "pets" ],
+              "parameters" : [ {
+                "name" : "limit",
+                "in" : "query",
+                "description" : "How many items to return at one time (max 100)",
+                "required" : false,
+                "schema" : {
+                  "type" : "integer",
+                  "format" : "int32"
+                }
+              } ],
+              "responses" : {
+                "200" : {
+                  "description" : "A paged array of pets",
+                  "headers" : {
+                    "x-next" : {
+                      "description" : "A link to the next page of responses",
+                      "schema" : {
+                        "type" : "string"
+                      }
+                    }
+                  },
+                  "content" : {
+                    "application/json" : {
+                      "schema" : {
+                        "$ref" : "#/components/schemas/Pets"
+                      }
+                    }
+                  }
+                },
+                "500" : {
+                  "description" : "unexpected error",
+                  "content" : {
+                    "application/json" : {
+                      "schema" : {
+                        "$ref" : "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                },
+                "default" : {
+                  "description" : "unexpected error",
+                  "content" : {
+                    "application/json" : {
+                      "schema" : {
+                        "$ref" : "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "post" : {
+              "summary" : "Create a pet",
+              "operationId" : "createPets",
+              "tags" : [ "pets" ],
+              "requestBody" : {
+                "description" : "a pet",
+                "required" : true,
+                "content" : {
+                  "application/json" : {
+                    "schema" : {
+                      "$ref" : "#/components/schemas/Pet"
+                    }
+                  },
+                  "*/*" : {
+                    "schema" : {
+                      "$ref" : "#/components/schemas/Pet"
+                    }
+                  }
+                }
+              },
+              "responses" : {
+                "201" : {
+                  "description" : "Null response"
+                },
+                "400" : {
+                  "description" : "unexpected error",
+                  "content" : {
+                    "application/json" : {
+                      "schema" : {
+                        "$ref" : "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                },
+                "500" : {
+                  "description" : "unexpected error",
+                  "content" : {
+                    "application/json" : {
+                      "schema" : {
+                        "$ref" : "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                },
+                "default" : {
+                  "description" : "unexpected error",
+                  "content" : {
+                    "application/json" : {
+                      "schema" : {
+                        "$ref" : "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/pets/{petId}" : {
+            "get" : {
+              "summary" : "Info for a specific pet",
+              "operationId" : "showPetById",
+              "tags" : [ "pets" ],
+              "parameters" : [ {
+                "name" : "petId",
+                "in" : "path",
+                "required" : true,
+                "description" : "The id of the pet to retrieve",
+                "schema" : {
+                  "type" : "string"
+                }
+              }, {
+                "in" : "header",
+                "name" : "X-Request-ID",
+                "schema" : {
+                  "type" : "string",
+                  "format" : "uuid"
+                },
+                "required" : true
+              } ],
+              "responses" : {
+                "200" : {
+                  "description" : "Expected response to a valid request",
+                  "content" : {
+                    "application/json" : {
+                      "schema" : {
+                        "$ref" : "#/components/schemas/Pet"
+                      }
+                    }
+                  }
+                },
+                "400" : {
+                  "description" : "unexpected error",
+                  "content" : {
+                    "application/json" : {
+                      "schema" : {
+                        "$ref" : "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                },
+                "500" : {
+                  "description" : "unexpected error",
+                  "content" : {
+                    "application/json" : {
+                      "schema" : {
+                        "$ref" : "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                },
+                "default" : {
+                  "description" : "unexpected error",
+                  "content" : {
+                    "application/json" : {
+                      "schema" : {
+                        "$ref" : "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/some/path" : {
+            "get" : {
+              "summary" : "Additional request with extra matchers",
+              "operationId" : "somePath",
+              "tags" : [ "pets" ],
+              "parameters" : [ {
+                "name" : "limit",
+                "in" : "query",
+                "description" : "How many items to return at one time (max 100)",
+                "required" : false,
+                "schema" : {
+                  "type" : "integer",
+                  "format" : "int32"
+                }
+              }, {
+                "in" : "header",
+                "name" : "X-Request-ID",
+                "schema" : {
+                  "type" : "string",
+                  "format" : "uuid"
+                },
+                "required" : true
+              } ],
+              "responses" : {
+                "200" : {
+                  "description" : "Expected response to a valid request",
+                  "content" : {
+                    "application/json" : {
+                      "schema" : {
+                        "$ref" : "#/components/schemas/Pet"
+                      }
+                    }
+                  }
+                },
+                "default" : {
+                  "description" : "unexpected error",
+                  "content" : {
+                    "application/json" : {
+                      "schema" : {
+                        "$ref" : "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "components" : {
+          "schemas" : {
+            "Pet" : {
+              "type" : "object",
+              "required" : [ "id", "name" ],
+              "properties" : {
+                "id" : {
+                  "type" : "integer",
+                  "format" : "int64"
+                },
+                "name" : {
+                  "type" : "string"
+                },
+                "tag" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "Pets" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/components/schemas/Pet"
+              }
+            },
+            "Error" : {
+              "type" : "object",
+              "required" : [ "code", "message" ],
+              "properties" : {
+                "code" : {
+                  "type" : "integer",
+                  "format" : "int32"
+                },
+                "message" : {
+                  "type" : "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "operationId" : "listPets"
+    },
+    "httpResponse" : {
+      "body" : "some_response_body"
+    }
+  }'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+<button id="button_match_by_inline_openapi_yaml" class="accordion">match request by openapi loaded by yaml string literal</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+<pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        new OpenAPIDefinition()
+            .withSpecUrlOrPayload(
+                "---\n" +
+                    "openapi: 3.0.0\n" +
+                    "info:\n" +
+                    "  version: 1.0.0\n" +
+                    "  title: Swagger Petstore\n" +
+                    "  license:\n" +
+                    "    name: MIT\n" +
+                    "servers:\n" +
+                    "  - url: http://petstore.swagger.io/v1\n" +
+                    "paths:\n" +
+                    "  /pets:\n" +
+                    "    get:\n" +
+                    "      summary: List all pets\n" +
+                    "      operationId: listPets\n" +
+                    "      tags:\n" +
+                    "        - pets\n" +
+                    "      parameters:\n" +
+                    "        - name: limit\n" +
+                    "          in: query\n" +
+                    "          description: How many items to return at one time (max 100)\n" +
+                    "          required: false\n" +
+                    "          schema:\n" +
+                    "            type: integer\n" +
+                    "            format: int32\n" +
+                    "      responses:\n" +
+                    "        '200':\n" +
+                    "          description: A paged array of pets\n" +
+                    "          headers:\n" +
+                    "            x-next:\n" +
+                    "              description: A link to the next page of responses\n" +
+                    "              schema:\n" +
+                    "                type: string\n" +
+                    "              examples:\n" +
+                    "                two:\n" +
+                    "                  value: \"/pets?query=752cd724e0d7&page=2\"\n" +
+                    "                end:\n" +
+                    "                  value: \"\"\n" +
+                    "          content:\n" +
+                    "            application/json:\n" +
+                    "              schema:\n" +
+                    "                $ref: '#/components/schemas/Pets'\n" +
+                    "        '500':\n" +
+                    "          description: unexpected error\n" +
+                    "          headers:\n" +
+                    "            x-code:\n" +
+                    "              description: The error code\n" +
+                    "              schema:\n" +
+                    "                type: integer\n" +
+                    "                format: int32\n" +
+                    "                example: 90\n" +
+                    "          content:\n" +
+                    "            application/json:\n" +
+                    "              schema:\n" +
+                    "                $ref: '#/components/schemas/Error'\n" +
+                    "        default:\n" +
+                    "          description: unexpected error\n" +
+                    "          content:\n" +
+                    "            application/json:\n" +
+                    "              schema:\n" +
+                    "                $ref: '#/components/schemas/Error'\n" +
+                    "    post:\n" +
+                    "      summary: Create a pet\n" +
+                    "      operationId: createPets\n" +
+                    "      tags:\n" +
+                    "        - pets\n" +
+                    "      requestBody:\n" +
+                    "        description: a pet\n" +
+                    "        required: true\n" +
+                    "        content:\n" +
+                    "          application/json:\n" +
+                    "            schema:\n" +
+                    "              $ref: '#/components/schemas/Pet'\n" +
+                    "          '*/*':\n" +
+                    "            schema:\n" +
+                    "              $ref: '#/components/schemas/Pet'\n" +
+                    "      responses:\n" +
+                    "        '201':\n" +
+                    "          description: Null response\n" +
+                    "        '400':\n" +
+                    "          description: unexpected error\n" +
+                    "          content:\n" +
+                    "            application/json:\n" +
+                    "              schema:\n" +
+                    "                $ref: '#/components/schemas/Error'\n" +
+                    "        '500':\n" +
+                    "          description: unexpected error\n" +
+                    "          content:\n" +
+                    "            application/json:\n" +
+                    "              schema:\n" +
+                    "                $ref: '#/components/schemas/Error'\n" +
+                    "        default:\n" +
+                    "          description: unexpected error\n" +
+                    "          content:\n" +
+                    "            application/json:\n" +
+                    "              schema:\n" +
+                    "                $ref: '#/components/schemas/Error'\n" +
+                    "  /pets/{petId}:\n" +
+                    "    get:\n" +
+                    "      summary: Info for a specific pet\n" +
+                    "      operationId: showPetById\n" +
+                    "      tags:\n" +
+                    "        - pets\n" +
+                    "      parameters:\n" +
+                    "        - name: petId\n" +
+                    "          in: path\n" +
+                    "          required: true\n" +
+                    "          description: The id of the pet to retrieve\n" +
+                    "          schema:\n" +
+                    "            type: string\n" +
+                    "        - in: header\n" +
+                    "          name: X-Request-ID\n" +
+                    "          schema:\n" +
+                    "            type: string\n" +
+                    "            format: uuid\n" +
+                    "          required: true\n" +
+                    "      responses:\n" +
+                    "        '200':\n" +
+                    "          description: Expected response to a valid request\n" +
+                    "          content:\n" +
+                    "            application/json:\n" +
+                    "              schema:\n" +
+                    "                $ref: '#/components/schemas/Pet'\n" +
+                    "              examples:\n" +
+                    "                Crumble:\n" +
+                    "                  value:\n" +
+                    "                    id: 2\n" +
+                    "                    name: Crumble\n" +
+                    "                    tag: dog\n" +
+                    "                Boots:\n" +
+                    "                  value:\n" +
+                    "                    id: 3\n" +
+                    "                    name: Boots\n" +
+                    "                    tag: cat\n" +
+                    "        '500':\n" +
+                    "          description: unexpected error\n" +
+                    "          content:\n" +
+                    "            application/json:\n" +
+                    "              schema:\n" +
+                    "                $ref: '#/components/schemas/Error'\n" +
+                    "        default:\n" +
+                    "          description: unexpected error\n" +
+                    "          content:\n" +
+                    "            application/json:\n" +
+                    "              schema:\n" +
+                    "                $ref: '#/components/schemas/Error'\n" +
+                    "components:\n" +
+                    "  schemas:\n" +
+                    "    Pet:\n" +
+                    "      type: object\n" +
+                    "      required:\n" +
+                    "        - id\n" +
+                    "        - name\n" +
+                    "      properties:\n" +
+                    "        id:\n" +
+                    "          type: integer\n" +
+                    "          format: int64\n" +
+                    "        name:\n" +
+                    "          type: string\n" +
+                    "        tag:\n" +
+                    "          type: string\n" +
+                    "      example:\n" +
+                    "        id: 1\n" +
+                    "        name: Scruffles\n" +
+                    "        tag: dog\n" +
+                    "    Pets:\n" +
+                    "      type: array\n" +
+                    "      items:\n" +
+                    "        $ref: '#/components/schemas/Pet'\n" +
+                    "    Error:\n" +
+                    "      type: object\n" +
+                    "      required:\n" +
+                    "        - code\n" +
+                    "        - message\n" +
+                    "      properties:\n" +
+                    "        code:\n" +
+                    "          type: integer\n" +
+                    "          format: int32\n" +
+                    "        message:\n" +
+                    "          type: string\n"
+            )
+            .withOperationId("listPets")
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest" : {
+        "specUrlOrPayload" : "---\n" +
+            "openapi: 3.0.0\n" +
+            "info:\n" +
+            "  version: 1.0.0\n" +
+            "  title: Swagger Petstore\n" +
+            "  license:\n" +
+            "    name: MIT\n" +
+            "servers:\n" +
+            "  - url: http://petstore.swagger.io/v1\n" +
+            "paths:\n" +
+            "  /pets:\n" +
+            "    get:\n" +
+            "      summary: List all pets\n" +
+            "      operationId: listPets\n" +
+            "      tags:\n" +
+            "        - pets\n" +
+            "      parameters:\n" +
+            "        - name: limit\n" +
+            "          in: query\n" +
+            "          description: How many items to return at one time (max 100)\n" +
+            "          required: false\n" +
+            "          schema:\n" +
+            "            type: integer\n" +
+            "            format: int32\n" +
+            "      responses:\n" +
+            "        '200':\n" +
+            "          description: A paged array of pets\n" +
+            "          headers:\n" +
+            "            x-next:\n" +
+            "              description: A link to the next page of responses\n" +
+            "              schema:\n" +
+            "                type: string\n" +
+            "              examples:\n" +
+            "                two:\n" +
+            "                  value: \"/pets?query=752cd724e0d7&page=2\"\n" +
+            "                end:\n" +
+            "                  value: \"\"\n" +
+            "          content:\n" +
+            "            application/json:\n" +
+            "              schema:\n" +
+            "                $ref: '#/components/schemas/Pets'\n" +
+            "        '500':\n" +
+            "          description: unexpected error\n" +
+            "          headers:\n" +
+            "            x-code:\n" +
+            "              description: The error code\n" +
+            "              schema:\n" +
+            "                type: integer\n" +
+            "                format: int32\n" +
+            "                example: 90\n" +
+            "          content:\n" +
+            "            application/json:\n" +
+            "              schema:\n" +
+            "                $ref: '#/components/schemas/Error'\n" +
+            "        default:\n" +
+            "          description: unexpected error\n" +
+            "          content:\n" +
+            "            application/json:\n" +
+            "              schema:\n" +
+            "                $ref: '#/components/schemas/Error'\n" +
+            "    post:\n" +
+            "      summary: Create a pet\n" +
+            "      operationId: createPets\n" +
+            "      tags:\n" +
+            "        - pets\n" +
+            "      requestBody:\n" +
+            "        description: a pet\n" +
+            "        required: true\n" +
+            "        content:\n" +
+            "          application/json:\n" +
+            "            schema:\n" +
+            "              $ref: '#/components/schemas/Pet'\n" +
+            "          '*/*':\n" +
+            "            schema:\n" +
+            "              $ref: '#/components/schemas/Pet'\n" +
+            "      responses:\n" +
+            "        '201':\n" +
+            "          description: Null response\n" +
+            "        '400':\n" +
+            "          description: unexpected error\n" +
+            "          content:\n" +
+            "            application/json:\n" +
+            "              schema:\n" +
+            "                $ref: '#/components/schemas/Error'\n" +
+            "        '500':\n" +
+            "          description: unexpected error\n" +
+            "          content:\n" +
+            "            application/json:\n" +
+            "              schema:\n" +
+            "                $ref: '#/components/schemas/Error'\n" +
+            "        default:\n" +
+            "          description: unexpected error\n" +
+            "          content:\n" +
+            "            application/json:\n" +
+            "              schema:\n" +
+            "                $ref: '#/components/schemas/Error'\n" +
+            "  /pets/{petId}:\n" +
+            "    get:\n" +
+            "      summary: Info for a specific pet\n" +
+            "      operationId: showPetById\n" +
+            "      tags:\n" +
+            "        - pets\n" +
+            "      parameters:\n" +
+            "        - name: petId\n" +
+            "          in: path\n" +
+            "          required: true\n" +
+            "          description: The id of the pet to retrieve\n" +
+            "          schema:\n" +
+            "            type: string\n" +
+            "        - in: header\n" +
+            "          name: X-Request-ID\n" +
+            "          schema:\n" +
+            "            type: string\n" +
+            "            format: uuid\n" +
+            "          required: true\n" +
+            "      responses:\n" +
+            "        '200':\n" +
+            "          description: Expected response to a valid request\n" +
+            "          content:\n" +
+            "            application/json:\n" +
+            "              schema:\n" +
+            "                $ref: '#/components/schemas/Pet'\n" +
+            "              examples:\n" +
+            "                Crumble:\n" +
+            "                  value:\n" +
+            "                    id: 2\n" +
+            "                    name: Crumble\n" +
+            "                    tag: dog\n" +
+            "                Boots:\n" +
+            "                  value:\n" +
+            "                    id: 3\n" +
+            "                    name: Boots\n" +
+            "                    tag: cat\n" +
+            "        '500':\n" +
+            "          description: unexpected error\n" +
+            "          content:\n" +
+            "            application/json:\n" +
+            "              schema:\n" +
+            "                $ref: '#/components/schemas/Error'\n" +
+            "        default:\n" +
+            "          description: unexpected error\n" +
+            "          content:\n" +
+            "            application/json:\n" +
+            "              schema:\n" +
+            "                $ref: '#/components/schemas/Error'\n" +
+            "components:\n" +
+            "  schemas:\n" +
+            "    Pet:\n" +
+            "      type: object\n" +
+            "      required:\n" +
+            "        - id\n" +
+            "        - name\n" +
+            "      properties:\n" +
+            "        id:\n" +
+            "          type: integer\n" +
+            "          format: int64\n" +
+            "        name:\n" +
+            "          type: string\n" +
+            "        tag:\n" +
+            "          type: string\n" +
+            "      example:\n" +
+            "        id: 1\n" +
+            "        name: Scruffles\n" +
+            "        tag: dog\n" +
+            "    Pets:\n" +
+            "      type: array\n" +
+            "      items:\n" +
+            "        $ref: '#/components/schemas/Pet'\n" +
+            "    Error:\n" +
+            "      type: object\n" +
+            "      required:\n" +
+            "        - code\n" +
+            "        - message\n" +
+            "      properties:\n" +
+            "        code:\n" +
+            "          type: integer\n" +
+            "          format: int32\n" +
+            "        message:\n" +
+            "          type: string\n",
+        "operationId" : "listPets"
+    },
+    "httpResponse" : {
+        "body" : "some_response_body"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "id" : "35bffe02-2bc7-416f-bfaf-0103a28ac705",
+    "priority" : 0,
+    "httpRequest" : {
+      "specUrlOrPayload" : "---\nopenapi: 3.0.0\ninfo:\n  version: 1.0.0\n  title: Swagger Petstore\n  license:\n    name: MIT\nservers:\n  - url: http://petstore.swagger.io/v1\npaths:\n  /pets:\n    get:\n      summary: List all pets\n      operationId: listPets\n      tags:\n        - pets\n      parameters:\n        - name: limit\n          in: query\n          description: How many items to return at one time (max 100)\n          required: false\n          schema:\n            type: integer\n            format: int32\n      responses:\n        '200':\n          description: A paged array of pets\n          headers:\n            x-next:\n              description: A link to the next page of responses\n              schema:\n                type: string\n              examples:\n                two:\n                  value: \"/pets?query=752cd724e0d7&page=2\"\n                end:\n                  value: \"\"\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/Pets'\n        '500':\n          description: unexpected error\n          headers:\n            x-code:\n              description: The error code\n              schema:\n                type: integer\n                format: int32\n                example: 90\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/Error'\n        default:\n          description: unexpected error\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/Error'\n    post:\n      summary: Create a pet\n      operationId: createPets\n      tags:\n        - pets\n      requestBody:\n        description: a pet\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/Pet'\n          '*/*':\n            schema:\n              $ref: '#/components/schemas/Pet'\n      responses:\n        '201':\n          description: Null response\n        '400':\n          description: unexpected error\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/Error'\n        '500':\n          description: unexpected error\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/Error'\n        default:\n          description: unexpected error\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/Error'\n  /pets/{petId}:\n    get:\n      summary: Info for a specific pet\n      operationId: showPetById\n      tags:\n        - pets\n      parameters:\n        - name: petId\n          in: path\n          required: true\n          description: The id of the pet to retrieve\n          schema:\n            type: string\n        - in: header\n          name: X-Request-ID\n          schema:\n            type: string\n            format: uuid\n          required: true\n      responses:\n        '200':\n          description: Expected response to a valid request\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/Pet'\n              examples:\n                Crumble:\n                  value:\n                    id: 2\n                    name: Crumble\n                    tag: dog\n                Boots:\n                  value:\n                    id: 3\n                    name: Boots\n                    tag: cat\n        '500':\n          description: unexpected error\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/Error'\n        default:\n          description: unexpected error\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/Error'\ncomponents:\n  schemas:\n    Pet:\n      type: object\n      required:\n        - id\n        - name\n      properties:\n        id:\n          type: integer\n          format: int64\n        name:\n          type: string\n        tag:\n          type: string\n      example:\n        id: 1\n        name: Scruffles\n        tag: dog\n    Pets:\n      type: array\n      items:\n        $ref: '#/components/schemas/Pet'\n    Error:\n      type: object\n      required:\n        - code\n        - message\n      properties:\n        code:\n          type: integer\n          format: int32\n        message:\n          type: string\n",
+      "operationId" : "listPets"
+    },
+    "times" : {
+      "unlimited" : true
+    },
+    "timeToLive" : {
+      "unlimited" : true
+    },
+    "httpResponse" : {
+      "body" : "some_response_body"
+    }
+  }'</code></pre>
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>

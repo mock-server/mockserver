@@ -123,14 +123,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <li><strong>string value</strong>
         <ul>
             <li><strong>use for:</strong> method, path, path parameter keys, path parameters values, query parameter keys, query parameters values, header keys, header values, cookie keys, cookie values or bodies</li>
-            <li><strong>examples:</strong> <a href="#button_match_request_by_query_parameter_name_regex">method</a>, <a href="#button_match_request_by_path">path</a>, path parameters, <!-- TODO --><a
+            <li><strong>examples:</strong> <a href="#button_match_request_by_query_parameter_name_regex">method</a>, <a href="#button_match_request_by_path">path</a>, <a href="#button_match_request_by_path_and_path_parameters">path parameters</a>, <a
                     href="#button_match_request_by_cookies_and_query_parameters">query parameters</a>, <a href="#button_match_request_by_headers">headers</a>, <a href="#button_match_request_by_cookies_and_query_parameters">cookies</a></li>
         </ul>
     </li>
     <li><strong>regex value</strong>
         <ul>
             <li><strong>use for:</strong> method, path, path parameter keys, path parameters values, query parameter keys, query parameters values, header keys, header values, cookie keys, cookie values or bodies</li>
-            <li><strong>examples:</strong> <a href="#button_match_request_by_method_regex">method</a>, <a href="#button_match_request_by_regex_path">path</a>, path parameters, <!-- TODO --><a
+            <li><strong>examples:</strong> <a href="#button_match_request_by_method_regex">method</a>, <a href="#button_match_request_by_regex_path">path</a>, <a href="#button_match_request_by_path_parameter_regex_value">path parameters</a>, <a
                     href="#button_match_request_by_query_parameter_name_regex">query parameters</a>, <a href="#button_match_request_by_header_name_regex">headers</a></li>
         </ul>
     </li>
@@ -138,14 +138,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <ul>
             <li><strong>use for:</strong> method, path, path parameters values, query parameters values, header values, cookie values or bodies</li>
             <li><strong>not supported for:</strong> path parameter keys, query parameter keys, header keys or cookie keys</li>
-            <li><strong>examples:</strong> path parameters, <!-- TODO -->query parameters, <!-- TODO -->headers<!-- TODO --> , cookies<!-- TODO --></li>
+            <li><strong>examples:</strong> <a href="#button_match_request_by_path_parameter_json_schema_value">path parameters</a>, <a href="#button_match_request_by_query_parameter_value_json_schema">query parameters</a>, <a href="#button_match_request_by_header_value_json_schema">headers</a> , <a href="#button_match_request_by_cookies_value_json_schema">cookies</a></li>
         </ul>
     </li>
     <li><strong>optional value</strong>
         <ul>
-            <li><strong>use for:</strong> method, path, path parameter keys, path parameters values, query parameter keys, query parameters values, header keys, header values, cookie keys, cookie values or bodies</li>
-            <li><strong>not supported for:</strong> path parameter values, query parameter values, header values or cookie values</li>
-            <li><strong>examples:</strong> path parameters, <!-- TODO -->query parameters, <!-- TODO -->headers<!-- TODO either / or header see shouldReturnResponseByMatchingOptionalHeaderWithEitherOr --> , cookies<!-- TODO --></li>
+            <li><strong>use for:</strong> method, path, path parameters values, query parameter keys, query parameters values, header keys, header values, cookie keys, cookie values or bodies</li>
+            <li><strong>not supported for:</strong> path parameter keys or values, query parameter values, header values or cookie values</li>
+            <li><strong>examples:</strong> <a href="#button_match_request_by_optional_query_parameter">query parameters</a>, <a href="#button_match_request_by_optional_header">headers</a>, <a href="#button_match_request_by_optional_cookies">cookies</a></li>
         </ul>
     </li>
     <li><strong>negated value</strong>
@@ -166,10 +166,10 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <li>Values support all <a href="#request_property_matchers">property matcher</a> except optional values</li>
     <li>Matching supports two modes:
         <ul>
-            <li><strong>sub set <!-- TODO --></strong> (default) - matches if the request property contains a matching sub set (considering optional keys), therefore there is <strong>at least one matching value</strong> for each
+            <li><strong><a href="#button_match_request_by_query_parameter_by_sub_set">sub set</a></strong> (default) - matches if the request property contains a matching sub set (considering optional keys), therefore there is <strong>at least one matching value</strong> for each
                 non-optional key or optional key if present
             </li>
-            <li><strong>matching key <!-- TODO --></strong> - matches if the request property contains only matching values (considering optional keys), therefore <strong>all values must match</strong> for each non-optional key or optional
+            <li><strong><a href="#button_match_request_by_header_by_matching_key">matching key</a></strong> - matches if the request property contains only matching values (considering optional keys), therefore <strong>all values must match</strong> for each non-optional key or optional
                 key if present
             </li>
         </ul>
@@ -200,7 +200,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
                     <li><strong><a href="#button_match_request_by_body_with_json_ignoring_extra_fields">ONLY_MATCHING_FIELDS</a></strong> only matches fields provided in the request matcher</li>
                 </ul>
             </li>
-            <li><strong>JSONUnit placeholders<!-- TODO --></strong> to allow fields or values to be ignored or matched by type for example:
+            <li><strong><a href="#button_match_request_by_body_with_json_placeholders">JSONUnit placeholders</a></strong> to allow fields or values to be ignored or matched by type for example:
                 <ul>
                     <li><strong>${json-unit.ignore-element}</strong> ignore a field</li>
                     <li><strong>${json-unit.any-boolean}</strong> match a field as any boolean</li>
@@ -213,7 +213,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <li><strong><a href="#button_match_request_by_body_with_json_path">JsonPath</a></strong> - matches if at least one value is returned by the expression, see <a href="https://github.com/json-path/JsonPath">JsonPath documentation</a></li>
     <li><strong><a href="#button_match_request_by_body_with_xml">XML</a></strong> - supports:
         <ul>
-            <li><strong>XMLUnit placeholders<!-- TODO --></strong> to allow fields or elements to be ignored or matched by type for example:
+            <li><strong><a href="#button_match_request_by_body_with_xml_placeholders">XMLUnit placeholders</a></strong> to allow fields or elements to be ignored or matched by type for example:
                 <ul>
                     <li><strong>${xmlunit.ignore}</strong> ignore an element</li>
                     <li><strong>${xmlunit.isNumber}</strong> match an element or attribute as a number</li>
@@ -245,7 +245,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
             <li><strong><a href="#button_match_by_openapi_filepath">File URL</a></strong></li>
             <li><strong><a href="#button_match_by_openapi_classpath">classpath location</a></strong> (without the classpath: scheme)</li>
             <li><strong><a href="#button_match_by_inline_openapi_json">inline JSON object</a></strong></li>
-            <li><strong>inline escaped YAML string<!-- TODO --></strong></li>
+            <li><strong><a href="#button_match_by_inline_openapi_yaml">inline escaped YAML string</a></strong></li>
         </ul>
     </li>
     <li><strong>operationId</strong> - optional value that specifies which <a href="#button_match_by_openapi_url_and_operation">operation</a> to match against, if <a href="#button_match_by_openapi_url">empty or null</a> all operations are
@@ -307,8 +307,8 @@ mockServerClient("localhost", 1080).mockAnyResponse({
             <li><strong><a href="#button_response_literal_status_code_and_reason_phrase">status code</a></strong></li>
             <li><strong><a href="#button_response_literal_status_code_and_reason_phrase">reason phrase</a></strong></li>
             <li><strong><a href="#button_response_literal_binary_PNG_body">body</a></strong></li>
-            <li><strong>headers<!-- TODO --></strong></li>
-            <li><strong>cookies<!-- TODO --></strong></li>
+            <li><strong><a href="#button_response_literal_with_header">headers</a></strong></li>
+            <li><strong><a href="#button_response_literal_with_cookie">cookies</a></strong></li>
             <li><strong><a href="#button_response_literal_with_10_second_delay">delay</a></strong></li>
             <li><strong><a href="#button_response_literal_with_connection_options_to_suppress_headers">connectionOptions</a></strong> that can be used to <a href="#button_response_literal_with_connection_options_to_suppress_headers">suppress
                 headers</a>, <a href="#button_response_literal_with_connection_options_to_override_headers">override headers</a> or <a href="#button_response_literal_with_connection_options_to_close_socket">close the socket connection</a>

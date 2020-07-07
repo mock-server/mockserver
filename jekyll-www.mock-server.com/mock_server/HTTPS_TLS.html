@@ -37,7 +37,7 @@ sitemap:
 
 <ul>
     <li>How dynamic certificate are created including, hostname (i.e. <a href="#button_configuration_ssl_certificate_domain_name">CN</a> & <a href="#button_configuration_ssl_subject_alternative_name_domains">SAN</a>) and ip address (i.e. <a href="#button_configuration_ssl_subject_alternative_name_ips">SAN</a>)</li>
-    <li>The Certificate Authority <a href="button_configuration_tls_certificate_authority_certificate">X.509 Certificate</a> and <a href="#button_configuration_tls_certificate_authority_private_key">Private Key</a> used to sign all generated X.509</li>
+    <li>The Certificate Authority <a href="#button_configuration_tls_certificate_authority_certificate">X.509 Certificate</a> and <a href="#button_configuration_tls_certificate_authority_private_key">Private Key</a> used to sign all generated X.509</li>
     <li>Dynamic creation of a <a href="#button_configuration_dynamically_create_ca_certificate">unique (i.e. local) Certificate Authority X509 Certificate and Private Key</a> instead of using the fixed Certificate Authority X509 Certificate and Private Key in the <a href="https://github.com/mock-server/mockserver/blob/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem">git repo</a>.</li>
     <li>Require <a href="#button_configuration_require_mtls_for_all_tls_connections">mTLS (also called client authentication or two-way TLS)</a> for all TLS connections / HTTPS requests to MockServer</li>
     <li>Configure <a href="#button_configuration_trusted_tls_certs_group_for_proxied_reqs">trust store</a> and <a href="#button_configuration_forward_proxy_certificate_chain">client X.509</a> used during forwarded and proxied requests to endpoints requiring mTLS</li>
