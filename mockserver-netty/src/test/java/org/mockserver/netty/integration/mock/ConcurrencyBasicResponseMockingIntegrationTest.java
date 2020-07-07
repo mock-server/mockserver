@@ -38,7 +38,7 @@ public class ConcurrencyBasicResponseMockingIntegrationTest {
                 request()
                     .withPath("/my/echo")
             )
-            .respond(callback().withCallbackClass("org.mockserver.netty.integration.mock.ConcurrencyBasicResponseMockingIntegrationTest$ClassCallback"));
+            .respond(callback().withCallbackClass(ConcurrencyBasicResponseMockingIntegrationTest.ClassCallback.class));
         httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false);
     }
 

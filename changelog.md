@@ -50,7 +50,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - removed call to ReflectionToStringBuilder.setDefaultStyle to avoid impacting toString globally for JVM
 - fixed destination port and ip in Socks5CommandResponse which prevented SOCKS5 proxied connections
 - fixed Subject Alternative Names with wildcards or other valid DNS name formats not supported by certain versions of the JDK (<= 1.8)
-- fixed json body responses by returning blank or null fields, objects and arrays 
+- fixed json body responses by returning blank or null fields, objects and arrays
+- fixed generics for withCallbackClass to allow ExpectationResponseCallback to be specified as a Class (not only a string) 
 
 ## [5.10.0] - 2020-03-24
 

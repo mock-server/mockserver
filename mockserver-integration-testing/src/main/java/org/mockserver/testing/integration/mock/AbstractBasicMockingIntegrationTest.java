@@ -13,6 +13,7 @@ import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequest;
 import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequestAndResponse;
+import org.mockserver.testing.integration.callback.PrecannedTestExpectationResponseCallback;
 import org.mockserver.uuid.UUIDService;
 import org.mockserver.verify.VerificationTimes;
 import org.slf4j.event.Level;
@@ -540,7 +541,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             )
             .respond(
                 callback()
-                    .withCallbackClass("org.mockserver.testing.integration.callback.PrecannedTestExpectationResponseCallback")
+                    .withCallbackClass(PrecannedTestExpectationResponseCallback.class)
                     .withDelay(new Delay(SECONDS, 2))
             );
 
@@ -583,7 +584,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             )
             .respond(
                 callback()
-                    .withCallbackClass("org.mockserver.testing.integration.callback.PrecannedTestExpectationResponseCallback")
+                    .withCallbackClass(PrecannedTestExpectationResponseCallback.class)
             );
 
         // then
@@ -2943,7 +2944,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
-    public void shouldForwardCallbackClassToOverrideRequestInTestClasspath() {
+    public void shouldForwardCallbackClassToOverrideRequestInTestClasspathAsClass() {
         // when
         Expectation[] upsertedExpectations = mockServerClient
             .when(
@@ -2953,6 +2954,77 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             .forward(
                 callback()
                     .withCallbackClass(PrecannedTestExpectationForwardCallbackRequest.class)
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body"),
+                        header("x-echo-server-port", insecureEchoServer.getPort())
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore
+            )
+        );
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+                .thenForward(
+                    callback()
+                        .withCallbackClass(PrecannedTestExpectationForwardCallbackRequest.class)
+                )
+        ));
+
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body"),
+                        header("x-echo-server-port", secureEchoServer.getPort())
+                    )
+                    .withBody("an_example_body_https"),
+                headersToIgnore
+            )
+        );
+    }
+
+    @Test
+    public void shouldForwardCallbackClassToOverrideRequestInTestClasspathAsString() {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                callback()
+                    .withCallbackClass("org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequest")
             );
 
         // then

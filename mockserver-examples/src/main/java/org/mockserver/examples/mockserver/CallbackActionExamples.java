@@ -32,7 +32,7 @@ public class CallbackActionExamples {
             )
             .respond(
                 callback()
-                    .withCallbackClass("org.mockserver.examples.mockserver.CallbackActionExamples$TestExpectationResponseCallback")
+                    .withCallbackClass(CallbackActionExamples.TestExpectationResponseCallback.class)
             );
     }
 
@@ -44,7 +44,7 @@ public class CallbackActionExamples {
             )
             .forward(
                 callback()
-                    .withCallbackClass("org.mockserver.examples.mockserver.CallbackActionExamples$TestExpectationForwardCallback")
+                    .withCallbackClass(CallbackActionExamples.TestExpectationForwardCallback.class)
             );
     }
 

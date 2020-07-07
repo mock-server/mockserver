@@ -13,6 +13,7 @@ import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequest;
 import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequestAndResponse;
+import org.mockserver.testing.integration.callback.PrecannedTestExpectationResponseCallback;
 import org.mockserver.uuid.UUIDService;
 import org.mockserver.verify.VerificationTimes;
 import org.slf4j.event.Level;
@@ -339,7 +340,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             )
             .respond(
                 callback()
-                    .withCallbackClass("org.mockserver.testing.integration.callback.PrecannedTestExpectationResponseCallback")
+                    .withCallbackClass(PrecannedTestExpectationResponseCallback.class)
                     .withDelay(new Delay(SECONDS, 2))
             );
 
@@ -382,7 +383,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             )
             .respond(
                 callback()
-                    .withCallbackClass("org.mockserver.testing.integration.callback.PrecannedTestExpectationResponseCallback")
+                    .withCallbackClass(PrecannedTestExpectationResponseCallback.class)
             );
 
         // then

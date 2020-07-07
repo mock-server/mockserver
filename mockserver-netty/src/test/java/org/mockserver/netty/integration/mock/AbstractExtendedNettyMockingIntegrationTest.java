@@ -1849,7 +1849,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     }
 
     @Test
-    public void shouldCallbackToSpecifiedClassInTestClasspath() {
+    public void shouldCallbackToSpecifiedClassInTestClasspathAsString() {
         // given
         TestClasspathTestExpectationResponseCallback.httpRequests.clear();
         TestClasspathTestExpectationResponseCallback.httpResponse = response()
@@ -1869,6 +1869,76 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             .respond(
                 callback()
                     .withCallbackClass("org.mockserver.netty.integration.mock.TestClasspathTestExpectationResponseCallback")
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withHeaders(
+                    header("x-callback", "test_callback_header")
+                )
+                .withBody("a_callback_response"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("callback"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("X-Test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore)
+        );
+        assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(0).getBody().getValue(), "an_example_body_http");
+        assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(0).getPath().getValue(), calculatePath("callback"));
+
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withHeaders(
+                    header("x-callback", "test_callback_header")
+                )
+                .withBody("a_callback_response"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("callback"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("X-Test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_https"),
+                headersToIgnore)
+        );
+        assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");
+        assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(1).getPath().getValue(), calculatePath("callback"));
+    }
+
+    @Test
+    public void shouldCallbackToSpecifiedClassInTestClasspathAsClass() {
+        // given
+        TestClasspathTestExpectationResponseCallback.httpRequests.clear();
+        TestClasspathTestExpectationResponseCallback.httpResponse = response()
+            .withStatusCode(ACCEPTED_202.code())
+            .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+            .withHeaders(
+                header("x-callback", "test_callback_header")
+            )
+            .withBody("a_callback_response");
+
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("callback"))
+            )
+            .respond(
+                callback()
+                    .withCallbackClass(TestClasspathTestExpectationResponseCallback.class)
             );
 
         // then
