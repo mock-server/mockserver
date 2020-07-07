@@ -36,6 +36,6 @@ COPY --from=build mockserver-netty-jar-with-dependencies.jar /
 #RUN chown -R mockserver:mockserver /mockserver
 #USER mockserver
 
-ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=90.0", "-Dfile.encoding=UTF-8", "-jar", "/mockserver-netty-jar-with-dependencies.jar"]
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=90.0", "-Dfile.encoding=UTF-8", "-cp", "/mockserver-netty-jar-with-dependencies.jar:/libs/*", "-Dmockserver.propertyFile=/config/mockserver.properties", "org.mockserver.cli.Main"]
 
 CMD ["-logLevel", "INFO", "-serverPort", "1080"]
