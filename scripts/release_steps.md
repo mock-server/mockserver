@@ -68,7 +68,7 @@ Release Steps
    1. login to https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi
    1. create new version
    1. publish version
-   1. update references to 5.x.x (i.e. 5.10.x) to correct version
+   1. update references to 5.x.x (i.e. 5.11.x) to correct version
 1. update www.mock-server.com
    1. find and replace MockServer version
    1. upload to S3
