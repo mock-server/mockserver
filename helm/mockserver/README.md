@@ -94,6 +94,8 @@ For example:
 helm upgrade --install --namespace mockserver --set app.mountedConfigMapName=other-mockserver-config --set app.propertiesFileNamem=other-mockserver.properties mockserver helm/mockserver
 ```
 
+An example of a helm chart to configure MockServer is [helm/mockserver-config](https://github.com/mock-server/mockserver/tree/master/helm/mockserver-config)
+
 ### Extending MockServer Classpath
 
 To use [class callbacks](https://www.mock-server.com/mock_server/creating_expectations.html#button_response_class_callback) or an [expectation initializer class](https://www.mock-server.com/mock_server/initializing_expectations.html#expectation_initializer_class) the classpath for MockServer must include the specified classes.

@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added extra log messages to indicate progress for large json expectation initializers
 - added log messages for invalid control plane request to make control plane errors clearer in the UI
 - added support for easily mapping jar and config into the docker container
+- added support for easily mapping jar and config into the helm chart
 
 ### Changed
 - reduced time range of CA certificates to increase likelihood they will be accepted by strict systems (i.e. VMWare vCenter Server)
