@@ -17,9 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - clear log, clear expectations, retrieve logs and retrieve requests using OpenAPI or Swagger specification
 - json schema matchers for method, path, headers, query string parameters and cookies
 - path variables matched by nottable string, regex or json schema (as per query string parameters)  
+- support for optional query parameters, header and cookies
 - support for nullable keyword in JSON Schemas (part of Open API specification not JSON Schema specification)
 - matching xml bodies against JSON Schema matchers
 - matching parameter bodies against JSON Schema matchers
+- support to match path parameters, query parameters and header either by sub set or by matching key
 - grouping of log events in UI to simplify analysis of expectation matches / non matches for a request
 - added extra log messages to indicate progress for large json expectation initializers
 - added log messages for invalid control plane request to make control plane errors clearer in the UI
