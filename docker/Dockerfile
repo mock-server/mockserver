@@ -31,10 +31,7 @@ EXPOSE 1080
 COPY --from=build mockserver-netty-jar-with-dependencies.jar /
 
 # don't run MockServer as root
-#RUN addgroup -g 1000 mockserver && \
-#    adduser -H -D -u 1000 -G mockserver mockserver
-#RUN chown -R mockserver:mockserver /mockserver
-#USER mockserver
+USER nonroot
 
 ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=90.0", "-Dfile.encoding=UTF-8", "-cp", "/mockserver-netty-jar-with-dependencies.jar:/libs/*", "-Dmockserver.propertyFile=/config/mockserver.properties", "org.mockserver.cli.Main"]
 
