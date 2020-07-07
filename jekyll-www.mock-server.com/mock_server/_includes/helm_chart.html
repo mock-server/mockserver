@@ -17,9 +17,11 @@
 
 <a id="logs" class="anchor" href="#logs">&nbsp</a>
 
-<h2>To view the logs:</h2>
+<p>To view the logs:</p>
 
 <pre class="prettyprint code"><code class="code">kubectl -n mockserver logs --tail=100 -l app=mockserver,release=mockserver</code></pre>
+
+<p>or open the <a href="/mock_server/mockserver_ui.html">UI</a></p>
 
 <p>To wait until the deployment is complete run:</p>
 
@@ -59,24 +61,38 @@
 
 <h2>Detailed MockServer Configuration</h2>
 
-<p>The MockServer helm chart also supports providing detailed configuration such as:</p>
+<p>If a configmap called <strong>mockserver-config</strong> exists in the same namespace this will be mapped into the MockServer container under the <strong>mountPath</strong> <strong>/config</strong>.</p>
+<p>This configmap can be used to configure MockServer by containing a <strong>mockserver.properties</strong> file and other related configuration files such as a:</p>
 <ul>
-    <li>a <strong>properties file</strong> to configure all MockServer properties, or</li>
-    <li>a <strong>json expectation initialization file</strong> to initialize expectations at start-up.</li>
+    <li><a href="/mock_server/initializing_expectations.html">json expectation initialization</a>, or</li>
+    <li>custom <a href="/mock_server/HTTPS_TLS.html#configuration">TLS CA, X.509 Certificate or Private Key</a></li>
 </ul>
+<p>The <strong>mockserver.properties</strong> file should load these additional files from the directory <strong>/config</strong> which is the <strong>mountPath</strong> for the configmap.</p>
+<p>See <a href="/mock_server/configuration_properties.html">MockServer Configuration</a> for details of all configuration options.</p>
 
-<p>This is done by deploying a <strong>configmap</strong> to kubernetes with files embedded in the yaml as shown in <a href="https://github.com/mock-server/mockserver/tree/master/helm/mockserver-config">mockserver-config</a> helm chart.</p>
-<p>The MockServer helm chart to configure to control how to mount the files from the <strong>configmap</strong>, as follows:</p>
+<p>The mapping of the configuration configmap can be configured as follows:</p>
 <ul>
-    <li><span class="keyword">app.mountConfigMap</span> (default: false) - enables the mounting of the configmap into the MockServer container file system</li>
-    <li><span class="keyword">app.mountedConfigMapName</span> (default: mockserver-config) - name of the configmap (in the same namespace) to mount</li>
+    <li><span class="keyword">app.mountedConfigMapName</span> (default: mockserver-config) - name of the configuration configmap (in the same namespace) to mount</li>
     <li><span class="keyword">app.propertiesFileName</span> (default: mockserver.properties) - name of the property file in the configmap</li>
-    <li><span class="keyword">app.initializationJsonFileName</span> (default: initializerJson.json) - name of the JSON initialization file in the configmap</li>
 </ul>
 
 For example:
 
-<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.mountConfigMap=true --set app.mountedConfigMapName=mockserver-config --set app.propertiesFileNamem=mockserver.properties --set app.initializationJsonFileName=initializerJson.json mockserver helm/mockserver</code></pre>
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.mountedConfigMapName=other-mockserver-config --set app.propertiesFileNamem=other-mockserver.properties mockserver helm/mockserver</code></pre>
+
+<h2>Extending MockServer Classpath</h2>
+
+<p>To use <a href="/mock_server/creating_expectations.html#button_response_class_callback">class callbacks</a> or an <a href="/mock_server/initializing_expectations.html#expectation_initializer_class">expectation initializer class</a> the classpath for MockServer must include the specified classes.</p>
+<p>To support adding classes to the classpath if a configmap called <strong>mockserver-config</strong> exists in the same namespace any jar files contained in this configmap will be added into MockServer classpath.</p>
+
+<p>The mapping of the libs configmap can be configured as follows:</p>
+<ul>
+    <li><span class="keyword">app.mountedLibsConfigMapName</span> (default: mockserver-config) - name of the libs configmap (in the same namespace) to mount</li>
+</ul>
+
+For example:
+
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.mountedLibsConfigMapName=mockserver-libs mockserver helm/mockserver</code></pre>
 
 <a id="mockserver_url" class="anchor" href="#mockserver_url">&nbsp</a>
 
@@ -97,9 +113,9 @@ echo http://$MOCKSERVER_HOST</code></pre>
 
 <h3>Docker for Desktop</h3>
 
-<p><a href="https://www.docker.com/products/docker-desktop">Docker for Desktop</a> creates automatic exposes <strong>LoadBalancer</strong> services.</p>
+<p><a href="https://www.docker.com/products/docker-desktop">Docker for Desktop</a> automatically exposes <strong>LoadBalancer</strong> services.</p>
 
-<p>In addition, on MacOS Docker for Desktop runs inside <a href="https://github.com/moby/hyperkit">Hyperkit</a> so the node IP address is not reachable, therefore the only way to call services is via the exposed <strong>LoadBalancer</strong> service added by Docker for Desktop.</p>
+<p>On MacOS Docker for Desktop runs inside <a href="https://github.com/moby/hyperkit">Hyperkit</a> so the node IP address is not reachable, therefore the only way to call services is via the exposed <strong>LoadBalancer</strong> service added by Docker for Desktop.</p>
 
 <p>To ensure that Docker for Desktop exposes MockServer update the service type to <strong>LoadBalancer</strong> using <strong>--set service.type=LoadBalancer</strong> and set the exposed port using <strong>--set service.port=1080</strong>, as follows:</p>
 

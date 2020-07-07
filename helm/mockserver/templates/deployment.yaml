@@ -72,27 +72,25 @@ spec:
 {{- if .Values.app.mountConfigMap }}
             - name: MOCKSERVER_PROPERTY_FILE
               value: /config/{{ .Values.app.propertiesFileName }}
-{{- if .Values.app.initializationJsonFileName }}
-            - name: MOCKSERVER_INITIALIZATION_JSON_PATH
-              value: /config/{{ .Values.app.initializationJsonFileName }}
 {{- end }}
-{{- end }}
-{{- if .Values.app.mountConfigMap }}
           volumeMounts:
             - name: config-volume
               mountPath: /config
-{{- end }}
+            - name: libs-volume
+              mountPath: /libs
 {{- if .Values.app.resources }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
 {{- end }}
-{{- if .Values.app.mountConfigMap }}
       volumes:
         - name: config-volume
           configMap:
             name: {{ .Values.app.mountedConfigMapName }}
             optional: true
-{{- end }}
+        - name: libs-volume
+          configMap:
+            name: {{ .Values.app.mountedLibsConfigMapName }}
+            optional: true
 {{- with .Values.nodeSelector }}
       nodeSelector:
 {{ toYaml . | indent 8 }}
