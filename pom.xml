@@ -493,7 +493,6 @@
                         <artifactId>maven-javadoc-plugin</artifactId>
                         <version>3.1.0</version>
                         <configuration>
-                            <excludePackageNames>org.mockserver.examples:org.mockserver.examples.*</excludePackageNames>
                             <failOnError>false</failOnError>
                             <doclint>none</doclint>
                         </configuration>
@@ -511,10 +510,7 @@
                                 </goals>
                                 <phase>site</phase>
                                 <configuration>
-                                    <excludePackageNames>org.mockserver.examples:org.mockserver.examples.*
-                                    </excludePackageNames>
-                                    <reportOutputDirectory>${basedir}/jekyll-www.mock-server.com/_site
-                                    </reportOutputDirectory>
+                                    <reportOutputDirectory>${basedir}/jekyll-www.mock-server.com/_site</reportOutputDirectory>
                                     <destDir>apidocs</destDir>
                                 </configuration>
                             </execution>
