@@ -95,7 +95,7 @@ Release Steps
    1. brew doctor
    1. delete https://github.com/jamesdbloom/homebrew-core
    1. git -C "$(brew --repo homebrew/core)" checkout master
-   1. git -C "$(brew --repo homebrew/core)" branch -D mockserver-didn't match request matcher
+   1. git -C "$(brew --repo homebrew/core)" branch -D mockserver-x.x.x
    1. git -C "$(brew --repo homebrew/core)" reset --hard HEAD
    1. brew update
    1. brew bump-formula-pr --strict mockserver --url=https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/x.x.x/mockserver-netty-x.x.x-brew-tar.tar
