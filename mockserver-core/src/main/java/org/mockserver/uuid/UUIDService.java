@@ -4,7 +4,7 @@ import java.util.UUID;
 
 public class UUIDService {
 
-    public static final String FIXED_UUID_FOR_TESTS = UUID.randomUUID().toString();
+    public static final String FIXED_UUID_FOR_TESTS = UUIDService.getUUID();
     public static boolean fixedUUID = false;
 
     public static String getUUID() {

@@ -2,6 +2,8 @@ package org.mockserver.matchers;
 
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
+import java.util.Objects;
+
 /**
  * @author jamesdbloom
  */
@@ -25,6 +27,7 @@ public class Times extends ObjectWithReflectiveEqualsHashCodeToString {
         }
     };
 
+    private int hashCode;
     private int remainingTimes;
     private final boolean unlimited;
 
@@ -72,5 +75,29 @@ public class Times extends ObjectWithReflectiveEqualsHashCodeToString {
         } else {
             return Times.exactly(remainingTimes);
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (hashCode() != o.hashCode()) {
+            return false;
+        }
+        Times times = (Times) o;
+        return remainingTimes == times.remainingTimes &&
+            unlimited == times.unlimited;
+    }
+
+    @Override
+    public int hashCode() {
+        if (hashCode == 0) {
+            hashCode = Objects.hash(remainingTimes, unlimited);
+        }
+        return hashCode;
     }
 }

@@ -14,11 +14,11 @@ import org.mockserver.mock.RequestMatchers;
 import org.mockserver.model.RequestDefinition;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.ui.MockServerMatcherNotifier;
+import org.mockserver.uuid.UUIDService;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -458,7 +458,7 @@ public class DashboardWebSocketHandlerTest {
     @Test
     public void shouldSerialiseRollUpEventsWithCorrelationId() throws InterruptedException {
         // given
-        String logCorrelationId = UUID.randomUUID().toString();
+        String logCorrelationId = UUIDService.getUUID();
         List<LogEntry> logEntries = Arrays.asList(
             new LogEntry()
                 .setHttpRequest(request("one").withLogCorrelationId(logCorrelationId))
@@ -543,9 +543,9 @@ public class DashboardWebSocketHandlerTest {
     @Test
     public void shouldSerialiseRollUpEventsWithSameCorrelationIdAndNotWarpEventsWithUniqueCorrelationId() throws InterruptedException {
         // given
-        String logCorrelationIdShared = UUID.randomUUID().toString();
-        String logCorrelationIdOne = UUID.randomUUID().toString();
-        String logCorrelationIdTwo = UUID.randomUUID().toString();
+        String logCorrelationIdShared = UUIDService.getUUID();
+        String logCorrelationIdOne = UUIDService.getUUID();
+        String logCorrelationIdTwo = UUIDService.getUUID();
         List<LogEntry> logEntries = Arrays.asList(
             new LogEntry()
                 .setHttpRequest(request("one").withLogCorrelationId(logCorrelationIdShared))
@@ -658,7 +658,7 @@ public class DashboardWebSocketHandlerTest {
         // given
         List<LogEntry> logEntries = Arrays.asList(
             new LogEntry()
-                .setHttpRequest(request("one").withLogCorrelationId(UUID.randomUUID().toString())),
+                .setHttpRequest(request("one").withLogCorrelationId(UUIDService.getUUID())),
             new LogEntry()
                 .setHttpRequest(request("two")),
             new LogEntry()

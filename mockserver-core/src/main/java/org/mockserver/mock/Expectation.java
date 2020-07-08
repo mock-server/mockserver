@@ -6,6 +6,7 @@ import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
 import org.mockserver.uuid.UUIDService;
 
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -25,7 +26,7 @@ public class Expectation extends ObjectWithJsonToString {
     private String id;
     @JsonIgnore
     private long created;
-    private final Integer priority;
+    private final int priority;
     private final RequestDefinition httpRequest;
     private final Times times;
     private final TimeToLive timeToLive;
@@ -40,9 +41,16 @@ public class Expectation extends ObjectWithJsonToString {
     private HttpOverrideForwardedRequest httpOverrideForwardedRequest;
     private HttpError httpError;
 
-    public static final Comparator<Expectation> EXPECTATION_PRIORITY_COMPARATOR = Comparator
-        .comparing(Expectation::getPriority, Comparator.nullsLast(Comparator.reverseOrder()))
-        .thenComparing(Expectation::getCreated, Comparator.nullsLast(Comparator.naturalOrder()));
+    public static final Comparator<Expectation> EXPECTATION_PRIORITY_COMPARATOR = (Comparator<Expectation> & Serializable) (expectationOne, expectationTwo) -> {
+        if (expectationOne == null) {
+            return expectationTwo == null ? 0 : 1;
+        } else if (expectationTwo == null) {
+            return -1;
+        } else {
+            int priorityComparison = Integer.compare(expectationTwo.getPriority(), expectationOne.getPriority());
+            return priorityComparison != 0 ? priorityComparison : Long.compare(expectationOne.getCreated(), expectationTwo.getCreated());
+        }
+    };
 
     /**
      * Specify the OpenAPI and operationId to match against by URL or payload and string as follows:
@@ -89,7 +97,7 @@ public class Expectation extends ObjectWithJsonToString {
      * @param priority         the priority with which this expectation is used to match requests compared to other expectations (high first)
      * @return the Expectation
      */
-    public static Expectation when(String specUrlOrPayload, String operationId, Integer priority) {
+    public static Expectation when(String specUrlOrPayload, String operationId, int priority) {
         return new Expectation(openAPI(specUrlOrPayload, operationId), Times.unlimited(), TimeToLive.unlimited(), priority);
     }
 
@@ -142,7 +150,7 @@ public class Expectation extends ObjectWithJsonToString {
      * @param priority         the priority with which this expectation is used to match requests compared to other expectations (high first)
      * @return the Expectation
      */
-    public static Expectation when(String specUrlOrPayload, String operationId, Times times, TimeToLive timeToLive, Integer priority) {
+    public static Expectation when(String specUrlOrPayload, String operationId, Times times, TimeToLive timeToLive, int priority) {
         return new Expectation(openAPI(specUrlOrPayload, operationId), times, timeToLive, priority);
     }
 
@@ -186,7 +194,7 @@ public class Expectation extends ObjectWithJsonToString {
      * @param priority    the priority with which this expectation is used to match requests compared to other expectations (high first)
      * @return the Expectation
      */
-    public static Expectation when(HttpRequest httpRequest, Integer priority) {
+    public static Expectation when(HttpRequest httpRequest, int priority) {
         return new Expectation(httpRequest, Times.unlimited(), TimeToLive.unlimited(), priority);
     }
 
@@ -238,7 +246,7 @@ public class Expectation extends ObjectWithJsonToString {
      * @param priority    the priority with which this expectation is used to match requests compared to other expectations (high first)
      * @return the Expectation
      */
-    public static Expectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive, Integer priority) {
+    public static Expectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive, int priority) {
         return new Expectation(httpRequest, times, timeToLive, priority);
     }
 
@@ -246,7 +254,7 @@ public class Expectation extends ObjectWithJsonToString {
         this(requestDefinition, Times.unlimited(), TimeToLive.unlimited(), 0);
     }
 
-    public Expectation(RequestDefinition requestDefinition, Times times, TimeToLive timeToLive, Integer priority) {
+    public Expectation(RequestDefinition requestDefinition, Times times, TimeToLive timeToLive, int priority) {
         // ensure created enforces insertion order by relying on system time, and a counter
         EXPECTATION_COUNTER.compareAndSet(Integer.MAX_VALUE, 0);
         this.created = System.currentTimeMillis() - START_TIME + EXPECTATION_COUNTER.incrementAndGet();
@@ -268,7 +276,7 @@ public class Expectation extends ObjectWithJsonToString {
         return id;
     }
 
-    public Integer getPriority() {
+    public int getPriority() {
         return priority;
     }
 
@@ -550,13 +558,11 @@ public class Expectation extends ObjectWithJsonToString {
             return false;
         }
         Expectation that = (Expectation) o;
-        boolean equals = Objects.equals(httpResponse, that.httpResponse);
-        boolean equals1 = Objects.equals(httpRequest, that.httpRequest);
         return Objects.equals(priority, that.priority) &&
-            equals1 &&
+            Objects.equals(httpRequest, that.httpRequest) &&
             Objects.equals(times, that.times) &&
             Objects.equals(timeToLive, that.timeToLive) &&
-            equals &&
+            Objects.equals(httpResponse, that.httpResponse) &&
             Objects.equals(httpResponseTemplate, that.httpResponseTemplate) &&
             Objects.equals(httpResponseClassCallback, that.httpResponseClassCallback) &&
             Objects.equals(httpResponseObjectCallback, that.httpResponseObjectCallback) &&

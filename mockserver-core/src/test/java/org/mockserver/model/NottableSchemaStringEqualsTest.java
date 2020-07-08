@@ -1,8 +1,7 @@
 package org.mockserver.model;
 
 import org.junit.Test;
-
-import java.util.UUID;
+import org.mockserver.uuid.UUIDService;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -31,7 +30,7 @@ public class NottableSchemaStringEqualsTest {
             "  \"minLength\": 2," + NEW_LINE +
             "  \"maxLength\": 3" + NEW_LINE +
             "}")));
-        assertThat(schemaString("{ \"type\": \"string\" }"), not((Object) "{" + NEW_LINE +
+        assertThat(schemaString("{ \"type\": \"string\" }"), not("{" + NEW_LINE +
             "  \"type\": \"string\"," + NEW_LINE +
             "  \"minLength\": 2," + NEW_LINE +
             "  \"maxLength\": 3" + NEW_LINE +
@@ -41,7 +40,7 @@ public class NottableSchemaStringEqualsTest {
     }
 
     @Test
-    public void schemaForNumberShouldEqualString(){
+    public void schemaForNumberShouldEqualString() {
         String schema = "{ \"type\": \"number\" }";
         NottableSchemaString string = schemaString(schema);
         NottableSchemaString notString = schemaString("!" + schema);
@@ -54,7 +53,7 @@ public class NottableSchemaStringEqualsTest {
     }
 
     @Test
-    public void schemaForIntegerShouldEqualString(){
+    public void schemaForIntegerShouldEqualString() {
         String schema = "{ \"type\": \"integer\" }";
         NottableSchemaString string = schemaString(schema);
         NottableSchemaString notString = schemaString("!" + schema);
@@ -65,7 +64,7 @@ public class NottableSchemaStringEqualsTest {
     }
 
     @Test
-    public void schemaForNumberMultipleShouldEqualString(){
+    public void schemaForNumberMultipleShouldEqualString() {
         String schema = "{" + NEW_LINE +
             "    \"type\"       : \"number\"," + NEW_LINE +
             "    \"multipleOf\" : 10" + NEW_LINE +
@@ -81,7 +80,7 @@ public class NottableSchemaStringEqualsTest {
     }
 
     @Test
-    public void schemaForStringByLengthShouldEqualString(){
+    public void schemaForStringByLengthShouldEqualString() {
         String schema = "{" + NEW_LINE +
             "  \"type\": \"string\"," + NEW_LINE +
             "  \"minLength\": 2," + NEW_LINE +
@@ -96,7 +95,7 @@ public class NottableSchemaStringEqualsTest {
     }
 
     @Test
-    public void schemaForStringByRegexShouldEqualString(){
+    public void schemaForStringByRegexShouldEqualString() {
         String schema = "{" + NEW_LINE +
             "   \"type\": \"string\"," + NEW_LINE +
             "   \"pattern\": \"^(\\\\([0-9]{3}\\\\))?[0-9]{3}-[0-9]{4}$\"" + NEW_LINE +
@@ -114,21 +113,21 @@ public class NottableSchemaStringEqualsTest {
     }
 
     @Test
-    public void schemaForStringByUUIDPatternShouldEqualString(){
+    public void schemaForStringByUUIDPatternShouldEqualString() {
         String schema = "{" + NEW_LINE +
             "    \"type\": \"string\"," + NEW_LINE +
             "    \"format\": \"uuid\"" + NEW_LINE +
             "}";
         NottableSchemaString string = schemaString(schema);
         NottableSchemaString notString = schemaString("!" + schema);
-        assertThat(string.equals(string(UUID.randomUUID().toString())), is(true));
+        assertThat(string.equals(string(UUIDService.getUUID())), is(true));
         assertThat(string.equals(string("abc")), is(false));
-        assertThat(notString.equals(string(UUID.randomUUID().toString())), is(false));
+        assertThat(notString.equals(string(UUIDService.getUUID())), is(false));
         assertThat(notString.equals(string("abc")), is(true));
     }
 
     @Test
-    public void schemaForStringByEmailPatternShouldEqualString(){
+    public void schemaForStringByEmailPatternShouldEqualString() {
         String schema = "{" + NEW_LINE +
             "    \"type\": \"string\"," + NEW_LINE +
             "    \"format\": \"email\"" + NEW_LINE +
@@ -142,7 +141,7 @@ public class NottableSchemaStringEqualsTest {
     }
 
     @Test
-    public void schemaForStringByIPv4PatternShouldEqualString(){
+    public void schemaForStringByIPv4PatternShouldEqualString() {
         String schema = "{" + NEW_LINE +
             "    \"type\": \"string\"," + NEW_LINE +
             "    \"format\": \"ipv4\"" + NEW_LINE +
@@ -156,7 +155,7 @@ public class NottableSchemaStringEqualsTest {
     }
 
     @Test
-    public void schemaForStringByHostnamePatternShouldEqualString(){
+    public void schemaForStringByHostnamePatternShouldEqualString() {
         String schema = "{" + NEW_LINE +
             "    \"type\": \"string\"," + NEW_LINE +
             "    \"format\": \"hostname\"" + NEW_LINE +
@@ -170,7 +169,7 @@ public class NottableSchemaStringEqualsTest {
     }
 
     @Test
-    public void schemaForStringByDateTimePatternShouldEqualString(){
+    public void schemaForStringByDateTimePatternShouldEqualString() {
         String schema = "{" + NEW_LINE +
             "    \"type\": \"string\"," + NEW_LINE +
             "    \"format\": \"date-time\"" + NEW_LINE +
@@ -264,9 +263,9 @@ public class NottableSchemaStringEqualsTest {
             "}";
         NottableSchemaString string = schemaString(schema);
         NottableSchemaString notString = schemaString("!" + schema);
-        assertThat(string.equals(string(UUID.randomUUID().toString())), is(true));
+        assertThat(string.equals(string(UUIDService.getUUID())), is(true));
         assertThat(string("abc").equals(string), is(false));
-        assertThat(notString.equals(string(UUID.randomUUID().toString())), is(false));
+        assertThat(notString.equals(string(UUIDService.getUUID())), is(false));
         assertThat(string("abc").equals(notString), is(true));
     }
 

@@ -12,9 +12,9 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.uuid.UUIDService;
 
 import java.net.InetSocketAddress;
-import java.util.UUID;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -65,8 +65,8 @@ public class HttpProxyChainedIntegrationTest {
         ClientAndServer proxyClientAndServer = null;
         try {
 
-            String username = UUID.randomUUID().toString();
-            String password = UUID.randomUUID().toString();
+            String username = UUIDService.getUUID();
+            String password = UUIDService.getUUID();
             ConfigurationProperties.proxyAuthenticationUsername(username);
             ConfigurationProperties.proxyAuthenticationPassword(password);
             ConfigurationProperties.forwardHttpsProxy("localhost:" + targetClientAndServer.getPort());

@@ -18,7 +18,6 @@ public abstract class AbstractHttpRequestMatcher extends NotMatcher<RequestDefin
     protected static final String EXPECTATION_DID_MATCH = "request:{}matched" + EXPECTATION + ":{}";
     protected static final String DID_NOT_MATCH = " didn't match";
     protected static final String MATCHED = " matched";
-    protected static final String COLON_NEW_LINE = ": " + NEW_LINE;
     protected static final String COLON_NEW_LINES = ": " + NEW_LINE + NEW_LINE;
 
     protected final MockServerLogger mockServerLogger;

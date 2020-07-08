@@ -19,7 +19,6 @@ import org.mockserver.verify.VerificationTimes;
 import org.slf4j.event.Level;
 
 import java.util.Arrays;
-import java.util.UUID;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -551,7 +550,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 request()
                     .withMethod("GET")
                     .withPath("/pets/12345")
-                    .withHeader("x-request-id", UUID.randomUUID().toString()),
+                    .withHeader("x-request-id", UUIDService.getUUID()),
                 headersToIgnore)
         );
 
@@ -670,7 +669,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 request()
                     .withMethod("GET")
                     .withPath("/pets/12345")
-                    .withHeader("x-request-id", UUID.randomUUID().toString()),
+                    .withHeader("x-request-id", UUIDService.getUUID()),
                 headersToIgnore)
         );
 

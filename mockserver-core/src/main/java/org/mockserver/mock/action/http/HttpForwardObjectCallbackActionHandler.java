@@ -14,8 +14,8 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpRequestAndHttpResponse;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
+import org.mockserver.uuid.UUIDService;
 
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static org.apache.commons.lang3.BooleanUtils.isFalse;
@@ -105,7 +105,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
     }
 
     private void handleViaWebSocket(HttpActionHandler actionHandler, HttpObjectCallback httpObjectCallback, HttpRequest request, ResponseWriter responseWriter, boolean synchronous, Runnable expectationPostProcessor, String clientId) {
-        final String webSocketCorrelationId = UUID.randomUUID().toString();
+        final String webSocketCorrelationId = UUIDService.getUUID();
         webSocketClientRegistry.registerForwardCallbackHandler(webSocketCorrelationId, new WebSocketRequestCallback() {
             @Override
             public void handle(final HttpRequest request) {

@@ -16,6 +16,7 @@ import org.mockserver.serialization.*;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.server.initialize.ExpectationInitializerLoader;
 import org.mockserver.ui.MockServerMatcherNotifier.Cause;
+import org.mockserver.uuid.UUIDService;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.event.Level;
@@ -23,7 +24,6 @@ import org.slf4j.event.Level;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -53,7 +53,7 @@ public class HttpState {
 
     public static final String LOG_SEPARATOR = NEW_LINE + "------------------------------------" + NEW_LINE;
     public static final String PATH_PREFIX = "/mockserver";
-    private final String uniqueLoopPreventionHeaderValue = "MockServer_" + UUID.randomUUID().toString();
+    private final String uniqueLoopPreventionHeaderValue = "MockServer_" + UUIDService.getUUID();
     private final MockServerEventLog mockServerLog;
     private final Scheduler scheduler;
     private ExpectationFileSystemPersistence expectationFileSystemPersistence;
@@ -95,7 +95,7 @@ public class HttpState {
     }
 
     public void clear(HttpRequest request) {
-        final String logCorrelationId = UUID.randomUUID().toString();
+        final String logCorrelationId = UUIDService.getUUID();
         RequestDefinition requestDefinition = null;
         if (isNotBlank(request.getBodyAsString())) {
             requestDefinition = getRequestDefinitionSerializer().deserialize(request.getBodyAsJsonOrXmlString());
@@ -196,7 +196,7 @@ public class HttpState {
     }
 
     public HttpResponse retrieve(HttpRequest request) {
-        final String logCorrelationId = UUID.randomUUID().toString();
+        final String logCorrelationId = UUIDService.getUUID();
         CompletableFuture<HttpResponse> httpResponseFuture = new CompletableFuture<>();
         HttpResponse response = response().withStatusCode(OK.code());
         if (request != null) {
@@ -469,7 +469,7 @@ public class HttpState {
 
     public boolean handle(HttpRequest request, ResponseWriter responseWriter, boolean warDeployment) {
 
-        request.withLogCorrelationId(UUID.randomUUID().toString());
+        request.withLogCorrelationId(UUIDService.getUUID());
 
         if (MockServerLogger.isEnabled(Level.TRACE)) {
             mockServerLogger.logEvent(

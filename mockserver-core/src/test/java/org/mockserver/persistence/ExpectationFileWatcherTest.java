@@ -9,12 +9,12 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.mock.RequestMatchers;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.ui.MockServerMatcherNotifier;
+import org.mockserver.uuid.UUIDService;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -44,7 +44,7 @@ public class ExpectationFileWatcherTest {
         ExpectationFileWatcher expectationFileWatcher = null;
         try {
             // given - configuration
-            File mockserverInitialization = new File("mockserverInitialization" + UUID.randomUUID().toString() + ".json");
+            File mockserverInitialization = new File("mockserverInitialization" + UUIDService.getUUID() + ".json");
             mockserverInitialization.deleteOnExit();
             ConfigurationProperties.initializationJsonPath(mockserverInitialization.getPath());
             // and - expectation update notification

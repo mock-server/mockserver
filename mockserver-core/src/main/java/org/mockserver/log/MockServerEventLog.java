@@ -14,6 +14,7 @@ import org.mockserver.model.RequestDefinition;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.RequestDefinitionSerializer;
 import org.mockserver.ui.MockServerEventLogNotifier;
+import org.mockserver.uuid.UUIDService;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.Logger;
@@ -176,7 +177,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         disruptor.publishEvent(new LogEntry()
             .setType(RUNNABLE)
             .setConsumer(() -> {
-                String logCorrelationId = UUID.randomUUID().toString();
+                String logCorrelationId = UUIDService.getUUID();
                 RequestDefinition matcher = requestDefinition != null ? requestDefinition : request().withLogCorrelationId(logCorrelationId);
                 HttpRequestMatcher requestMatcher = matcherBuilder.transformsToMatcher(matcher);
                 for (LogEntry logEntry : new LinkedList<>(eventLog)) {
@@ -286,7 +287,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         disruptor.publishEvent(new LogEntry()
             .setType(RUNNABLE)
             .setConsumer(() -> {
-                RequestDefinition requestDefinitionMatcher = requestDefinition != null ? requestDefinition : request().withLogCorrelationId(UUID.randomUUID().toString());
+                RequestDefinition requestDefinitionMatcher = requestDefinition != null ? requestDefinition : request().withLogCorrelationId(UUIDService.getUUID());
                 HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(requestDefinition);
                 consumer.accept(this.eventLog
                     .stream()
@@ -301,7 +302,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         disruptor.publishEvent(new LogEntry()
             .setType(RUNNABLE)
             .setConsumer(() -> {
-                RequestDefinition requestDefinitionMatcher = requestDefinition != null ? requestDefinition : request().withLogCorrelationId(UUID.randomUUID().toString());
+                RequestDefinition requestDefinitionMatcher = requestDefinition != null ? requestDefinition : request().withLogCorrelationId(UUIDService.getUUID());
                 HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(requestDefinitionMatcher);
                 consumer.accept(this.eventLog
                     .stream()
@@ -336,7 +337,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     }
 
     public void verify(Verification verification, Consumer<String> resultConsumer) {
-        final String logCorrelationId = UUID.randomUUID().toString();
+        final String logCorrelationId = UUIDService.getUUID();
         if (verification != null) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -403,7 +404,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     }
 
     public void verify(VerificationSequence verificationSequence, Consumer<String> resultConsumer) {
-        final String logCorrelationId = UUID.randomUUID().toString();
+        final String logCorrelationId = UUIDService.getUUID();
         retrieveRequests(null, allRequests -> {
             try {
                 if (verificationSequence != null) {

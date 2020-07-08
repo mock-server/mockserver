@@ -6,9 +6,9 @@ import org.mockserver.cli.Main;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.netty.integration.mock.tls.inbound.AbstractClientAuthenticationMockingIntegrationTest;
 import org.mockserver.socket.PortFactory;
+import org.mockserver.uuid.UUIDService;
 
 import java.io.File;
-import java.util.UUID;
 
 import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.stop.Stop.stopQuietly;
@@ -24,7 +24,7 @@ public class ClientAuthenticationDynamicCAMockingIntegrationTest extends Abstrac
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void startServer() throws Exception {
         // temporary directory
-        File temporaryDirectory = new File(File.createTempFile("random", "temp").getParent() + UUID.randomUUID().toString());
+        File temporaryDirectory = new File(File.createTempFile("random", "temp").getParent() + UUIDService.getUUID());
         temporaryDirectory.mkdirs();
 
         useBouncyCastleForKeyAndCertificateGeneration(true);

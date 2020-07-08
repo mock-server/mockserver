@@ -21,11 +21,11 @@ import org.mockserver.model.*;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.curl.HttpRequestToCurlSerializer;
+import org.mockserver.uuid.UUIDService;
 import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
 import java.util.HashSet;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.Mockito.*;
@@ -102,7 +102,7 @@ public class ActionHandlerTest {
         mockHttpStateHandler = mock(HttpState.class);
         scheduler = spy(new Scheduler(mockServerLogger));
         when(mockHttpStateHandler.getScheduler()).thenReturn(scheduler);
-        when(mockHttpStateHandler.getUniqueLoopPreventionHeaderValue()).thenReturn("MockServer_" + UUID.randomUUID().toString());
+        when(mockHttpStateHandler.getUniqueLoopPreventionHeaderValue()).thenReturn("MockServer_" + UUIDService.getUUID());
         actionHandler = new HttpActionHandler(null, mockHttpStateHandler, null, null);
 
         initMocks(this);

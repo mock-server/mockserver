@@ -1,6 +1,5 @@
 package org.mockserver.netty.proxy;
 
-import com.google.common.base.Splitter;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -13,11 +12,11 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.BinaryMessage;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.uuid.UUIDService;
 import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -51,7 +50,7 @@ public class BinaryHandler extends SimpleChannelInboundHandler<ByteBuf> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ByteBuf byteBuf) {
         BinaryMessage binaryRequest = bytes(ByteBufUtil.getBytes(byteBuf));
-        String logCorrelationId = UUID.randomUUID().toString();
+        String logCorrelationId = UUIDService.getUUID();
         mockServerLogger.logEvent(
             new LogEntry()
                 .setType(RECEIVED_REQUEST)

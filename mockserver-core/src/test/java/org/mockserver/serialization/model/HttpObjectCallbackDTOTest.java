@@ -2,8 +2,7 @@ package org.mockserver.serialization.model;
 
 import org.junit.Test;
 import org.mockserver.model.HttpObjectCallback;
-
-import java.util.UUID;
+import org.mockserver.uuid.UUIDService;
 
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -17,10 +16,10 @@ public class HttpObjectCallbackDTOTest {
     @Test
     public void shouldReturnValuesSetInConstructor() {
         // given
-        String clientId = UUID.randomUUID().toString();
+        String clientId = UUIDService.getUUID();
 
         HttpObjectCallback httpObjectCallback = new HttpObjectCallback()
-                .withClientId(clientId);
+            .withClientId(clientId);
 
         // when
         HttpObjectCallbackDTO httpObjectCallbackDTO = new HttpObjectCallbackDTO(httpObjectCallback);
@@ -32,10 +31,10 @@ public class HttpObjectCallbackDTOTest {
     @Test
     public void shouldBuildObject() {
         // given
-        String clientId = UUID.randomUUID().toString();
+        String clientId = UUIDService.getUUID();
 
         HttpObjectCallback httpObjectCallback = new HttpObjectCallback()
-                .withClientId(clientId);
+            .withClientId(clientId);
 
         // when
         HttpObjectCallback builtHttpObjectCallback = new HttpObjectCallbackDTO(httpObjectCallback).buildObject();
@@ -47,7 +46,7 @@ public class HttpObjectCallbackDTOTest {
     @Test
     public void shouldReturnValuesSetInSetter() {
         // given
-        String clientId = UUID.randomUUID().toString();
+        String clientId = UUIDService.getUUID();
 
         HttpObjectCallback httpObjectCallback = new HttpObjectCallback();
 

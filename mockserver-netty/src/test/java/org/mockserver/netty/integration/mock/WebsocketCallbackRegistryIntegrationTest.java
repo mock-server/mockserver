@@ -11,6 +11,7 @@ import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
+import org.mockserver.uuid.UUIDService;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -19,7 +20,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -619,7 +619,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                                     .withCloseSocket(true)
                             )
                     );
-                String addedHeader = UUID.randomUUID().toString();
+                String addedHeader = UUIDService.getUUID();
                 proxy = startClientAndServer();
                 proxy
                     .when(
@@ -691,7 +691,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                                 .withCloseSocket(true)
                         )
                 );
-            String addedHeader = UUID.randomUUID().toString();
+            String addedHeader = UUIDService.getUUID();
             proxy = startClientAndServer();
             proxy
                 .when(
@@ -762,7 +762,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                                 .withCloseSocket(true)
                         )
                 );
-            TestExpectationForwardAndResponseCallback.addedHeader = UUID.randomUUID().toString();
+            TestExpectationForwardAndResponseCallback.addedHeader = UUIDService.getUUID();
             TestExpectationForwardAndResponseCallback.serverPort = getServerPort();
             proxy = startClientAndServer();
             proxy

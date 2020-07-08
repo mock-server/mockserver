@@ -6,6 +6,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.OpenAPIDefinition;
+import org.mockserver.uuid.UUIDService;
 
 import java.util.UUID;
 
@@ -4544,7 +4545,7 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("Authorization", "basic " + UUID.randomUUID().toString())
+                .withHeader("Authorization", "basic " + UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -4552,7 +4553,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+                .withHeader("Authorization", "wrong_scheme " + UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -4586,7 +4587,7 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withHeader("Authorization", "bearer " + UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -4594,7 +4595,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+                .withHeader("Authorization", "wrong_scheme " + UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -4629,7 +4630,7 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("X-API-Key", UUID.randomUUID().toString())
+                .withHeader("X-API-Key", UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -4669,7 +4670,7 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withHeader("Authorization", "bearer " + UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -4712,7 +4713,7 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withHeader("Authorization", "bearer " + UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -4750,11 +4751,11 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("Authorization", "basic " + UUID.randomUUID().toString())
+                .withHeader("Authorization", "basic " + UUIDService.getUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withHeader("Authorization", "bearer " + UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -4762,7 +4763,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+                .withHeader("Authorization", "wrong_scheme " + UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -4805,15 +4806,15 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("Authorization", "basic " + UUID.randomUUID().toString())
+                .withHeader("Authorization", "basic " + UUIDService.getUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withHeader("Authorization", "bearer " + UUIDService.getUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("X-API-Key", UUID.randomUUID().toString())
+                .withHeader("X-API-Key", UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -4821,7 +4822,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+                .withHeader("Authorization", "wrong_scheme " + UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -4868,15 +4869,15 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("Authorization", "basic " + UUID.randomUUID().toString())
+                .withHeader("Authorization", "basic " + UUIDService.getUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withHeader("Authorization", "bearer " + UUIDService.getUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("X-API-Key", UUID.randomUUID().toString())
+                .withHeader("X-API-Key", UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -4884,7 +4885,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+                .withHeader("Authorization", "wrong_scheme " + UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -4932,15 +4933,15 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("Authorization", "basic " + UUID.randomUUID().toString())
+                .withHeader("Authorization", "basic " + UUIDService.getUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withHeader("Authorization", "bearer " + UUIDService.getUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("X-API-Key", UUID.randomUUID().toString())
+                .withHeader("X-API-Key", UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -4948,7 +4949,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+                .withHeader("Authorization", "wrong_scheme " + UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -4989,7 +4990,7 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withQueryStringParameter("Authorization", "basic " + UUID.randomUUID().toString())
+                .withQueryStringParameter("Authorization", "basic " + UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -4997,7 +4998,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withQueryStringParameter("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+                .withQueryStringParameter("Authorization", "wrong_scheme " + UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5032,7 +5033,7 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withQueryStringParameter("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withQueryStringParameter("Authorization", "bearer " + UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5040,7 +5041,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withQueryStringParameter("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+                .withQueryStringParameter("Authorization", "wrong_scheme " + UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5075,7 +5076,7 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withQueryStringParameter("X-API-Key", UUID.randomUUID().toString())
+                .withQueryStringParameter("X-API-Key", UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5116,7 +5117,7 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withQueryStringParameter("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withQueryStringParameter("Authorization", "bearer " + UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5160,7 +5161,7 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withQueryStringParameter("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withQueryStringParameter("Authorization", "bearer " + UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5200,11 +5201,11 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withQueryStringParameter("Authorization", "basic " + UUID.randomUUID().toString())
+                .withQueryStringParameter("Authorization", "basic " + UUIDService.getUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withQueryStringParameter("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withQueryStringParameter("Authorization", "bearer " + UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5212,7 +5213,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withQueryStringParameter("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+                .withQueryStringParameter("Authorization", "wrong_scheme " + UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5257,15 +5258,15 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withQueryStringParameter("Authorization", "basic " + UUID.randomUUID().toString())
+                .withQueryStringParameter("Authorization", "basic " + UUIDService.getUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withQueryStringParameter("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withQueryStringParameter("Authorization", "bearer " + UUIDService.getUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withQueryStringParameter("X-API-Key", UUID.randomUUID().toString())
+                .withQueryStringParameter("X-API-Key", UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5273,7 +5274,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withQueryStringParameter("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+                .withQueryStringParameter("Authorization", "wrong_scheme " + UUIDService.getUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5322,7 +5323,7 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withQueryStringParameter("Authorization", "basic " + UUID.randomUUID().toString())
+                .withQueryStringParameter("Authorization", "basic " + UUIDService.getUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()

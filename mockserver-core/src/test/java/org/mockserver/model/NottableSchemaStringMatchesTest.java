@@ -1,8 +1,7 @@
 package org.mockserver.model;
 
 import org.junit.Test;
-
-import java.util.UUID;
+import org.mockserver.uuid.UUIDService;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -123,9 +122,9 @@ public class NottableSchemaStringMatchesTest {
             "}";
         NottableSchemaString string = schemaString(schema);
         NottableSchemaString notString = schemaString("!" + schema);
-        assertThat(string.matches(UUID.randomUUID().toString()), is(true));
+        assertThat(string.matches(UUIDService.getUUID()), is(true));
         assertThat(string.matches("abc"), is(false));
-        assertThat(notString.matches(UUID.randomUUID().toString()), is(false));
+        assertThat(notString.matches(UUIDService.getUUID()), is(false));
         assertThat(notString.matches("abc"), is(true));
     }
 

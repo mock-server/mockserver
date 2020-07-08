@@ -19,7 +19,6 @@ import org.mockserver.verify.VerificationTimes;
 import org.slf4j.event.Level;
 
 import java.util.Arrays;
-import java.util.UUID;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -216,16 +215,16 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             .when(
                 request()
                     .withPath("/some/path/{variableOne}/{variableTwo}")
-                .withPathParameters(
-                    schemaParam("variableO[a-z]{2}", "{" + NEW_LINE +
-                        "   \"type\": \"string\"," + NEW_LINE +
-                        "   \"pattern\": \"variableOneV[a-z]{4}$\"" + NEW_LINE +
-                        "}"),
-                    schemaParam("variableTwo", "{" + NEW_LINE +
-                        "   \"type\": \"string\"," + NEW_LINE +
-                        "   \"pattern\": \"variableTwoV[a-z]{4}$\"" + NEW_LINE +
-                        "}")
-                )
+                    .withPathParameters(
+                        schemaParam("variableO[a-z]{2}", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"variableOneV[a-z]{4}$\"" + NEW_LINE +
+                            "}"),
+                        schemaParam("variableTwo", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"variableTwoV[a-z]{4}$\"" + NEW_LINE +
+                            "}")
+                    )
             )
             .respond(
                 response()
@@ -752,7 +751,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 request()
                     .withMethod("GET")
                     .withPath("/pets/12345")
-                    .withHeader("x-request-id", UUID.randomUUID().toString()),
+                    .withHeader("x-request-id", UUIDService.getUUID()),
                 headersToIgnore)
         );
 
@@ -871,7 +870,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 request()
                     .withMethod("GET")
                     .withPath("/pets/12345")
-                    .withHeader("x-request-id", UUID.randomUUID().toString()),
+                    .withHeader("x-request-id", UUIDService.getUUID()),
                 headersToIgnore)
         );
 

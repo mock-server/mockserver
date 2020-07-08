@@ -29,12 +29,12 @@ import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.socket.tls.KeyStoreFactory;
 import org.mockserver.streams.IOStreamUtils;
+import org.mockserver.uuid.UUIDService;
 
 import javax.net.ssl.SSLSocket;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Base64;
-import java.util.UUID;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -164,8 +164,8 @@ public class NettyHttpSecureProxyIntegrationTest {
         String existingUsername = ConfigurationProperties.proxyAuthenticationUsername();
         String existingPassword = ConfigurationProperties.proxyAuthenticationPassword();
         try {
-            String username = UUID.randomUUID().toString();
-            String password = UUID.randomUUID().toString();
+            String username = UUIDService.getUUID();
+            String password = UUIDService.getUUID();
             ConfigurationProperties.proxyAuthenticationUsername(username);
             ConfigurationProperties.proxyAuthenticationPassword(password);
 
@@ -198,8 +198,8 @@ public class NettyHttpSecureProxyIntegrationTest {
         String existingPassword = ConfigurationProperties.proxyAuthenticationPassword();
         String existingRealm = ConfigurationProperties.proxyAuthenticationRealm();
         try {
-            String username = UUID.randomUUID().toString();
-            String password = UUID.randomUUID().toString();
+            String username = UUIDService.getUUID();
+            String password = UUIDService.getUUID();
             String realm = "Some other random \"realm\"";
             ConfigurationProperties.proxyAuthenticationUsername(username);
             ConfigurationProperties.proxyAuthenticationPassword(password);
@@ -235,8 +235,8 @@ public class NettyHttpSecureProxyIntegrationTest {
         String existingPassword = ConfigurationProperties.proxyAuthenticationPassword();
         String existingRealm = ConfigurationProperties.proxyAuthenticationRealm();
         try {
-            String username = UUID.randomUUID().toString();
-            String password = UUID.randomUUID().toString();
+            String username = UUIDService.getUUID();
+            String password = UUIDService.getUUID();
             String realm = "Some other random \"realm\"";
             ConfigurationProperties.proxyAuthenticationUsername(username);
             ConfigurationProperties.proxyAuthenticationPassword(password);
@@ -482,8 +482,8 @@ public class NettyHttpSecureProxyIntegrationTest {
         String existingUsername = ConfigurationProperties.proxyAuthenticationUsername();
         String existingPassword = ConfigurationProperties.proxyAuthenticationPassword();
         try {
-            String username = UUID.randomUUID().toString();
-            String password = UUID.randomUUID().toString();
+            String username = UUIDService.getUUID();
+            String password = UUIDService.getUUID();
             ConfigurationProperties.proxyAuthenticationUsername(username);
             ConfigurationProperties.proxyAuthenticationPassword(password);
 
@@ -519,8 +519,8 @@ public class NettyHttpSecureProxyIntegrationTest {
         String existingUsername = ConfigurationProperties.proxyAuthenticationUsername();
         String existingPassword = ConfigurationProperties.proxyAuthenticationPassword();
         try {
-            String username = UUID.randomUUID().toString();
-            String password = UUID.randomUUID().toString();
+            String username = UUIDService.getUUID();
+            String password = UUIDService.getUUID();
             ConfigurationProperties.proxyAuthenticationUsername(username);
             ConfigurationProperties.proxyAuthenticationPassword(password);
 

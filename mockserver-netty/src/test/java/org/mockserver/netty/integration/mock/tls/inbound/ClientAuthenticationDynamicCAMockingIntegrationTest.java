@@ -5,9 +5,9 @@ import org.junit.BeforeClass;
 import org.mockserver.cli.Main;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.socket.PortFactory;
+import org.mockserver.uuid.UUIDService;
 
 import java.io.File;
-import java.util.UUID;
 
 import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.stop.Stop.stopQuietly;
@@ -24,7 +24,7 @@ public class ClientAuthenticationDynamicCAMockingIntegrationTest extends Abstrac
     public static void startServer() throws Exception {
         tlsMutualAuthenticationRequired(true);
         dynamicallyCreateCertificateAuthorityCertificate(true);
-        File temporaryDirectory = new File(File.createTempFile("random", "temp").getParent() + UUID.randomUUID().toString());
+        File temporaryDirectory = new File(File.createTempFile("random", "temp").getParent() + UUIDService.getUUID());
         temporaryDirectory.mkdirs();
         directoryToSaveDynamicSSLCertificate(temporaryDirectory.getAbsolutePath());
         Main.main("-serverPort", "" + severHttpPort);
