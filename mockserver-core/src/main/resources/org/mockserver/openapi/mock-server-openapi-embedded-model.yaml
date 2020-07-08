@@ -358,21 +358,21 @@ components:
         keepAlive:
           type: boolean
         method:
-          $ref: "#/definitions/stringOrJsonSchema"
+          $ref: "#/components/schemas/StringOrJsonSchema"
         path:
-          $ref: "#/definitions/stringOrJsonSchema"
+          $ref: "#/components/schemas/StringOrJsonSchema"
         pathParameters:
-          $ref: "#/definitions/keyToMultiValue"
+          $ref: "#/components/schemas/KeyToMultiValue"
         queryStringParameters:
-          $ref: "#/definitions/keyToMultiValue"
+          $ref: "#/components/schemas/KeyToMultiValue"
         body:
-          $ref: "#/definitions/body"
+          $ref: "#/components/schemas/Body"
         headers:
-          $ref: "#/definitions/keyToMultiValue"
+          $ref: "#/components/schemas/KeyToMultiValue"
         cookies:
-          $ref: "#/definitions/keyToValue"
+          $ref: "#/components/schemas/KeyToValue"
         socketAddress:
-          $ref: "#/definitions/socketAddress"
+          $ref: "#/components/schemas/SocketAddress"
     OpenAPIDefinition:
       title: "open api or swagger request matcher"
       type: object
@@ -504,21 +504,56 @@ components:
           additionalProperties: false
           items:
             type: object
+            additionalProperties: false
             properties:
               name:
                 type: string
               values:
                 type: array
+                additionalProperties: false
                 items:
                   type: string
         - type: object
-          additionalProperties: false
-          patternProperties:
-            "^\\S+$":
-              type: array
-              additionalProperties: false
-              items:
-                $ref: "#/components/schemas/StringOrJsonSchema"
+          additionalProperties: true
+          properties:
+            keyMatchStyle:
+              type: string
+              enum:
+                - MATCHING_KEY
+                - SUB_SET
+              default: SUB_SET
+          # patternProperties:
+          #   "^(?!keyMatchStyle)\\S+$":
+          #     oneOf:
+          #     - type: array
+          #       additionalProperties: false
+          #       items:
+          #         $ref: "#/components/schemas/StringOrJsonSchema"
+          #     - type: object
+          #       additionalProperties: false
+          #       properties:
+          #         parameterStyle:
+          #           type: string
+          #           enum:
+          #           - SIMPLE
+          #           - SIMPLE_EXPLODED
+          #           - LABEL
+          #           - LABEL_EXPLODED
+          #           - MATRIX
+          #           - MATRIX_EXPLODED
+          #           - FORM_EXPLODED
+          #           - FORM
+          #           - SPACE_DELIMITED_EXPLODED
+          #           - SPACE_DELIMITED
+          #           - PIPE_DELIMITED_EXPLODED
+          #           - PIPE_DELIMITED
+          #           - DEEP_OBJECT
+          #           default: ''
+          #         values:
+          #           type: array
+          #           additionalProperties: false
+          #           items:
+          #             $ref: "#/components/schemas/StringOrJsonSchema"
     KeyToValue:
       oneOf:
         - type: array
@@ -531,14 +566,42 @@ components:
               value:
                 type: string
         - type: object
-          additionalProperties: false
-          patternProperties:
-            "^\\S+$":
-              $ref: "#/components/schemas/StringOrJsonSchema"
+          additionalProperties: true
+          # patternProperties:
+          #   "^\\S+$":
+          #     $ref: "#/components/schemas/StringOrJsonSchema"
     StringOrJsonSchema:
+      title: string value that can be support nottable, optional or a json schema
       oneOf:
         - type: string
-        - $ref: http://json-schema.org/draft-04/schema
+        - type: object
+          additionalProperties: false
+          properties:
+            not:
+              type: boolean
+            optional:
+              type: boolean
+            value:
+              type: string
+            schema:
+              $ref: http://json-schema.org/draft-04/schema
+            parameterStyle:
+              type: string
+              enum:
+                - SIMPLE
+                - SIMPLE_EXPLODED
+                - LABEL
+                - LABEL_EXPLODED
+                - MATRIX
+                - MATRIX_EXPLODED
+                - FORM_EXPLODED
+                - FORM
+                - SPACE_DELIMITED_EXPLODED
+                - SPACE_DELIMITED
+                - PIPE_DELIMITED_EXPLODED
+                - PIPE_DELIMITED
+                - DEEP_OBJECT
+              default: ''
     SocketAddress:
       title: remote address to send request to
       type: object
