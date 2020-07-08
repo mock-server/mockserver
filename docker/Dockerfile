@@ -33,6 +33,6 @@ COPY --from=build mockserver-netty-jar-with-dependencies.jar /
 # don't run MockServer as root
 USER nonroot
 
-ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=90.0", "-Dfile.encoding=UTF-8", "-cp", "/mockserver-netty-jar-with-dependencies.jar:/libs/*", "-Dmockserver.propertyFile=/config/mockserver.properties", "org.mockserver.cli.Main"]
+ENTRYPOINT ["java", "-Dfile.encoding=UTF-8", "-cp", "/mockserver-netty-jar-with-dependencies.jar:/libs/*", "-Dmockserver.propertyFile=/config/mockserver.properties", "org.mockserver.cli.Main"]
 
-CMD ["-logLevel", "INFO", "-serverPort", "1080"]
+CMD ["-serverPort", "1080"]
