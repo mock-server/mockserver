@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+## [5.11.0] - 2020-07-08
+
+### Added
 - added basic support to proxy binary requests that are not HTTP
 - dynamic maximum log events and maximum expectations based on available memory
 - added ability to switch between BouncyCastle and vanillar JDK for key and certificate generation

@@ -123,7 +123,7 @@ echo http://$MOCKSERVER_HOST</code></pre>
 
 <p>To ensure that Docker for Desktop exposes MockServer update the service type to <strong>LoadBalancer</strong> using <strong>--set service.type=LoadBalancer</strong> and set the exposed port using <strong>--set service.port=1080</strong>, as follows:</p>
 
-<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set service.type=LoadBalancer --set service.port=1080 mockserver http://www.mock-server.com/mockserver-5.10.0.tgz</code></pre>
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set service.type=LoadBalancer --set service.port=1080 mockserver http://www.mock-server.com/mockserver-5.11.0.tgz</code></pre>
 
 <p>MockServer will then be reachable on <strong>http://localhost:1080</strong></p>
 
