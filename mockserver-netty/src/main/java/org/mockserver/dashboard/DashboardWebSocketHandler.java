@@ -71,7 +71,7 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
     private final HttpState httpState;
     private HttpRequestSerializer httpRequestSerializer;
     private WebSocketServerHandshaker handshaker;
-    private final Map<ChannelOutboundInvoker, HttpRequest> clientRegistry = new CircularHashMap<>(100);
+    private Map<ChannelOutboundInvoker, HttpRequest> clientRegistry;
     private RequestMatchers requestMatchers;
     private MockServerEventLog mockServerEventLog;
     private ThreadPoolExecutor scheduler;
@@ -87,6 +87,9 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
 
     @VisibleForTesting
     public Map<ChannelOutboundInvoker, HttpRequest> getClientRegistry() {
+        if (clientRegistry == null) {
+            clientRegistry = new CircularHashMap<>(100);
+        }
         return clientRegistry;
     }
 
@@ -173,7 +176,7 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
                 httpRequest,
                 new DefaultHttpHeaders(),
                 ctx.channel().newPromise()
-            ).addListener((ChannelFutureListener) future -> clientRegistry.put(ctx, request()));
+            ).addListener((ChannelFutureListener) future -> getClientRegistry().put(ctx, request()));
         }
         registerListeners();
     }
@@ -238,11 +241,11 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
 
     private void handleWebSocketFrame(final ChannelHandlerContext ctx, WebSocketFrame frame) {
         if (frame instanceof CloseWebSocketFrame) {
-            handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain()).addListener((ChannelFutureListener) future -> clientRegistry.remove(ctx));
+            handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain()).addListener((ChannelFutureListener) future -> getClientRegistry().remove(ctx));
         } else if (frame instanceof TextWebSocketFrame) {
             try {
                 HttpRequest httpRequest = httpRequestSerializer.deserialize(((TextWebSocketFrame) frame).text());
-                clientRegistry.put(ctx, httpRequest);
+                getClientRegistry().put(ctx, httpRequest);
                 sendUpdate(ctx, httpRequest);
             } catch (IllegalArgumentException iae) {
                 sendMessage(ctx, null, ImmutableMap.of("error", iae.getMessage()), 2);
@@ -312,14 +315,14 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
 
     @Override
     public void updated(MockServerEventLog mockServerLog) {
-        for (Map.Entry<ChannelOutboundInvoker, HttpRequest> registryEntry : clientRegistry.entrySet()) {
+        for (Map.Entry<ChannelOutboundInvoker, HttpRequest> registryEntry : getClientRegistry().entrySet()) {
             sendUpdate(registryEntry.getKey(), registryEntry.getValue());
         }
     }
 
     @Override
     public void updated(RequestMatchers requestMatchers, MockServerMatcherNotifier.Cause cause) {
-        for (Map.Entry<ChannelOutboundInvoker, HttpRequest> registryEntry : clientRegistry.entrySet()) {
+        for (Map.Entry<ChannelOutboundInvoker, HttpRequest> registryEntry : getClientRegistry().entrySet()) {
             sendUpdate(registryEntry.getKey(), registryEntry.getValue());
         }
     }
