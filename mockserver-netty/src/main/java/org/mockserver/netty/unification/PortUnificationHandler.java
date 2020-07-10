@@ -246,6 +246,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                 )
                 .addListener((ChannelFuture future) -> future.channel().disconnect().awaitUninterruptibly());
         } else {
+            // TODO(jamesdbloom) move to another websocket interactions to another port for performance
             addLastIfNotPresent(pipeline, new CallbackWebSocketServerHandler(httpStateHandler));
             addLastIfNotPresent(pipeline, new DashboardWebSocketHandler(httpStateHandler, isSslEnabledUpstream(ctx.channel()), false));
             addLastIfNotPresent(pipeline, new MockServerHttpServerCodec(mockServerLogger, isSslEnabledUpstream(ctx.channel())));
