@@ -147,6 +147,29 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldSetAndReadOutputMemoryUsageCsv() {
+        // given
+        boolean originalSetting = outputMemoryUsageCsv();
+        try {
+            // when
+            outputMemoryUsageCsv(true);
+
+            // then
+            assertTrue(outputMemoryUsageCsv());
+            assertEquals("true", System.getProperty("mockserver.outputMemoryUsageCsv"));
+
+            // when
+            outputMemoryUsageCsv(false);
+
+            // then
+            assertFalse(outputMemoryUsageCsv());
+            assertEquals("false", System.getProperty("mockserver.outputMemoryUsageCsv"));
+        } finally {
+            outputMemoryUsageCsv(originalSetting);
+        }
+    }
+
+    @Test
     public void shouldSetAndReadMaxWebSocketExpectations() {
         // given
         System.clearProperty("mockserver.maxWebSocketExpectations");
