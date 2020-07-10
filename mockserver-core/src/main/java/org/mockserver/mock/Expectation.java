@@ -6,8 +6,6 @@ import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
 import org.mockserver.uuid.UUIDService;
 
-import java.io.Serializable;
-import java.util.Comparator;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -19,14 +17,15 @@ import static org.mockserver.model.OpenAPIDefinition.openAPI;
 @SuppressWarnings("rawtypes")
 public class Expectation extends ObjectWithJsonToString {
 
-    private static final String[] excludedFields = {"id", "created"};
+    private static final String[] excludedFields = {"id", "created", "sortableExpectationId"};
     private static final AtomicInteger EXPECTATION_COUNTER = new AtomicInteger(0);
     private static final long START_TIME = System.currentTimeMillis();
     private int hashCode;
     private String id;
     @JsonIgnore
     private long created;
-    private final int priority;
+    private int priority;
+    private SortableExpectationId sortableExpectationId;
     private final RequestDefinition httpRequest;
     private final Times times;
     private final TimeToLive timeToLive;
@@ -40,17 +39,6 @@ public class Expectation extends ObjectWithJsonToString {
     private HttpObjectCallback httpForwardObjectCallback;
     private HttpOverrideForwardedRequest httpOverrideForwardedRequest;
     private HttpError httpError;
-
-    public static final Comparator<Expectation> EXPECTATION_PRIORITY_COMPARATOR = (Comparator<Expectation> & Serializable) (expectationOne, expectationTwo) -> {
-        if (expectationOne == null) {
-            return expectationTwo == null ? 0 : 1;
-        } else if (expectationTwo == null) {
-            return -1;
-        } else {
-            int priorityComparison = Integer.compare(expectationTwo.getPriority(), expectationOne.getPriority());
-            return priorityComparison != 0 ? priorityComparison : Long.compare(expectationOne.getCreated(), expectationTwo.getCreated());
-        }
-    };
 
     /**
      * Specify the OpenAPI and operationId to match against by URL or payload and string as follows:
@@ -266,6 +254,7 @@ public class Expectation extends ObjectWithJsonToString {
 
     public Expectation withId(String key) {
         this.id = key;
+        this.sortableExpectationId = null;
         return this;
     }
 
@@ -276,17 +265,32 @@ public class Expectation extends ObjectWithJsonToString {
         return id;
     }
 
+    public Expectation withPriority(int priority) {
+        this.priority = priority;
+        this.sortableExpectationId = null;
+        return this;
+    }
+
     public int getPriority() {
         return priority;
     }
 
     public Expectation withCreated(long created) {
         this.created = created;
+        this.sortableExpectationId = null;
         return this;
     }
 
     public long getCreated() {
         return created;
+    }
+
+    @JsonIgnore
+    public SortableExpectationId getSortableId() {
+        if (sortableExpectationId == null) {
+            sortableExpectationId = new SortableExpectationId(getId(), priority, created);
+        }
+        return sortableExpectationId;
     }
 
     public RequestDefinition getHttpRequest() {

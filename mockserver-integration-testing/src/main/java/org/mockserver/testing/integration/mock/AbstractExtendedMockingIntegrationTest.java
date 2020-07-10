@@ -1186,6 +1186,89 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
+    public void shouldReturnResponseByMatchingPathInOrderOfInsertionAfterUpdate() {
+        // when
+        Expectation expectationOne = new Expectation(request().withPath(calculatePath("some_path")), exactly(2), TimeToLive.unlimited(), 0)
+            .thenRespond(
+                response()
+                    .withBody("some_body_one")
+            );
+        Expectation expectationTwo = new Expectation(request().withPath(calculatePath("some_path")), exactly(1), TimeToLive.unlimited(), 0)
+            .thenRespond(
+                response()
+                    .withBody("some_body_two")
+            );
+        Expectation[] upsertedExpectations = mockServerClient
+            .upsert(
+                expectationOne,
+                expectationTwo
+            );
+
+        // then
+        assertThat(upsertedExpectations.length, is(2));
+        assertThat(upsertedExpectations[0], is(expectationOne));
+        assertThat(upsertedExpectations[1], is(expectationTwo));
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_one"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+
+        // when
+        Expectation expectationOneWithDifferentBody = new Expectation(request().withPath(calculatePath("some_path")), exactly(1), TimeToLive.unlimited(), 0)
+            .withId(upsertedExpectations[0].getId())
+            .withCreated(upsertedExpectations[0].getCreated())
+            .thenRespond(
+                response()
+                    .withBody("some_body_one_updated")
+            );
+        upsertedExpectations = mockServerClient
+            .upsert(
+                expectationOneWithDifferentBody,
+                expectationTwo
+            );
+
+        // then
+        assertThat(upsertedExpectations.length, is(2));
+        assertThat(upsertedExpectations[0], is(expectationOneWithDifferentBody));
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_one_updated"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_two"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
+                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
     public void shouldUpdateExistingExpectation() {
         // when
         Expectation expectationOne = new Expectation(request().withPath(calculatePath("some_path_one")))

@@ -4,12 +4,9 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.RequestDefinition;
 
-import java.util.Comparator;
 import java.util.List;
 
 public interface HttpRequestMatcher extends Matcher<RequestDefinition> {
-
-    Comparator<? super HttpRequestMatcher> EXPECTATION_PRIORITY_COMPARATOR = Comparator.comparing(HttpRequestMatcher::getExpectation, Expectation.EXPECTATION_PRIORITY_COMPARATOR);
 
     List<HttpRequest> getHttpRequests();
 

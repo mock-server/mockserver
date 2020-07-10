@@ -43,7 +43,7 @@ public class MockServerMatcherManageExpectationsTest {
 
         // then
         assertThat(requestMatchers.postProcess(requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("somePath"))), nullValue());
-        assertThat(requestMatchers.httpRequestMatchers, empty());
+        assertThat(requestMatchers.httpRequestMatchers.toSortedList(), empty());
     }
 
     @Test
@@ -53,7 +53,7 @@ public class MockServerMatcherManageExpectationsTest {
 
         // then
         assertThat(requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("someOtherPath")), nullValue());
-        assertThat(requestMatchers.httpRequestMatchers, empty());
+        assertThat(requestMatchers.httpRequestMatchers.toSortedList(), empty());
     }
 
     @Test
@@ -75,7 +75,7 @@ public class MockServerMatcherManageExpectationsTest {
 
         // then - after 3 seconds
         assertThat(requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("someOtherPath")), nullValue());
-        assertThat(requestMatchers.httpRequestMatchers, empty());
+        assertThat(requestMatchers.httpRequestMatchers.toSortedList(), empty());
     }
 
     @Test
@@ -108,7 +108,7 @@ public class MockServerMatcherManageExpectationsTest {
         // then
         assertThat(requestMatchers.postProcess(requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("somePath"))), is(expectation));
         assertThat(requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("somePath")), nullValue());
-        assertThat(requestMatchers.httpRequestMatchers, empty());
+        assertThat(requestMatchers.httpRequestMatchers.toSortedList(), empty());
     }
 
     @Test
@@ -151,6 +151,6 @@ public class MockServerMatcherManageExpectationsTest {
         // then
         assertThat(requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("somepath")), nullValue());
         assertThat(requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("someOtherPath")), nullValue());
-        assertThat(requestMatchers.httpRequestMatchers, empty());
+        assertThat(requestMatchers.httpRequestMatchers.toSortedList(), empty());
     }
 }

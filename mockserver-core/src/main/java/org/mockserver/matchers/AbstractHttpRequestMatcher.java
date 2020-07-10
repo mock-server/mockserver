@@ -49,7 +49,8 @@ public abstract class AbstractHttpRequestMatcher extends NotMatcher<RequestDefin
             this.expectation = expectation;
             this.hashCode = 0;
             this.isBlank = expectation.getHttpRequest() == null;
-            return apply(expectation.getHttpRequest());
+            apply(expectation.getHttpRequest());
+            return true;
         }
     }
 
