@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.detailedMatchFailures;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.slf4j.event.Level.TRACE;
@@ -71,7 +71,7 @@ public class MatchDifference {
 
     public MatchDifference addDifference(Field fieldName, String messageFormat, Object... arguments) {
         if (detailedMatchFailures()) {
-            if (isNotEmpty(messageFormat) && arguments != null && isNotEmpty(fieldName)) {
+            if (isNotBlank(messageFormat) && arguments != null && fieldName != null) {
                 this.differences
                     .computeIfAbsent(fieldName, key -> new ArrayList<>())
                     .add(formatLogMessage(1, messageFormat, arguments));

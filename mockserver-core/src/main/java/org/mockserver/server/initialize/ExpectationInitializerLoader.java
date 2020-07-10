@@ -14,7 +14,6 @@ import org.mockserver.ui.MockServerMatcherNotifier.Cause;
 import java.lang.reflect.Constructor;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.slf4j.event.Level.*;
 
@@ -54,7 +53,7 @@ public class ExpectationInitializerLoader {
                     );
                 }
                 ClassLoader contextClassLoader = ExpectationInitializerLoader.class.getClassLoader();
-                if (contextClassLoader != null && isNotEmpty(initializationClass)) {
+                if (contextClassLoader != null && isNotBlank(initializationClass)) {
                     Constructor<?> initializerClassConstructor = contextClassLoader.loadClass(initializationClass).getDeclaredConstructor();
                     Object expectationInitializer = initializerClassConstructor.newInstance();
                     if (expectationInitializer instanceof ExpectationInitializer) {

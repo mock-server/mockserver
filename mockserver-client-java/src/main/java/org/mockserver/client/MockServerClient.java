@@ -33,7 +33,8 @@ import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.apache.commons.lang3.StringUtils.*;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.mock.HttpState.LOG_SEPARATOR;
@@ -660,7 +661,7 @@ public class MockServerClient implements Stoppable {
      */
     public RequestDefinition[] retrieveRecordedRequests(RequestDefinition requestDefinition) {
         String recordedRequests = retrieveRecordedRequests(requestDefinition, Format.JSON);
-        if (isNotEmpty(recordedRequests) && !recordedRequests.equals("[]")) {
+        if (isNotBlank(recordedRequests) && !recordedRequests.equals("[]")) {
             return requestDefinitionSerializer.deserializeArray(recordedRequests);
         } else {
             return new RequestDefinition[0];
@@ -695,7 +696,7 @@ public class MockServerClient implements Stoppable {
      */
     public LogEventRequestAndResponse[] retrieveRecordedRequestsAndResponses(RequestDefinition requestDefinition) {
         String recordedRequests = retrieveRecordedRequestsAndResponses(requestDefinition, Format.JSON);
-        if (isNotEmpty(recordedRequests) && !recordedRequests.equals("[]")) {
+        if (isNotBlank(recordedRequests) && !recordedRequests.equals("[]")) {
             return httpRequestResponseSerializer.deserializeArray(recordedRequests);
         } else {
             return new LogEventRequestAndResponse[0];
