@@ -75,7 +75,7 @@ public class HttpRequestTemplateObject extends RequestDefinition {
         return secure;
     }
 
-    public HttpRequestTemplateObject clone() {
+    public HttpRequestTemplateObject shallowClone() {
         return this;
     }
 

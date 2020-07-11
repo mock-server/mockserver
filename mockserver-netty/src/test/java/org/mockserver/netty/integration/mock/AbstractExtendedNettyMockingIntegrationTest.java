@@ -1572,7 +1572,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             assertThat(IOStreamUtils.readInputStreamToString(socket), is("" +
                 "HTTP/1.1 200 OK" + NEW_LINE +
                 "content-type: audio/*" + NEW_LINE +
-                "connection: close" + NEW_LINE
+                "connection: keep-alive" + NEW_LINE
             ));
 
             TimeUnit.SECONDS.sleep(3);
@@ -1617,7 +1617,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             assertThat(IOStreamUtils.readInputStreamToString(sslSocket), is("" +
                 "HTTP/1.1 200 OK" + NEW_LINE +
                 "content-type: audio/*" + NEW_LINE +
-                "connection: close" + NEW_LINE
+                "connection: keep-alive" + NEW_LINE
             ));
         }
     }
@@ -1656,7 +1656,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             // then
             String actual = IOUtils.toString(socket.getInputStream(), StandardCharsets.UTF_8.name());
             assertThat(actual, is("HTTP/1.1 200 OK\r\n" +
-                "connection: close\r\n" +
+                "connection: keep-alive\r\n" +
                 "transfer-encoding: chunked\r\n" +
                 "\r\n" +
                 "a\r\n" +
@@ -1685,7 +1685,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             // then
             String actual = IOUtils.toString(sslSocket.getInputStream(), StandardCharsets.UTF_8.name());
             assertThat(actual, is("HTTP/1.1 200 OK\r\n" +
-                "connection: close\r\n" +
+                "connection: keep-alive\r\n" +
                 "transfer-encoding: chunked\r\n" +
                 "\r\n" +
                 "a\r\n" +

@@ -42,6 +42,7 @@ import static org.mockserver.configuration.ConfigurationProperties.addSubjectAlt
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.log.model.LogEntry.LogMessageType.CLEARED;
 import static org.mockserver.log.model.LogEntry.LogMessageType.RETRIEVED;
+import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE_FORMAT;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.openapi.OpenAPISerialiser.OPEN_API_LOAD_ERROR;
@@ -133,13 +134,15 @@ public class HttpState {
         requestMatchers.reset();
         mockServerLog.reset();
         webSocketClientRegistry.reset();
-        mockServerLogger.logEvent(
-            new LogEntry()
-                .setType(CLEARED)
-                .setLogLevel(Level.INFO)
-                .setHttpRequest(request())
-                .setMessageFormat("resetting all expectations and request logs")
-        );
+        if (MockServerLogger.isEnabled(Level.INFO)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(CLEARED)
+                    .setLogLevel(Level.INFO)
+                    .setHttpRequest(request())
+                    .setMessageFormat("resetting all expectations and request logs")
+            );
+        }
         System.gc();
         new Thread(() -> {
             try {
@@ -221,15 +224,17 @@ public class HttpState {
                             }
                             stringBuffer.append(NEW_LINE);
                             response.withBody(stringBuffer.toString(), MediaType.PLAIN_TEXT_UTF_8);
-                            mockServerLogger.logEvent(
-                                new LogEntry()
-                                    .setType(RETRIEVED)
-                                    .setLogLevel(Level.INFO)
-                                    .setCorrelationId(logCorrelationId)
-                                    .setHttpRequest(requestDefinition)
-                                    .setMessageFormat("retrieved logs that match:{}")
-                                    .setArguments(requestDefinition)
-                            );
+                            if (MockServerLogger.isEnabled(Level.INFO)) {
+                                mockServerLogger.logEvent(
+                                    new LogEntry()
+                                        .setType(RETRIEVED)
+                                        .setLogLevel(Level.INFO)
+                                        .setCorrelationId(logCorrelationId)
+                                        .setHttpRequest(requestDefinition)
+                                        .setMessageFormat("retrieved logs that match:{}")
+                                        .setArguments(requestDefinition)
+                                );
+                            }
                             httpResponseFuture.complete(response);
                         });
                         break;
@@ -400,15 +405,17 @@ public class HttpState {
                                 response.withBody("LOG_ENTRIES not supported for ACTIVE_EXPECTATIONS", MediaType.create("text", "plain").withCharset(UTF_8));
                                 break;
                         }
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setType(RETRIEVED)
-                                .setLogLevel(Level.INFO)
-                                .setCorrelationId(logCorrelationId)
-                                .setHttpRequest(requestDefinition)
-                                .setMessageFormat("retrieved active expectations in " + format.name().toLowerCase() + " that match:{}")
-                                .setArguments(requestDefinition)
-                        );
+                        if (MockServerLogger.isEnabled(Level.INFO)) {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setType(RETRIEVED)
+                                    .setLogLevel(Level.INFO)
+                                    .setCorrelationId(logCorrelationId)
+                                    .setHttpRequest(requestDefinition)
+                                    .setMessageFormat("retrieved active expectations in " + format.name().toLowerCase() + " that match:{}")
+                                    .setArguments(requestDefinition)
+                            );
+                        }
                         httpResponseFuture.complete(response);
                         break;
                     }
@@ -476,7 +483,7 @@ public class HttpState {
                 new LogEntry()
                     .setLogLevel(Level.TRACE)
                     .setHttpRequest(request)
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request)
             );
         }

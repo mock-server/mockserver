@@ -2,12 +2,10 @@ package org.mockserver.templates.engine.velocity;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.TimeService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -16,6 +14,7 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.serialization.model.HttpResponseDTO;
+import org.slf4j.event.Level;
 
 import javax.script.ScriptException;
 import java.util.ArrayList;
@@ -58,6 +57,19 @@ public class VelocityTemplateEngineTest {
     @Before
     public void setupTestFixture() {
         initMocks(this);
+    }
+
+    private Level originalLogLevel;
+
+    @Before
+    public void setLogLevel() {
+        originalLogLevel = ConfigurationProperties.logLevel();
+        ConfigurationProperties.logLevel("INFO");
+    }
+
+    @After
+    public void resetLogLevel() {
+        ConfigurationProperties.logLevel(originalLogLevel.name());
     }
 
     @Test

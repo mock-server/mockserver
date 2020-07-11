@@ -1,5 +1,7 @@
 package org.mockserver.model;
 
+import com.google.common.collect.Multimap;
+
 import java.util.Collection;
 import java.util.List;
 
@@ -16,6 +18,10 @@ public class Parameters extends KeysToMultiValues<Parameter, Parameters> {
         withEntries(parameters);
     }
 
+    public Parameters(Multimap<NottableString, NottableString> headers) {
+        super(headers);
+    }
+
     @Override
     public Parameter build(NottableString name, Collection<NottableString> values) {
         return new Parameter(name, values);
@@ -28,7 +34,7 @@ public class Parameters extends KeysToMultiValues<Parameter, Parameters> {
 
     @SuppressWarnings("MethodDoesntCallSuperMethod")
     public Parameters clone() {
-        return new Parameters().withEntries(getEntries());
+        return new Parameters(getMultimap());
     }
 
 }

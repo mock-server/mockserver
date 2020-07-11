@@ -7,7 +7,9 @@ import org.mockserver.socket.tls.jdk.CertificateSigningRequest;
 import org.mockserver.socket.tls.jdk.X509AndPrivateKey;
 import org.mockserver.socket.tls.jdk.X509Generator;
 
-import javax.net.ssl.*;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.X509KeyManager;
 import java.net.Socket;
 import java.security.Principal;
 import java.security.PrivateKey;
@@ -20,7 +22,6 @@ import static org.mockserver.socket.tls.PEMToFile.privateKeyFromPEM;
 import static org.mockserver.socket.tls.PEMToFile.x509FromPEM;
 import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.*;
 import static org.slf4j.event.Level.ERROR;
-import static org.slf4j.event.Level.WARN;
 
 public class UniqueCertificateChainSSLContextBuilder {
 
@@ -62,14 +63,12 @@ public class UniqueCertificateChainSSLContextBuilder {
                     x509FromPEM(certificateAuthorityX509AndPrivateKey.getCert())
                 );
             } catch (Throwable throwable) {
-                if (MockServerLogger.isEnabled(ERROR)) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setLogLevel(ERROR)
-                            .setMessageFormat("exception create fake certificates and private keys")
-                            .setThrowable(throwable)
-                    );
-                }
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(ERROR)
+                        .setMessageFormat("exception create fake certificates and private keys")
+                        .setThrowable(throwable)
+                );
             }
         }
 

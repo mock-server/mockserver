@@ -17,10 +17,6 @@ public class ConnectionOptions extends ObjectWithJsonToString {
         return new ConnectionOptions();
     }
 
-    public static boolean isFalseOrNull(Boolean aBoolean) {
-        return aBoolean == null || !aBoolean;
-    }
-
     /**
      * Prevent a "Content-Length" header from being added to the response
      *

@@ -70,6 +70,12 @@
             <artifactId>jzlib</artifactId>
         </dependency>
 
+        <!-- non-blocking UUID -->
+        <dependency>
+            <groupId>com.fasterxml.uuid</groupId>
+            <artifactId>java-uuid-generator</artifactId>
+        </dependency>
+
         <!-- SSL X509 -->
         <dependency>
             <groupId>org.bouncycastle</groupId>

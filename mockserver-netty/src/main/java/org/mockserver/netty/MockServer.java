@@ -7,6 +7,7 @@ import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.action.http.HttpActionHandler;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.socket.tls.NettySslContextFactory;
@@ -80,7 +81,7 @@ public class MockServer extends LifeCycle {
         }
 
         remoteSocket = new InetSocketAddress(remoteHost, remotePort);
-        if (proxyConfiguration != null) {
+        if (proxyConfiguration != null && MockServerLogger.isEnabled(Level.INFO)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(SERVER_CONFIGURATION)

@@ -51,6 +51,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LOG_DATE_FORMAT;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
+import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE_FORMAT;
 import static org.mockserver.mock.Expectation.when;
 import static org.mockserver.mock.OpenAPIExpectation.openAPIExpectation;
 import static org.mockserver.model.Format.LOG_ENTRIES;
@@ -1263,7 +1264,7 @@ public class HttpStateTest {
                     .setType(RECEIVED_REQUEST)
                     .setLogLevel(Level.INFO)
                     .setHttpRequest(request("request_one"))
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_one"))
             );
         httpState
@@ -1272,7 +1273,7 @@ public class HttpStateTest {
                     .setType(RECEIVED_REQUEST)
                     .setLogLevel(Level.INFO)
                     .setHttpRequest(request("request_two"))
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_two"))
             );
         httpState
@@ -1281,7 +1282,7 @@ public class HttpStateTest {
                     .setType(RECEIVED_REQUEST)
                     .setLogLevel(Level.INFO)
                     .setHttpRequest(request("request_one"))
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_one"))
             );
 
@@ -1300,13 +1301,13 @@ public class HttpStateTest {
                     .setType(RECEIVED_REQUEST)
                     .setLogLevel(Level.INFO)
                     .setHttpRequest(request("request_one"))
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_one")),
                 new LogEntry()
                     .setType(RECEIVED_REQUEST)
                     .setLogLevel(Level.INFO)
                     .setHttpRequest(request("request_one"))
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_one"))
             )), MediaType.JSON_UTF_8).withStatusCode(200))
         );

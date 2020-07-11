@@ -18,6 +18,7 @@ import javax.script.*;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.formatting.StringFormatter.indentAndToString;
 import static org.mockserver.log.model.LogEntry.LogMessageType.TEMPLATE_GENERATED;
+import static org.mockserver.log.model.LogEntryMessages.TEMPLATE_GENERATED_MESSAGE_FORMAT;
 
 /**
  * @author jamesdbloom
@@ -58,22 +59,26 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
                 try {
                     generatedObject = OBJECT_MAPPER.readTree(String.valueOf(stringifiedResponse));
                 } catch (Throwable throwable) {
+                    if (MockServerLogger.isEnabled(Level.TRACE)) {
+                        logFormatter.logEvent(
+                            new LogEntry()
+                                .setLogLevel(Level.TRACE)
+                                .setHttpRequest(request)
+                                .setMessageFormat("exception deserialising generated content:{}into json node for request:{}")
+                                .setArguments(stringifiedResponse, request)
+                        );
+                    }
+                }
+                if (MockServerLogger.isEnabled(Level.INFO)) {
                     logFormatter.logEvent(
                         new LogEntry()
-                            .setLogLevel(Level.DEBUG)
+                            .setType(TEMPLATE_GENERATED)
+                            .setLogLevel(Level.INFO)
                             .setHttpRequest(request)
-                            .setMessageFormat("exception deserialising generated content:{}into json node for request:{}")
-                            .setArguments(stringifiedResponse, request)
+                            .setMessageFormat(TEMPLATE_GENERATED_MESSAGE_FORMAT)
+                            .setArguments(generatedObject != null ? generatedObject : stringifiedResponse, script, request)
                     );
                 }
-                logFormatter.logEvent(
-                    new LogEntry()
-                        .setType(TEMPLATE_GENERATED)
-                        .setLogLevel(Level.INFO)
-                        .setHttpRequest(request)
-                        .setMessageFormat("generated output:{}from template:{}for request:{}")
-                        .setArguments(generatedObject != null ? generatedObject : stringifiedResponse, script, request)
-                );
                 result = httpTemplateOutputDeserializer.deserializer(request, (String) stringifiedResponse, dtoClass);
             } else {
                 logFormatter.logEvent(

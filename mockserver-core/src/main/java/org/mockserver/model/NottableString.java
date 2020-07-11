@@ -18,6 +18,7 @@ import static org.mockserver.model.ParameterStyle.DEEP_OBJECT;
 public class NottableString extends ObjectWithJsonToString implements Comparable<NottableString> {
 
     public static final char NOT_CHAR = '!';
+    private static final String EMPTY_STRING = "";
     private final String value;
     private final boolean isBlank;
     private final Boolean not;
@@ -36,7 +37,7 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
             this.not = Boolean.FALSE;
         }
         this.hashCode = Objects.hash(this.value, this.not);
-        this.json = (this.isOptional() ? "" + OPTIONAL_CHAR : "") + (this.not ? "" + NOT_CHAR : "") + (!this.isBlank ? this.value : "");
+        this.json = serialise();
     }
 
     NottableString(String value) {
@@ -49,7 +50,17 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
             this.not = Boolean.FALSE;
         }
         this.hashCode = Objects.hash(this.value, this.not);
-        this.json = (this.isOptional() ? "" + OPTIONAL_CHAR : "") + (this.not ? "" + NOT_CHAR : "") + (!this.isBlank ? this.value : "");
+        this.json = serialise();
+    }
+
+    private String serialise() {
+        if (this.isOptional() || this.not) {
+            return (this.isOptional() ? "" + OPTIONAL_CHAR : "") + (this.not ? "" + NOT_CHAR : "") + (!this.isBlank ? this.value : EMPTY_STRING);
+        } else if (this.isBlank) {
+            return EMPTY_STRING;
+        } else {
+            return this.value;
+        }
     }
 
     public static List<NottableString> deserializeNottableStrings(String... strings) {

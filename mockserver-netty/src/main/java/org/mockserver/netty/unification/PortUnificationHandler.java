@@ -230,12 +230,14 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                 .withStatusCode(426)
                 .withHeader("Upgrade", "TLS/1.2, HTTP/1.1")
                 .withHeader("Connection", "Upgrade");
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(Level.INFO)
-                    .setMessageFormat("no tls for connection:{}returning response:{}")
-                    .setArguments(ctx.channel().localAddress(), httpResponse)
-            );
+            if (MockServerLogger.isEnabled(Level.INFO)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(Level.INFO)
+                        .setMessageFormat("no tls for connection:{}returning response:{}")
+                        .setArguments(ctx.channel().localAddress(), httpResponse)
+                );
+            }
             ctx
                 .channel()
                 .writeAndFlush(mockServerHttpResponseToFullHttpResponse
@@ -246,7 +248,6 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                 )
                 .addListener((ChannelFuture future) -> future.channel().disconnect().awaitUninterruptibly());
         } else {
-            // TODO(jamesdbloom) move to another websocket interactions to another port for performance
             addLastIfNotPresent(pipeline, new CallbackWebSocketServerHandler(httpStateHandler));
             addLastIfNotPresent(pipeline, new DashboardWebSocketHandler(httpStateHandler, isSslEnabledUpstream(ctx.channel()), false));
             addLastIfNotPresent(pipeline, new MockServerHttpServerCodec(mockServerLogger, isSslEnabledUpstream(ctx.channel())));

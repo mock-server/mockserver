@@ -112,15 +112,13 @@ public class Main {
             }
 
         } catch (Throwable throwable) {
-            if (MockServerLogger.isEnabled(ERROR)) {
-                MOCK_SERVER_LOGGER.logEvent(
-                    new LogEntry()
-                        .setType(SERVER_CONFIGURATION)
-                        .setLogLevel(ERROR)
-                        .setMessageFormat("exception while starting:{}")
-                        .setThrowable(throwable)
-                );
-            }
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(SERVER_CONFIGURATION)
+                    .setLogLevel(ERROR)
+                    .setMessageFormat("exception while starting:{}")
+                    .setThrowable(throwable)
+            );
             if (ConfigurationProperties.disableSystemOut()) {
                 System.out.println("exception while starting: " + throwable);
             }

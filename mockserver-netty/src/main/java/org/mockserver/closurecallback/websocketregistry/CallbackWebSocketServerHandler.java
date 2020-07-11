@@ -95,18 +95,22 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
                         ctx.pipeline().remove(DashboardWebSocketHandler.class);
                         ctx.pipeline().remove(MockServerHttpServerCodec.class);
                         ctx.pipeline().remove(HttpRequestHandler.class);
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setLogLevel(Level.TRACE)
-                                .setMessageFormat("registering client " + clientId)
-                        );
-                        webSocketClientRegistry.registerClient(clientId, ctx);
-                        future.channel().closeFuture().addListener((ChannelFutureListener) closeFuture -> {
+                        if (MockServerLogger.isEnabled(Level.TRACE)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setLogLevel(Level.TRACE)
-                                    .setMessageFormat("unregistering callback for client " + clientId)
+                                    .setMessageFormat("registering client " + clientId)
                             );
+                        }
+                        webSocketClientRegistry.registerClient(clientId, ctx);
+                        future.channel().closeFuture().addListener((ChannelFutureListener) closeFuture -> {
+                            if (MockServerLogger.isEnabled(Level.TRACE)) {
+                                mockServerLogger.logEvent(
+                                    new LogEntry()
+                                        .setLogLevel(Level.TRACE)
+                                        .setMessageFormat("unregistering callback for client " + clientId)
+                                );
+                            }
                             webSocketClientRegistry.unregisterClient(clientId);
                         });
                     });

@@ -54,7 +54,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
     private HashMapMatcher cookieMatcher = null;
     private BooleanMatcher keepAliveMatcher = null;
     private BooleanMatcher sslMatcher = null;
-    private ObjectMapper objectMapperWithStrictBodyDTODeserializer = ObjectMapperFactory.createObjectMapper(new StrictBodyDTODeserializer());
+    private ObjectMapper objectMapperWithStrictBodyDTODeserializer;
     private JsonSchemaBodyDecoder jsonSchemaBodyParser;
     private MatcherBuilder matcherBuilder;
 
@@ -202,30 +202,34 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             boolean overallMatch = matches(matchDifference, request, becauseBuilder);
             if (!controlPlaneMatcher) {
                 if (overallMatch) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setType(EXPECTATION_MATCHED)
-                            .setLogLevel(Level.INFO)
-                            .setCorrelationId(requestDefinition.getLogCorrelationId())
-                            .setHttpRequest(request)
-                            .setExpectation(this.expectation)
-                            .setMessageFormat(this.expectation == null ? REQUEST_DID_MATCH : EXPECTATION_DID_MATCH)
-                            .setArguments(request, (this.expectation == null ? this : this.expectation.clone()))
-                    );
+                    if (MockServerLogger.isEnabled(Level.INFO)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setType(EXPECTATION_MATCHED)
+                                .setLogLevel(Level.INFO)
+                                .setCorrelationId(requestDefinition.getLogCorrelationId())
+                                .setHttpRequest(request)
+                                .setExpectation(this.expectation)
+                                .setMessageFormat(this.expectation == null ? REQUEST_DID_MATCH : EXPECTATION_DID_MATCH)
+                                .setArguments(request, (this.expectation == null ? this : this.expectation.clone()))
+                        );
+                    }
                 } else {
                     becauseBuilder.replace(0, 1, "");
                     String because = becauseBuilder.toString();
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setType(EXPECTATION_NOT_MATCHED)
-                            .setLogLevel(Level.INFO)
-                            .setCorrelationId(requestDefinition.getLogCorrelationId())
-                            .setHttpRequest(request)
-                            .setExpectation(this.expectation)
-                            .setMessageFormat(this.expectation == null ? didNotMatchRequestBecause : becauseBuilder.length() > 0 ? didNotMatchExpectationBecause : didNotMatchExpectationWithoutBecause)
-                            .setArguments(request, (this.expectation == null ? this : this.expectation.clone()), because)
-                            .setBecause(because)
-                    );
+                    if (MockServerLogger.isEnabled(Level.INFO)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setType(EXPECTATION_NOT_MATCHED)
+                                .setLogLevel(Level.INFO)
+                                .setCorrelationId(requestDefinition.getLogCorrelationId())
+                                .setHttpRequest(request)
+                                .setExpectation(this.expectation)
+                                .setMessageFormat(this.expectation == null ? didNotMatchRequestBecause : becauseBuilder.length() > 0 ? didNotMatchExpectationBecause : didNotMatchExpectationWithoutBecause)
+                                .setArguments(request, (this.expectation == null ? this : this.expectation.clone()), because)
+                                .setBecause(because)
+                        );
+                    }
                 }
             }
             return overallMatch;
@@ -395,7 +399,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                 } else {
                     if (isNotBlank(request.getBodyAsJsonOrXmlString())) {
                         try {
-                            BodyDTO bodyDTO = objectMapperWithStrictBodyDTODeserializer.readValue(request.getBodyAsJsonOrXmlString(), BodyDTO.class);
+                            BodyDTO bodyDTO = getObjectMapperWithStrictBodyDTODeserializer().readValue(request.getBodyAsJsonOrXmlString(), BodyDTO.class);
                             if (bodyDTO != null) {
                                 bodyMatches = bodyMatches(
                                     buildBodyMatcher(bodyDTO.buildObject()),
@@ -515,5 +519,12 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             hashCode = Objects.hash(super.hashCode(), httpRequest);
         }
         return hashCode;
+    }
+
+    private ObjectMapper getObjectMapperWithStrictBodyDTODeserializer() {
+        if (objectMapperWithStrictBodyDTODeserializer == null) {
+            objectMapperWithStrictBodyDTODeserializer = ObjectMapperFactory.createObjectMapper(new StrictBodyDTODeserializer());
+        }
+        return objectMapperWithStrictBodyDTODeserializer;
     }
 }

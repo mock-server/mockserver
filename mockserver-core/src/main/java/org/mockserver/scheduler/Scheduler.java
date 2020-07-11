@@ -75,13 +75,15 @@ public class Scheduler {
         try {
             command.run();
         } catch (Throwable throwable) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(WARN)
-                    .setLogLevel(Level.INFO)
-                    .setMessageFormat(throwable.getMessage())
-                    .setThrowable(throwable)
-            );
+            if (MockServerLogger.isEnabled(Level.INFO)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(WARN)
+                        .setLogLevel(Level.INFO)
+                        .setMessageFormat(throwable.getMessage())
+                        .setThrowable(throwable)
+                );
+            }
         }
     }
 
@@ -180,13 +182,15 @@ public class Scheduler {
                 try {
                     consumer.accept(httpResponse, exception);
                 } catch (Throwable throwable) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setType(WARN)
-                            .setLogLevel(Level.INFO)
-                            .setMessageFormat(throwable.getMessage())
-                            .setThrowable(throwable)
-                    );
+                    if (MockServerLogger.isEnabled(Level.INFO)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setType(WARN)
+                                .setLogLevel(Level.INFO)
+                                .setMessageFormat(throwable.getMessage())
+                                .setThrowable(throwable)
+                        );
+                    }
                 }
             } else {
                 future.getHttpResponse().whenCompleteAsync(consumer, scheduler);

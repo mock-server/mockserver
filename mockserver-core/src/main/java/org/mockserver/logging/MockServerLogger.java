@@ -42,15 +42,13 @@ public class MockServerLogger {
                 LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(loggingConfiguration.getBytes(UTF_8)));
             }
         } catch (Throwable throwable) {
-            if (MockServerLogger.isEnabled(ERROR)) {
-                new MockServerLogger().logEvent(
-                    new LogEntry()
-                        .setType(SERVER_CONFIGURATION)
-                        .setLogLevel(ERROR)
-                        .setMessageFormat("exception while configuring Java logging - " + throwable.getMessage())
-                        .setThrowable(throwable)
-                );
-            }
+            new MockServerLogger().logEvent(
+                new LogEntry()
+                    .setType(SERVER_CONFIGURATION)
+                    .setLogLevel(ERROR)
+                    .setMessageFormat("exception while configuring Java logging - " + throwable.getMessage())
+                    .setThrowable(throwable)
+            );
         }
     }
 
@@ -121,7 +119,6 @@ public class MockServerLogger {
     }
 
     public static boolean isEnabled(final Level level) {
-        return (logLevel() == null && level.toInt() >= Level.WARN.toInt())
-            || (logLevel() != null && level.toInt() >= logLevel().toInt());
+        return logLevel() != null && level.toInt() >= logLevel().toInt();
     }
 }

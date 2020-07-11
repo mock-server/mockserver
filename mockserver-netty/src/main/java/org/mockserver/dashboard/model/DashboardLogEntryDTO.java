@@ -3,7 +3,6 @@ package org.mockserver.dashboard.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.dashboard.serializers.Description;
 import org.mockserver.log.model.LogEntry;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.ObjectWithJsonToString;
 import org.mockserver.model.RequestDefinition;
@@ -11,7 +10,6 @@ import org.mockserver.model.RequestDefinition;
 import java.util.Map;
 
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
-import static org.mockserver.model.HttpRequest.request;
 
 @SuppressWarnings({"UnusedReturnValue", "unused"})
 public class DashboardLogEntryDTO extends ObjectWithJsonToString {
@@ -96,15 +94,6 @@ public class DashboardLogEntryDTO extends ObjectWithJsonToString {
 
     public DashboardLogEntryDTO setHttpRequests(RequestDefinition[] httpRequests) {
         this.httpRequests = httpRequests;
-        return this;
-    }
-
-    public DashboardLogEntryDTO setHttpRequest(HttpRequest httpRequest) {
-        if (httpRequest != null) {
-            this.httpRequests = new HttpRequest[]{httpRequest};
-        } else {
-            this.httpRequests = new HttpRequest[]{request()};
-        }
         return this;
     }
 

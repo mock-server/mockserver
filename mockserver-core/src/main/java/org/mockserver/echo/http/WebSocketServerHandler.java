@@ -1,4 +1,3 @@
-
 package org.mockserver.echo.http;
 
 import io.netty.channel.*;
@@ -88,19 +87,23 @@ public class WebSocketServerHandler extends ChannelInboundHandlerAdapter {
                 )
                 .addListener((ChannelFutureListener) future -> {
                     ctx.pipeline().remove(MockServerHttpServerCodec.class);
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setLogLevel(Level.TRACE)
-                            .setMessageFormat("registering client " + clientId)
-                    );
-                    registeredClients.add(clientId);
-                    websocketChannels.add(future.channel());
-                    future.channel().closeFuture().addListener((ChannelFutureListener) future1 -> {
+                    if (MockServerLogger.isEnabled(Level.TRACE)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(Level.TRACE)
-                                .setMessageFormat("unregistering callback for client " + clientId)
+                                .setMessageFormat("registering client " + clientId)
                         );
+                    }
+                    registeredClients.add(clientId);
+                    websocketChannels.add(future.channel());
+                    future.channel().closeFuture().addListener((ChannelFutureListener) closeFuture -> {
+                        if (MockServerLogger.isEnabled(Level.TRACE)) {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setLogLevel(Level.TRACE)
+                                    .setMessageFormat("unregistering callback for client " + clientId)
+                            );
+                        }
                         registeredClients.remove(clientId);
                         websocketChannels.remove(future.channel());
                     });

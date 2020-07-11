@@ -5,8 +5,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
-import io.netty.util.NettyRuntime;
-import io.netty.util.internal.SystemPropertyUtil;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -1245,7 +1243,7 @@ public class ConfigurationProperties {
                 String propertyName = String.valueOf(propertyNames.nextElement());
                 propertiesLogDump.append("  ").append(propertyName).append(" = ").append(properties.getProperty(propertyName)).append(NEW_LINE);
             }
-            if (MOCK_SERVER_LOGGER != null) {
+            if (MOCK_SERVER_LOGGER != null && MockServerLogger.isEnabled(Level.INFO)) {
                 MOCK_SERVER_LOGGER.logEvent(
                     new LogEntry()
                         .setType(SERVER_CONFIGURATION)

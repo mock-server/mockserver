@@ -522,6 +522,18 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
         return Type.RESPONSE;
     }
 
+    public HttpResponse shallowClone() {
+        return response()
+            .withStatusCode(statusCode)
+            .withReasonPhrase(reasonPhrase)
+            .withBody(body)
+            .withHeaders(headers)
+            .withCookies(cookies)
+            .withDelay(getDelay())
+            .withConnectionOptions(connectionOptions);
+    }
+
+
     @SuppressWarnings("MethodDoesntCallSuperMethod")
     public HttpResponse clone() {
         return response()

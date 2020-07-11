@@ -104,25 +104,22 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
             try {
                 createParentDirs(file);
                 if (!file.createNewFile()) {
-                    if (MockServerLogger.isEnabled(ERROR)) {
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setLogLevel(ERROR)
-                                .setMessageFormat("failed to create the file{}while attempting to save Certificate Authority " + type + " PEM file")
-                                .setArguments(file.getAbsolutePath())
-                        );
-                    }
-                }
-            } catch (Throwable throwable) {
-                if (MockServerLogger.isEnabled(ERROR)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(ERROR)
                             .setMessageFormat("failed to create the file{}while attempting to save Certificate Authority " + type + " PEM file")
                             .setArguments(file.getAbsolutePath())
-                            .setThrowable(throwable)
                     );
+
                 }
+            } catch (Throwable throwable) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(ERROR)
+                        .setMessageFormat("failed to create the file{}while attempting to save Certificate Authority " + type + " PEM file")
+                        .setArguments(file.getAbsolutePath())
+                        .setThrowable(throwable)
+                );
             }
         }
         return file;

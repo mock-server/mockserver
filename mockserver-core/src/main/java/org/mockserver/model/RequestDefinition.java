@@ -20,10 +20,10 @@ public abstract class RequestDefinition extends Not {
         return this;
     }
 
-    public abstract RequestDefinition clone();
+    public abstract RequestDefinition shallowClone();
 
     public RequestDefinition cloneWithLogCorrelationId() {
-        return MockServerLogger.isEnabled(Level.TRACE) && isNotBlank(getLogCorrelationId()) ? clone().withLogCorrelationId(getLogCorrelationId()) : this;
+        return MockServerLogger.isEnabled(Level.TRACE) && isNotBlank(getLogCorrelationId()) ? shallowClone().withLogCorrelationId(getLogCorrelationId()) : this;
     }
 
     @Override

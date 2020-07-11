@@ -18,8 +18,16 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
 
     private KeyMatchStyle keyMatchStyle = KeyMatchStyle.SUB_SET;
 
-    private final Multimap<NottableString, NottableString> listMultimap = LinkedHashMultimap.create();
+    private final Multimap<NottableString, NottableString> multimap;
     private final K k = (K) this;
+
+    protected KeysToMultiValues() {
+        multimap = LinkedHashMultimap.create();
+    }
+
+    protected KeysToMultiValues(Multimap<NottableString, NottableString> multimap) {
+        this.multimap = LinkedHashMultimap.create(multimap);
+    }
 
     public CaseInsensitiveRegexMultiMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher) {
         return toCaseInsensitiveRegexMultiMap(mockServerLogger, getEntries(), controlPlaneMatcher, keyMatchStyle);
@@ -50,7 +58,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     }
 
     public K withEntries(final Map<String, List<String>> entries) {
-        listMultimap.clear();
+        multimap.clear();
         for (String name : entries.keySet()) {
             for (String value : entries.get(name)) {
                 withEntry(name, value);
@@ -60,7 +68,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     }
 
     public K withEntries(final List<T> entries) {
-        listMultimap.clear();
+        multimap.clear();
         if (entries != null) {
             for (T entry : entries) {
                 withEntry(entry);
@@ -79,34 +87,34 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
 
     public K withEntry(final T entry) {
         if (entry.getValues().isEmpty()) {
-            listMultimap.put(entry.getName(), null);
+            multimap.put(entry.getName(), null);
         } else {
-            listMultimap.putAll(entry.getName(), entry.getValues());
+            multimap.putAll(entry.getName(), entry.getValues());
         }
         return k;
     }
 
     public K withEntry(final String name, final String... values) {
         if (values == null || values.length == 0) {
-            listMultimap.put(string(name), string(""));
+            multimap.put(string(name), string(""));
         } else {
-            listMultimap.putAll(string(name), deserializeNottableStrings(values));
+            multimap.putAll(string(name), deserializeNottableStrings(values));
         }
         return k;
     }
 
     public K withEntry(final String name, final List<String> values) {
         if (values == null || values.size() == 0) {
-            listMultimap.put(string(name), null);
+            multimap.put(string(name), null);
         } else {
-            listMultimap.putAll(string(name), deserializeNottableStrings(values));
+            multimap.putAll(string(name), deserializeNottableStrings(values));
         }
         return k;
     }
 
     public K withEntry(final NottableString name, final List<NottableString> values) {
         if (values != null) {
-            listMultimap.putAll(name, values);
+            multimap.putAll(name, values);
         }
         return k;
     }
@@ -119,18 +127,18 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     }
 
     public K remove(final String name) {
-        for (NottableString key : listMultimap.keySet().toArray(new NottableString[0])) {
+        for (NottableString key : multimap.keySet().toArray(new NottableString[0])) {
             if (key.equalsIgnoreCase(name)) {
-                listMultimap.removeAll(key);
+                multimap.removeAll(key);
             }
         }
         return k;
     }
 
     public K remove(final NottableString name) {
-        for (NottableString key : listMultimap.keySet().toArray(new NottableString[0])) {
+        for (NottableString key : multimap.keySet().toArray(new NottableString[0])) {
             if (key.equalsIgnoreCase(name)) {
-                listMultimap.removeAll(key);
+                multimap.removeAll(key);
             }
         }
         return k;
@@ -140,7 +148,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     public K replaceEntry(final T entry) {
         if (entry != null) {
             remove(entry.getName());
-            listMultimap.putAll(entry.getName(), entry.getValues());
+            multimap.putAll(entry.getName(), entry.getValues());
         }
         return k;
     }
@@ -149,7 +157,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     public K replaceEntry(final String name, final String... values) {
         if (ArrayUtils.isNotEmpty(values)) {
             remove(name);
-            listMultimap.putAll(string(name), deserializeNottableStrings(values));
+            multimap.putAll(string(name), deserializeNottableStrings(values));
         }
         return k;
     }
@@ -157,8 +165,8 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     public List<T> getEntries() {
         if (!isEmpty()) {
             ArrayList<T> headers = new ArrayList<>();
-            for (NottableString nottableString : listMultimap.keySet().toArray(new NottableString[0])) {
-                headers.add(build(nottableString, listMultimap.get(nottableString)));
+            for (NottableString nottableString : multimap.keySet().toArray(new NottableString[0])) {
+                headers.add(build(nottableString, multimap.get(nottableString)));
             }
             return headers;
         } else {
@@ -167,23 +175,23 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     }
 
     public Set<NottableString> keySet() {
-        return listMultimap.keySet();
+        return multimap.keySet();
     }
 
     public Collection<NottableString> getValues(NottableString key) {
-        return listMultimap.get(key);
+        return multimap.get(key);
     }
 
     public Multimap<NottableString, NottableString> getMultimap() {
-        return listMultimap;
+        return multimap;
     }
 
     public List<String> getValues(final String name) {
         if (!isEmpty() && name != null) {
             List<String> values = new ArrayList<>();
-            for (NottableString key : listMultimap.keySet().toArray(new NottableString[0])) {
+            for (NottableString key : multimap.keySet().toArray(new NottableString[0])) {
                 if (key != null && key.equalsIgnoreCase(name)) {
-                    values.addAll(serialiseNottableString(listMultimap.get(key)));
+                    values.addAll(serialiseNottableString(multimap.get(key)));
                 }
             }
             return values;
@@ -194,9 +202,9 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
 
     String getFirstValue(final String name) {
         if (!isEmpty()) {
-            for (NottableString key : listMultimap.keySet().toArray(new NottableString[0])) {
+            for (NottableString key : multimap.keySet().toArray(new NottableString[0])) {
                 if (key != null && key.equalsIgnoreCase(name)) {
-                    Collection<NottableString> nottableStrings = listMultimap.get(key);
+                    Collection<NottableString> nottableStrings = multimap.get(key);
                     if (!nottableStrings.isEmpty()) {
                         NottableString next = nottableStrings.iterator().next();
                         if (next != null) {
@@ -211,7 +219,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
 
     public boolean containsEntry(final String name) {
         if (!isEmpty()) {
-            for (NottableString key : listMultimap.keySet().toArray(new NottableString[0])) {
+            for (NottableString key : multimap.keySet().toArray(new NottableString[0])) {
                 if (key != null && key.equalsIgnoreCase(name)) {
                     return true;
                 }
@@ -226,9 +234,9 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
 
     boolean containsEntry(final NottableString name, final NottableString value) {
         if (!isEmpty() && name != null && value != null) {
-            for (NottableString entryKey : listMultimap.keySet().toArray(new NottableString[0])) {
+            for (NottableString entryKey : multimap.keySet().toArray(new NottableString[0])) {
                 if (entryKey != null && entryKey.equalsIgnoreCase(name)) {
-                    Collection<NottableString> nottableStrings = listMultimap.get(entryKey);
+                    Collection<NottableString> nottableStrings = multimap.get(entryKey);
                     if (nottableStrings != null) {
                         for (NottableString entryValue : nottableStrings.toArray(new NottableString[0])) {
                             if (value.equalsIgnoreCase(entryValue)) {
@@ -243,7 +251,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     }
 
     public boolean isEmpty() {
-        return listMultimap.isEmpty();
+        return multimap.isEmpty();
     }
 
     @Override
@@ -255,11 +263,11 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
             return false;
         }
         KeysToMultiValues<?, ?> that = (KeysToMultiValues<?, ?>) o;
-        return Objects.equals(listMultimap, that.listMultimap);
+        return Objects.equals(multimap, that.multimap);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(listMultimap);
+        return Objects.hash(multimap);
     }
 }

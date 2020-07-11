@@ -11,9 +11,11 @@ import org.mockserver.scheduler.Scheduler;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.ui.MockServerMatcherNotifier.Cause.API;
@@ -137,9 +139,8 @@ public class MockServerMatcherSequentialResponsesTest {
         // then
         assertEquals(expectationZero, requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
         MILLISECONDS.sleep(2250L);
-        assertEquals(isNull(), requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
+        assertThat(requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("somepath")), is(nullValue()));
         assertNull(requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
     }
-
 
 }

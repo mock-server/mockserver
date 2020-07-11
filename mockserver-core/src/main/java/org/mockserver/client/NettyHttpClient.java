@@ -132,12 +132,14 @@ public class NettyHttpClient {
                 .connect(remoteAddress)
                 .addListener((ChannelFutureListener) future -> {
                     if (future.isSuccess()) {
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setLogLevel(Level.DEBUG)
-                                .setMessageFormat("sending bytes hex{}to{}")
-                                .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()), future.channel().attr(REMOTE_SOCKET).get())
-                        );
+                        if (MockServerLogger.isEnabled(Level.DEBUG)) {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setLogLevel(Level.DEBUG)
+                                    .setMessageFormat("sending bytes hex{}to{}")
+                                    .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()), future.channel().attr(REMOTE_SOCKET).get())
+                            );
+                        }
                         // send the binary request
                         future.channel().writeAndFlush(Unpooled.copiedBuffer(binaryRequest.getBytes()));
                     } else {

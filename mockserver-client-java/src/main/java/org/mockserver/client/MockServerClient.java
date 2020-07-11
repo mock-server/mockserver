@@ -272,14 +272,12 @@ public class MockServerClient implements Stoppable {
                 }
             }
         } catch (Throwable throwable) {
-            if (MockServerLogger.isEnabled(ERROR)) {
-                MOCK_SERVER_LOGGER.logEvent(
-                    new LogEntry()
-                        .setLogLevel(ERROR)
-                        .setMessageFormat("exception while attempting to launch UI" + (isNotBlank(throwable.getMessage()) ? " " + throwable.getMessage() : ""))
-                        .setThrowable(throwable)
-                );
-            }
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setLogLevel(ERROR)
+                    .setMessageFormat("exception while attempting to launch UI" + (isNotBlank(throwable.getMessage()) ? " " + throwable.getMessage() : ""))
+                    .setThrowable(throwable)
+            );
             throw new ClientException("exception while attempting to launch UI" + (isNotBlank(throwable.getMessage()) ? " " + throwable.getMessage() : ""));
         }
         return this;

@@ -943,6 +943,21 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         }
     }
 
+    public HttpRequest shallowClone() {
+        return not(request(), not)
+            .withMethod(method)
+            .withPath(path)
+            .withPathParameters(pathParameters)
+            .withQueryStringParameters(queryStringParameters)
+            .withBody(body)
+            .withHeaders(headers)
+            .withCookies(cookies)
+            .withKeepAlive(keepAlive)
+            .withSecure(secure)
+            .withSocketAddress(socketAddress);
+    }
+
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
     public HttpRequest clone() {
         return not(request(), not)
             .withMethod(method)

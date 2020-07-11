@@ -42,6 +42,7 @@ import static org.junit.Assert.fail;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
+import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE_FORMAT;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.unlimited;
 import static org.mockserver.model.BinaryBody.binary;
@@ -5342,13 +5343,13 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .setType(RECEIVED_REQUEST)
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(requestOne)
-                .setMessageFormat("received request:{}")
+                .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                 .setArguments(requestOne),
             new LogEntry()
                 .setType(RECEIVED_REQUEST)
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(requestTwo)
-                .setMessageFormat("received request:{}")
+                .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                 .setArguments(requestTwo)
         );
 

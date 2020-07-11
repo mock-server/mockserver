@@ -29,6 +29,8 @@ import static org.mockserver.model.HttpRequest.request;
 public class LogEntry implements EventTranslator<LogEntry> {
 
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
+    private static final RequestDefinition[] EMPTY_REQUEST_DEFINITIONS = new RequestDefinition[0];
+    private static final RequestDefinition[] DEFAULT_REQUESTS_DEFINITIONS = {request()};
     private int hashCode;
     private String id;
     private String correlationId;
@@ -139,7 +141,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
     @JsonIgnore
     public RequestDefinition[] getHttpRequests() {
         if (httpRequests == null) {
-            return new RequestDefinition[0];
+            return EMPTY_REQUEST_DEFINITIONS;
         } else {
             return httpRequests;
         }
@@ -148,7 +150,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
     @JsonIgnore
     public RequestDefinition[] getHttpUpdatedRequests() {
         if (httpRequests == null) {
-            return new RequestDefinition[0];
+            return EMPTY_REQUEST_DEFINITIONS;
         } else if (httpUpdatedRequests == null) {
             httpUpdatedRequests = Arrays
                 .stream(httpRequests)
@@ -161,13 +163,13 @@ public class LogEntry implements EventTranslator<LogEntry> {
     }
 
     @JsonIgnore
-    public boolean matches(HttpRequestMatcher matcher, String logCorrelationId) {
+    public boolean matches(HttpRequestMatcher matcher) {
         if (matcher == null) {
             return true;
         }
         if (httpRequests == null || httpRequests.length == 0) {
-            return true;
-        }
+                return true;
+            }
         for (RequestDefinition httpRequest : httpRequests) {
             if (matcher.matches(httpRequest.cloneWithLogCorrelationId())) {
                 return true;
@@ -196,7 +198,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
             }
             this.httpRequests = new RequestDefinition[]{httpRequest};
         } else {
-            this.httpRequests = new RequestDefinition[]{request()};
+            this.httpRequests = DEFAULT_REQUESTS_DEFINITIONS;
         }
         return this;
     }
@@ -334,26 +336,26 @@ public class LogEntry implements EventTranslator<LogEntry> {
             if (body instanceof JsonBody) {
                 try {
                     return httpRequest
-                        .clone()
+                        .shallowClone()
                         .withBody(
                             new LogEventBody(OBJECT_MAPPER.readTree(body.toString()))
                         );
                 } catch (Throwable throwable) {
                     return httpRequest
-                        .clone()
+                        .shallowClone()
                         .withBody(
                             new LogEventBody(body.toString())
                         );
                 }
             } else if (body instanceof ParameterBody) {
                 return httpRequest
-                    .clone()
+                    .shallowClone()
                     .withBody(
                         new LogEventBody(body.toString())
                     );
             } else if (body instanceof BodyWithContentType && !(body instanceof LogEventBody)) {
                 return httpRequest
-                    .clone()
+                    .shallowClone()
                     .withBody(
                         new LogEventBody(body.toString())
                     );
@@ -371,20 +373,20 @@ public class LogEntry implements EventTranslator<LogEntry> {
             if (body != null && JsonBody.class.isAssignableFrom(body.getClass())) {
                 try {
                     return httpResponse
-                        .clone()
+                        .shallowClone()
                         .withBody(
                             new LogEventBody(OBJECT_MAPPER.readTree(body.toString()))
                         );
                 } catch (Throwable throwable) {
                     return httpResponse
-                        .clone()
+                        .shallowClone()
                         .withBody(
                             new LogEventBody(body.toString())
                         );
                 }
             } else if (body != null && !(body instanceof LogEventBody)) {
                 return httpResponse
-                    .clone()
+                    .shallowClone()
                     .withBody(
                         new LogEventBody(body.toString())
                     );

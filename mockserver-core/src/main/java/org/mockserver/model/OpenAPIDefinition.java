@@ -109,7 +109,7 @@ public class OpenAPIDefinition extends RequestDefinition {
         return this;
     }
 
-    public OpenAPIDefinition clone() {
+    public OpenAPIDefinition shallowClone() {
         return not(openAPI(), not)
             .withSpecUrlOrPayload(specUrlOrPayload)
             .withOperationId(operationId);

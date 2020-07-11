@@ -33,6 +33,7 @@ import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.cors.CORSHeaders.isPreflightRequest;
 import static org.mockserver.exception.ExceptionHandling.*;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
+import static org.mockserver.log.model.LogEntryMessages.*;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.slf4j.event.Level.TRACE;
 
@@ -79,7 +80,7 @@ public class HttpActionHandler {
                     .setLogLevel(Level.INFO)
                     .setCorrelationId(request.getLogCorrelationId())
                     .setHttpRequest(request)
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request)
             );
         }
@@ -162,16 +163,18 @@ public class HttpActionHandler {
                 case ERROR: {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         getHttpErrorActionHandler().handle((HttpError) action, ctx);
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setType(EXPECTATION_RESPONSE)
-                                .setLogLevel(Level.INFO)
-                                .setCorrelationId(request.getLogCorrelationId())
-                                .setHttpRequest(request)
-                                .setHttpError((HttpError) action)
-                                .setMessageFormat("returning error:{}for request:{}for action:{}")
-                                .setArguments(action, request, action)
-                        );
+                        if (MockServerLogger.isEnabled(Level.INFO)) {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setType(EXPECTATION_RESPONSE)
+                                    .setLogLevel(Level.INFO)
+                                    .setCorrelationId(request.getLogCorrelationId())
+                                    .setHttpRequest(request)
+                                    .setHttpError((HttpError) action)
+                                    .setMessageFormat("returning error:{}for request:{}for action:{}")
+                                    .setArguments(action, request, action)
+                            );
+                        }
                         expectationPostProcessor.run();
                     }), synchronous, action.getDelay());
                     break;
@@ -181,13 +184,15 @@ public class HttpActionHandler {
         } else if (isPreflightRequest(request) && (enableCORSForAPI() || enableCORSForAllResponses())) {
 
             responseWriter.writeResponse(request, OK);
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(INFO)
-                    .setLogLevel(Level.INFO)
-                    .setCorrelationId(request.getLogCorrelationId())
-                    .setMessageFormat("returning CORS response for OPTIONS request")
-            );
+            if (MockServerLogger.isEnabled(Level.INFO)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(INFO)
+                        .setLogLevel(Level.INFO)
+                        .setCorrelationId(request.getLogCorrelationId())
+                        .setMessageFormat("returning CORS response for OPTIONS request")
+                );
+            }
 
         } else if (proxyingRequest || potentiallyHttpProxy) {
 
@@ -217,16 +222,18 @@ public class HttpActionHandler {
                         }
                         if (response.containsHeader(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue())) {
                             response.removeHeader(httpStateHandler.getUniqueLoopPreventionHeaderName());
-                            mockServerLogger.logEvent(
-                                new LogEntry()
-                                    .setType(NO_MATCH_RESPONSE)
-                                    .setLogLevel(Level.INFO)
-                                    .setCorrelationId(request.getLogCorrelationId())
-                                    .setHttpRequest(request)
-                                    .setHttpResponse(notFoundResponse())
-                                    .setMessageFormat("no expectation for:{}returning response:{}")
-                                    .setArguments(request, response)
-                            );
+                            if (MockServerLogger.isEnabled(Level.INFO)) {
+                                mockServerLogger.logEvent(
+                                    new LogEntry()
+                                        .setType(NO_MATCH_RESPONSE)
+                                        .setLogLevel(Level.INFO)
+                                        .setCorrelationId(request.getLogCorrelationId())
+                                        .setHttpRequest(request)
+                                        .setHttpResponse(notFoundResponse())
+                                        .setMessageFormat(NO_MATCH_RESPONSE_NO_EXPECTATION_MESSAGE_FORMAT)
+                                        .setArguments(request, response)
+                                );
+                            }
                         } else {
                             mockServerLogger.logEvent(
                                 new LogEntry()
@@ -297,30 +304,34 @@ public class HttpActionHandler {
             processAction.run();
         } catch (Throwable throwable) {
             writeResponseActionResponse(notFoundResponse(), responseWriter, request, action, synchronous);
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(WARN)
-                    .setLogLevel(Level.INFO)
-                    .setCorrelationId(request.getLogCorrelationId())
-                    .setHttpRequest(request)
-                    .setMessageFormat(throwable.getMessage())
-                    .setThrowable(throwable)
-            );
+            if (MockServerLogger.isEnabled(Level.INFO)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(WARN)
+                        .setLogLevel(Level.INFO)
+                        .setCorrelationId(request.getLogCorrelationId())
+                        .setHttpRequest(request)
+                        .setMessageFormat(throwable.getMessage())
+                        .setThrowable(throwable)
+                );
+            }
         }
     }
 
     void writeResponseActionResponse(final HttpResponse response, final ResponseWriter responseWriter, final HttpRequest request, final Action action, boolean synchronous) {
         scheduler.schedule(() -> {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(EXPECTATION_RESPONSE)
-                    .setLogLevel(Level.INFO)
-                    .setCorrelationId(request.getLogCorrelationId())
-                    .setHttpRequest(request)
-                    .setHttpResponse(response)
-                    .setMessageFormat("returning response:{}for request:{}for action:{}")
-                    .setArguments(response, request, action)
-            );
+            if (MockServerLogger.isEnabled(Level.INFO)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(EXPECTATION_RESPONSE)
+                        .setLogLevel(Level.INFO)
+                        .setCorrelationId(request.getLogCorrelationId())
+                        .setHttpRequest(request)
+                        .setHttpResponse(response)
+                        .setMessageFormat("returning response:{}for request:{}for action:{}")
+                        .setArguments(response, request, action)
+                );
+            }
             responseWriter.writeResponse(request, response, false);
         }, synchronous, response.getDelay());
     }
@@ -342,7 +353,6 @@ public class HttpActionHandler {
                         .setHttpRequest(request)
                         .setHttpResponse(response)
                         .setExpectation(request, response)
-                        .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}")
                         .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}")
                         .setArguments(response, responseFuture.getHttpRequest(), httpRequestToCurlSerializer.toCurl(responseFuture.getHttpRequest(), responseFuture.getRemoteAddress()), action)
                 );
@@ -432,27 +442,31 @@ public class HttpActionHandler {
                 );
             }
         } else if (isNotBlank(error)) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(NO_MATCH_RESPONSE)
-                    .setLogLevel(Level.INFO)
-                    .setCorrelationId(request.getLogCorrelationId())
-                    .setHttpRequest(request)
-                    .setHttpResponse(notFoundResponse())
-                    .setMessageFormat("error:{}handling request:{}returning response:{}")
-                    .setArguments(error, request, notFoundResponse())
-            );
+            if (MockServerLogger.isEnabled(Level.INFO)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(NO_MATCH_RESPONSE)
+                        .setLogLevel(Level.INFO)
+                        .setCorrelationId(request.getLogCorrelationId())
+                        .setHttpRequest(request)
+                        .setHttpResponse(notFoundResponse())
+                        .setMessageFormat(NO_MATCH_RESPONSE_ERROR_MESSAGE_FORMAT)
+                        .setArguments(error, request, notFoundResponse())
+                );
+            }
         } else {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(NO_MATCH_RESPONSE)
-                    .setLogLevel(Level.INFO)
-                    .setCorrelationId(request.getLogCorrelationId())
-                    .setHttpRequest(request)
-                    .setHttpResponse(notFoundResponse())
-                    .setMessageFormat("no expectation for:{}returning response:{}")
-                    .setArguments(request, notFoundResponse())
-            );
+            if (MockServerLogger.isEnabled(Level.INFO)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(NO_MATCH_RESPONSE)
+                        .setLogLevel(Level.INFO)
+                        .setCorrelationId(request.getLogCorrelationId())
+                        .setHttpRequest(request)
+                        .setHttpResponse(notFoundResponse())
+                        .setMessageFormat(NO_MATCH_RESPONSE_NO_EXPECTATION_MESSAGE_FORMAT)
+                        .setArguments(request, notFoundResponse())
+                );
+            }
         }
         responseWriter.writeResponse(request, response, false);
     }

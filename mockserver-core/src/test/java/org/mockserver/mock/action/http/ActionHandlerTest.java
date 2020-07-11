@@ -3,10 +3,7 @@ package org.mockserver.mock.action.http;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.Attribute;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -32,6 +29,7 @@ import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
+import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE_FORMAT;
 import static org.mockserver.mock.action.http.HttpActionHandler.REMOTE_SOCKET;
 import static org.mockserver.model.Delay.milliseconds;
 import static org.mockserver.model.HttpClassCallback.callback;
@@ -86,6 +84,7 @@ public class ActionHandlerTest {
     private Expectation expectation;
     @InjectMocks
     private HttpActionHandler actionHandler;
+    private Level originalLogLevel;
 
     @BeforeClass
     public static void fixTime() {
@@ -99,6 +98,9 @@ public class ActionHandlerTest {
 
     @Before
     public void setupMocks() {
+        originalLogLevel = ConfigurationProperties.logLevel();
+        ConfigurationProperties.logLevel("INFO");
+
         mockHttpStateHandler = mock(HttpState.class);
         scheduler = spy(new Scheduler(mockServerLogger));
         when(mockHttpStateHandler.getScheduler()).thenReturn(scheduler);
@@ -124,6 +126,11 @@ public class ActionHandlerTest {
         when(mockHttpOverrideForwardedRequestActionHandler.handle(any(HttpOverrideForwardedRequest.class), any(HttpRequest.class))).thenReturn(httpForwardActionResult);
     }
 
+    @After
+    public void resetLogLevel() {
+        ConfigurationProperties.logLevel(originalLogLevel.name());
+    }
+
     @Test
     public void shouldProcessResponseAction() {
         // given
@@ -142,7 +149,7 @@ public class ActionHandlerTest {
                 .setType(RECEIVED_REQUEST)
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request)
-                .setMessageFormat("received request:{}")
+                .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                 .setArguments(request)
         );
         verify(mockServerLogger).logEvent(
@@ -176,7 +183,7 @@ public class ActionHandlerTest {
                 .setType(RECEIVED_REQUEST)
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request)
-                .setMessageFormat("received request:{}")
+                .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                 .setArguments(request)
         );
         verify(mockServerLogger).logEvent(
@@ -212,7 +219,7 @@ public class ActionHandlerTest {
                 .setType(RECEIVED_REQUEST)
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request)
-                .setMessageFormat("received request:{}")
+                .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                 .setArguments(request)
         );
         verify(mockServerLogger).logEvent(
@@ -252,7 +259,7 @@ public class ActionHandlerTest {
                 .setType(RECEIVED_REQUEST)
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request)
-                .setMessageFormat("received request:{}")
+                .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                 .setArguments(request)
         );
         verify(mockServerLogger).logEvent(
@@ -286,7 +293,7 @@ public class ActionHandlerTest {
                 .setType(RECEIVED_REQUEST)
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request)
-                .setMessageFormat("received request:{}")
+                .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                 .setArguments(request)
         );
     }
@@ -312,7 +319,7 @@ public class ActionHandlerTest {
                 .setType(RECEIVED_REQUEST)
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request)
-                .setMessageFormat("received request:{}")
+                .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                 .setArguments(request)
         );
         verify(mockServerLogger).logEvent(
@@ -347,7 +354,7 @@ public class ActionHandlerTest {
                 .setType(RECEIVED_REQUEST)
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request)
-                .setMessageFormat("received request:{}")
+                .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                 .setArguments(request)
         );
         verify(mockServerLogger).logEvent(
@@ -383,7 +390,7 @@ public class ActionHandlerTest {
                 .setType(RECEIVED_REQUEST)
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request)
-                .setMessageFormat("received request:{}")
+                .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                 .setArguments(request)
         );
         verify(mockServerLogger).logEvent(
@@ -424,7 +431,7 @@ public class ActionHandlerTest {
                 .setType(RECEIVED_REQUEST)
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request)
-                .setMessageFormat("received request:{}")
+                .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                 .setArguments(request)
         );
         verify(mockServerLogger).logEvent(
@@ -458,7 +465,7 @@ public class ActionHandlerTest {
                 .setType(RECEIVED_REQUEST)
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request)
-                .setMessageFormat("received request:{}")
+                .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                 .setArguments(request)
         );
     }
@@ -482,7 +489,7 @@ public class ActionHandlerTest {
                 .setType(RECEIVED_REQUEST)
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request)
-                .setMessageFormat("received request:{}")
+                .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                 .setArguments(request)
         );
         verify(mockServerLogger).logEvent(
@@ -517,7 +524,7 @@ public class ActionHandlerTest {
                 .setType(RECEIVED_REQUEST)
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request)
-                .setMessageFormat("received request:{}")
+                .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                 .setArguments(request)
         );
         verify(mockServerLogger).logEvent(
@@ -560,7 +567,7 @@ public class ActionHandlerTest {
                 .setType(RECEIVED_REQUEST)
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request)
-                .setMessageFormat("received request:{}")
+                .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                 .setArguments(request)
         );
         verify(mockServerLogger).logEvent(

@@ -3,33 +3,24 @@ package org.mockserver.socket.tls.jdk;
 import com.google.common.net.InetAddresses;
 import com.google.common.net.InternetDomainName;
 import org.apache.commons.lang3.StringUtils;
-import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.slf4j.event.Level;
 import sun.security.util.DerValue;
 import sun.security.x509.*;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.*;
-import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.KeySpec;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.Random;
 import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.socket.tls.PEMToFile.*;
 import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.*;
 
@@ -163,12 +154,14 @@ public class X509Generator {
             try {
                 return new GeneralName(new IPAddressName(subjectAlternativeName));
             } catch (Throwable throwable) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(Level.WARN)
-                        .setMessageFormat("unable to use ip address with the value \"" + subjectAlternativeName + "\" as Subject Alternative Name (SAN) for X509 as JDK does not support SANs with that format")
-                        .setThrowable(throwable)
-                );
+                if (MockServerLogger.isEnabled(Level.WARN)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(Level.WARN)
+                            .setMessageFormat("unable to use ip address with the value \"" + subjectAlternativeName + "\" as Subject Alternative Name (SAN) for X509 as JDK does not support SANs with that format")
+                            .setThrowable(throwable)
+                    );
+                }
             }
         } else if (InternetDomainName.isValid(subjectAlternativeName)) {
             try {
@@ -177,6 +170,21 @@ public class X509Generator {
                 try {
                     return new GeneralName(new DNSName(new DerValue(DerValue.tag_IA5String, subjectAlternativeName)));
                 } catch (Throwable throwable) {
+                    if (MockServerLogger.isEnabled(Level.WARN)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(Level.WARN)
+                                .setMessageFormat("unable to use domain name with the value \"" + subjectAlternativeName + "\" as Subject Alternative Name (SAN) for X509 as JDK does not support SANs with that format")
+                                .setThrowable(throwable)
+                        );
+                    }
+                }
+            }
+        } else if (subjectAlternativeName.contains("*")) {
+            try {
+                return new GeneralName(new DNSName(new DerValue(DerValue.tag_IA5String, subjectAlternativeName)));
+            } catch (Throwable throwable) {
+                if (MockServerLogger.isEnabled(Level.WARN)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.WARN)
@@ -184,17 +192,6 @@ public class X509Generator {
                             .setThrowable(throwable)
                     );
                 }
-            }
-        } else if (subjectAlternativeName.contains("*")) {
-            try {
-                return new GeneralName(new DNSName(new DerValue(DerValue.tag_IA5String, subjectAlternativeName)));
-            } catch (Throwable throwable) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(Level.WARN)
-                        .setMessageFormat("unable to use domain name with the value \"" + subjectAlternativeName + "\" as Subject Alternative Name (SAN) for X509 as JDK does not support SANs with that format")
-                        .setThrowable(throwable)
-                );
             }
         }
         return null;

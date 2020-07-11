@@ -25,6 +25,7 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
+import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE_FORMAT;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
@@ -171,7 +172,7 @@ public class MockServerEventLogTest {
                     .setLogLevel(INFO)
                     .setType(RECEIVED_REQUEST)
                     .setHttpRequest(request("request_one"))
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_one"))
             );
             mockServerLogger.logEvent(
@@ -188,7 +189,7 @@ public class MockServerEventLogTest {
                     .setLogLevel(INFO)
                     .setType(RECEIVED_REQUEST)
                     .setHttpRequests(new RequestDefinition[]{request("request_two"), request("request_three")})
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_two"))
             );
             mockServerLogger.logEvent(
@@ -265,7 +266,7 @@ public class MockServerEventLogTest {
                     .setLogLevel(INFO)
                     .setType(RECEIVED_REQUEST)
                     .setHttpRequest(request("request_one"))
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_one")),
                 new LogEntry()
                     .setLogLevel(INFO)
@@ -278,7 +279,7 @@ public class MockServerEventLogTest {
                     .setLogLevel(INFO)
                     .setType(RECEIVED_REQUEST)
                     .setHttpRequests(new RequestDefinition[]{request("request_two"), request("request_three")})
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_two")),
                 new LogEntry()
                     .setType(EXPECTATION_MATCHED)
@@ -323,7 +324,7 @@ public class MockServerEventLogTest {
                     .setLogLevel(INFO)
                     .setType(RECEIVED_REQUEST)
                     .setHttpRequest(request("request_one"))
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_one"))
             );
             mockServerLogger.logEvent(
@@ -340,7 +341,7 @@ public class MockServerEventLogTest {
                     .setLogLevel(INFO)
                     .setType(RECEIVED_REQUEST)
                     .setHttpRequest(request("request_two"))
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_two"))
             );
             mockServerLogger.logEvent(
@@ -399,7 +400,7 @@ public class MockServerEventLogTest {
                     .setLogLevel(INFO)
                     .setType(RECEIVED_REQUEST)
                     .setHttpRequest(request("request_one"))
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_one")),
                 new LogEntry()
                     .setLogLevel(INFO)
@@ -620,7 +621,7 @@ public class MockServerEventLogTest {
                     .setLogLevel(INFO)
                     .setType(RECEIVED_REQUEST)
                     .setHttpRequest(request("request_one"))
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_one"))
             );
             mockServerLogger.logEvent(
@@ -637,7 +638,7 @@ public class MockServerEventLogTest {
                     .setLogLevel(INFO)
                     .setType(RECEIVED_REQUEST)
                     .setHttpRequest(request("request_two"))
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_two"))
             );
             mockServerLogger.logEvent(
@@ -705,7 +706,7 @@ public class MockServerEventLogTest {
                     .setLogLevel(INFO)
                     .setType(RECEIVED_REQUEST)
                     .setHttpRequest(request("request_two"))
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_two")),
                 new LogEntry()
                     .setType(EXPECTATION_MATCHED)
@@ -755,7 +756,7 @@ public class MockServerEventLogTest {
                     .setLogLevel(INFO)
                     .setType(RECEIVED_REQUEST)
                     .setHttpRequest(request("request_one"))
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_one"))
             );
             mockServerLogger.logEvent(
@@ -772,7 +773,7 @@ public class MockServerEventLogTest {
                     .setLogLevel(INFO)
                     .setType(RECEIVED_REQUEST)
                     .setHttpRequest(request("request_two"))
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_two"))
             );
             mockServerLogger.logEvent(
@@ -850,7 +851,7 @@ public class MockServerEventLogTest {
                 .setLogLevel(INFO)
                 .setType(RECEIVED_REQUEST)
                 .setHttpRequest(request("request_one"))
-                .setMessageFormat("received request:{}")
+                .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                 .setArguments(request("request_one"))));
             assertThat(actual.get(1), is(new LogEntry()
                 .setDeleted(true)
@@ -864,7 +865,7 @@ public class MockServerEventLogTest {
                 .setLogLevel(INFO)
                 .setType(RECEIVED_REQUEST)
                 .setHttpRequest(request("request_two"))
-                .setMessageFormat("received request:{}")
+                .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                 .setArguments(request("request_two"))));
             assertThat(actual.get(3), is(new LogEntry()
                 .setType(EXPECTATION_MATCHED)
