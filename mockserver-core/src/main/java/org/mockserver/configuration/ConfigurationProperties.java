@@ -52,7 +52,7 @@ public class ConfigurationProperties {
     private static final String DEFAULT_ENABLE_CORS_FOR_ALL_RESPONSES = "false";
     private static final String DEFAULT_PREVENT_CERTIFICATE_DYNAMIC_UPDATE = "false";
     private static final int DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT = 5;
-    private static final int DEFAULT_ACTION_HANDLER_THREAD_COUNT = Math.max(20, Runtime.getRuntime().availableProcessors());
+    private static final int DEFAULT_ACTION_HANDLER_THREAD_COUNT = Math.max(5, Runtime.getRuntime().availableProcessors());
     private static final int DEFAULT_WEB_SOCKET_CLIENT_EVENT_LOOP_THREAD_COUNT = 5;
     private static final String DEFAULT_CERTIFICATE_AUTHORITY_PRIVATE_KEY = "org/mockserver/socket/PKCS8CertificateAuthorityPrivateKey.pem";
     private static final String DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE = "org/mockserver/socket/CertificateAuthorityCertificate.pem";

@@ -64,7 +64,7 @@ public class ConfigurationPropertiesTest {
     public void shouldSetAndReadActionHandlerThreadCount() {
         // given
         System.clearProperty("mockserver.actionHandlerThreadCount");
-        int actionHandlerThreadCount = Math.max(20, Runtime.getRuntime().availableProcessors());
+        int actionHandlerThreadCount = Math.max(5, Runtime.getRuntime().availableProcessors());
 
         // when
         assertEquals(actionHandlerThreadCount, actionHandlerThreadCount());
