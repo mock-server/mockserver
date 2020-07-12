@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - performance improvements of expectation sorting and comparisons
+- reduced creation of objects at WARN log level
 
 ### Fixed
 
