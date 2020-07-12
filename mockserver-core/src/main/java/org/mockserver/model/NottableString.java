@@ -224,6 +224,15 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
         return lowercasePattern.matcher(input.toLowerCase()).matches();
     }
 
+    public boolean fieldsEqual(NottableString that) {
+        if (this == that) {
+            return true;
+        }
+        return isBlank == that.isBlank &&
+            Objects.equals(json, that.json) &&
+            parameterStyle == that.parameterStyle;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other instanceof String) {

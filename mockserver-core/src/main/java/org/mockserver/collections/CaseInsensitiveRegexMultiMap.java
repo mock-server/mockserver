@@ -366,8 +366,7 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
         }
         List<NottableString> list = Collections.synchronizedList(new ArrayList<>());
         for (ImmutableEntry entry : entryList()) {
-            // TODO(jamesdbloom) can this use of reflection equals be optimised
-            if (EqualsBuilder.reflectionEquals(entry.getKey(), key, "key")) {
+            if (entry.getKey().fieldsEqual(key)) {
                 if (key.isOptional()) {
                     throw new IllegalArgumentException("multiple values for optional key are not allowed, value \"" + entry.getValue() + "\" already exists for \"" + key + "\"");
                 }
