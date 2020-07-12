@@ -32,9 +32,6 @@ import static org.mockserver.model.HttpResponse.response;
 
 public class DashboardWebSocketHandlerTest {
 
-    // TODO(jamesdbloom)
-    //    - request filtering (i.e. by path and method)
-
     @Test
     public void shouldSerialiseEventsWithNoRequestFilter() throws InterruptedException {
         // given

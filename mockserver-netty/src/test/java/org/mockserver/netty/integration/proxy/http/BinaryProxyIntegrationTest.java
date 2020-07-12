@@ -167,6 +167,6 @@ public class BinaryProxyIntegrationTest {
         assertThat(ByteBufUtil.hexDump(binaryResponse.getBytes()), is(ByteBufUtil.hexDump("unknown message format".getBytes(StandardCharsets.UTF_8))));
     }
 
-    // TODO (jamesdbloom) test for proxying via SOCKS4/5 and HTTP CONNECT?
+    // TODO (jamesdbloom) binary test for proxying via SOCKS4/5 and HTTP CONNECT?
 
 }
