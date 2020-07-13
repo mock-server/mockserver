@@ -1,6 +1,6 @@
 ---
 title: Scalability & Latency
-layout: page
+layout: default
 pageOrder: 6
 section: 'General'
 subsection: true
@@ -10,13 +10,19 @@ changefreq: 'monthly'
 lastmod: 2019-11-10T08:00:00+01:00
 ---
 
+<div class="header">
+    <h1>Scalability & Latency</h1>
+
+    <h2 itemprop="headline">average of 1.58ms and p99 of 4ms for 150 parallel clients sending 95,228 requests per second</h2>
+</div>
+
 <p>MockServer is build to support massive scale from a single instance:</p>
 <ul>
-    <li><a href="#apache_bench">Apache Benchmark</a> tested up to <strong>6,000 parallel clients</strong></li>
-    <li><a href="#locust">Locust</a> tested up to <strong>3,000 parallel clients</strong></li>
+    <li><a href="#apache_bench">Apache Benchmark</a> tested up to <strong>6,000 parallel clients</strong> and shows MockServer has an <strong>average of 1.58ms and p99 of 4ms for 150 parallel clients sending 95,228 requests per second</strong></li>
+    <li><a href="#locust">Locust</a> tested up to <strong>3,000 parallel clients</strong> and shows MockServer has a <strong>p99 of 4ms for 150 parallel clients</strong></li>
 </ul>
 
-<p>The test frameworks show similar results up to 2,000 parallel clients at which point Locust reports warnings and the figures are no longer consistent with Apache Benchmark.</p>
+<p>Both performance testing frameworks show similar results up to 2,000 parallel clients at which point Locust reports warnings and the figures are no longer consistent with Apache Benchmark.</p>
 
 <p>The following frameworks & techniques are used to maximise scalability:</p>
 <ul>
@@ -39,7 +45,7 @@ lastmod: 2019-11-10T08:00:00+01:00
 
 <p>The following graph shows how the p99 increases as the number of parallel clients increase.</p>
 
-<img src="/images/p99vsparallelclients.png" alt="p99 as parallel clients increase" style="max-width:80%;">
+<img class="ui_image" src="/images/p99vsparallelclients.png" alt="p99 as parallel clients increase">
 
 <a id="apache_bench" class="anchor" href="#apache_bench">&nbsp;</a>
 
