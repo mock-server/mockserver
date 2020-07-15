@@ -1267,7 +1267,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  {" + NEW_LINE +
                     "    \"body\" : {" + NEW_LINE +
                     "      \"type\" : \"PARAMETERS\"," + NEW_LINE +
-                    "      \"value\" : {" + NEW_LINE +
+                    "      \"parameters\" : {" + NEW_LINE +
                     "        \"name\" : [ \"value\" ]" + NEW_LINE +
                     "      }" + NEW_LINE +
                     "    }" + NEW_LINE +
@@ -1327,7 +1327,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  {" + NEW_LINE +
                     "    \"body\" : {" + NEW_LINE +
                     "      \"type\" : \"PARAMETERS\"," + NEW_LINE +
-                    "      \"value\" : {" + NEW_LINE +
+                    "      \"parameters\" : {" + NEW_LINE +
                     "        \"name\" : [ \"va[0-9]{1}ue\" ]" + NEW_LINE +
                     "      }" + NEW_LINE +
                     "    }" + NEW_LINE +

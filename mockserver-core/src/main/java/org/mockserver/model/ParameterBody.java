@@ -28,6 +28,10 @@ public class ParameterBody extends Body<Parameters> {
         }
     }
 
+    public static ParameterBody params(Parameters parameters) {
+        return new ParameterBody(parameters);
+    }
+
     public static ParameterBody params(Parameter... parameters) {
         return new ParameterBody(parameters);
     }

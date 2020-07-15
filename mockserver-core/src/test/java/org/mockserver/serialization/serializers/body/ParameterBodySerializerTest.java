@@ -25,7 +25,7 @@ public class ParameterBodySerializerTest {
             )),
             is("{" + NEW_LINE +
                 "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
-                "  \"value\" : {" + NEW_LINE +
+                "  \"parameters\" : {" + NEW_LINE +
                 "    \"queryStringParameterOneName\" : [ \"queryStringParameterOneValueOne\", \"queryStringParameterOneValueTwo\" ]," + NEW_LINE +
                 "    \"queryStringParameterTwoName\" : [ \"queryStringParameterTwoValue\" ]" + NEW_LINE +
                 "  }" + NEW_LINE +
@@ -41,7 +41,7 @@ public class ParameterBodySerializerTest {
             is("{" + NEW_LINE +
                 "  \"not\" : true," + NEW_LINE +
                 "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
-                "  \"value\" : {" + NEW_LINE +
+                "  \"parameters\" : {" + NEW_LINE +
                 "    \"queryStringParameterOneName\" : [ \"queryStringParameterOneValueOne\", \"queryStringParameterOneValueTwo\" ]," + NEW_LINE +
                 "    \"queryStringParameterTwoName\" : [ \"queryStringParameterTwoValue\" ]" + NEW_LINE +
                 "  }" + NEW_LINE +
@@ -57,7 +57,7 @@ public class ParameterBodySerializerTest {
             is("{" + NEW_LINE +
                 "  \"optional\" : true," + NEW_LINE +
                 "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
-                "  \"value\" : {" + NEW_LINE +
+                "  \"parameters\" : {" + NEW_LINE +
                 "    \"queryStringParameterOneName\" : [ \"queryStringParameterOneValueOne\", \"queryStringParameterOneValueTwo\" ]," + NEW_LINE +
                 "    \"queryStringParameterTwoName\" : [ \"queryStringParameterTwoValue\" ]" + NEW_LINE +
                 "  }" + NEW_LINE +
@@ -72,7 +72,7 @@ public class ParameterBodySerializerTest {
             )),
             is("{" + NEW_LINE +
                 "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
-                "  \"value\" : {" + NEW_LINE +
+                "  \"parameters\" : {" + NEW_LINE +
                 "    \"!queryStringParameterOneName\" : [ \"!queryStringParameterOneValueOne\", \"!queryStringParameterOneValueTwo\" ]," + NEW_LINE +
                 "    \"!queryStringParameterTwoName\" : [ \"!queryStringParameterTwoValue\" ]" + NEW_LINE +
                 "  }" + NEW_LINE +
@@ -87,7 +87,7 @@ public class ParameterBodySerializerTest {
             )),
             is("{" + NEW_LINE +
                 "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
-                "  \"value\" : {" + NEW_LINE +
+                "  \"parameters\" : {" + NEW_LINE +
                 "    \"!queryStringParameterOneName\" : [ \"!queryStringParameterOneValueOne\", \"!queryStringParameterOneValueTwo\" ]," + NEW_LINE +
                 "    \"!queryStringParameterTwoName\" : [ \"!queryStringParameterTwoValue\" ]" + NEW_LINE +
                 "  }" + NEW_LINE +
@@ -102,7 +102,7 @@ public class ParameterBodySerializerTest {
             )),
             is("{" + NEW_LINE +
                 "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
-                "  \"value\" : {" + NEW_LINE +
+                "  \"parameters\" : {" + NEW_LINE +
                 "    \"!queryStringParameterOneName\" : [ \"!queryStringParameterOneValueOne\", \"!queryStringParameterOneValueTwo\" ]," + NEW_LINE +
                 "    \"!queryStringParameterTwoName\" : [ \"!queryStringParameterTwoValue\" ]" + NEW_LINE +
                 "  }" + NEW_LINE +
@@ -117,7 +117,7 @@ public class ParameterBodySerializerTest {
             )),
             is("{" + NEW_LINE +
                 "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
-                "  \"value\" : {" + NEW_LINE +
+                "  \"parameters\" : {" + NEW_LINE +
                 "    \"!queryStringParameterOneName\" : [ \"queryStringParameterOneValueOne\", \"!queryStringParameterOneValueTwo\" ]," + NEW_LINE +
                 "    \"queryStringParameterTwoName\" : [ \"!queryStringParameterTwoValue\" ]" + NEW_LINE +
                 "  }" + NEW_LINE +

@@ -2,6 +2,8 @@ package org.mockserver.serialization.deserializers.body;
 
 import org.hamcrest.core.Is;
 import org.junit.Test;
+import org.mockserver.model.KeyMatchStyle;
+import org.mockserver.model.Parameters;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.BodyDTO;
 import org.mockserver.serialization.model.ParameterBodyDTO;
@@ -18,7 +20,7 @@ import static org.mockserver.model.ParameterBody.params;
 public class ParameterBodyDTODeserializerTest {
 
     @Test
-    public void shouldSerializeArrayFormatParameterBodyDTO() throws IOException {
+    public void shouldDeserializeArrayFormatParameterBodyDTO() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
             "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
@@ -44,7 +46,7 @@ public class ParameterBodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldSerializeObjectFormatParameterBodyDTO() throws IOException {
+    public void shouldDeserializeObjectFormatParameterBodyDTO() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
             "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
@@ -67,7 +69,31 @@ public class ParameterBodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldSerializeArrayFormatParameterBodyDTOWithNot() throws IOException {
+    public void shouldDeserializeArrayFormatParameterBodyDTOWithKeyMatchStyle() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
+            "  \"parameters\" : {" + NEW_LINE +
+            "    \"keyMatchStyle\" : \"MATCHING_KEY\"," + NEW_LINE +
+            "    \"queryStringParameterOneName\" : [ \"queryStringParameterOneValueOne\", \"queryStringParameterOneValueTwo\" ]," + NEW_LINE +
+            "    \"queryStringParameterTwoName\" : [ \"queryStringParameterTwoValue\" ]" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}");
+
+        // when
+        BodyDTO bodyDTO = ObjectMapperFactory.createObjectMapper().readValue(json, BodyDTO.class);
+
+        // then
+        assertThat(bodyDTO,
+            Is.is(new ParameterBodyDTO(params(new Parameters(
+                param("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
+                param("queryStringParameterTwoName", "queryStringParameterTwoValue")
+            ).withKeyMatchStyle(KeyMatchStyle.MATCHING_KEY))))
+        );
+    }
+
+    @Test
+    public void shouldDeserializeArrayFormatParameterBodyDTOWithNot() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
             "  \"not\" : true," + NEW_LINE +
@@ -94,7 +120,7 @@ public class ParameterBodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldSerializeObjectFormatParameterBodyDTOWithNot() throws IOException {
+    public void shouldDeserializeObjectFormatParameterBodyDTOWithNot() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
             "  \"not\" : true," + NEW_LINE +
@@ -118,7 +144,7 @@ public class ParameterBodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldSerializeArrayFormatParameterBodyDTOWithAllNottedParameterKeys() throws IOException {
+    public void shouldDeserializeArrayFormatParameterBodyDTOWithAllNottedParameterKeys() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
             "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
@@ -141,7 +167,7 @@ public class ParameterBodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldSerializeObjectFormatParameterBodyDTOWithAllNottedParameterKeys() throws IOException {
+    public void shouldDeserializeObjectFormatParameterBodyDTOWithAllNottedParameterKeys() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
             "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
@@ -164,7 +190,7 @@ public class ParameterBodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldSerializeArrayFormatParameterBodyDTOWithAllNottedParameterValues() throws IOException {
+    public void shouldDeserializeArrayFormatParameterBodyDTOWithAllNottedParameterValues() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
             "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
@@ -187,7 +213,7 @@ public class ParameterBodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldSerializeObjectFormatParameterBodyDTOWithAllNottedParameterValues() throws IOException {
+    public void shouldDeserializeObjectFormatParameterBodyDTOWithAllNottedParameterValues() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
             "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
@@ -210,7 +236,7 @@ public class ParameterBodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldSerializeArrayFormatParameterBodyDTOWithAllNottedParameterKeysAndValue() throws IOException {
+    public void shouldDeserializeArrayFormatParameterBodyDTOWithAllNottedParameterKeysAndValue() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
             "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
@@ -233,7 +259,7 @@ public class ParameterBodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldSerializeObjectFormatParameterBodyDTOWithAllNottedParameterKeysAndValue() throws IOException {
+    public void shouldDeserializeObjectFormatParameterBodyDTOWithAllNottedParameterKeysAndValue() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
             "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
@@ -258,7 +284,7 @@ public class ParameterBodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldSerializeArrayFormatParameterBodyDTOWithAMixtureOfNottedAndStringParameterKeysAndValue() throws IOException {
+    public void shouldDeserializeArrayFormatParameterBodyDTOWithAMixtureOfNottedAndStringParameterKeysAndValue() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
             "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
@@ -281,7 +307,7 @@ public class ParameterBodyDTODeserializerTest {
     }
 
     @Test
-    public void shouldSerializeObjectFormatParameterBodyDTOWithAMixtureOfNottedAndStringParameterKeysAndValue() throws IOException {
+    public void shouldDeserializeObjectFormatParameterBodyDTOWithAMixtureOfNottedAndStringParameterKeysAndValue() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
             "  \"type\" : \"PARAMETERS\"," + NEW_LINE +

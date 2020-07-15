@@ -9,7 +9,6 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.serialization.model.*;
 
-import java.util.Base64;
 import java.util.concurrent.TimeUnit;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -421,7 +420,75 @@ public class ExpectationSerializerIntegrationTest {
                         )
                     )
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5))).buildObject(), expectation);
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation);
+    }
+
+    @Test
+    public void shouldDeserializeCompleteObjectWithResponseWithParameterBody() {
+        // given
+        String requestBytes = ("{" + NEW_LINE +
+            "  \"id\" : \"bf4e3011-5d39-4c02-a373-c6132d0642da\"," + NEW_LINE +
+            "  \"priority\" : -1," + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"POST\"," + NEW_LINE +
+            "    \"path\" : \"/vendors/smartsearch/aml\"," + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"PARAMETERS\"," + NEW_LINE +
+            "      \"parameters\" : {" + NEW_LINE +
+            "        \"keyMatchStyle\" : \"MATCHING_KEY\"," + NEW_LINE +
+            "        \"risk_level\" : [ \".*\" ]," + NEW_LINE +
+            "        \"app_title\" : [ \".*\" ]," + NEW_LINE +
+            "        \"app_forename\" : [ \".*\" ]," + NEW_LINE +
+            "        \"app_lastname\" : [ \".*\" ]," + NEW_LINE +
+            "        \"add01_house_no\" : [ \".*\" ]," + NEW_LINE +
+            "        \"add01_line1\" : [ \".*\" ]," + NEW_LINE +
+            "        \"add01_town\" : [ \".*\" ]," + NEW_LINE +
+            "        \"add01_postcode\" : [ \".*\" ]" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"body\" : \"some_response_body\"" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}");
+
+        // when
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setId("bf4e3011-5d39-4c02-a373-c6132d0642da")
+                .setPriority(-1)
+                .setHttpRequest(
+                    new HttpRequestDTO()
+                        .setMethod(string("POST"))
+                        .setPath(string("/vendors/smartsearch/aml"))
+                        .setBody(new ParameterBodyDTO(params(
+                            param("risk_level", ".*"),
+                            param("app_title", ".*"),
+                            param("app_forename", ".*"),
+                            param("app_lastname", ".*"),
+                            param("add01_house_no", ".*"),
+                            param("add01_line1", ".*"),
+                            param("add01_town", ".*"),
+                            param("add01_postcode", ".*")
+                        )))
+                )
+                .setHttpResponse(
+                    new HttpResponseDTO()
+                        .setBody(new StringBodyDTO(exact("some_response_body")))
+                )
+                .setTimes(new TimesDTO(Times.unlimited()))
+                .setTimeToLive(new TimeToLiveDTO(TimeToLive.unlimited()))
+                .buildObject(),
+            expectation
+        );
     }
 
     @Test
@@ -641,7 +708,7 @@ public class ExpectationSerializerIntegrationTest {
                     .setDelay(new DelayDTO(new Delay(MICROSECONDS, 1)))
 
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5))).buildObject(), expectation
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
         );
     }
 
@@ -721,7 +788,7 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpClassCallbackDTO()
                     .setCallbackClass("someClass")
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5))).buildObject(), expectation
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
         );
     }
 
@@ -801,7 +868,7 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpObjectCallbackDTO()
                     .setClientId("someClientId")
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5))).buildObject(), expectation
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
         );
     }
 
@@ -885,7 +952,7 @@ public class ExpectationSerializerIntegrationTest {
                     .setPort(1234)
                     .setScheme(HttpForward.Scheme.HTTPS)
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5)))
+            .setTimes(new TimesDTO(Times.exactly(5)))
             .setTimeToLive(new TimeToLiveDTO(TimeToLive.unlimited())).buildObject(), expectation
         );
     }
@@ -974,7 +1041,7 @@ public class ExpectationSerializerIntegrationTest {
                     .setDelay(new DelayDTO(new Delay(MICROSECONDS, 1)))
 
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5))).buildObject(), expectation
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
         );
     }
 
@@ -1054,7 +1121,7 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpClassCallbackDTO()
                     .setCallbackClass("someClass")
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5))).buildObject(), expectation
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
         );
     }
 
@@ -1134,7 +1201,7 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpObjectCallbackDTO()
                     .setClientId("someClientId")
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5))).buildObject(), expectation
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
         );
     }
 
@@ -1223,7 +1290,7 @@ public class ExpectationSerializerIntegrationTest {
                         .setValue(1)
                     )
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5))).buildObject(), expectation
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
         );
     }
 
@@ -1310,7 +1377,7 @@ public class ExpectationSerializerIntegrationTest {
                     .setDropConnection(Boolean.TRUE)
                     .setResponseBytes("some_bytes".getBytes(UTF_8))
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5)))
+            .setTimes(new TimesDTO(Times.exactly(5)))
             .setTimeToLive(new TimeToLiveDTO(TimeToLive.unlimited())).buildObject(), expectation
         );
     }
@@ -1483,7 +1550,7 @@ public class ExpectationSerializerIntegrationTest {
                         )
                     )
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5)))
+            .setTimes(new TimesDTO(Times.exactly(5)))
             .buildObject()
         );
 
@@ -1577,7 +1644,7 @@ public class ExpectationSerializerIntegrationTest {
                     .setDelay(new DelayDTO(new Delay(MICROSECONDS, 1)))
 
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5)))
+            .setTimes(new TimesDTO(Times.exactly(5)))
             .buildObject()
         );
 
@@ -1651,7 +1718,7 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpClassCallbackDTO()
                     .setCallbackClass("someClass")
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5)))
+            .setTimes(new TimesDTO(Times.exactly(5)))
             .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2L)))
             .buildObject()
         );
@@ -1722,7 +1789,7 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpObjectCallbackDTO()
                     .setClientId("someClientId")
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5)))
+            .setTimes(new TimesDTO(Times.exactly(5)))
             .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2L)))
             .buildObject()
         );
@@ -1795,7 +1862,7 @@ public class ExpectationSerializerIntegrationTest {
                     .setPort(1234)
                     .setScheme(HttpForward.Scheme.HTTPS)
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5)))
+            .setTimes(new TimesDTO(Times.exactly(5)))
             .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2L)))
             .buildObject()
         );
@@ -1871,7 +1938,7 @@ public class ExpectationSerializerIntegrationTest {
                     .setDelay(new DelayDTO(new Delay(MICROSECONDS, 1)))
 
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5)))
+            .setTimes(new TimesDTO(Times.exactly(5)))
             .buildObject()
         );
 
@@ -1945,7 +2012,7 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpClassCallbackDTO()
                     .setCallbackClass("someClass")
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5)))
+            .setTimes(new TimesDTO(Times.exactly(5)))
             .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2L)))
             .buildObject()
         );
@@ -2016,7 +2083,7 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpObjectCallbackDTO()
                     .setClientId("someClientId")
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5)))
+            .setTimes(new TimesDTO(Times.exactly(5)))
             .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2L)))
             .buildObject()
         );
@@ -2096,7 +2163,7 @@ public class ExpectationSerializerIntegrationTest {
                         .setValue(1)
                     )
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5))).buildObject()
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject()
         );
 
         // then
@@ -2174,7 +2241,7 @@ public class ExpectationSerializerIntegrationTest {
                     .setDelay(new DelayDTO(new Delay(TimeUnit.HOURS, 1)))
                     .setDropConnection(false)
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5)))
+            .setTimes(new TimesDTO(Times.exactly(5)))
             .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2L)))
             .buildObject()
         );
@@ -2253,7 +2320,7 @@ public class ExpectationSerializerIntegrationTest {
                     .setDelay(new DelayDTO(new Delay(MICROSECONDS, 1)))
 
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5)))
+            .setTimes(new TimesDTO(Times.exactly(5)))
             .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2L)))
             .buildObject()
         );
@@ -2313,7 +2380,7 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpResponseDTO()
                     .setBody(new StringBodyDTO(exact("someBody")))
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5)))
+            .setTimes(new TimesDTO(Times.exactly(5)))
             .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2L)))
             .buildObject()
         );
@@ -2353,7 +2420,7 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpResponseDTO()
                     .setBody(new StringBodyDTO(exact("someBody")))
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5)))
+            .setTimes(new TimesDTO(Times.exactly(5)))
             .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2L)))
             .buildObject()
         );
@@ -2418,36 +2485,36 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpResponseDTO()
                     .setBody(new JsonBodyDTO(new JsonBody("{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}")))
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5)))
+            .setTimes(new TimesDTO(Times.exactly(5)))
             .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2L)))
             .buildObject()
         );
 
         // then
         assertEquals("{" + NEW_LINE +
-                "  \"id\" : \"some_key\"," + NEW_LINE +
-                "  \"priority\" : 10," + NEW_LINE +
-                "  \"httpRequest\" : {" + NEW_LINE +
-                "    \"path\" : \"somePath\"," + NEW_LINE +
-                "    \"body\" : {" + NEW_LINE +
-                "      \"type\" : \"XML_SCHEMA\"," + NEW_LINE +
-                "      \"xmlSchema\" : \"" + StringEscapeUtils.escapeJava(xmlSchema) + "\"" + NEW_LINE +
-                "    }" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : {" + NEW_LINE +
-                "      \"fieldOne\" : \"valueOne\"," + NEW_LINE +
-                "      \"fieldTwo\" : \"valueTwo\"" + NEW_LINE +
-                "    }" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"remainingTimes\" : 5" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"timeToLive\" : {" + NEW_LINE +
-                "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
-                "    \"timeToLive\" : 2" + NEW_LINE +
-                "  }" + NEW_LINE +
-                "}", jsonExpectation);
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"XML_SCHEMA\"," + NEW_LINE +
+            "      \"xmlSchema\" : \"" + StringEscapeUtils.escapeJava(xmlSchema) + "\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"fieldOne\" : \"valueOne\"," + NEW_LINE +
+            "      \"fieldTwo\" : \"valueTwo\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+            "    \"timeToLive\" : 2" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
     }
 
     @Test
@@ -2483,7 +2550,7 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpResponseDTO()
                     .setBody(new JsonBodyDTO(new JsonBody("{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}")))
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5)))
+            .setTimes(new TimesDTO(Times.exactly(5)))
             .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2L)))
             .buildObject()
         );
@@ -2548,7 +2615,7 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpResponseDTO()
                     .setBody(new JsonBodyDTO(new JsonBody(jsonBody)))
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5)))
+            .setTimes(new TimesDTO(Times.exactly(5)))
             .buildObject()
         );
 
@@ -2593,7 +2660,7 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpResponseDTO()
                     .setBody(new StringBodyDTO(exact("someBody")))
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5)))
+            .setTimes(new TimesDTO(Times.exactly(5)))
             .buildObject()
         );
 
@@ -2638,7 +2705,7 @@ public class ExpectationSerializerIntegrationTest {
                 new HttpResponseDTO()
                     .setBody(new StringBodyDTO(exact("someBody")))
             )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(5)))
+            .setTimes(new TimesDTO(Times.exactly(5)))
             .buildObject()
         );
 
