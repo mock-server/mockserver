@@ -94,6 +94,26 @@ public class BinaryProxyIntegrationTest {
         }
     }
 
+    // TODO(jamesdbloom) make this test more stable:
+    //      org.mockserver.client.SocketConnectionException: Channel handler removed before valid response has been received
+    //        at org.mockserver.client.HttpClientConnectionErrorHandler.handlerRemoved(HttpClientConnectionErrorHandler.java:20)
+    //        at io.netty.channel.AbstractChannelHandlerContext.callHandlerRemoved(AbstractChannelHandlerContext.java:946)
+    //        at io.netty.channel.DefaultChannelPipeline.callHandlerRemoved0(DefaultChannelPipeline.java:637)
+    //        at io.netty.channel.DefaultChannelPipeline.destroyDown(DefaultChannelPipeline.java:876)
+    //        at io.netty.channel.DefaultChannelPipeline.destroyUp(DefaultChannelPipeline.java:844)
+    //        at io.netty.channel.DefaultChannelPipeline.destroy(DefaultChannelPipeline.java:836)
+    //        at io.netty.channel.DefaultChannelPipeline.access$700(DefaultChannelPipeline.java:46)
+    //        at io.netty.channel.DefaultChannelPipeline$HeadContext.channelUnregistered(DefaultChannelPipeline.java:1392)
+    //        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelUnregistered(AbstractChannelHandlerContext.java:198)
+    //        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelUnregistered(AbstractChannelHandlerContext.java:184)
+    //        at io.netty.channel.DefaultChannelPipeline.fireChannelUnregistered(DefaultChannelPipeline.java:821)
+    //        at io.netty.channel.AbstractChannel$AbstractUnsafe$8.run(AbstractChannel.java:826)
+    //        at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:164)
+    //        at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:472)
+    //        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:497)
+    //        at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:989)
+    //        at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+    //        at java.lang.Thread.run(Thread.java:748)
     @Test
     public void shouldForwardBinaryMessagesOverTLS() throws Exception {
         // given
