@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - reduced creation of objects at WARN log level
 
 ### Fixed
+- fixed field name error when serializing ParameterBody 
 
 ## [5.11.0] - 2020-07-08
 
