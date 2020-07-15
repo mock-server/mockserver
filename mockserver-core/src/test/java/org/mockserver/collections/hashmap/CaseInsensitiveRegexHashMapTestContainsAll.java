@@ -1,11 +1,11 @@
 package org.mockserver.collections.hashmap;
 
 import org.junit.Test;
-import org.mockserver.collections.CaseInsensitiveRegexHashMap;
+import org.mockserver.collections.NottableStringHashMap;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockserver.collections.CaseInsensitiveRegexHashMap.hashMap;
+import static org.mockserver.collections.NottableStringHashMap.hashMap;
 
 /**
  * @author jamesdbloom
@@ -15,7 +15,7 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     @Test
     public void shouldContainAllForEmptyMapMatchedAgainstMapWithSingleEntry() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"}
         );
 
@@ -28,7 +28,7 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     @Test
     public void shouldContainAllForEmptyMapMatchedAgainstMapWithMultipleEntries() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"},
             new String[]{"keyThree", "keyThreeValue"}
@@ -43,7 +43,7 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     @Test
     public void shouldContainAllExactMatchSingleKeyAndSingleValue() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"}
         );
 
@@ -56,7 +56,7 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     @Test
     public void shouldContainAllSubSetSingleKeyAndSingleValue() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"},
             new String[]{"keyThree", "keyThreeValue"}
@@ -71,7 +71,7 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     @Test
     public void shouldContainAllExactMatchMultipleKeyAndMultipleValues() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"}
         );
@@ -86,7 +86,7 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     @Test
     public void shouldContainAllSubSetMultipleKeyAndMultipleValues() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"},
             new String[]{"keyThree", "keyThreeValue"}
@@ -102,7 +102,7 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     @Test
     public void shouldNotContainAllNotMatchSingleKeySingleEntry() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"}
         );
 
@@ -115,7 +115,7 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     @Test
     public void shouldNotContainAllNotMatchSingleValueSingleEntry() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"}
         );
 
@@ -128,7 +128,7 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     @Test
     public void shouldNotContainAllNotMatchSingleKeyMultipleEntries() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"},
             new String[]{"keyThree", "keyThreeValue"}
@@ -143,7 +143,7 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     @Test
     public void shouldNotContainAllNotMatchSingleValueMultipleEntries() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"},
             new String[]{"keyThree", "keyThreeValue"}
@@ -158,7 +158,7 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     @Test
     public void shouldNotContainAllNotMatchMultipleKeysMultipleEntries() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"},
             new String[]{"keyThree", "keyThreeValue"}
@@ -174,7 +174,7 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     @Test
     public void shouldNotContainAllNotMatchMultipleValuesMultipleEntries() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"},
             new String[]{"keyThree", "keyThreeValue"}

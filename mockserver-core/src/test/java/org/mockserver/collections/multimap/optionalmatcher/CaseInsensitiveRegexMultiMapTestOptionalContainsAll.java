@@ -1,13 +1,13 @@
 package org.mockserver.collections.multimap.optionalmatcher;
 
 import org.junit.Test;
-import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
+import org.mockserver.collections.NottableStringMultiMap;
 import org.mockserver.model.KeyMatchStyle;
 import org.mockserver.model.NottableString;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockserver.collections.CaseInsensitiveRegexMultiMap.multiMap;
+import static org.mockserver.collections.NottableStringMultiMap.multiMap;
 import static org.mockserver.model.NottableOptionalString.optionalString;
 import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
@@ -20,7 +20,7 @@ public class CaseInsensitiveRegexMultiMapTestOptionalContainsAll {
     @Test
     public void shouldContainAllSubSetMultipleKeyForOptionalKeys() {
         // given
-        CaseInsensitiveRegexMultiMap matcher = multiMap(
+        NottableStringMultiMap matcher = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
@@ -54,7 +54,7 @@ public class CaseInsensitiveRegexMultiMapTestOptionalContainsAll {
     @Test
     public void shouldContainAllSubSetMultipleKeyForOptionalKeysWithNottedValue() {
         // given
-        CaseInsensitiveRegexMultiMap matcher = multiMap(
+        NottableStringMultiMap matcher = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
@@ -95,7 +95,7 @@ public class CaseInsensitiveRegexMultiMapTestOptionalContainsAll {
     @Test
     public void shouldContainAllSubSetMultipleKeyForAllOptionalKeys() {
         // given
-        CaseInsensitiveRegexMultiMap matcher = multiMap(
+        NottableStringMultiMap matcher = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new NottableString[]{string("?keyOne"), string("keyOneValue")},
@@ -169,7 +169,7 @@ public class CaseInsensitiveRegexMultiMapTestOptionalContainsAll {
     @Test
     public void shouldContainAllSubSetMultipleKeyForAllOptionalEitherOr() {
         // given
-        CaseInsensitiveRegexMultiMap matcher = multiMap(
+        NottableStringMultiMap matcher = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new NottableString[]{string("?keyOne"), string("keyOneValue")},

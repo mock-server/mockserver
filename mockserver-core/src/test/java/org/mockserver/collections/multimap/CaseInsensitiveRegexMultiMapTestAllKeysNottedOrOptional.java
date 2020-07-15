@@ -5,7 +5,7 @@ import org.mockserver.model.KeyMatchStyle;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockserver.collections.CaseInsensitiveRegexMultiMap.multiMap;
+import static org.mockserver.collections.NottableStringMultiMap.multiMap;
 
 /**
  * @author jamesdbloom

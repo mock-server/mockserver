@@ -3,8 +3,6 @@ package org.mockserver.model;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import org.apache.commons.lang3.ArrayUtils;
-import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
-import org.mockserver.logging.MockServerLogger;
 
 import java.util.*;
 
@@ -27,22 +25,6 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
 
     protected KeysToMultiValues(Multimap<NottableString, NottableString> multimap) {
         this.multimap = LinkedHashMultimap.create(multimap);
-    }
-
-    public CaseInsensitiveRegexMultiMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher) {
-        return toCaseInsensitiveRegexMultiMap(mockServerLogger, getEntries(), controlPlaneMatcher, keyMatchStyle);
-    }
-
-    private CaseInsensitiveRegexMultiMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, final List<T> entries, boolean controlPlaneMatcher, KeyMatchStyle keyMatchStyle) {
-        CaseInsensitiveRegexMultiMap caseInsensitiveRegexMultiMap = new CaseInsensitiveRegexMultiMap(mockServerLogger, controlPlaneMatcher, keyMatchStyle);
-        if (entries != null) {
-            for (KeyToMultiValue keyToMultiValue : entries) {
-                for (NottableString value : keyToMultiValue.getValues()) {
-                    caseInsensitiveRegexMultiMap.put(keyToMultiValue.getName(), value != null ? value : string(""));
-                }
-            }
-        }
-        return caseInsensitiveRegexMultiMap;
     }
 
     public abstract T build(final NottableString name, final Collection<NottableString> values);
@@ -191,7 +173,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
             List<String> values = new ArrayList<>();
             for (NottableString key : multimap.keySet().toArray(new NottableString[0])) {
                 if (key != null && key.equalsIgnoreCase(name)) {
-                    values.addAll(serialiseNottableString(multimap.get(key)));
+                    values.addAll(serialiseNottableStrings(multimap.get(key)));
                 }
             }
             return values;

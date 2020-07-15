@@ -1,14 +1,16 @@
 package org.mockserver.collections.multimap;
 
 import org.junit.Test;
-import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
+import org.mockserver.collections.NottableStringMultiMap;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.KeyMatchStyle;
+import org.mockserver.model.NottableString;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
-import static org.mockserver.collections.CaseInsensitiveRegexMultiMap.multiMap;
+import static org.mockserver.collections.NottableStringMultiMap.multiMap;
+import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
@@ -21,28 +23,24 @@ public class CaseInsensitiveRegexMultiMapTestOptionalOnlySingleValuePerKey {
             assertThat(multiMap(
                 true,
                 KeyMatchStyle.SUB_SET,
-                new String[]{"?keyOne", "keyOne_valueOne", "keyOne_valueTwo"}
+                new NottableString[]{string("?keyOne"), string("keyOne_valueOne"), string("keyOne_valueTwo")}
             ).allKeysOptional(), is(true));
 
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("multiple values for optional key are not allowed, value \"keyOne_valueOne\" already exists for \"?keyOne\""));
+            assertThat(iae.getMessage(), is("multiple values for optional key are not allowed, key \"?keyOne\" has values \"[keyOne_valueOne, keyOne_valueTwo]\""));
         }
     }
 
     @Test
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     public void shouldThrowExceptionForPut() {
-        // given
-        CaseInsensitiveRegexMultiMap multiMap = new CaseInsensitiveRegexMultiMap(new MockServerLogger(), true);
-        multiMap.put("?keyOne", "keyOne_valueOne");
-
         try {
-            multiMap.put("?keyOne", "keyOne_valueTwo");
+            new NottableStringMultiMap(new MockServerLogger(), true, KeyMatchStyle.defaultValue, "?keyOne", "keyOne_valueOne", "?keyOne", "keyOne_valueTwo");
 
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("multiple values for optional key are not allowed, value \"keyOne_valueOne\" already exists for \"?keyOne\""));
+            assertThat(iae.getMessage(), is("multiple values for optional key are not allowed, key \"?keyOne\" has values \"[keyOne_valueOne, keyOne_valueTwo]\""));
         }
     }
 

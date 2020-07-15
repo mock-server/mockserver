@@ -1,12 +1,12 @@
 package org.mockserver.collections.hashmap.optionalmatcher;
 
 import org.junit.Test;
-import org.mockserver.collections.CaseInsensitiveRegexHashMap;
+import org.mockserver.collections.NottableStringHashMap;
 import org.mockserver.model.NottableString;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockserver.collections.CaseInsensitiveRegexHashMap.hashMap;
+import static org.mockserver.collections.NottableStringHashMap.hashMap;
 import static org.mockserver.model.NottableOptionalString.optionalString;
 import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
@@ -19,7 +19,7 @@ public class CaseInsensitiveRegexHashMapTestOptionalContainsAll {
     @Test
     public void shouldContainAllSubSetMultipleKeyForOptionalKeys() {
         // given
-        CaseInsensitiveRegexHashMap matcher = hashMap(true,
+        NottableStringHashMap matcher = hashMap(true,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")},
             new NottableString[]{optionalString("keyThree"), string("keyThreeValue")}
@@ -45,7 +45,7 @@ public class CaseInsensitiveRegexHashMapTestOptionalContainsAll {
     @Test
     public void shouldContainAllSubSetMultipleKeyForOptionalKeysWithNottedValue() {
         // given
-        CaseInsensitiveRegexHashMap matcher = hashMap(true,
+        NottableStringHashMap matcher = hashMap(true,
             new NottableString[]{string("keyOne"), string("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")},
             new NottableString[]{optionalString("keyThree"), not("keyThreeValue")}
@@ -76,7 +76,7 @@ public class CaseInsensitiveRegexHashMapTestOptionalContainsAll {
     @Test
     public void shouldContainAllSubSetMultipleKeyForAllOptionalKeys() {
         // given
-        CaseInsensitiveRegexHashMap matcher = hashMap(true,
+        NottableStringHashMap matcher = hashMap(true,
             new NottableString[]{string("?keyOne"), string("keyOneValue")},
             new NottableString[]{string("?keyTwo"), string("keyTwoValue")},
             new NottableString[]{string("?keyThree"), string("keyThreeValue")}
@@ -128,7 +128,7 @@ public class CaseInsensitiveRegexHashMapTestOptionalContainsAll {
     @Test
     public void shouldContainAllSubSetMultipleKeyForAllOptionalEitherOr() {
         // given
-        CaseInsensitiveRegexHashMap matcher = hashMap(true,
+        NottableStringHashMap matcher = hashMap(true,
             new NottableString[]{string("?keyOne"), string("keyOneValue")},
             new NottableString[]{string("?keyTwo"), string("keyTwoValue")},
             new NottableString[]{string("keyOne|keyTwo"), string("key.*")}

@@ -9,10 +9,7 @@ import org.mockserver.matchers.BodyMatcher;
 import org.mockserver.matchers.JsonSchemaMatcher;
 import org.mockserver.matchers.StringToXmlDocumentParser;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.Parameter;
-import org.mockserver.model.ParameterStyle;
-import org.mockserver.model.Parameters;
+import org.mockserver.model.*;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.slf4j.event.Level;
 import org.w3c.dom.Document;
@@ -90,7 +87,7 @@ public class JsonSchemaBodyDecoder {
             }
             parameters
                 .getEntries()
-                .forEach(parameter -> objectNode.set(serialiseNottableString(parameter.getName()), toJsonObject(serialiseNottableString(parameter.getValues()))));
+                .forEach(parameter -> objectNode.set(serialiseNottableString(parameter.getName()), toJsonObject(NottableString.serialiseNottableStrings(parameter.getValues()))));
             bodyAsJson = objectNode.toPrettyString();
         }
         return bodyAsJson;

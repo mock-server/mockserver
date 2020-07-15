@@ -18,6 +18,9 @@ public class KeyToMultiValue extends ObjectWithJsonToString {
 
     @SuppressWarnings({"UseBulkOperation", "ManualArrayToCollectionCopy"})
     KeyToMultiValue(final NottableString name, final NottableString... values) {
+        if (name == null) {
+            throw new IllegalArgumentException("key must not be null");
+        }
         this.name = name;
         if (values == null || values.length == 0) {
             this.values = Collections.singletonList(string(".*"));

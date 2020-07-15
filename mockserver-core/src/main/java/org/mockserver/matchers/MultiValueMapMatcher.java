@@ -1,35 +1,38 @@
 package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
+import org.mockserver.collections.NottableStringMultiMap;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.KeyToMultiValue;
 import org.mockserver.model.KeysToMultiValues;
+
+import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
  */
 @SuppressWarnings("rawtypes")
-public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues> {
+public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues<? extends KeyToMultiValue, ? extends KeysToMultiValues>> {
     private static final String[] EXCLUDED_FIELDS = {"mockServerLogger"};
     private final MockServerLogger mockServerLogger;
-    private final CaseInsensitiveRegexMultiMap matcher;
+    private final NottableStringMultiMap matcher;
     private final KeysToMultiValues keysToMultiValues;
     private final boolean controlPlaneMatcher;
     private Boolean allKeysNotted;
     private Boolean allKeysOptional;
 
-    MultiValueMapMatcher(MockServerLogger mockServerLogger, KeysToMultiValues keysToMultiValues, boolean controlPlaneMatcher) {
+    MultiValueMapMatcher(MockServerLogger mockServerLogger, KeysToMultiValues<? extends KeyToMultiValue, ? extends KeysToMultiValues> keysToMultiValues, boolean controlPlaneMatcher) {
         this.mockServerLogger = mockServerLogger;
         this.keysToMultiValues = keysToMultiValues;
         this.controlPlaneMatcher = controlPlaneMatcher;
         if (keysToMultiValues != null) {
-            this.matcher = keysToMultiValues.toCaseInsensitiveRegexMultiMap(mockServerLogger, controlPlaneMatcher);
+            this.matcher = new NottableStringMultiMap(this.mockServerLogger, this.controlPlaneMatcher, keysToMultiValues.getKeyMatchStyle(), keysToMultiValues.getEntries());
         } else {
             this.matcher = null;
         }
     }
 
-    public boolean matches(final MatchDifference context, KeysToMultiValues matched) {
+    public boolean matches(final MatchDifference context, KeysToMultiValues<? extends KeyToMultiValue, ? extends KeysToMultiValues> matched) {
         boolean result;
 
         if (matcher == null || matcher.isEmpty()) {
@@ -43,7 +46,7 @@ public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues> {
             }
             result = allKeysNotted || allKeysOptional;
         } else {
-            result = matched.toCaseInsensitiveRegexMultiMap(mockServerLogger, controlPlaneMatcher).containsAll(matcher, context != null ? context.getLogCorrelationId() : null);
+            result = new NottableStringMultiMap(mockServerLogger, controlPlaneMatcher, matched.getKeyMatchStyle(), matched.getEntries()).containsAll(matcher, context != null ? context.getLogCorrelationId() : null);
         }
 
         if (!result && context != null) {

@@ -1,14 +1,14 @@
 package org.mockserver.collections.multimap.schemamatcher;
 
 import org.junit.Test;
-import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
+import org.mockserver.collections.NottableStringMultiMap;
 import org.mockserver.model.KeyMatchStyle;
 import org.mockserver.model.NottableString;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.collections.CaseInsensitiveRegexMultiMap.multiMap;
+import static org.mockserver.collections.NottableStringMultiMap.multiMap;
 import static org.mockserver.model.NottableSchemaString.schemaString;
 import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
@@ -30,7 +30,7 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
     @Test
     public void shouldContainAllExactMatchSingleKeyAndSingleValueForSchemaKey() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new NottableString[]{schemaString(stringLengthSchema), string("keyOne_valueOne")}
@@ -70,7 +70,7 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
     @Test
     public void shouldContainAllExactMatchSingleKeyAndSingleValueForSchemaValue() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyOne"), schemaString(stringLengthSchema)}
@@ -110,7 +110,7 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
     @Test
     public void shouldContainAllExactMatchSingleKeyAndSingleValueForSchemaKeyAndValue() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new NottableString[]{schemaString(stringLengthSchema), schemaString(stringLengthSchema)}
@@ -178,7 +178,7 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
     @Test
     public void shouldContainAllSubSetSingleKeyAndSingleValueForSchemaKey() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new NottableString[]{schemaString(stringLengthSchema), string("keyOne_valueOne")},
@@ -219,7 +219,7 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
     @Test
     public void shouldContainAllSubSetSingleKeyAndSingleValueForSchemaValue() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyOne"), schemaString(stringLengthSchema)},
@@ -260,7 +260,7 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
     @Test
     public void shouldContainAllSubSetSingleKeyAndSingleValueForSchemaKeyAndValue() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new NottableString[]{schemaString(stringLengthSchema), schemaString(stringLengthSchema)},
@@ -329,7 +329,7 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
     @Test
     public void shouldContainAllExactMatchSingleKeyAndMultipleValuesForSchemaKey() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new NottableString[]{schemaString(stringLengthSchema), string("keyOne_valueOne")},
@@ -406,7 +406,7 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
     @Test
     public void shouldContainAllExactMatchSingleKeyAndMultipleValuesForSchemaValue() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new NottableString[]{string("keyOne"), schemaString(stringLengthSchema)},
@@ -483,7 +483,7 @@ public class CaseInsensitiveRegexMultiMapTestSchemaContainsAll {
     @Test
     public void shouldContainAllExactMatchSingleKeyAndMultipleValuesForSchemaKeyAndValue() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new NottableString[]{schemaString(stringLengthSchema), schemaString(stringLengthSchema)},

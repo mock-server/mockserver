@@ -1,13 +1,13 @@
 package org.mockserver.collections.hashmap.schemamatcher;
 
 import org.junit.Test;
-import org.mockserver.collections.CaseInsensitiveRegexHashMap;
+import org.mockserver.collections.NottableStringHashMap;
 import org.mockserver.model.NottableString;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.collections.CaseInsensitiveRegexHashMap.hashMap;
+import static org.mockserver.collections.NottableStringHashMap.hashMap;
 import static org.mockserver.model.NottableSchemaString.schemaString;
 import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
@@ -29,7 +29,7 @@ public class CaseInsensitiveRegexHashMapTestSchemaContainsAll {
     @Test
     public void shouldContainAllExactMatchSingleKeyAndSingleValueForSchemaKey() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new NottableString[]{schemaString(stringLengthSchema), string("keyOne_valueOne")}
         );
 
@@ -59,7 +59,7 @@ public class CaseInsensitiveRegexHashMapTestSchemaContainsAll {
     @Test
     public void shouldContainAllExactMatchSingleKeyAndSingleValueForSchemaValue() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new NottableString[]{string("keyOne"), schemaString(stringLengthSchema)}
         );
 
@@ -89,7 +89,7 @@ public class CaseInsensitiveRegexHashMapTestSchemaContainsAll {
     @Test
     public void shouldContainAllExactMatchSingleKeyAndSingleValueForSchemaKeyAndValue() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new NottableString[]{schemaString(stringLengthSchema), schemaString(stringLengthSchema)}
         );
 
@@ -139,7 +139,7 @@ public class CaseInsensitiveRegexHashMapTestSchemaContainsAll {
     @Test
     public void shouldContainAllSubSetSingleKeyAndSingleValueForSchemaKey() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new NottableString[]{schemaString(stringLengthSchema), string("keyOne_valueOne")},
             new NottableString[]{schemaString(emailPatternSchema), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         );
@@ -170,7 +170,7 @@ public class CaseInsensitiveRegexHashMapTestSchemaContainsAll {
     @Test
     public void shouldContainAllSubSetSingleKeyAndSingleValueForSchemaValue() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new NottableString[]{string("keyOne"), schemaString(stringLengthSchema)},
             new NottableString[]{string("keyTwo"), schemaString(emailPatternSchema)}
         );
@@ -201,7 +201,7 @@ public class CaseInsensitiveRegexHashMapTestSchemaContainsAll {
     @Test
     public void shouldContainAllSubSetSingleKeyAndSingleValueForSchemaKeyAndValue() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new NottableString[]{schemaString(stringLengthSchema), schemaString(stringLengthSchema)},
             new NottableString[]{schemaString(emailPatternSchema), schemaString(emailPatternSchema)}
         );

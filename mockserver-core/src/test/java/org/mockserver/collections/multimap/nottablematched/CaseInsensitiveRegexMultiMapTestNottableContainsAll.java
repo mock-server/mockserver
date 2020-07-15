@@ -1,13 +1,13 @@
 package org.mockserver.collections.multimap.nottablematched;
 
 import org.junit.Test;
-import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
+import org.mockserver.collections.NottableStringMultiMap;
 import org.mockserver.model.KeyMatchStyle;
 import org.mockserver.model.NottableString;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockserver.collections.CaseInsensitiveRegexMultiMap.multiMap;
+import static org.mockserver.collections.NottableStringMultiMap.multiMap;
 import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
 
@@ -19,10 +19,10 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldContainAllExactMatchSingleKeyAndSingleValueForNottedKey() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
-            new String[]{"keyOne", "keyOne_valueOne"}
+            new String[][]{new String[]{"keyOne", "keyOne_valueOne"}}
         );
 
         // then
@@ -36,10 +36,10 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldContainAllExactMatchSingleKeyAndSingleValueForNottedValue() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
-            new String[]{"keyOne", "keyOne_valueOne"}
+            new String[][]{new String[]{"keyOne", "keyOne_valueOne"}}
         );
 
         // then
@@ -53,10 +53,10 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldContainAllExactMatchSingleKeyAndSingleValueForNottedKeyAndValue() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
-            new String[]{"keyOne", "keyOne_valueOne"}
+            new String[][]{new String[]{"keyOne", "keyOne_valueOne"}}
         );
 
         // then
@@ -70,7 +70,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldContainAllSubSetSingleKeyAndSingleValueForNottedKey() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new String[]{"keyOne", "keyOne_valueOne"},
@@ -89,7 +89,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldContainAllSubSetSingleKeyAndSingleValueForNottedValue() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new String[]{"keyOne", "keyOne_valueOne"},
@@ -108,7 +108,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldContainAllSubSetSingleKeyAndSingleValueForNottedKeyAndValue() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new String[]{"keyOne", "keyOne_valueOne"},
@@ -127,10 +127,10 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldContainAllExactMatchSingleKeyAndMultipleValuesForNottedKey() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
-            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
+            new String[][]{new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}}
         );
 
         // then
@@ -144,10 +144,10 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldContainAllExactMatchSingleKeyAndMultipleValuesForNottedValue() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
-            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
+            new String[][]{new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}}
         );
 
         // then
@@ -171,10 +171,10 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldContainAllExactMatchSingleKeyAndMultipleValuesForNottedKeyAndValue() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
-            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
+            new String[][]{new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}}
         );
 
         // then
@@ -198,7 +198,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldContainAllSubSetSingleKeyAndMultipleValuesForNottedKey() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new String[]{"keyOne", "keyOne_valueOne"},
@@ -217,7 +217,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldContainAllSubSetSingleKeyAndMultipleValuesForNottedValue() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new String[]{"keyOne", "keyOne_valueOne"},
@@ -246,7 +246,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldContainAllSubSetSingleKeyAndMultipleValuesForNottedKeyAndValue() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new String[]{"keyOne", "keyOne_valueOne"},
@@ -275,7 +275,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldContainAllExactMatchMultipleKeyAndMultipleValuesForNottedKey() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new String[]{"keyOne", "keyOne_valueOne"},
@@ -306,7 +306,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldContainAllExactMatchMultipleKeyAndMultipleValuesForNottedValue() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new String[]{"keyOne", "keyOne_valueOne"},
@@ -361,7 +361,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldContainAllExactMatchMultipleKeyAndMultipleValuesForNottedKeyAndValue() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new String[]{"keyOne", "keyOne_valueOne"},
@@ -416,7 +416,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldContainAllSubSetMultipleKeyAndMultipleValuesForNottedKey() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new String[]{"keyOne", "keyOne_valueOne"},
@@ -448,7 +448,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldContainAllSubSetMultipleKeyAndMultipleValuesForNottedValue() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new String[]{"keyOne", "keyOne_valueOne"},
@@ -504,7 +504,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldContainAllSubSetMultipleKeyAndMultipleValuesForNottedKeyAndValue() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new String[]{"keyOne", "keyOne_valueOne"},
@@ -598,10 +598,10 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldNotContainAllNotMatchSingleKeySingleEntry() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
-            new String[]{"keyOne", "keyOne_valueOne"}
+            new String[][]{new String[]{"keyOne", "keyOne_valueOne"}}
         );
 
         // then
@@ -615,10 +615,10 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldNotContainAllNotMatchSingleValueSingleEntry() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
-            new String[]{"keyOne", "keyOne_valueOne"}
+            new String[][]{new String[]{"keyOne", "keyOne_valueOne"}}
         );
 
         // then
@@ -632,7 +632,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldNotContainAllNotMatchSingleKeyMultipleEntries() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new String[]{"keyOne", "keyOne_valueOne"},
@@ -651,7 +651,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldNotContainAllNotMatchSingleValueMultipleEntries() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new String[]{"keyOne", "keyOne_valueOne"},
@@ -675,7 +675,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldNotContainAllNotMatchMultipleKeysMultipleEntries() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new String[]{"keyOne", "keyOne_valueOne"},
@@ -701,7 +701,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldNotContainAllNotMatchMultipleKeysAndValuesMultipleEntries() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new String[]{"keyOne", "keyOne_valueOne"},
@@ -721,7 +721,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     @Test
     public void shouldNotContainAllNotMatchMultipleValuesMultipleEntries() {
         // given
-        CaseInsensitiveRegexMultiMap multiMap = multiMap(
+        NottableStringMultiMap multiMap = multiMap(
             true,
             KeyMatchStyle.SUB_SET,
             new String[]{"keyOne", "keyOne_valueOne"},

@@ -1,12 +1,12 @@
 package org.mockserver.collections.hashmap.nottablematched;
 
 import org.junit.Test;
-import org.mockserver.collections.CaseInsensitiveRegexHashMap;
+import org.mockserver.collections.NottableStringHashMap;
 import org.mockserver.model.NottableString;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockserver.collections.CaseInsensitiveRegexHashMap.hashMap;
+import static org.mockserver.collections.NottableStringHashMap.hashMap;
 import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
 
@@ -18,7 +18,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
     @Test
     public void shouldContainAllExactMatchSingleKeyAndSingleValueForNottedKey() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"}
         );
 
@@ -31,7 +31,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
     @Test
     public void shouldContainAllExactMatchSingleKeyAndSingleValueForNottedValue() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"}
         );
 
@@ -44,7 +44,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
     @Test
     public void shouldContainAllExactMatchSingleKeyAndSingleValueForNottedKeyAndValue() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"}
         );
 
@@ -57,7 +57,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
     @Test
     public void shouldContainAllSubSetSingleKeyAndSingleValueForNottedKey() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"},
             new String[]{"keyThree", "keyThreeValue"}
@@ -72,7 +72,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
     @Test
     public void shouldContainAllSubSetSingleKeyAndSingleValueForNottedValue() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"},
             new String[]{"keyThree", "keyThreeValue"}
@@ -87,7 +87,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
     @Test
     public void shouldContainAllSubSetSingleKeyAndSingleValueForNottedKeyAndValue() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"},
             new String[]{"keyThree", "keyThreeValue"}
@@ -102,7 +102,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
     @Test
     public void shouldContainAllExactMatchMultipleKeyAndMultipleValuesForNottedKey() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"}
         );
@@ -125,7 +125,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
     @Test
     public void shouldContainAllExactMatchMultipleKeyAndMultipleValuesForNottedValue() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"}
         );
@@ -164,7 +164,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
     @Test
     public void shouldContainAllExactMatchMultipleKeyAndMultipleValuesForNottedKeyAndValue() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"}
         );
@@ -203,7 +203,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
     @Test
     public void shouldContainAllSubSetMultipleKeyAndMultipleValuesForNottedKey() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"},
             new String[]{"keyThree", "keyThreeValue"}
@@ -227,7 +227,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
     @Test
     public void shouldContainAllSubSetMultipleKeyAndMultipleValuesForNottedValue() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"},
             new String[]{"keyThree", "keyThreeValue"}
@@ -267,7 +267,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
     @Test
     public void shouldContainAllSubSetMultipleKeyAndMultipleValuesForNottedKeyAndValue() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"},
             new String[]{"keyThree", "keyThreeValue"}
@@ -333,7 +333,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
     @Test
     public void shouldNotContainAllNotMatchSingleKeySingleEntry() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"}
         );
 
@@ -346,7 +346,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
     @Test
     public void shouldNotContainAllNotMatchSingleValueSingleEntry() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"}
         );
 
@@ -359,7 +359,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
     @Test
     public void shouldNotContainAllNotMatchSingleKeyMultipleEntries() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"},
             new String[]{"keyThree", "keyThreeValue"}
@@ -374,7 +374,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
     @Test
     public void shouldNotContainAllNotMatchSingleValueMultipleEntries() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"},
             new String[]{"keyThree", "keyThreeValue"}
@@ -389,7 +389,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
     @Test
     public void shouldNotContainAllNotMatchMultipleKeysMultipleEntries() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"},
             new String[]{"keyThree", "keyThreeValue"}
@@ -405,7 +405,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
     @Test
     public void shouldNotContainAllNotMatchMultipleValuesMultipleEntries() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
+        NottableStringHashMap hashMap = hashMap(
             true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"},
             new String[]{"keyThree", "keyThreeValue"}

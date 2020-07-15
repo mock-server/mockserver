@@ -6,6 +6,7 @@ import com.google.common.collect.Multimap;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.RegexStringMatcher;
+import org.mockserver.model.KeyAndValue;
 import org.mockserver.model.NottableString;
 
 import java.util.*;
@@ -18,52 +19,91 @@ import static org.mockserver.model.NottableString.string;
 import static org.slf4j.event.Level.TRACE;
 
 /**
- * Map that uses case insensitive regex expression matching for keys and values
- *
  * @author jamesdbloom
  */
-public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, NottableString> implements Map<NottableString, NottableString> {
+public class NottableStringHashMap {
 
+    private final Map<NottableString, NottableString> backingMap = new LinkedHashMap<>();
     private final RegexStringMatcher regexStringMatcher;
     private final MockServerLogger mockServerLogger;
     private boolean noOptionals = true;
 
-    public CaseInsensitiveRegexHashMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher) {
+    public NottableStringHashMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher) {
         this.mockServerLogger = mockServerLogger;
         regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
     }
 
-    @VisibleForTesting
-    public static CaseInsensitiveRegexHashMap hashMap(boolean controlPlaneMatcher, String[]... keyAndValues) {
-        CaseInsensitiveRegexHashMap hashMap = new CaseInsensitiveRegexHashMap(new MockServerLogger(), controlPlaneMatcher);
-        for (String[] keyAndValue : keyAndValues) {
-            if (keyAndValue.length >= 2) {
-                hashMap.put(keyAndValue[0], keyAndValue[1]);
-            }
+    public NottableStringHashMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher, List<? extends KeyAndValue> entries) {
+        this.mockServerLogger = mockServerLogger;
+        regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
+        for (KeyAndValue keyToMultiValue : entries) {
+            put(keyToMultiValue.getName(), keyToMultiValue.getValue());
         }
-        return hashMap;
     }
 
     @VisibleForTesting
-    public static CaseInsensitiveRegexHashMap hashMap(boolean controlPlaneMatcher, NottableString[]... keyAndValues) {
-        CaseInsensitiveRegexHashMap hashMap = new CaseInsensitiveRegexHashMap(new MockServerLogger(), controlPlaneMatcher);
-        for (NottableString[] keyAndValue : keyAndValues) {
+    public NottableStringHashMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher, String... keyAndValues) {
+        this.mockServerLogger = mockServerLogger;
+        regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
+        for (int i = 0; i < keyAndValues.length - 1; i += 2) {
+            put(string(keyAndValues[i]), string(keyAndValues[i + 1]));
+        }
+    }
+
+    @VisibleForTesting
+    public NottableStringHashMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher, NottableString... keyAndValues) {
+        this.mockServerLogger = mockServerLogger;
+        regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
+        for (int i = 0; i < keyAndValues.length - 1; i += 2) {
+            put(keyAndValues[i], keyAndValues[i + 1]);
+        }
+    }
+
+    // TODO(jamesdbloom) remove once tests are cleaned up
+    @VisibleForTesting
+    public NottableStringHashMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher, String[]... keyAndValues) {
+        this.mockServerLogger = mockServerLogger;
+        regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
+        for (String[] keyAndValue : keyAndValues) {
             if (keyAndValue.length >= 2) {
-                hashMap.put(keyAndValue[0], keyAndValue[1]);
+                put(string(keyAndValue[0]), string(keyAndValue[1]));
             }
         }
-        return hashMap;
+    }
+
+    // TODO(jamesdbloom) remove once tests are cleaned up
+    @VisibleForTesting
+    public NottableStringHashMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher, NottableString[]... keyAndValues) {
+        this.mockServerLogger = mockServerLogger;
+        regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
+        for (NottableString[] keyAndValue : keyAndValues) {
+            if (keyAndValue.length >= 2) {
+                put(keyAndValue[0], keyAndValue[1]);
+            }
+        }
+    }
+
+    // TODO(jamesdbloom) remove once tests are cleaned up
+    @VisibleForTesting
+    public static NottableStringHashMap hashMap(boolean controlPlaneMatcher, String[]... keyAndValues) {
+        return new NottableStringHashMap(new MockServerLogger(), controlPlaneMatcher, keyAndValues);
+    }
+
+    // TODO(jamesdbloom) remove once tests are cleaned up
+    @VisibleForTesting
+    public static NottableStringHashMap hashMap(boolean controlPlaneMatcher, NottableString[]... keyAndValues) {
+        return new NottableStringHashMap(new MockServerLogger(), controlPlaneMatcher, keyAndValues);
     }
 
     public boolean isNoOptionals() {
         return noOptionals;
     }
 
-    public boolean containsAll(CaseInsensitiveRegexHashMap matcher) {
+    public boolean containsAll(NottableStringHashMap matcher) {
         return containsAll(matcher, null);
     }
 
-    public boolean containsAll(CaseInsensitiveRegexHashMap matcher, String logCorrelationId) {
+    public boolean containsAll(NottableStringHashMap matcher, String logCorrelationId) {
 
         List<ImmutableEntry> matchedEntries = entryList();
         Multimap<Integer, List<ImmutableEntry>> allMatchedSubSets
@@ -80,7 +120,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
             );
         }
 
-        if (isEmpty() && matcher.allKeysNotted()) {
+        if (backingMap.isEmpty() && matcher.allKeysNotted()) {
 
             return true;
 
@@ -191,7 +231,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
     }
 
     public boolean allKeysNotted() {
-        for (NottableString key : keySet()) {
+        for (NottableString key : backingMap.keySet()) {
             if (!key.isNot()) {
                 return false;
             }
@@ -200,7 +240,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
     }
 
     public boolean allKeysOptional() {
-        for (NottableString key : keySet()) {
+        for (NottableString key : backingMap.keySet()) {
             if (!key.isOptional()) {
                 return false;
             }
@@ -208,109 +248,21 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
         return true;
     }
 
-    public synchronized boolean containsKeyValue(String key, String value) {
-        return containsKeyValue(string(key), string(value));
+    public boolean isEmpty() {
+        return backingMap.isEmpty();
     }
 
-    public synchronized boolean containsKeyValue(NottableString key, NottableString value) {
-        boolean result = false;
-
-        for (Entry<NottableString, NottableString> matcherEntry : entrySet()) {
-            if (regexStringMatcher.matches(value, matcherEntry.getValue(), true)
-                && regexStringMatcher.matches(key, matcherEntry.getKey(), true)) {
-                result = true;
-                break;
-            }
-        }
-
-        return result;
-    }
-
-    @Override
-    public synchronized boolean containsKey(Object key) {
-        boolean result = false;
-
-        if (key instanceof NottableString) {
-            for (NottableString keyToCompare : keySet()) {
-                if (regexStringMatcher.matches(((NottableString) key), keyToCompare, true)) {
-                    result = true;
-                    break;
-                }
-            }
-        } else if (key instanceof String) {
-            result = containsKey(string((String) key));
-        }
-
-        return result;
-    }
-
-    @Override
-    public synchronized boolean containsValue(Object value) {
-        boolean result = false;
-
-        if (value instanceof NottableString) {
-            for (Entry<NottableString, NottableString> entry : entrySet()) {
-                if (regexStringMatcher.matches((NottableString) value, entry.getValue(), true)) {
-                    return true;
-                }
-            }
-        } else if (value instanceof String) {
-            result = containsValue(string((String) value));
-        }
-
-        return result;
-    }
-
-    @Override
-    public synchronized NottableString get(Object key) {
-        if (key instanceof NottableString) {
-            for (Entry<NottableString, NottableString> entry : entrySet()) {
-                if (regexStringMatcher.matches((NottableString) key, entry.getKey(), true)) {
-                    return super.get(entry.getKey());
-                }
-            }
-        } else if (key instanceof String) {
-            return get(string((String) key));
-        }
-        return null;
-    }
-
-    @Override
-    public synchronized NottableString put(NottableString key, NottableString value) {
-        if (key == null) {
-            throw new IllegalArgumentException("key must not be null");
-        }
-        if (value == null) {
-            throw new IllegalArgumentException("value must not be null");
-        }
+    private void put(NottableString key, NottableString value) {
         if (key.isOptional()) {
             noOptionals = false;
         }
-        return super.put(key, value);
+        backingMap.put(key, value != null ? value : string(""));
     }
 
-    public synchronized NottableString put(String key, String value) {
-        return super.put(string(key), string(value));
-    }
-
-    @Override
-    public synchronized NottableString remove(Object key) {
-        if (key instanceof NottableString) {
-            for (Entry<NottableString, NottableString> entry : entrySet()) {
-                if (regexStringMatcher.matches((NottableString) key, entry.getKey(), true)) {
-                    return super.remove(entry.getKey());
-                }
-            }
-        } else if (key instanceof String) {
-            return remove(string((String) key));
-        }
-        return null;
-    }
-
-    public synchronized List<ImmutableEntry> entryList() {
-        if (!isEmpty()) {
+    private List<ImmutableEntry> entryList() {
+        if (!backingMap.isEmpty()) {
             List<ImmutableEntry> entrySet = new ArrayList<>();
-            for (Entry<NottableString, NottableString> entry : entrySet()) {
+            for (Map.Entry<NottableString, NottableString> entry : backingMap.entrySet()) {
                 entrySet.add(entry(regexStringMatcher, entry.getKey(), entry.getValue()));
             }
             return entrySet;
