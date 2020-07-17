@@ -34,11 +34,12 @@ public class LogEntry implements EventTranslator<LogEntry> {
     private int hashCode;
     private String id;
     private String correlationId;
+    private Integer port;
     private Level logLevel = Level.INFO;
     public static final DateFormat LOG_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     private long epochTime = TimeService.currentTimeMillis();
     private String timestamp;
-    private LogEntry.LogMessageType type;
+    private LogMessageType type;
     private RequestDefinition[] httpRequests;
     private RequestDefinition[] httpUpdatedRequests;
     private HttpResponse httpResponse;
@@ -75,6 +76,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
         id = null;
         logLevel = Level.INFO;
         correlationId = null;
+        port = null;
         epochTime = -1;
         timestamp = null;
         type = null;
@@ -120,11 +122,11 @@ public class LogEntry implements EventTranslator<LogEntry> {
         return timestamp;
     }
 
-    public LogEntry.LogMessageType getType() {
+    public LogMessageType getType() {
         return type;
     }
 
-    public LogEntry setType(LogEntry.LogMessageType type) {
+    public LogEntry setType(LogMessageType type) {
         this.type = type;
         return this;
     }
@@ -136,6 +138,15 @@ public class LogEntry implements EventTranslator<LogEntry> {
     public LogEntry setCorrelationId(String correlationId) {
         this.correlationId = correlationId;
         return this;
+    }
+
+    public LogEntry setPort(Integer port) {
+        this.port = port;
+        return this;
+    }
+
+    public Integer getPort() {
+        return port;
     }
 
     @JsonIgnore
@@ -168,8 +179,8 @@ public class LogEntry implements EventTranslator<LogEntry> {
             return true;
         }
         if (httpRequests == null || httpRequests.length == 0) {
-                return true;
-            }
+            return true;
+        }
         for (RequestDefinition httpRequest : httpRequests) {
             if (matcher.matches(httpRequest.cloneWithLogCorrelationId())) {
                 return true;
@@ -412,6 +423,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
             .setLogLevel(getLogLevel())
             .setEpochTime(getEpochTime())
             .setCorrelationId(getCorrelationId())
+            .setPort(getPort())
             .setHttpRequests(getHttpRequests())
             .setHttpResponse(getHttpResponse())
             .setHttpError(getHttpError())
@@ -432,6 +444,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
             .setLogLevel(getLogLevel())
             .setEpochTime(getEpochTime())
             .setCorrelationId(getCorrelationId())
+            .setPort(getPort())
             .setHttpRequests(getHttpRequests())
             .setHttpResponse(getHttpResponse())
             .setHttpError(getHttpError())

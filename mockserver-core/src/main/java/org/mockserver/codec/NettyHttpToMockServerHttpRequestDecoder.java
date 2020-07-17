@@ -15,8 +15,8 @@ public class NettyHttpToMockServerHttpRequestDecoder extends MessageToMessageDec
 
     private final FullHttpRequestToMockServerHttpRequest fullHttpRequestToMockServerRequest;
 
-    public NettyHttpToMockServerHttpRequestDecoder(MockServerLogger mockServerLogger, boolean isSecure) {
-        fullHttpRequestToMockServerRequest = new FullHttpRequestToMockServerHttpRequest(mockServerLogger, isSecure);
+    public NettyHttpToMockServerHttpRequestDecoder(MockServerLogger mockServerLogger, boolean isSecure, Integer port) {
+        fullHttpRequestToMockServerRequest = new FullHttpRequestToMockServerHttpRequest(mockServerLogger, isSecure, port);
     }
 
     @Override

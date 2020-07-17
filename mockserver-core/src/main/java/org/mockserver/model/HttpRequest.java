@@ -18,11 +18,13 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.NottableSchemaString.schemaString;
 import static org.mockserver.model.NottableString.string;
+import static org.mockserver.model.SocketAddress.Scheme.HTTP;
+import static org.mockserver.model.SocketAddress.Scheme.HTTPS;
 
 /**
  * @author jamesdbloom
  */
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({"rawtypes", "UnusedReturnValue"})
 public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRequest, Body> {
     private int hashCode;
     private NottableString method = string("");
@@ -64,12 +66,12 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
-     * Match on whether the request was made over SSL (i.e. HTTPS)
+     * Match on whether the request was made over TLS or SSL (i.e. HTTPS)
      *
-     * @param isSsl true if the request was made with SSL
+     * @param isSecure true if the request was made with TLS or SSL
      */
-    public HttpRequest withSecure(Boolean isSsl) {
-        this.secure = isSsl;
+    public HttpRequest withSecure(Boolean isSecure) {
+        this.secure = isSecure;
         this.hashCode = 0;
         return this;
     }
@@ -103,6 +105,50 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
             .withHost(host)
             .withPort(port)
             .withScheme(scheme);
+        this.hashCode = 0;
+        return this;
+    }
+
+    /**
+     * Specify remote address by attempting to derive it from the host header and / or the specified port
+     *
+     * @param host the remote host or ip to send request to
+     * @param port the remote port to send request to
+     */
+    public HttpRequest withSocketAddress(String host, Integer port) {
+        withSocketAddress(secure, host, port);
+        this.hashCode = 0;
+        return this;
+    }
+
+    /**
+     * Specify remote address by attempting to derive it from the host header
+     */
+    public HttpRequest withSocketAddressFromHostHeader() {
+        withSocketAddress(secure, getFirstHeader("host"), null);
+        this.hashCode = 0;
+        return this;
+    }
+
+    /**
+     * Specify remote address by attempting to derive it from the host header and / or the specified port
+     *
+     * @param isSecure true if the request was made with TLS or SSL
+     * @param host     the remote host or ip to send request to
+     * @param port     the remote port to send request to
+     */
+    public HttpRequest withSocketAddress(Boolean isSecure, String host, Integer port) {
+        if (isNotBlank(host)) {
+            String[] hostParts = host.split(":");
+            boolean secure = Boolean.TRUE.equals(isSecure);
+            if (hostParts.length > 1) {
+                withSocketAddress(hostParts[0], port != null ? port : Integer.parseInt(hostParts[1]), secure ? HTTPS : HTTP);
+            } else if (secure) {
+                withSocketAddress(host, port != null ? port : 443, HTTPS);
+            } else {
+                withSocketAddress(host, port != null ? port : 80, HTTP);
+            }
+        }
         this.hashCode = 0;
         return this;
     }

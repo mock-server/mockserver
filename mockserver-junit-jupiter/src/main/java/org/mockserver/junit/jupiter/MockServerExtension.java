@@ -4,7 +4,7 @@ import org.junit.jupiter.api.extension.*;
 import org.junit.platform.commons.support.AnnotationSupport;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.ClientAndServer;
-import org.mockserver.socket.PortFactory;
+import org.mockserver.scheduler.Scheduler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +52,7 @@ public class MockServerExtension implements ParameterResolver, BeforeAllCallback
         if (perTestSuite) {
             if (perTestSuiteClient == null) {
                 perTestSuiteClient = ClientAndServer.startClientAndServer(ports);
-                Runtime.getRuntime().addShutdownHook(new Thread(() -> perTestSuiteClient.stop()));
+                Runtime.getRuntime().addShutdownHook(new Scheduler.SchedulerThreadFactory("MockServer Test Extension ShutdownHook").newThread(() -> perTestSuiteClient.stop()));
             }
             return perTestSuiteClient;
         }

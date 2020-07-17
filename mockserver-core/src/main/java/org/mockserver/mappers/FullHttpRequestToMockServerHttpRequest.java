@@ -5,9 +5,9 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import org.mockserver.codec.BodyDecoderEncoder;
+import org.mockserver.codec.ExpandedParameterDecoder;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.codec.ExpandedParameterDecoder;
 import org.mockserver.model.Cookies;
 import org.mockserver.model.Headers;
 import org.mockserver.model.HttpRequest;
@@ -27,14 +27,16 @@ public class FullHttpRequestToMockServerHttpRequest {
 
     private final MockServerLogger mockServerLogger;
     private final BodyDecoderEncoder bodyDecoderEncoder;
-    private final boolean isSecure;
     private final ExpandedParameterDecoder formParameterParser;
+    private final boolean isSecure;
+    private final Integer port;
 
-    public FullHttpRequestToMockServerHttpRequest(MockServerLogger mockServerLogger, boolean isSecure) {
+    public FullHttpRequestToMockServerHttpRequest(MockServerLogger mockServerLogger, boolean isSecure, Integer port) {
         this.mockServerLogger = mockServerLogger;
         this.bodyDecoderEncoder = new BodyDecoderEncoder();
-        this.isSecure = isSecure;
         formParameterParser = new ExpandedParameterDecoder(mockServerLogger);
+        this.isSecure = isSecure;
+        this.port = port;
     }
 
     public HttpRequest mapFullHttpRequestToMockServerRequest(FullHttpRequest fullHttpRequest) {
@@ -48,6 +50,7 @@ public class FullHttpRequestToMockServerHttpRequest {
                 setHeaders(httpRequest, fullHttpRequest);
                 setCookies(httpRequest, fullHttpRequest);
                 setBody(httpRequest, fullHttpRequest);
+                setSocketAddress(httpRequest, isSecure, port, fullHttpRequest);
 
                 httpRequest.withKeepAlive(isKeepAlive(fullHttpRequest));
                 httpRequest.withSecure(isSecure);
@@ -64,6 +67,9 @@ public class FullHttpRequestToMockServerHttpRequest {
         return httpRequest;
     }
 
+    private void setSocketAddress(HttpRequest httpRequest, boolean isSecure, Integer port, FullHttpRequest fullHttpRequest) {
+        httpRequest.withSocketAddress(isSecure, fullHttpRequest.headers().get("host"), port);
+    }
 
     private void setMethod(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {
         httpRequest.withMethod(fullHttpResponse.method().name());

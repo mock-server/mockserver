@@ -25,6 +25,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
+import static org.mockserver.mock.HttpState.setPort;
 import static org.mockserver.model.HttpRequest.request;
 import static org.slf4j.event.Level.*;
 
@@ -167,7 +168,7 @@ public abstract class LifeCycle implements Stoppable {
             try {
                 final CompletableFuture<Channel> channelOpened = new CompletableFuture<>();
                 channelFutures.add(channelOpened);
-                new Thread(() -> {
+                new Scheduler.SchedulerThreadFactory("MockServer thread for port: " + portToBind, false).newThread(() -> {
                     try {
                         InetSocketAddress inetSocketAddress;
                         if (isBlank(localBoundIP)) {
@@ -189,7 +190,7 @@ public abstract class LifeCycle implements Stoppable {
                     } catch (Exception e) {
                         channelOpened.completeExceptionally(new RuntimeException("Exception while binding MockServer to port " + portToBind, e));
                     }
-                }, "MockServer thread for port: " + portToBind).start();
+                }).start();
 
                 actualPortBindings.add(((InetSocketAddress) channelOpened.get(maxFutureTimeout(), MILLISECONDS).localAddress()).getPort());
             } catch (Exception e) {
@@ -201,6 +202,7 @@ public abstract class LifeCycle implements Stoppable {
 
     protected void startedServer(List<Integer> ports) {
         final String message = "started on port" + (ports.size() == 1 ? ": " + ports.get(0) : "s: " + ports);
+        setPort(ports);
         if (MockServerLogger.isEnabled(INFO)) {
             mockServerLogger.logEvent(
                 new LogEntry()

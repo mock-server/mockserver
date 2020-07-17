@@ -52,7 +52,7 @@ public class BinaryProxyIntegrationTest {
                 ClientAndServer proxyClientAndServer = startClientAndServer("127.0.0.1", serverSocketPort);
 
                 CompletableFuture<Socket> socketFuture = new CompletableFuture<>();
-                new Thread(() -> {
+                new Scheduler.SchedulerThreadFactory("MockServer Test " + this.getClass().getSimpleName()).newThread(() -> {
                     try {
                         socketFuture.complete(serverSocket.accept());
                     } catch (Throwable throwable) {
@@ -125,7 +125,7 @@ public class BinaryProxyIntegrationTest {
                 ClientAndServer proxyClientAndServer = startClientAndServer("127.0.0.1", serverSocket.getLocalPort());
 
                 CompletableFuture<Socket> socketFuture = new CompletableFuture<>();
-                new Thread(() -> {
+                new Scheduler.SchedulerThreadFactory("MockServer Test " + this.getClass().getSimpleName()).newThread(() -> {
                     try {
                         socketFuture.complete(serverSocket.accept());
                     } catch (Throwable throwable) {

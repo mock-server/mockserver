@@ -7,10 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- port is now printed at start of each log line
 
 ### Changed
 - performance improvements of expectation sorting and comparisons
 - reduced creation of objects at WARN log level
+- ensured all threads are daemon threads (except port binding thread)
 
 ### Fixed
 - fixed field name error when serializing ParameterBody 

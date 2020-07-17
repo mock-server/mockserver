@@ -16,6 +16,8 @@ import java.util.function.BiConsumer;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.log.model.LogEntry.LogMessageType.WARN;
+import static org.mockserver.mock.HttpState.getPort;
+import static org.mockserver.mock.HttpState.setPort;
 
 /**
  * @author jamesdbloom
@@ -33,17 +35,24 @@ public class Scheduler {
     public static class SchedulerThreadFactory implements ThreadFactory {
 
         private final String name;
+        private final boolean daemon;
         private static int threadInitNumber;
 
         public SchedulerThreadFactory(String name) {
             this.name = name;
+            this.daemon = true;
+        }
+
+        public SchedulerThreadFactory(String name, boolean daemon) {
+            this.name = name;
+            this.daemon = daemon;
         }
 
         @Override
         @SuppressWarnings("NullableProblems")
         public Thread newThread(Runnable runnable) {
             Thread thread = new Thread(runnable, "MockServer-" + name + threadInitNumber++);
-            thread.setDaemon(true);
+            thread.setDaemon(daemon);
             return thread;
         }
     }
@@ -71,7 +80,8 @@ public class Scheduler {
         }
     }
 
-    private void run(Runnable command) {
+    private void run(Runnable command, Integer port) {
+        setPort(port);
         try {
             command.run();
         } catch (Throwable throwable) {
@@ -89,16 +99,17 @@ public class Scheduler {
 
     public void schedule(Runnable command, boolean synchronous, Delay... delays) {
         Delay delay = addDelays(delays);
+        Integer port = getPort();
         if (this.synchronous || synchronous) {
             if (delay != null) {
                 delay.applyDelay();
             }
-            run(command);
+            run(command, port);
         } else {
             if (delay != null) {
-                scheduler.schedule(() -> run(command), delay.getValue(), delay.getTimeUnit());
+                scheduler.schedule(() -> run(command, port), delay.getValue(), delay.getTimeUnit());
             } else {
-                run(command);
+                run(command, port);
             }
         }
     }
@@ -126,14 +137,16 @@ public class Scheduler {
     }
 
     public void submit(Runnable command, boolean synchronous) {
+        Integer port = getPort();
         if (this.synchronous || synchronous) {
-            run(command);
+            run(command, port);
         } else {
-            scheduler.submit(() -> run(command));
+            scheduler.submit(() -> run(command, port));
         }
     }
 
     public void submit(HttpForwardActionResult future, Runnable command, boolean synchronous) {
+        Integer port = getPort();
         if (future != null) {
             if (this.synchronous || synchronous) {
                 try {
@@ -143,14 +156,26 @@ public class Scheduler {
                 } catch (InterruptedException | ExecutionException ex) {
                     future.getHttpResponse().completeExceptionally(ex);
                 }
-                run(command);
+                run(command, port);
             } else {
-                future.getHttpResponse().whenCompleteAsync((httpResponse, throwable) -> command.run(), scheduler);
+                future.getHttpResponse().whenCompleteAsync((httpResponse, throwable) -> {
+                    if (throwable != null && MockServerLogger.isEnabled(Level.INFO)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setType(WARN)
+                                .setLogLevel(Level.INFO)
+                                .setMessageFormat(throwable.getMessage())
+                                .setThrowable(throwable)
+                        );
+                    }
+                    run(command, port);
+                }, scheduler);
             }
         }
     }
 
     public void submit(CompletableFuture<BinaryMessage> future, Runnable command, boolean synchronous) {
+        Integer port = getPort();
         if (future != null) {
             if (this.synchronous || synchronous) {
                 try {
@@ -160,7 +185,7 @@ public class Scheduler {
                 } catch (InterruptedException | ExecutionException ex) {
                     future.completeExceptionally(ex);
                 }
-                run(command);
+                run(command, port);
             } else {
                 future.whenCompleteAsync((httpResponse, throwable) -> command.run(), scheduler);
             }

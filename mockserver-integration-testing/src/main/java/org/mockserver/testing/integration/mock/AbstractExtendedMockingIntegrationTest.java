@@ -63,6 +63,7 @@ import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.Parameter.schemaParam;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.RegexBody.regex;
+import static org.mockserver.model.SocketAddress.Scheme.HTTP;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.StringBody.subString;
 import static org.mockserver.model.XPathBody.xpath;

@@ -36,7 +36,7 @@ public class MockServerLogger {
                     (!disableSystemOut() ? "handlers=org.mockserver.logging.StandardOutConsoleHandler" + NEW_LINE : "") +
                     "org.mockserver.logging.StandardOutConsoleHandler.level=ALL" + NEW_LINE +
                     "org.mockserver.logging.StandardOutConsoleHandler.formatter=java.util.logging.SimpleFormatter" + NEW_LINE +
-                    "java.util.logging.SimpleFormatter.format=%1$tF %1$tT " + Version.getVersion() + " %3$s  %4$s  %5$s %6$s%n" + NEW_LINE +
+                    "java.util.logging.SimpleFormatter.format=%1$tF %1$tT " + Version.getVersion() + " %4$s %5$s %6$s%n" + NEW_LINE +
                     "org.mockserver.level=" + javaLoggerLogLevel() + NEW_LINE +
                     "io.netty.handler.ssl.SslHandler.level=WARNING";
                 LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(loggingConfiguration.getBytes(UTF_8)));
@@ -99,22 +99,31 @@ public class MockServerLogger {
                 isNotBlank(logEntry.getMessage())) {
                 switch (logEntry.getLogLevel()) {
                     case ERROR:
-                        logger.error(logEntry.getMessage(), logEntry.getThrowable());
+                        logger.error(portInformation(logEntry) + logEntry.getMessage(), logEntry.getThrowable());
                         break;
                     case WARN:
-                        logger.warn(logEntry.getMessage(), logEntry.getThrowable());
+                        logger.warn(portInformation(logEntry) + logEntry.getMessage(), logEntry.getThrowable());
                         break;
                     case INFO:
-                        logger.info(logEntry.getMessage(), logEntry.getThrowable());
+                        logger.info(portInformation(logEntry) + logEntry.getMessage(), logEntry.getThrowable());
                         break;
                     case DEBUG:
-                        logger.debug(logEntry.getMessage(), logEntry.getThrowable());
+                        logger.debug(portInformation(logEntry) + logEntry.getMessage(), logEntry.getThrowable());
                         break;
                     case TRACE:
-                        logger.trace(logEntry.getMessage(), logEntry.getThrowable());
+                        logger.trace(portInformation(logEntry) + logEntry.getMessage(), logEntry.getThrowable());
                         break;
                 }
             }
+        }
+    }
+
+    private static String portInformation(LogEntry logEntry) {
+        Integer port = logEntry.getPort();
+        if (port != null) {
+            return port + " ";
+        } else {
+            return "";
         }
     }
 

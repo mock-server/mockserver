@@ -60,7 +60,7 @@ public class EchoServer implements Stoppable {
         registeredClients = new ArrayList<>();
         websocketChannels = new ArrayList<>();
         textWebSocketFrames = new ArrayList<>();
-        new Thread(() -> {
+        new Scheduler.SchedulerThreadFactory("MockServer EchoServer Thread").newThread(() -> {
             bossGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-bossEventLoop"));
             workerGroup = new NioEventLoopGroup(5, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-workerEventLoop"));
             new ServerBootstrap().group(bossGroup, workerGroup)
@@ -78,7 +78,7 @@ public class EchoServer implements Stoppable {
                         boundPort.completeExceptionally(future.cause());
                     }
                 });
-        }, "MockServer EchoServer Thread").start();
+        }).start();
 
         try {
             // wait for proxy to start all channels

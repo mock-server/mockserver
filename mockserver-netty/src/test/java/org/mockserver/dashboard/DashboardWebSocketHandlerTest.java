@@ -1265,7 +1265,7 @@ public class DashboardWebSocketHandlerTest {
         MockServerLogger mockServerLogger = new MockServerLogger(DashboardWebSocketHandlerTest.class);
         Scheduler scheduler = new Scheduler(mockServerLogger, true);
         HttpState httpState = new HttpState(mockServerLogger, scheduler);
-        new Thread(() -> {
+        new Scheduler.SchedulerThreadFactory("MockServer Test " + this.getClass().getSimpleName()).newThread(() -> {
             MockServerEventLog mockServerEventLog = httpState.getMockServerLog();
             for (LogEntry logEntry : logEntries) {
                 mockServerEventLog.add(logEntry);

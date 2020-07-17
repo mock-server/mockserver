@@ -40,6 +40,7 @@ import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.log.model.LogEntryMessages.VERIFICATION_REQUESTS_MESSAGE_FORMAT;
 import static org.mockserver.log.model.LogEntryMessages.VERIFICATION_REQUEST_SEQUENCES_MESSAGE_FORMAT;
 import static org.mockserver.logging.MockServerLogger.writeToSystemOut;
+import static org.mockserver.mock.HttpState.getPort;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
@@ -83,6 +84,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     }
 
     public void add(LogEntry logEntry) {
+        logEntry.setPort(getPort());
         if (asynchronousEventProcessing) {
             if (!disruptor.getRingBuffer().tryPublishEvent(logEntry)) {
                 // if ring buffer full only write WARN and ERROR to logger

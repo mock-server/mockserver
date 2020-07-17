@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.serialization.model.HttpResponseDTO;
 
@@ -151,7 +152,7 @@ public class JavaScriptTemplateEngineTest {
         if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
             Thread[] threads = new Thread[3];
             for (int i = 0; i < threads.length; i++) {
-                threads[i] = new Thread(() -> assertThat(javaScriptTemplateEngine.executeTemplate(template, request,
+                threads[i] = new Scheduler.SchedulerThreadFactory("MockServer Test " + this.getClass().getSimpleName()).newThread(() -> assertThat(javaScriptTemplateEngine.executeTemplate(template, request,
                     HttpResponseDTO.class
                 ), is(
                     response()

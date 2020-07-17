@@ -37,6 +37,7 @@ public class HttpServletRequestToMockServerHttpRequestDecoder {
         setBody(request, httpServletRequest);
         setHeaders(request, httpServletRequest);
         setCookies(request, httpServletRequest);
+        setSocketAddress(request, httpServletRequest);
 
         request.withKeepAlive(isKeepAlive(httpServletRequest));
         request.withSecure(httpServletRequest.isSecure());
@@ -88,6 +89,10 @@ public class HttpServletRequestToMockServerHttpRequestDecoder {
             }
         }
         httpRequest.withCookies(cookies);
+    }
+
+    private void setSocketAddress(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
+        httpRequest.withSocketAddress(httpServletRequest.isSecure(), httpServletRequest.getHeader("host"), httpServletRequest.getLocalPort());
     }
 
     public boolean isKeepAlive(HttpServletRequest httpServletRequest) {

@@ -54,7 +54,7 @@ public class MatcherBuilderTest {
         String bodyTestString = "UTF_8 characters: Bj\u00F6rk";
 
         // given
-        FullHttpRequestToMockServerHttpRequest fullHttpRequestToMockServerRequest = new FullHttpRequestToMockServerHttpRequest(mockServerLogger, false);
+        FullHttpRequestToMockServerHttpRequest fullHttpRequestToMockServerRequest = new FullHttpRequestToMockServerHttpRequest(mockServerLogger, false, null);
         FullHttpRequest fullHttpRequest = new DefaultFullHttpRequest(
             HTTP_1_1,
             GET,
@@ -83,7 +83,7 @@ public class MatcherBuilderTest {
         String bodyTestString = "UTF_8 characters: Bj\u00F6rk";
 
         // given
-        FullHttpRequestToMockServerHttpRequest fullHttpRequestToMockServerRequest = new FullHttpRequestToMockServerHttpRequest(mockServerLogger, false);
+        FullHttpRequestToMockServerHttpRequest fullHttpRequestToMockServerRequest = new FullHttpRequestToMockServerHttpRequest(mockServerLogger, false, null);
         FullHttpRequest fullHttpRequest = new DefaultFullHttpRequest(
             HTTP_1_1,
             GET,

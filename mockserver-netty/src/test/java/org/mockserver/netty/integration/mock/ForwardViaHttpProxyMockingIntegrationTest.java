@@ -4,6 +4,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.HttpTemplate;
 import org.mockserver.netty.MockServer;
@@ -12,6 +13,7 @@ import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwa
 import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.Times.once;

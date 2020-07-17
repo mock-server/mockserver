@@ -54,6 +54,7 @@ public class HttpState {
 
     public static final String LOG_SEPARATOR = NEW_LINE + "------------------------------------" + NEW_LINE;
     public static final String PATH_PREFIX = "/mockserver";
+    private static final ThreadLocal<Integer> LOCAL_PORT = new ThreadLocal<>();
     private final String uniqueLoopPreventionHeaderValue = "MockServer_" + UUIDService.getUUID();
     private final MockServerEventLog mockServerLog;
     private final Scheduler scheduler;
@@ -74,6 +75,33 @@ public class HttpState {
     private LogEntrySerializer logEntrySerializer;
     private MemoryMonitoring memoryMonitoring;
     private OpenAPIConverter openAPIConverter;
+
+    public static void setPort(final HttpRequest request) {
+        if (request != null && request.getSocketAddress() != null) {
+            setPort(request.getSocketAddress().getPort());
+            request.withSocketAddress(null);
+        }
+    }
+
+    public static void setPort(final Integer port) {
+        LOCAL_PORT.set(port);
+    }
+
+    public static void setPort(final Integer... port) {
+        if (port != null && port.length > 0) {
+            setPort(port[0]);
+        }
+    }
+
+    public static void setPort(final List<Integer> port) {
+        if (port != null && port.size() > 0) {
+            setPort(port.get(0));
+        }
+    }
+
+    public static Integer getPort() {
+        return LOCAL_PORT.get();
+    }
 
     public HttpState(MockServerLogger mockServerLogger, Scheduler scheduler) {
         this.mockServerLogger = mockServerLogger.setHttpStateHandler(this);
@@ -144,7 +172,7 @@ public class HttpState {
             );
         }
         System.gc();
-        new Thread(() -> {
+        new Scheduler.SchedulerThreadFactory("MockServer Memory Metrics").newThread(() -> {
             try {
                 SECONDS.sleep(10);
                 memoryMonitoring.logMemoryMetrics();
@@ -477,6 +505,7 @@ public class HttpState {
     public boolean handle(HttpRequest request, ResponseWriter responseWriter, boolean warDeployment) {
 
         request.withLogCorrelationId(UUIDService.getUUID());
+        setPort(request);
 
         if (MockServerLogger.isEnabled(Level.TRACE)) {
             mockServerLogger.logEvent(

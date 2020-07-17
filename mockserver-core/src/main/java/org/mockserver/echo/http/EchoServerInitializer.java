@@ -72,7 +72,7 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
 
         pipeline.addLast(new WebSocketServerHandler(mockServerLogger, registeredClients, websocketChannels, textWebSocketFrames, secure));
 
-        pipeline.addLast(new MockServerHttpServerCodec(mockServerLogger, secure));
+        pipeline.addLast(new MockServerHttpServerCodec(mockServerLogger, secure, channel.localAddress().getPort()));
 
         if (!secure && error == EchoServer.Error.CLOSE_CONNECTION) {
             throw new IllegalArgumentException("Error type CLOSE_CONNECTION is not supported in non-secure mode");

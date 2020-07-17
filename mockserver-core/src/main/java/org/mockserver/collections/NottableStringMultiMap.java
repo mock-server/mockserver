@@ -136,6 +136,10 @@ public class NottableStringMultiMap extends ObjectWithReflectiveEqualsHashCodeTo
         return new NottableStringMultiMap(new MockServerLogger(), controlPlaneMatcher, keyMatchStyle, keyAndValues);
     }
 
+    public KeyMatchStyle getKeyMatchStyle() {
+        return keyMatchStyle;
+    }
+
     public boolean isNoOptionals() {
         return noOptionals;
     }
@@ -295,6 +299,7 @@ public class NottableStringMultiMap extends ObjectWithReflectiveEqualsHashCodeTo
                         }
                         return false;
                     }
+
                     for (NottableString matchedValue : matchedValuesForKey) {
                         boolean matchesValue = false;
                         for (NottableString matcherValue : matcherValuesForKey) {
@@ -309,12 +314,23 @@ public class NottableStringMultiMap extends ObjectWithReflectiveEqualsHashCodeTo
                                     new LogEntry()
                                         .setLogLevel(TRACE)
                                         .setCorrelationId(logCorrelationId)
-                                        .setMessageFormat("multimap{}containsAll matching by key found non-matching value{}for{}")
-                                        .setArguments(this, matchedValue, matcherValuesForKey)
+                                        .setMessageFormat("multimap{}containsAll matching by key{}found matched value{}does not-match one value in{}")
+                                        .setArguments(this, matcherKey, matchedValue, matcherValuesForKey)
 
                                 );
                             }
                             return false;
+                        } else {
+                            if (MockServerLogger.isEnabled(TRACE)) {
+                                mockServerLogger.logEvent(
+                                    new LogEntry()
+                                        .setLogLevel(TRACE)
+                                        .setCorrelationId(logCorrelationId)
+                                        .setMessageFormat("multimap{}containsAll matching by key{}found matched value{}matches one value in{}")
+                                        .setArguments(this, matcherKey, matchedValue, matcherValuesForKey)
+
+                                );
+                            }
                         }
                     }
                 }
