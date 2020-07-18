@@ -277,13 +277,13 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
     public void shouldContainAllSubSetMultipleKeyForEmptyMap() {
         // given
         NottableStringHashMap hashMap = hashMap(true,
-            new NottableString[]{}
+            new NottableString[]{not("keyOne"), string("keyOneValue")},
+            new NottableString[]{not("keyTwo"), string("keyTwoValue")}
         );
 
         // then
         assertThat(hashMap.containsAll(hashMap(true,
-            new NottableString[]{not("keyOne"), string("keyOneValue")},
-            new NottableString[]{not("keyTwo"), string("keyTwoValue")}
+            new NottableString[]{}
         )), is(true));
     }
 

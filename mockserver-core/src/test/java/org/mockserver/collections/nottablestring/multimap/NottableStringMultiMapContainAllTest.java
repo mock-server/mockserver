@@ -50,24 +50,19 @@ public class NottableStringMultiMapContainAllTest {
     // - notted value in multi-value - DONE
     // - notted key and value - DONE
     // NOTTED SUBSET
-    // - notted value in multi-value - TODO
-    // - notted key and value - TODO
+    // - subset notted value in multi-value - DONE
+    // - subset notted key and value - DONE
     // NOTTED NOT MATCHING
     // - non matching notted keys - DONE
     // - non matching notted values - DONE
     // - non matching notted value in multi-value - DONE
     // - non matching notted keys and values - DONE
     // OPTIONAL
-    // - optional keys - TODO
-    // - optional values - TODO
-    // - optional key and value - TODO
+    // - optional keys - DONE
     // OPTIONAL SUBSET
-    // - optional key and multi-value - TODO
-    // - optional key and value - TODO
+    // - optional key and value
     // OPTIONAL NOT MATCHING
-    // - non matching optional keys - TODO
-    // - non matching optional values - TODO
-    // - non matching optional keys and values - TODO
+    // - non matching optional values - DONE
     // CONTROL PLANE - REGEX
     // - control plane regex keys - TODO
     // - control plane regex values - TODO
@@ -77,9 +72,13 @@ public class NottableStringMultiMapContainAllTest {
     // - control plane non matching regex values - TODO
     // - control plane non matching regex keys and values - TODO
 
+    // EMPTY
+
     @Test
     public void shouldContainAllEmpty() {
-        shouldPassScenariosSingleDirection(passScenario(new String[]{
+        // can't match empty in reverse
+        shouldPassScenariosSingleDirection(
+            passScenario(new String[]{
             }, new String[]{
                 "keyOne", "valueOne",
             }),
@@ -97,9 +96,12 @@ public class NottableStringMultiMapContainAllTest {
         );
     }
 
+    // IDENTICAL
+
     @Test
     public void shouldContainAllIdenticalKeysAndValues() {
-        shouldPassScenarios(passScenario(new String[]{
+        shouldPassScenarios(
+            passScenario(new String[]{
                 "keyOne", "valueOne",
             }, new String[]{
                 "keyOne", "valueOne",
@@ -125,7 +127,8 @@ public class NottableStringMultiMapContainAllTest {
 
     @Test
     public void shouldContainAllIdenticalKeysAndMultiValues() {
-        shouldPassScenarios(passScenario(new String[]{
+        shouldPassScenarios(
+            passScenario(new String[]{
                 "keyOne", "valueOne_One",
                 "keyOne", "valueOne_Two",
             }, new String[]{
@@ -161,9 +164,12 @@ public class NottableStringMultiMapContainAllTest {
         );
     }
 
+    // DIFFERENT CASE
+
     @Test
     public void shouldContainAllDifferentCaseKeys() {
-        shouldPassScenarios(passScenario(new String[]{
+        shouldPassScenarios(
+            passScenario(new String[]{
                 "KEYOne", "valueOne",
             }, new String[]{
                 "keyOne", "valueOne",
@@ -189,7 +195,8 @@ public class NottableStringMultiMapContainAllTest {
 
     @Test
     public void shouldContainAllDifferentCaseValues() {
-        shouldPassScenarios(passScenario(new String[]{
+        shouldPassScenarios(
+            passScenario(new String[]{
                 "keyOne", "valueONE",
             }, new String[]{
                 "keyOne", "valueOne",
@@ -215,7 +222,8 @@ public class NottableStringMultiMapContainAllTest {
 
     @Test
     public void shouldContainAllDifferentCaseKeysAndMultiValues() {
-        shouldPassScenarios(passScenario(new String[]{
+        shouldPassScenarios(
+            passScenario(new String[]{
                 "KEYOne", "valueOne_ONE",
                 "keyOne", "valueOne_Two",
             }, new String[]{
@@ -251,9 +259,13 @@ public class NottableStringMultiMapContainAllTest {
         );
     }
 
+    // SUBSET
+
     @Test
     public void shouldContainAllSubsetKeysAndValues() {
-        shouldPassScenariosSingleDirection(passScenario(new String[]{
+        // can't match subsets in reverse
+        shouldPassScenariosSingleDirection(
+            passScenario(new String[]{
             }, new String[]{
                 "keyOne", "valueOne",
             }),
@@ -276,7 +288,10 @@ public class NottableStringMultiMapContainAllTest {
 
     @Test
     public void shouldContainAllSubsetMultiValues() {
-        shouldPassScenariosSingleDirectionSubSetOnly(passScenario(new String[]{
+        // can't match subsets in reverse
+        // can't match multiple different values with matching key
+        shouldPassScenariosSingleDirectionSubSetMatchingOnly(
+            passScenario(new String[]{
                 "keyOne", "valueOne_One",
             }, new String[]{
                 "keyOne", "valueOne_One",
@@ -304,10 +319,39 @@ public class NottableStringMultiMapContainAllTest {
                 "keyThree", "valueThree_Two",
             })
         );
+        // can't match subsets in reverse
+        shouldPassScenariosSingleDirection(
+            passScenario(new String[]{
+                "keyOne", "valueOne_One",
+                "keyOne", "valueOne_Two",
+            }, new String[]{
+                "keyOne", "valueOne_One",
+                "keyOne", "valueOne_Two",
+                "keyTwo", "valueTwo_One",
+                "keyTwo", "valueTwo_Two",
+                "keyThree", "valueThree_One",
+                "keyThree", "valueThree_Two",
+            }),
+            passScenario(new String[]{
+                "keyOne", "valueOne_One",
+                "keyOne", "valueOne_Two",
+                "keyTwo", "valueTwo_One",
+                "keyTwo", "valueTwo_Two",
+            }, new String[]{
+                "keyOne", "valueOne_One",
+                "keyOne", "valueOne_Two",
+                "keyTwo", "valueTwo_One",
+                "keyTwo", "valueTwo_Two",
+                "keyThree", "valueThree_One",
+                "keyThree", "valueThree_Two",
+            })
+        );
     }
 
+    // NON MATCHING
+
     @Test
-    public void shouldContainAllNotMatchingKeys() {
+    public void shouldContainAllNonMatchingKeys() {
         shouldPassScenarios(
             failScenario(new String[]{
                 "notKeyOne", "valueOne",
@@ -334,7 +378,7 @@ public class NottableStringMultiMapContainAllTest {
     }
 
     @Test
-    public void shouldContainAllNotMatchingValues() {
+    public void shouldContainAllNonMatchingValues() {
         shouldPassScenarios(
             failScenario(new String[]{
                 "keyOne", "notValueOne",
@@ -361,7 +405,7 @@ public class NottableStringMultiMapContainAllTest {
     }
 
     @Test
-    public void shouldContainAllNotMatchingValueInMultiValues() {
+    public void shouldContainAllNonMatchingValueInMultiValues() {
         shouldPassScenarios(
             failScenario(new String[]{
                 "keyOne", "valueOne_One",
@@ -400,7 +444,7 @@ public class NottableStringMultiMapContainAllTest {
     }
 
     @Test
-    public void shouldContainAllNotMatchingKeysAndValues() {
+    public void shouldContainAllNonMatchingKeysAndValues() {
         shouldPassScenarios(
             failScenario(new String[]{
                 "notKeyOne", "notValueOne",
@@ -426,10 +470,13 @@ public class NottableStringMultiMapContainAllTest {
         );
     }
 
+    // REGEX
+
     @Test
     public void shouldContainAllIdenticalRegexKeys() {
-        // subset only as keys match multiple values
-        shouldPassScenariosSingleDirection(passScenario(new String[]{
+        // can't match regex in reverse (without control plane)
+        shouldPassScenariosSingleDirection(
+            passScenario(new String[]{
                 "key.*", "valueOne",
             }, new String[]{
                 "keyOne", "valueOne",
@@ -453,7 +500,9 @@ public class NottableStringMultiMapContainAllTest {
 
     @Test
     public void shouldContainAllIdenticalRegexValues() {
-        shouldPassScenariosSingleDirection(passScenario(new String[]{
+        // can't match regex in reverse (without control plane)
+        shouldPassScenariosSingleDirection(
+            passScenario(new String[]{
                 "keyOne", "value.*",
             }, new String[]{
                 "keyOne", "valueOne",
@@ -470,7 +519,9 @@ public class NottableStringMultiMapContainAllTest {
 
     @Test
     public void shouldContainAllIdenticalRegexKeysAndValues() {
-        shouldPassScenariosSingleDirection(passScenario(new String[]{
+        // can't match regex in reverse (without control plane)
+        shouldPassScenariosSingleDirection(
+            passScenario(new String[]{
                 "key.*", "value.*",
             }, new String[]{
                 "keyOne", "valueOne",
@@ -485,9 +536,13 @@ public class NottableStringMultiMapContainAllTest {
         );
     }
 
+    // REGEX SUBSET
+
     @Test
     public void shouldContainAllSubsetRegexKeysAndValues() {
-        shouldPassScenariosSingleDirection(passScenario(new String[]{
+        // can't match regex in reverse (without control plane)
+        shouldPassScenariosSingleDirection(
+            passScenario(new String[]{
                 "keyO.*", "valueO.*",
             }, new String[]{
                 "keyOne", "valueOne",
@@ -506,7 +561,9 @@ public class NottableStringMultiMapContainAllTest {
 
     @Test
     public void shouldContainAllSubsetRegexKeysAndMultiValues() {
-        shouldPassScenariosSingleDirection(passScenario(new String[]{
+        // can't match regex in reverse (without control plane)
+        shouldPassScenariosSingleDirection(
+            passScenario(new String[]{
                 "keyO.*", "valueO.*",
             }, new String[]{
                 "keyOne", "valueOne_One",
@@ -524,9 +581,12 @@ public class NottableStringMultiMapContainAllTest {
         );
     }
 
+    // REGEX NON MATCHING
+
     @Test
-    public void shouldContainAllNotMatchingRegexKeys() {
-        shouldPassScenariosSingleDirection(failScenario(new String[]{
+    public void shouldContainAllNonMatchingRegexKeys() {
+        shouldPassScenarios(
+            failScenario(new String[]{
                 "keyO[0-9]*", "valueOne",
             }, new String[]{
                 "keyOne", "valueOne",
@@ -551,8 +611,9 @@ public class NottableStringMultiMapContainAllTest {
     }
 
     @Test
-    public void shouldContainAllNotMatchingRegexValues() {
-        shouldPassScenariosSingleDirection(failScenario(new String[]{
+    public void shouldContainAllNonMatchingRegexValues() {
+        shouldPassScenarios(
+            failScenario(new String[]{
                 "keyOne", "value[0-9]*",
             }, new String[]{
                 "keyOne", "valueOne",
@@ -577,8 +638,9 @@ public class NottableStringMultiMapContainAllTest {
     }
 
     @Test
-    public void shouldContainAllNotMatchingRegexValueInMultiValues() {
-        shouldPassScenariosSingleDirection(failScenario(new String[]{
+    public void shouldContainAllNonMatchingRegexValueInMultiValues() {
+        shouldPassScenarios(
+            failScenario(new String[]{
                 "keyOne", "value[0-9]*",
                 "keyOne", "value[0-9]*",
             }, new String[]{
@@ -615,7 +677,7 @@ public class NottableStringMultiMapContainAllTest {
     }
 
     @Test
-    public void shouldContainAllNotMatchingRegexKeysAndValues() {
+    public void shouldContainAllNonMatchingRegexKeysAndValues() {
         shouldPassScenarios(
             failScenario(new String[]{
                 "key[0-9]*", "value[0-9]*",
@@ -641,44 +703,27 @@ public class NottableStringMultiMapContainAllTest {
         );
     }
 
+    // NOTTED
+
     @Test
     public void shouldContainAllNottedKeys() {
-        shouldPassScenarios(passScenario(new String[]{
+        shouldPassScenarios(
+            passScenario(new String[]{
                 "!notKeyOne", "valueOne",
             }, new String[]{
                 "keyOne", "valueOne",
             })
         );
-        // only single direction as regex
-        shouldPassScenariosSingleDirection(passScenario(new String[]{
+        // can't match regex in reverse (without control plane)
+        shouldPassScenariosSingleDirection(
+            passScenario(new String[]{
                 "!notKeyOne", "value.*",
                 "!notKeyTwo", "value.*",
             }, new String[]{
                 "keyOne", "valueOne",
                 "keyTwo", "valueTwo",
-            })
-        );
-        // subset only as keys match multiple values
-        shouldPassScenariosSubSetOnly(passScenario(new String[]{
-                "!notKeyOne", "valueOne",
-                "!notKeyTwo", "valueTwo",
-            }, new String[]{
-                "keyOne", "valueOne",
-                "keyTwo", "valueTwo",
-            })
-        );
-        shouldPassScenariosSingleDirectionMatchingKey(passScenario(new String[]{
-                "keyOne", "valueOne",
-                "!notKeyTwo", "valueTwo",
-                "keyThree", "valueThree",
-            }, new String[]{
-                "keyOne", "valueOne",
-                "keyTwo", "valueTwo",
-                "keyThree", "valueThree",
-            })
-        );
-        // only single direction as regex AND subset only as keys match multiple values
-        shouldPassScenariosSingleDirection(passScenario(new String[]{
+            }),
+            passScenario(new String[]{
                 "keyOne", "valueOne",
                 "!notKeyTwo", "value.*",
                 "keyThree", "valueThree",
@@ -688,12 +733,31 @@ public class NottableStringMultiMapContainAllTest {
                 "keyThree", "valueThree",
             })
         );
-
+        // can't match multiple different values with matching key
+        shouldPassScenariosSubSetOnly(
+            passScenario(new String[]{
+                "!notKeyOne", "valueOne",
+                "!notKeyTwo", "valueTwo",
+            }, new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+            }),
+            passScenario(new String[]{
+                "keyOne", "valueOne",
+                "!notKeyTwo", "valueTwo",
+                "keyThree", "valueThree",
+            }, new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+                "keyThree", "valueThree",
+            })
+        );
     }
 
     @Test
     public void shouldContainAllNottedValues() {
-        shouldPassScenarios(passScenario(new String[]{
+        shouldPassScenarios(
+            passScenario(new String[]{
                 "keyOne", "!notValueOne",
             }, new String[]{
                 "keyOne", "valueOne",
@@ -719,7 +783,8 @@ public class NottableStringMultiMapContainAllTest {
 
     @Test
     public void shouldContainAllNottedKeysAndMultiValues() {
-        shouldPassScenarios(passScenario(new String[]{
+        shouldPassScenarios(
+            passScenario(new String[]{
                 "keyOne", "!notValueOne_One",
                 "keyOne", "valueOne_Two",
             }, new String[]{
@@ -782,8 +847,92 @@ public class NottableStringMultiMapContainAllTest {
         );
     }
 
+    // NOTTED SUBSET
+
     @Test
-    public void shouldContainAllNotMatchingNottedKeys() {
+    public void shouldContainAllSubsetNottedKeysAndValues() {
+        // can't match subsets in reverse
+        // can't match multiple different values with matching key
+        shouldPassScenariosSingleDirectionSubSetMatchingOnly(
+            passScenario(new String[]{
+                "keyOne", "!notValueOne",
+            }, new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+            }),
+            passScenario(new String[]{
+                "!notKeyOne", "!notValueOne",
+            }, new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+            }),
+            passScenario(new String[]{
+                "keyOne", "!notValueOne",
+                "keyTwo", "!notValueTwo",
+            }, new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+                "keyThree", "valueThree",
+            }),
+            passScenario(new String[]{
+                "!notKeyOne", "!notValueOne",
+                "!notKeyTwo", "!notValueTwo",
+            }, new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+                "keyThree", "valueThree",
+            })
+        );
+    }
+
+    @Test
+    public void shouldContainAllSubsetNottedKeysAndMultiValues() {
+        // can't match subsets in reverse
+        // can't match multiple different values with matching key
+        shouldPassScenariosSingleDirectionSubSetMatchingOnly(
+            passScenario(new String[]{
+                "keyOne", "!notValueOne_One",
+            }, new String[]{
+                "keyOne", "valueOne_One",
+                "keyOne", "valueOne_Two",
+            }),
+            passScenario(new String[]{
+                "keyOne", "!notValueOne_One",
+                "keyTwo", "!notValueTwo_One",
+            }, new String[]{
+                "keyOne", "valueOne_One",
+                "keyOne", "valueOne_Two",
+                "keyTwo", "valueTwo_One",
+                "keyTwo", "valueTwo_Two",
+            }),
+            passScenario(new String[]{
+                "keyOne", "!notValueOne_One",
+                "keyOne", "!notValueOne_Two",
+            }, new String[]{
+                "keyOne", "valueOne_One",
+                "keyOne", "valueOne_Two",
+                "keyTwo", "valueTwo_One",
+                "keyTwo", "valueTwo_Two",
+            }),
+            passScenario(new String[]{
+                "keyOne", "valueOne_One",
+                "keyOne", "valueOne_Two",
+                "keyThree", "!notValueThree_One",
+            }, new String[]{
+                "keyOne", "valueOne_One",
+                "keyOne", "valueOne_Two",
+                "keyTwo", "valueTwo_One",
+                "keyTwo", "valueTwo_Two",
+                "keyThree", "valueThree_One",
+                "keyThree", "valueThree_Two",
+            })
+        );
+    }
+
+    // NOTTED NOT MATCHING
+
+    @Test
+    public void shouldContainAllNonMatchingNottedKeys() {
         shouldPassScenarios(
             failScenario(new String[]{
                 "!keyOne", "valueOne",
@@ -812,7 +961,7 @@ public class NottableStringMultiMapContainAllTest {
     }
 
     @Test
-    public void shouldContainAllNotMatchingNottedValues() {
+    public void shouldContainAllNonMatchingNottedValues() {
         shouldPassScenarios(
             failScenario(new String[]{
                 "keyOne", "!valueOne",
@@ -839,7 +988,8 @@ public class NottableStringMultiMapContainAllTest {
     }
 
     @Test
-    public void shouldContainAllNotMatchingNottedKeysAndMultiValues() {
+    public void shouldContainAllNonMatchingNottedKeysAndMultiValues() {
+        // can't match multiple different values with matching key
         shouldPassScenariosSubSetOnly(
             failScenario(new String[]{
                 "keyOne", "!valueOne_One",
@@ -878,7 +1028,7 @@ public class NottableStringMultiMapContainAllTest {
     }
 
     @Test
-    public void shouldContainAllNotMatchingNottedKeysAndValues() {
+    public void shouldContainAllNonMatchingNottedKeysAndValues() {
         shouldPassScenarios(
             failScenario(new String[]{
                 "!keyOne", "!valueOne",
@@ -900,6 +1050,180 @@ public class NottableStringMultiMapContainAllTest {
                 "keyOne", "valueOne",
                 "keyTwo", "valueTwo",
                 "keyThree", "valueThree",
+            })
+        );
+    }
+
+    // OPTIONAL
+
+    @Test
+    public void shouldContainAllOptionalKeys() {
+        shouldPassScenarios(
+            passScenario(new String[]{
+                "?keyOne", "valueOne",
+            }, new String[]{
+                "keyOne", "valueOne",
+            }),
+            passScenario(new String[]{
+                "?keyOne", "valueOne",
+            }, new String[]{
+            }),
+            passScenario(new String[]{
+                "?keyOne", "valueOne",
+                "?keyTwo", "valueTwo",
+            }, new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+            }),
+            passScenario(new String[]{
+                "?keyOne", "valueOne",
+                "?keyTwo", "valueTwo",
+            }, new String[]{
+                "keyOne", "valueOne",
+            }),
+            passScenario(new String[]{
+                "?keyOne", "valueOne",
+                "?keyTwo", "valueTwo",
+            }, new String[]{
+                "keyTwo", "valueTwo",
+            }),
+            passScenario(new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+                "?keyThree", "valueThree",
+            }, new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+                "keyThree", "valueThree",
+            }),
+            passScenario(new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+                "?keyThree", "valueThree",
+            }, new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+            })
+        );
+    }
+
+    // OPTIONAL SUBSET
+
+    @Test
+    public void shouldContainAllOptionalSubsetKeysAndValues() {
+        shouldPassScenarios(
+            passScenario(new String[]{
+                "?keyOne", "valueOne",
+            }, new String[]{
+                "?keyOne", "valueOne",
+            }),
+            passScenario(new String[]{
+                "?keyOne", "valueOne",
+            }, new String[]{
+                "keyOne", "valueOne",
+            }),
+            passScenario(new String[]{
+                "?keyOne", "valueOne",
+                "?keyTwo", "valueTwo",
+            }, new String[]{
+                "?keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+            }),
+            passScenario(new String[]{
+                "?keyOne", "valueOne",
+                "?keyTwo", "valueTwo",
+            }, new String[]{
+                "?keyOne", "valueOne",
+                "?keyTwo", "valueTwo",
+            })
+        );
+        shouldPassScenariosSingleDirection(
+            passScenario(new String[]{
+                "?keyOne", "valueOne",
+            }, new String[]{
+                "keyTwo", "valueTwo",
+            }),
+            passScenario(new String[]{
+                "?keyOne", "valueOne",
+                "?keyTwo", "valueTwo",
+            }, new String[]{
+                "keyTwo", "valueTwo",
+                "keyThree", "valueThree",
+            }),
+            passScenario(new String[]{
+                "?keyOne", "valueOne",
+                "?keyTwo", "valueTwo",
+            }, new String[]{
+                "keyOne", "valueOne",
+                "keyThree", "valueThree",
+            }),
+            passScenario(new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+                "?keyThree", "valueThree",
+            }, new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+                "keyFour", "valueFour",
+            })
+        );
+        // can't match subsets in reverse
+        shouldPassScenariosSingleDirection(
+            passScenario(new String[]{
+                "?keyOne", "valueOne",
+            }, new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+            }),
+            passScenario(new String[]{
+                "?keyOne", "valueOne",
+                "?keyTwo", "valueTwo",
+            }, new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+                "keyThree", "valueThree",
+            }),
+            passScenario(new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+                "?keyThree", "valueThree",
+            }, new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+                "keyThree", "valueThree",
+                "keyFour", "valueFour",
+            })
+        );
+    }
+
+    // OPTIONAL NOT MATCHING
+
+    @Test
+    public void shouldContainAllNonMatchingOptionalValues() {
+        shouldPassScenarios(
+            failScenario(new String[]{
+                "?keyOne", "valueOne",
+            }, new String[]{
+                "keyOne", "notValueOne",
+            }),
+            failScenario(new String[]{
+                "?keyOne", "valueOne",
+                "?keyTwo", "valueTwo",
+            }, new String[]{
+                "keyOne", "notValueOne",
+                "keyTwo", "notValueTwo",
+            }),
+            failScenario(new String[]{
+                "?keyOne", "valueOne",
+                "?keyTwo", "valueTwo",
+            }, new String[]{
+                "keyOne", "notValueOne",
+            }),
+            failScenario(new String[]{
+                "?keyOne", "valueOne",
+                "?keyTwo", "valueTwo",
+            }, new String[]{
+                "keyTwo", "notValueTwo",
             })
         );
     }
@@ -934,15 +1258,11 @@ public class NottableStringMultiMapContainAllTest {
         shouldPassScenarios(false, false, false, true, testScenarios);
     }
 
-    void shouldPassScenariosSingleDirectionMatchingKey(TestScenario... testScenarios) {
-        shouldPassScenarios(true, false, false, true, testScenarios);
-    }
-
     void shouldPassScenariosSubSetOnly(TestScenario... testScenarios) {
         shouldPassScenarios(true, true, false, false, testScenarios);
     }
 
-    void shouldPassScenariosSingleDirectionSubSetOnly(TestScenario... testScenarios) {
+    void shouldPassScenariosSingleDirectionSubSetMatchingOnly(TestScenario... testScenarios) {
         shouldPassScenarios(false, false, false, false, testScenarios);
     }
 

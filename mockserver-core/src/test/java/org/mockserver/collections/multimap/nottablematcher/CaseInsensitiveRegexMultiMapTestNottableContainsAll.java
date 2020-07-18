@@ -620,15 +620,14 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
         NottableStringMultiMap multiMap = multiMap(
             false,
             KeyMatchStyle.SUB_SET,
-            new NottableString[]{}
+            new NottableString[]{not("keyOne"), string("keyOneValue")},
+            new NottableString[]{not("keyTwo"), string("keyTwoValue")}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
             false,
-            KeyMatchStyle.SUB_SET,
-            new NottableString[]{not("keyOne"), string("keyOneValue")},
-            new NottableString[]{not("keyTwo"), string("keyTwoValue")}
+            KeyMatchStyle.SUB_SET, new NottableString[]{}
         )), is(true));
     }
 

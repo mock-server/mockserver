@@ -33,6 +33,14 @@ public class ImmutableEntry extends Pair<NottableString, NottableString> impleme
         this.value = value;
     }
 
+    public boolean isOptional() {
+        return getKey().isOptional();
+    }
+
+    public boolean isNotOptional() {
+        return !isOptional();
+    }
+
     @Override
     public NottableString getLeft() {
         return key;
