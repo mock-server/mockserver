@@ -41,7 +41,7 @@ public class HttpResponseDTOSerializer extends StdSerializer<HttpResponseDTO> {
                 jgen.writeObjectField("body", body);
             } else if (body instanceof BinaryBodyDTO) {
                 jgen.writeObjectField("body", body);
-            } else if (body instanceof LogEventBodyDTO) {
+            } else if (body instanceof LogEntryBodyDTO) {
                 jgen.writeObjectField("body", body);
             }
         }

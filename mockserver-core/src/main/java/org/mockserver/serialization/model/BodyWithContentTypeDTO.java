@@ -31,9 +31,9 @@ public abstract class BodyWithContentTypeDTO extends BodyDTO {
         } else if (body instanceof XmlBody) {
             XmlBody xmlBody = (XmlBody) body;
             result = new XmlBodyDTO(xmlBody, xmlBody.getNot());
-        } else if (body instanceof LogEventBody) {
-            LogEventBody logEventBody = (LogEventBody) body;
-            result = new LogEventBodyDTO(logEventBody);
+        } else if (body instanceof LogEntryBody) {
+            LogEntryBody logEventBody = (LogEntryBody) body;
+            result = new LogEntryBodyDTO(logEventBody);
         }
 
         if (result != null) {

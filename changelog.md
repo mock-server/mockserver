@@ -14,9 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - reduced creation of objects at WARN log level
 - ensured all threads are daemon threads (except port binding thread)
 - simplified and improve performance of matching for headers, query string parameters, path parameters, cookies and body parameters
+- only mark log events as deleted for log level of TRACE, DEBUG, or INFO so log can be view in UI
 
 ### Fixed
-- fixed field name error when serializing ParameterBody 
+- fixed field name error when serializing ParameterBody
+- error when log level DEBUG cleared log events were returned from the API 
 
 ## [5.11.0] - 2020-07-08
 

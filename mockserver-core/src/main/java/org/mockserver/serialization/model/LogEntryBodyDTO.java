@@ -1,16 +1,16 @@
 package org.mockserver.serialization.model;
 
 import org.mockserver.model.Body;
-import org.mockserver.model.LogEventBody;
+import org.mockserver.model.LogEntryBody;
 
 /**
  * @author jamesdbloom
  */
-public class LogEventBodyDTO extends BodyWithContentTypeDTO {
+public class LogEntryBodyDTO extends BodyWithContentTypeDTO {
 
     private final Object value;
 
-    public LogEventBodyDTO(LogEventBody logEventBody) {
+    public LogEntryBodyDTO(LogEntryBody logEventBody) {
         super(Body.Type.STRING, null, null);
         value = logEventBody.getValue();
     }
@@ -20,7 +20,7 @@ public class LogEventBodyDTO extends BodyWithContentTypeDTO {
     }
 
     @Override
-    public LogEventBody buildObject() {
-        return (LogEventBody) new LogEventBody(value).withOptional(getOptional());
+    public LogEntryBody buildObject() {
+        return (LogEntryBody) new LogEntryBody(value).withOptional(getOptional());
     }
 }

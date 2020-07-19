@@ -49,16 +49,20 @@ import static org.mockserver.model.HttpRequest.request;
 public class MockServerEventLog extends MockServerEventLogNotifier {
 
     private static final Logger logger = LoggerFactory.getLogger(MockServerEventLog.class);
+    private static final Predicate<LogEntry> allPredicate = input
+        -> true;
+    private static final Predicate<LogEntry> notDeletedPredicate = input
+        -> !input.isDeleted();
     private static final Predicate<LogEntry> requestLogPredicate = input
-        -> input.getType() == RECEIVED_REQUEST;
-    private static final Predicate<LogEntry> nonDeletedRequestLogPredicate = input
         -> !input.isDeleted() && input.getType() == RECEIVED_REQUEST;
     private static final Predicate<LogEntry> requestResponseLogPredicate = input
-        -> input.getType() == EXPECTATION_RESPONSE
-        || input.getType() == NO_MATCH_RESPONSE
-        || input.getType() == FORWARDED_REQUEST;
+        -> !input.isDeleted() && (
+        input.getType() == EXPECTATION_RESPONSE
+            || input.getType() == NO_MATCH_RESPONSE
+            || input.getType() == FORWARDED_REQUEST
+    );
     private static final Predicate<LogEntry> recordedExpectationLogPredicate = input
-        -> input.getType() == FORWARDED_REQUEST;
+        -> !input.isDeleted() && input.getType() == FORWARDED_REQUEST;
     private static final Function<LogEntry, RequestDefinition[]> logEntryToRequest = LogEntry::getHttpRequests;
     private static final Function<LogEntry, Expectation> logEntryToExpectation = LogEntry::getExpectation;
     private static final Function<LogEntry, LogEventRequestAndResponse> logEntryToHttpRequestAndHttpResponse =
@@ -179,7 +183,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
 
     public void clear(RequestDefinition requestDefinition) {
         CompletableFuture<String> future = new CompletableFuture<>();
-        final boolean markAsDeletedOnly = MockServerLogger.isEnabled(Level.DEBUG);
+        final boolean markAsDeletedOnly = MockServerLogger.isEnabled(Level.INFO);
         disruptor.publishEvent(new LogEntry()
             .setType(RUNNABLE)
             .setConsumer(() -> {
@@ -230,7 +234,15 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     public void retrieveMessageLogEntries(RequestDefinition requestDefinition, Consumer<List<LogEntry>> listConsumer) {
         retrieveLogEntries(
             requestDefinition,
-            logEntry -> true,
+            notDeletedPredicate,
+            (Stream<LogEntry> logEventStream) -> listConsumer.accept(logEventStream.filter(Objects::nonNull).collect(Collectors.toList()))
+        );
+    }
+
+    public void retrieveMessageLogEntriesIncludingDeleted(RequestDefinition requestDefinition, Consumer<List<LogEntry>> listConsumer) {
+        retrieveLogEntries(
+            requestDefinition,
+            allPredicate,
             (Stream<LogEntry> logEventStream) -> listConsumer.accept(logEventStream.filter(Objects::nonNull).collect(Collectors.toList()))
         );
     }
@@ -246,7 +258,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     public void retrieveRequests(RequestDefinition requestDefinition, Consumer<List<RequestDefinition>> listConsumer) {
         retrieveLogEntries(
             requestDefinition,
-            nonDeletedRequestLogPredicate,
+            requestLogPredicate,
             logEntryToRequest,
             logEventStream -> listConsumer.accept(
                 logEventStream
@@ -295,7 +307,6 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         disruptor.publishEvent(new LogEntry()
             .setType(RUNNABLE)
             .setConsumer(() -> {
-                RequestDefinition requestDefinitionMatcher = requestDefinition != null ? requestDefinition : request().withLogCorrelationId(UUIDService.getUUID());
                 HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(requestDefinition);
                 consumer.accept(this.eventLog
                     .stream()

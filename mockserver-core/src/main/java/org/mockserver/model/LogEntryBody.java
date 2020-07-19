@@ -5,11 +5,11 @@ import java.util.Objects;
 /**
  * @author jamesdbloom
  */
-public class LogEventBody extends BodyWithContentType<Object> {
+public class LogEntryBody extends BodyWithContentType<Object> {
     private int hashCode;
     private final Object value;
 
-    public LogEventBody(Object value) {
+    public LogEntryBody(Object value) {
         super(Type.LOG_EVENT, null);
         this.value = value;
     }
@@ -33,7 +33,7 @@ public class LogEventBody extends BodyWithContentType<Object> {
         if (!super.equals(o)) {
             return false;
         }
-        LogEventBody that = (LogEventBody) o;
+        LogEntryBody that = (LogEntryBody) o;
         return Objects.equals(value, that.value);
     }
 

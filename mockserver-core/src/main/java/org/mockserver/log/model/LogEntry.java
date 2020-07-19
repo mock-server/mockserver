@@ -349,26 +349,26 @@ public class LogEntry implements EventTranslator<LogEntry> {
                     return httpRequest
                         .shallowClone()
                         .withBody(
-                            new LogEventBody(OBJECT_MAPPER.readTree(body.toString()))
+                            new LogEntryBody(OBJECT_MAPPER.readTree(body.toString()))
                         );
                 } catch (Throwable throwable) {
                     return httpRequest
                         .shallowClone()
                         .withBody(
-                            new LogEventBody(body.toString())
+                            new LogEntryBody(body.toString())
                         );
                 }
             } else if (body instanceof ParameterBody) {
                 return httpRequest
                     .shallowClone()
                     .withBody(
-                        new LogEventBody(body.toString())
+                        new LogEntryBody(body.toString())
                     );
-            } else if (body instanceof BodyWithContentType && !(body instanceof LogEventBody)) {
+            } else if (body instanceof BodyWithContentType && !(body instanceof LogEntryBody)) {
                 return httpRequest
                     .shallowClone()
                     .withBody(
-                        new LogEventBody(body.toString())
+                        new LogEntryBody(body.toString())
                     );
             } else {
                 return httpRequest;
@@ -386,20 +386,20 @@ public class LogEntry implements EventTranslator<LogEntry> {
                     return httpResponse
                         .shallowClone()
                         .withBody(
-                            new LogEventBody(OBJECT_MAPPER.readTree(body.toString()))
+                            new LogEntryBody(OBJECT_MAPPER.readTree(body.toString()))
                         );
                 } catch (Throwable throwable) {
                     return httpResponse
                         .shallowClone()
                         .withBody(
-                            new LogEventBody(body.toString())
+                            new LogEntryBody(body.toString())
                         );
                 }
-            } else if (body != null && !(body instanceof LogEventBody)) {
+            } else if (body != null && !(body instanceof LogEntryBody)) {
                 return httpResponse
                     .shallowClone()
                     .withBody(
-                        new LogEventBody(body.toString())
+                        new LogEntryBody(body.toString())
                     );
             } else {
                 return httpResponse;

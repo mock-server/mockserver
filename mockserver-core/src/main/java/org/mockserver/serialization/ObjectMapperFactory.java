@@ -202,8 +202,8 @@ public class ObjectMapperFactory {
             new XmlSchemaBodyDTOSerializer(),
             new XPathBodySerializer(),
             new XPathBodyDTOSerializer(),
-            new LogEventBodySerializer(),
-            new LogEventBodyDTOSerializer(),
+            new LogEntryBodySerializer(),
+            new LogEntryBodyDTOSerializer(),
             // condition
             new VerificationTimesDTOSerializer(),
             new VerificationTimesSerializer(),

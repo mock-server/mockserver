@@ -15,6 +15,7 @@ import org.mockserver.scheduler.Scheduler;
 import org.slf4j.event.Level;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -52,6 +53,18 @@ public class MockServerEventLogTest {
     private List<LogEntry> retrieveMessageLogEntries(RequestDefinition httpRequest) {
         CompletableFuture<List<LogEntry>> future = new CompletableFuture<>();
         mockServerEventLog.retrieveMessageLogEntries(httpRequest, future::complete);
+        try {
+            return future.get(60, SECONDS);
+        } catch (Exception e) {
+            fail(e.getMessage());
+            return null;
+        }
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private List<LogEntry> retrieveMessageLogEntriesIncludingDeleted(RequestDefinition httpRequest) {
+        CompletableFuture<List<LogEntry>> future = new CompletableFuture<>();
+        mockServerEventLog.retrieveMessageLogEntriesIncludingDeleted(httpRequest, future::complete);
         try {
             return future.get(60, SECONDS);
         } catch (Exception e) {
@@ -541,7 +554,7 @@ public class MockServerEventLogTest {
             // then
             assertThat(retrieveRequests(null), empty());
             assertThat(retrieveRecordedExpectations(null), empty());
-            List<LogEntry> actual = retrieveMessageLogEntries(null);
+            List<LogEntry> actual = Objects.requireNonNull(retrieveMessageLogEntriesIncludingDeleted(null));
             assertThat(actual.get(0), is(new LogEntry()
                 .setDeleted(true)
                 .setLogLevel(INFO)
@@ -587,24 +600,7 @@ public class MockServerEventLogTest {
                 .setMessageFormat("cleared logs that match:{}")
                 .setArguments("{}")));
             assertThat(retrieveRequestLogEntries(), empty());
-            assertThat(retrieveRequestResponseMessageLogEntries(null), contains(
-                new LogEntry()
-                    .setDeleted(true)
-                    .setLogLevel(INFO)
-                    .setType(NO_MATCH_RESPONSE)
-                    .setHttpRequest(request("request_one"))
-                    .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
-                    .setMessageFormat("no expectation for:{}returning response:{}")
-                    .setArguments(request("request_one"), notFoundResponse()),
-                new LogEntry()
-                    .setDeleted(true)
-                    .setLogLevel(INFO)
-                    .setType(EXPECTATION_RESPONSE)
-                    .setHttpRequest(request("request_two"))
-                    .setHttpResponse(response("response_two"))
-                    .setMessageFormat("returning error:{}for request:{}for action:{}")
-                    .setArguments(request("request_two"), response("response_two"), response("response_two"))
-            ));
+            assertThat(retrieveRequestResponseMessageLogEntries(null), empty());
         } finally {
             ConfigurationProperties.logLevel(originalLevel.name());
         }
@@ -820,14 +816,6 @@ public class MockServerEventLogTest {
             ));
             assertThat(retrieveRequestResponseMessageLogEntries(null), contains(
                 new LogEntry()
-                    .setDeleted(true)
-                    .setLogLevel(INFO)
-                    .setType(NO_MATCH_RESPONSE)
-                    .setHttpRequest(request("request_one"))
-                    .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
-                    .setMessageFormat("no expectation for:{}returning response:{}")
-                    .setArguments(request("request_one"), notFoundResponse()),
-                new LogEntry()
                     .setEpochTime(TimeService.currentTimeMillis())
                     .setLogLevel(INFO)
                     .setType(EXPECTATION_RESPONSE)
@@ -845,7 +833,7 @@ public class MockServerEventLogTest {
             assertThat(retrieveRecordedExpectations(null), contains(
                 new Expectation(request("request_five"), Times.once(), TimeToLive.unlimited(), 0).thenRespond(response("response_five"))
             ));
-            List<LogEntry> actual = retrieveMessageLogEntries(null);
+            List<LogEntry> actual = Objects.requireNonNull(retrieveMessageLogEntriesIncludingDeleted(null));
             assertThat(actual.get(0), is(new LogEntry()
                 .setDeleted(true)
                 .setLogLevel(INFO)

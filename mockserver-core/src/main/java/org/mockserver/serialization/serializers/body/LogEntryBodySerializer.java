@@ -3,21 +3,21 @@ package org.mockserver.serialization.serializers.body;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import org.mockserver.model.LogEventBody;
+import org.mockserver.model.LogEntryBody;
 
 import java.io.IOException;
 
 /**
  * @author jamesdbloom
  */
-public class LogEventBodySerializer extends StdSerializer<LogEventBody> {
+public class LogEntryBodySerializer extends StdSerializer<LogEntryBody> {
 
-    public LogEventBodySerializer() {
-        super(LogEventBody.class);
+    public LogEntryBodySerializer() {
+        super(LogEntryBody.class);
     }
 
     @Override
-    public void serialize(LogEventBody logEventBody, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+    public void serialize(LogEntryBody logEventBody, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         jgen.writeObject(logEventBody.getValue());
     }
 }
