@@ -32,33 +32,7 @@ public class NottableStringMultiMap extends ObjectWithReflectiveEqualsHashCodeTo
         this.keyMatchStyle = keyMatchStyle;
         regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
         for (KeyToMultiValue keyToMultiValue : entries) {
-            if (keyToMultiValue.getName().isOptional() && keyToMultiValue.getValues().size() > 1) {
-                throw new IllegalArgumentException("multiple values for optional key are not allowed, value \"" + keyToMultiValue.getName() + "\" has values \"" + keyToMultiValue.getValues() + "\"");
-            }
             backingMap.put(keyToMultiValue.getName(), keyToMultiValue.getValues());
-        }
-    }
-
-    @VisibleForTesting
-    public NottableStringMultiMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher, KeyMatchStyle keyMatchStyle, String... keyAndValues) {
-        this.mockServerLogger = mockServerLogger;
-        this.keyMatchStyle = keyMatchStyle;
-        regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
-        Map<String, List<String>> groupedValues = new LinkedHashMap<>();
-        for (int i = 0; i < keyAndValues.length - 1; i += 2) {
-            if (groupedValues.containsKey(keyAndValues[i])) {
-                groupedValues.get(keyAndValues[i]).add(keyAndValues[i + 1]);
-            } else {
-                groupedValues.put(keyAndValues[i], new ArrayList<>(Collections.singletonList(keyAndValues[i + 1])));
-            }
-        }
-        for (Map.Entry<String, List<String>> keysAndValue : groupedValues.entrySet()) {
-            NottableString nottableKey = string(keysAndValue.getKey());
-            List<NottableString> nottableValues = strings(keysAndValue.getValue());
-            if (nottableKey.isOptional() && nottableValues.size() > 1) {
-                throw new IllegalArgumentException("multiple values for optional key are not allowed, key \"" + nottableKey + "\" has values \"" + nottableValues + "\"");
-            }
-            backingMap.put(nottableKey, nottableValues);
         }
     }
 
@@ -67,17 +41,10 @@ public class NottableStringMultiMap extends ObjectWithReflectiveEqualsHashCodeTo
         this.mockServerLogger = mockServerLogger;
         this.keyMatchStyle = keyMatchStyle;
         regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
-        Map<NottableString, List<NottableString>> groupedValues = new LinkedHashMap<>();
         for (NottableString[] keyAndValue : keyAndValues) {
-            if (keyAndValue.length > 1) {
-                groupedValues.put(keyAndValue[0], Arrays.asList(keyAndValue).subList(1, keyAndValue.length));
+            if (keyAndValue.length > 0) {
+                backingMap.put(keyAndValue[0], keyAndValue.length > 1 ? Arrays.asList(keyAndValue).subList(1, keyAndValue.length) : Collections.emptyList());
             }
-        }
-        for (Map.Entry<NottableString, List<NottableString>> keysAndValue : groupedValues.entrySet()) {
-            if (keysAndValue.getKey().isOptional() && keysAndValue.getValue().size() > 1) {
-                throw new IllegalArgumentException("multiple values for optional key are not allowed, key \"" + keysAndValue.getKey() + "\" has values \"" + keysAndValue.getValue() + "\"");
-            }
-            backingMap.put(keysAndValue.getKey(), keysAndValue.getValue());
         }
     }
 
@@ -89,27 +56,14 @@ public class NottableStringMultiMap extends ObjectWithReflectiveEqualsHashCodeTo
         regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
         Map<String, List<String>> groupedValues = new LinkedHashMap<>();
         for (String[] keyAndValue : keyAndValues) {
-            groupedValues.put(keyAndValue[0], Arrays.asList(keyAndValue).subList(1, keyAndValue.length));
-        }
-        for (Map.Entry<String, List<String>> keysAndValue : groupedValues.entrySet()) {
-            NottableString nottableKey = string(keysAndValue.getKey());
-            List<NottableString> nottableValues = strings(keysAndValue.getValue());
-            if (nottableKey.isOptional() && nottableValues.size() > 1) {
-                throw new IllegalArgumentException("multiple values for optional key are not allowed, value \"" + nottableKey + "\" has values \"" + nottableValues + "\"");
-            }
-            backingMap.put(nottableKey, nottableValues);
+            List<NottableString> values = strings(Arrays.asList(keyAndValue).subList(1, keyAndValue.length));
+            backingMap.put(string(keyAndValue[0]), values);
         }
     }
 
     // TODO(jamesdbloom) remove once tests are cleaned up
     @VisibleForTesting
     public static NottableStringMultiMap multiMap(boolean controlPlaneMatcher, KeyMatchStyle keyMatchStyle, String[]... keyAndValues) {
-        return new NottableStringMultiMap(new MockServerLogger(), controlPlaneMatcher, keyMatchStyle, keyAndValues);
-    }
-
-    // TODO(jamesdbloom) remove once tests are cleaned up
-    @VisibleForTesting
-    public static NottableStringMultiMap multiMap(boolean controlPlaneMatcher, KeyMatchStyle keyMatchStyle, String... keyAndValues) {
         return new NottableStringMultiMap(new MockServerLogger(), controlPlaneMatcher, keyMatchStyle, keyAndValues);
     }
 
