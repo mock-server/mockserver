@@ -5,10 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
@@ -320,7 +318,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
-     * The query string parameters to match on as a list of Parameter objects where the values or keys of each parameter can be either a string or a regex
+     * The path parameter to match on as a list of Parameter objects where the values or keys of each parameter can be either a string or a regex
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameters the list of Parameter objects where the values or keys of each parameter can be either a string or a regex
@@ -332,7 +330,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
-     * The query string parameters to match on as a varags Parameter objects where the values or keys of each parameter can be either a string or a regex
+     * The path parameter to match on as a varags Parameter objects where the values or keys of each parameter can be either a string or a regex
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameters the varags Parameter objects where the values or keys of each parameter can be either a string or a regex
@@ -344,7 +342,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
-     * The query string parameters to match on as a Map<String, List<String>> where the values or keys of each parameter can be either a string or a regex
+     * The path parameter to match on as a Map<String, List<String>> where the values or keys of each parameter can be either a string or a regex
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameters the Map<String, List<String>> object where the values or keys of each parameter can be either a string or a regex
@@ -356,7 +354,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
-     * Adds one query string parameter to match on as a Parameter object where the parameter values list can be a list of strings or regular expressions
+     * Adds one path parameter to match on as a Parameter object where the parameter values list can be a list of strings or regular expressions
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameter the Parameter object which can have a values list of strings or regular expressions
@@ -368,7 +366,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
-     * Adds one query string parameter to match which can specified using plain strings or regular expressions
+     * Adds one path parameter to match which can specified using plain strings or regular expressions
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param name   the parameter name
@@ -381,7 +379,20 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
-     * Adds one query string parameter to match on or to not match on using the NottableString, each NottableString can either be a positive matching
+     * Adds one path parameter to match which the values are JSON schema i.e. "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }"
+     * (for more details of the supported JSON schema see https://json-schema.org)
+     *
+     * @param name   the parameter name
+     * @param values the parameter values which can be a varags of JSON schemas
+     */
+    public HttpRequest withSchemaPathParameter(String name, String... values) {
+        getOrCreatePathParameters().withEntry(string(name), Arrays.stream(values).map(NottableSchemaString::schemaString).toArray(NottableString[]::new));
+        this.hashCode = 0;
+        return this;
+    }
+
+    /**
+     * Adds one path parameter to match on or to not match on using the NottableString, each NottableString can either be a positive matching
      * value, such as string("match"), or a value to not match on, such as not("do not match"), the string values passed to the NottableString
      * can also be a plain string or a regex (for more details of the supported regex syntax
      * see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
@@ -500,7 +511,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
-     * Adds one query string parameter to match which can specified using plain strings or regular expressions
+     * Adds one query string parameter to match which the values are plain strings or regular expressions
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param name   the parameter name
@@ -508,6 +519,19 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      */
     public HttpRequest withQueryStringParameter(String name, String... values) {
         getOrCreateQueryStringParameters().withEntry(name, values);
+        this.hashCode = 0;
+        return this;
+    }
+
+    /**
+     * Adds one query string parameter to match which the values are JSON schema i.e. "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }"
+     * (for more details of the supported JSON schema see https://json-schema.org)
+     *
+     * @param name   the parameter name
+     * @param values the parameter values which can be a varags of JSON schemas
+     */
+    public HttpRequest withSchemaQueryStringParameter(String name, String... values) {
+        getOrCreateQueryStringParameters().withEntry(string(name), Arrays.stream(values).map(NottableSchemaString::schemaString).toArray(NottableString[]::new));
         this.hashCode = 0;
         return this;
     }
@@ -781,6 +805,19 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
+     * Adds one header to match which the values are JSON schema i.e. "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }"
+     * (for more details of the supported JSON schema see https://json-schema.org)
+     *
+     * @param name   the header name
+     * @param values the header values which can be a varags of JSON schemas
+     */
+    public HttpRequest withSchemaHeader(String name, String... values) {
+        getOrCreateHeaders().withEntry(header(string(name), Arrays.stream(values).map(NottableSchemaString::schemaString).toArray(NottableString[]::new)));
+        this.hashCode = 0;
+        return this;
+    }
+
+    /**
      * Adds one header to match on or to not match on using the NottableString, each NottableString can either be a positive matching value,
      * such as string("match"), or a value to not match on, such as not("do not match"), the string values passed to the NottableString
      * can also be a plain string or a regex (for more details of the supported regex syntax
@@ -941,7 +978,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
-     * Adds one cookie to match on, which can specified using either plain strings or regular expressions
+     * Adds one cookie to match on, which the value is plain strings or regular expressions
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param name  the cookies name
@@ -949,6 +986,19 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      */
     public HttpRequest withCookie(String name, String value) {
         getOrCreateCookies().withEntry(name, value);
+        this.hashCode = 0;
+        return this;
+    }
+
+    /**
+     * Adds one cookie to match on, which the value the values is JSON schema i.e. "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }"
+     * (for more details of the supported JSON schema see https://json-schema.org)
+     *
+     * @param name  the cookies name
+     * @param value the cookies value as JSON schema
+     */
+    public HttpRequest withSchemaCookie(String name, String value) {
+        getOrCreateCookies().withEntry(string(name), schemaString(value));
         this.hashCode = 0;
         return this;
     }
