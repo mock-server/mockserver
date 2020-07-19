@@ -21,13 +21,13 @@ public class MockServerEventLogNotifier extends ObjectWithReflectiveEqualsHashCo
         this.scheduler = scheduler;
     }
 
-    protected void notifyListeners(final MockServerEventLog notifier) {
+    protected void notifyListeners(final MockServerEventLog notifier, boolean synchronous) {
         if (listenerAdded && !listeners.isEmpty()) {
             scheduler.submit(() -> {
                 for (MockServerLogListener listener : listeners.toArray(new MockServerLogListener[0])) {
                     listener.updated(notifier);
                 }
-            });
+            }, synchronous);
         }
     }
 

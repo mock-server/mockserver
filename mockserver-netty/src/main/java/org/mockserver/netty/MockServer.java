@@ -86,7 +86,6 @@ public class MockServer extends LifeCycle {
                 new LogEntry()
                     .setType(SERVER_CONFIGURATION)
                     .setLogLevel(Level.INFO)
-                    .setHttpRequest(request())
                     .setMessageFormat("using proxy configuration for forwarded requests:{}")
                     .setArguments(proxyConfiguration)
             );
@@ -111,7 +110,7 @@ public class MockServer extends LifeCycle {
             .childOption(ChannelOption.AUTO_READ, true)
             .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
             .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
-            .childHandler(new MockServerUnificationInitializer(MockServer.this, httpStateHandler, new HttpActionHandler(getEventLoopGroup(), httpStateHandler, proxyConfiguration, nettySslContextFactory), nettySslContextFactory))
+            .childHandler(new MockServerUnificationInitializer(MockServer.this, httpState, new HttpActionHandler(getEventLoopGroup(), httpState, proxyConfiguration, nettySslContextFactory), nettySslContextFactory))
             .childAttr(REMOTE_SOCKET, remoteSocket)
             .childAttr(PROXYING, remoteSocket != null);
 

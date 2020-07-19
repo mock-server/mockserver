@@ -1248,7 +1248,6 @@ public class ConfigurationProperties {
                     new LogEntry()
                         .setType(SERVER_CONFIGURATION)
                         .setLogLevel(Level.INFO)
-                        .setHttpRequest(request())
                         .setMessageFormat(propertiesLogDump.toString())
                 );
             }

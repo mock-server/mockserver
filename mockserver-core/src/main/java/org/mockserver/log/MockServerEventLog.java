@@ -144,12 +144,13 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     private void processLogEntry(LogEntry logEntry) {
         logEntry = logEntry.cloneAndClear();
         eventLog.add(logEntry);
-        notifyListeners(this);
+        notifyListeners(this, false);
         writeToSystemOut(logger, logEntry);
     }
 
     public void stop() {
         try {
+            notifyListeners(this, true);
             eventLog.clear();
             disruptor.shutdown(2, SECONDS);
         } catch (Throwable throwable) {
@@ -172,7 +173,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             .setConsumer(() -> {
                 eventLog.clear();
                 future.complete("done");
-                notifyListeners(this);
+                notifyListeners(this, false);
             })
         );
         try {
@@ -222,7 +223,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                     );
                 }
                 future.complete("done");
-                notifyListeners(this);
+                notifyListeners(this, false);
             })
         );
         try {

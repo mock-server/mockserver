@@ -37,7 +37,7 @@ public abstract class LifeCycle implements Stoppable {
     protected final MockServerLogger mockServerLogger;
     protected EventLoopGroup bossGroup = new NioEventLoopGroup(5, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-bossEventLoop"));
     protected EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-workerEventLoop"));
-    protected HttpState httpStateHandler;
+    protected HttpState httpState;
     protected ServerBootstrap serverServerBootstrap;
     private List<Future<Channel>> serverChannelFutures = new ArrayList<>();
     private Scheduler scheduler;
@@ -45,14 +45,23 @@ public abstract class LifeCycle implements Stoppable {
     protected LifeCycle() {
         this.mockServerLogger = new MockServerLogger(MockServerEventLog.class);
         this.scheduler = new Scheduler(this.mockServerLogger);
-        this.httpStateHandler = new HttpState(this.mockServerLogger, this.scheduler);
+        this.httpState = new HttpState(this.mockServerLogger, this.scheduler);
     }
 
     public Future<String> stopAsync() {
+        final String message = "stopped for port" + (getLocalPorts().size() == 1 ? ": " + getLocalPorts().get(0) : "s: " + getLocalPorts());
+        if (MockServerLogger.isEnabled(INFO)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(SERVER_CONFIGURATION)
+                    .setLogLevel(INFO)
+                    .setMessageFormat(message)
+            );
+        }
         CompletableFuture<String> stopFuture = new CompletableFuture<>();
         new Scheduler.SchedulerThreadFactory("Stop").newThread(() -> {
+            httpState.stop();
             scheduler.shutdown();
-            httpStateHandler.stop();
 
             // Shut down all event loops to terminate all threads.
             bossGroup.shutdownGracefully(5, 5, MILLISECONDS);
@@ -208,7 +217,6 @@ public abstract class LifeCycle implements Stoppable {
                 new LogEntry()
                     .setType(SERVER_CONFIGURATION)
                     .setLogLevel(INFO)
-                    .setHttpRequest(request())
                     .setMessageFormat(message)
             );
         }
