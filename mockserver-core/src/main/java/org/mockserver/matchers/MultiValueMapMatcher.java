@@ -46,7 +46,7 @@ public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues<? extends
             }
             result = allKeysNotted || allKeysOptional;
         } else {
-            result = new NottableStringMultiMap(mockServerLogger, controlPlaneMatcher, matched.getKeyMatchStyle(), matched.getEntries()).containsAll(matcher, context != null ? context.getLogCorrelationId() : null);
+            result = new NottableStringMultiMap(mockServerLogger, controlPlaneMatcher, matched.getKeyMatchStyle(), matched.getEntries()).containsAll(matcher);
         }
 
         if (!result && context != null) {

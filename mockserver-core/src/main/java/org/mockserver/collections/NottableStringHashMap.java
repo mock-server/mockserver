@@ -20,10 +20,6 @@ public class NottableStringHashMap {
     private final Map<NottableString, NottableString> backingMap = new LinkedHashMap<>();
     private final RegexStringMatcher regexStringMatcher;
 
-    public NottableStringHashMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher) {
-        regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
-    }
-
     public NottableStringHashMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher, List<? extends KeyAndValue> entries) {
         regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
         for (KeyAndValue keyToMultiValue : entries) {
@@ -32,34 +28,6 @@ public class NottableStringHashMap {
     }
 
     @VisibleForTesting
-    public NottableStringHashMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher, String... keyAndValues) {
-        regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
-        for (int i = 0; i < keyAndValues.length - 1; i += 2) {
-            put(string(keyAndValues[i]), string(keyAndValues[i + 1]));
-        }
-    }
-
-    @VisibleForTesting
-    public NottableStringHashMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher, NottableString... keyAndValues) {
-        regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
-        for (int i = 0; i < keyAndValues.length - 1; i += 2) {
-            put(keyAndValues[i], keyAndValues[i + 1]);
-        }
-    }
-
-    // TODO(jamesdbloom) remove once tests are cleaned up
-    @VisibleForTesting
-    public NottableStringHashMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher, String[]... keyAndValues) {
-        regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
-        for (String[] keyAndValue : keyAndValues) {
-            if (keyAndValue.length >= 2) {
-                put(string(keyAndValue[0]), string(keyAndValue[1]));
-            }
-        }
-    }
-
-    // TODO(jamesdbloom) remove once tests are cleaned up
-    @VisibleForTesting
     public NottableStringHashMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher, NottableString[]... keyAndValues) {
         regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
         for (NottableString[] keyAndValue : keyAndValues) {
@@ -67,18 +35,6 @@ public class NottableStringHashMap {
                 put(keyAndValue[0], keyAndValue[1]);
             }
         }
-    }
-
-    // TODO(jamesdbloom) remove once tests are cleaned up
-    @VisibleForTesting
-    public static NottableStringHashMap hashMap(boolean controlPlaneMatcher, String[]... keyAndValues) {
-        return new NottableStringHashMap(new MockServerLogger(), controlPlaneMatcher, keyAndValues);
-    }
-
-    // TODO(jamesdbloom) remove once tests are cleaned up
-    @VisibleForTesting
-    public static NottableStringHashMap hashMap(boolean controlPlaneMatcher, NottableString[]... keyAndValues) {
-        return new NottableStringHashMap(new MockServerLogger(), controlPlaneMatcher, keyAndValues);
     }
 
     public boolean containsAll(NottableStringHashMap subset) {

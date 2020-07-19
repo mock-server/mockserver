@@ -1,7 +1,6 @@
 package org.mockserver.collections;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.RegexStringMatcher;
 import org.mockserver.model.KeyMatchStyle;
@@ -13,9 +12,6 @@ import java.util.*;
 
 import static org.mockserver.collections.ImmutableEntry.entry;
 import static org.mockserver.collections.SubSetMatcher.containsSubset;
-import static org.mockserver.model.NottableString.string;
-import static org.mockserver.model.NottableString.strings;
-import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -24,11 +20,9 @@ public class NottableStringMultiMap extends ObjectWithReflectiveEqualsHashCodeTo
 
     private final Map<NottableString, List<NottableString>> backingMap = new LinkedHashMap<>();
     private final RegexStringMatcher regexStringMatcher;
-    private final MockServerLogger mockServerLogger;
     private final KeyMatchStyle keyMatchStyle;
 
     public NottableStringMultiMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher, KeyMatchStyle keyMatchStyle, List<? extends KeyToMultiValue> entries) {
-        this.mockServerLogger = mockServerLogger;
         this.keyMatchStyle = keyMatchStyle;
         regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
         for (KeyToMultiValue keyToMultiValue : entries) {
@@ -38,7 +32,6 @@ public class NottableStringMultiMap extends ObjectWithReflectiveEqualsHashCodeTo
 
     @VisibleForTesting
     public NottableStringMultiMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher, KeyMatchStyle keyMatchStyle, NottableString[]... keyAndValues) {
-        this.mockServerLogger = mockServerLogger;
         this.keyMatchStyle = keyMatchStyle;
         regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
         for (NottableString[] keyAndValue : keyAndValues) {
@@ -48,63 +41,19 @@ public class NottableStringMultiMap extends ObjectWithReflectiveEqualsHashCodeTo
         }
     }
 
-    // TODO(jamesdbloom) remove once tests are cleaned up
-    @VisibleForTesting
-    public NottableStringMultiMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher, KeyMatchStyle keyMatchStyle, String[]... keyAndValues) {
-        this.mockServerLogger = mockServerLogger;
-        this.keyMatchStyle = keyMatchStyle;
-        regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
-        Map<String, List<String>> groupedValues = new LinkedHashMap<>();
-        for (String[] keyAndValue : keyAndValues) {
-            List<NottableString> values = strings(Arrays.asList(keyAndValue).subList(1, keyAndValue.length));
-            backingMap.put(string(keyAndValue[0]), values);
-        }
-    }
-
-    // TODO(jamesdbloom) remove once tests are cleaned up
-    @VisibleForTesting
-    public static NottableStringMultiMap multiMap(boolean controlPlaneMatcher, KeyMatchStyle keyMatchStyle, String[]... keyAndValues) {
-        return new NottableStringMultiMap(new MockServerLogger(), controlPlaneMatcher, keyMatchStyle, keyAndValues);
-    }
-
-    // TODO(jamesdbloom) remove once tests are cleaned up
-    @VisibleForTesting
-    public static NottableStringMultiMap multiMap(boolean controlPlaneMatcher, KeyMatchStyle keyMatchStyle, NottableString[]... keyAndValues) {
-        return new NottableStringMultiMap(new MockServerLogger(), controlPlaneMatcher, keyMatchStyle, keyAndValues);
-    }
-
-    public KeyMatchStyle getKeyMatchStyle() {
-        return keyMatchStyle;
-    }
-
-    public boolean containsAll(NottableStringMultiMap matcher) {
-        return containsAll(matcher, null);
-    }
-
-    // TODO(jamesdbloom) check matching key
-    public boolean containsAll(NottableStringMultiMap subset, String logCorrelationId) {
+    public boolean containsAll(NottableStringMultiMap subset) {
         switch (subset.keyMatchStyle) {
             case SUB_SET: {
                 return containsSubset(regexStringMatcher, subset.entryList(), entryList());
             }
             case MATCHING_KEY: {
                 for (NottableString matcherKey : subset.backingMap.keySet()) {
-                    List<NottableString> matcherValuesForKey = subset.getAll(matcherKey);
                     List<NottableString> matchedValuesForKey = getAll(matcherKey);
                     if (matchedValuesForKey.isEmpty() && !matcherKey.isOptional()) {
-                        if (MockServerLogger.isEnabled(TRACE)) {
-                            mockServerLogger.logEvent(
-                                new LogEntry()
-                                    .setLogLevel(TRACE)
-                                    .setCorrelationId(logCorrelationId)
-                                    .setMessageFormat("multimap{}containsAll matching by key found no matching values for{}")
-                                    .setArguments(this, matcherKey)
-
-                            );
-                        }
                         return false;
                     }
 
+                    List<NottableString> matcherValuesForKey = subset.getAll(matcherKey);
                     for (NottableString matchedValue : matchedValuesForKey) {
                         boolean matchesValue = false;
                         for (NottableString matcherValue : matcherValuesForKey) {
@@ -114,28 +63,7 @@ public class NottableStringMultiMap extends ObjectWithReflectiveEqualsHashCodeTo
                             }
                         }
                         if (!matchesValue) {
-                            if (MockServerLogger.isEnabled(TRACE)) {
-                                mockServerLogger.logEvent(
-                                    new LogEntry()
-                                        .setLogLevel(TRACE)
-                                        .setCorrelationId(logCorrelationId)
-                                        .setMessageFormat("multimap{}containsAll matching by key{}found matched value{}does not-match one value in{}")
-                                        .setArguments(this, matcherKey, matchedValue, matcherValuesForKey)
-
-                                );
-                            }
                             return false;
-                        } else {
-                            if (MockServerLogger.isEnabled(TRACE)) {
-                                mockServerLogger.logEvent(
-                                    new LogEntry()
-                                        .setLogLevel(TRACE)
-                                        .setCorrelationId(logCorrelationId)
-                                        .setMessageFormat("multimap{}containsAll matching by key{}found matched value{}matches one value in{}")
-                                        .setArguments(this, matcherKey, matchedValue, matcherValuesForKey)
-
-                                );
-                            }
                         }
                     }
                 }
