@@ -9,12 +9,12 @@ import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatchDifference;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.metrics.Metrics;
+import org.mockserver.mock.listeners.MockServerMatcherNotifier;
 import org.mockserver.model.Action;
 import org.mockserver.model.HttpObjectCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.RequestDefinition;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.ui.MockServerMatcherNotifier;
 import org.slf4j.event.Level;
 
 import java.util.*;

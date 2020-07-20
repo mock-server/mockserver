@@ -2,6 +2,7 @@ package org.mockserver.integration;
 
 import org.mockserver.client.MockServerClient;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.lifecycle.ExpectationsListener;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.netty.MockServer;
 
@@ -128,5 +129,10 @@ public class ClientAndServer extends MockServerClient {
 
     public InetSocketAddress getRemoteAddress() {
         return mockServer.getRemoteAddress();
+    }
+
+    public ClientAndServer registerListener(ExpectationsListener expectationsListener) {
+        mockServer.registerListener(expectationsListener);
+        return this;
     }
 }

@@ -17,8 +17,8 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
+import static org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.API;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.ui.MockServerMatcherNotifier.Cause.API;
 
 /**
  * @author jamesdbloom

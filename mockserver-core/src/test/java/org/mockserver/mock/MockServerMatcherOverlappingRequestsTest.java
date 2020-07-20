@@ -14,7 +14,7 @@ import org.mockserver.scheduler.Scheduler;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
-import static org.mockserver.ui.MockServerMatcherNotifier.Cause.API;
+import static org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.API;
 
 /**
  * @author jamesdbloom

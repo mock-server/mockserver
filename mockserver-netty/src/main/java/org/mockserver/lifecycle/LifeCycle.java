@@ -11,6 +11,7 @@ import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpState;
+import org.mockserver.mock.listeners.MockServerMatcherNotifier;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.stop.Stoppable;
 
@@ -26,7 +27,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.mockserver.mock.HttpState.setPort;
-import static org.mockserver.model.HttpRequest.request;
 import static org.slf4j.event.Level.*;
 
 /**
@@ -220,6 +220,15 @@ public abstract class LifeCycle implements Stoppable {
                     .setMessageFormat(message)
             );
         }
+    }
+
+    public LifeCycle registerListener(ExpectationsListener expectationsListener) {
+        httpState.getRequestMatchers().registerListener((requestMatchers, cause) -> {
+            if (cause == MockServerMatcherNotifier.Cause.API) {
+                expectationsListener.updated(requestMatchers.retrieveActiveExpectations(null));
+            }
+        });
+        return this;
     }
 
 }

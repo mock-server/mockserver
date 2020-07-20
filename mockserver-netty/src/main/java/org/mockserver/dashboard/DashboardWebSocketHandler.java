@@ -22,15 +22,15 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpState;
 import org.mockserver.mock.RequestMatchers;
+import org.mockserver.mock.listeners.MockServerLogListener;
+import org.mockserver.mock.listeners.MockServerMatcherListener;
+import org.mockserver.mock.listeners.MockServerMatcherNotifier;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.OpenAPIDefinition;
 import org.mockserver.model.RequestDefinition;
 import org.mockserver.serialization.HttpRequestSerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.ExpectationDTO;
-import org.mockserver.ui.MockServerLogListener;
-import org.mockserver.ui.MockServerMatcherListener;
-import org.mockserver.ui.MockServerMatcherNotifier;
 import org.slf4j.event.Level;
 
 import java.util.HashMap;

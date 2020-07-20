@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - port is now printed at start of each log line
 - shutdown log message specifying port
 - UI update prior to shutdown to ensure all pending log messages are sent over UI web socket 
+- added listener for expectation modifications that can be used with ExpectationInitializer for custom expectation persistence
 
 ### Changed
 - performance improvements of expectation sorting and comparisons

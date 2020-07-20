@@ -8,9 +8,9 @@ import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.metrics.Metrics;
+import org.mockserver.mock.listeners.MockServerMatcherNotifier;
 import org.mockserver.model.HttpObjectCallback;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.ui.MockServerMatcherNotifier;
 import org.mockserver.uuid.UUIDService;
 
 import java.util.ArrayList;
@@ -21,10 +21,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.mock;
+import static org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.API;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.ui.MockServerMatcherNotifier.Cause.API;
 
 /**
  * @author jamesdbloom

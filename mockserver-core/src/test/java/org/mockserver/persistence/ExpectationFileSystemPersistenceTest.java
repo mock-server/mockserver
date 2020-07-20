@@ -7,8 +7,8 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.RequestMatchers;
+import org.mockserver.mock.listeners.MockServerMatcherNotifier;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.ui.MockServerMatcherNotifier;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -18,9 +18,9 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.API;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.ui.MockServerMatcherNotifier.Cause.API;
 
 public class ExpectationFileSystemPersistenceTest {
 

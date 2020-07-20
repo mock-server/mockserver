@@ -24,10 +24,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockserver.matchers.TimeToLive.unlimited;
+import static org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.API;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.OpenAPIDefinition.openAPI;
-import static org.mockserver.ui.MockServerMatcherNotifier.Cause.API;
 
 /**
  * @author jamesdbloom

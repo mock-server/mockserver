@@ -5,6 +5,7 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import org.mockserver.lifecycle.ExpectationsListener;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -21,7 +22,6 @@ import java.util.List;
 import static java.util.Collections.singletonList;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.mockserver.mock.action.http.HttpActionHandler.REMOTE_SOCKET;
-import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.netty.HttpRequestHandler.PROXYING;
 import static org.mockserver.proxyconfiguration.ProxyConfiguration.proxyConfiguration;
 
@@ -132,6 +132,11 @@ public class MockServer extends LifeCycle {
 
     public InetSocketAddress getRemoteAddress() {
         return remoteSocket;
+    }
+
+    public MockServer registerListener(ExpectationsListener expectationsListener) {
+        super.registerListener(expectationsListener);
+        return this;
     }
 
 }

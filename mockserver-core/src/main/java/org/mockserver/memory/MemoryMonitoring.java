@@ -5,9 +5,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.mock.RequestMatchers;
-import org.mockserver.ui.MockServerLogListener;
-import org.mockserver.ui.MockServerMatcherListener;
-import org.mockserver.ui.MockServerMatcherNotifier;
+import org.mockserver.mock.listeners.MockServerLogListener;
+import org.mockserver.mock.listeners.MockServerMatcherListener;
+import org.mockserver.mock.listeners.MockServerMatcherNotifier;
 
 import java.io.File;
 import java.io.FileOutputStream;

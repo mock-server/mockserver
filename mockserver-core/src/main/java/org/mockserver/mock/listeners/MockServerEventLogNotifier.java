@@ -1,4 +1,4 @@
-package org.mockserver.ui;
+package org.mockserver.mock.listeners;
 
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;

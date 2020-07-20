@@ -7,8 +7,8 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.RequestMatchers;
+import org.mockserver.mock.listeners.MockServerMatcherNotifier;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.ui.MockServerMatcherNotifier;
 import org.mockserver.uuid.UUIDService;
 
 import java.io.File;
