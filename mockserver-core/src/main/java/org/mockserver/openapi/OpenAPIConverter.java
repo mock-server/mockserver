@@ -77,6 +77,9 @@ public class OpenAPIConverter {
                 return resolve(swaggerParseResult.getOpenAPI());
             } else {
                 String mesage = String.join(" and ", swaggerParseResult.getMessages()).trim();
+                if (mesage.equals("attribute openapi is missing")) {
+                    mesage += " only OpenAPI '3.0.0' is supported";
+                }
                 throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + (isNotBlank(mesage) ? ", " + mesage : ""));
             }
         }
