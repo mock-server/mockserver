@@ -17,7 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.model.NottableOptionalString.optionalString;
+import static org.mockserver.model.NottableOptionalString.optional;
 import static org.mockserver.model.NottableString.string;
 
 public class ExpandedParameterDecoder {
@@ -72,14 +72,14 @@ public class ExpandedParameterDecoder {
                 Matcher quotedValue = QUOTED_PARAMETER_VALUE.matcher(value.getValue());
                 if (quotedValue.matches()) {
                     if (value.isOptional()) {
-                        splitValues.add(optionalString(quotedValue.group(1), value.isNot()));
+                        splitValues.add(optional(quotedValue.group(1), value.isNot()));
                     } else {
                         splitValues.add(string(quotedValue.group(1), value.isNot()));
                     }
                 } else if (!JSON_VALUE.matcher(value.getValue()).matches()) {
                     for (String splitValue : value.getValue().split(style.getRegex().replaceAll("<name>", name))) {
                         if (value.isOptional()) {
-                            splitValues.add(optionalString(splitValue, value.isNot()));
+                            splitValues.add(optional(splitValue, value.isNot()));
                         } else {
                             splitValues.add(string(splitValue, value.isNot()));
                         }

@@ -113,7 +113,7 @@ public class OpenAPIExpectationSerializer implements Serializer<OpenAPIExpectati
                             .setArguments(jsonOpenAPIExpectation)
                             .setThrowable(throwable)
                     );
-                    throw new RuntimeException("exception while parsing [" + jsonOpenAPIExpectation + "] for OpenAPIExpectation", throwable);
+                    throw new IllegalArgumentException("exception while parsing [" + jsonOpenAPIExpectation + "] for OpenAPIExpectation", throwable);
                 }
                 return expectation;
             } else {

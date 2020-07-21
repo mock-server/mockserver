@@ -1,6 +1,7 @@
 package org.mockserver.serialization.deserializers.string;
 
 import org.junit.Test;
+import org.mockserver.model.NottableOptionalString;
 import org.mockserver.model.NottableString;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.ExpectationDTO;
@@ -11,7 +12,7 @@ import java.io.IOException;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.model.NottableOptionalString.optionalString;
+import static org.mockserver.model.NottableOptionalString.optional;
 import static org.mockserver.model.NottableSchemaString.schemaString;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.ParameterStyle.MATRIX;
@@ -40,19 +41,19 @@ public class NottableStringDeserializerTest {
     @Test
     public void shouldDeserializeOptionalString() throws IOException {
         assertThat(ObjectMapperFactory.createObjectMapper().readValue("\"?some_string\"", NottableString.class),
-            is(optionalString("some_string")));
+            is(optional("some_string")));
         assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"optional\":true,\"value\":\"some_string\"}", NottableString.class),
-            is(optionalString("some_string")));
+            is(optional("some_string")));
         assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"not\":false,\"optional\":true,\"value\":\"some_string\"}", NottableString.class),
-            is(optionalString("some_string")));
+            is(optional("some_string")));
     }
 
     @Test
     public void shouldDeserializeNottedOptionalString() throws IOException {
         assertThat(ObjectMapperFactory.createObjectMapper().readValue("\"?!some_string\"", NottableString.class),
-            is(optionalString("some_string", true)));
+            is(NottableOptionalString.optional("some_string", true)));
         assertThat(ObjectMapperFactory.createObjectMapper().readValue("\"!?some_string\"", NottableString.class),
-            is(optionalString("some_string", true)));
+            is(NottableOptionalString.optional("some_string", true)));
         assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"not\":true,\"optional\":true,\"value\":\"some_string\"}", NottableString.class),
             is(string("?!some_string")));
     }
@@ -178,7 +179,7 @@ public class NottableStringDeserializerTest {
         assertThat(expectationDTO, is(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setMethod(optionalString("HEAD"))
+                    .setMethod(optional("HEAD"))
             )));
     }
 
@@ -302,7 +303,7 @@ public class NottableStringDeserializerTest {
         assertThat(expectationDTO, is(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setPath(optionalString("/some/path"))
+                    .setPath(optional("/some/path"))
             )));
     }
 

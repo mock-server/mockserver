@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.NottableOptionalString.OPTIONAL_CHAR;
-import static org.mockserver.model.NottableOptionalString.optionalString;
+import static org.mockserver.model.NottableOptionalString.optional;
 import static org.mockserver.model.ParameterStyle.DEEP_OBJECT;
 
 /**
@@ -113,7 +113,7 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
             }
         }
         if (optional) {
-            return optionalString(value, not);
+            return optional(value, not);
         } else {
             return new NottableString(value, not);
         }

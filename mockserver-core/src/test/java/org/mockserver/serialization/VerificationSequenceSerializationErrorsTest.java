@@ -1,6 +1,5 @@
 package org.mockserver.serialization;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import org.junit.Before;
 import org.junit.Rule;

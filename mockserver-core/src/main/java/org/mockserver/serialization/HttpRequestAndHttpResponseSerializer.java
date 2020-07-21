@@ -107,7 +107,7 @@ public class HttpRequestAndHttpResponseSerializer implements Serializer<HttpRequ
                             .setArguments(jsonHttpRequest)
                             .setThrowable(throwable)
                     );
-                    throw new RuntimeException("exception while parsing [" + jsonHttpRequest + "] for HttpRequestAndHttpResponse", throwable);
+                    throw new IllegalArgumentException("exception while parsing [" + jsonHttpRequest + "] for HttpRequestAndHttpResponse", throwable);
                 }
             }
             String validationErrors = getValidator().isValid(jsonHttpRequest);
@@ -126,7 +126,7 @@ public class HttpRequestAndHttpResponseSerializer implements Serializer<HttpRequ
                             .setArguments(jsonHttpRequest)
                             .setThrowable(throwable)
                     );
-                    throw new RuntimeException("exception while parsing [" + jsonHttpRequest + "] for HttpRequestAndHttpResponse", throwable);
+                    throw new IllegalArgumentException("exception while parsing [" + jsonHttpRequest + "] for HttpRequestAndHttpResponse", throwable);
                 }
                 return httpRequestAndHttpResponse;
             } else {

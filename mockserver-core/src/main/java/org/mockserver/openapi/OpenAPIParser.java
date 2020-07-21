@@ -29,7 +29,7 @@ public class OpenAPIParser {
 
     private final static LRUCache<String, OpenAPI> openAPILRUCache = new LRUCache<>(new MockServerLogger(), 250, MINUTES.toMillis(10));
 
-    public static final String OPEN_API_LOAD_ERROR = "Unable to load API spec from provided URL or payload";
+    public static final String OPEN_API_LOAD_ERROR = "Unable to load API spec";
 
     public static OpenAPI buildOpenAPI(String specUrlOrPayload) {
         OpenAPI openAPI = openAPILRUCache.get(specUrlOrPayload);
@@ -43,6 +43,7 @@ public class OpenAPIParser {
             parseOptions.setFlatten(true);
             parseOptions.setFlattenComposedSchemas(true);
 
+            List<String> errorMessage = new ArrayList<>();
             try {
                 if (specUrlOrPayload.endsWith(".json") || specUrlOrPayload.endsWith(".yaml")) {
                     specUrlOrPayload = specUrlOrPayload.replaceAll("\\\\", "/");
@@ -52,11 +53,16 @@ public class OpenAPIParser {
                         openAPI = swaggerParseResult.getOpenAPI();
                         if (openAPI != null) {
                             break;
+                        } else {
+                            errorMessage.addAll(swaggerParseResult.getMessages());
                         }
                     }
                 } else {
                     swaggerParseResult = new OpenAPIV3Parser().readContents(specUrlOrPayload, auths, parseOptions);
                     openAPI = swaggerParseResult.getOpenAPI();
+                    if (openAPI == null) {
+                        errorMessage.addAll(swaggerParseResult.getMessages());
+                    }
                 }
             } catch (Throwable throwable) {
                 throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + (isNotBlank(throwable.getMessage()) ? ", " + throwable.getMessage() : ""), throwable);
@@ -69,7 +75,7 @@ public class OpenAPIParser {
                 }
             } else {
                 if (swaggerParseResult != null) {
-                    String message = swaggerParseResult.getMessages().stream().filter(Objects::nonNull).collect(Collectors.joining(" and ")).trim();
+                    String message = errorMessage.stream().filter(Objects::nonNull).collect(Collectors.joining(" and ")).trim();
                     throw new IllegalArgumentException((OPEN_API_LOAD_ERROR + (isNotBlank(message) ? ", " + message : "")));
                 } else {
                     throw new IllegalArgumentException(OPEN_API_LOAD_ERROR);

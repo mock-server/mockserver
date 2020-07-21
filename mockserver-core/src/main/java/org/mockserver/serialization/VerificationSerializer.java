@@ -75,7 +75,7 @@ public class VerificationSerializer implements Serializer<Verification> {
                             .setArguments(jsonVerification)
                             .setThrowable(throwable)
                     );
-                    throw new RuntimeException("exception while parsing [" + jsonVerification + "] for Verification", throwable);
+                    throw new IllegalArgumentException("exception while parsing [" + jsonVerification + "] for Verification", throwable);
                 }
                 return verification;
             } else {

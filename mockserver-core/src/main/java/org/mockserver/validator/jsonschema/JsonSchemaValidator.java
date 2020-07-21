@@ -391,6 +391,9 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
             } else {
                 validationErrors.addAll(extractMessage(processingMessageJson));
             }
+            if (validationErrors.isEmpty() && processingMessageJson.get("message") != null && isNotBlank(processingMessageJson.get("message").asText())) {
+                validationErrors.add(processingMessageJson.get("message").asText());
+            }
         }
         validationErrors.sort(String::compareToIgnoreCase);
         return validationErrors.size() + " error" + (validationErrors.size() > 1 ? "s" : "") + ":" + NEW_LINE

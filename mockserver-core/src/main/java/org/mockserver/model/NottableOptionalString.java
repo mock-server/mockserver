@@ -7,12 +7,20 @@ public class NottableOptionalString extends NottableString {
 
     public static final char OPTIONAL_CHAR = '?';
 
-    public static NottableOptionalString optionalString(String value, Boolean not) {
+    public static NottableOptionalString optional(String value, Boolean not) {
         return new NottableOptionalString(value, not);
     }
 
-    public static NottableOptionalString optionalString(String value) {
+    public static NottableOptionalString optional(String value) {
         return new NottableOptionalString(value);
+    }
+
+    /**
+     * @deprecated use `optional` instead
+     */
+    @Deprecated
+    public static NottableOptionalString optionalString(String value) {
+        return optional(value);
     }
 
     public static NottableOptionalString notOptional(String value) {

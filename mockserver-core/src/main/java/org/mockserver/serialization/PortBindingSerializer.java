@@ -46,7 +46,7 @@ public class PortBindingSerializer implements Serializer<PortBinding> {
                         .setArguments(jsonPortBinding)
                         .setThrowable(throwable)
                 );
-                throw new  RuntimeException("exception while parsing PortBinding for [" + jsonPortBinding + "]", throwable);
+                throw new  IllegalArgumentException("exception while parsing PortBinding for [" + jsonPortBinding + "]", throwable);
             }
         }
         return portBinding;

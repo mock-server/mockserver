@@ -221,7 +221,7 @@ public class HttpRequestsPropertiesMatcherTest {
             // then
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload, allowReserved field is not supported on parameters, found on operation: \"someOperation\" method: \"GET\" parameter: \"someParam\" in: \"path\""));
+            assertThat(iae.getMessage(), is("Unable to load API spec, allowReserved field is not supported on parameters, found on operation: \"someOperation\" method: \"GET\" parameter: \"someParam\" in: \"path\""));
         }
     }
 
@@ -2847,7 +2847,7 @@ public class HttpRequestsPropertiesMatcherTest {
             // then
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload, multipart form data is not supported on requestBody, found on operation: \"someOperation\" method: \"POST\""));
+            assertThat(iae.getMessage(), is("Unable to load API spec, multipart form data is not supported on requestBody, found on operation: \"someOperation\" method: \"POST\""));
         }
     }
 
@@ -5989,7 +5989,7 @@ public class HttpRequestsPropertiesMatcherTest {
             // then
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload, Unexpected end-of-input in field name" + NEW_LINE +
+            assertThat(iae.getMessage(), is("Unable to load API spec, Unexpected end-of-input in field name" + NEW_LINE +
                 " at [Source: (String)\"{" + NEW_LINE +
                 "  \"openapi\": \"3.0.0\"," + NEW_LINE +
                 "  \"info\": {" + NEW_LINE +
@@ -6015,7 +6015,7 @@ public class HttpRequestsPropertiesMatcherTest {
             // then
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload, while scanning a simple key" + NEW_LINE +
+            assertThat(iae.getMessage(), is("Unable to load API spec, while scanning a simple key" + NEW_LINE +
                 " in 'reader', line 8, column 1:" + NEW_LINE +
                 "    servers" + NEW_LINE +
                 "    ^" + NEW_LINE +
@@ -6044,7 +6044,7 @@ public class HttpRequestsPropertiesMatcherTest {
             // then
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload"));
+            assertThat(iae.getMessage(), is("Unable to load API spec, unable to read location `org/mockserver/mock/does_not_exist.json`"));
         }
     }
 

@@ -75,7 +75,7 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
                             .setArguments(jsonVerificationSequence)
                             .setThrowable(throwable)
                     );
-                    throw new RuntimeException("exception while parsing [" + jsonVerificationSequence + "] for VerificationSequence", throwable);
+                    throw new IllegalArgumentException("exception while parsing [" + jsonVerificationSequence + "] for VerificationSequence", throwable);
                 }
                 return verificationSequence;
             } else {

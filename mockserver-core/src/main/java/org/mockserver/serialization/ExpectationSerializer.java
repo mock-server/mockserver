@@ -127,7 +127,7 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                             .setArguments(jsonExpectation)
                             .setThrowable(throwable)
                     );
-                    throw new RuntimeException("exception while parsing [" + jsonExpectation + "] for Expectation", throwable);
+                    throw new IllegalArgumentException("exception while parsing [" + jsonExpectation + "] for Expectation", throwable);
                 }
                 return expectation;
             } else {

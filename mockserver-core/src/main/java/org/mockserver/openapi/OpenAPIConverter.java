@@ -43,9 +43,10 @@ public class OpenAPIConverter {
             .getPaths()
             .values()
             .stream()
-            .flatMap(pathItem -> pathItem
-                .readOperations()
-                .stream()
+            .flatMap(pathItem ->
+                pathItem
+                    .readOperations()
+                    .stream()
             )
             .filter(operation -> operationsAndResponses == null || operationsAndResponses.containsKey(operation.getOperationId()))
             .map(operation -> new Expectation(openAPI(specUrlOrPayload, operation.getOperationId()))

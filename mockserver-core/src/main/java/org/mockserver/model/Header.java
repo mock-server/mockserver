@@ -3,7 +3,7 @@ package org.mockserver.model;
 import java.util.Arrays;
 import java.util.Collection;
 
-import static org.mockserver.model.NottableOptionalString.optionalString;
+import static org.mockserver.model.NottableOptionalString.optional;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -16,6 +16,10 @@ public class Header extends KeyToMultiValue {
     }
 
     public Header(NottableString name, NottableString... value) {
+        super(name, value);
+    }
+
+    public Header(NottableString name, String... value) {
         super(name, value);
     }
 
@@ -52,6 +56,6 @@ public class Header extends KeyToMultiValue {
     }
 
     public static Header optionalHeader(String name, String... values) {
-        return new Header(optionalString(name), Arrays.stream(values).map(NottableString::string).toArray(NottableString[]::new));
+        return new Header(optional(name), Arrays.stream(values).map(NottableString::string).toArray(NottableString[]::new));
     }
 }

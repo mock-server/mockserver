@@ -21,7 +21,7 @@ import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.JsonPathBody.jsonPath;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
-import static org.mockserver.model.NottableOptionalString.optionalString;
+import static org.mockserver.model.NottableOptionalString.optional;
 import static org.mockserver.model.NottableSchemaString.schemaString;
 import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
@@ -217,8 +217,8 @@ public class RequestPropertiesMatcherExamples {
                     .withPath("/some/path")
                     .withQueryStringParameters(
                         optionalParam("cartId", "[A-Z0-9\\-]+"),
-                        param(optionalString("maxItemCount"), schemaString("{ \"type\": \"integer\" }")),
-                        schemaParam(optionalString("userId"), "{ \"type\": \"string\", \"format\": \"uuid\" }")
+                        param(optional("maxItemCount"), schemaString("{ \"type\": \"integer\" }")),
+                        schemaParam(optional("userId"), "{ \"type\": \"string\", \"format\": \"uuid\" }")
                     )
             )
             .respond(

@@ -133,7 +133,7 @@ public class RequestDefinitionSerializer implements Serializer<RequestDefinition
                             .setArguments(jsonRequestDefinition)
                             .setThrowable(throwable)
                     );
-                    throw new RuntimeException("exception while parsing [" + jsonRequestDefinition + "] for RequestDefinition", throwable);
+                    throw new IllegalArgumentException("exception while parsing [" + jsonRequestDefinition + "] for RequestDefinition", throwable);
                 }
             } else if (jsonRequestDefinition.contains("\"openAPIDefinition\"")) {
                 try {
@@ -149,7 +149,7 @@ public class RequestDefinitionSerializer implements Serializer<RequestDefinition
                             .setArguments(jsonRequestDefinition)
                             .setThrowable(throwable)
                     );
-                    throw new RuntimeException("exception while parsing [" + jsonRequestDefinition + "] for RequestDefinition", throwable);
+                    throw new IllegalArgumentException("exception while parsing [" + jsonRequestDefinition + "] for RequestDefinition", throwable);
                 }
             }
             String validationErrors = getValidator().isValid(jsonRequestDefinition);
@@ -168,7 +168,7 @@ public class RequestDefinitionSerializer implements Serializer<RequestDefinition
                             .setArguments(jsonRequestDefinition)
                             .setThrowable(throwable)
                     );
-                    throw new RuntimeException("exception while parsing [" + jsonRequestDefinition + "] for RequestDefinition", throwable);
+                    throw new IllegalArgumentException("exception while parsing [" + jsonRequestDefinition + "] for RequestDefinition", throwable);
                 }
                 return requestDefinition;
             } else {

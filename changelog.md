@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - simplified and improve performance of matching for headers, query string parameters, path parameters, cookies and body parameters
 - only mark log events as deleted for log level of TRACE, DEBUG, or INFO so log can be view in UI
 - improved performance of handling large OpenAPI specifications
+- improved error message format for errors when loading OpenAPI specifications
+- changed name of `optionalString` static factory method to `optional` to improve consistency with `not`
 
 ### Fixed
 - fixed field name error when serializing ParameterBody

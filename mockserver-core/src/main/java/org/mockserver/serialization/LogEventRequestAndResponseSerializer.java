@@ -75,7 +75,7 @@ public class LogEventRequestAndResponseSerializer {
                     .setMessageFormat("exception while serializing HttpRequestAndHttpResponse to JSON with value " + Arrays.asList(httpRequestAndHttpResponses))
                     .setThrowable(e)
             );
-            throw new RuntimeException("Exception while serializing HttpRequestAndHttpResponse to JSON with value " + Arrays.asList(httpRequestAndHttpResponses), e);
+            throw new IllegalArgumentException("Exception while serializing HttpRequestAndHttpResponse to JSON with value " + Arrays.asList(httpRequestAndHttpResponses), e);
         }
     }
 
@@ -97,7 +97,7 @@ public class LogEventRequestAndResponseSerializer {
                         .setArguments(jsonHttpRequestAndHttpResponse)
                         .setThrowable(throwable)
                 );
-                throw new  RuntimeException("exception while parsing [" + jsonHttpRequestAndHttpResponse + "] for HttpRequestAndHttpResponse", throwable);
+                throw new  IllegalArgumentException("exception while parsing [" + jsonHttpRequestAndHttpResponse + "] for HttpRequestAndHttpResponse", throwable);
             }
             return httpRequestAndHttpResponse;
         }

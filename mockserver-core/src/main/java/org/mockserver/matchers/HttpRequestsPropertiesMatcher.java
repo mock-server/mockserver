@@ -29,7 +29,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.AUTHORIZATION;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
-import static org.mockserver.model.NottableOptionalString.optionalString;
+import static org.mockserver.model.NottableOptionalString.optional;
 import static org.mockserver.model.NottableSchemaString.schemaString;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.ParameterStyle.*;
@@ -126,7 +126,7 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                     );
                 if (schema != null) {
                     try {
-                        NottableString name = (parameter.getRequired() != null && parameter.getRequired() ? string(parameter.getName()) : optionalString(parameter.getName())).withStyle(parameterStyle(parameter.getExplode(), parameter.getStyle()));
+                        NottableString name = (parameter.getRequired() != null && parameter.getRequired() ? string(parameter.getName()) : optional(parameter.getName())).withStyle(parameterStyle(parameter.getExplode(), parameter.getStyle()));
                         if (parameter.getAllowEmptyValue() != null && parameter.getAllowEmptyValue()) {
                             schema.nullable(true);
                         }

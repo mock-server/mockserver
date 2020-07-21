@@ -17,6 +17,10 @@ public class KeyAndValue extends ObjectWithJsonToString {
         this(string(name), string(isBlank(value) ? "" : value));
     }
 
+    public KeyAndValue(NottableString name, String value) {
+        this(name, string(isBlank(value) ? "" : value));
+    }
+
     public KeyAndValue(NottableString name, NottableString value) {
         this.name = name;
         this.value = value;

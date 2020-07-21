@@ -2,14 +2,14 @@ package org.mockserver.serialization.serializers.string;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.Test;
+import org.mockserver.model.NottableOptionalString;
 import org.mockserver.model.NottableString;
-import org.mockserver.model.ParameterStyle;
 import org.mockserver.serialization.ObjectMapperFactory;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.model.NottableOptionalString.optionalString;
+import static org.mockserver.model.NottableOptionalString.optional;
 import static org.mockserver.model.NottableSchemaString.schemaString;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.ParameterStyle.MATRIX;
@@ -50,7 +50,7 @@ public class NottableStringSerializerTest {
     public void shouldSerializeObjectWithOptionalString() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new Object() {
                 public NottableString getValue() {
-                    return optionalString("some_string");
+                    return optional("some_string");
                 }
             }),
             is("{\"value\":\"?some_string\"}"));
@@ -98,7 +98,7 @@ public class NottableStringSerializerTest {
 
     @Test
     public void shouldSerializeOptionalString() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(optionalString("some_string")),
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(optional("some_string")),
             is("\"?some_string\""));
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(string("?some_string")),
             is("\"?some_string\""));
@@ -106,7 +106,7 @@ public class NottableStringSerializerTest {
 
     @Test
     public void shouldSerializeOptionalNottedString() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(optionalString("some_string", true)),
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(NottableOptionalString.optional("some_string", true)),
             is("\"?!some_string\""));
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(string("?!some_string")),
             is("\"?!some_string\""));
@@ -168,7 +168,7 @@ public class NottableStringSerializerTest {
     public void shouldSerializeOptionalNottedStyledString() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper()
                 .writeValueAsString(
-                    optionalString("some_string", true)
+                    NottableOptionalString.optional("some_string", true)
                         .withStyle(MATRIX)
                 ),
             is("{\"not\":true,\"optional\":true,\"parameterStyle\":\"MATRIX\",\"value\":\"some_string\"}"));

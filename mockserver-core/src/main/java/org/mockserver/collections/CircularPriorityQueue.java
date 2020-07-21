@@ -71,7 +71,11 @@ public class CircularPriorityQueue<K, V, SLK extends Keyed<K>> {
     }
 
     public Optional<V> getByKey(K key) {
-        return Optional.ofNullable(byKey.get(key));
+        if (key != null && !"".equals(key)) {
+            return Optional.ofNullable(byKey.get(key));
+        } else {
+            return Optional.empty();
+        }
     }
 
     public Map<K, V> keyMap() {

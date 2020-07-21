@@ -13,7 +13,7 @@ import org.mockserver.serialization.ObjectMapperFactory;
 import java.io.IOException;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.model.NottableOptionalString.optionalString;
+import static org.mockserver.model.NottableOptionalString.optional;
 import static org.mockserver.model.NottableSchemaString.schemaString;
 import static org.mockserver.model.NottableString.string;
 
@@ -61,7 +61,7 @@ public class NottableStringDeserializer extends StdDeserializer<NottableString> 
             if (schema != null) {
                 result = schemaString(schema.toPrettyString(), not);
             } else if (Boolean.TRUE.equals(optional)) {
-                result = optionalString(value, not);
+                result = optional(value, not);
             } else if (isNotBlank(value)) {
                 result = string(value, not);
             }

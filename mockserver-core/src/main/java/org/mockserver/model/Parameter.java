@@ -3,7 +3,7 @@ package org.mockserver.model;
 import java.util.Arrays;
 import java.util.Collection;
 
-import static org.mockserver.model.NottableOptionalString.optionalString;
+import static org.mockserver.model.NottableOptionalString.optional;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -16,6 +16,10 @@ public class Parameter extends KeyToMultiValue {
     }
 
     public Parameter(NottableString name, NottableString... value) {
+        super(name, value);
+    }
+
+    public Parameter(NottableString name, String... value) {
         super(name, value);
     }
 
@@ -32,6 +36,10 @@ public class Parameter extends KeyToMultiValue {
     }
 
     public static Parameter param(NottableString name, NottableString... value) {
+        return new Parameter(name, value);
+    }
+
+    public static Parameter param(NottableString name, String... value) {
         return new Parameter(name, value);
     }
 
@@ -52,7 +60,7 @@ public class Parameter extends KeyToMultiValue {
     }
 
     public static Parameter optionalParam(String name, String... values) {
-        return new Parameter(optionalString(name), Arrays.stream(values).map(NottableString::string).toArray(NottableString[]::new));
+        return new Parameter(optional(name), Arrays.stream(values).map(NottableString::string).toArray(NottableString[]::new));
     }
 
     public Parameter withStyle(ParameterStyle style) {

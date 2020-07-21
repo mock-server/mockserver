@@ -16,6 +16,10 @@ public class KeyToMultiValue extends ObjectWithJsonToString {
         this(string(name), strings(values));
     }
 
+    KeyToMultiValue(final NottableString name, final String... values) {
+        this(name, strings(values));
+    }
+
     @SuppressWarnings({"UseBulkOperation", "ManualArrayToCollectionCopy"})
     KeyToMultiValue(final NottableString name, final NottableString... values) {
         if (name == null) {
