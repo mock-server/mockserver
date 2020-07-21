@@ -58,7 +58,6 @@ import static org.mockserver.verify.VerificationTimes.exactly;
 /**
  * @author jamesdbloom
  */
-@SuppressWarnings("unchecked")
 public class NettyHttpProxySOCKSIntegrationTest {
 
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(NettyHttpProxySOCKSIntegrationTest.class);

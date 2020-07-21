@@ -223,6 +223,4 @@ public class NettyHttpClientTest {
         ));
     }
 
-    // TODO (jamesdbloom) binary test scenarios for requests and responses
-
 }
