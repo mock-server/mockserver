@@ -45,7 +45,7 @@ import static org.mockserver.log.model.LogEntry.LogMessageType.RETRIEVED;
 import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE_FORMAT;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.openapi.OpenAPISerialiser.OPEN_API_LOAD_ERROR;
+import static org.mockserver.openapi.OpenAPIParser.OPEN_API_LOAD_ERROR;
 
 /**
  * @author jamesdbloom

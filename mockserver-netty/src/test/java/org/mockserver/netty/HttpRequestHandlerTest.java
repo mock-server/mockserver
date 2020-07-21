@@ -293,6 +293,10 @@ public class HttpRequestHandlerTest {
                     "      \"body\" : \"response_one\"" + NEW_LINE +
                     "    }" + NEW_LINE +
                     "  }" + NEW_LINE +
+                    NEW_LINE +
+                    " with id:" + NEW_LINE +
+                    NEW_LINE +
+                    "  key_one" + NEW_LINE +
                     NEW_LINE))
             );
         } finally {

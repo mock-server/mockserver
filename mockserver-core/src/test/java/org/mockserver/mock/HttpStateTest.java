@@ -280,6 +280,10 @@ public class HttpStateTest {
                     "      \"body\" : \"response_one\"" + NEW_LINE +
                     "    }" + NEW_LINE +
                     "  }" + NEW_LINE +
+                    NEW_LINE +
+                    " with id:" + NEW_LINE +
+                    NEW_LINE +
+                    "  key_one" + NEW_LINE +
                     NEW_LINE))
             );
         } finally {
@@ -906,6 +910,10 @@ public class HttpStateTest {
                         "      \"body\" : \"response_one\"" + NEW_LINE +
                         "    }" + NEW_LINE +
                         "  }" + NEW_LINE +
+                        NEW_LINE +
+                        " with id:" + NEW_LINE +
+                        NEW_LINE +
+                        "  one" + NEW_LINE +
                         NEW_LINE,
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
             );
@@ -994,6 +1002,10 @@ public class HttpStateTest {
                         "    }" + NEW_LINE +
                         "  }" + NEW_LINE +
                         NEW_LINE +
+                        " with id:" + NEW_LINE +
+                        NEW_LINE +
+                        "  key_one" + NEW_LINE +
+                        NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - some random" + NEW_LINE +
                         NEW_LINE +
@@ -1028,6 +1040,10 @@ public class HttpStateTest {
                         "      \"body\" : \"response_four\"" + NEW_LINE +
                         "    }" + NEW_LINE +
                         "  }" + NEW_LINE +
+                        NEW_LINE +
+                        " with id:" + NEW_LINE +
+                        NEW_LINE +
+                        "  key_four" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - cleared expectations that match:" + NEW_LINE +

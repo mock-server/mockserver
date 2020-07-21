@@ -28,15 +28,15 @@ public class OpenAPIDefinitionSerializer extends StdSerializer<OpenAPIDefinition
         if (openAPIDefinition.getNot() != null && openAPIDefinition.getNot()) {
             jgen.writeBooleanField("not", openAPIDefinition.getNot());
         }
+        if (isNotBlank(openAPIDefinition.getOperationId())) {
+            jgen.writeObjectField("operationId", openAPIDefinition.getOperationId());
+        }
         if (isNotBlank(openAPIDefinition.getSpecUrlOrPayload())) {
             if (openAPIDefinition.getSpecUrlOrPayload().trim().startsWith("{")) {
                 jgen.writeObjectField("specUrlOrPayload", OBJECT_MAPPER.readTree(openAPIDefinition.getSpecUrlOrPayload()));
             } else {
                 jgen.writeObjectField("specUrlOrPayload", openAPIDefinition.getSpecUrlOrPayload());
             }
-        }
-        if (isNotBlank(openAPIDefinition.getOperationId())) {
-            jgen.writeObjectField("operationId", openAPIDefinition.getOperationId());
         }
         jgen.writeEndObject();
     }

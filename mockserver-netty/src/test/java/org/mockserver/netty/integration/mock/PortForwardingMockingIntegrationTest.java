@@ -119,7 +119,11 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     "    \"httpResponse\" : {" + NEW_LINE +
                     "      \"body\" : \"some_body\"" + NEW_LINE +
                     "    }" + NEW_LINE +
-                    "  }" + NEW_LINE,
+                    "  }" + NEW_LINE +
+                    NEW_LINE +
+                    " with id:" + NEW_LINE +
+                    NEW_LINE +
+                    "  " + UUIDService.getUUID() + NEW_LINE,
                 new String[]{  // 2
                     "received request:" + NEW_LINE +
                         NEW_LINE +

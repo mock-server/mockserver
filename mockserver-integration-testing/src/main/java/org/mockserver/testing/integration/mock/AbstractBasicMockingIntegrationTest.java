@@ -1394,11 +1394,11 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             fail("expected exception to be thrown");
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + NEW_LINE +
-                "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_petstore_example.json\"," + NEW_LINE +
-                "  \"operationId\" : \"createPets\"" + NEW_LINE +
+                "  \"operationId\" : \"createPets\"," + NEW_LINE +
+                "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_petstore_example.json\"" + NEW_LINE +
                 "}, {" + NEW_LINE +
-                "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_petstore_example.json\"," + NEW_LINE +
-                "  \"operationId\" : \"listPets\"" + NEW_LINE +
+                "  \"operationId\" : \"listPets\"," + NEW_LINE +
+                "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_petstore_example.json\"" + NEW_LINE +
                 "} ]> but was:<[ {" + NEW_LINE +
                 "  \"method\" : \"GET\"," + NEW_LINE +
                 "  \"path\" : \"/pets\","));
@@ -1715,7 +1715,11 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "    \"httpResponse\" : {" + NEW_LINE +
                     "      \"body\" : \"some_body\"" + NEW_LINE +
                     "    }" + NEW_LINE +
-                    "  }" + NEW_LINE,
+                    "  }" + NEW_LINE +
+                    NEW_LINE +
+                    " with id:" + NEW_LINE +
+                    NEW_LINE +
+                    "  " + UUIDService.getUUID() + NEW_LINE,
 
                 new String[]{
                     "received request:" + NEW_LINE +

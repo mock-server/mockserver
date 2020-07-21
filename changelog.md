@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ensured all threads are daemon threads (except port binding thread)
 - simplified and improve performance of matching for headers, query string parameters, path parameters, cookies and body parameters
 - only mark log events as deleted for log level of TRACE, DEBUG, or INFO so log can be view in UI
+- improved performance of handling large OpenAPI specifications
 
 ### Fixed
 - fixed field name error when serializing ParameterBody

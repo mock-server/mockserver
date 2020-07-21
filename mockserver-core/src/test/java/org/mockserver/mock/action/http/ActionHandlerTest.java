@@ -158,8 +158,8 @@ public class ActionHandlerTest {
                 .setType(EXPECTATION_RESPONSE)
                 .setHttpRequest(request)
                 .setHttpResponse(this.response)
-                .setMessageFormat("returning response:{}for request:{}for action:{}")
-                .setArguments(this.response, request, response)
+                .setMessageFormat("returning response:{}for request:{}for action:{}from expectation:{}")
+                .setArguments(this.response, request, response, expectation.getId())
         );
         verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(0)));
         verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(0)));
@@ -192,8 +192,8 @@ public class ActionHandlerTest {
                 .setType(EXPECTATION_RESPONSE)
                 .setHttpRequest(request)
                 .setHttpResponse(response)
-                .setMessageFormat("returning response:{}for request:{}for action:{}")
-                .setArguments(response, request, template)
+                .setMessageFormat("returning response:{}for request:{}for action:{}from expectation:{}")
+                .setArguments(response, request, template, expectation.getId())
         );
         verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(1)));
         verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(0)));
@@ -228,8 +228,8 @@ public class ActionHandlerTest {
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request)
                 .setHttpResponse(notFoundResponse())
-                .setMessageFormat("returning response:{}for request:{}for action:{}")
-                .setArguments(notFoundResponse(), request, expectation.getAction())
+                .setMessageFormat("returning response:{}for request:{}for action:{}from expectation:{}")
+                .setArguments(notFoundResponse(), request, expectation.getAction(), expectation.getId())
         );
         verify(mockServerLogger).logEvent(
             new LogEntry()
@@ -268,8 +268,8 @@ public class ActionHandlerTest {
                 .setLogLevel(INFO)
                 .setHttpRequest(request)
                 .setHttpResponse(response)
-                .setMessageFormat("returning response:{}for request:{}for action:{}")
-                .setArguments(response, request, callback)
+                .setMessageFormat("returning response:{}for request:{}for action:{}from expectation:{}")
+                .setArguments(response, request, callback, expectation.getId())
         );
         verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(1)));
         verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(0)));
@@ -329,8 +329,8 @@ public class ActionHandlerTest {
                 .setHttpRequest(request)
                 .setHttpResponse(response)
                 .setExpectation(request, response)
-                .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}")
-                .setArguments(response, forwardedHttpRequest, "curl -v 'http://" + remoteAddress.getHostName() + ":" + remoteAddress.getPort() + "/'", expectation.getAction())
+                .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}from expectation:{}")
+                .setArguments(response, forwardedHttpRequest, "curl -v 'http://" + remoteAddress.getHostName() + ":" + remoteAddress.getPort() + "/'", expectation.getAction(), expectation.getId())
         );
         verify(httpRequestToCurlSerializer).toCurl(forwardedHttpRequest, remoteAddress);
     }
@@ -364,8 +364,8 @@ public class ActionHandlerTest {
                 .setHttpRequest(request)
                 .setHttpResponse(response)
                 .setExpectation(request, response)
-                .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}")
-                .setArguments(response, forwardedHttpRequest, "curl -v 'http://" + remoteAddress.getHostName() + ":" + remoteAddress.getPort() + "/'", expectation.getAction())
+                .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}from expectation:{}")
+                .setArguments(response, forwardedHttpRequest, "curl -v 'http://" + remoteAddress.getHostName() + ":" + remoteAddress.getPort() + "/'", expectation.getAction(), expectation.getId())
         );
         verify(httpRequestToCurlSerializer).toCurl(forwardedHttpRequest, remoteAddress);
     }
@@ -399,8 +399,8 @@ public class ActionHandlerTest {
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request)
                 .setHttpResponse(notFoundResponse())
-                .setMessageFormat("returning response:{}for request:{}for action:{}")
-                .setArguments(notFoundResponse(), request, expectation.getAction())
+                .setMessageFormat("returning response:{}for request:{}for action:{}from expectation:{}")
+                .setArguments(notFoundResponse(), request, expectation.getAction(), expectation.getId())
         );
         verify(mockServerLogger).logEvent(
             new LogEntry()
@@ -441,8 +441,8 @@ public class ActionHandlerTest {
                 .setHttpRequest(request)
                 .setHttpResponse(response)
                 .setExpectation(request, response)
-                .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}")
-                .setArguments(response, forwardedHttpRequest, "curl -v 'http://" + remoteAddress.getHostName() + ":" + remoteAddress.getPort() + "/'", expectation.getAction())
+                .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}from expectation:{}")
+                .setArguments(response, forwardedHttpRequest, "curl -v 'http://" + remoteAddress.getHostName() + ":" + remoteAddress.getPort() + "/'", expectation.getAction(), expectation.getId())
         );
         verify(httpRequestToCurlSerializer).toCurl(forwardedHttpRequest, remoteAddress);
     }
@@ -499,8 +499,8 @@ public class ActionHandlerTest {
                 .setHttpRequest(request)
                 .setHttpResponse(response)
                 .setExpectation(request, response)
-                .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}")
-                .setArguments(response, forwardedHttpRequest, "curl -v 'http://" + remoteAddress.getHostName() + ":" + remoteAddress.getPort() + "/'", expectation.getAction())
+                .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}from expectation:{}")
+                .setArguments(response, forwardedHttpRequest, "curl -v 'http://" + remoteAddress.getHostName() + ":" + remoteAddress.getPort() + "/'", expectation.getAction(), expectation.getId())
         );
         verify(httpRequestToCurlSerializer).toCurl(forwardedHttpRequest, remoteAddress);
     }
@@ -533,8 +533,8 @@ public class ActionHandlerTest {
                 .setType(EXPECTATION_RESPONSE)
                 .setHttpRequest(request)
                 .setHttpError(error)
-                .setMessageFormat("returning error:{}for request:{}for action:{}")
-                .setArguments(error, request, error)
+                .setMessageFormat("returning error:{}for request:{}for action:{}from expectation:{}")
+                .setArguments(error, request, error, expectation.getId())
         );
     }
 

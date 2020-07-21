@@ -6,10 +6,6 @@ import io.swagger.v3.oas.models.examples.Example;
 import io.swagger.v3.oas.models.headers.Header;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.responses.ApiResponses;
-import io.swagger.v3.parser.OpenAPIResolver;
-import io.swagger.v3.parser.OpenAPIV3Parser;
-import io.swagger.v3.parser.core.models.SwaggerParseResult;
-import io.swagger.v3.parser.util.ResolverFully;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
@@ -26,11 +22,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.OpenAPIDefinition.openAPI;
-import static org.mockserver.openapi.OpenAPISerialiser.OPEN_API_LOAD_ERROR;
+import static org.mockserver.openapi.OpenAPIParser.buildOpenAPI;
 import static org.slf4j.event.Level.ERROR;
 
 public class OpenAPIConverter {
@@ -53,42 +48,14 @@ public class OpenAPIConverter {
                 .stream()
             )
             .filter(operation -> operationsAndResponses == null || operationsAndResponses.containsKey(operation.getOperationId()))
-            .map(operation ->
-                new Expectation(openAPI(specUrlOrPayload, operation.getOperationId()))
-                    .thenRespond(buildHttpResponse(
-                        openAPI,
-                        operation.getResponses(),
-                        operationsAndResponses != null ? operationsAndResponses.get(operation.getOperationId()) : null
-                    ))
+            .map(operation -> new Expectation(openAPI(specUrlOrPayload, operation.getOperationId()))
+                .thenRespond(buildHttpResponse(
+                    openAPI,
+                    operation.getResponses(),
+                    operationsAndResponses != null ? operationsAndResponses.get(operation.getOperationId()) : null
+                ))
             )
             .collect(Collectors.toList());
-    }
-
-    public static OpenAPI buildOpenAPI(String specUrlOrPayload) {
-        if (specUrlOrPayload.endsWith(".json") || specUrlOrPayload.endsWith(".yaml")) {
-            try {
-                return resolve(new OpenAPIV3Parser().read(specUrlOrPayload));
-            } catch (Throwable throwable) {
-                throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + (isNotBlank(throwable.getMessage()) ? ", " + throwable.getMessage() : ""));
-            }
-        } else {
-            SwaggerParseResult swaggerParseResult = new OpenAPIV3Parser().readContents(specUrlOrPayload);
-            if (swaggerParseResult.getOpenAPI() != null) {
-                return resolve(swaggerParseResult.getOpenAPI());
-            } else {
-                String mesage = String.join(" and ", swaggerParseResult.getMessages()).trim();
-                if (mesage.equals("attribute openapi is missing")) {
-                    mesage += " only OpenAPI '3.0.0' is supported";
-                }
-                throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + (isNotBlank(mesage) ? ", " + mesage : ""));
-            }
-        }
-    }
-
-    private static OpenAPI resolve(OpenAPI openAPI) {
-        openAPI = new OpenAPIResolver(openAPI).resolve();
-        new ResolverFully().resolveFully(openAPI);
-        return openAPI;
     }
 
     private HttpResponse buildHttpResponse(OpenAPI openAPI, ApiResponses apiResponses, String apiResponseKey) {

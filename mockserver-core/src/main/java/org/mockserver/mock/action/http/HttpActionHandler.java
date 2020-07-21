@@ -171,8 +171,8 @@ public class HttpActionHandler {
                                     .setCorrelationId(request.getLogCorrelationId())
                                     .setHttpRequest(request)
                                     .setHttpError((HttpError) action)
-                                    .setMessageFormat("returning error:{}for request:{}for action:{}")
-                                    .setArguments(action, request, action)
+                                    .setMessageFormat("returning error:{}for request:{}for action:{}from expectation:{}")
+                                    .setArguments(action, request, action, action.getExpectationId())
                             );
                         }
                         expectationPostProcessor.run();
@@ -328,8 +328,8 @@ public class HttpActionHandler {
                         .setCorrelationId(request.getLogCorrelationId())
                         .setHttpRequest(request)
                         .setHttpResponse(response)
-                        .setMessageFormat("returning response:{}for request:{}for action:{}")
-                        .setArguments(response, request, action)
+                        .setMessageFormat("returning response:{}for request:{}for action:{}from expectation:{}")
+                        .setArguments(response, request, action, action.getExpectationId())
                 );
             }
             responseWriter.writeResponse(request, response, false);
@@ -353,8 +353,8 @@ public class HttpActionHandler {
                         .setHttpRequest(request)
                         .setHttpResponse(response)
                         .setExpectation(request, response)
-                        .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}")
-                        .setArguments(response, responseFuture.getHttpRequest(), httpRequestToCurlSerializer.toCurl(responseFuture.getHttpRequest(), responseFuture.getRemoteAddress()), action)
+                        .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}from expectation:{}")
+                        .setArguments(response, responseFuture.getHttpRequest(), httpRequestToCurlSerializer.toCurl(responseFuture.getHttpRequest(), responseFuture.getRemoteAddress()), action, action.getExpectationId())
                 );
             } catch (Throwable throwable) {
                 handleExceptionDuringForwardingRequest(action, request, responseWriter, throwable);
@@ -400,7 +400,7 @@ public class HttpActionHandler {
         }
     }
 
-    void writeForwardActionResponse(final HttpResponse response, final ResponseWriter responseWriter, final HttpRequest request, final Action action, boolean synchronous) {
+    void writeForwardActionResponse(final HttpResponse response, final ResponseWriter responseWriter, final HttpRequest request, final Action action) {
         try {
             responseWriter.writeResponse(request, response, false);
             mockServerLogger.logEvent(
@@ -411,8 +411,8 @@ public class HttpActionHandler {
                     .setHttpRequest(request)
                     .setHttpResponse(response)
                     .setExpectation(request, response)
-                    .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}")
-                    .setArguments(response, response, httpRequestToCurlSerializer.toCurl(request), action)
+                    .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}for action:{}from expectation:{}")
+                    .setArguments(response, response, httpRequestToCurlSerializer.toCurl(request), action, action.getExpectationId())
             );
         } catch (Throwable throwable) {
             mockServerLogger.logEvent(

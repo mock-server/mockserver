@@ -116,7 +116,7 @@ public class DescriptionProcessorTest {
             "      }" + NEW_LINE +
             "    }" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"first\" : \"spec:\"," + NEW_LINE +
+            "  \"first\" : \"spec \"," + NEW_LINE +
             "  \"second\" : \" showPetById\"" + NEW_LINE +
             "}, " +
             "{" + NEW_LINE +
@@ -134,7 +134,7 @@ public class DescriptionProcessorTest {
             "      }" + NEW_LINE +
             "    }" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"first\" : \"spec:\"," + NEW_LINE +
+            "  \"first\" : \"spec \"," + NEW_LINE +
             "  \"second\" : \"            \"" + NEW_LINE +
             "}, " +
             "\"openapi_petstore_example.json                      \", " +
@@ -254,7 +254,7 @@ public class DescriptionProcessorTest {
             "      }" + NEW_LINE +
             "    }" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"first\" : \"spec:\"," + NEW_LINE +
+            "  \"first\" : \"spec \"," + NEW_LINE +
             "  \"second\" : \" \"" + NEW_LINE +
             "}, " +
             "\"openapi_petstore_example.json                      \", " +

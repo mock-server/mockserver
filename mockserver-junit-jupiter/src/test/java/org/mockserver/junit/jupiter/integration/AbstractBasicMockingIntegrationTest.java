@@ -1403,7 +1403,11 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "    \"httpResponse\" : {" + NEW_LINE +
                     "      \"body\" : \"some_body\"" + NEW_LINE +
                     "    }" + NEW_LINE +
-                    "  }" + NEW_LINE,
+                    "  }" + NEW_LINE +
+                    NEW_LINE +
+                    " with id:" + NEW_LINE +
+                    NEW_LINE +
+                    "  " + UUIDService.getUUID() + NEW_LINE,
 
                 new String[]{
                     "received request:" + NEW_LINE +

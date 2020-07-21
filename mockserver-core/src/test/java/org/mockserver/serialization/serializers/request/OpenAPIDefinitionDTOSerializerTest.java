@@ -29,8 +29,8 @@ public class OpenAPIDefinitionDTOSerializerTest {
                 .withOperationId("listPets")
         )), is("" +
             "{" + NEW_LINE +
-            "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_simple_example.json\"," + NEW_LINE +
-            "  \"operationId\" : \"listPets\"" + NEW_LINE +
+            "  \"operationId\" : \"listPets\"," + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_simple_example.json\"" + NEW_LINE +
             "}"
         ));
     }
@@ -55,8 +55,8 @@ public class OpenAPIDefinitionDTOSerializerTest {
                 .withOperationId("listPets")
         )), is("" +
             "{" + NEW_LINE +
-            "  \"specUrlOrPayload\" : \"" + FileReader.getURL("org/mockserver/mock/openapi_simple_example.json").toString() + "\"," + NEW_LINE +
-            "  \"operationId\" : \"listPets\"" + NEW_LINE +
+            "  \"operationId\" : \"listPets\"," + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"" + FileReader.getURL("org/mockserver/mock/openapi_simple_example.json").toString() + "\"" + NEW_LINE +
             "}"
         ));
     }
@@ -81,8 +81,8 @@ public class OpenAPIDefinitionDTOSerializerTest {
                 .withOperationId("listPets")
         )), is("" +
             "{" + NEW_LINE +
-            "  \"specUrlOrPayload\" : " + ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_simple_example.json")).toPrettyString().replaceAll("\\R", "\n  ") + "," + NEW_LINE +
-            "  \"operationId\" : \"listPets\"" + NEW_LINE +
+            "  \"operationId\" : \"listPets\"," + NEW_LINE +
+            "  \"specUrlOrPayload\" : " + ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_simple_example.json")).toPrettyString().replaceAll("\\R", "\n  ") + NEW_LINE +
             "}"
         ));
     }

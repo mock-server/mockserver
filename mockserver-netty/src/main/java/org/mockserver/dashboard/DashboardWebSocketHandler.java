@@ -357,7 +357,7 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
                             }
                             return ImmutableMap.of(
                                 "key", requestMatcher.getExpectation().getId(),
-                                "description", activeExpectationsDescriptionProcessor.description(requestMatcher.getExpectation().getHttpRequest()),
+                                "description", activeExpectationsDescriptionProcessor.description(requestMatcher.getExpectation().getHttpRequest(), requestMatcher.getExpectation().getId()),
                                 "value", expectationJsonNode
                             );
                         })

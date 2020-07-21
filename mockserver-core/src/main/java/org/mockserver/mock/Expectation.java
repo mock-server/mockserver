@@ -339,29 +339,32 @@ public class Expectation extends ObjectWithJsonToString {
 
     @JsonIgnore
     public Action getAction() {
+        Action action = null;
         if (httpResponse != null) {
-            return getHttpResponse();
+            action = getHttpResponse();
         } else if (httpResponseTemplate != null) {
-            return getHttpResponseTemplate();
+            action = getHttpResponseTemplate();
         } else if (httpResponseClassCallback != null) {
-            return getHttpResponseClassCallback();
+            action = getHttpResponseClassCallback();
         } else if (httpResponseObjectCallback != null) {
-            return getHttpResponseObjectCallback();
+            action = getHttpResponseObjectCallback();
         } else if (httpForward != null) {
-            return getHttpForward();
+            action = getHttpForward();
         } else if (httpForwardTemplate != null) {
-            return getHttpForwardTemplate();
+            action = getHttpForwardTemplate();
         } else if (httpForwardClassCallback != null) {
-            return getHttpForwardClassCallback();
+            action = getHttpForwardClassCallback();
         } else if (httpForwardObjectCallback != null) {
-            return getHttpForwardObjectCallback();
+            action = getHttpForwardObjectCallback();
         } else if (httpOverrideForwardedRequest != null) {
-            return getHttpOverrideForwardedRequest();
+            action = getHttpOverrideForwardedRequest();
         } else if (httpError != null) {
-            return getHttpError();
-        } else {
-            return null;
+            action = getHttpError();
         }
+        if (action != null) {
+            action.setExpectationId(getId());
+        }
+        return action;
     }
 
     public Times getTimes() {

@@ -71,14 +71,14 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                     httpRequestMatchers.removePriorityKey(httpRequestMatcher);
                     if (httpRequestMatcher.update(expectation)) {
                         httpRequestMatchers.addPriorityKey(httpRequestMatcher);
-                        if (MockServerLogger.isEnabled(Level.DEBUG)) {
+                        if (MockServerLogger.isEnabled(Level.INFO)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setType(UPDATED_EXPECTATION)
-                                    .setLogLevel(Level.DEBUG)
+                                    .setLogLevel(Level.INFO)
                                     .setHttpRequest(expectation.getHttpRequest())
                                     .setMessageFormat(UPDATED_EXPECTATION_MESSAGE_FORMAT)
-                                    .setArguments(expectation.clone())
+                                    .setArguments(expectation.clone(), expectation.getId())
                             );
                         }
                         if (expectation.getAction() != null) {
@@ -125,7 +125,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                                         .setLogLevel(Level.INFO)
                                         .setHttpRequest(expectation.getHttpRequest())
                                         .setMessageFormat(UPDATED_EXPECTATION_MESSAGE_FORMAT)
-                                        .setArguments(expectation.clone())
+                                        .setArguments(expectation.clone(), expectation.getId())
                                 );
                             }
                             if (expectation.getAction() != null) {
@@ -167,7 +167,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                     .setLogLevel(Level.INFO)
                     .setHttpRequest(expectation.getHttpRequest())
                     .setMessageFormat(CREATED_EXPECTATION_MESSAGE_FORMAT)
-                    .setArguments(expectation.clone())
+                    .setArguments(expectation.clone(), expectation.getId())
             );
         }
         return httpRequestMatcher;
@@ -279,13 +279,14 @@ public class RequestMatchers extends MockServerMatcherNotifier {
     private void removeHttpRequestMatcher(HttpRequestMatcher httpRequestMatcher, Cause cause, boolean notifyAndUpdateMetrics) {
         if (httpRequestMatchers.remove(httpRequestMatcher)) {
             if (httpRequestMatcher.getExpectation() != null && MockServerLogger.isEnabled(Level.INFO)) {
+                Expectation expectation = httpRequestMatcher.getExpectation().clone();
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(REMOVED_EXPECTATION)
                         .setLogLevel(Level.INFO)
                         .setHttpRequest(httpRequestMatcher.getExpectation().getHttpRequest())
                         .setMessageFormat(REMOVED_EXPECTATION_MESSAGE_FORMAT)
-                        .setArguments(httpRequestMatcher.getExpectation().clone())
+                        .setArguments(expectation, expectation.getId())
                 );
             }
             if (httpRequestMatcher.getExpectation() != null) {

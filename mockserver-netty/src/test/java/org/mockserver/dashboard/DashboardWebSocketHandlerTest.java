@@ -284,7 +284,7 @@ public class DashboardWebSocketHandlerTest {
         String renderedList = "" +
             "  \"activeExpectations\" : [ {" + NEW_LINE +
             "    \"key\" : \"" + expectations.get(0).getId() + "\"," + NEW_LINE +
-            "    \"description\" : \"  one\"," + NEW_LINE +
+            "    \"description\" : \"" + expectations.get(0).getId() + ":   one\"," + NEW_LINE +
             "    \"value\" : {" + NEW_LINE +
             "      \"id\" : \"" + expectations.get(0).getId() + "\"," + NEW_LINE +
             "      \"priority\" : 0," + NEW_LINE +
@@ -1192,7 +1192,7 @@ public class DashboardWebSocketHandlerTest {
         String renderedList = "" +
             "  \"activeExpectations\" : [ {" + NEW_LINE +
             "    \"key\" : \"" + expectations.get(0).getId() + "\"," + NEW_LINE +
-            "    \"description\" : \"    one\"," + NEW_LINE +
+            "    \"description\" : \"" + expectations.get(0).getId() + ":     one\"," + NEW_LINE +
             "    \"value\" : {" + NEW_LINE +
             "      \"id\" : \"" + expectations.get(0).getId() + "\"," + NEW_LINE +
             "      \"priority\" : 0," + NEW_LINE +
@@ -1213,7 +1213,7 @@ public class DashboardWebSocketHandlerTest {
             "    }" + NEW_LINE +
             "  }, {" + NEW_LINE +
             "    \"key\" : \"" + expectations.get(1).getId() + "\"," + NEW_LINE +
-            "    \"description\" : \"    two\"," + NEW_LINE +
+            "    \"description\" : \"" + expectations.get(1).getId() + ":     two\"," + NEW_LINE +
             "    \"value\" : {" + NEW_LINE +
             "      \"id\" : \"" + expectations.get(1).getId() + "\"," + NEW_LINE +
             "      \"priority\" : 0," + NEW_LINE +
@@ -1234,7 +1234,7 @@ public class DashboardWebSocketHandlerTest {
             "    }" + NEW_LINE +
             "  }, {" + NEW_LINE +
             "    \"key\" : \"" + expectations.get(2).getId() + "\"," + NEW_LINE +
-            "    \"description\" : \"  three\"," + NEW_LINE +
+            "    \"description\" : \"" + expectations.get(2).getId() + ":   three\"," + NEW_LINE +
             "    \"value\" : {" + NEW_LINE +
             "      \"id\" : \"" + expectations.get(2).getId() + "\"," + NEW_LINE +
             "      \"priority\" : 0," + NEW_LINE +

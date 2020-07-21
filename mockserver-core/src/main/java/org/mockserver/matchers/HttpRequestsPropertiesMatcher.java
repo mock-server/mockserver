@@ -33,7 +33,8 @@ import static org.mockserver.model.NottableOptionalString.optionalString;
 import static org.mockserver.model.NottableSchemaString.schemaString;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.ParameterStyle.*;
-import static org.mockserver.openapi.OpenAPISerialiser.OPEN_API_LOAD_ERROR;
+import static org.mockserver.openapi.OpenAPIParser.OPEN_API_LOAD_ERROR;
+import static org.mockserver.openapi.OpenAPIParser.buildOpenAPI;
 import static org.slf4j.event.Level.ERROR;
 import static org.slf4j.event.Level.TRACE;
 
@@ -69,7 +70,7 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                 httpRequests = new ArrayList<>();
                 OpenAPISerialiser openAPISerialiser = new OpenAPISerialiser(mockServerLogger);
                 try {
-                    OpenAPI openAPI = openAPISerialiser.buildOpenAPI(openAPIDefinition.getSpecUrlOrPayload(), true);
+                    OpenAPI openAPI = buildOpenAPI(openAPIDefinition.getSpecUrlOrPayload());
                     final Map<String, List<Pair<String, Operation>>> stringListMap = openAPISerialiser.retrieveOperations(openAPI, openAPIDefinition.getOperationId());
                     stringListMap
                         .forEach((path, operations) -> operations

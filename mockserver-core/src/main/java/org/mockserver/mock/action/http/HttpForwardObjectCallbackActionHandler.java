@@ -68,7 +68,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                     if (httpResponse != null) {
                         try {
                             HttpResponse callbackResponse = expectationForwardAndResponseCallback.handle(request, httpResponse);
-                            actionHandler.writeForwardActionResponse(callbackResponse, responseWriter, request, httpObjectCallback, synchronous);
+                            actionHandler.writeForwardActionResponse(callbackResponse, responseWriter, request, httpObjectCallback);
                         } catch (Throwable throwable) {
                             if (MockServerLogger.isEnabled(WARN)) {
                                 mockServerLogger.logEvent(
