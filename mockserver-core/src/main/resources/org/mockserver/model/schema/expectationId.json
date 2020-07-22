@@ -1,0 +1,10 @@
+{
+  "title": "expectation id",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string"
+    }
+  }
+}

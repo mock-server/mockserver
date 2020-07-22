@@ -3,6 +3,9 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "expectationId": {
+      "$ref": "#/definitions/expectationId"
+    },
     "httpRequest": {
       "$ref": "#/definitions/requestDefinition"
     },
@@ -10,6 +13,18 @@
       "$ref": "#/definitions/verificationTimes"
     }
   },
+  "oneOf": [
+    {
+      "required": [
+        "expectationId"
+      ]
+    },
+    {
+      "required": [
+        "httpRequest"
+      ]
+    }
+  ],
   "definitions": {
   }
 }

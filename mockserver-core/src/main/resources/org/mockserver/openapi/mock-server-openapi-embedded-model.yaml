@@ -93,7 +93,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RequestDefinition"
+              oneOf:
+                - $ref: "#/components/schemas/RequestDefinition"
+                - $ref: "#/components/schemas/ExpectationId"
         description: request used to match expectations and recored requests to clear
   /reset:
     put:
@@ -320,6 +322,13 @@ components:
             - httpOverrideForwardedRequest
         - required:
             - httpError
+    ExpectationId:
+      title: "pointer to existing expectation"
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
     OpenAPIExpectations:
       title: "list of open api expectations"
       oneOf:
@@ -839,10 +848,17 @@ components:
       type: object
       additionalProperties: false
       properties:
+        expectationId:
+          $ref: "#/components/schemas/ExpectationId"
         httpRequest:
           $ref: "#/components/schemas/RequestDefinition"
         times:
           $ref: "#/components/schemas/VerificationTimes"
+      oneOf:
+        - required:
+            - expectationId
+        - required:
+            - httpRequest
     VerificationTimes:
       description: "number of request to verify"
       type: object
@@ -857,10 +873,20 @@ components:
       type: object
       additionalProperties: false
       properties:
+        expectationIds:
+          type: array
+          additionalProperties: false
+          items:
+            $ref: "#/components/schemas/ExpectationId"
         httpRequests:
           type: array
           items:
             $ref: "#/components/schemas/RequestDefinition"
+      oneOf:
+        - required:
+            - expectationIds
+        - required:
+            - httpRequests
     Ports:
       description: "list of ports"
       type: object

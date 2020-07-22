@@ -869,7 +869,7 @@ public class MockServerClientTest {
     public void shouldSendClearRequestForNullRequest() {
         // when
         mockServerClient
-            .clear(null);
+            .clear((RequestDefinition) null);
 
         // then
         verify(mockHttpClient).sendRequest(
@@ -1296,7 +1296,7 @@ public class MockServerClientTest {
         exception.expectMessage(containsString("verify(RequestDefinition, VerificationTimes) requires a non null RequestDefinition object"));
 
         // when
-        mockServerClient.verify(null, VerificationTimes.exactly(2));
+        mockServerClient.verify((RequestDefinition) null, VerificationTimes.exactly(2));
     }
 
     @Test
@@ -1326,7 +1326,7 @@ public class MockServerClientTest {
         exception.expectMessage(containsString("verify(RequestDefinition...) requires a non-null non-empty array of RequestDefinition objects"));
 
         // when
-        mockServerClient.verify();
+        mockServerClient.verify(new RequestDefinition[0]);
     }
 
     @Test

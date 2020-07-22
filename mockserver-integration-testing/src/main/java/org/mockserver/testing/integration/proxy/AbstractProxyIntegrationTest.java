@@ -993,8 +993,10 @@ public abstract class AbstractProxyIntegrationTest {
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  1 error:" + NEW_LINE +
+            "  3 errors:" + NEW_LINE +
             "   - object instance has properties which are not allowed by the schema: [\"httpRequest\"]" + NEW_LINE +
+            "   - schema: \"/oneOf/0\" has error: \"object has missing required properties ([\"expectationIds\"])\"" + NEW_LINE +
+            "   - schema: \"/oneOf/1\" has error: \"object has missing required properties ([\"httpRequests\"])\"" + NEW_LINE +
             "  " + NEW_LINE +
             "  " + OPEN_API_SPECIFICATION_URL));
     }

@@ -301,6 +301,14 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         }
     }
 
+    public Stream<Expectation> retrieveExpectations(ExpectationId... expectationIds) {
+        return Arrays
+            .stream(expectationIds)
+            .map(expectationId -> httpRequestMatchers.getByKey(expectationId.getId()).map(HttpRequestMatcher::getExpectation))
+            .filter(Optional::isPresent)
+            .map(Optional::get);
+    }
+
     public List<Expectation> retrieveActiveExpectations(RequestDefinition requestDefinition) {
         if (requestDefinition == null) {
             return httpRequestMatchers.stream().map(HttpRequestMatcher::getExpectation).collect(Collectors.toList());

@@ -65,6 +65,7 @@ public class HttpState {
     private MockServerLogger mockServerLogger;
     private WebSocketClientRegistry webSocketClientRegistry;
     // serializers
+    private ExpectationIdSerializer expectationIdSerializer;
     private RequestDefinitionSerializer requestDefinitionSerializer;
     private LogEventRequestAndResponseSerializer httpRequestResponseSerializer;
     private ExpectationSerializer expectationSerializer;
@@ -127,8 +128,14 @@ public class HttpState {
         final String logCorrelationId = UUIDService.getUUID();
         RequestDefinition requestDefinition = null;
         if (isNotBlank(request.getBodyAsString())) {
-            requestDefinition = getRequestDefinitionSerializer().deserialize(request.getBodyAsJsonOrXmlString());
-            requestDefinition.withLogCorrelationId(logCorrelationId);
+            String body = request.getBodyAsJsonOrXmlString();
+            try {
+                requestDefinition = resolveExpectationId(getExpectationIdSerializer().deserialize(body));
+            } catch (IllegalArgumentException ignore) {
+                // assume not expectationId
+                requestDefinition = getRequestDefinitionSerializer().deserialize(body);
+                requestDefinition.withLogCorrelationId(logCorrelationId);
+            }
         }
         try {
             ClearType type = ClearType.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "ALL"));
@@ -156,6 +163,21 @@ public class HttpState {
             throw new IllegalArgumentException("\"" + request.getFirstQueryStringParameter("type") + "\" is not a valid value for \"type\" parameter, only the following values are supported " + Arrays.stream(ClearType.values()).map(input -> input.name().toLowerCase()).collect(Collectors.toList()));
         }
         System.gc();
+    }
+
+    private RequestDefinition resolveExpectationId(ExpectationId expectationId) {
+        return requestMatchers
+            .retrieveExpectations(expectationId)
+            .findFirst()
+            .map(Expectation::getHttpRequest)
+            .orElse(null);
+    }
+
+    private RequestDefinition[] resolveExpectationIds(ExpectationId... expectationId) {
+        return requestMatchers
+            .retrieveExpectations(expectationId)
+            .map(Expectation::getHttpRequest)
+            .toArray(RequestDefinition[]::new);
     }
 
     public void reset() {
@@ -489,6 +511,9 @@ public class HttpState {
     }
 
     public void verify(Verification verification, Consumer<String> resultConsumer) {
+        if (verification.getHttpRequest() == null) {
+            verification.withRequest(resolveExpectationId(verification.getExpectationId()));
+        }
         mockServerLog.verify(verification, resultConsumer);
     }
 
@@ -499,6 +524,9 @@ public class HttpState {
     }
 
     public void verify(VerificationSequence verification, Consumer<String> resultConsumer) {
+        if (verification.getHttpRequests() == null) {
+            verification.withRequests(resolveExpectationIds(verification.getExpectationIds().toArray(new ExpectationId[0])));
+        }
         mockServerLog.verify(verification, resultConsumer);
     }
 
@@ -676,6 +704,13 @@ public class HttpState {
             expectationFileWatcher.stop();
         }
         getMockServerLog().stop();
+    }
+
+    private ExpectationIdSerializer getExpectationIdSerializer() {
+        if (this.expectationIdSerializer == null) {
+            this.expectationIdSerializer = new ExpectationIdSerializer(mockServerLogger);
+        }
+        return expectationIdSerializer;
     }
 
     private RequestDefinitionSerializer getRequestDefinitionSerializer() {

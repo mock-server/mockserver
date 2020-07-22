@@ -1249,7 +1249,7 @@ public class MockServerClientIntegrationTest {
         echoServerOne.withNextResponse(response().withStatusCode(201));
 
         // when
-        mockServerClientOne.clear(null);
+        mockServerClientOne.clear((RequestDefinition) null);
 
         // then
         assertThat(retrieveRequests(request()).size(), is(1));

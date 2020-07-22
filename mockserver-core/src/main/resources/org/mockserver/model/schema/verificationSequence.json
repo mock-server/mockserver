@@ -3,6 +3,13 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "expectationIds": {
+      "type": "array",
+      "additionalProperties": false,
+      "items": {
+        "$ref": "#/definitions/expectationId"
+      }
+    },
     "httpRequests": {
       "type": "array",
       "additionalProperties": false,
@@ -11,6 +18,18 @@
       }
     }
   },
+  "oneOf": [
+    {
+      "required": [
+        "expectationIds"
+      ]
+    },
+    {
+      "required": [
+        "httpRequests"
+      ]
+    }
+  ],
   "definitions": {
   }
 }

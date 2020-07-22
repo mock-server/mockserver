@@ -5731,7 +5731,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         );
 
         // when
-        mockServerClient.clear(null);
+        mockServerClient.clear((RequestDefinition) null);
 
         // then
         assertThat(mockServerClient.retrieveActiveExpectations(null), emptyArray());

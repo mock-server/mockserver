@@ -1,5 +1,6 @@
 package org.mockserver.verify;
 
+import org.mockserver.model.ExpectationId;
 import org.mockserver.model.ObjectWithJsonToString;
 import org.mockserver.model.RequestDefinition;
 
@@ -12,6 +13,7 @@ import java.util.List;
  */
 public class VerificationSequence extends ObjectWithJsonToString {
     private List<RequestDefinition> httpRequests = new ArrayList<>();
+    private List<ExpectationId> expectationIds = new ArrayList<>();
 
     public static VerificationSequence verificationSequence() {
         return new VerificationSequence();
@@ -29,5 +31,19 @@ public class VerificationSequence extends ObjectWithJsonToString {
 
     public List<RequestDefinition> getHttpRequests() {
         return httpRequests;
+    }
+
+    public VerificationSequence withExpectationIds(ExpectationId... expectationIds) {
+        Collections.addAll(this.expectationIds, expectationIds);
+        return this;
+    }
+
+    public VerificationSequence withExpectationIds(List<ExpectationId> expectationIds) {
+        this.expectationIds = expectationIds;
+        return this;
+    }
+
+    public List<ExpectationId> getExpectationIds() {
+        return expectationIds;
     }
 }
