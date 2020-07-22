@@ -519,8 +519,8 @@ components:
             keyMatchStyle:
               type: string
               enum:
-                - MATCHING_KEY
-                - SUB_SET
+              - MATCHING_KEY
+              - SUB_SET
               default: SUB_SET
           # patternProperties:
           #   "^(?!keyMatchStyle)\\S+$":
@@ -588,20 +588,19 @@ components:
             parameterStyle:
               type: string
               enum:
-                - SIMPLE
-                - SIMPLE_EXPLODED
-                - LABEL
-                - LABEL_EXPLODED
-                - MATRIX
-                - MATRIX_EXPLODED
-                - FORM_EXPLODED
-                - FORM
-                - SPACE_DELIMITED_EXPLODED
-                - SPACE_DELIMITED
-                - PIPE_DELIMITED_EXPLODED
-                - PIPE_DELIMITED
-                - DEEP_OBJECT
-              default: ''
+              - SIMPLE
+              - SIMPLE_EXPLODED
+              - LABEL
+              - LABEL_EXPLODED
+              - MATRIX
+              - MATRIX_EXPLODED
+              - FORM_EXPLODED
+              - FORM
+              - SPACE_DELIMITED_EXPLODED
+              - SPACE_DELIMITED
+              - PIPE_DELIMITED_EXPLODED
+              - PIPE_DELIMITED
+              - DEEP_OBJECT
     SocketAddress:
       title: remote address to send request to
       type: object
