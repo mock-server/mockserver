@@ -39,7 +39,7 @@ Release Steps
 1. update docker image
    1. ensure maven returns the latest release 
       1. curl -v https://oss.sonatype.org/service/local/artifact/maven/redirect\?r\=releases\&g\=org.mock-server\&a\=mockserver-netty\&c\=jar-with-dependencies\&e\=jar\&v\=RELEASE
-   1. update Dockerfile
+   1. update Dockerfile (no longer required)
    1. docker build --no-cache -t mockserver/mockserver:mockserver-x.x.x ./docker
    1. docker build --no-cache -t jamesdbloom/mockserver:mockserver-x.x.x ./docker
    1. docker login

@@ -365,11 +365,11 @@ LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(loggingCon
 
 <p>When running MockServer directly from <a href="/mock_server/running_mock_server.html#running_from_command_line">the command line</a> the command line argument <span class="inline_code">-logLevel</span> can be used to set the log level, as follows:</p>
 
-<pre><code class="code">java -jar ~/Downloads/mockserver-netty-5.11.0-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel DEBUG</code></pre>
+<pre><code class="code">java -jar ~/Downloads/mockserver-netty-5.11.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel DEBUG</code></pre>
 
 <p>Alternatively a system property <span class="inline_code">mockserver.logLevel</span> can be used to set the log level, as follows:</p>
 
-<pre><code class="code">java -Dmockserver.logLevel=INFO -jar ~/Downloads/mockserver-netty-5.11.0-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span></code></pre>
+<pre><code class="code">java -Dmockserver.logLevel=INFO -jar ~/Downloads/mockserver-netty-5.11.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span></code></pre>
 
 <h4>Configuring Java Logger</h4>
 
@@ -378,7 +378,7 @@ LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(loggingCon
 <p>The MockServer github repository contains an example <a href="https://github.com/mock-server/mockserver/blob/master/mockserver-netty/src/main/resources/example_logging_configuration.properties">Java Logger configuration file</a> (which would be configured using <span class="inline_code">java.util.logging.config.file</span>).</p>
 
 <p>The default logging configuration can be overridden as follows:</p>
-<pre><code class="code">java -Djava.util.logging.config.file=/path/to/example_logging_configuration.properties -jar ~/Downloads/mockserver-netty-5.11.0-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel DEBUG</code></pre>
+<pre><code class="code">java -Djava.util.logging.config.file=/path/to/example_logging_configuration.properties -jar ~/Downloads/mockserver-netty-5.11.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel DEBUG</code></pre>
 
 <a id="logging_with_maven_plugin" class="anchor" href="#logging_with_maven_plugin">&nbsp;</a>
 
@@ -389,7 +389,7 @@ LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(loggingCon
 <pre><code class="code xml">&lt;<span class="element">plugin</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-     &lt;<span class="element">version</span>&gt;<span class="element_value">5.11.0</span>&lt;/<span class="element">version</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">5.11.1</span>&lt;/<span class="element">version</span>&gt;
      &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
         &lt;<span class="element">logLevel</span>&gt;<span class="element_value">DEBUG</span>&lt;/<span class="element">logLevel</span>&gt;
