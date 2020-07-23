@@ -217,6 +217,7 @@
 <div class="panel title">
     <p>File location of custom mTLS (TLS client authentication) X.509 Certificate Chain for Trusting (i.e. signature verification of) Client X.509 Certificates, the certificate chain must be a X.509 PEM file.</p>
     <p>This certificate chain will be used if MockServer performs mTLS (client authentication) for inbound TLS connections because <a href="#button_configuration_require_mtls_for_all_tls_connections">tlsMutualAuthenticationRequired</a> is enabled</p>
+    <p>This configuration property is also used for MockServerClient to trust <a href="#button_configuration_mtls_mockserver_client_certificate_chain">outbound TLS X.509 certificates</a> i.e. TLS connections to MockServer</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
     <p>Java Code:</p>
     <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.tlsMutualAuthenticationCertificateChain(String certificateChain)</code></pre>
@@ -311,6 +312,30 @@
     <p>Example:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardProxyCertificateChain="/some/existing/path"</code></pre>
 </div>
+
+<a id="tls_configuration_mockserver_client" class="anchor" href="#tls_configuration_mockserver_client">&nbsp;</a>
+
+<h4>MockServer Client </h4>
+
+<button id="button_configuration_mtls_mockserver_client_certificate_chain" class="accordion title"><strong>Fixed Inbound mTLS Client Authentication X.509 Certificate Chain (for Trusting Client X.509 Certificates)</strong></button>
+<div class="panel title">
+    <p>File location of custom mTLS (TLS client authentication) X.509 Certificate Chain for Trusting (i.e. signature verification of) MockServer X.509 Certificates, the certificate chain must be a X.509 PEM file. This certificate chain will only be used if MockServerClient performs TLS to calls to MockServer.</p>
+    <p>This settings is particularly used when connecting to MockServer via a load-balancer or other TLS terminating network infrastructure with its own X.509 Certificate.</p>
+    <p>This configuration property is also used for MockServer to trust <a href="#button_configuration_mtls_certificate_chain">inbound mTLS client authentication X.509 certificates</a></p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.tlsMutualAuthenticationCertificateChain(String certificateChain)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.tlsMutualAuthenticationCertificateChain=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.tlsMutualAuthenticationCertificateChain=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.tlsMutualAuthenticationCertificateChain="/some/existing/path"</code></pre>
+</div>
+
+<a id="tls_configuration_bouncy_castle" class="anchor" href="#tls_configuration_bouncy_castle">&nbsp;</a>
 
 <h4>Bouncy Castle</h4>
 
