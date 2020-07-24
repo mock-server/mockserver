@@ -73,6 +73,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_MAX_EXPECTATIONS = "mockserver.maxExpectations";
     private static final String MOCKSERVER_MAX_LOG_ENTRIES = "mockserver.maxLogEntries";
     private static final String MOCKSERVER_OUTPUT_MEMORY_USAGE_CSV = "mockserver.outputMemoryUsageCsv";
+    private static final String MOCKSERVER_MEMORY_USAGE_DIRECTORY = "mockserver.memoryUsageCsvDirectory";
     private static final String MOCKSERVER_MAX_WEB_SOCKET_EXPECTATIONS = "mockserver.maxWebSocketExpectations";
     private static final String MOCKSERVER_MAX_INITIAL_LINE_LENGTH = "mockserver.maxInitialLineLength";
     private static final String MOCKSERVER_MAX_HEADER_SIZE = "mockserver.maxHeaderSize";
@@ -311,6 +312,15 @@ public class ConfigurationProperties {
 
     public static void outputMemoryUsageCsv(boolean enable) {
         System.setProperty(MOCKSERVER_OUTPUT_MEMORY_USAGE_CSV, "" + enable);
+    }
+
+    public static String memoryUsageCsvDirectory() {
+        return readPropertyHierarchically(MOCKSERVER_MEMORY_USAGE_DIRECTORY, "MOCKSERVER_MEMORY_USAGE_DIRECTORY", ".");
+    }
+
+    public static void memoryUsageCsvDirectory(String directory) {
+        fileExists(directory);
+        System.setProperty(MOCKSERVER_MEMORY_USAGE_DIRECTORY, directory);
     }
 
     public static int maxWebSocketExpectations() {

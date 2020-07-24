@@ -25,7 +25,7 @@ mods
 *.log.*
 *.sql
 *.sqlite
-test.csv
+*.csv
 TODO.md
 persistedExpectations.json
 mockserverInitialization.json

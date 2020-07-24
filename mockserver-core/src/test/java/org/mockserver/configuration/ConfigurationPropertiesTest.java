@@ -168,6 +168,21 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldSetAndReadMemoryUsageCsvDirectory() throws IOException {
+        // given
+        System.clearProperty("mockserver.memoryUsageCsvDirectory");
+
+        // when
+        assertEquals(".", memoryUsageCsvDirectory());
+        File tempFile = File.createTempFile("prefix", "suffix");
+        memoryUsageCsvDirectory(tempFile.getAbsolutePath());
+
+        // then
+        assertEquals(tempFile.getAbsolutePath(), memoryUsageCsvDirectory());
+        assertEquals(tempFile.getAbsolutePath(), System.getProperty("mockserver.memoryUsageCsvDirectory"));
+    }
+
+    @Test
     public void shouldSetAndReadMaxWebSocketExpectations() {
         // given
         System.clearProperty("mockserver.maxWebSocketExpectations");
