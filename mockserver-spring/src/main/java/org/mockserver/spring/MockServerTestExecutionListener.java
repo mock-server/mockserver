@@ -29,7 +29,6 @@ public class MockServerTestExecutionListener extends AbstractTestExecutionListen
             List<Field> fields = getMockServerFields(testContext.getTestClass());
             if (!fields.isEmpty()) {
                 initMockServerClientIfRequired(testContext);
-
             }
             for (Field field : fields) {
                 setFieldValue(testContext, field);
@@ -64,7 +63,7 @@ public class MockServerTestExecutionListener extends AbstractTestExecutionListen
 
     @Override
     public void afterTestMethod(TestContext testContext) {
-        if (isMockServerTest(testContext)) {
+        if (mockServerClient != null && isMockServerTest(testContext)) {
             mockServerClient.reset();
         }
     }
