@@ -14,6 +14,10 @@
     <description>A module containing helpers for writing mockserver tests in spring projects</description>
     <url>http://www.mock-server.com</url>
 
+    <properties>
+        <spring-boot.version>2.2.8.RELEASE</spring-boot.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.mock-server</groupId>
@@ -41,6 +45,20 @@
             <artifactId>spring-boot</artifactId>
             <version>2.2.8.RELEASE</version>
         </dependency>
-    </dependencies>
 
+        <!-- Test -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <version>${spring-boot.version}</version>
+        </dependency>
+    </dependencies>
 </project>
