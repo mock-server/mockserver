@@ -13,7 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
-- fixed recursive loop on stopAsync for ClientAndServer 
+- fixed recursive loop on stopAsync for ClientAndServer
+- header matching for subsets to ensure notted header keys don't exist 
 
 ## [5.11.1] - 2020-07-22
 

@@ -241,7 +241,7 @@
     <p>Configure trusted set of certificates for forwarded or proxied requests (i.e. TLS connections out of MockServer).</p>
     <p>MockServer will only be able to establish a TLS connection to endpoints that have a trusted X.509 certificate according to the trust manager type, as follows:</p>
     <ul>
-        <li>ALL - Insecure will trust all X.509 certificates and not perform host name verification.</li>
+        <li>ANY - Insecure will trust all X.509 certificates and not perform host name verification.</li>
         <li>JVM - Will trust all X.509 certificates trust by the JVM.</li>
         <li>CUSTOM - Will trust all X.509 certificates specified in <a href="#button_configuration_custom_trusted_tls_certs_for_proxied_reqs">forwardProxyTLSCustomTrustX509Certificates</a> configuration value.</li>
     </ul>

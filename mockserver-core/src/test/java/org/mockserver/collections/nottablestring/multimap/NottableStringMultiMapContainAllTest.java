@@ -96,6 +96,10 @@ public class NottableStringMultiMapContainAllTest {
     // - control plane non matching schema keys
     // - control plane non matching schema values
     // - control plane non matching schema keys and values
+    // CONTROL PLANE - NOTTED (matching both notted and unnotted values, i.e. clear a notted value with a notted value)
+    // - control plane notted keys - TODO
+    // - control plane notted values - TODO
+    // - control plane notted keys and values - TODO
 
     // EMPTY
 
@@ -315,7 +319,7 @@ public class NottableStringMultiMapContainAllTest {
     public void shouldContainAllSubsetMultiValues() {
         // can't match subsets in reverse
         // can't match multiple different values with matching key
-        shouldPassScenariosSingleDirectionSubSetMatchingOnly(
+        shouldPassScenariosSingleDirectionSubSetOnly(
             passScenario(new String[]{
                 "keyOne", "valueOne_One",
             }, new String[]{
@@ -588,7 +592,7 @@ public class NottableStringMultiMapContainAllTest {
     public void shouldContainAllSubsetRegexKeysAndMultiValues() {
         // can't match regex in reverse (without control plane)
         // can't match multiple different values with matching key
-        shouldPassScenariosSingleDirectionSubSetMatchingOnly(
+        shouldPassScenariosSingleDirectionSubSetOnly(
             passScenario(new String[]{
                 "keyO.*", "valueO.*",
             }, new String[]{
@@ -758,7 +762,7 @@ public class NottableStringMultiMapContainAllTest {
     public void shouldContainAllIdenticalSchemaKeys() {
         // can't match schema in reverse (without control plane)
         // can't match schema by matching keys (without control plane)
-        shouldPassScenariosSingleDirectionSubSetMatchingOnly(
+        shouldPassScenariosSingleDirectionSubSetOnly(
             passSchemaScenario(new NottableString[][]{
                 new NottableString[]{schemaString("{\"type\": \"string\", \"pattern\": \"key.*\"}"), string("valueOne")},
             }, new NottableString[][]{
@@ -804,7 +808,7 @@ public class NottableStringMultiMapContainAllTest {
     public void shouldContainAllIdenticalSchemaKeysAndValues() {
         // can't match schema in reverse (without control plane)
         // can't match schema by matching keys (without control plane)
-        shouldPassScenariosSingleDirectionSubSetMatchingOnly(
+        shouldPassScenariosSingleDirectionSubSetOnly(
             passSchemaScenario(new NottableString[][]{
                 new NottableString[]{schemaString("{\"type\": \"string\", \"pattern\": \"key.*\"}"), schemaString("{\"type\": \"string\", \"pattern\": \"valueO.*\"}")},
             }, new NottableString[][]{
@@ -833,7 +837,7 @@ public class NottableStringMultiMapContainAllTest {
     public void shouldContainAllSubsetSchemaKeysAndValues() {
         // can't match schema in reverse (without control plane)
         // can't match schema by matching keys (without control plane)
-        shouldPassScenariosSingleDirectionSubSetMatchingOnly(
+        shouldPassScenariosSingleDirectionSubSetOnly(
             passSchemaScenario(new NottableString[][]{
                 new NottableString[]{schemaString("{\"type\": \"string\", \"pattern\": \"keyO.*\"}"), schemaString("{\"type\": \"string\", \"pattern\": \"valueO.*\"}")},
             }, new NottableString[][]{
@@ -856,7 +860,7 @@ public class NottableStringMultiMapContainAllTest {
     public void shouldContainAllSubsetSchemaKeysAndMultiValues() {
         // can't match schema in reverse (without control plane)
         // can't match schema by matching keys (without control plane)
-        shouldPassScenariosSingleDirectionSubSetMatchingOnly(
+        shouldPassScenariosSingleDirectionSubSetOnly(
             passSchemaScenario(new NottableString[][]{
                 new NottableString[]{schemaString("{\"type\": \"string\", \"pattern\": \"keyO.*\"}"), schemaString("{\"type\": \"string\", \"pattern\": \"valueO.*\"}")},
             }, new NottableString[][]{
@@ -881,7 +885,7 @@ public class NottableStringMultiMapContainAllTest {
     public void shouldContainAllNotMatchingSchemaKeys() {
         // can't match schema in reverse (without control plane)
         // can't match schema by matching keys (without control plane)
-        shouldPassScenariosSingleDirectionSubSetMatchingOnly(
+        shouldPassScenariosSingleDirectionSubSetOnly(
             failSchemaScenario(new NottableString[][]{
                 new NottableString[]{schemaString("{\"type\": \"string\", \"pattern\": \"notKey.*\"}"), string("valueOne")},
             }, new NottableString[][]{
@@ -941,7 +945,7 @@ public class NottableStringMultiMapContainAllTest {
     public void shouldContainAllNotMatchingSchemaKeysAndValues() {
         // can't match schema in reverse (without control plane)
         // can't match schema by matching keys (without control plane)
-        shouldPassScenariosSingleDirectionSubSetMatchingOnly(
+        shouldPassScenariosSingleDirectionSubSetOnly(
             failSchemaScenario(new NottableString[][]{
                 new NottableString[]{schemaString("{\"type\": \"string\", \"pattern\": \"notKey.*\"}"), schemaString("{\"type\": \"string\", \"pattern\": \"notValueO.*\"}")},
             }, new NottableString[][]{
@@ -968,44 +972,44 @@ public class NottableStringMultiMapContainAllTest {
                 "keyOne", "valueOne",
             })
         );
-        // can't match regex in reverse (without control plane)
-        shouldPassScenariosSingleDirection(
-            passScenario(new String[]{
-                "!notKeyOne", "value.*",
-                "!notKeyTwo", "value.*",
-            }, new String[]{
-                "keyOne", "valueOne",
-                "keyTwo", "valueTwo",
-            }),
-            passScenario(new String[]{
-                "keyOne", "valueOne",
-                "!notKeyTwo", "value.*",
-                "keyThree", "valueThree",
-            }, new String[]{
-                "keyOne", "valueOne",
-                "keyTwo", "valueTwo",
-                "keyThree", "valueThree",
-            })
-        );
-        // can't match multiple different values with matching key
-        shouldPassScenariosSubSetOnly(
-            passScenario(new String[]{
-                "!notKeyOne", "valueOne",
-                "!notKeyTwo", "valueTwo",
-            }, new String[]{
-                "keyOne", "valueOne",
-                "keyTwo", "valueTwo",
-            }),
-            passScenario(new String[]{
-                "keyOne", "valueOne",
-                "!notKeyTwo", "valueTwo",
-                "keyThree", "valueThree",
-            }, new String[]{
-                "keyOne", "valueOne",
-                "keyTwo", "valueTwo",
-                "keyThree", "valueThree",
-            })
-        );
+//        // can't match regex in reverse (without control plane)
+//        shouldPassScenariosSingleDirection(
+//            passScenario(new String[]{
+//                "!notKeyOne", "value.*",
+//                "!notKeyTwo", "value.*",
+//            }, new String[]{
+//                "keyOne", "valueOne",
+//                "keyTwo", "valueTwo",
+//            }),
+//            passScenario(new String[]{
+//                "keyOne", "valueOne",
+//                "!notKeyTwo", "value.*",
+//                "keyThree", "valueThree",
+//            }, new String[]{
+//                "keyOne", "valueOne",
+//                "keyTwo", "valueTwo",
+//                "keyThree", "valueThree",
+//            })
+//        );
+//        // can't match multiple different values with matching key
+//        shouldPassScenariosSubSetOnly(
+//            passScenario(new String[]{
+//                "!notKeyOne", "valueOne",
+//                "!notKeyTwo", "valueTwo",
+//            }, new String[]{
+//                "keyOne", "valueOne",
+//                "keyTwo", "valueTwo",
+//            }),
+//            passScenario(new String[]{
+//                "keyOne", "valueOne",
+//                "!notKeyTwo", "valueTwo",
+//                "keyThree", "valueThree",
+//            }, new String[]{
+//                "keyOne", "valueOne",
+//                "keyTwo", "valueTwo",
+//                "keyThree", "valueThree",
+//            })
+//        );
     }
 
     @Test
@@ -1099,6 +1103,14 @@ public class NottableStringMultiMapContainAllTest {
                 "keyThree", "valueThree",
             })
         );
+        // can't match subsets in reverse
+        // matching key still matches in reverse (but subset doesn't) so only subset
+        shouldPassScenariosSingleDirectionSubSetOnly(passScenario(new String[]{
+            "!keyOne", "!notValueOne",
+        }, new String[]{
+            "notKeyOne", "valueOne",
+            "notKeyOne", "valueOne",
+        }));
     }
 
     // NOTTED SUBSET
@@ -1107,7 +1119,7 @@ public class NottableStringMultiMapContainAllTest {
     public void shouldContainAllSubsetNottedKeysAndValues() {
         // can't match subsets in reverse
         // can't match multiple different values with matching key
-        shouldPassScenariosSingleDirectionSubSetMatchingOnly(
+        shouldPassScenariosSingleDirectionSubSetOnly(
             passScenario(new String[]{
                 "keyOne", "!notValueOne",
             }, new String[]{
@@ -1143,7 +1155,7 @@ public class NottableStringMultiMapContainAllTest {
     public void shouldContainAllSubsetNottedKeysAndMultiValues() {
         // can't match subsets in reverse
         // can't match multiple different values with matching key
-        shouldPassScenariosSingleDirectionSubSetMatchingOnly(
+        shouldPassScenariosSingleDirectionSubSetOnly(
             passScenario(new String[]{
                 "keyOne", "!notValueOne_One",
             }, new String[]{
@@ -1210,6 +1222,12 @@ public class NottableStringMultiMapContainAllTest {
                 "keyOne", "valueOne",
                 "keyTwo", "valueTwo",
                 "keyThree", "valueThree",
+            }),
+            failScenario(new String[]{
+                "!keyOne", ".*",
+            }, new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
             })
         );
     }
@@ -1700,7 +1718,7 @@ public class NottableStringMultiMapContainAllTest {
     @Test
     public void shouldContainAllSubsetRegexKeysAndMultiValuesForControlPlane() {
         // can't match multiple different values with matching key
-        shouldPassScenariosControlPlaneSingleDirectionSubSetMatchingOnly(
+        shouldPassScenariosControlPlaneSingleDirectionSubSetOnly(
             passScenario(new String[]{
                 "keyOne", "valueOne_One",
                 "keyOne", "valueOne_Two",
@@ -1826,7 +1844,7 @@ public class NottableStringMultiMapContainAllTest {
     @Test
     public void shouldContainAllSubsetSchemaKeysAndMultiValuesForControlPlane() {
         // can't match multiple different values with matching key
-        shouldPassScenariosControlPlaneSingleDirectionSubSetMatchingOnly(
+        shouldPassScenariosControlPlaneSingleDirectionSubSetOnly(
             passSchemaScenario(new NottableString[][]{
                 new NottableString[]{
                     string("keyOne"),
@@ -1925,6 +1943,282 @@ public class NottableStringMultiMapContainAllTest {
         );
     }
 
+    // CONTROL PLANE - NOTTED
+
+    @Test
+    public void shouldContainAllNottedKeysForControlPlane() {
+        shouldPassScenarios(
+//            passScenario(new String[]{
+//                "!notKeyOne", "valueOne",
+//            }, new String[]{
+//                "!notKeyOne", "valueOne",
+//            }),
+//            passScenario(new String[]{
+//                "!notKeyOne", "valueOne",
+//                "!notKeyTwo", "valueTwo",
+//            }, new String[]{
+//                "!notKeyOne", "valueOne",
+//                "!notKeyTwo", "valueTwo",
+//            }),
+            passScenario(new String[]{
+                "keyOne", "valueOne",
+            }, new String[]{
+                "!notKeyOne", "valueOne",
+            })
+        );
+        // can't match multiple different values with matching key
+        shouldPassScenariosSubSetOnly(
+            passScenario(new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+            }, new String[]{
+                "!notKeyOne", "valueOne",
+                "!notKeyTwo", "valueTwo",
+            }),
+            passScenario(new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+                "keyThree", "valueThree",
+            }, new String[]{
+                "keyOne", "valueOne",
+                "!notKeyTwo", "valueTwo",
+                "keyThree", "valueThree",
+            })
+        );
+    }
+
+    @Test
+    public void shouldContainAllNottedValuesForControlPlane() {
+        shouldPassScenarios(
+            passScenario(new String[]{
+                "keyOne", "valueOne",
+            }, new String[]{
+                "keyOne", "!notValueOne",
+            }),
+            passScenario(new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+            }, new String[]{
+                "keyOne", "!notValueOne",
+                "keyTwo", "!notValueTwo",
+            }),
+            passScenario(new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+                "keyThree", "valueThree",
+            }, new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "!notValueTwo",
+                "keyThree", "valueThree",
+            })
+        );
+    }
+
+    @Test
+    public void shouldContainAllNottedKeysAndMultiValuesForControlPlane() {
+        shouldPassScenarios(
+            passScenario(new String[]{
+                "keyOne", "valueOne_One",
+                "keyOne", "valueOne_Two",
+            }, new String[]{
+                "keyOne", "!notValueOne_One",
+                "keyOne", "valueOne_Two",
+            }),
+            passScenario(new String[]{
+                "keyOne", "valueOne_One",
+                "keyOne", "valueOne_Two",
+                "keyTwo", "valueTwo_One",
+                "keyTwo", "valueTwo_Two",
+            }, new String[]{
+                "keyOne", "!notValueOne_One",
+                "keyOne", "!notValueOne_Two",
+                "keyTwo", "!notValueTwo_One",
+                "keyTwo", "valueTwo_Two",
+            }),
+            passScenario(new String[]{
+                "keyOne", "valueOne_One",
+                "keyOne", "valueOne_Two",
+                "keyTwo", "valueTwo_One",
+                "keyTwo", "valueTwo_Two",
+                "keyThree", "valueThree_One",
+                "keyThree", "valueThree_Two",
+            }, new String[]{
+                "keyOne", "valueOne_One",
+                "keyOne", "valueOne_Two",
+                "keyTwo", "valueTwo_One",
+                "keyTwo", "valueTwo_Two",
+                "keyThree", "!notValueThree_One",
+                "keyThree", "valueThree_Two",
+            })
+        );
+    }
+
+    @Test
+    public void shouldContainAllNottedKeysAndValuesForControlPlane() {
+        shouldPassScenarios(
+            passScenario(new String[]{
+                "keyOne", "valueOne",
+            }, new String[]{
+                "!notKeyOne", "!notValueOne",
+            }),
+            passScenario(new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+            }, new String[]{
+                "!notKeyOne", "!notValueOne",
+                "!notKeyTwo", "!notValueTwo",
+            }),
+            passScenario(new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+                "keyThree", "valueThree",
+            }, new String[]{
+                "keyOne", "valueOne",
+                "!notKeyTwo", "!notValueTwo",
+                "keyThree", "valueThree",
+            })
+        );
+        // can't match subsets in reverse
+        // matching key still matches in reverse (but subset doesn't) so only subset
+        shouldPassScenariosSingleDirectionSubSetOnly(passScenario(new String[]{
+            "notKeyOne", "valueOne",
+        }, new String[]{
+            "!keyOne", "!notValueOne",
+            "!notKeyTwo", "!notValueTwo",
+        }));
+    }
+
+    // CONTROL PLANE - NOTTED NOT MATCHING
+
+    @Test
+    public void shouldContainAllNonMatchingNottedKeysForControlPlane() {
+        shouldPassScenariosControlPlane(
+            failScenario(new String[]{
+                "keyOne", "valueOne",
+            }, new String[]{
+                "!keyOne", "valueOne",
+            }),
+            failScenario(new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+            }, new String[]{
+                "!keyOne", "valueOne",
+                "!keyTwo", "valueTwo",
+            })
+        );
+        shouldPassScenariosControlPlaneSubSetOnly(
+            failScenario(new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+                "keyThree", "valueThree",
+            }, new String[]{
+                "keyOne", "valueOne",
+                "!keyTwo", "valueTwo",
+                "keyThree", "valueThree",
+            }),
+            failScenario(new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+            }, new String[]{
+                "!keyOne", ".*",
+            })
+        );
+    }
+
+    @Test
+    public void shouldContainAllNonMatchingNottedValuesForControlPlane() {
+        shouldPassScenariosControlPlane(
+            failScenario(new String[]{
+                "keyOne", "valueOne",
+            }, new String[]{
+                "keyOne", "!valueOne",
+            }),
+            failScenario(new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+            }, new String[]{
+                "keyOne", "!valueOne",
+                "keyTwo", "!valueTwo",
+            }),
+            failScenario(new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+                "keyThree", "valueThree",
+            }, new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "!valueTwo",
+                "keyThree", "valueThree",
+            })
+        );
+    }
+
+    @Test
+    public void shouldContainAllNonMatchingNottedKeysAndMultiValuesForControlPlane() {
+        // can't match multiple different values with matching key
+        shouldPassScenariosControlPlaneSubSetOnly(
+            failScenario(new String[]{
+                "keyOne", "valueOne_One",
+                "keyOne", "valueOne_Two",
+            }, new String[]{
+                "keyOne", "!valueOne_One",
+                "keyOne", "valueOne_Two",
+            }),
+            failScenario(new String[]{
+                "keyOne", "valueOne_One",
+                "keyOne", "valueOne_Two",
+                "keyTwo", "valueTwo_One",
+                "keyTwo", "valueTwo_Two",
+            }, new String[]{
+                "keyOne", "!valueOne_One",
+                "keyOne", "!valueOne_Two",
+                "keyTwo", "!valueTwo_One",
+                "keyTwo", "valueTwo_Two",
+            }),
+            failScenario(new String[]{
+                "keyOne", "valueOne_One",
+                "keyOne", "valueOne_Two",
+                "keyTwo", "valueTwo_One",
+                "keyTwo", "valueTwo_Two",
+                "keyThree", "valueThree_One",
+                "keyThree", "valueThree_Two",
+            }, new String[]{
+                "keyOne", "valueOne_One",
+                "keyOne", "valueOne_Two",
+                "keyTwo", "valueTwo_One",
+                "keyTwo", "valueTwo_Two",
+                "keyThree", "!valueThree_One",
+                "keyThree", "valueThree_Two",
+            })
+        );
+    }
+
+    @Test
+    public void shouldContainAllNonMatchingNottedKeysAndValuesForControlPlane() {
+        shouldPassScenariosControlPlane(
+            failScenario(new String[]{
+                "keyOne", "valueOne",
+            }, new String[]{
+                "!keyOne", "!valueOne",
+            }),
+            failScenario(new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+            }, new String[]{
+                "!keyOne", "valueOne",
+                "keyTwo", "!valueTwo",
+            }),
+            failScenario(new String[]{
+                "keyOne", "valueOne",
+                "keyTwo", "valueTwo",
+                "keyThree", "valueThree",
+            }, new String[]{
+                "keyOne", "valueOne",
+                "!keyTwo", "valueTwo",
+                "keyThree", "!valueThree",
+            })
+        );
+    }
+
     public static class TestScenario {
 
         final NottableString[][] matcher;
@@ -1996,7 +2290,7 @@ public class NottableStringMultiMapContainAllTest {
         shouldPassScenarios(true, true, false, false, testScenarios, false);
     }
 
-    void shouldPassScenariosSingleDirectionSubSetMatchingOnly(TestScenario... testScenarios) {
+    void shouldPassScenariosSingleDirectionSubSetOnly(TestScenario... testScenarios) {
         shouldPassScenarios(false, false, false, false, testScenarios, false);
     }
 
@@ -2010,8 +2304,12 @@ public class NottableStringMultiMapContainAllTest {
         shouldPassScenarios(false, false, false, true, testScenarios, true);
     }
 
+    void shouldPassScenariosControlPlaneSubSetOnly(TestScenario... testScenarios) {
+        shouldPassScenarios(true, true, true, false, testScenarios, false);
+        shouldPassScenarios(false, false, false, false, testScenarios, false);
+    }
 
-    void shouldPassScenariosControlPlaneSingleDirectionSubSetMatchingOnly(TestScenario... testScenarios) {
+    void shouldPassScenariosControlPlaneSingleDirectionSubSetOnly(TestScenario... testScenarios) {
         shouldPassScenarios(false, false, true, false, testScenarios, false);
         shouldPassScenarios(false, false, false, false, testScenarios, true);
     }

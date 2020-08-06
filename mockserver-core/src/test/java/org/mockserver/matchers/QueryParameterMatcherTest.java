@@ -241,6 +241,15 @@ public class QueryParameterMatcherTest {
             null,
             new Parameters().withEntries(
                 new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
+                new Parameter("notParameterTwoName", "parameterTwoValue")
+            )
+        ));
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(), new Parameters().withEntries(
+            new Parameter(not("parameterTwoName"), "parameterTwoValue")
+        ), true).matches(
+            null,
+            new Parameters().withEntries(
+                new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
                 new Parameter("parameterTwoName", "parameterTwoValue")
             )
         ));

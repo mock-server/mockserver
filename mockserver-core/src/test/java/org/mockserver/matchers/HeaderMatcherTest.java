@@ -107,6 +107,16 @@ public class HeaderMatcherTest {
         ), false).matches(
             null,
             new Headers().withEntries(
+                new Header("notHeaderOneName", "headerOneValue"),
+                new Header("notHeaderTwoName", "headerTwoValue")
+            )
+        ));
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
+            new Header(not("headerOneName"), not("headerOneValue")),
+            new Header(not("headerTwoName"), "headerTwoValue")
+        ), false).matches(
+            null,
+            new Headers().withEntries(
                 new Header("headerOneName", "headerOneValue"),
                 new Header("headerTwoName", "headerTwoValue")
             )
@@ -308,7 +318,7 @@ public class HeaderMatcherTest {
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
-                new Header("headerTwoName", "headerTwoValue")
+                new Header("notHeaderTwoName", "headerTwoValue")
             )
         ));
     }

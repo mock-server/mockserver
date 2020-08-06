@@ -356,6 +356,14 @@ public class CookieMatcherTest {
             new Cookie(not("cookieOneName"), not("cookieOneValue"))
         ), false).matches(null,
             new Cookies().withEntries(
+                new Cookie("notCookieOneName", "cookieOneValue"),
+                new Cookie("cookieTwoName", "cookieTwoValue")
+            )
+        ));
+        assertFalse(new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
+            new Cookie(not("cookieOneName"), "cookieOneValue")
+        ), false).matches(null,
+            new Cookies().withEntries(
                 new Cookie("cookieOneName", "cookieOneValue"),
                 new Cookie("cookieTwoName", "cookieTwoValue")
             )

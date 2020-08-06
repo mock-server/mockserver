@@ -3767,7 +3767,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("GET")
                     .withPath(calculatePath("some_pathRequest"))
                     .withHeaders(
-                        header("requestHeaderNameOne", "OTHERrequestHeaderValueOne"),
+                        header("OTHERrequestHeaderNameOne", "OTHERrequestHeaderValueOne"),
                         header("requestHeaderNameTwo", "requestHeaderValueTwo")
                     ),
                 headersToIgnore)
@@ -5296,7 +5296,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             request().withBody("{\"digests\": [\"sha256:two\"]}")
         );
     }
-
 
     @Test
     public void shouldRetrieveRecordedRequestsAsLogEntries() {

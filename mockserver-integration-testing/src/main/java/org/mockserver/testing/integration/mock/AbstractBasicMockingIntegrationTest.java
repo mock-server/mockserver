@@ -1100,6 +1100,46 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
+    public void shouldNotReturnResponseForNottedHeader() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withMethod("GET")
+                    .withHeaders(new Headers(header(NottableString.not("headerName"))))
+            )
+            .respond(
+                response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                    .withBody("some_body")
+            );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withHeaders(header("headerName", "headerValue")),
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withHeaders(header("otherHeaderName", "headerValue")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
     public void shouldNotReturnResponseForNonMatchingOpenAPI() {
         // when
         Expectation[] upsertedExpectations = mockServerClient

@@ -17,8 +17,7 @@ import org.mockserver.scheduler.Scheduler;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -586,8 +585,11 @@ public class MockServerMatcherClearAndResetTest {
         requestMatchers.clear(request().withHeaders(headersToMatchOn));
 
         // then
-        assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
-        assertThat(requestMatchers.httpRequestMatchers.toSortedList(), containsInAnyOrder(new MatcherBuilder(mockServerLogger).transformsToMatcher(expectation[3])));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(2));
+        assertThat(requestMatchers.httpRequestMatchers.toSortedList(), contains(
+            new MatcherBuilder(mockServerLogger).transformsToMatcher(expectation[2]),
+            new MatcherBuilder(mockServerLogger).transformsToMatcher(expectation[3])
+        ));
     }
 
     @Test
@@ -695,8 +697,11 @@ public class MockServerMatcherClearAndResetTest {
         requestMatchers.clear(request().withCookies(cookiesToMatchOn));
 
         // then
-        assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
-        assertThat(requestMatchers.httpRequestMatchers.toSortedList(), containsInAnyOrder(new MatcherBuilder(mockServerLogger).transformsToMatcher(expectation[3])));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(2));
+        assertThat(requestMatchers.httpRequestMatchers.toSortedList(), contains(
+            new MatcherBuilder(mockServerLogger).transformsToMatcher(expectation[2]),
+            new MatcherBuilder(mockServerLogger).transformsToMatcher(expectation[3])
+        ));
     }
 
     @Test
@@ -804,8 +809,11 @@ public class MockServerMatcherClearAndResetTest {
         requestMatchers.clear(request().withQueryStringParameters(parametersToMatchOn));
 
         // then
-        assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
-        assertThat(requestMatchers.httpRequestMatchers.toSortedList(), containsInAnyOrder(new MatcherBuilder(mockServerLogger).transformsToMatcher(expectation[3])));
+        assertThat(requestMatchers.httpRequestMatchers.size(), is(2));
+        assertThat(requestMatchers.httpRequestMatchers.toSortedList(), contains(
+            new MatcherBuilder(mockServerLogger).transformsToMatcher(expectation[2]),
+            new MatcherBuilder(mockServerLogger).transformsToMatcher(expectation[3])
+        ));
     }
 
     @Test

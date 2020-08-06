@@ -1546,6 +1546,13 @@ public class HttpRequestPropertiesMatcherTest {
             new Parameter("!someKey", "!someValue")
         )).matches(null, new HttpRequest().withQueryStringParameters(
             new Parameter("someOtherKey", "someOtherValue"),
+            new Parameter("notSomeKey", "someOtherValueOne", "someOtherValueTwo"),
+            new Parameter("someOtherKey", "someValue")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameter("!someKey", "someValue")
+        )).matches(null, new HttpRequest().withQueryStringParameters(
+            new Parameter("someOtherKey", "someOtherValue"),
             new Parameter("someKey", "someOtherValueOne", "someOtherValueTwo"),
             new Parameter("someOtherKey", "someValue")
         )));
@@ -1901,7 +1908,7 @@ public class HttpRequestPropertiesMatcherTest {
             new Header("!someKey", "!someValue")
         )).matches(null, new HttpRequest().withHeaders(
             new Header("someOtherKey", "someOtherValue"),
-            new Header("someKey", "someOtherValueOne", "someOtherValueTwo"),
+            new Header("notSomeKey", "someOtherValueOne", "someOtherValueTwo"),
             new Header("someOtherKey", "someValue")
         )));
     }

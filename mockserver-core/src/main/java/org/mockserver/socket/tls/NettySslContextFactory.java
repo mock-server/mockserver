@@ -18,6 +18,7 @@ import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -154,12 +155,10 @@ public class NettySslContextFactory {
     private X509Certificate[] trustCertificateChain() {
         if (isNotBlank(ConfigurationProperties.tlsMutualAuthenticationCertificateChain())) {
             List<X509Certificate> x509Certificates = x509ChainFromPEMFile(ConfigurationProperties.tlsMutualAuthenticationCertificateChain());
-            x509Certificates.add(keyAndCertificateFactory.x509Certificate());
             x509Certificates.add(keyAndCertificateFactory.certificateAuthorityX509Certificate());
             return x509Certificates.toArray(new X509Certificate[0]);
         } else {
-            return Arrays.asList(
-                keyAndCertificateFactory.x509Certificate(),
+            return Collections.singletonList(
                 keyAndCertificateFactory.certificateAuthorityX509Certificate()
             ).toArray(new X509Certificate[0]);
         }

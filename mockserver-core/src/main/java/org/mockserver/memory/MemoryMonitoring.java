@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.mock.HttpState.getPort;
 
 public class MemoryMonitoring implements MockServerLogListener, MockServerMatcherListener {
 
@@ -89,6 +90,7 @@ public class MemoryMonitoring implements MockServerLogListener, MockServerMatche
         Summary heap = getJVMMemory(MemoryType.HEAP);
         Summary nonHeap = getJVMMemory(MemoryType.NON_HEAP);
         List<ImmutablePair<String, Object>> memoryStatistics = new ArrayList<>();
+        memoryStatistics.add(ImmutablePair.of("mockServerPort", getPort()));
         memoryStatistics.add(ImmutablePair.of("eventLogSize", currentLogEntriesCount.get()));
         memoryStatistics.add(ImmutablePair.of("maxLogEntries", ConfigurationProperties.maxLogEntries()));
         memoryStatistics.add(ImmutablePair.of("expectationsSize", currentExpectationsCount.get()));

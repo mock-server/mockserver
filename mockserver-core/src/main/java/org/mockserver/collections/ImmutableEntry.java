@@ -37,6 +37,10 @@ public class ImmutableEntry extends Pair<NottableString, NottableString> impleme
         return getKey().isOptional();
     }
 
+    public boolean isNotted() {
+        return getKey().isNot() && !getValue().isNot();
+    }
+
     public boolean isNotOptional() {
         return !isOptional();
     }

@@ -27,8 +27,6 @@ mods
 *.sqlite
 *.csv
 TODO.md
-persistedExpectations.json
-mockserverInitialization.json
 
 # Runtime artifacts #
 #####################
@@ -105,3 +103,6 @@ mockserver_keystore_*_jks
 /PKCS8CertificateAuthorityPrivateKey.pem
 !/*/PKCS8CertificateAuthorityPrivateKey.pem
 /*/mockserverInitialization*.json
+persistedExpectations.json
+mockserverInitialization.json
+/*.pem
