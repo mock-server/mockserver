@@ -108,7 +108,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                     pipelineToProxyClient.addLast(new UpstreamProxyRelayHandler(mockServerLogger, proxyClientCtx.channel(), mockServerCtx.channel()));
                                 });
                         } else {
-                            mockServerCtx.fireChannelRead(Unpooled.copiedBuffer(bytes));
+                            mockServerCtx.fireChannelRead(msg);
                         }
                     }
                 }
