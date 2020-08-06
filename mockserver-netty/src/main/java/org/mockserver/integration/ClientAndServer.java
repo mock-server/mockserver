@@ -101,7 +101,7 @@ public class ClientAndServer extends MockServerClient {
     public Future stopAsync() {
         Future<String> stopAsync = mockServer.stopAsync();
         if (stopAsync instanceof CompletableFuture) {
-            ((CompletableFuture<String>) stopAsync).thenAccept(ignore -> super.stop());
+            ((CompletableFuture<String>) stopAsync).thenAccept(ignore -> super.stop(true));
         } else {
             // no need to wait for client to clean up event loop
             super.stopAsync();
