@@ -21,18 +21,17 @@ public class MockServerPropertyCustomizer implements ContextCustomizer {
     MockServerPropertyCustomizer(String... properties) {
         this.properties = Arrays.asList(properties);
     }
+
     @Override
     public void customizeContext(ConfigurableApplicationContext context, MergedContextConfiguration mergedConfig) {
         context.getEnvironment().getPropertySources().addLast(
                 new MockPropertySource().withProperty("mockServerPort", mockServerPort)
         );
 
-        if (!properties.isEmpty()) {
-            properties.forEach(property -> {
-                String replacement = MOCKSERVERPORT_PORT_PATTERN.matcher(property).replaceAll(String.valueOf(mockServerPort));
+        properties.forEach(property -> {
+            String replacement = MOCKSERVERPORT_PORT_PATTERN.matcher(property).replaceAll(String.valueOf(mockServerPort));
 
-                TestPropertySourceUtils.addInlinedPropertiesToEnvironment(context, replacement);
-            });
-        }
+            TestPropertySourceUtils.addInlinedPropertiesToEnvironment(context, replacement);
+        });
     }
 }

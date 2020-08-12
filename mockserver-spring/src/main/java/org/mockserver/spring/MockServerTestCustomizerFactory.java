@@ -10,10 +10,7 @@ import org.springframework.test.context.ContextCustomizerFactory;
 public class MockServerTestCustomizerFactory implements ContextCustomizerFactory {
     @Override
     public ContextCustomizer createContextCustomizer(Class<?> testClass, List<ContextConfigurationAttributes> configAttributes) {
-        final MockServerTest mockServerTest = AnnotatedElementUtils.findMergedAnnotation(testClass, MockServerTest.class);
-        if (mockServerTest != null) {
-            return new MockServerPropertyCustomizer(mockServerTest.value());
-        }
-        return null;
+        final MockServerTest mockServerTestAnnotation = AnnotatedElementUtils.findMergedAnnotation(testClass, MockServerTest.class);
+        return mockServerTestAnnotation != null ? new MockServerPropertyCustomizer(mockServerTestAnnotation.value()) : null;
     }
 }
