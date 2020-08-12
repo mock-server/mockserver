@@ -333,6 +333,54 @@ class ExampleTestClass {
 }</code></pre></div>
 <a id="running_from_command_line" class="anchor" href="#running_from_command_line">&nbsp;</a>
 
+<a id="spring_test_exec_listener" class="anchor" href="#spring_test_exec_listener">&nbsp;</a>
+
+<h2>Running MockServer via Spring TestExecutionListener @MockServerTest</h2>
+
+<p>MockServer can be run using <code>@MockServerTest</code>. The <strong>mockserver-spring</strong> dependency registers a Spring TestExecutionListener which starts MockServer on a free port if the test class is annotated with <code>@MockServerTest</code>. MockServer is resetted after each test and closed after all tests via a shutdown hook.</p>
+<p>An instance of <strong>MockServerClient</strong> is assigned to any field in the unit test of type <strong>org.mockserver.client.MockServerClient</strong>.</p>
+
+<pre><code class="prettyprint lang-java code">
+@MockServerTest
+@RunWith(SpringRunner.class)
+public class MockServerTestExecutionListenerTest {
+
+    private MockServerClient mockServerClient;
+</code></pre>
+
+<p>If you want to configure a client (Spring Bean) to use MockServer you can create a test property with <code>${mockServerPort}</code> placeholder. This is replaced by the chosen free port for MockServer.</p>
+
+<pre><code class="prettyprint lang-java code">
+@MockServerTest("server.url=http://localhost:${mockServerPort}/path")
+@RunWith(SpringRunner.class)
+public class MockServerTestFullSampleTest {
+
+    static class Client {
+        @Value("${server.url}")
+        URI serverUrl;
+</code></pre>
+
+<p>The free port itself is also added as test property and can be retrieved with <code>@MockServerPort</code>.</p>
+
+<pre><code class="prettyprint lang-java code">
+@MockServerTest
+@RunWith(SpringRunner.class)
+public class MockServerTestFullSampleTest {
+
+    @MockServerPort
+    Integer mockServerPort;
+</code></pre>
+
+<p>The TestExecutionListener with <code>@MockServerTest</code> can be added to your project by including the following maven dependency:</p>
+
+<pre class="prettyprint lang-xml code"><code class="code">&lt;dependency&gt;
+    &lt;groupId&gt;org.mock-server&lt;/groupId&gt;
+    &lt;artifactId&gt;mockserver-spring&lt;/artifactId&gt;
+    &lt;version&gt;5.11.0&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+
+<p><em>As the MockServer instance is shared between all test classes <code>@MockServerTest</code> does not support parallel test execution.</em></p>
+
 <h2>Running From Command Line</h2>
 
 <p>MockServer can be run from the command line in the following ways:</p>
