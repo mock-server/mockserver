@@ -14,15 +14,10 @@
     <description>A module containing helpers for writing mockserver tests in spring projects</description>
     <url>http://www.mock-server.com</url>
 
-    <properties>
-        <spring-boot.version>2.2.8.RELEASE</spring-boot.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-netty</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -37,7 +32,6 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
-            <version>${spring.version}</version>
             <scope>compile</scope>
         </dependency>
 

@@ -13,10 +13,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.test.context.TestContext;
 import org.springframework.test.context.support.AbstractTestExecutionListener;
 
-@SuppressWarnings({
-        "squid:S1523" /*   Make sure that this dynamic injection or execution of code is safe.
-                      - not an issue for test code */
-})
 public class MockServerTestExecutionListener extends AbstractTestExecutionListener {
 
     private static final ConcurrentHashMap<Class<?>, List<Field>> MOCK_SERVER_FIELDS = new ConcurrentHashMap<>();
