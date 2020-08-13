@@ -90,26 +90,35 @@ public String loadFileFromLocation(String location) {
 }
 
 private String loadFileFromClasspath(String location) {
-    InputStream inputStream = this.getClass().getResourceAsStream(location);
-
-    if (inputStream == null) {
-        inputStream = this.getClass().getClassLoader().getResourceAsStream(location);
-    }
-
-    if (inputStream == null) {
-        inputStream = ClassLoader.getSystemResourceAsStream(location);
-    }
-
-    if (inputStream != null) {
+    try {
+        InputStream inputStream = this.getClass().getResourceAsStream(location);
         try {
-            // org.apache.commons.io.IOUtils
-            return IOUtils.toString(inputStream, Charsets.UTF_8);
-        } catch (IOException e) {
-            throw new RuntimeException("Could not read " + location + " from the classpath", e);
-        }
-    }
+            if (inputStream == null) {
+                inputStream = this.getClass().getClassLoader().getResourceAsStream(location);
+            }
 
-    throw new RuntimeException("Could not find " + location + " on the classpath");
+            if (inputStream == null) {
+                inputStream = ClassLoader.getSystemResourceAsStream(location);
+            }
+
+            if (inputStream != null) {
+                try {
+                    // org.apache.commons.io.IOUtils
+                    return IOUtils.toString(inputStream, Charsets.UTF_8);
+                } catch (IOException e) {
+                    throw new RuntimeException("Could not read " + location + " from the classpath", e);
+                }
+            }
+
+            throw new RuntimeException("Could not find " + location + " on the classpath");
+        } finally {
+            if (inputStream != null) {
+                inputStream.close();
+            }
+        }
+    } catch (IOException ioe) {
+        throw new RuntimeException("Exception closing input stream for " + location, ioe);
+    }
 }</code></pre>
 
 <h3>Java DefaultSSLSocketFactory</h3>

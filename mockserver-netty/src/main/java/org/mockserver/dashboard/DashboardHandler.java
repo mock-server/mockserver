@@ -54,26 +54,27 @@ public class DashboardHandler {
             if (path.isEmpty() || path.equals("/")) {
                 path = "/index.html";
             }
-            InputStream contentStream = DashboardHandler.class.getResourceAsStream("/org/mockserver/dashboard" + path);
-            if (contentStream != null) {
-                final String extension = substringAfterLast(path, ".");
-                if (IS_STRING_CONTENT.contains(extension)) {
-                    final String content = new String(ByteStreams.toByteArray(contentStream), UTF_8.name());
-                    response =
-                        response()
-                            .withHeader(HttpHeaderNames.CONTENT_TYPE.toString(), MIME_MAP.get(extension))
-                            .withHeader(HttpHeaderNames.CONTENT_LENGTH.toString(), String.valueOf(content.getBytes().length))
-                            .withBody(content);
-                } else {
-                    final byte[] bytes = ByteStreams.toByteArray(contentStream);
-                    response =
-                        response()
-                            .withHeader(HttpHeaderNames.CONTENT_TYPE.toString(), MIME_MAP.get(extension))
-                            .withHeader(HttpHeaderNames.CONTENT_LENGTH.toString(), String.valueOf(bytes.length))
-                            .withBody(bytes);
-                }
-                if (request.isKeepAlive()) {
-                    response.withHeader(HttpHeaderNames.CONNECTION.toString(), HttpHeaderValues.KEEP_ALIVE.toString());
+            try (InputStream contentStream = DashboardHandler.class.getResourceAsStream("/org/mockserver/dashboard" + path)) {
+                if (contentStream != null) {
+                    final String extension = substringAfterLast(path, ".");
+                    if (IS_STRING_CONTENT.contains(extension)) {
+                        final String content = new String(ByteStreams.toByteArray(contentStream), UTF_8.name());
+                        response =
+                            response()
+                                .withHeader(HttpHeaderNames.CONTENT_TYPE.toString(), MIME_MAP.get(extension))
+                                .withHeader(HttpHeaderNames.CONTENT_LENGTH.toString(), String.valueOf(content.getBytes().length))
+                                .withBody(content);
+                    } else {
+                        final byte[] bytes = ByteStreams.toByteArray(contentStream);
+                        response =
+                            response()
+                                .withHeader(HttpHeaderNames.CONTENT_TYPE.toString(), MIME_MAP.get(extension))
+                                .withHeader(HttpHeaderNames.CONTENT_LENGTH.toString(), String.valueOf(bytes.length))
+                                .withBody(bytes);
+                    }
+                    if (request.isKeepAlive()) {
+                        response.withHeader(HttpHeaderNames.CONNECTION.toString(), HttpHeaderValues.KEEP_ALIVE.toString());
+                    }
                 }
             }
         }
