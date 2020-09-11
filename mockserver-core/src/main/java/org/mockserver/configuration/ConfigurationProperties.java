@@ -511,12 +511,12 @@ public class ConfigurationProperties {
      * <pre>&lt;dependency&gt;
      *   &lt;groupId&gt;org.bouncycastle&lt;/groupId&gt;
      *   &lt;artifactId&gt;bcprov-jdk15on&lt;/artifactId&gt;
-     *   &lt;version&gt;1.65&lt;/version&gt;
+     *   &lt;version&gt;1.66&lt;/version&gt;
      * &lt;/dependency&gt;
      * &lt;dependency&gt;
      *   &lt;groupId&gt;org.bouncycastle&lt;/groupId&gt;
      *   &lt;artifactId&gt;bcpkix-jdk15on&lt;/artifactId&gt;
-     *   &lt;version&gt;1.65&lt;/version&gt;
+     *   &lt;version&gt;1.66&lt;/version&gt;
      * &lt;/dependency&gt;</pre>
      *
      * @param enable enable BouncyCastle instead of the Java JDK to generate Certificate and Keys

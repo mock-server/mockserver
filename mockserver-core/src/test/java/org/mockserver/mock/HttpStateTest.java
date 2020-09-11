@@ -398,9 +398,7 @@ public class HttpStateTest {
             "expected <block end>, but found ','" + NEW_LINE +
             " in 'reader', line 1, column 19:" + NEW_LINE +
             "    \"openapi\": \"3.0.0\"," + NEW_LINE +
-            "                      ^" + NEW_LINE +
-            NEW_LINE +
-            " at [Source: (StringReader); line: 1, column: 19]"));
+            "                      ^"));
     }
 
     @Test
@@ -470,9 +468,7 @@ public class HttpStateTest {
             "could not find expected ':'" + NEW_LINE +
             " in 'reader', line 8, column 8:" + NEW_LINE +
             "    servers" + NEW_LINE +
-            "           ^" + NEW_LINE +
-            NEW_LINE +
-            " at [Source: (StringReader); line: 8, column: 1]"));
+            "           ^"));
     }
 
     @Test

@@ -1,14 +1,18 @@
 package org.mockserver.serialization.serializers.string;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.mockserver.model.NottableSchemaString;
 import org.mockserver.model.NottableString;
 import org.mockserver.serialization.ObjectMapperFactory;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 import static org.mockserver.model.NottableString.serialiseNottableString;
 

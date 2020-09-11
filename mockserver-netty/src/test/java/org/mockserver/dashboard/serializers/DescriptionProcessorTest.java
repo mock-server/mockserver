@@ -114,7 +114,8 @@ public class DescriptionProcessorTest {
             "          \"operationId\" : \"someOperation\"" + NEW_LINE +
             "        }" + NEW_LINE +
             "      }" + NEW_LINE +
-            "    }" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"components\" : { }" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"first\" : \"spec \"," + NEW_LINE +
             "  \"second\" : \" showPetById\"" + NEW_LINE +
@@ -132,7 +133,8 @@ public class DescriptionProcessorTest {
             "          \"operationId\" : \"someOperation\"" + NEW_LINE +
             "        }" + NEW_LINE +
             "      }" + NEW_LINE +
-            "    }" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"components\" : { }" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"first\" : \"spec \"," + NEW_LINE +
             "  \"second\" : \"            \"" + NEW_LINE +
@@ -252,7 +254,8 @@ public class DescriptionProcessorTest {
             "          \"operationId\" : \"someOperation\"" + NEW_LINE +
             "        }" + NEW_LINE +
             "      }" + NEW_LINE +
-            "    }" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"components\" : { }" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"first\" : \"spec \"," + NEW_LINE +
             "  \"second\" : \" \"" + NEW_LINE +

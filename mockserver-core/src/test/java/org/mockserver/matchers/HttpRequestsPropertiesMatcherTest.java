@@ -5989,13 +5989,7 @@ public class HttpRequestsPropertiesMatcherTest {
             // then
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec, Unexpected end-of-input in field name" + NEW_LINE +
-                " at [Source: (String)\"{" + NEW_LINE +
-                "  \"openapi\": \"3.0.0\"," + NEW_LINE +
-                "  \"info\": {" + NEW_LINE +
-                "    \"version\": \"1.0.0\"," + NEW_LINE +
-                "    \"title\": \"Swagger Petstore\"," + NEW_LINE +
-                "    \"li\"; line: 6, column: 8]"));
+            assertThat(iae.getMessage(), is("Unable to load API spec, Unexpected end-of-input in field name"));
         }
     }
 
@@ -6022,9 +6016,7 @@ public class HttpRequestsPropertiesMatcherTest {
                 "could not find expected ':'" + NEW_LINE +
                 " in 'reader', line 8, column 8:" + NEW_LINE +
                 "    servers" + NEW_LINE +
-                "           ^" + NEW_LINE +
-                NEW_LINE +
-                " at [Source: (StringReader); line: 8, column: 1]"));
+                "           ^"));
         }
     }
 
@@ -6044,7 +6036,7 @@ public class HttpRequestsPropertiesMatcherTest {
             // then
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec, unable to read location `org/mockserver/mock/does_not_exist.json`"));
+            assertThat(iae.getMessage(), is("Unable to load API spec, Unable to read location `org/mockserver/mock/does_not_exist.json`"));
         }
     }
 

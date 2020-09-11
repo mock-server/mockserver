@@ -29,6 +29,7 @@ import org.mockserver.serialization.serializers.request.OpenAPIDefinitionDTOSeri
 import org.mockserver.serialization.serializers.request.OpenAPIDefinitionSerializer;
 import org.mockserver.serialization.serializers.response.HttpResponseSerializer;
 import org.mockserver.serialization.serializers.response.*;
+import org.mockserver.serialization.serializers.schema.*;
 import org.mockserver.serialization.serializers.string.NottableStringSerializer;
 
 import java.util.*;
@@ -41,13 +42,13 @@ import static org.mockserver.exception.ExceptionHandling.swallowThrowable;
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class ObjectMapperFactory {
 
-    private static ObjectMapper objectMapper = buildObjectMapper(Collections.emptyList(), Collections.emptyList());
-    private static ObjectWriter prettyPrintWriter = buildObjectMapper(Collections.emptyList(), Collections.emptyList()).writerWithDefaultPrettyPrinter();
-    private static ObjectWriter writer = buildObjectMapper(Collections.emptyList(), Collections.emptyList()).writer();
+    private static ObjectMapper objectMapper = buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Collections.emptyList());
+    private static final ObjectWriter prettyPrintWriter = buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Collections.emptyList()).writerWithDefaultPrettyPrinter();
+    private static final ObjectWriter writer = buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Collections.emptyList()).writer();
 
     public static ObjectMapper createObjectMapper() {
         if (objectMapper == null) {
-            objectMapper = buildObjectMapper(Collections.emptyList(), Collections.emptyList());
+            objectMapper = buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Collections.emptyList());
         }
         return objectMapper;
     }
@@ -55,22 +56,22 @@ public class ObjectMapperFactory {
     public static ObjectMapper createObjectMapper(JsonSerializer... additionJsonSerializers) {
         if (additionJsonSerializers == null || additionJsonSerializers.length == 0) {
             if (objectMapper == null) {
-                objectMapper = buildObjectMapper(Collections.emptyList(), Collections.emptyList());
+                objectMapper = buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Collections.emptyList());
             }
             return objectMapper;
         } else {
-            return buildObjectMapper(Collections.emptyList(), Arrays.asList(additionJsonSerializers));
+            return buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Arrays.asList(additionJsonSerializers));
         }
     }
 
     public static ObjectMapper createObjectMapper(JsonDeserializer... replacementJsonDeserializers) {
         if (replacementJsonDeserializers == null || replacementJsonDeserializers.length == 0) {
             if (objectMapper == null) {
-                objectMapper = buildObjectMapper(Collections.emptyList(), Collections.emptyList());
+                objectMapper = buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Collections.emptyList());
             }
             return objectMapper;
         } else {
-            return buildObjectMapper(Arrays.asList(replacementJsonDeserializers), Collections.emptyList());
+            return buildObjectMapperWithDeserializerAndSerializers(Arrays.asList(replacementJsonDeserializers), Collections.emptyList());
         }
     }
 
@@ -83,15 +84,14 @@ public class ObjectMapperFactory {
             }
         } else {
             if (pretty) {
-                return buildObjectMapper(Collections.emptyList(), Arrays.asList(additionJsonSerializers)).writerWithDefaultPrettyPrinter();
+                return buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Arrays.asList(additionJsonSerializers)).writerWithDefaultPrettyPrinter();
             } else {
-                return buildObjectMapper(Collections.emptyList(), Arrays.asList(additionJsonSerializers)).writer();
+                return buildObjectMapperWithDeserializerAndSerializers(Collections.emptyList(), Arrays.asList(additionJsonSerializers)).writer();
             }
         }
     }
 
-    @SuppressWarnings("deprecation")
-    private static ObjectMapper buildObjectMapper(List<JsonDeserializer> replacementJsonDeserializers, List<JsonSerializer> replacementJsonSerializers) {
+    public static ObjectMapper buildObjectMapperWithoutDeserializerAndSerializers() {
         ObjectMapper objectMapper = new ObjectMapper();
 
         // ignore failures
@@ -124,6 +124,12 @@ public class ObjectMapperFactory {
         swallowThrowable(() -> objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT));
         swallowThrowable(() -> objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL));
         swallowThrowable(() -> objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY));
+
+        return objectMapper;
+    }
+
+    private static ObjectMapper buildObjectMapperWithDeserializerAndSerializers(List<JsonDeserializer> replacementJsonDeserializers, List<JsonSerializer> replacementJsonSerializers) {
+        ObjectMapper objectMapper = buildObjectMapperWithoutDeserializerAndSerializers();
 
         // register our own module with our serializers and deserializers
         SimpleModule module = new SimpleModule();
@@ -220,7 +226,25 @@ public class ObjectMapperFactory {
             new org.mockserver.serialization.serializers.log.LogEntrySerializer(),
             // matcher
             new HttpRequestsPropertiesMatcherSerializer(),
-            new HttpRequestPropertiesMatcherSerializer()
+            new HttpRequestPropertiesMatcherSerializer(),
+            // schema
+            new SchemaSerializer(),
+            new ArraySchemaSerializer(),
+            new BinarySchemaSerializer(),
+            new BooleanSchemaSerializer(),
+            new ByteArraySchemaSerializer(),
+            new ComposedSchemaSerializer(),
+            new DateSchemaSerializer(),
+            new DateTimeSchemaSerializer(),
+            new EmailSchemaSerializer(),
+            new FileSchemaSerializer(),
+            new IntegerSchemaSerializer(),
+            new MapSchemaSerializer(),
+            new NumberSchemaSerializer(),
+            new ObjectSchemaSerializer(),
+            new PasswordSchemaSerializer(),
+            new StringSchemaSerializer(),
+            new UUIDSchemaSerializer()
         );
         Map<Class, JsonSerializer> jsonSerializersByType = new HashMap<>();
         for (JsonSerializer jsonSerializer : jsonSerializers) {
