@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -41,6 +42,7 @@ public abstract class LifeCycle implements Stoppable {
     protected ServerBootstrap serverServerBootstrap;
     private final List<Future<Channel>> serverChannelFutures = new ArrayList<>();
     private final CompletableFuture<String> stopFuture = new CompletableFuture<>();
+    private final AtomicBoolean stopping = new AtomicBoolean(false);
     private final Scheduler scheduler;
 
     protected LifeCycle() {
@@ -50,7 +52,7 @@ public abstract class LifeCycle implements Stoppable {
     }
 
     public Future<String> stopAsync() {
-        if (!stopFuture.isDone()) {
+        if (!stopFuture.isDone() && stopping.compareAndSet(false, true)) {
             final String message = "stopped for port" + (getLocalPorts().size() == 1 ? ": " + getLocalPorts().get(0) : "s: " + getLocalPorts());
             if (MockServerLogger.isEnabled(INFO)) {
                 mockServerLogger.logEvent(
@@ -72,12 +74,14 @@ public abstract class LifeCycle implements Stoppable {
                 bossGroup.terminationFuture().syncUninterruptibly();
                 workerGroup.terminationFuture().syncUninterruptibly();
 
-                try {
-                    GlobalEventExecutor.INSTANCE.awaitInactivity(2, SECONDS);
-                } catch (InterruptedException ignore) {
-                    // ignore interruption
-                }
                 stopFuture.complete("done");
+
+                // then commented out code below would wait for all tasks to stop however it is static and so performs badly with multiple parallel (or rapidly created serial) instances of MockServer
+                // try {
+                //     GlobalEventExecutor.INSTANCE.awaitInactivity(2, SECONDS);
+                // } catch (InterruptedException ignore) {
+                //     // ignore interruption
+                // }
             }).start();
         }
         return stopFuture;

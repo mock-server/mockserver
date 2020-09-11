@@ -8,7 +8,6 @@ import io.netty.handler.ssl.NotSslRecordException;
 import org.mockserver.model.Message;
 
 import javax.net.ssl.SSLException;
-
 import java.util.Arrays;
 import java.util.List;
 
