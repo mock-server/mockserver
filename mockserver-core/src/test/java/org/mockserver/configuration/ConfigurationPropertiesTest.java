@@ -47,6 +47,20 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldRemoveLeadingAndTrailingQuotes() {
+        // given
+        System.clearProperty("mockserver.initializationJsonPath");
+
+        // when
+        assertEquals("", initializationJsonPath());
+        initializationJsonPath("\"org/mockserver/server/initialize/initializerJson.json\"");
+
+        // then
+        assertEquals("org/mockserver/server/initialize/initializerJson.json", initializationJsonPath());
+        assertEquals("\"org/mockserver/server/initialize/initializerJson.json\"", System.getProperty("mockserver.initializationJsonPath"));
+    }
+
+    @Test
     public void shouldSetAndReadNIOEventLoopThreadCount() {
         // given
         System.clearProperty("mockserver.nioEventLoopThreadCount");
