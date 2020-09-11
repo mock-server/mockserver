@@ -9,10 +9,20 @@ import org.mockserver.model.Message;
 
 import javax.net.ssl.SSLException;
 
+import java.util.Arrays;
+import java.util.List;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.client.NettyHttpClient.RESPONSE_FUTURE;
 
 @ChannelHandler.Sharable
 public class HttpClientHandler extends SimpleChannelInboundHandler<Message> {
+
+    private final List<String> connectionClosedStrings = Arrays.asList(
+        "Broken pipe",
+        "(broken pipe)",
+        "Connection reset"
+    );
 
     HttpClientHandler() {
         super(false);
@@ -26,7 +36,7 @@ public class HttpClientHandler extends SimpleChannelInboundHandler<Message> {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        if (isNotSslException(cause)) {
+        if (isNotSslException(cause) && isNotConnectionReset(cause)) {
             cause.printStackTrace();
         }
         ctx.channel().attr(RESPONSE_FUTURE).get().completeExceptionally(cause);
@@ -35,5 +45,11 @@ public class HttpClientHandler extends SimpleChannelInboundHandler<Message> {
 
     private boolean isNotSslException(Throwable cause) {
         return !(cause.getCause() instanceof SSLException || cause instanceof DecoderException | cause instanceof NotSslRecordException);
+    }
+
+    private boolean isNotConnectionReset(Throwable cause) {
+        return connectionClosedStrings.stream().noneMatch(connectionClosedString ->
+            (isNotBlank(cause.getMessage()) && cause.getMessage().contains(connectionClosedString))
+                || (cause.getCause() != null && isNotBlank(cause.getCause().getMessage()) && cause.getCause().getMessage().contains(connectionClosedString)));
     }
 }
