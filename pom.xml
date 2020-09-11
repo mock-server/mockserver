@@ -61,7 +61,7 @@
         <netty.version>4.1.50.Final</netty.version>
         <httpcomponents.version>4.4.1</httpcomponents.version>
         <boucycastle.verion>1.65</boucycastle.verion>
-        <spring.version>5.2.7.RELEASE</spring.version>
+        <spring.version>5.2.8.RELEASE</spring.version>
         <mockito.version>3.3.3</mockito.version>
         <xmlunit.version>2.7.0</xmlunit.version>
         <skipTests>false</skipTests>
