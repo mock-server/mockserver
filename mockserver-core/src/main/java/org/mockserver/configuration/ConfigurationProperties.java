@@ -1275,7 +1275,7 @@ public class ConfigurationProperties {
             defaultValue :
             System.getenv(environmentVariableKey);
         String propertyValue = System.getProperty(systemPropertyKey, PROPERTIES != null ? PROPERTIES.getProperty(systemPropertyKey, defaultOrEnvironmentVariable) : defaultOrEnvironmentVariable);
-        if (propertyValue != null) {
+        if (propertyValue != null && propertyValue.startsWith("\"") && propertyValue.endsWith("\"")) {
             propertyValue = propertyValue.replaceAll("^\"|\"$", "");
         }
         return propertyValue;

@@ -51,13 +51,31 @@ public class ConfigurationPropertiesTest {
         // given
         System.clearProperty("mockserver.initializationJsonPath");
 
-        // when
+        // when - leading and trailing
         assertEquals("", initializationJsonPath());
         initializationJsonPath("\"org/mockserver/server/initialize/initializerJson.json\"");
 
         // then
         assertEquals("org/mockserver/server/initialize/initializerJson.json", initializationJsonPath());
         assertEquals("\"org/mockserver/server/initialize/initializerJson.json\"", System.getProperty("mockserver.initializationJsonPath"));
+
+        // when - only trailing
+        System.clearProperty("mockserver.initializationJsonPath");
+        assertEquals("", initializationJsonPath());
+        initializationJsonPath("org/mockserver/server/initialize/initializerJson.json\"");
+
+        // then
+        assertEquals("org/mockserver/server/initialize/initializerJson.json\"", initializationJsonPath());
+        assertEquals("org/mockserver/server/initialize/initializerJson.json\"", System.getProperty("mockserver.initializationJsonPath"));
+
+        // when - only leading
+        System.clearProperty("mockserver.initializationJsonPath");
+        assertEquals("", initializationJsonPath());
+        initializationJsonPath("\"org/mockserver/server/initialize/initializerJson.json");
+
+        // then
+        assertEquals("\"org/mockserver/server/initialize/initializerJson.json", initializationJsonPath());
+        assertEquals("\"org/mockserver/server/initialize/initializerJson.json", System.getProperty("mockserver.initializationJsonPath"));
     }
 
     @Test
