@@ -59,16 +59,26 @@ public class MockServerClient implements Stoppable {
     protected CompletableFuture<Integer> portFuture;
     private Boolean secure;
     private Integer port;
-    private NettyHttpClient nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, null, false, new NettySslContextFactory(MOCK_SERVER_LOGGER));
     private HttpRequest requestOverride;
+    @SuppressWarnings("FieldMayBeFinal")
+    private NettyHttpClient nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, null, false, new NettySslContextFactory(MOCK_SERVER_LOGGER));
+    @SuppressWarnings("FieldMayBeFinal")
     private RequestDefinitionSerializer requestDefinitionSerializer = new RequestDefinitionSerializer(MOCK_SERVER_LOGGER);
+    @SuppressWarnings("FieldMayBeFinal")
     private ExpectationIdSerializer expectationIdSerializer = new ExpectationIdSerializer(MOCK_SERVER_LOGGER);
+    @SuppressWarnings("FieldMayBeFinal")
     private LogEventRequestAndResponseSerializer httpRequestResponseSerializer = new LogEventRequestAndResponseSerializer(MOCK_SERVER_LOGGER);
+    @SuppressWarnings("FieldMayBeFinal")
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(MOCK_SERVER_LOGGER);
+    @SuppressWarnings("FieldMayBeFinal")
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer(MOCK_SERVER_LOGGER);
+    @SuppressWarnings("FieldMayBeFinal")
     private OpenAPIExpectationSerializer openAPIExpectationSerializer = new OpenAPIExpectationSerializer(MOCK_SERVER_LOGGER);
+    @SuppressWarnings("FieldMayBeFinal")
     private VerificationSerializer verificationSerializer = new VerificationSerializer(MOCK_SERVER_LOGGER);
+    @SuppressWarnings("FieldMayBeFinal")
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer(MOCK_SERVER_LOGGER);
+    private final CompletableFuture<MockServerClient> stopFuture = new CompletableFuture<>();
 
     /**
      * Start the client communicating to a MockServer on localhost at the port
@@ -185,44 +195,48 @@ public class MockServerClient implements Stoppable {
     }
 
     private HttpResponse sendRequest(HttpRequest request, boolean ignoreErrors) {
-        try {
-            if (!request.containsHeader(CONTENT_TYPE.toString())
-                && request.getBody() != null
-                && isNotBlank(request.getBody().getContentType())) {
-                request.withHeader(CONTENT_TYPE.toString(), request.getBody().getContentType());
-            }
-            if (secure != null) {
-                request.withSecure(secure);
-            }
-            if (requestOverride != null) {
-                request = request.update(requestOverride);
-            }
-            HttpResponse response = nettyHttpClient.sendRequest(
-                request.withHeader(HOST.toString(), this.host + ":" + port()),
-                ConfigurationProperties.maxSocketTimeout(),
-                TimeUnit.MILLISECONDS,
-                ignoreErrors
-            );
-
-            if (response != null) {
-                if (response.getStatusCode() != null &&
-                    response.getStatusCode() == BAD_REQUEST.code()) {
-                    throw new IllegalArgumentException(response.getBodyAsString());
+        if (!stopFuture.isDone()) {
+            try {
+                if (!request.containsHeader(CONTENT_TYPE.toString())
+                    && request.getBody() != null
+                    && isNotBlank(request.getBody().getContentType())) {
+                    request.withHeader(CONTENT_TYPE.toString(), request.getBody().getContentType());
                 }
-                String serverVersion = response.getFirstHeader("version");
-                String clientVersion = Version.getVersion();
-                if (!Version.matchesMajorMinorVersion(serverVersion)) {
-                    throw new ClientException("Client version \"" + clientVersion + "\" major and minor versions do not match server version \"" + serverVersion + "\"");
+                if (secure != null) {
+                    request.withSecure(secure);
+                }
+                if (requestOverride != null) {
+                    request = request.update(requestOverride);
+                }
+                HttpResponse response = nettyHttpClient.sendRequest(
+                    request.withHeader(HOST.toString(), this.host + ":" + port()),
+                    ConfigurationProperties.maxSocketTimeout(),
+                    TimeUnit.MILLISECONDS,
+                    ignoreErrors
+                );
+
+                if (response != null) {
+                    if (response.getStatusCode() != null &&
+                        response.getStatusCode() == BAD_REQUEST.code()) {
+                        throw new IllegalArgumentException(response.getBodyAsString());
+                    }
+                    String serverVersion = response.getFirstHeader("version");
+                    String clientVersion = Version.getVersion();
+                    if (!Version.matchesMajorMinorVersion(serverVersion)) {
+                        throw new ClientException("Client version \"" + clientVersion + "\" major and minor versions do not match server version \"" + serverVersion + "\"");
+                    }
+                }
+
+                return response;
+            } catch (RuntimeException rex) {
+                if (isNotBlank(rex.getMessage()) && (rex.getMessage().contains("executor not accepting a task") || rex.getMessage().contains("loop shut down"))) {
+                    throw new IllegalStateException(this.getClass().getSimpleName() + " has already been closed, please create new " + this.getClass().getSimpleName() + " instance");
+                } else {
+                    throw rex;
                 }
             }
-
-            return response;
-        } catch (RuntimeException rex) {
-            if (isNotBlank(rex.getMessage()) && (rex.getMessage().contains("executor not accepting a task") || rex.getMessage().contains("loop shut down"))) {
-                throw new IllegalStateException(this.getClass().getSimpleName() + " has already been closed, please create new " + this.getClass().getSimpleName() + " instance");
-            } else {
-                throw rex;
-            }
+        } else {
+            throw new IllegalStateException(this.getClass().getSimpleName() + " has already been stopped, please create new " + this.getClass().getSimpleName() + " instance");
         }
     }
 
@@ -459,40 +473,41 @@ public class MockServerClient implements Stoppable {
      * Stop MockServer gracefully (only support for Netty version, not supported for WAR version)
      */
     public Future<MockServerClient> stop(boolean ignoreFailure) {
-        getMockServerEventBus().publish(EventType.STOP);
-        removeMockServerEventBus();
-        CompletableFuture<MockServerClient> stopFuture = new CompletableFuture<>();
-        new Scheduler.SchedulerThreadFactory("ClientStop").newThread(() -> {
-            try {
-                sendRequest(request().withMethod("PUT").withPath(calculatePath("stop")));
-                if (!hasStopped()) {
-                    for (int i = 0; !hasStopped() && i < 50; i++) {
-                        TimeUnit.MILLISECONDS.sleep(5);
+        if (!stopFuture.isDone()) {
+            getMockServerEventBus().publish(EventType.STOP);
+            removeMockServerEventBus();
+            new Scheduler.SchedulerThreadFactory("ClientStop").newThread(() -> {
+                try {
+                    sendRequest(request().withMethod("PUT").withPath(calculatePath("stop")));
+                    if (!hasStopped()) {
+                        for (int i = 0; !hasStopped() && i < 50; i++) {
+                            TimeUnit.MILLISECONDS.sleep(5);
+                        }
+                    }
+                } catch (RejectedExecutionException ree) {
+                    if (!ignoreFailure && MockServerLogger.isEnabled(TRACE)) {
+                        MOCK_SERVER_LOGGER.logEvent(
+                            new LogEntry()
+                                .setLogLevel(TRACE)
+                                .setMessageFormat("request rejected while closing down, logging in case due other error " + ree)
+                                .setThrowable(ree)
+                        );
+                    }
+                } catch (Exception e) {
+                    if (!ignoreFailure && MockServerLogger.isEnabled(WARN)) {
+                        MOCK_SERVER_LOGGER.logEvent(
+                            new LogEntry()
+                                .setLogLevel(WARN)
+                                .setMessageFormat("failed to send stop request to MockServer " + e.getMessage())
+                        );
                     }
                 }
-            } catch (RejectedExecutionException ree) {
-                if (!ignoreFailure && MockServerLogger.isEnabled(TRACE)) {
-                    MOCK_SERVER_LOGGER.logEvent(
-                        new LogEntry()
-                            .setLogLevel(TRACE)
-                            .setMessageFormat("request rejected while closing down, logging in case due other error " + ree)
-                            .setThrowable(ree)
-                    );
+                if (!eventLoopGroup.isShuttingDown()) {
+                    eventLoopGroup.shutdownGracefully();
                 }
-            } catch (Exception e) {
-                if (!ignoreFailure && MockServerLogger.isEnabled(WARN)) {
-                    MOCK_SERVER_LOGGER.logEvent(
-                        new LogEntry()
-                            .setLogLevel(WARN)
-                            .setMessageFormat("failed to send stop request to MockServer " + e.getMessage())
-                    );
-                }
-            }
-            if (!eventLoopGroup.isShuttingDown()) {
-                eventLoopGroup.shutdownGracefully();
-            }
-            stopFuture.complete(clientClass.cast(this));
-        }).start();
+                stopFuture.complete(clientClass.cast(this));
+            }).start();
+        }
         return stopFuture;
     }
 

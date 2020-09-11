@@ -35,12 +35,13 @@ import static org.slf4j.event.Level.*;
 public abstract class LifeCycle implements Stoppable {
 
     protected final MockServerLogger mockServerLogger;
-    protected EventLoopGroup bossGroup = new NioEventLoopGroup(5, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-bossEventLoop"));
-    protected EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-workerEventLoop"));
-    protected HttpState httpState;
+    protected final EventLoopGroup bossGroup = new NioEventLoopGroup(5, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-bossEventLoop"));
+    protected final EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-workerEventLoop"));
+    protected final HttpState httpState;
     protected ServerBootstrap serverServerBootstrap;
-    private List<Future<Channel>> serverChannelFutures = new ArrayList<>();
-    private Scheduler scheduler;
+    private final List<Future<Channel>> serverChannelFutures = new ArrayList<>();
+    private final CompletableFuture<String> stopFuture = new CompletableFuture<>();
+    private final Scheduler scheduler;
 
     protected LifeCycle() {
         this.mockServerLogger = new MockServerLogger(MockServerEventLog.class);
@@ -49,35 +50,36 @@ public abstract class LifeCycle implements Stoppable {
     }
 
     public Future<String> stopAsync() {
-        final String message = "stopped for port" + (getLocalPorts().size() == 1 ? ": " + getLocalPorts().get(0) : "s: " + getLocalPorts());
-        if (MockServerLogger.isEnabled(INFO)) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(SERVER_CONFIGURATION)
-                    .setLogLevel(INFO)
-                    .setMessageFormat(message)
-            );
-        }
-        CompletableFuture<String> stopFuture = new CompletableFuture<>();
-        new Scheduler.SchedulerThreadFactory("Stop").newThread(() -> {
-            httpState.stop();
-            scheduler.shutdown();
-
-            // Shut down all event loops to terminate all threads.
-            bossGroup.shutdownGracefully(5, 5, MILLISECONDS);
-            workerGroup.shutdownGracefully(5, 5, MILLISECONDS);
-
-            // Wait until all threads are terminated.
-            bossGroup.terminationFuture().syncUninterruptibly();
-            workerGroup.terminationFuture().syncUninterruptibly();
-
-            try {
-                GlobalEventExecutor.INSTANCE.awaitInactivity(2, SECONDS);
-            } catch (InterruptedException ignore) {
-                // ignore interruption
+        if (!stopFuture.isDone()) {
+            final String message = "stopped for port" + (getLocalPorts().size() == 1 ? ": " + getLocalPorts().get(0) : "s: " + getLocalPorts());
+            if (MockServerLogger.isEnabled(INFO)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(SERVER_CONFIGURATION)
+                        .setLogLevel(INFO)
+                        .setMessageFormat(message)
+                );
             }
-            stopFuture.complete("done");
-        }).start();
+            new Scheduler.SchedulerThreadFactory("Stop").newThread(() -> {
+                httpState.stop();
+                scheduler.shutdown();
+
+                // Shut down all event loops to terminate all threads.
+                bossGroup.shutdownGracefully(5, 5, MILLISECONDS);
+                workerGroup.shutdownGracefully(5, 5, MILLISECONDS);
+
+                // Wait until all threads are terminated.
+                bossGroup.terminationFuture().syncUninterruptibly();
+                workerGroup.terminationFuture().syncUninterruptibly();
+
+                try {
+                    GlobalEventExecutor.INSTANCE.awaitInactivity(2, SECONDS);
+                } catch (InterruptedException ignore) {
+                    // ignore interruption
+                }
+                stopFuture.complete("done");
+            }).start();
+        }
         return stopFuture;
     }
 

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - verifying by expectation id
 
 ### Changed
+- improved reliability and performance around stopping especially when stop is called multiple times for the same instance
 
 ### Fixed
 - fixed recursive loop on stopAsync for ClientAndServer
