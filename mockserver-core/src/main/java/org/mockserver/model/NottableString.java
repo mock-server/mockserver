@@ -107,10 +107,6 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
                 not = true;
                 value = value.substring(1);
             }
-            if (value.charAt(0) == OPTIONAL_CHAR) {
-                optional = true;
-                value = value.substring(1);
-            }
         }
         if (optional) {
             return optional(value, not);
