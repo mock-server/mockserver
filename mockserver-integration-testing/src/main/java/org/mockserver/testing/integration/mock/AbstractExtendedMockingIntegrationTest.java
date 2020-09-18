@@ -429,6 +429,56 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
+    public void shouldReturnResponseByMatchingHeaderNotPresent() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withHeader(not("Authorization"), string(".*"))
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+            );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withHeader("Authorization", "some_value"),
+                headersToIgnore)
+        );
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withHeader("Authorization", "some_value")
+                    .withHeader("SomeHeader", "some_other_value"),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withHeader("NotAuthorization", "some_value")
+                    .withHeader("SomeHeader", "some_other_value"),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withHeader("SomeHeader", "some_other_value"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
     public void shouldReturnResponseByMatchingOptionalBody() {
         // when
         mockServerClient
