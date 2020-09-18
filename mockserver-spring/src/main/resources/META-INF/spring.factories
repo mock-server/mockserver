@@ -1,3 +1,0 @@
-org.springframework.test.context.TestExecutionListener=org.mockserver.spring.MockServerTestExecutionListener
-
-org.springframework.test.context.ContextCustomizerFactory=org.mockserver.spring.MockServerTestCustomizerFactory

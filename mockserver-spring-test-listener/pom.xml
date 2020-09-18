@@ -4,21 +4,33 @@
     <parent>
         <groupId>org.mock-server</groupId>
         <artifactId>mockserver</artifactId>
-        <version>5.11.1-SNAPSHOT</version>
+        <version>5.11.2-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>mockserver-spring</artifactId>
-    <name>MockServer Spring</name>
+    <artifactId>mockserver-spring-test-listener</artifactId>
+    <name>MockServer Spring Test</name>
     <description>A module containing helpers for writing mockserver tests in spring projects</description>
     <url>http://www.mock-server.com</url>
 
     <dependencies>
+        <!-- mockserver -->
         <dependency>
-            <groupId>org.mock-server</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>mockserver-netty</artifactId>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>mockserver-integration-testing</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>mockserver-testing</artifactId>
+        </dependency>
+
+        <!-- spring -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-beans</artifactId>
@@ -34,23 +46,19 @@
             <artifactId>spring-test</artifactId>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+        </dependency>
 
-        <!-- Test -->
+        <!-- test -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.mock-server</groupId>
-            <artifactId>mockserver-testing</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
         </dependency>
     </dependencies>
 </project>

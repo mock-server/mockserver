@@ -1,11 +1,11 @@
-package org.mockserver.spring;
-
-import java.util.List;
+package org.mockserver.springtest;
 
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.test.context.ContextConfigurationAttributes;
 import org.springframework.test.context.ContextCustomizer;
 import org.springframework.test.context.ContextCustomizerFactory;
+
+import java.util.List;
 
 public class MockServerTestCustomizerFactory implements ContextCustomizerFactory {
     @Override

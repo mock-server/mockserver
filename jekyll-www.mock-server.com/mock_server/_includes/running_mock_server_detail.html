@@ -337,49 +337,85 @@ class ExampleTestClass {
 
 <h2>Running MockServer via Spring TestExecutionListener @MockServerTest</h2>
 
-<p>MockServer can be run using <code>@MockServerTest</code>. The <strong>mockserver-spring</strong> dependency registers a Spring TestExecutionListener which starts MockServer on a free port if the test class is annotated with <code>@MockServerTest</code>. MockServer is resetted after each test and closed after all tests via a shutdown hook.</p>
-<p>An instance of <strong>MockServerClient</strong> is assigned to any field in the unit test of type <strong>org.mockserver.client.MockServerClient</strong>.</p>
+<p>MockServer can be run using <strong><code>@MockServerTest</code></strong>. The <strong><code>mockserver-spring-test-listener</code></strong> dependency registers a Spring <code>TestExecutionListener</code> which starts MockServer on a free port if the test class is annotated with <strong><code>@MockServerTest</code></strong>. MockServer is reset after each test and closed after all tests via a shutdown hook.</p>
+<p>As the MockServer instance is shared between all test classes <strong><code>@MockServerTest</code></strong> does not support parallel test execution, unless each test uses a <a href="/mock_server/running_tests_in_parallel.html">unique value in each request matcher</a>.</p>
 
-<pre><code class="prettyprint lang-java code">
-@MockServerTest
-@RunWith(SpringRunner.class)
-public class MockServerTestExecutionListenerTest {
-
-    private MockServerClient mockServerClient;
-</code></pre>
-
-<p>If you want to configure a client (Spring Bean) to use MockServer you can create a test property with <code>${mockServerPort}</code> placeholder. This is replaced by the chosen free port for MockServer.</p>
-
-<pre><code class="prettyprint lang-java code">
-@MockServerTest("server.url=http://localhost:${mockServerPort}/path")
-@RunWith(SpringRunner.class)
-public class MockServerTestFullSampleTest {
-
-    static class Client {
-        @Value("${server.url}")
-        URI serverUrl;
-</code></pre>
-
-<p>The free port itself is also added as test property and can be retrieved with <code>@MockServerPort</code>.</p>
-
-<pre><code class="prettyprint lang-java code">
-@MockServerTest
-@RunWith(SpringRunner.class)
-public class MockServerTestFullSampleTest {
-
-    @MockServerPort
-    Integer mockServerPort;
-</code></pre>
-
-<p>The TestExecutionListener with <code>@MockServerTest</code> can be added to your project by including the following maven dependency:</p>
+<p>The TestExecutionListener with <strong><code>@MockServerTest</code></strong> can be added to your project by including the following maven dependency:</p>
 
 <pre class="prettyprint lang-xml code"><code class="code">&lt;dependency&gt;
     &lt;groupId&gt;org.mock-server&lt;/groupId&gt;
-    &lt;artifactId&gt;mockserver-spring&lt;/artifactId&gt;
-    &lt;version&gt;5.11.0&lt;/version&gt;
+    &lt;artifactId&gt;mockserver-spring-test-listener&lt;/artifactId&gt;
+    &lt;version&gt;5.11.1&lt;/version&gt;
 &lt;/dependency&gt;</code></pre>
 
-<p><em>As the MockServer instance is shared between all test classes <code>@MockServerTest</code> does not support parallel test execution.</em></p>
+<p>An instance of <strong><code>MockServerClient</code></strong> is assigned to any field in the unit test of type <strong><code>org.mockserver.client.MockServerClient</code></strong>.</p>
+
+<pre><code class="prettyprint lang-java code">@MockServerTest
+@RunWith(SpringRunner.class)
+public class ExampleSpringTestListenerTestWithClientInjection {
+
+    private MockServerClient mockServerClient;
+
+    @Test
+    public void testSomething() {
+        // test code
+    }
+
+}</code></pre>
+
+<p>If you want to configure a client (Spring Bean) to use MockServer you can create a test property with <code>${mockServerPort}</code> placeholder. This is replaced by the chosen free port for MockServer.</p>
+
+<pre><code class="prettyprint lang-java code">@RunWith(SpringRunner.class)
+@MockServerTest("server.url=http://localhost:${mockServerPort}/path")
+@ContextConfiguration(classes = MockServerTestFullSampleTest.Config.class)
+public class ExampleSpringTestListenerTestWithUrlInjection {
+
+    static class Client {
+        @Value("${server.url}")
+        private URI serverUrl;
+
+        private final RestTemplate restTemplate = new RestTemplate();
+
+        @Nullable
+        public &lt;T&gt; T getResult(String path, Class&lt;T&gt; responseType) {
+            return restTemplate.getForObject(serverUrl + path, responseType);
+        }
+    }
+
+    static class Config {
+        @Bean
+        public Client client() {
+            return new Client();
+        }
+    }
+
+    @Autowired
+    private Client client;
+
+    private MockServerClient mockServerClient;
+
+    @Test
+    public void testSomething() {
+        // test code
+    }
+
+}</code></pre>
+
+<p>The free port itself is also added as test property and can be retrieved with <code>@MockServerPort</code>.</p>
+
+<pre><code class="prettyprint lang-java code">@MockServerTest
+@RunWith(SpringRunner.class)
+public class ExampleSpringTestListenerTestWithPortInjection {
+
+    @MockServerPort
+    Integer mockServerPort;
+
+    @Test
+    public void testSomething() {
+        // test code
+    }
+
+}</code></pre>
 
 <h2>Running From Command Line</h2>
 

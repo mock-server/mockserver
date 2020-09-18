@@ -1,10 +1,4 @@
-package org.mockserver.spring;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
+package org.mockserver.springtest;
 
 import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.ClientAndServer;
@@ -12,6 +6,12 @@ import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.env.Environment;
 import org.springframework.test.context.TestContext;
 import org.springframework.test.context.support.AbstractTestExecutionListener;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MockServerTestExecutionListener extends AbstractTestExecutionListener {
 
@@ -68,8 +68,8 @@ public class MockServerTestExecutionListener extends AbstractTestExecutionListen
         if (mockServerClient == null) {
             Environment environment = testContext.getApplicationContext().getEnvironment();
             int mockServerPort = Optional.ofNullable(environment.getProperty("mockServerPort"))
-                    .map(Integer::valueOf)
-                    .orElseThrow(()->new IllegalStateException("[mockServerPort] is not defined in context environment"));
+                .map(Integer::valueOf)
+                .orElseThrow(() -> new IllegalStateException("[mockServerPort] is not defined in context environment"));
 
             mockServerClient = ClientAndServer.startClientAndServer(mockServerPort);
             Runtime.getRuntime().addShutdownHook(new Thread(() -> mockServerClient.stop()));

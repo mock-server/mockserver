@@ -1,4 +1,4 @@
 @NonNullApi
-package org.mockserver.spring;
+package org.mockserver.springtest;
 
 import org.springframework.lang.NonNullApi;
