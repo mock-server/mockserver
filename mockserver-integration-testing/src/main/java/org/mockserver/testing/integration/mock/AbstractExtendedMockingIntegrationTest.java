@@ -3212,6 +3212,28 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
                 headersToIgnore)
         );
+        // - in http - body string - different order
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body_response")
+                .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
+                .withHeaders(
+                    header("headerNameResponse", "headerValueResponse"),
+                    header(SET_COOKIE.toString(), "cookieNameResponse=cookieValueResponse")
+                ),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_pathRequest"))
+                    .withBody(new StringBody("bodyParameterTwoName=Parameter+Two" +
+                        "&bodyParameterOneName=Parameter+One+Value+Two" +
+                        "&bodyParameterOneName=Parameter+One+Value+One"))
+                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
+                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
+                headersToIgnore)
+        );
         // - in http - body parameter objects
         assertEquals(
             response()
@@ -3235,7 +3257,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
                 headersToIgnore)
         );
-        // - in https - url string and query string parameter objects
+        // - in http - body parameter objects - different order
         assertEquals(
             response()
                 .withStatusCode(ACCEPTED_202.code())
@@ -3251,8 +3273,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("POST")
                     .withPath(calculatePath("some_pathRequest"))
                     .withBody(params(
-                        param("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
-                        param("bodyParameterTwoName", "Parameter Two")
+                        param("bodyParameterTwoName", "Parameter Two"),
+                        param("bodyParameterOneName", "Parameter One Value Two", "Parameter One Value One")
                     ))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
