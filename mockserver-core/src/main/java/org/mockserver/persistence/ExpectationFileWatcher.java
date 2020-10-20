@@ -6,8 +6,8 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.RequestMatchers;
+import org.mockserver.mock.listeners.MockServerMatcherNotifier;
 import org.mockserver.serialization.ExpectationSerializer;
-import org.mockserver.ui.MockServerMatcherNotifier;
 import org.slf4j.event.Level;
 
 import java.util.Arrays;

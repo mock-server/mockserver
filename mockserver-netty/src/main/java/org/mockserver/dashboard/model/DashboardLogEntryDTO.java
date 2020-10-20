@@ -1,12 +1,15 @@
 package org.mockserver.dashboard.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.mockserver.dashboard.serializers.Description;
 import org.mockserver.log.model.LogEntry;
-import org.mockserver.mock.Expectation;
-import org.mockserver.model.*;
-import org.slf4j.event.Level;
+import org.mockserver.model.HttpResponse;
+import org.mockserver.model.ObjectWithJsonToString;
+import org.mockserver.model.RequestDefinition;
 
-import static org.mockserver.model.HttpRequest.request;
+import java.util.Map;
+
+import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
 
 @SuppressWarnings({"UnusedReturnValue", "unused"})
 public class DashboardLogEntryDTO extends ObjectWithJsonToString {
@@ -14,38 +17,41 @@ public class DashboardLogEntryDTO extends ObjectWithJsonToString {
     private static final String[] EXCLUDED_FIELDS = {
         "id",
         "timestamp",
-        "message",
-        "throwable"
     };
     private String id;
-    private Level logLevel;
-    private long epochTime;
+    private String correlationId;
     private String timestamp;
     private LogEntry.LogMessageType type;
     private RequestDefinition[] httpRequests;
     private HttpResponse httpResponse;
-    private HttpError httpError;
-    private Expectation expectation;
-    private Throwable throwable;
-
+    private Map<String, String> style;
     private String messageFormat;
     private Object[] arguments;
-    private String message;
+    private String[] throwable;
+    private String because;
+
+    private Description description;
+
+    public DashboardLogEntryDTO(String id, String correlationId, String timestamp, LogEntry.LogMessageType type) {
+        setId(id);
+        setCorrelationId(correlationId);
+        setTimestamp(timestamp);
+        setType(type);
+    }
 
     public DashboardLogEntryDTO(LogEntry logEntry) {
         setId(logEntry.id());
-        setLogLevel(logEntry.getLogLevel());
+        setCorrelationId(logEntry.getCorrelationId());
         setTimestamp(logEntry.getTimestamp());
-        setEpochTime(logEntry.getEpochTime());
         setType(logEntry.getType());
         setHttpRequests(logEntry.getHttpUpdatedRequests());
         setHttpResponse(logEntry.getHttpUpdatedResponse());
-        setHttpError(logEntry.getHttpError());
-        setExpectation(logEntry.getExpectation());
         setMessageFormat(logEntry.getMessageFormat());
         setArguments(logEntry.getArguments());
-        setMessage(logEntry.getMessage());
-        setThrowable(logEntry.getThrowable());
+        if (logEntry.getThrowable() != null) {
+            setThrowable(getStackTrace(logEntry.getThrowable()).split(System.lineSeparator()));
+        }
+        setBecause(logEntry.getBecause());
     }
 
     public String getId() {
@@ -56,22 +62,12 @@ public class DashboardLogEntryDTO extends ObjectWithJsonToString {
         this.id = id;
     }
 
-    public Level getLogLevel() {
-        return logLevel;
+    public String getCorrelationId() {
+        return correlationId;
     }
 
-    public DashboardLogEntryDTO setLogLevel(Level logLevel) {
-        this.logLevel = logLevel;
-        return this;
-    }
-
-    public long getEpochTime() {
-        return epochTime;
-    }
-
-    public DashboardLogEntryDTO setEpochTime(long epochTime) {
-        this.epochTime = epochTime;
-        return this;
+    public void setCorrelationId(String correlationId) {
+        this.correlationId = correlationId;
     }
 
     public String getTimestamp() {
@@ -101,15 +97,6 @@ public class DashboardLogEntryDTO extends ObjectWithJsonToString {
         return this;
     }
 
-    public DashboardLogEntryDTO setHttpRequest(HttpRequest httpRequest) {
-        if (httpRequest != null) {
-            this.httpRequests = new HttpRequest[]{httpRequest};
-        } else {
-            this.httpRequests = new HttpRequest[]{request()};
-        }
-        return this;
-    }
-
     public RequestDefinition getHttpRequest() {
         if (httpRequests != null && httpRequests.length > 0) {
             return httpRequests[0];
@@ -127,30 +114,12 @@ public class DashboardLogEntryDTO extends ObjectWithJsonToString {
         return this;
     }
 
-    public HttpError getHttpError() {
-        return httpError;
+    public Map<String, String> getStyle() {
+        return style;
     }
 
-    public DashboardLogEntryDTO setHttpError(HttpError httpError) {
-        this.httpError = httpError;
-        return this;
-    }
-
-    public Expectation getExpectation() {
-        return expectation;
-    }
-
-    public DashboardLogEntryDTO setExpectation(Expectation expectation) {
-        this.expectation = expectation;
-        return this;
-    }
-
-    public Throwable getThrowable() {
-        return throwable;
-    }
-
-    public DashboardLogEntryDTO setThrowable(Throwable throwable) {
-        this.throwable = throwable;
+    public DashboardLogEntryDTO setStyle(Map<String, String> style) {
+        this.style = style;
         return this;
     }
 
@@ -172,13 +141,31 @@ public class DashboardLogEntryDTO extends ObjectWithJsonToString {
         return this;
     }
 
-    @JsonIgnore
-    public String getMessage() {
-        return message;
+    public String[] getThrowable() {
+        return throwable;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
+    public void setThrowable(String[] throwable) {
+        this.throwable = throwable;
+    }
+
+    @JsonIgnore
+    public Object getBecause() {
+        return because;
+    }
+
+    public DashboardLogEntryDTO setBecause(String because) {
+        this.because = because;
+        return this;
+    }
+
+    public Description getDescription() {
+        return description;
+    }
+
+    public DashboardLogEntryDTO setDescription(Description description) {
+        this.description = description;
+        return this;
     }
 
     @Override

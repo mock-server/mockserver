@@ -41,7 +41,7 @@ public class HttpForwardClassCallbackActionHandlerTest {
         // given
         CompletableFuture<HttpResponse> httpResponse = new CompletableFuture<>();
         httpResponse.complete(response("some_response_body"));
-        when(mockHttpClient.sendRequest(any(HttpRequest.class), isNull(InetSocketAddress.class))).thenReturn(httpResponse);
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), isNull())).thenReturn(httpResponse);
 
         HttpClassCallback httpClassCallback = callback("org.mockserver.mock.action.FooBar");
 
@@ -60,7 +60,7 @@ public class HttpForwardClassCallbackActionHandlerTest {
         // given
         CompletableFuture<HttpResponse> httpResponse = new CompletableFuture<>();
         httpResponse.complete(response("some_response_body"));
-        when(mockHttpClient.sendRequest(any(HttpRequest.class), isNull(InetSocketAddress.class))).thenReturn(httpResponse);
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), isNull())).thenReturn(httpResponse);
 
         HttpClassCallback httpClassCallback = HttpClassCallback.callback(HttpForwardClassCallbackActionHandlerTest.TestCallback.class);
 

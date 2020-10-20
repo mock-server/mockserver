@@ -19,7 +19,7 @@ public class OpenAPIExpectation extends ObjectWithJsonToString {
     }
 
     /**
-     * Specify the OpenAPI / Swagger and operations and responses to create matchers and example responses for:
+     * Specify the OpenAPI and operations and responses to create matchers and example responses for:
      *
      * <p>
      * <pre>
@@ -44,7 +44,7 @@ public class OpenAPIExpectation extends ObjectWithJsonToString {
      *     "showPetById", "200"
      * ));
      *
-     * // Create from an OpenAPI / Swagger payload (json or yaml)
+     * // Create from an OpenAPI payload (json or yaml)
      * openAPIExpectation("{\"openapi\": \"3.0.0\", \"info\": { ...", ImmutableMap.of(
      *     "listPets", "500",
      *     "createPets", "default",
@@ -52,8 +52,8 @@ public class OpenAPIExpectation extends ObjectWithJsonToString {
      * ));
      * </pre>
      *
-     * @param specUrlOrPayload       the OpenAPI / Swagger to match against by URL or payload
-     * @param operationsAndResponses operations and responses to use for each example response where the key is the operationId in the Swagger or OpenAPI and the value if the response key (i.e. "200", "400" or "default")
+     * @param specUrlOrPayload       the OpenAPI to match against by URL or payload
+     * @param operationsAndResponses operations and responses to use for each example response where the key is the operationId in the OpenAPI and the value if the response key (i.e. "200", "400" or "default")
      * @return the OpenAPIExpectation
      */
     public static OpenAPIExpectation openAPIExpectation(String specUrlOrPayload, Map<String, String> operationsAndResponses) {
@@ -63,7 +63,7 @@ public class OpenAPIExpectation extends ObjectWithJsonToString {
     }
 
     /**
-     * Specify the OpenAPI / Swagger to create matchers and example responses for:
+     * Specify the OpenAPI to create matchers and example responses for:
      *
      * <p>
      * <pre>
@@ -88,7 +88,7 @@ public class OpenAPIExpectation extends ObjectWithJsonToString {
      *     "showPetById", "200"
      * ));
      *
-     * // Create from an OpenAPI / Swagger payload (json or yaml)
+     * // Create from an OpenAPI payload (json or yaml)
      * openAPIExpectation("{\"openapi\": \"3.0.0\", \"info\": { ...", ImmutableMap.of(
      *     "listPets", "500",
      *     "createPets", "default",
@@ -96,7 +96,7 @@ public class OpenAPIExpectation extends ObjectWithJsonToString {
      * ));
      * </pre>
      *
-     * @param specUrlOrPayload the OpenAPI / Swagger to match against by URL or payload
+     * @param specUrlOrPayload the OpenAPI to match against by URL or payload
      * @return the OpenAPIExpectation
      */
     public static OpenAPIExpectation openAPIExpectation(String specUrlOrPayload) {
@@ -109,7 +109,7 @@ public class OpenAPIExpectation extends ObjectWithJsonToString {
     }
 
     /**
-     * Specify the OpenAPI / Swagger specification:
+     * Specify the OpenAPI specification:
      *
      * <p>
      * <pre>
@@ -122,11 +122,11 @@ public class OpenAPIExpectation extends ObjectWithJsonToString {
      * // Create from a classpath resource in the /api package (json or yaml)
      * withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json");
      *
-     * // Create from an OpenAPI / Swagger payload (json or yaml)
+     * // Create from an OpenAPI payload (json or yaml)
      * withSpecUrlOrPayload("{\"openapi\": \"3.0.0\", \"info\": { ...");
      * </pre>
      *
-     * @param specUrlOrPayload the OpenAPI / Swagger to match against by URL or payload
+     * @param specUrlOrPayload the OpenAPI to match against by URL or payload
      * @return this OpenAPIExpectation
      */
     public OpenAPIExpectation withSpecUrlOrPayload(String specUrlOrPayload) {
@@ -139,7 +139,7 @@ public class OpenAPIExpectation extends ObjectWithJsonToString {
     }
 
     /**
-     * The operations and responses to use for each example response where the key is the operationId in the Swagger or OpenAPI and the value if the response key (i.e. "200", "400" or "default")
+     * The operations and responses to use for each example response where the key is the operationId in the OpenAPI and the value if the response key (i.e. "200", "400" or "default")
      *
      * @param operationsAndResponses operations and responses to use for each example response
      * @return this OpenAPIExpectation

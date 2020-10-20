@@ -1,5 +1,6 @@
 package org.mockserver.verify;
 
+import org.mockserver.model.ExpectationId;
 import org.mockserver.model.ObjectWithJsonToString;
 import org.mockserver.model.RequestDefinition;
 
@@ -10,6 +11,7 @@ import static org.mockserver.model.HttpRequest.request;
  */
 public class Verification extends ObjectWithJsonToString {
     private RequestDefinition httpRequest = request();
+    private ExpectationId expectationId;
     private VerificationTimes times = VerificationTimes.atLeast(1);
 
     public static Verification verification() {
@@ -23,6 +25,15 @@ public class Verification extends ObjectWithJsonToString {
 
     public RequestDefinition getHttpRequest() {
         return httpRequest;
+    }
+
+    public Verification withExpectationId(ExpectationId expectationId) {
+        this.expectationId = expectationId;
+        return this;
+    }
+
+    public ExpectationId getExpectationId() {
+        return expectationId;
     }
 
     public Verification withTimes(VerificationTimes times) {

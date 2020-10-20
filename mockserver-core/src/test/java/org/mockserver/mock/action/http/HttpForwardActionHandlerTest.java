@@ -43,7 +43,7 @@ public class HttpForwardActionHandlerTest {
         HttpRequest httpRequest = request();
         HttpForward httpForward = forward()
             .withHost("some_host")
-            .withPort(1080)
+            .withPort(1090)
             .withScheme(HttpForward.Scheme.HTTP);
         when(mockHttpClient.sendRequest(httpRequest, new InetSocketAddress(httpForward.getHost(), httpForward.getPort()))).thenReturn(responseFuture);
 
@@ -64,7 +64,7 @@ public class HttpForwardActionHandlerTest {
         HttpRequest httpRequest = request();
         HttpForward httpForward = forward()
             .withHost("some_host")
-            .withPort(1080)
+            .withPort(1090)
             .withScheme(HttpForward.Scheme.HTTPS);
         when(mockHttpClient.sendRequest(httpRequest, new InetSocketAddress(httpForward.getHost(), httpForward.getPort()))).thenReturn(httpResponse);
 

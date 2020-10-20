@@ -1,17 +1,11 @@
 package org.mockserver.openapi;
 
-import com.atlassian.oai.validator.util.ContentTypeUtils;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.examples.Example;
 import io.swagger.v3.oas.models.headers.Header;
 import io.swagger.v3.oas.models.media.MediaType;
-import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.responses.ApiResponses;
-import io.swagger.v3.parser.OpenAPIResolver;
-import io.swagger.v3.parser.OpenAPIV3Parser;
-import io.swagger.v3.parser.core.models.SwaggerParseResult;
-import io.swagger.v3.parser.util.ResolverFully;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
@@ -28,10 +22,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.mockserver.matchers.OpenAPIMatcher.OPEN_API_LOAD_ERROR;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.OpenAPIDefinition.openAPI;
+import static org.mockserver.openapi.OpenAPIParser.buildOpenAPI;
 import static org.slf4j.event.Level.ERROR;
 
 public class OpenAPIConverter {
@@ -49,43 +43,20 @@ public class OpenAPIConverter {
             .getPaths()
             .values()
             .stream()
-            .flatMap(pathItem -> pathItem
-                .readOperations()
-                .stream()
+            .flatMap(pathItem ->
+                pathItem
+                    .readOperations()
+                    .stream()
             )
             .filter(operation -> operationsAndResponses == null || operationsAndResponses.containsKey(operation.getOperationId()))
-            .map(operation ->
-                new Expectation(openAPI(specUrlOrPayload, operation.getOperationId()))
-                    .thenRespond(buildHttpResponse(
-                        openAPI,
-                        operation.getResponses(),
-                        operationsAndResponses != null ? operationsAndResponses.get(operation.getOperationId()) : null
-                    ))
+            .map(operation -> new Expectation(openAPI(specUrlOrPayload, operation.getOperationId()))
+                .thenRespond(buildHttpResponse(
+                    openAPI,
+                    operation.getResponses(),
+                    operationsAndResponses != null ? operationsAndResponses.get(operation.getOperationId()) : null
+                ))
             )
             .collect(Collectors.toList());
-    }
-
-    public OpenAPI buildOpenAPI(String specUrlOrPayload) {
-        if (specUrlOrPayload.endsWith(".json") || specUrlOrPayload.endsWith(".yaml")) {
-            try {
-                return resolve(new OpenAPIV3Parser().read(specUrlOrPayload));
-            } catch (Throwable throwable) {
-                throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + throwable.getMessage());
-            }
-        } else {
-            SwaggerParseResult swaggerParseResult = new OpenAPIV3Parser().readContents(specUrlOrPayload);
-            if (swaggerParseResult.getOpenAPI() != null) {
-                return resolve(swaggerParseResult.getOpenAPI());
-            } else {
-                throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + String.join(" and ", swaggerParseResult.getMessages()).trim());
-            }
-        }
-    }
-
-    private OpenAPI resolve(OpenAPI openAPI) {
-        openAPI = new OpenAPIResolver(openAPI).resolve();
-        new ResolverFully().resolveFully(openAPI);
-        return openAPI;
     }
 
     private HttpResponse buildHttpResponse(OpenAPI openAPI, ApiResponses apiResponses, String apiResponseKey) {
@@ -131,7 +102,7 @@ public class OpenAPIConverter {
                             .ifPresent(mediaType -> {
                                 Example example = findExample(mediaType);
                                 if (example != null) {
-                                    if (ContentTypeUtils.isJsonContentType(contentType.getKey())) {
+                                    if (isJsonContentType(contentType.getKey())) {
                                         response.withBody(json(serialise(example.getValue())));
                                     } else {
                                         response.withBody(String.valueOf(example.getValue()));
@@ -142,7 +113,7 @@ public class OpenAPIConverter {
                                         response.withBody(((StringExample) generatedExample).getValue());
                                     } else {
                                         String serialise = serialise(ExampleBuilder.fromSchema(mediaType.getSchema(), openAPI.getComponents().getSchemas()));
-                                        if (ContentTypeUtils.isJsonContentType(contentType.getKey())) {
+                                        if (isJsonContentType(contentType.getKey())) {
                                             response.withBody(json(serialise));
                                         } else {
                                             response.withBody(serialise);
@@ -153,6 +124,10 @@ public class OpenAPIConverter {
                     });
             });
         return response;
+    }
+
+    public static boolean isJsonContentType(String contentType) {
+        return org.mockserver.model.MediaType.parse(contentType).isJson();
     }
 
     private Example findExample(Header value) {

@@ -10,7 +10,6 @@ import java.util.Objects;
  * @author jamesdbloom
  */
 public class ParameterBody extends Body<Parameters> {
-    public static final MediaType DEFAULT_CONTENT_TYPE = MediaType.FORM_DATA;
     private int hashCode;
     private Parameters parameters = new Parameters();
 
@@ -27,6 +26,10 @@ public class ParameterBody extends Body<Parameters> {
         if (parameters != null) {
             this.parameters = parameters;
         }
+    }
+
+    public static ParameterBody params(Parameters parameters) {
+        return new ParameterBody(parameters);
     }
 
     public static ParameterBody params(Parameter... parameters) {

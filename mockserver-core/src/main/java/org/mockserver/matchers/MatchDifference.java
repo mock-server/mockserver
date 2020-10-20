@@ -2,17 +2,17 @@ package org.mockserver.matchers;
 
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.HttpRequest;
+import org.mockserver.model.RequestDefinition;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.detailedMatchFailures;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
-import static org.slf4j.event.Level.DEBUG;
+import static org.slf4j.event.Level.TRACE;
 
 public class MatchDifference {
 
@@ -40,20 +40,22 @@ public class MatchDifference {
         }
     }
 
-    private final HttpRequest httpRequest;
+    private final RequestDefinition httpRequest;
     private final Map<Field, List<String>> differences = new ConcurrentHashMap<>();
     private Field fieldName;
 
-    public MatchDifference(HttpRequest httpRequest) {
+    public MatchDifference(RequestDefinition httpRequest) {
         this.httpRequest = httpRequest;
     }
 
     @SuppressWarnings("UnusedReturnValue")
     public MatchDifference addDifference(MockServerLogger mockServerLogger, Throwable throwable, String messageFormat, Object... arguments) {
-        if (MockServerLogger.isEnabled(DEBUG)) {
+        if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setLogLevel(DEBUG)
+                    .setLogLevel(TRACE)
+                    .setHttpRequest(httpRequest)
+                    .setCorrelationId(httpRequest.getLogCorrelationId())
                     .setMessageFormat(messageFormat)
                     .setArguments(arguments)
                     .setThrowable(throwable)
@@ -69,8 +71,8 @@ public class MatchDifference {
 
     public MatchDifference addDifference(Field fieldName, String messageFormat, Object... arguments) {
         if (detailedMatchFailures()) {
-            if (isNotEmpty(messageFormat) && arguments != null && isNotEmpty(fieldName)) {
-                differences
+            if (isNotBlank(messageFormat) && arguments != null && fieldName != null) {
+                this.differences
                     .computeIfAbsent(fieldName, key -> new ArrayList<>())
                     .add(formatLogMessage(1, messageFormat, arguments));
             }
@@ -83,8 +85,12 @@ public class MatchDifference {
         return addDifference(fieldName, messageFormat, arguments);
     }
 
-    public HttpRequest getHttpRequest() {
+    public RequestDefinition getHttpRequest() {
         return httpRequest;
+    }
+
+    public String getLogCorrelationId() {
+        return httpRequest.getLogCorrelationId();
     }
 
     @SuppressWarnings("UnusedReturnValue")
@@ -94,7 +100,18 @@ public class MatchDifference {
     }
 
     public List<String> getDifferences(Field fieldName) {
-        return differences.get(fieldName);
+        return this.differences.get(fieldName);
     }
 
+    public Map<Field, List<String>> getAllDifferences() {
+        return this.differences;
+    }
+
+    public void addDifferences(Map<Field, List<String>> differences) {
+        for (Field field : differences.keySet()) {
+            this.differences
+                .computeIfAbsent(field, key -> new ArrayList<>())
+                .addAll(differences.get(field));
+        }
+    }
 }

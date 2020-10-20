@@ -8,11 +8,16 @@ import org.mockserver.model.NottableString;
  */
 public class NottableStringToJavaSerializer {
 
-    public static String serialize(NottableString nottableString) {
-        if (nottableString.isNot()) {
+    public static String serialize(NottableString nottableString, boolean alwaysNottableString) {
+        if (nottableString.isOptional()) {
+            return "optional(\"" + StringEscapeUtils.escapeJava(nottableString.getValue()) + "\")";
+        } else if (nottableString.isNot()) {
             return "not(\"" + StringEscapeUtils.escapeJava(nottableString.getValue()) + "\")";
+        } else if (alwaysNottableString) {
+            return "string(\"" + StringEscapeUtils.escapeJava(nottableString.getValue()) + "\")";
         } else {
             return "\"" + StringEscapeUtils.escapeJava(nottableString.getValue()) + "\"";
         }
     }
+
 }

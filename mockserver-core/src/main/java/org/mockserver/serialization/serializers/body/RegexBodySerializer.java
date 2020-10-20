@@ -22,6 +22,9 @@ public class RegexBodySerializer extends StdSerializer<RegexBody> {
         if (regexBody.getNot() != null && regexBody.getNot()) {
             jgen.writeBooleanField("not", regexBody.getNot());
         }
+        if (regexBody.getOptional() != null && regexBody.getOptional()) {
+            jgen.writeBooleanField("optional", regexBody.getOptional());
+        }
         jgen.writeStringField("type", regexBody.getType().name());
         jgen.writeStringField("regex", regexBody.getValue());
         jgen.writeEndObject();

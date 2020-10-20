@@ -1,13 +1,13 @@
 {
-    "title": "response delay",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-        "timeUnit": {
-            "type": "string"
-        },
-        "value": {
-            "type": "integer"
-        }
+  "title": "response delay",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "timeUnit": {
+      "type": "string"
+    },
+    "value": {
+      "type": "integer"
     }
+  }
 }

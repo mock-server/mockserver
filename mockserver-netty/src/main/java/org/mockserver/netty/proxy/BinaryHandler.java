@@ -12,6 +12,7 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.BinaryMessage;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.uuid.UUIDService;
 import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
@@ -22,6 +23,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.exception.ExceptionHandling.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
+import static org.mockserver.formatting.StringFormatter.formatBytes;
 import static org.mockserver.log.model.LogEntry.LogMessageType.FORWARDED_REQUEST;
 import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
 import static org.mockserver.mock.action.http.HttpActionHandler.getRemoteAddress;
@@ -48,10 +50,12 @@ public class BinaryHandler extends SimpleChannelInboundHandler<ByteBuf> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ByteBuf byteBuf) {
         BinaryMessage binaryRequest = bytes(ByteBufUtil.getBytes(byteBuf));
+        String logCorrelationId = UUIDService.getUUID();
         mockServerLogger.logEvent(
             new LogEntry()
                 .setType(RECEIVED_REQUEST)
                 .setLogLevel(Level.INFO)
+                .setCorrelationId(logCorrelationId)
                 .setMessageFormat("received binary request:{}")
                 .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()))
         );
@@ -66,28 +70,35 @@ public class BinaryHandler extends SimpleChannelInboundHandler<ByteBuf> {
                         new LogEntry()
                             .setType(FORWARDED_REQUEST)
                             .setLogLevel(Level.INFO)
+                            .setCorrelationId(logCorrelationId)
                             .setMessageFormat("returning binary response:{}from:{}for forwarded binary request:{}")
-                            .setArguments(ByteBufUtil.hexDump(binaryResponse.getBytes()), remoteAddress, ByteBufUtil.hexDump(binaryRequest.getBytes()))
+                            .setArguments(formatBytes(binaryResponse.getBytes()), remoteAddress, formatBytes(binaryRequest.getBytes()))
                     );
                     ctx.writeAndFlush(Unpooled.copiedBuffer(binaryResponse.getBytes()));
                 } catch (Throwable throwable) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setLogLevel(Level.WARN)
-                            .setMessageFormat("exception " + throwable.getMessage() + " sending hex{}to{}closing connection")
-                            .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()), remoteAddress)
-                            .setThrowable(throwable)
-                    );
+                    if (MockServerLogger.isEnabled(Level.WARN)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(Level.WARN)
+                                .setCorrelationId(logCorrelationId)
+                                .setMessageFormat("exception " + throwable.getMessage() + " sending hex{}to{}closing connection")
+                                .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()), remoteAddress)
+                                .setThrowable(throwable)
+                        );
+                    }
                     ctx.close();
                 }
             }, synchronous);
         } else {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(Level.INFO)
-                    .setMessageFormat("unknown message format{}")
-                    .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()))
-            );
+            if (MockServerLogger.isEnabled(Level.INFO)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(Level.INFO)
+                        .setCorrelationId(logCorrelationId)
+                        .setMessageFormat("unknown message format{}")
+                        .setArguments(ByteBufUtil.hexDump(binaryRequest.getBytes()))
+                );
+            }
             ctx.writeAndFlush(Unpooled.copiedBuffer("unknown message format".getBytes(StandardCharsets.UTF_8)));
             ctx.close();
         }

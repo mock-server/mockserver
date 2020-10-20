@@ -5,7 +5,7 @@ import org.junit.Test;
 import java.util.Arrays;
 
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsCollectionContaining.hasItems;
+import static org.hamcrest.core.IsIterableContaining.hasItems;
 import static org.junit.Assert.assertThat;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.NottableString.not;

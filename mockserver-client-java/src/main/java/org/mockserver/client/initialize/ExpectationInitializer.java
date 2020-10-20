@@ -4,7 +4,7 @@ import org.mockserver.client.MockServerClient;
 
 /**
  * @author jamesdbloom
- * @deprecated use org.mockserver.client.initialize.PluginExpectationInitializer instead
+ * @deprecated instead use org.mockserver.client.initialize.PluginExpectationInitializer or org.mockserver.server.initialize.ExpectationInitializer
  */
 @Deprecated
 public interface ExpectationInitializer {

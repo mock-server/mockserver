@@ -30,7 +30,7 @@ import static org.mockserver.character.Character.NEW_LINE;
  */
 public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToString implements Validator<String> {
 
-    public static final String OPEN_API_SPECIFICATION_URL = "See: https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x for OpenAPI Specification";
+    public static final String OPEN_API_SPECIFICATION_URL = "See: https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x for OpenAPI Specification";
     private static final Map<String, String> schemaCache = new ConcurrentHashMap<>();
     private final MockServerLogger mockServerLogger;
     private final String schema;
@@ -390,6 +390,9 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                 validationErrors.addAll(extractMessage(reports));
             } else {
                 validationErrors.addAll(extractMessage(processingMessageJson));
+            }
+            if (validationErrors.isEmpty() && processingMessageJson.get("message") != null && isNotBlank(processingMessageJson.get("message").asText())) {
+                validationErrors.add(processingMessageJson.get("message").asText());
             }
         }
         validationErrors.sort(String::compareToIgnoreCase);

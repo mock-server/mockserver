@@ -1,16 +1,35 @@
 {
-    "title": "verification sequence",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-        "httpRequests": {
-            "type": "array",
-            "additionalProperties": false,
-            "items": {
-                "$ref": "#/definitions/requestDefinition"
-            }
-        }
+  "title": "verification sequence",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "expectationIds": {
+      "type": "array",
+      "additionalProperties": false,
+      "items": {
+        "$ref": "#/definitions/expectationId"
+      }
     },
-    "definitions": {
+    "httpRequests": {
+      "type": "array",
+      "additionalProperties": false,
+      "items": {
+        "$ref": "#/definitions/requestDefinition"
+      }
     }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "expectationIds"
+      ]
+    },
+    {
+      "required": [
+        "httpRequests"
+      ]
+    }
+  ],
+  "definitions": {
+  }
 }

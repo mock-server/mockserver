@@ -45,7 +45,7 @@ public class DirectProxyViaLoadBalanceIntegrationTest {
     @BeforeClass
     public static void startServer() {
         targetClientAndServer = startClientAndServer();
-        loadBalancerClientAndServer = startClientAndServer("127.0.0.1", targetClientAndServer.getLocalPort());
+        loadBalancerClientAndServer = startClientAndServer("127.0.0.1", targetClientAndServer.getPort());
     }
 
     @AfterClass
@@ -79,8 +79,8 @@ public class DirectProxyViaLoadBalanceIntegrationTest {
                 httpClient.sendRequest(
                     request()
                         .withPath("/some_path")
-                        .withHeader(HOST.toString(), "localhost:" + loadBalancerClientAndServer.getLocalPort()),
-                    new InetSocketAddress(loadBalancerClientAndServer.getLocalPort())
+                        .withHeader(HOST.toString(), "localhost:" + loadBalancerClientAndServer.getPort()),
+                    new InetSocketAddress(loadBalancerClientAndServer.getPort())
                 );
 
             // then - returns 404
@@ -148,8 +148,8 @@ public class DirectProxyViaLoadBalanceIntegrationTest {
                 httpClient.sendRequest(
                     request()
                         .withPath("/target")
-                        .withHeader(HOST.toString(), "localhost:" + loadBalancerClientAndServer.getLocalPort()),
-                    new InetSocketAddress(loadBalancerClientAndServer.getLocalPort())
+                        .withHeader(HOST.toString(), "localhost:" + loadBalancerClientAndServer.getPort()),
+                    new InetSocketAddress(loadBalancerClientAndServer.getPort())
                 );
 
             // then - returns 404
@@ -194,8 +194,8 @@ public class DirectProxyViaLoadBalanceIntegrationTest {
             httpClient.sendRequest(
                 request()
                     .withPath("/some_path")
-                    .withHeader(HOST.toString(), "localhost:" + loadBalancerClientAndServer.getLocalPort()),
-                new InetSocketAddress(loadBalancerClientAndServer.getLocalPort())
+                    .withHeader(HOST.toString(), "localhost:" + loadBalancerClientAndServer.getPort()),
+                new InetSocketAddress(loadBalancerClientAndServer.getPort())
             );
 
         // then

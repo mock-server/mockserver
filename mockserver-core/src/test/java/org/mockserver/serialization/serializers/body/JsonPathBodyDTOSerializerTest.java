@@ -23,4 +23,10 @@ public class JsonPathBodyDTOSerializerTest {
                 is("{\"not\":true,\"type\":\"JSON_PATH\",\"jsonPath\":\"\\\\some\\\\path\"}"));
     }
 
+    @Test
+    public void shouldSerializeJsonPathBodyDTOWithOptional() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new JsonPathBodyDTO(new JsonPathBody("\\some\\path")).withOptional(true)),
+                is("{\"optional\":true,\"type\":\"JSON_PATH\",\"jsonPath\":\"\\\\some\\\\path\"}"));
+    }
+
 }

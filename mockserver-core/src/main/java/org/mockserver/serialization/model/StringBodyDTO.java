@@ -16,7 +16,7 @@ public class StringBodyDTO extends BodyWithContentTypeDTO {
     }
 
     public StringBodyDTO(StringBody stringBody, Boolean not) {
-        super(stringBody.getType(), not, stringBody.getContentType());
+        super(stringBody.getType(), not, stringBody);
         string = stringBody.getValue();
         subString = stringBody.isSubString();
         rawBytes = stringBody.getRawBytes();
@@ -35,6 +35,6 @@ public class StringBodyDTO extends BodyWithContentTypeDTO {
     }
 
     public StringBody buildObject() {
-        return new StringBody(getString(), getRawBytes(), isSubString(), getMediaType());
+        return (StringBody) new StringBody(getString(), getRawBytes(), isSubString(), getMediaType()).withOptional(getOptional());
     }
 }

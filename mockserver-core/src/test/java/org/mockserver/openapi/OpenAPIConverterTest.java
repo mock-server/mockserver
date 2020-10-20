@@ -308,16 +308,14 @@ public class OpenAPIConverterTest {
             // then
             fail("exception expected");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload because while parsing a block mapping" + NEW_LINE +
+            assertThat(iae.getMessage(), is("Unable to load API spec, while parsing a block mapping" + NEW_LINE +
                 " in 'reader', line 1, column 1:" + NEW_LINE +
                 "    \"openapi\": \"3.0.0\"," + NEW_LINE +
                 "    ^" + NEW_LINE +
                 "expected <block end>, but found ','" + NEW_LINE +
                 " in 'reader', line 1, column 19:" + NEW_LINE +
                 "    \"openapi\": \"3.0.0\"," + NEW_LINE +
-                "                      ^" + NEW_LINE +
-                NEW_LINE +
-                " at [Source: (StringReader); line: 1, column: 19]"));
+                "                      ^"));
         }
     }
 
@@ -333,16 +331,14 @@ public class OpenAPIConverterTest {
             // then
             fail("exception expected");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload because while scanning a simple key" + NEW_LINE +
+            assertThat(iae.getMessage(), is("Unable to load API spec, while scanning a simple key" + NEW_LINE +
                 " in 'reader', line 8, column 1:" + NEW_LINE +
                 "    servers" + NEW_LINE +
                 "    ^" + NEW_LINE +
                 "could not find expected ':'" + NEW_LINE +
                 " in 'reader', line 8, column 8:" + NEW_LINE +
                 "    servers" + NEW_LINE +
-                "           ^" + NEW_LINE +
-                NEW_LINE +
-                " at [Source: (StringReader); line: 8, column: 1]"));
+                "           ^"));
         }
     }
 
@@ -362,16 +358,14 @@ public class OpenAPIConverterTest {
             // then
             fail("exception expected");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload because while parsing a block mapping" + NEW_LINE +
+            assertThat(iae.getMessage(), is("Unable to load API spec, while parsing a block mapping" + NEW_LINE +
                 " in 'reader', line 1, column 1:" + NEW_LINE +
                 "    \"openapi\": \"3.0.0\"," + NEW_LINE +
                 "    ^" + NEW_LINE +
                 "expected <block end>, but found ','" + NEW_LINE +
                 " in 'reader', line 1, column 19:" + NEW_LINE +
                 "    \"openapi\": \"3.0.0\"," + NEW_LINE +
-                "                      ^" + NEW_LINE +
-                NEW_LINE +
-                " at [Source: (StringReader); line: 1, column: 19]"));
+                "                      ^"));
         }
     }
 
@@ -387,16 +381,14 @@ public class OpenAPIConverterTest {
             // then
             fail("exception expected");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec from provided URL or payload because while scanning a simple key" + NEW_LINE +
+            assertThat(iae.getMessage(), is("Unable to load API spec, while scanning a simple key" + NEW_LINE +
                 " in 'reader', line 8, column 1:" + NEW_LINE +
                 "    servers" + NEW_LINE +
                 "    ^" + NEW_LINE +
                 "could not find expected ':'" + NEW_LINE +
                 " in 'reader', line 8, column 8:" + NEW_LINE +
                 "    servers" + NEW_LINE +
-                "           ^" + NEW_LINE +
-                NEW_LINE +
-                " at [Source: (StringReader); line: 8, column: 1]"));
+                "           ^"));
         }
     }
 

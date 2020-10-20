@@ -6,16 +6,15 @@ import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.scheduler.Scheduler;
-
-import java.util.UUID;
+import org.mockserver.uuid.UUIDService;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.mock;
+import static org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.API;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.ui.MockServerMatcherNotifier.Cause.API;
 
 /**
  * @author jamesdbloom
@@ -34,7 +33,7 @@ public class MockServerMatcherUpdateExpectationsTest {
     @Test
     public void shouldUpdateExistingExpectation() {
         // given
-        String key = UUID.randomUUID().toString();
+        String key = UUIDService.getUUID();
         requestMatchers.add(new Expectation(request().withPath("somePath")).withId(key).thenRespond(response().withBody("someBody")), API);
 
         // then
@@ -53,11 +52,11 @@ public class MockServerMatcherUpdateExpectationsTest {
     @Test
     public void shouldUpdateAllExpectationAndHandleNull() {
         // given
-        String keyOne = UUID.randomUUID().toString();
+        String keyOne = UUIDService.getUUID();
         requestMatchers.add(new Expectation(request().withPath("path_one")).withId(keyOne).thenRespond(response().withBody("body_one")), API);
-        String keyTwo = UUID.randomUUID().toString();
+        String keyTwo = UUIDService.getUUID();
         requestMatchers.add(new Expectation(request().withPath("path_two")).withId(keyTwo).thenRespond(response().withBody("body_two")), API);
-        String keyThree = UUID.randomUUID().toString();
+        String keyThree = UUIDService.getUUID();
         requestMatchers.add(new Expectation(request().withPath("path_three")).withId(keyThree).thenRespond(response().withBody("body_three")), API);
 
         // then
@@ -88,11 +87,11 @@ public class MockServerMatcherUpdateExpectationsTest {
     @Test
     public void shouldUpdateAllExpectationNoneNewNoneRemoved() {
         // given
-        String keyOne = UUID.randomUUID().toString();
+        String keyOne = UUIDService.getUUID();
         requestMatchers.add(new Expectation(request().withPath("path_one")).withId(keyOne).thenRespond(response().withBody("body_one")), API);
-        String keyTwo = UUID.randomUUID().toString();
+        String keyTwo = UUIDService.getUUID();
         requestMatchers.add(new Expectation(request().withPath("path_two")).withId(keyTwo).thenRespond(response().withBody("body_two")), API);
-        String keyThree = UUID.randomUUID().toString();
+        String keyThree = UUIDService.getUUID();
         requestMatchers.add(new Expectation(request().withPath("path_three")).withId(keyThree).thenRespond(response().withBody("body_three")), API);
 
         // then
@@ -166,11 +165,11 @@ public class MockServerMatcherUpdateExpectationsTest {
     @Test
     public void shouldUpdateAllExpectationNoneNewNoneExisting() {
         // given
-        String keyOne = UUID.randomUUID().toString();
+        String keyOne = UUIDService.getUUID();
         requestMatchers.add(new Expectation(request().withPath("path_one")).withId(keyOne).thenRespond(response().withBody("body_one")), API);
-        String keyTwo = UUID.randomUUID().toString();
+        String keyTwo = UUIDService.getUUID();
         requestMatchers.add(new Expectation(request().withPath("path_two")).withId(keyTwo).thenRespond(response().withBody("body_two")), API);
-        String keyThree = UUID.randomUUID().toString();
+        String keyThree = UUIDService.getUUID();
         requestMatchers.add(new Expectation(request().withPath("path_three")).withId(keyThree).thenRespond(response().withBody("body_three")), API);
 
         // then
@@ -203,11 +202,11 @@ public class MockServerMatcherUpdateExpectationsTest {
     @Test
     public void shouldUpdateAllExpectationWithExistingAndRemoved() {
         // given
-        String keyOne = UUID.randomUUID().toString();
+        String keyOne = UUIDService.getUUID();
         requestMatchers.add(new Expectation(request().withPath("path_one")).withId(keyOne).thenRespond(response().withBody("body_one")), API);
-        String keyTwo = UUID.randomUUID().toString();
+        String keyTwo = UUIDService.getUUID();
         requestMatchers.add(new Expectation(request().withPath("path_two")).withId(keyTwo).thenRespond(response().withBody("body_two")), API);
-        String keyThree = UUID.randomUUID().toString();
+        String keyThree = UUIDService.getUUID();
         requestMatchers.add(new Expectation(request().withPath("path_three")).withId(keyThree).thenRespond(response().withBody("body_three")), API);
 
         // then
@@ -249,13 +248,13 @@ public class MockServerMatcherUpdateExpectationsTest {
     @Test
     public void shouldUpdateAllExpectationWithNewExistingAndRemoved() {
         // given
-        String keyOne = UUID.randomUUID().toString();
+        String keyOne = UUIDService.getUUID();
         requestMatchers.add(new Expectation(request().withPath("path_one")).withId(keyOne).thenRespond(response().withBody("body_one")), API);
-        String keyTwo = UUID.randomUUID().toString();
+        String keyTwo = UUIDService.getUUID();
         requestMatchers.add(new Expectation(request().withPath("path_two")).withId(keyTwo).thenRespond(response().withBody("body_two")), API);
-        String keyThree = UUID.randomUUID().toString();
+        String keyThree = UUIDService.getUUID();
         requestMatchers.add(new Expectation(request().withPath("path_three")).withId(keyThree).thenRespond(response().withBody("body_three")), API);
-        String keyFour = UUID.randomUUID().toString();
+        String keyFour = UUIDService.getUUID();
 
         // then
         assertThat(requestMatchers.httpRequestMatchers.size(), is(3));

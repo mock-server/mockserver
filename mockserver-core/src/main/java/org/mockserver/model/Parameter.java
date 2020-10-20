@@ -2,10 +2,8 @@ package org.mockserver.model;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 
-import static org.mockserver.model.NottableSchemaString.schemaString;
+import static org.mockserver.model.NottableOptionalString.optional;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -18,6 +16,10 @@ public class Parameter extends KeyToMultiValue {
     }
 
     public Parameter(NottableString name, NottableString... value) {
+        super(name, value);
+    }
+
+    public Parameter(NottableString name, String... value) {
         super(name, value);
     }
 
@@ -37,6 +39,10 @@ public class Parameter extends KeyToMultiValue {
         return new Parameter(name, value);
     }
 
+    public static Parameter param(NottableString name, String... value) {
+        return new Parameter(name, value);
+    }
+
     public static Parameter param(String name, Collection<String> value) {
         return new Parameter(name, value);
     }
@@ -48,4 +54,18 @@ public class Parameter extends KeyToMultiValue {
     public static Parameter schemaParam(String name, String... values) {
         return new Parameter(string(name), Arrays.stream(values).map(NottableSchemaString::schemaString).toArray(NottableString[]::new));
     }
+
+    public static Parameter schemaParam(NottableString name, String... values) {
+        return new Parameter(name, Arrays.stream(values).map(NottableSchemaString::schemaString).toArray(NottableString[]::new));
+    }
+
+    public static Parameter optionalParam(String name, String... values) {
+        return new Parameter(optional(name), Arrays.stream(values).map(NottableString::string).toArray(NottableString[]::new));
+    }
+
+    public Parameter withStyle(ParameterStyle style) {
+        getName().withStyle(style);
+        return this;
+    }
+
 }

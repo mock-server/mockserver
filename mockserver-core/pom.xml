@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.mock-server</groupId>
         <artifactId>mockserver</artifactId>
-        <version>5.10.1-SNAPSHOT</version>
+        <version>5.11.2-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -69,6 +69,12 @@
         <dependency>
             <groupId>com.jcraft</groupId>
             <artifactId>jzlib</artifactId>
+        </dependency>
+
+        <!-- non-blocking UUID -->
+        <dependency>
+            <groupId>com.fasterxml.uuid</groupId>
+            <artifactId>java-uuid-generator</artifactId>
         </dependency>
 
         <!-- SSL X509 -->
@@ -141,15 +147,10 @@
             <artifactId>json-path</artifactId>
         </dependency>
 
-        <!-- swagger -->
+        <!-- open api -->
         <dependency>
             <groupId>io.swagger.parser.v3</groupId>
             <artifactId>swagger-parser</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.oai</groupId>
-            <artifactId>swagger-request-validator-core</artifactId>
-            <version>2.10.0</version>
         </dependency>
 
         <!-- xml -->
@@ -216,15 +217,17 @@
         </dependency>
         <dependency>
             <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-all</artifactId>
+            <artifactId>hamcrest</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

@@ -218,7 +218,7 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
             )
             .respond(
                 callback()
-                    .withCallbackClass("org.mockserver.mockservlet.integration.TestClasspathTestExpectationResponseCallback")
+                    .withCallbackClass(TestClasspathTestExpectationResponseCallback.class)
             );
 
         // then
@@ -287,7 +287,7 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
             )
             .forward(
                 callback()
-                    .withCallbackClass("org.mockserver.mockservlet.integration.TestClasspathTestExpectationForwardCallback")
+                    .withCallbackClass(TestClasspathTestExpectationForwardCallback.class)
             );
 
         // then
@@ -361,7 +361,7 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
             )
             .forward(
                 callback()
-                    .withCallbackClass("org.mockserver.mockservlet.integration.TestClasspathTestExpectationForwardCallbackWithResponseOverride")
+                    .withCallbackClass(TestClasspathTestExpectationForwardCallbackWithResponseOverride.class)
             );
 
         // then

@@ -79,8 +79,8 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
                 httpClient.sendRequest(
                     request()
                         .withPath("/some_path")
-                        .withHeader(HOST.toString(), "localhost:" + targetClientAndServer.getLocalPort()),
-                    new InetSocketAddress(loadBalancerClientAndServer.getLocalPort())
+                        .withHeader(HOST.toString(), "localhost:" + targetClientAndServer.getPort()),
+                    new InetSocketAddress(loadBalancerClientAndServer.getPort())
                 );
 
             // then - returns 404
@@ -147,8 +147,8 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
                 httpClient.sendRequest(
                     request()
                         .withPath("/target")
-                        .withHeader(HOST.toString(), "localhost:" + targetClientAndServer.getLocalPort()),
-                    new InetSocketAddress(loadBalancerClientAndServer.getLocalPort())
+                        .withHeader(HOST.toString(), "localhost:" + targetClientAndServer.getPort()),
+                    new InetSocketAddress(loadBalancerClientAndServer.getPort())
                 );
 
             // then - does not return a 404
@@ -211,8 +211,8 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
                 httpClient.sendRequest(
                     request()
                         .withPath("/target")
-                        .withHeader(HOST.toString(), "localhost:" + targetClientAndServer.getLocalPort()),
-                    new InetSocketAddress(loadBalancerClientAndServer.getLocalPort())
+                        .withHeader(HOST.toString(), "localhost:" + targetClientAndServer.getPort()),
+                    new InetSocketAddress(loadBalancerClientAndServer.getPort())
                 );
 
             // then - returns a 404
@@ -249,8 +249,8 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
                 httpClient.sendRequest(
                     request()
                         .withPath("/target")
-                        .withHeader(HOST.toString(), "localhost:" + targetClientAndServer.getLocalPort()),
-                    new InetSocketAddress(loadBalancerClientAndServer.getLocalPort())
+                        .withHeader(HOST.toString(), "localhost:" + targetClientAndServer.getPort()),
+                    new InetSocketAddress(loadBalancerClientAndServer.getPort())
                 );
 
             // then - does not return a 404

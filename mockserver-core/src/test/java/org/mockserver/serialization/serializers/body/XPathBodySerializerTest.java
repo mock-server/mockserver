@@ -23,4 +23,10 @@ public class XPathBodySerializerTest {
                 is("{\"not\":true,\"type\":\"XPATH\",\"xpath\":\"\\\\some\\\\xpath\"}"));
     }
 
+    @Test
+    public void shouldSerializeXPathBodyWithOptional() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new XPathBody("\\some\\xpath").withOptional(true)),
+                is("{\"optional\":true,\"type\":\"XPATH\",\"xpath\":\"\\\\some\\\\xpath\"}"));
+    }
+
 }

@@ -2,6 +2,8 @@ package org.mockserver.examples.mockserver;
 
 import com.google.common.io.ByteStreams;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.integration.ClientAndServer;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.HttpTemplate;
@@ -13,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_DISPOSITION;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.Header.header;
@@ -67,6 +70,33 @@ public class ResponseActionExamples {
             );
     }
 
+    public void responseLiteralWithHeader() {
+        new MockServerClient("localhost", 1080)
+            // this request matcher matches every request
+            .when(
+                request()
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+                    .withHeader("Content-Type", "plain/text")
+            );
+    }
+
+    public void responseLiteralWithCookie() {
+        new MockServerClient("localhost", 1080)
+            // this request matcher matches every request
+            .when(
+                request()
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+                    .withHeader("Content-Type", "plain/text")
+                    .withCookie("Session", "97d43b1e-fe03-4855-926a-f448eddac32f")
+            );
+    }
+
     public void responseLiteralWithStatusCodeAndReasonPhraseOnly() {
         new MockServerClient("localhost", 1080)
             .when(
@@ -84,8 +114,8 @@ public class ResponseActionExamples {
     public void respondDifferentlyForTheSameRequest() {
         MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
 
-        // respond once with 200, then respond twice with 204, then
-        // respond with 404 as no remaining active expectations
+// respond once with 200, then respond twice with 204, then
+// respond with 404 as no remaining active expectations
         mockServerClient
             .when(
                 request()
@@ -268,5 +298,12 @@ public class ResponseActionExamples {
                         "}"
                 )
             );
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        ConfigurationProperties.logLevel("DEBUG");
+        new ClientAndServer(1080);
+        new ResponseActionExamples().responseLiteralWithCookie();
+        MINUTES.sleep(5);
     }
 }

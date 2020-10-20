@@ -57,13 +57,9 @@ public class XmlBody extends BodyWithContentType<String> {
         return xml;
     }
 
+    @JsonIgnore
     public byte[] getRawBytes() {
         return rawBytes;
-    }
-
-    @JsonIgnore
-    public Charset getCharsetOrDefault() {
-        return DEFAULT_XML_CONTENT_TYPE.getCharset();
     }
 
     @Override

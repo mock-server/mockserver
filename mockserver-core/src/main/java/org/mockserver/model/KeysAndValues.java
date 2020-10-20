@@ -1,6 +1,6 @@
 package org.mockserver.model;
 
-import org.mockserver.collections.CaseInsensitiveRegexHashMap;
+import org.mockserver.collections.NottableStringHashMap;
 import org.mockserver.logging.MockServerLogger;
 
 import java.util.*;
@@ -13,16 +13,14 @@ import static org.mockserver.model.NottableString.string;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public abstract class KeysAndValues<T extends KeyAndValue, K extends KeysAndValues> extends ObjectWithJsonToString {
 
-    private final Map<NottableString, NottableString> map = new LinkedHashMap<>();
+    private final Map<NottableString, NottableString> map;
 
-    public CaseInsensitiveRegexHashMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, List<T> entries, boolean controlPlaneMatcher) {
-        CaseInsensitiveRegexHashMap caseInsensitiveRegexHashMap = new CaseInsensitiveRegexHashMap(mockServerLogger, controlPlaneMatcher);
-        if (entries != null) {
-            for (KeyAndValue keyToMultiValue : entries) {
-                caseInsensitiveRegexHashMap.put(keyToMultiValue.getName(), keyToMultiValue.getValue());
-            }
-        }
-        return caseInsensitiveRegexHashMap;
+    protected KeysAndValues() {
+        map = new LinkedHashMap<>();
+    }
+
+    protected KeysAndValues(Map<NottableString, NottableString> map) {
+        this.map = new LinkedHashMap<>(map);
     }
 
     public abstract T build(NottableString name, NottableString value);
@@ -73,10 +71,6 @@ public abstract class KeysAndValues<T extends KeyAndValue, K extends KeysAndValu
 
     public Map<NottableString, NottableString> getMap() {
         return map;
-    }
-
-    public CaseInsensitiveRegexHashMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher) {
-        return toCaseInsensitiveRegexMultiMap(mockServerLogger, this.getEntries(), controlPlaneMatcher);
     }
 
     public boolean isEmpty() {

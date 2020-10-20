@@ -33,6 +33,8 @@ import static org.mockserver.echo.tls.UniqueCertificateChainSSLContextBuilder.un
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.OK_200;
+import static org.mockserver.socket.tls.PEMToFile.privateKeyFromPEMFile;
+import static org.mockserver.socket.tls.PEMToFile.x509FromPEMFile;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
@@ -138,11 +140,11 @@ public class ClientAuthenticationAdditionalCertificateChainMockingIntegrationTes
         keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
         return new KeyStoreFactory(new MockServerLogger())
             .sslContext(
-                X509Generator.privateKeyFromPEMFile("org/mockserver/netty/integration/tls/leaf-key-pkcs8.pem"),
-                X509Generator.x509FromPEMFile("org/mockserver/netty/integration/tls/leaf-cert.pem"),
-                X509Generator.x509FromPEMFile("org/mockserver/netty/integration/tls/ca.pem"),
+                privateKeyFromPEMFile("org/mockserver/netty/integration/tls/leaf-key-pkcs8.pem"),
+                x509FromPEMFile("org/mockserver/netty/integration/tls/leaf-cert.pem"),
+                x509FromPEMFile("org/mockserver/netty/integration/tls/ca.pem"),
                 new X509Certificate[]{
-                    X509Generator.x509FromPEMFile("org/mockserver/netty/integration/tls/ca.pem"),
+                    x509FromPEMFile("org/mockserver/netty/integration/tls/ca.pem"),
                     keyAndCertificateFactory.certificateAuthorityX509Certificate()
                 }
             );

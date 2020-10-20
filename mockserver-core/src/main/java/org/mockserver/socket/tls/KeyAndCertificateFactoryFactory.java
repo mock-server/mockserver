@@ -9,12 +9,13 @@ import org.slf4j.event.Level;
 import java.lang.reflect.Constructor;
 
 /**
- * @author jamesdbloom, ganskef
+ * @author jamesdbloom
  */
 public class KeyAndCertificateFactoryFactory {
 
     private static final ClassLoader CLASS_LOADER = KeyAndCertificateFactoryFactory.class.getClassLoader();
 
+    @SuppressWarnings("unchecked")
     public static KeyAndCertificateFactory createKeyAndCertificateFactory(MockServerLogger mockServerLogger) {
         if (ConfigurationProperties.useBouncyCastleForKeyAndCertificateGeneration()) {
             Class<?> bouncyCastleProvider = null;
@@ -33,12 +34,12 @@ public class KeyAndCertificateFactoryFactory {
                         .setArguments("<dependency>\n" +
                             "    <groupId>org.bouncycastle</groupId>\n" +
                             "    <artifactId>bcprov-jdk15on</artifactId>\n" +
-                            "    <version>1.65</version>\n" +
+                            "    <version>1.66</version>\n" +
                             "</dependency>\n" +
                             "<dependency>\n" +
                             "    <groupId>org.bouncycastle</groupId>\n" +
                             "    <artifactId>bcpkix-jdk15on</artifactId>\n" +
-                            "    <version>1.65</version>\n" +
+                            "    <version>1.66</version>\n" +
                             "</dependency>")
                 );
             }
@@ -46,6 +47,13 @@ public class KeyAndCertificateFactoryFactory {
             try {
                 Class<KeyAndCertificateFactory> keyAndCertificateFactorClass = (Class<KeyAndCertificateFactory>) CLASS_LOADER.loadClass("org.mockserver.socket.tls.bouncycastle.BCKeyAndCertificateFactory");
                 Constructor<KeyAndCertificateFactory> keyAndCertificateFactorConstructor = keyAndCertificateFactorClass.getDeclaredConstructor(MockServerLogger.class);
+                if (MockServerLogger.isEnabled(Level.INFO)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(Level.INFO)
+                            .setMessageFormat("using Bouncy Castle for X.509 Certificate and Private Key generation")
+                    );
+                }
                 return keyAndCertificateFactorConstructor.newInstance(mockServerLogger);
             } catch (Throwable throwable) {
                 mockServerLogger.logEvent(

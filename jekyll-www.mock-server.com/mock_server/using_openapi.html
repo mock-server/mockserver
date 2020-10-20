@@ -11,9 +11,9 @@ sitemap:
   lastmod: 2019-11-10T08:00:00+01:00
 ---
 
-<p>MockServer supports <a href="https://swagger.io/docs/specification/basic-structure/"><strong>OpenAPI v3</strong></a> or <a href="https://swagger.io/docs/specification/2-0/basic-structure/"><strong>Swagger v2</strong></a> specifications in either JSON or YAML format.</p>
+<p>MockServer supports <a href="https://swagger.io/docs/specification/basic-structure/"><strong>OpenAPI v3</strong></a> specifications in either JSON or YAML format.</p>
 
-<p>OpenAPI or Swagger specifications can be used in <a href="/mock_server/getting_started.html#request_openapi_matchers"><strong>request matchers</strong></a> for</p>
+<p>OpenAPI specifications can be used in <a href="/mock_server/getting_started.html#request_openapi_matchers"><strong>request matchers</strong></a> for</p>
 <ul>
   <li>expectation <a href="/mock_server/getting_started.html#request_openapi_matchers"><strong>request matchers</strong></a></li>
   <li><a href="/mock_server/verification.html"><strong>verifying requests</strong></a> and <a href="/mock_server/verification.html"><strong>verifying request sequences</strong></a></li>
@@ -21,350 +21,683 @@ sitemap:
   <li>retrieving <a href="/mock_server/debugging_issues.html#retrieving_recorded_logs"><strong>logs</strong></a>, <a href="/mock_server/debugging_issues.html#retrieving_recorded_requests"><strong>recorded requests</strong></a> and <a href="/mock_server/debugging_issues.html#retrieving_active_expectations"><strong>expectations</strong></a></li>
 </ul>
 
-<p>OpenAPI or Swagger specifications can also be used to <a href="#generate_expectation_from_openapi"><strong>generate expectations</strong></a> with example responses.</p>
+<p>OpenAPI specifications can also be used to <a href="#generate_expectation_from_openapi"><strong>generate expectations</strong></a> with example responses.</p>
 
 <a id="generate_expectation_from_openapi" class="anchor" href="#generate_expectation_from_openapi">&nbsp;</a>
 
-<h2>Generate Expectations From OpenAPI or Swagger</h2>
+<h2>Generate Expectations From OpenAPI</h2>
 
-<p>MockServer can create an expectation for each operation in an OpenAPI or Swagger specifications.</p>
-<p>Each expectation will use an <a href="/mock_server/getting_started.html#request_openapi_matchers"><strong>OpenAPI request matcher</strong></a> to match requests.</p>
-<p>An <a href="/mock_server/creating_expectations.html#response_action"><strong>HttpResponse</strong></a> action is added to each expectation using <a href="https://swagger.io/docs/specification/adding-examples/">examples provided in the specification</a>.  If no examples are provided in the specification then the <a href="/mock_server/creating_expectations.html#response_action"><strong>HttpResponse</strong></a> is auto-generated examples from schema definitions for response body and headers of the operation.</p>
-<p>If the operation specifies multiple response bodies for different status codes the first status code response body is used by default, however this can be specified by using a <strong>operationsAndResponses</strong> map which lists <strong>operationId</strong> to <strong>statusCode</strong> (such as "200", "400" and "default").</p>
+<p>MockServer supports <strong>open api expectations</strong> containing the follow fields:</p>
+<ul>
+    <li><strong>specUrlOrPayload</strong> - mandatory value containing an <a href="https://swagger.io/docs/specification/basic-structure/"><strong>OpenAPI v3</strong></a> specifications in either JSON or YAML format as an:
+        <ul>
+            <li><strong><a href="#button_open_api_remote_specification">HTTP/HTTPS URL</a></strong></li>
+            <li><strong><a href="#button_open_api_filepath">File URL</a></strong></li>
+            <li><strong><a href="#button_open_api_classpath">classpath location</a></strong> (without the classpath: scheme)</li>
+            <li><strong><a href="#button_open_api_inline_json_specification">inline JSON object</a></strong></li>
+            <li><strong><a href="#button_open_api_inline_yaml_specification">inline escaped YAML string</a></strong></li>
+        </ul>
+    </li>
+    <li><strong><a href="#button_open_api_remote_specification_with_filtering">operationsAndResponses</a></strong>
+        <ul>
+            <li>optional value that specifies which specifies operations are included, if not specified all operations are included</li>
+            <li>specified which response body when multiple response bodies are specified (i.e. different status codes), if not specified the first response body is used</li>
+            <li>fields names are <strong>operationId</strong> indicating the operation in the OpenAPI specification</li>
+            <li>field values are a string <strong>statusCode</strong> (such as "200", "400" or "default") indicating the response body for the specified operation</li>
+        </ul>
+    </li>
+</ul>
 
-<p>The following OpenAPI will be used to demonstrate what expectations will be created:</p>
+<p>For each <strong>open api expectations</strong> MockServer creates multiple <strong><a href="/mock_server/creating_expectations.html">request matcher expectations</a></strong> as follows:</p>
+<ul>
+    <li><strong>request matcher</strong>
+        <ul>
+            <li>each expectation will use an <a href="/mock_server/getting_started.html#request_openapi_matchers"><strong>open api request matcher</strong></a> to match requests.</li>
+        </ul></li>
+    <li><strong>action</strong>
+        <ul>
+            <li>a <a href="/mock_server/creating_expectations.html#response_action"><strong>response</strong></a> action is added to each expectation using <a href="https://swagger.io/docs/specification/adding-examples/">examples provided in the specification</a></li>
+            <li>if no examples are provided in the specification then the <a href="/mock_server/creating_expectations.html#response_action"><strong>response</strong></a> is auto-generated from schema definitions for response body and headers of the operation</li>
+            <li>if multiple response bodies are specified for an operation (i.e. different status codes) the first response body is used by default, however this can be controlled by using <strong>operationsAndResponses</strong></li>
+        </ul>
+    </li>
+</ul>
 
-<pre class="prettyprint lang-java code"><code class="code">---
-openapi: 3.0.0
-info:
-  version: 1.0.0
-  title: Swagger Petstore
-  license:
-    name: MIT
-servers:
-  - url: http://petstore.swagger.io/v1
-paths:
-  /pets:
-    get:
-      summary: List all pets
-      operationId: listPets
-      tags:
-        - pets
-      parameters:
-        - name: limit
-          in: query
-          description: How many items to return at one time (max 100)
-          required: false
-          schema:
-            type: integer
-            format: int32
-      responses:
-        '200':
-          description: A paged array of pets
-          headers:
-            x-next:
-              description: A link to the next page of responses
-              schema:
-                type: string
-              examples:
-                two:
-                  value: "/pets?query=752cd724e0d7&page=2"
-                end:
-                  value: ""
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Pets'
-        '500':
-          description: unexpected error
-          headers:
-            x-code:
-              description: The error code
-              schema:
-                type: integer
-                format: int32
-                example: 90
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-    post:
-      summary: Create a pet
-      operationId: createPets
-      tags:
-        - pets
-      requestBody:
-        description: a pet
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Pet'
-          '*/*':
-            schema:
-              $ref: '#/components/schemas/Pet'
-      responses:
-        '201':
-          description: Null response
-        '400':
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /pets/{petId}:
-    get:
-      summary: Info for a specific pet
-      operationId: showPetById
-      tags:
-        - pets
-      parameters:
-        - name: petId
-          in: path
-          required: true
-          description: The id of the pet to retrieve
-          schema:
-            type: string
-        - in: header
-          name: X-Request-ID
-          schema:
-            type: string
-            format: uuid
-          required: true
-      responses:
-        '200':
-          description: Expected response to a valid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Pet'
-              examples:
-                Crumble:
-                  value:
-                    id: 2
-                    name: Crumble
-                    tag: dog
-                Boots:
-                  value:
-                    id: 3
-                    name: Boots
-                    tag: cat
-        '500':
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-components:
-  schemas:
-    Pet:
-      type: object
-      required:
-        - id
-        - name
-      properties:
-        id:
-          type: integer
-          format: int64
-        name:
-          type: string
-        tag:
-          type: string
-      example:
-        id: 1
-        name: Scruffles
-        tag: dog
-    Pets:
-      type: array
-      items:
-        $ref: '#/components/schemas/Pet'
-    Error:
-      type: object
-      required:
-        - code
-        - message
-      properties:
-        code:
-          type: integer
-          format: int32
-        message:
-          type: string</code></pre>
+<p></p>
 
-<p>No operationId to response mapping:</p>
 
-<pre class="prettyprint lang-java code"><code class="code">[ {
-  "id" : "b5efa161-efc0-4ccf-be44-7ba125415c7b",
-  "priority" : 0,
-  "httpRequest" : {
-    "specUrlOrPayload" : "org/mockserver/mock/openapi_petstore_example_with_examples.yaml",
-    "operationId" : "listPets"
+<p></p>
+
+<a id="generate_expectation_from_openapi_example" class="anchor" href="#generate_expectation_from_openapi_example">&nbsp;</a>
+
+<p>If an <a href="https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json">OpenAPI specification</a> is submitted with operation filtering as follows:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+    "operationsAndResponses": {
+        "showPetById": "200",
+        "createPets": "500"
+    }
+}</code></pre>
+
+<p>Then the following expectations are created:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "priority": 0,
+  "httpRequest": {
+    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+    "operationId": "showPetById"
   },
-  "httpResponse" : {
-    "statusCode" : 200,
-    "headers" : {
-      "x-next" : [ "/pets?query=752cd724e0d7&page=2" ],
-      "content-type" : [ "application/json" ]
+  "httpResponse": {
+    "statusCode": 200,
+    "headers": {
+      "content-type": [
+        "application/json"
+      ]
     },
-    "body" : {
-      "type" : "JSON",
-      "json" : "[ {\n  \"id\" : 1,\n  \"name\" : \"Scruffles\",\n  \"tag\" : \"dog\"\n} ]",
-      "rawBytes" : "WyB7CiAgImlkIiA6IDEsCiAgIm5hbWUiIDogIlNjcnVmZmxlcyIsCiAgInRhZyIgOiAiZG9nIgp9IF0="
+    "body": {
+      "id": 0,
+      "name": "some_string_value",
+      "tag": "some_string_value"
     }
   },
-  "times" : {
-    "unlimited" : true
+  "times": {
+    "unlimited": true
   },
-  "timeToLive" : {
-    "unlimited" : true
+  "timeToLive": {
+    "unlimited": true
   }
-}, {
-  "id" : "318c5ece-cb41-4c07-a03e-debc41ed4106",
-  "priority" : 0,
-  "httpRequest" : {
-    "specUrlOrPayload" : "org/mockserver/mock/openapi_petstore_example_with_examples.yaml",
-    "operationId" : "createPets"
+}</code></pre>
+<pre class="prettyprint lang-java code"><code class="code">{
+  "priority": 0,
+  "httpRequest": {
+    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+    "operationId": "createPets"
   },
-  "httpResponse" : {
-    "statusCode" : 201
-  },
-  "times" : {
-    "unlimited" : true
-  },
-  "timeToLive" : {
-    "unlimited" : true
-  }
-}, {
-  "id" : "d7b30144-2e6f-4a21-9b92-c80d0942a62a",
-  "priority" : 0,
-  "httpRequest" : {
-    "specUrlOrPayload" : "org/mockserver/mock/openapi_petstore_example_with_examples.yaml",
-    "operationId" : "showPetById"
-  },
-  "httpResponse" : {
-    "statusCode" : 200,
-    "headers" : {
-      "content-type" : [ "application/json" ]
+  "httpResponse": {
+    "statusCode": 500,
+    "headers": {
+      "content-type": [
+        "application/json"
+      ]
     },
-    "body" : {
-      "type" : "JSON",
-      "json" : "{\n  \"id\" : 2,\n  \"name\" : \"Crumble\",\n  \"tag\" : \"dog\"\n}",
-      "rawBytes" : "ewogICJpZCIgOiAyLAogICJuYW1lIiA6ICJDcnVtYmxlIiwKICAidGFnIiA6ICJkb2ciCn0="
+    "body": {
+      "code": 0,
+      "message": "some_string_value"
     }
   },
-  "times" : {
-    "unlimited" : true
+  "times": {
+    "unlimited": true
   },
-  "timeToLive" : {
-    "unlimited" : true
+  "timeToLive": {
+    "unlimited": true
   }
-} ]</code></pre>
+}</code></pre>
 
-<p>With operationId to response mapping:</p>
+<a id="generate_expectation_from_openapi_code_examples" class="anchor" href="#generate_expectation_from_openapi_code_examples">&nbsp;</a>
 
-<pre class="prettyprint lang-java code"><code class="code">ImmutableMap.of(
-    "listPets", "500",
-    "createPets", "default",
-    "showPetById", "200"
-)</code></pre>
-
-<pre class="prettyprint lang-java code"><code class="code">[ {
-  "id" : "68231b4f-773a-4ecb-bbe7-fee4a3c223da",
-  "priority" : 0,
-  "httpRequest" : {
-    "specUrlOrPayload" : "org/mockserver/mock/openapi_petstore_example_with_examples.yaml",
-    "operationId" : "listPets"
-  },
-  "httpResponse" : {
-    "statusCode" : 500,
-    "headers" : {
-      "x-code" : [ "90" ],
-      "content-type" : [ "application/json" ]
+<button id="button_open_api_remote_specification" class="accordion">create expectation from a remote specification</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+<pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .upsert(
+        openAPIExpectation(
+            "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json"
+        )
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).openAPIExpectation({
+    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json"
+}).then(
+    function () {
+        console.log("expectation created");
     },
-    "body" : {
-      "type" : "JSON",
-      "json" : "{\n  \"code\" : 0,\n  \"message\" : \"some_string_value\"\n}",
-      "rawBytes" : "ewogICJjb2RlIiA6IDAsCiAgIm1lc3NhZ2UiIDogInNvbWVfc3RyaW5nX3ZhbHVlIgp9"
+    function (error) {
+        console.log(error);
     }
-  },
-  "times" : {
-    "unlimited" : true
-  },
-  "timeToLive" : {
-    "unlimited" : true
-  }
-}, {
-  "id" : "73f2fe6b-4ede-4e9e-a45a-c727c867dfb4",
-  "priority" : 0,
-  "httpRequest" : {
-    "specUrlOrPayload" : "org/mockserver/mock/openapi_petstore_example_with_examples.yaml",
-    "operationId" : "createPets"
-  },
-  "httpResponse" : {
-    "headers" : {
-      "content-type" : [ "application/json" ]
+);</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/openapi" -d '{
+    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json"
+}'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+<button id="button_open_api_remote_specification_with_filtering" class="accordion">create expectation from a remote specification filtering operations and controlling response bodies</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+<pre class="prettyprint lang-java code"><code class="code">Map&lt;String, String&gt; operationsAndResponses = new HashMap<>();
+operationsAndResponses.put("showPetById", "200");
+operationsAndResponses.put("createPets", "500");
+new MockServerClient("localhost", 1080)
+    .upsert(
+        openAPIExpectation(
+            "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+            operationsAndResponses
+        )
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).openAPIExpectation({
+    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+    "operationsAndResponses": {
+        "showPetById": "200",
+        "createPets": "500"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
     },
-    "body" : {
-      "type" : "JSON",
-      "json" : "{\n  \"code\" : 0,\n  \"message\" : \"some_string_value\"\n}",
-      "rawBytes" : "ewogICJjb2RlIiA6IDAsCiAgIm1lc3NhZ2UiIDogInNvbWVfc3RyaW5nX3ZhbHVlIgp9"
+    function (error) {
+        console.log(error);
     }
-  },
-  "times" : {
-    "unlimited" : true
-  },
-  "timeToLive" : {
-    "unlimited" : true
-  }
-}, {
-  "id" : "d0deff7f-3fb0-4dff-a0ed-8659d14aca5f",
-  "priority" : 0,
-  "httpRequest" : {
-    "specUrlOrPayload" : "org/mockserver/mock/openapi_petstore_example_with_examples.yaml",
-    "operationId" : "showPetById"
-  },
-  "httpResponse" : {
-    "statusCode" : 200,
-    "headers" : {
-      "content-type" : [ "application/json" ]
+);</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/openapi" -d '{
+    "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+    "operationsAndResponses": {
+        "showPetById": "200",
+        "createPets": "500"
+    }
+}'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+<button id="button_open_api_filepath" class="accordion">create expectation from file path</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+<pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .upsert(
+        openAPIExpectation(
+            "file:/Users/jamesbloom/git/mockserver/mockserver/mockserver-core/target/test-classes/org/mockserver/mock/openapi_petstore_example.json"
+        )
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).openAPIExpectation({
+    "specUrlOrPayload": "file:/Users/jamesbloom/git/mockserver/mockserver/mockserver-core/target/test-classes/org/mockserver/mock/openapi_petstore_example.json"
+}).then(
+    function () {
+        console.log("expectation created");
     },
-    "body" : {
-      "type" : "JSON",
-      "json" : "{\n  \"id\" : 2,\n  \"name\" : \"Crumble\",\n  \"tag\" : \"dog\"\n}",
-      "rawBytes" : "ewogICJpZCIgOiAyLAogICJuYW1lIiA6ICJDcnVtYmxlIiwKICAidGFnIiA6ICJkb2ciCn0="
+    function (error) {
+        console.log(error);
     }
-  },
-  "times" : {
-    "unlimited" : true
-  },
-  "timeToLive" : {
-    "unlimited" : true
-  }
-} ]</code></pre>
-
-<!-- status code -->
-<!-- values used for generated examples -->
-<!-- choosing response by status code -->
+);</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/openapi" -d '{
+    "specUrlOrPayload": "file:/Users/jamesbloom/git/mockserver/mockserver/mockserver-core/target/test-classes/org/mockserver/mock/openapi_petstore_example.json"
+}'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+<button id="button_open_api_classpath" class="accordion">create expectation from classpath location</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+<pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .upsert(
+        openAPIExpectation("org/mockserver/mock/openapi_petstore_example.json")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).openAPIExpectation({
+    "specUrlOrPayload": "org/mockserver/mock/openapi_petstore_example.json"
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/openapi" -d '{
+    "specUrlOrPayload": "org/mockserver/mock/openapi_petstore_example.json"
+}'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+<button id="button_open_api_inline_json_specification" class="accordion">create expectation from an inline json specification</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+<pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .upsert(
+        openAPIExpectation(FileReader.readFileFromClassPathOrPath("/Users/jamesbloom/git/mockserver/mockserver/mockserver-core/target/test-classes/org/mockserver/mock/openapi_petstore_example.json"))
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var fs = require('fs');
+try {
+    var mockServerClient = require('mockserver-client').mockServerClient;
+    mockServerClient("localhost", 1080).openAPIExpectation({
+        "specUrlOrPayload": fs.readFileSync("/Users/jamesbloom/git/mockserver/mockserver/mockserver-core/target/test-classes/org/mockserver/mock/openapi_petstore_example.json", "utf8")
+    }).then(
+        function () {
+            console.log("expectation created");
+        },
+        function (error) {
+            console.log(error);
+        }
+    );
+} catch (e) {
+    console.log('Error:', e.stack);
+}</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/openapi" -d "{
+    \"specUrlOrPayload\": `cat /Users/jamesbloom/git/mockserver/mockserver/mockserver-core/target/test-classes/org/mockserver/mock/openapi_petstore_example.json`
+}"</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+<button id="button_open_api_inline_yaml_specification" class="accordion">create expectation from an inline yaml specification</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+<pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .upsert(
+        openAPIExpectation("---\n" +
+            "openapi: 3.0.0\n" +
+            "info:\n" +
+            "  version: 1.0.0\n" +
+            "  title: Swagger Petstore\n" +
+            "  license:\n" +
+            "    name: MIT\n" +
+            "servers:\n" +
+            "  - url: http://petstore.swagger.io/v1\n" +
+            "paths:\n" +
+            "  /pets:\n" +
+            "    get:\n" +
+            "      summary: List all pets\n" +
+            "      operationId: listPets\n" +
+            "      tags:\n" +
+            "        - pets\n" +
+            "      parameters:\n" +
+            "        - name: limit\n" +
+            "          in: query\n" +
+            "          description: How many items to return at one time (max 100)\n" +
+            "          required: false\n" +
+            "          schema:\n" +
+            "            type: integer\n" +
+            "            format: int32\n" +
+            "      responses:\n" +
+            "        '200':\n" +
+            "          description: A paged array of pets\n" +
+            "          headers:\n" +
+            "            x-next:\n" +
+            "              description: A link to the next page of responses\n" +
+            "              schema:\n" +
+            "                type: string\n" +
+            "              examples:\n" +
+            "                two:\n" +
+            "                  value: \"/pets?query=752cd724e0d7&page=2\"\n" +
+            "                end:\n" +
+            "                  value: \"\"\n" +
+            "          content:\n" +
+            "            application/json:\n" +
+            "              schema:\n" +
+            "                $ref: '#/components/schemas/Pets'\n" +
+            "        '500':\n" +
+            "          description: unexpected error\n" +
+            "          headers:\n" +
+            "            x-code:\n" +
+            "              description: The error code\n" +
+            "              schema:\n" +
+            "                type: integer\n" +
+            "                format: int32\n" +
+            "                example: 90\n" +
+            "          content:\n" +
+            "            application/json:\n" +
+            "              schema:\n" +
+            "                $ref: '#/components/schemas/Error'\n" +
+            "        default:\n" +
+            "          description: unexpected error\n" +
+            "          content:\n" +
+            "            application/json:\n" +
+            "              schema:\n" +
+            "                $ref: '#/components/schemas/Error'\n" +
+            "    post:\n" +
+            "      summary: Create a pet\n" +
+            "      operationId: createPets\n" +
+            "      tags:\n" +
+            "        - pets\n" +
+            "      requestBody:\n" +
+            "        description: a pet\n" +
+            "        required: true\n" +
+            "        content:\n" +
+            "          application/json:\n" +
+            "            schema:\n" +
+            "              $ref: '#/components/schemas/Pet'\n" +
+            "          '*/*':\n" +
+            "            schema:\n" +
+            "              $ref: '#/components/schemas/Pet'\n" +
+            "      responses:\n" +
+            "        '201':\n" +
+            "          description: Null response\n" +
+            "        '400':\n" +
+            "          description: unexpected error\n" +
+            "          content:\n" +
+            "            application/json:\n" +
+            "              schema:\n" +
+            "                $ref: '#/components/schemas/Error'\n" +
+            "        '500':\n" +
+            "          description: unexpected error\n" +
+            "          content:\n" +
+            "            application/json:\n" +
+            "              schema:\n" +
+            "                $ref: '#/components/schemas/Error'\n" +
+            "        default:\n" +
+            "          description: unexpected error\n" +
+            "          content:\n" +
+            "            application/json:\n" +
+            "              schema:\n" +
+            "                $ref: '#/components/schemas/Error'\n" +
+            "  /pets/{petId}:\n" +
+            "    get:\n" +
+            "      summary: Info for a specific pet\n" +
+            "      operationId: showPetById\n" +
+            "      tags:\n" +
+            "        - pets\n" +
+            "      parameters:\n" +
+            "        - name: petId\n" +
+            "          in: path\n" +
+            "          required: true\n" +
+            "          description: The id of the pet to retrieve\n" +
+            "          schema:\n" +
+            "            type: string\n" +
+            "        - in: header\n" +
+            "          name: X-Request-ID\n" +
+            "          schema:\n" +
+            "            type: string\n" +
+            "            format: uuid\n" +
+            "          required: true\n" +
+            "      responses:\n" +
+            "        '200':\n" +
+            "          description: Expected response to a valid request\n" +
+            "          content:\n" +
+            "            application/json:\n" +
+            "              schema:\n" +
+            "                $ref: '#/components/schemas/Pet'\n" +
+            "              examples:\n" +
+            "                Crumble:\n" +
+            "                  value:\n" +
+            "                    id: 2\n" +
+            "                    name: Crumble\n" +
+            "                    tag: dog\n" +
+            "                Boots:\n" +
+            "                  value:\n" +
+            "                    id: 3\n" +
+            "                    name: Boots\n" +
+            "                    tag: cat\n" +
+            "        '500':\n" +
+            "          description: unexpected error\n" +
+            "          content:\n" +
+            "            application/json:\n" +
+            "              schema:\n" +
+            "                $ref: '#/components/schemas/Error'\n" +
+            "        default:\n" +
+            "          description: unexpected error\n" +
+            "          content:\n" +
+            "            application/json:\n" +
+            "              schema:\n" +
+            "                $ref: '#/components/schemas/Error'\n" +
+            "components:\n" +
+            "  schemas:\n" +
+            "    Pet:\n" +
+            "      type: object\n" +
+            "      required:\n" +
+            "        - id\n" +
+            "        - name\n" +
+            "      properties:\n" +
+            "        id:\n" +
+            "          type: integer\n" +
+            "          format: int64\n" +
+            "        name:\n" +
+            "          type: string\n" +
+            "        tag:\n" +
+            "          type: string\n" +
+            "      example:\n" +
+            "        id: 1\n" +
+            "        name: Scruffles\n" +
+            "        tag: dog\n" +
+            "    Pets:\n" +
+            "      type: array\n" +
+            "      items:\n" +
+            "        $ref: '#/components/schemas/Pet'\n" +
+            "    Error:\n" +
+            "      type: object\n" +
+            "      required:\n" +
+            "        - code\n" +
+            "        - message\n" +
+            "      properties:\n" +
+            "        code:\n" +
+            "          type: integer\n" +
+            "          format: int32\n" +
+            "        message:\n" +
+            "          type: string\n")
+    );
+}</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).openAPIExpectation({
+    "specUrlOrPayload": "---\n" +
+        "openapi: 3.0.0\n" +
+        "info:\n" +
+        "  version: 1.0.0\n" +
+        "  title: Swagger Petstore\n" +
+        "  license:\n" +
+        "    name: MIT\n" +
+        "servers:\n" +
+        "  - url: http://petstore.swagger.io/v1\n" +
+        "paths:\n" +
+        "  /pets:\n" +
+        "    get:\n" +
+        "      summary: List all pets\n" +
+        "      operationId: listPets\n" +
+        "      tags:\n" +
+        "        - pets\n" +
+        "      parameters:\n" +
+        "        - name: limit\n" +
+        "          in: query\n" +
+        "          description: How many items to return at one time (max 100)\n" +
+        "          required: false\n" +
+        "          schema:\n" +
+        "            type: integer\n" +
+        "            format: int32\n" +
+        "      responses:\n" +
+        "        '200':\n" +
+        "          description: A paged array of pets\n" +
+        "          headers:\n" +
+        "            x-next:\n" +
+        "              description: A link to the next page of responses\n" +
+        "              schema:\n" +
+        "                type: string\n" +
+        "              examples:\n" +
+        "                two:\n" +
+        "                  value: \"/pets?query=752cd724e0d7&page=2\"\n" +
+        "                end:\n" +
+        "                  value: \"\"\n" +
+        "          content:\n" +
+        "            application/json:\n" +
+        "              schema:\n" +
+        "                $ref: '#/components/schemas/Pets'\n" +
+        "        '500':\n" +
+        "          description: unexpected error\n" +
+        "          headers:\n" +
+        "            x-code:\n" +
+        "              description: The error code\n" +
+        "              schema:\n" +
+        "                type: integer\n" +
+        "                format: int32\n" +
+        "                example: 90\n" +
+        "          content:\n" +
+        "            application/json:\n" +
+        "              schema:\n" +
+        "                $ref: '#/components/schemas/Error'\n" +
+        "        default:\n" +
+        "          description: unexpected error\n" +
+        "          content:\n" +
+        "            application/json:\n" +
+        "              schema:\n" +
+        "                $ref: '#/components/schemas/Error'\n" +
+        "    post:\n" +
+        "      summary: Create a pet\n" +
+        "      operationId: createPets\n" +
+        "      tags:\n" +
+        "        - pets\n" +
+        "      requestBody:\n" +
+        "        description: a pet\n" +
+        "        required: true\n" +
+        "        content:\n" +
+        "          application/json:\n" +
+        "            schema:\n" +
+        "              $ref: '#/components/schemas/Pet'\n" +
+        "          '*/*':\n" +
+        "            schema:\n" +
+        "              $ref: '#/components/schemas/Pet'\n" +
+        "      responses:\n" +
+        "        '201':\n" +
+        "          description: Null response\n" +
+        "        '400':\n" +
+        "          description: unexpected error\n" +
+        "          content:\n" +
+        "            application/json:\n" +
+        "              schema:\n" +
+        "                $ref: '#/components/schemas/Error'\n" +
+        "        '500':\n" +
+        "          description: unexpected error\n" +
+        "          content:\n" +
+        "            application/json:\n" +
+        "              schema:\n" +
+        "                $ref: '#/components/schemas/Error'\n" +
+        "        default:\n" +
+        "          description: unexpected error\n" +
+        "          content:\n" +
+        "            application/json:\n" +
+        "              schema:\n" +
+        "                $ref: '#/components/schemas/Error'\n" +
+        "  /pets/{petId}:\n" +
+        "    get:\n" +
+        "      summary: Info for a specific pet\n" +
+        "      operationId: showPetById\n" +
+        "      tags:\n" +
+        "        - pets\n" +
+        "      parameters:\n" +
+        "        - name: petId\n" +
+        "          in: path\n" +
+        "          required: true\n" +
+        "          description: The id of the pet to retrieve\n" +
+        "          schema:\n" +
+        "            type: string\n" +
+        "        - in: header\n" +
+        "          name: X-Request-ID\n" +
+        "          schema:\n" +
+        "            type: string\n" +
+        "            format: uuid\n" +
+        "          required: true\n" +
+        "      responses:\n" +
+        "        '200':\n" +
+        "          description: Expected response to a valid request\n" +
+        "          content:\n" +
+        "            application/json:\n" +
+        "              schema:\n" +
+        "                $ref: '#/components/schemas/Pet'\n" +
+        "              examples:\n" +
+        "                Crumble:\n" +
+        "                  value:\n" +
+        "                    id: 2\n" +
+        "                    name: Crumble\n" +
+        "                    tag: dog\n" +
+        "                Boots:\n" +
+        "                  value:\n" +
+        "                    id: 3\n" +
+        "                    name: Boots\n" +
+        "                    tag: cat\n" +
+        "        '500':\n" +
+        "          description: unexpected error\n" +
+        "          content:\n" +
+        "            application/json:\n" +
+        "              schema:\n" +
+        "                $ref: '#/components/schemas/Error'\n" +
+        "        default:\n" +
+        "          description: unexpected error\n" +
+        "          content:\n" +
+        "            application/json:\n" +
+        "              schema:\n" +
+        "                $ref: '#/components/schemas/Error'\n" +
+        "components:\n" +
+        "  schemas:\n" +
+        "    Pet:\n" +
+        "      type: object\n" +
+        "      required:\n" +
+        "        - id\n" +
+        "        - name\n" +
+        "      properties:\n" +
+        "        id:\n" +
+        "          type: integer\n" +
+        "          format: int64\n" +
+        "        name:\n" +
+        "          type: string\n" +
+        "        tag:\n" +
+        "          type: string\n" +
+        "      example:\n" +
+        "        id: 1\n" +
+        "        name: Scruffles\n" +
+        "        tag: dog\n" +
+        "    Pets:\n" +
+        "      type: array\n" +
+        "      items:\n" +
+        "        $ref: '#/components/schemas/Pet'\n" +
+        "    Error:\n" +
+        "      type: object\n" +
+        "      required:\n" +
+        "        - code\n" +
+        "        - message\n" +
+        "      properties:\n" +
+        "        code:\n" +
+        "          type: integer\n" +
+        "          format: int32\n" +
+        "        message:\n" +
+        "          type: string\n"
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>

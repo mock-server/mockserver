@@ -1,5 +1,6 @@
 package org.mockserver.serialization.deserializers.body;
 
+import com.google.common.collect.ImmutableMap;
 import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
 import org.mockserver.matchers.MatchType;
@@ -21,6 +22,32 @@ import static org.mockserver.model.StringBody.exact;
 
 public class BodyDTODeserializerTest {
 
+    @Test
+    public void shouldParseJsonBodyWithInvalidType() throws IOException {
+        // given
+        String json = ("{\"httpRequest\":{\"body\":{\"type\":\"info\",\"body\":[{\"info\":{\"address\":\"192.168.0.0\",\"os\":\"Windows\",\"name\":\"HOMEPC\",\"version\":\"XP SP3\",\"key\":\"WINXPSP3H\"}}],\"timestamp\":\"2020-02-19T08:09:32.802\"}}}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO().setBody(new JsonBodyDTO(json("{\n" +
+                    "  \"type\" : \"info\",\n" +
+                    "  \"body\" : [ {\n" +
+                    "    \"info\" : {\n" +
+                    "      \"address\" : \"192.168.0.0\",\n" +
+                    "      \"os\" : \"Windows\",\n" +
+                    "      \"name\" : \"HOMEPC\",\n" +
+                    "      \"version\" : \"XP SP3\",\n" +
+                    "      \"key\" : \"WINXPSP3H\"\n" +
+                    "    }\n" +
+                    "  } ],\n" +
+                    "  \"timestamp\" : \"2020-02-19T08:09:32.802\"\n" +
+                    "}")))
+            ), expectationDTO);
+    }
     @Test
     public void shouldParseJsonWithInvalidBody() throws IOException {
         // given
@@ -291,6 +318,78 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
+    public void shouldParseJsonObjectWithoutMatchingValueFieldAsJsonBodyDTO() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\" : {" + NEW_LINE +
+            "            \"contentType\" : \"\"," + NEW_LINE +
+            "            \"foo\" : \"some_value\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new JsonBodyDTO(json("{" + NEW_LINE +
+                        "  \"contentType\" : \"\"," + NEW_LINE +
+                        "  \"foo\" : \"some_value\"" + NEW_LINE +
+                        "}")))
+            ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJsonArrayWithoutMatchingValueFieldAsJsonBodyDTO() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\" : [{" + NEW_LINE +
+            "            \"contentType\" : \"\"," + NEW_LINE +
+            "            \"foo\" : \"some_value\"" + NEW_LINE +
+            "        }]" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new JsonBodyDTO(json("[ {" + NEW_LINE +
+                        "  \"contentType\" : \"\"," + NEW_LINE +
+                        "  \"foo\" : \"some_value\"" + NEW_LINE +
+                        "} ]")))
+            ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseStringAsJsonBodyDTO() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\" : \"some_value\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new StringBodyDTO(exact("some_value")))
+            ), expectationDTO);
+    }
+
+    @Test
     public void shouldParseJsonWithParametersBody() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
@@ -352,6 +451,39 @@ public class BodyDTODeserializerTest {
                         new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
                         new Parameter("parameterTwoName", "parameterTwoValue")
                     ), true))
+            ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJsonWithParametersBodyWithOptional() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\" : {" + NEW_LINE +
+            "            \"optional\" : true," + NEW_LINE +
+            "            \"type\" : \"PARAMETERS\"," + NEW_LINE +
+            "            \"parameters\" : [ {" + NEW_LINE +
+            "                    \"name\" : \"parameterOneName\"," + NEW_LINE +
+            "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + NEW_LINE +
+            "                }, {" + NEW_LINE +
+            "                    \"name\" : \"parameterTwoName\"," + NEW_LINE +
+            "                    \"values\" : [ \"parameterTwoValue\" ]" + NEW_LINE +
+            "            } ]" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new ParameterBodyDTO((ParameterBody) new ParameterBody(
+                        new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
+                        new Parameter("parameterTwoName", "parameterTwoValue")
+                    ).withOptional(true)))
             ), expectationDTO);
     }
 
@@ -537,6 +669,30 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
+    public void shouldParseJsonWithExactStringBodyUsingStringPropertyWithOptional() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\" : {" + NEW_LINE +
+            "            \"optional\" : true," + NEW_LINE +
+            "            \"type\" : \"STRING\"," + NEW_LINE +
+            "            \"string\" : \"some_value\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new StringBodyDTO((StringBody) new StringBody("some_value").withOptional(true)))
+            ), expectationDTO);
+    }
+
+    @Test
     public void shouldParseJsonWithExactStringBodyUsingStringProperty() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
@@ -701,6 +857,31 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
+    public void shouldParseJsonWithSubStringBodyUsingStringPropertyWithOptional() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\" : {" + NEW_LINE +
+            "            \"optional\" : true," + NEW_LINE +
+            "            \"type\" : \"STRING\"," + NEW_LINE +
+            "            \"string\" : \"some_value\"," + NEW_LINE +
+            "            \"subString\" : true" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new StringBodyDTO((StringBody) new StringBody("some_value", null, true, null).withOptional(true)))
+            ), expectationDTO);
+    }
+
+    @Test
     public void shouldParseJsonWithSubStringBodyUsingStringProperty() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
@@ -770,6 +951,29 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
+    public void shouldParseJsonWithRegexBodyWithOptional() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\" : {" + NEW_LINE +
+            "            \"optional\" : true," + NEW_LINE +
+            "            \"regex\" : \"some[a-zA-Z]*\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new RegexBodyDTO((RegexBody) new RegexBody("some[a-zA-Z]*").withOptional(true)))
+            ), expectationDTO);
+    }
+
+    @Test
     public void shouldParseJsonWithRegexBodyUsingRegexProperty() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
@@ -834,6 +1038,29 @@ public class BodyDTODeserializerTest {
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setBody(new JsonBodyDTO(new JsonBody("{'employees':[{'firstName':'John', 'lastName':'Doe'}]}"), true))
+            ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJsonWithJsonBodyWithOptional() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\" : {" + NEW_LINE +
+            "            \"optional\" : true," + NEW_LINE +
+            "            \"json\" : \"{'employees':[{'firstName':'John', 'lastName':'Doe'}]}\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new JsonBodyDTO((JsonBody) new JsonBody("{'employees':[{'firstName':'John', 'lastName':'Doe'}]}").withOptional(true)))
             ), expectationDTO);
     }
 
@@ -1137,6 +1364,42 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
+    public void shouldParseJsonWithJsonSchemaBodyWithOptional() throws IOException {
+        // given
+        String jsonSchema = "{" + NEW_LINE +
+            "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+            "    \"title\": \"Product\"," + NEW_LINE +
+            "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
+            "    \"type\": \"object\"," + NEW_LINE +
+            "    \"properties\": {" + NEW_LINE +
+            "        \"id\": {" + NEW_LINE +
+            "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
+            "            \"type\": \"integer\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"required\": [\"id\"]" + NEW_LINE +
+            "}";
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\" : {" + NEW_LINE +
+            "            \"optional\" : true," + NEW_LINE +
+            "            \"jsonSchema\" : \"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new JsonSchemaBodyDTO((JsonSchemaBody) new JsonSchemaBody(jsonSchema).withOptional(true)))
+            ), expectationDTO);
+    }
+
+    @Test
     public void shouldParseJsonWithJsonSchemaBodyWithoutType() throws IOException {
         // given
         String jsonSchema = "{" + NEW_LINE +
@@ -1208,6 +1471,37 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
+    public void shouldParseJsonWithJsonSchemaBodyWithParameterStyles() throws IOException {
+        // given
+        String jsonSchema = "{" + NEW_LINE +
+            "  \"type\" : \"object\"," + NEW_LINE +
+            "  \"properties\" : {" + NEW_LINE +
+            "    \"id\" : {" + NEW_LINE +
+            "      \"type\" : \"integer\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"required\" : [ \"id\" ]" + NEW_LINE +
+            "}";
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\" : {\"type\":\"JSON_SCHEMA\",\"jsonSchema\":" + jsonSchema + ",\"parameterStyles\":{\"pipeDelimitedParameter\":\"PIPE_DELIMITED\"}}" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                    new HttpRequestDTO()
+                        .setBody(new JsonSchemaBodyDTO(new JsonSchemaBody(jsonSchema)
+                            .withParameterStyles(ImmutableMap.of("pipeDelimitedParameter", ParameterStyle.PIPE_DELIMITED))
+                        ))),
+            expectationDTO);
+    }
+
+    @Test
     public void shouldParseJsonWithJsonPathBodyWithoutType() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
@@ -1249,6 +1543,29 @@ public class BodyDTODeserializerTest {
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setBody(new JsonPathBodyDTO(new JsonPathBody("\\some\\path"), true))
+            ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJsonWithJsonPathBodyWithOptional() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\" : {" + NEW_LINE +
+            "            \"optional\" : true," + NEW_LINE +
+            "            \"jsonPath\" : \"\\\\some\\\\path\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new JsonPathBodyDTO((JsonPathBody) new JsonPathBody("\\some\\path").withOptional(true)))
             ), expectationDTO);
     }
 
@@ -1308,6 +1625,42 @@ public class BodyDTODeserializerTest {
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setBody(new XmlSchemaBodyDTO(new XmlSchemaBody(xmlSchema), true))
+            ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJsonWithXmlSchemaBodyWithOptional() throws IOException {
+        // given
+        String xmlSchema = "{" + NEW_LINE +
+            "    \"$schema\": \"http://xml-schema.org/draft-04/schema#\"," + NEW_LINE +
+            "    \"title\": \"Product\"," + NEW_LINE +
+            "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
+            "    \"type\": \"object\"," + NEW_LINE +
+            "    \"properties\": {" + NEW_LINE +
+            "        \"id\": {" + NEW_LINE +
+            "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
+            "            \"type\": \"integer\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"required\": [\"id\"]" + NEW_LINE +
+            "}";
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\" : {" + NEW_LINE +
+            "            \"optional\" : true," + NEW_LINE +
+            "            \"xmlSchema\" : \"" + StringEscapeUtils.escapeJava(xmlSchema) + "\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new XmlSchemaBodyDTO((XmlSchemaBody) new XmlSchemaBody(xmlSchema).withOptional(true)))
             ), expectationDTO);
     }
 
@@ -1429,6 +1782,29 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
+    public void shouldParseJsonWithXPathBodyWithOptional() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\" : {" + NEW_LINE +
+            "            \"optional\" : true," + NEW_LINE +
+            "            \"xpath\" : \"\\\\some\\\\xpath\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new XPathBodyDTO((XPathBody) new XPathBody("\\some\\xpath").withOptional(true)))
+            ), expectationDTO);
+    }
+
+    @Test
     public void shouldParseJsonWithXPathBodyUsingXpathProperty() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
@@ -1493,6 +1869,29 @@ public class BodyDTODeserializerTest {
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setBody(new XmlBodyDTO(new XmlBody("<some><xml></xml></some>"), true))
+            ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJsonWithXmlBodyWithOptional() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\" : {" + NEW_LINE +
+            "            \"optional\" : true," + NEW_LINE +
+            "            \"xml\" : \"<some><xml></xml></some>\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new XmlBodyDTO((XmlBody) new XmlBody("<some><xml></xml></some>").withOptional(true)))
             ), expectationDTO);
     }
 
@@ -1607,6 +2006,29 @@ public class BodyDTODeserializerTest {
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setBody(new BinaryBodyDTO(new BinaryBody("some_value".getBytes(UTF_8)), true))
+            ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJsonWithBinaryBodyWithOptional() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\" : {" + NEW_LINE +
+            "            \"optional\" : true," + NEW_LINE +
+            "            \"base64Bytes\" : \"" + DatatypeConverter.printBase64Binary("some_value".getBytes(UTF_8)) + "\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new BinaryBodyDTO((BinaryBody) new BinaryBody("some_value".getBytes(UTF_8)).withOptional(true)))
             ), expectationDTO);
     }
 

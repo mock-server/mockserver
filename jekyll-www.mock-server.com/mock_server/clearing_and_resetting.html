@@ -1,7 +1,7 @@
 ---
 title: Clearing & Resetting
 layout: page
-pageOrder: 3
+pageOrder: 4
 section: 'General'
 subsection: true
 sitemap:
@@ -22,8 +22,10 @@ sitemap:
 <p>State can be <strong>cleared</strong> from MockServer selectively:</p>
 <ul>
     <li>use <strong>type</strong> to select with type of state to clear</li>
-    <li>use a <a href="/mock_server/getting_started.html#request_matchers"><strong>request matchers</strong></a> to clear matching items</li>
+    <li>use a <a href="/mock_server/getting_started.html#request_matchers"><strong>request matcher</strong></a> to clear matching items</li>
 </ul>
+
+<p>When <a href="/mock_server/debugging_issues.html#logging-levels">logLevel</a> is set to <span class="string_literal">DEBUG</span> using <strong>clear</strong> does not delete logs from the event log, instead they are marked as deleted to ensure <a href="/mock_server/verification.html">verification</a> continues to work correctly.  This allows the <a href="/mock_server/mockserver_ui.html">UI</a> to continue to display logs that would have otherwise been deleted to improve the ability to debug issues.</p>
 
 <button id="button_client_clear" class="accordion">clear everything that matches request properties matcher</button>
 <div class="panel">
@@ -49,14 +51,14 @@ mockServerClient("localhost", 1080)
       console.log(error);
     }
   );</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/clear" -d '{
     "path": "/some/path"
 }'</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_client_opeanapi_clear" class="accordion">clear everything that matches openapi request matcher</button>
@@ -86,7 +88,7 @@ mockServerClient("localhost", 1080)
             console.log(error);
         }
     );</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -94,7 +96,7 @@ mockServerClient("localhost", 1080)
         "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
         "operationId": "showPetById"
     }'</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_client_clear_logs_by_req" class="accordion">clear recorded requests and logs that matches request properties matcher</button>
@@ -122,14 +124,14 @@ mockServerClient("localhost", 1080)
       console.log(error);
     }
   );</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/clear?type=LOGS" -d '{
     "path": "/some/path"
 }'</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_client_clear_logs_by_openapi_req" class="accordion">clear recorded requests and logs that matches openapi request matcher</button>
@@ -160,7 +162,7 @@ mockServerClient("localhost", 1080)
             console.log(error);
         }
     );</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -168,7 +170,7 @@ mockServerClient("localhost", 1080)
         "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
         "operationId": "showPetById"
     }'</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 <button id="button_client_clear_expectations_by_req" class="accordion">clear expectations that matches request matcher</button>
@@ -196,14 +198,14 @@ mockServerClient("localhost", 1080)
       console.log(error);
     }
   );</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/clear?type=EXPECTATIONS" -d '{
     "path": "/some/path"
 }'</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
 
@@ -228,11 +230,11 @@ mockServerClient("localhost", 1080)
       console.log(error);
     }
   );</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/control/put_reset" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/control/put_reset" target="_blank">REST API</a> for full JSON specification</p>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/reset</code></pre>
-        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x#/control/put_reset" target="_blank">REST API</a> for full JSON specification</p>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/control/put_reset" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>

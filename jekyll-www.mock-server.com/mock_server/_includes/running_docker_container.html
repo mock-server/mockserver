@@ -66,7 +66,31 @@ In addition it is possible to <a href="#docker_container_customization">customis
 
 <h3>Interactive Shell</h3>
 
-<p>MockServer uses <a href="https://github.com/GoogleContainerTools/distroless">distroless</a> as its based container for both size and security.  This minimises the likelihood of vulnerabilities and to reduces the attack surface by ensuring only the JVM and MockServer code is inside the container.</p>
+<p>MockServer uses <a href="https://github.com/GoogleContainerTools/distroless">distroless</a> as its based container for both size and security and so does not contain an interactive shell.  This minimises the likelihood of vulnerabilities and to reduces the attack surface by ensuring only the JVM and MockServer code is inside the container.</p>
+
+<a id="docker_detailed_configuration" class="anchor" href="#docker_detailed_configuration">&nbsp;</a>
+
+<h2>Detailed MockServer Configuration</h2>
+
+<p>To support configuring MockServer a <strong>mockserver.properties</strong> will be loaded from <strong>/config</strong> directory if it exists.</p>
+<p>A <strong>mockserver.properties</strong> configuration file and other related configuration files such as <a href="/mock_server/initializing_expectations.html">json expectation initialization</a>, or custom <a href="/mock_server/HTTPS_TLS.html#configuration">TLS CA, X.509 Certificate or Private Key</a> should be mapping into the <strong>/config</strong> directory.</p>
+
+For example to add configuration files in the current directory, such as <strong>mockserver.properties</strong>, map <strong>$(pwd)</strong> into <strong>/config</strong>, as follows:
+
+<pre><code class="code">docker run -v $(pwd):/config -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span>  mockserver/mockserver -serverPort <span class="numeric_literal">1080</span></code></pre>
+
+<p>See <a href="/mock_server/configuration_properties.html">MockServer Configuration</a> for details of all configuration options.</p>
+
+<a id="docker_extend_classpath" class="anchor" href="#docker_extend_classpath">&nbsp;</a>
+
+<h2>Extending MockServer Classpath</h2>
+
+<p>To use <a href="/mock_server/creating_expectations.html#button_response_class_callback">class callbacks</a> or an <a href="/mock_server/initializing_expectations.html#expectation_initializer_class">expectation initializer class</a> the classpath for MockServer must include the specified classes.</p>
+<p>To support adding classes to the classpath any jar files contained in the <strong>/libs</strong> directory will be added into MockServer classpath.</p>
+
+For example to add all jar files in the current directory, map <strong>$(pwd)</strong> into <strong>/libs</strong>, as follows:
+
+<pre><code class="code">docker run -v $(pwd):/libs -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span>  mockserver/mockserver -serverPort <span class="numeric_literal">1080</span></code></pre>
 
 <a id="docker_compose" class="anchor" href="#docker_compose">&nbsp;</a>
 
@@ -79,7 +103,7 @@ In addition it is possible to <a href="#docker_container_customization">customis
 <pre class="prettyprint lang-java code"><code class="code">version: "2.4"
 services:
   mockServer:
-    image: mockserver/mockserver:mockserver-5.10.0
+    image: mockserver/mockserver:mockserver-5.11.1
     command: -logLevel DEBUG -serverPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com
     ports:
       - 1080:1090</code></pre>
@@ -89,7 +113,7 @@ services:
 <pre class="prettyprint lang-java code"><code class="code">version: "2.4"
 services:
   mockServer:
-    image: mockserver/mockserver:mockserver-5.10.0
+    image: mockserver/mockserver:mockserver-5.11.1
     ports:
       - 1080:1090
     environment:
@@ -101,7 +125,7 @@ services:
 <pre class="prettyprint lang-java code"><code class="code">version: "2.4"
 services:
   mockServer:
-    image: mockserver/mockserver:mockserver-5.10.0
+    image: mockserver/mockserver:mockserver-5.11.1
     ports:
       - 1080:1080
     environment:

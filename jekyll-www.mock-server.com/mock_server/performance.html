@@ -1,7 +1,7 @@
 ---
 title: Scalability & Latency
-layout: page
-pageOrder: 5
+layout: default
+pageOrder: 6
 section: 'General'
 subsection: true
 sitemap:
@@ -10,13 +10,19 @@ changefreq: 'monthly'
 lastmod: 2019-11-10T08:00:00+01:00
 ---
 
+<div class="header">
+    <h1>Scalability & Latency</h1>
+
+    <h2 itemprop="headline">average of 1.58ms and p99 of 4ms for 150 parallel clients sending 95,228 requests per second</h2>
+</div>
+
 <p>MockServer is build to support massive scale from a single instance:</p>
 <ul>
-    <li><a href="#apache_bench">Apache Bench</a> tested <strong>73,307 requests per second with a p99 of less then 1 ms</strong></li>
-    <li><a href="#locust">Locust</a> tested <strong>987 requests per second with a p99 of 19 ms</strong></li>
+    <li><a href="#apache_bench">Apache Benchmark</a> tested up to <strong>6,000 parallel clients</strong> and shows MockServer has an <strong>average of 1.58ms and p99 of 4ms for 150 parallel clients sending 95,228 requests per second</strong></li>
+    <li><a href="#locust">Locust</a> tested up to <strong>3,000 parallel clients</strong> and shows MockServer has a <strong>p99 of 4ms for 150 parallel clients</strong></li>
 </ul>
 
-<p>The test frameworks show different results, this is most likely due to the way TCP connections are re-created in <a href="#locust">Locust</a> but are re-used in <a href="#apache_bench">Apache Bench</a>.</p>
+<p>Both performance testing frameworks show similar results up to 2,000 parallel clients at which point Locust reports warnings and the figures are no longer consistent with Apache Benchmark.</p>
 
 <p>The following frameworks & techniques are used to maximise scalability:</p>
 <ul>
@@ -27,154 +33,234 @@ lastmod: 2019-11-10T08:00:00+01:00
 
 <h2>Performance Tests</h2>
 
-<p>MockServer has been performance tested using <a href="#apache_bench">Apache Bench</a> and <a href="#locust">Locust</a> with the following scenario:</p>
+<p>MockServer has been performance tested using <a href="#apache_bench">Apache Benchmark</a> and <a href="#locust">Locust</a> with the following scenario:</p>
 <ul>
     <li>four basic expectations, including method, path and headers</li>
     <li>basic GET request matching third expectation (i.e. three matches are attempted for each request)</li>
 </ul>
 
-<p>During the test MockServer was run on a Java 12 JVM, due to the improved GC, with the following command:</p>
+<p>During the test MockServer was run on a Java 13 JVM, with the following command:</p>
 
-<pre class="prettyprint lang-bash code"><code class="code">java -XX:+UnlockExperimentalVMOptions -XX:+AlwaysPreTouch -XX:-UseBiasedLocking -Xms8192m -Xmx8192m -Dmockserver.logLevel=ERROR -Dmockserver.disableSystemOut=true -Dmockserver.nioEventLoopThreadCount=500 -jar mockserver-netty-jar-with-dependencies.jar -serverPort 1080</code></pre>
+<pre class="prettyprint lang-bash code"><code class="code">java -Xmx500m -Dmockserver.logLevel=WARN -Dmockserver.disableSystemOut=true -jar ~/.m2/repository/org/mock-server/mockserver-netty/5.11.1-SNAPSHOT/mockserver-netty-5.11.1-SNAPSHOT-jar-with-dependencies.jar -serverPort 1080</code></pre>
+
+<p>The following graph shows how the p99 increases as the number of parallel clients increase.</p>
+
+<img class="ui_image" src="/images/p99vsparallelclients.png" alt="p99 as parallel clients increase">
 
 <a id="apache_bench" class="anchor" href="#apache_bench">&nbsp;</a>
 
-<h3>Apache Bench Performance Test</h3>
+<h3>Apache Bench Performance Test Results</h3>
 
-<p><a href="https://httpd.apache.org/docs/2.4/programs/ab.html">Apache Bench</a> showed for a simple test the MockServer can scale up to <strong>73,307 requests per second with a p99 of less then 1 ms</strong>.</p>
+<p><a href="https://httpd.apache.org/docs/2.4/programs/ab.html">Apache Benchmark</a> was executed as follows:</p>
 
-<p>The following command was executed:</p>
-
-<pre class="prettyprint lang-bash code"><code class="code">ab -k -n 10000000 -c 10 http://127.0.0.1:1080/simple</code></pre>
+<pre class="prettyprint lang-bash code"><code class="code">ab -k -n 10000000 -c &lt;parallel clients&gt; http://127.0.0.1:1080/simple</code></pre>
 
 <p>The test results are:</p>
-
-<pre class="prettyprint lang-bash code"><code class="code">This is ApacheBench, Version 2.3 <$Revision: 1843412 $>
-Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
-Licensed to The Apache Software Foundation, http://www.apache.org/
-
-Benchmarking 127.0.0.1 (be patient)
-Completed 1000000 requests
-Completed 2000000 requests
-Completed 3000000 requests
-Completed 4000000 requests
-Completed 5000000 requests
-Completed 6000000 requests
-Completed 7000000 requests
-Completed 8000000 requests
-Completed 9000000 requests
-Completed 10000000 requests
-Finished 10000000 requests
-
-
-Server Software:
-Server Hostname:        127.0.0.1
-Server Port:            1080
-
-Document Path:          /simple
-Document Length:        20 bytes
-
-Concurrency Level:      10
-Time taken for tests:   136.413 seconds
-Complete requests:      10000000
-Failed requests:        0
-Keep-Alive requests:    10000000
-Total transferred:      830000000 bytes
-HTML transferred:       200000000 bytes
-Requests per second:    73307.04 [#/sec] (mean)
-Time per request:       0.136 [ms] (mean)
-Time per request:       0.014 [ms] (mean, across all concurrent requests)
-Transfer rate:          5941.88 [Kbytes/sec] received
-
-Connection Times (ms)
-              min  mean[+/-sd] median   max
-Connect:        0    0   0.0      0       0
-Processing:     0    0   0.2      0      30
-Waiting:        0    0   0.2      0      30
-Total:          0    0   0.2      0      30
-
-Percentage of the requests served within a certain time (ms)
-  50%      0
-  66%      0
-  75%      0
-  80%      0
-  90%      0
-  95%      0
-  98%      0
-  99%      0
- 100%     30 (longest request)</code></pre>
-
-<p>A lower request rate also shows similar results:</p>
-
-<pre class="prettyprint lang-bash code"><code class="code">$ ab -k -n 1000 -c 5 http://127.0.0.1:1080/simple
-This is ApacheBench, Version 2.3 <$Revision: 1843412 $>
-Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
-Licensed to The Apache Software Foundation, http://www.apache.org/
-
-Benchmarking 127.0.0.1 (be patient)
-Completed 100 requests
-Completed 200 requests
-Completed 300 requests
-Completed 400 requests
-Completed 500 requests
-Completed 600 requests
-Completed 700 requests
-Completed 800 requests
-Completed 900 requests
-Completed 1000 requests
-Finished 1000 requests
-
-
-Server Software:
-Server Hostname:        127.0.0.1
-Server Port:            1080
-
-Document Path:          /simple
-Document Length:        20 bytes
-
-Concurrency Level:      5
-Time taken for tests:   0.023 seconds
-Complete requests:      1000
-Failed requests:        0
-Keep-Alive requests:    1000
-Total transferred:      83000 bytes
-HTML transferred:       20000 bytes
-Requests per second:    42868.78 [#/sec] (mean)
-Time per request:       0.117 [ms] (mean)
-Time per request:       0.023 [ms] (mean, across all concurrent requests)
-Transfer rate:          3474.72 [Kbytes/sec] received
-
-Connection Times (ms)
-              min  mean[+/-sd] median   max
-Connect:        0    0   0.0      0       0
-Processing:     0    0   0.1      0       2
-Waiting:        0    0   0.1      0       2
-Total:          0    0   0.1      0       2
-
-Percentage of the requests served within a certain time (ms)
-  50%      0
-  66%      0
-  75%      0
-  80%      0
-  90%      0
-  95%      0
-  98%      0
-  99%      0
- 100%      2 (longest request)</code></pre>
-
-<a id="locust" class="anchor" href="#locust">&nbsp;</a>
-
-<h3>Locust Performance Test</h3>
-
-<p>The <a href="https://locust.io/">Locust</a> results are as follows:</p>
 
 <table class="results">
     <thead>
     <tr>
-        <td>req/s</td>
-        <td>Min</td>
-        <td>Avg</td>
-        <td>Median</td>
+        <td>parallel clients</td>
+        <td>50%</td>
+        <td>66%</td>
+        <td>75%</td>
+        <td>80%</td>
+        <td>90%</td>
+        <td>95%</td>
+        <td>98%</td>
+        <td>99%</td>
+        <td>requests/s</td>
+        <td>mean</td>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>10</td>
+        <td>0</td>
+        <td>0</td>
+        <td>0</td>
+        <td>0</td>
+        <td>0</td>
+        <td>0</td>
+        <td>0</td>
+        <td>0</td>
+        <td>77,122</td>
+        <td>0.13</td>
+    </tr>
+    <tr>
+        <td>50</td>
+        <td>1</td>
+        <td>1</td>
+        <td>1</td>
+        <td>1</td>
+        <td>1</td>
+        <td>1</td>
+        <td>1</td>
+        <td>1</td>
+        <td>85,765</td>
+        <td>0.58</td>
+    </tr>
+    <tr>
+        <td>100</td>
+        <td>1</td>
+        <td>1</td>
+        <td>1</td>
+        <td>1</td>
+        <td>1</td>
+        <td>2</td>
+        <td>2</td>
+        <td>3</td>
+        <td>92,846</td>
+        <td>1.08</td>
+    </tr>
+    <tr>
+        <td>150</td>
+        <td>1</td>
+        <td>2</td>
+        <td>2</td>
+        <td>2</td>
+        <td>2</td>
+        <td>2</td>
+        <td>3</td>
+        <td>4</td>
+        <td>95,228</td>
+        <td>1.58</td>
+    </tr>
+    <tr>
+        <td>250</td>
+        <td>3</td>
+        <td>3</td>
+        <td>3</td>
+        <td>3</td>
+        <td>4</td>
+        <td>5</td>
+        <td>7</td>
+        <td>8</td>
+        <td>86,470</td>
+        <td>2.89</td>
+    </tr>
+    <tr>
+        <td>500</td>
+        <td>6</td>
+        <td>6</td>
+        <td>6</td>
+        <td>6</td>
+        <td>7</td>
+        <td>7</td>
+        <td>8</td>
+        <td>9</td>
+        <td>83,209</td>
+        <td>6.01</td>
+    </tr>
+    <tr>
+        <td>750</td>
+        <td>9</td>
+        <td>9</td>
+        <td>10</td>
+        <td>10</td>
+        <td>11</td>
+        <td>11</td>
+        <td>12</td>
+        <td>15</td>
+        <td>75,554</td>
+        <td>9.93</td>
+    </tr>
+    <tr>
+        <td>1000</td>
+        <td>11</td>
+        <td>12</td>
+        <td>13</td>
+        <td>13</td>
+        <td>14</td>
+        <td>16</td>
+        <td>17</td>
+        <td>21</td>
+        <td>75,423</td>
+        <td>13.26</td>
+    </tr>
+    <tr>
+        <td>2000</td>
+        <td>24</td>
+        <td>24</td>
+        <td>25</td>
+        <td>26</td>
+        <td>27</td>
+        <td>29</td>
+        <td>31</td>
+        <td>35</td>
+        <td>82,191</td>
+        <td>24.33</td>
+    </tr>
+    <tr>
+        <td>3000</td>
+        <td>37</td>
+        <td>39</td>
+        <td>40</td>
+        <td>40</td>
+        <td>43</td>
+        <td>46</td>
+        <td>51</td>
+        <td>58</td>
+        <td>78,171</td>
+        <td>38.38</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>4000</td>
+        <td>52</td>
+        <td>55</td>
+        <td>57</td>
+        <td>59</td>
+        <td>64</td>
+        <td>70</td>
+        <td>82</td>
+        <td>91</td>
+        <td>73,552</td>
+        <td>54.38</td>
+    </tr>
+    <tr>
+        <td>5000</td>
+        <td>65</td>
+        <td>67</td>
+        <td>70</td>
+        <td>71</td>
+        <td>75</td>
+        <td>79</td>
+        <td>90</td>
+        <td>102</td>
+        <td>74,065</td>
+        <td>67.51</td>
+    </tr>
+    <tr>
+        <td>6000</td>
+        <td>80</td>
+        <td>84</td>
+        <td>88</td>
+        <td>90</td>
+        <td>97</td>
+        <td>104</td>
+        <td>122</td>
+        <td>137</td>
+        <td>70,432</td>
+        <td>85.19</td>
+    </tr>
+    </tbody>
+</table>
+
+<a id="locust" class="anchor" href="#locust">&nbsp;</a>
+
+<h3>Locust Performance Test Results</h3>
+
+<p><a href="https://httpd.apache.org/docs/2.4/programs/ab.html">Apache Benchmark</a> was executed as follows:</p>
+
+<pre class="prettyprint lang-bash code"><code class="code">locust --loglevel=WARNING --headless --only-summary -u &lt;parallel clients&gt; -r 100 -t 180 --host=http://127.0.0.1:1080</code></pre>
+
+<p>The test results are:</p>
+
+<table class="results">
+    <thead>
+    <tr>
+        <td>parallel clients</td>
         <td>50%</td>
         <td>66%</td>
         <td>75%</td>
@@ -185,11 +271,13 @@ Percentage of the requests served within a certain time (ms)
         <td>99%</td>
         <td>99.90%</td>
         <td>99.99%</td>
-        <td>Max</td>
+        <td>requests/s</td>
+        <td>mean</td>
     </tr>
     </thead>
+    <tbody>
     <tr>
-        <td>49.73</td>
+        <td>10</td>
         <td>0</td>
         <td>0</td>
         <td>1</td>
@@ -197,21 +285,16 @@ Percentage of the requests served within a certain time (ms)
         <td>1</td>
         <td>1</td>
         <td>1</td>
-        <td>1</td>
-        <td>1</td>
-        <td>1</td>
         <td>2</td>
-        <td>2</td>
-        <td>3</td>
-        <td>3</td>
+        <td>5</td>
+        <td>5</td>
+        <td>11</td>
+        <td>0</td>
     </tr>
     <tr>
-        <td>49.63</td>
+        <td>50</td>
         <td>0</td>
         <td>0</td>
-        <td>1</td>
-        <td>1</td>
-        <td>1</td>
         <td>1</td>
         <td>1</td>
         <td>1</td>
@@ -219,132 +302,146 @@ Percentage of the requests served within a certain time (ms)
         <td>1</td>
         <td>2</td>
         <td>3</td>
-        <td>3</td>
-        <td>3</td>
+        <td>5</td>
+        <td>50</td>
+        <td>0</td>
     </tr>
     <tr>
-        <td>99.3</td>
+        <td>100</td>
         <td>0</td>
-        <td>0</td>
         <td>1</td>
         <td>1</td>
         <td>1</td>
         <td>1</td>
-        <td>1</td>
-        <td>1</td>
-        <td>1</td>
-        <td>2</td>
         <td>2</td>
         <td>2</td>
         <td>3</td>
-        <td>3</td>
+        <td>4</td>
+        <td>8</td>
+        <td>100</td>
+        <td>0</td>
     </tr>
     <tr>
-        <td>247.96</td>
+        <td>150</td>
+        <td>1</td>
+        <td>1</td>
+        <td>1</td>
+        <td>1</td>
+        <td>2</td>
+        <td>3</td>
+        <td>3</td>
+        <td>4</td>
+        <td>5</td>
+        <td>6</td>
+        <td>149</td>
         <td>0</td>
-        <td>1</td>
-        <td>1</td>
-        <td>1</td>
-        <td>1</td>
-        <td>1</td>
+    </tr>
+    <tr>
+        <td>250</td>
+        <td>2</td>
+        <td>3</td>
+        <td>3</td>
+        <td>4</td>
+        <td>5</td>
+        <td>6</td>
+        <td>7</td>
+        <td>8</td>
+        <td>15</td>
+        <td>46</td>
+        <td>245</td>
+        <td>2</td>
+    </tr>
+    <tr>
+        <td>500</td>
         <td>2</td>
         <td>2</td>
         <td>3</td>
         <td>3</td>
         <td>4</td>
         <td>5</td>
+        <td>6</td>
         <td>7</td>
-        <td>7</td>
+        <td>9</td>
+        <td>46</td>
+        <td>479</td>
+        <td>2</td>
     </tr>
     <tr>
-        <td>495.73</td>
-        <td>0</td>
-        <td>2</td>
-        <td>1</td>
-        <td>1</td>
-        <td>2</td>
+        <td>750</td>
         <td>3</td>
         <td>4</td>
+        <td>5</td>
         <td>6</td>
         <td>8</td>
         <td>10</td>
         <td>12</td>
-        <td>18</td>
-        <td>21</td>
-        <td>21</td>
+        <td>14</td>
+        <td>29</td>
+        <td>34</td>
+        <td>699</td>
+        <td>3</td>
     </tr>
     <tr>
-        <td>741.66</td>
-        <td>0</td>
+        <td>1000</td>
         <td>3</td>
-        <td>2</td>
-        <td>2</td>
         <td>4</td>
-        <td>5</td>
+        <td>6</td>
         <td>6</td>
         <td>8</td>
         <td>10</td>
         <td>13</td>
-        <td>15</td>
-        <td>22</td>
-        <td>24</td>
-        <td>24</td>
+        <td>16</td>
+        <td>36</td>
+        <td>52</td>
+        <td>909</td>
+        <td>3</td>
     </tr>
     <tr>
-        <td>986.75</td>
-        <td>0</td>
+        <td>2000</td>
         <td>4</td>
-        <td>3</td>
-        <td>3</td>
-        <td>5</td>
-        <td>6</td>
         <td>7</td>
         <td>10</td>
-        <td>13</td>
-        <td>17</td>
-        <td>19</td>
-        <td>29</td>
-        <td>31</td>
-        <td>31</td>
+        <td>12</td>
+        <td>22</td>
+        <td>34</td>
+        <td>49</td>
+        <td>59</td>
+        <td>87</td>
+        <td>110</td>
+        <td>1626.14</td>
+        <td>8</td>
     </tr>
     <tr>
-        <td>2299.28</td>
-        <td>0</td>
-        <td>44</td>
-        <td>21</td>
-        <td>21</td>
-        <td>42</td>
-        <td>65</td>
-        <td>83</td>
-        <td>120</td>
+        <td>3000</td>
+        <td>51</td>
+        <td>78</td>
+        <td>99</td>
+        <td>110</td>
+        <td>160</td>
         <td>180</td>
-        <td>200</td>
-        <td>210</td>
-        <td>230</td>
-        <td>250</td>
-        <td>259</td>
+        <td>220</td>
+        <td>240</td>
+        <td>290</td>
+        <td>310</td>
+        <td>2629.92</td>
+        <td>54</td>
     </tr>
+    </tbody>
 </table>
-
-<p>This test was done using the following typical command but altering the values for <span class="this_value">-c NUM_CLIENTS</span>, <span class="this_value">-r HATCH_RATE</span> and <span class="this_value">-t RUN_TIME</span></p>
-
-<pre class="prettyprint lang-bash code"><code class="code">locust --loglevel=INFO --no-web --only-summary -c 500 -r 50 -t 50 --host=http://127.0.0.1:1080</code></pre>
 
 <p>The following <strong>locustfile.py</strong> was used</p>
 
-<pre class="prettyprint lang-python code"><code class="code">from locust import TaskSet, task, between
-import locust.stats
+<pre class="prettyprint lang-python code"><code class="code">import locust.stats
+from locust import task, between
 locust.stats.CONSOLE_STATS_INTERVAL_SEC = 60
 from locust.contrib.fasthttp import FastHttpLocust
 
-class UserBehavior(TaskSet):
-    @task
-    def simple(self):
-        self.client.get("/simple", verify=False)
-
-class WebsiteUser(FastHttpLocust):
-    task_set = UserBehavior
+class UserBehavior(FastHttpUser):
     wait_time = between(1, 1)
+
+    @task
+    def request(self):
+        self.client.get("/simple", verify=False)
 </code></pre>
 
 {% include_subpage _includes/clustering.html %}

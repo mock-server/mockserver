@@ -20,6 +20,7 @@ import org.mockserver.model.PortBinding;
 import org.mockserver.netty.proxy.connect.HttpConnectHandler;
 import org.mockserver.netty.responsewriter.NettyResponseWriter;
 import org.mockserver.responsewriter.ResponseWriter;
+import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.PortBindingSerializer;
 import org.slf4j.event.Level;
 
@@ -38,7 +39,8 @@ import static org.mockserver.exception.ExceptionHandling.connectionClosedExcepti
 import static org.mockserver.mock.HttpState.PATH_PREFIX;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
-import static org.mockserver.netty.unification.PortUnificationHandler.*;
+import static org.mockserver.netty.unification.PortUnificationHandler.enableSslUpstreamAndDownstream;
+import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabledUpstream;
 
 /**
  * @author jamesdbloom
@@ -113,7 +115,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
                 } else if (request.matches("PUT", PATH_PREFIX + "/stop", "/stop")) {
 
                     ctx.writeAndFlush(response().withStatusCode(OK.code()));
-                    new Thread(() -> server.stop()).start();
+                    new Scheduler.SchedulerThreadFactory("MockServer Stop").newThread(() -> server.stop()).start();
 
                 } else if (request.getMethod().getValue().equals("GET") && request.getPath().getValue().startsWith(PATH_PREFIX + "/dashboard")) {
 
@@ -152,8 +154,8 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
                             new LogEntry()
                                 .setLogLevel(Level.ERROR)
                                 .setHttpRequest(request)
-                                .setMessageFormat("exception processing:{}")
-                                .setArguments(request)
+                                .setMessageFormat("exception processing request:{}error:{}")
+                                .setArguments(request, throwable.getMessage())
                                 .setThrowable(throwable)
                         );
                     }
@@ -165,7 +167,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
                 new LogEntry()
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(request)
-                    .setMessageFormat("exception processing:{}error:{}")
+                    .setMessageFormat("exception processing request:{}error:{}")
                     .setArguments(request, iae.getMessage())
             );
             // send request without API CORS headers

@@ -1,5 +1,6 @@
 package org.mockserver.testing.integration.mock;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Uninterruptibles;
 import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
@@ -41,11 +42,13 @@ import static org.junit.Assert.fail;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
+import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE_FORMAT;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.unlimited;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
+import static org.mockserver.model.Header.schemaHeader;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
@@ -57,8 +60,10 @@ import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.Parameter.schemaParam;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.RegexBody.regex;
+import static org.mockserver.model.SocketAddress.Scheme.HTTP;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.StringBody.subString;
 import static org.mockserver.model.XPathBody.xpath;
@@ -224,6 +229,624 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingOptionalSchemaQueryStringParameter() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some/path")
+                    .withQueryStringParameters(
+                        schemaParam("?variableO[a-z]{2}", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"variableOneV[a-z]{4}$\"" + NEW_LINE +
+                            "}"),
+                        schemaParam("?variableTwo", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"variableTwoV[a-z]{4}$\"" + NEW_LINE +
+                            "}")
+                    )
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path?variableOne=variableOneValue&variableTwo=variableTwoValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path?variableOne=variableOneValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path?variableTwo=variableTwoValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path?otherVariable=otherVariableValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path")),
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path?variableOne=otherVariableValue&variableTwo=otherVariableValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path?variableOne=otherVariableValue&variableTwo=variableTwoValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path?variableOne=variableOneValue&variableTwo=otherVariableValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path?variableOne=otherVariableValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path?variableTwo=otherVariableValue")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingOptionalHeaderWithEitherOr() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withHeader(schemaHeader(
+                        "headerNameOne|headerNameTwo", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"^headerValue[A-z]{3}$\"" + NEW_LINE +
+                            "}"
+                    ))
+                    .withHeader(schemaHeader(
+                        "?headerNameOne", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"^headerValueO[a-z]{2}$\"" + NEW_LINE +
+                            "}"
+                    ))
+                    .withHeader(schemaHeader(
+                        "?headerNameTwo", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"^headerValueT[a-z]{2}$\"" + NEW_LINE +
+                            "}"
+                    ))
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withHeader("headerNameOne", "headerValueOne"),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withHeader("headerNameTwo", "headerValueTwo"),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withHeader("headerNameOne", "headerValueOne")
+                    .withHeader("headerNameTwo", "headerValueTwo"),
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withHeader("headerNameOne", "headerOtherValue"),
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withHeader("headerNameTwo", "headerOtherValue"),
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request(),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingHeaderNotPresent() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withHeader(not("Authorization"), string(".*"))
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+            );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withHeader("Authorization", "some_value"),
+                headersToIgnore)
+        );
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withHeader("Authorization", "some_value")
+                    .withHeader("SomeHeader", "some_other_value"),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withHeader("NotAuthorization", "some_value")
+                    .withHeader("SomeHeader", "some_other_value"),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withHeader("SomeHeader", "some_other_value"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingOptionalBody() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withBody(json("{" + NEW_LINE +
+                        "    \"id\": 1," + NEW_LINE +
+                        "    \"name\": \"A σπίτι door\"," + NEW_LINE +
+                        "    \"price\": 12.50," + NEW_LINE +
+                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
+                        "}").withOptional(true))
+            )
+            .respond(
+                response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                    .withBody("some_body")
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST")
+                    .withBody(json("{" + NEW_LINE +
+                        "    \"id\": 1," + NEW_LINE +
+                        "    \"extra ignored field\": \"some value\"," + NEW_LINE +
+                        "    \"name\": \"A σπίτι door\"," + NEW_LINE +
+                        "    \"price\": 12.50," + NEW_LINE +
+                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
+                        "}")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST"),
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST")
+                    .withBody(json("{" + NEW_LINE +
+                        "    \"id\": 1," + NEW_LINE +
+                        "    \"name\": \"A σπίτι door\"," + NEW_LINE +
+                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
+                        "}")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingBodyWithSpaceDelimitedParameters() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withBody(jsonSchema("{" + NEW_LINE +
+                        "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                        "    \"title\": \"Product\"," + NEW_LINE +
+                        "    \"type\": \"object\"," + NEW_LINE +
+                        "    \"properties\": {" + NEW_LINE +
+                        "        \"id\": {" + NEW_LINE +
+                        "            \"type\": \"integer\"" + NEW_LINE +
+                        "        }," + NEW_LINE +
+                        "        \"name\": {" + NEW_LINE +
+                        "            \"type\": \"string\"" + NEW_LINE +
+                        "        }," + NEW_LINE +
+                        "        \"price\": {" + NEW_LINE +
+                        "            \"type\": \"number\"," + NEW_LINE +
+                        "            \"minimum\": 0," + NEW_LINE +
+                        "            \"exclusiveMinimum\": true" + NEW_LINE +
+                        "        }," + NEW_LINE +
+                        "        \"tags\": {" + NEW_LINE +
+                        "            \"type\": \"array\"," + NEW_LINE +
+                        "            \"items\": {" + NEW_LINE +
+                        "                \"type\": \"string\"" + NEW_LINE +
+                        "            }," + NEW_LINE +
+                        "            \"minItems\": 1," + NEW_LINE +
+                        "            \"maxItems\": 3," + NEW_LINE +
+                        "            \"uniqueItems\": true" + NEW_LINE +
+                        "        }" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                        "}").withParameterStyles(ImmutableMap.of("tags", ParameterStyle.SPACE_DELIMITED)))
+            )
+            .respond(
+                response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                    .withBody("some_body")
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST")
+                    .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .withBody("" +
+                        "id=1" +
+                        "&name=A+green+door" +
+                        "&price=12.5" +
+                        "&tags=home+green"),
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST")
+                    .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .withBody("" +
+                        "id=1" +
+                        "&name=A+green+door" +
+                        "&price=12.5" +
+                        "&tags=home+green+door+book+expensive"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingOptionalParameterBody() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_pathRequest"))
+                    .withQueryStringParameters(
+                        param("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
+                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                    )
+                    .withBody(params(param("bodyParameterName", "bodyParameterValue"))
+                        .withOptional(true)
+                    )
+            )
+            .respond(
+                response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                    .withBody("some_body")
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_pathRequest"))
+                    .withQueryStringParameters(
+                        param("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
+                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                    )
+                    .withBody(params(param("bodyParameterName", "bodyParameterValue"))),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_pathRequest"))
+                    .withQueryStringParameters(
+                        param("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
+                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                    ),
+                headersToIgnore)
+        );
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_pathRequest"))
+                    .withQueryStringParameters(
+                        param("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
+                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                    )
+                    .withBody(params(param("bodyOtherParameterName", "bodyOtherParameterValue"))),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingMultipleHeadersWithKeyMatchDefault() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withHeader(schemaHeader(
+                        "headerNameOne", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"^headerValueO[a-z]{2}$\"" + NEW_LINE +
+                            "}"
+                    ))
+                    .withHeader(schemaHeader(
+                        "headerNameTwo", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"^headerValueT[a-z]{2}$\"" + NEW_LINE +
+                            "}"
+                    ))
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withHeader("headerNameOne", "headerValueOne")
+                    .withHeader("headerNameTwo", "headerValueTwo"),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withHeader("headerNameOne", "headerValueOne", "headerOtherValueOne")
+                    .withHeader("headerNameTwo", "headerValueTwo"),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withHeader("headerNameOne", "headerValueOne")
+                    .withHeader("headerNameTwo", "headerValueTwo", "headerOtherValueTwo"),
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withHeader("headerNameOne", "headerValueOne"),
+                headersToIgnore)
+        );
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withHeader("headerNameTwo", "headerValueTwo"),
+                headersToIgnore)
+        );
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request(),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingMultipleHeadersWithKeyMatchByKey() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withHeaders(
+                        new Headers(
+                            schemaHeader(
+                                "headerNameOne", "{" + NEW_LINE +
+                                    "   \"type\": \"string\"," + NEW_LINE +
+                                    "   \"pattern\": \"^headerValueO[a-z]{2}$\"" + NEW_LINE +
+                                    "}"
+                            ),
+                            schemaHeader(
+                                "headerNameTwo", "{" + NEW_LINE +
+                                    "   \"type\": \"string\"," + NEW_LINE +
+                                    "   \"pattern\": \"^headerValueT[a-z]{2}$\"" + NEW_LINE +
+                                    "}"
+                            )
+                        ).withKeyMatchStyle(KeyMatchStyle.MATCHING_KEY)
+                    )
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withHeader("headerNameOne", "headerValueOne")
+                    .withHeader("headerNameTwo", "headerValueTwo"),
+                headersToIgnore)
+        );
+
+        // then - no match
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withHeader("headerNameOne", "headerValueOne", "headerOtherValueOne")
+                    .withHeader("headerNameTwo", "headerValueTwo"),
+                headersToIgnore)
+        );
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withHeader("headerNameOne", "headerValueOne")
+                    .withHeader("headerNameTwo", "headerValueTwo", "headerOtherValueTwo"),
+                headersToIgnore)
+        );
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withHeader("headerNameOne", "headerValueOne"),
+                headersToIgnore)
+        );
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withHeader("headerNameTwo", "headerValueTwo"),
+                headersToIgnore)
+        );
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request(),
                 headersToIgnore)
         );
     }
@@ -587,6 +1210,89 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withBody("some_body_one"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_two"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
+                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingPathInOrderOfInsertionAfterUpdate() {
+        // when
+        Expectation expectationOne = new Expectation(request().withPath(calculatePath("some_path")), exactly(2), TimeToLive.unlimited(), 0)
+            .thenRespond(
+                response()
+                    .withBody("some_body_one")
+            );
+        Expectation expectationTwo = new Expectation(request().withPath(calculatePath("some_path")), exactly(1), TimeToLive.unlimited(), 0)
+            .thenRespond(
+                response()
+                    .withBody("some_body_two")
+            );
+        Expectation[] upsertedExpectations = mockServerClient
+            .upsert(
+                expectationOne,
+                expectationTwo
+            );
+
+        // then
+        assertThat(upsertedExpectations.length, is(2));
+        assertThat(upsertedExpectations[0], is(expectationOne));
+        assertThat(upsertedExpectations[1], is(expectationTwo));
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_one"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+
+        // when
+        Expectation expectationOneWithDifferentBody = new Expectation(request().withPath(calculatePath("some_path")), exactly(1), TimeToLive.unlimited(), 0)
+            .withId(upsertedExpectations[0].getId())
+            .withCreated(upsertedExpectations[0].getCreated())
+            .thenRespond(
+                response()
+                    .withBody("some_body_one_updated")
+            );
+        upsertedExpectations = mockServerClient
+            .upsert(
+                expectationOneWithDifferentBody,
+                expectationTwo
+            );
+
+        // then
+        assertThat(upsertedExpectations.length, is(2));
+        assertThat(upsertedExpectations[0], is(expectationOneWithDifferentBody));
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_one_updated"),
             makeRequest(
                 request()
                     .withSecure(true)
@@ -1478,6 +2184,63 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
+    public void shouldReturnResponseByMatchingBodyWithJsonWithBlankFields() {
+        // when
+        makeRequest(
+            request()
+                .withPath(calculatePath("mockserver/expectation"))
+                .withMethod("PUT")
+                .withBody("{" + NEW_LINE +
+                    "  \"httpRequest\" : {" + NEW_LINE +
+                    "    \"body\" : {" + NEW_LINE +
+                    "        \"id\": 1," + NEW_LINE +
+                    "        \"name\": \"\"," + NEW_LINE +
+                    "        \"price\": 0," + NEW_LINE +
+                    "        \"null\": null," + NEW_LINE +
+                    "        \"tags\": []" + NEW_LINE +
+                    "    }" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"httpResponse\" : {" + NEW_LINE +
+                    "    \"body\" : {" + NEW_LINE +
+                    "        \"id\": 1," + NEW_LINE +
+                    "        \"name\": \"\"," + NEW_LINE +
+                    "        \"price\": 0," + NEW_LINE +
+                    "        \"null\": null," + NEW_LINE +
+                    "        \"tags\": []" + NEW_LINE +
+                    "    }" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    "}"),
+            headersToIgnore);
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader(CONTENT_TYPE.toString(), MediaType.APPLICATION_JSON_UTF_8.toString())
+                .withBody(json("{" + NEW_LINE +
+                    "  \"id\" : 1," + NEW_LINE +
+                    "  \"name\" : \"\"," + NEW_LINE +
+                    "  \"price\" : 0," + NEW_LINE +
+                    "  \"null\" : null," + NEW_LINE +
+                    "  \"tags\" : [ ]" + NEW_LINE +
+                    "}")),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST")
+                    .withBody(json("{" + NEW_LINE +
+                        "  \"id\" : 1," + NEW_LINE +
+                        "  \"name\" : \"\"," + NEW_LINE +
+                        "  \"price\" : 0," + NEW_LINE +
+                        "  \"null\" : null," + NEW_LINE +
+                        "  \"tags\" : [ ]" + NEW_LINE +
+                        "}")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
     public void shouldReturnResponseByMatchingBodyWithJsonWithCharsetUTF16() {
         // when
         mockServerClient
@@ -1732,15 +2495,12 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         mockServerClient.when(request().withBody(jsonSchema("{" + NEW_LINE +
             "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
             "    \"title\": \"Product\"," + NEW_LINE +
-            "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
             "    \"type\": \"object\"," + NEW_LINE +
             "    \"properties\": {" + NEW_LINE +
             "        \"id\": {" + NEW_LINE +
-            "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
             "            \"type\": \"integer\"" + NEW_LINE +
             "        }," + NEW_LINE +
             "        \"name\": {" + NEW_LINE +
-            "            \"description\": \"Name of the product\"," + NEW_LINE +
             "            \"type\": \"string\"" + NEW_LINE +
             "        }," + NEW_LINE +
             "        \"price\": {" + NEW_LINE +
@@ -2452,6 +3212,28 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
                 headersToIgnore)
         );
+        // - in http - body string - different order
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body_response")
+                .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
+                .withHeaders(
+                    header("headerNameResponse", "headerValueResponse"),
+                    header(SET_COOKIE.toString(), "cookieNameResponse=cookieValueResponse")
+                ),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_pathRequest"))
+                    .withBody(new StringBody("bodyParameterTwoName=Parameter+Two" +
+                        "&bodyParameterOneName=Parameter+One+Value+Two" +
+                        "&bodyParameterOneName=Parameter+One+Value+One"))
+                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
+                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
+                headersToIgnore)
+        );
         // - in http - body parameter objects
         assertEquals(
             response()
@@ -2475,7 +3257,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
                 headersToIgnore)
         );
-        // - in https - url string and query string parameter objects
+        // - in http - body parameter objects - different order
         assertEquals(
             response()
                 .withStatusCode(ACCEPTED_202.code())
@@ -2491,8 +3273,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("POST")
                     .withPath(calculatePath("some_pathRequest"))
                     .withBody(params(
-                        param("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
-                        param("bodyParameterTwoName", "Parameter Two")
+                        param("bodyParameterTwoName", "Parameter Two"),
+                        param("bodyParameterOneName", "Parameter One Value Two", "Parameter One Value One")
                     ))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
@@ -2574,99 +3356,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
-    public void shouldReturnResponseByNotMatchingBodyParameterWithNotOperatorForNameAndValue() {
-        // when
-        mockServerClient
-            .when(
-                request()
-                    .withMethod("POST")
-                    .withPath(calculatePath("some_pathRequest"))
-                    .withBody(params(
-                        param(not("bodyParameterOneName"), not("Parameter One Value One"), not("Parameter One Value Two")),
-                        param("bodyParameterTwoName", "Parameter Two")
-                    ))
-            )
-            .respond(
-                response()
-                    .withStatusCode(ACCEPTED_202.code())
-                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                    .withBody("some_body_response")
-            );
-
-        // then
-        // wrong query string parameter name
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withBody("some_body_response"),
-            makeRequest(
-                request()
-                    .withMethod("POST")
-                    .withPath(calculatePath("some_pathRequest"))
-                    .withBody(params(
-                        param("OTHERBodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
-                        param("bodyParameterTwoName", "Parameter Two")
-                    ))
-                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
-                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                headersToIgnore)
-        );
-        // wrong query string parameter name
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withBody("some_body_response"),
-            makeRequest(
-                request()
-                    .withMethod("POST")
-                    .withPath(calculatePath("some_pathRequest"))
-                    .withBody(new StringBody("OTHERBodyParameterOneName=Parameter+One+Value+One" +
-                        "&OTHERBodyParameterOneName=Parameter+One+Value+Two" +
-                        "&bodyParameterTwoName=Parameter+Two"))
-                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
-                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                headersToIgnore)
-        );
-        // wrong query string parameter value
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withBody("some_body_response"),
-            makeRequest(
-                request()
-                    .withMethod("POST")
-                    .withPath(calculatePath("some_pathRequest"))
-                    .withBody(params(
-                        param("bodyParameterOneName", "OTHER Parameter One Value One", "OTHER Parameter One Value Two"),
-                        param("bodyParameterTwoName", "Parameter Two")
-                    ))
-                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
-                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                headersToIgnore)
-        );
-        // wrong query string parameter value
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withBody("some_body_response"),
-            makeRequest(
-                request()
-                    .withMethod("POST")
-                    .withPath(calculatePath("some_pathRequest"))
-                    .withBody(new StringBody("bodyParameterOneName=OTHER Parameter+One+Value+One" +
-                        "&bodyParameterOneName=OTHER Parameter+One+Value+Two" +
-                        "&bodyParameterTwoName=Parameter+Two"))
-                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
-                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                headersToIgnore)
-        );
-    }
-
-    @Test
     public void shouldReturnResponseByNotMatchingBodyParameterWithNotOperatorForName() {
         // when
         mockServerClient
@@ -2733,7 +3422,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("POST")
                     .withPath(calculatePath("some_pathRequest"))
                     .withBody(params(
-                        param(string("bodyParameterOneName"), not("Parameter One Value One"), not("Parameter One Value Two")),
+                        param(string("bodyParameterOneName"), string("!Parameter One Value One"), not("Parameter One Value Two")),
                         param("bodyParameterTwoName", "Parameter Two")
                     ))
             )
@@ -2745,7 +3434,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // wrong query string parameter value
+        // wrong query string parameter first value
         assertEquals(
             response()
                 .withStatusCode(ACCEPTED_202.code())
@@ -2756,14 +3445,14 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("POST")
                     .withPath(calculatePath("some_pathRequest"))
                     .withBody(params(
-                        param("bodyParameterOneName", "OTHER Parameter One Value One", "OTHER Parameter One Value Two"),
+                        param("bodyParameterOneName", "Other Parameter One Value One", "Parameter One Value Two"),
                         param("bodyParameterTwoName", "Parameter Two")
                     ))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
                 headersToIgnore)
         );
-        // wrong query string parameter value
+        // wrong query string parameter first value
         assertEquals(
             response()
                 .withStatusCode(ACCEPTED_202.code())
@@ -2773,8 +3462,78 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withMethod("POST")
                     .withPath(calculatePath("some_pathRequest"))
-                    .withBody(new StringBody("bodyParameterOneName=OTHER Parameter+One+Value+One" +
-                        "&bodyParameterOneName=OTHER Parameter+One+Value+Two" +
+                    .withBody(new StringBody("bodyParameterOneName=Other+Parameter+One+Value+One" +
+                        "&bodyParameterOneName=Parameter+One+Value+Two" +
+                        "&bodyParameterTwoName=Parameter+Two"))
+                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
+                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
+                headersToIgnore)
+        );
+        // wrong query string parameter second value
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_pathRequest"))
+                    .withBody(params(
+                        param("bodyParameterOneName", "Parameter One Value One", "Other Parameter One Value Two"),
+                        param("bodyParameterTwoName", "Parameter Two")
+                    ))
+                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
+                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
+                headersToIgnore)
+        );
+        // wrong query string parameter second value
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_pathRequest"))
+                    .withBody(new StringBody("bodyParameterOneName=Parameter+One+Value+One" +
+                        "&bodyParameterOneName=Other+Parameter+One+Value+Two" +
+                        "&bodyParameterTwoName=Parameter+Two"))
+                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
+                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
+                headersToIgnore)
+        );
+        // wrong body parameter values
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_pathRequest"))
+                    .withBody(params(
+                        param("bodyParameterOneName", "Other Parameter One Value One", "Other Parameter One Value Two"),
+                        param("bodyParameterTwoName", "Parameter Two")
+                    ))
+                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
+                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
+                headersToIgnore)
+        );
+        // wrong body parameter values
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_pathRequest"))
+                    .withBody(new StringBody("bodyParameterOneName=Other+Parameter+One+Value+One" +
+                        "&bodyParameterOneName=Other+Parameter+One+Value+Two" +
                         "&bodyParameterTwoName=Parameter+Two"))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
@@ -2791,7 +3550,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("POST")
                     .withPath(calculatePath("some_pathRequest"))
                     .withQueryStringParameters(
-                        param(not("queryStringParameterOneName"), not("Parameter One Value One"), not("Parameter One Value Two")),
+                        param(string("queryStringParameterOneName"), not("Parameter One Value One"), string("!Parameter One Value Two")),
                         param("queryStringParameterTwoName", "Parameter Two")
                     )
             )
@@ -2814,7 +3573,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("POST")
                     .withPath(calculatePath("some_pathRequest"))
                     .withQueryStringParameters(
-                        param("OTHERQueryStringParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
+                        param("queryStringParameterOneName", "Other Parameter One Value One", "Parameter One Value Two"),
                         param("queryStringParameterTwoName", "Parameter Two")
                     ),
                 headersToIgnore)
@@ -2830,7 +3589,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("POST")
                     .withPath(calculatePath("some_pathRequest"))
                     .withQueryStringParameters(
-                        param("queryStringParameterOneName", "OTHER Parameter One Value One", "OTHER Parameter One Value Two"),
+                        param("queryStringParameterOneName", "Parameter One Value One", "Other Parameter One Value Two"),
                         param("queryStringParameterTwoName", "Parameter Two")
                     ),
                 headersToIgnore)
@@ -2885,7 +3644,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("POST")
                     .withPath(calculatePath("some_pathRequest"))
                     .withQueryStringParameters(
-                        param(string("queryStringParameterOneName"), not("Parameter One Value One"), not("Parameter One Value Two")),
+                        param(string("queryStringParameterOneName"), not("Parameter One Value One"), string("!Parameter One Value Two")),
                         param("queryStringParameterTwoName", "Parameter Two")
                     )
             )
@@ -2908,7 +3667,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("POST")
                     .withPath(calculatePath("some_pathRequest"))
                     .withQueryStringParameters(
-                        param("queryStringParameterOneName", "OTHER Parameter One Value One", "OTHER Parameter One Value Two"),
+                        param("queryStringParameterOneName", "Other Parameter One Value One", "Other Parameter One Value Two"),
                         param("queryStringParameterTwoName", "Parameter Two")
                     ),
                 headersToIgnore)
@@ -2924,7 +3683,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("GET")
                     .withPath(calculatePath("some_pathRequest"))
                     .withCookies(
-                        cookie(not("requestCookieNameOne"), not("requestCookieValueOne")),
+                        cookie("requestCookieNameOne", "!requestCookieValueOne"),
                         cookie("requestCookieNameTwo", "requestCookieValueTwo")
                     )
             )
@@ -2936,22 +3695,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // wrong query string cookie name
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withBody("some_body_response"),
-            makeRequest(
-                request()
-                    .withMethod("GET")
-                    .withPath(calculatePath("some_pathRequest"))
-                    .withCookies(
-                        cookie("OTHERrequestCookieNameOne", "requestCookieValueOne"),
-                        cookie("requestCookieNameTwo", "requestCookieValueTwo")
-                    ),
-                headersToIgnore)
-        );
         // wrong query string cookie value
         assertEquals(
             response()
@@ -3096,7 +3839,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("GET")
                     .withPath(calculatePath("some_pathRequest"))
                     .withHeaders(
-                        header("requestHeaderNameOne", "OTHERrequestHeaderValueOne"),
+                        header("OTHERrequestHeaderNameOne", "OTHERrequestHeaderValueOne"),
                         header("requestHeaderNameTwo", "requestHeaderValueTwo")
                     ),
                 headersToIgnore)
@@ -3409,15 +4152,12 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         mockServerClient.when(request().withBody(jsonSchema("{" + NEW_LINE +
             "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
             "    \"title\": \"Product\"," + NEW_LINE +
-            "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
             "    \"type\": \"object\"," + NEW_LINE +
             "    \"properties\": {" + NEW_LINE +
             "        \"id\": {" + NEW_LINE +
-            "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
             "            \"type\": \"integer\"" + NEW_LINE +
             "        }," + NEW_LINE +
             "        \"name\": {" + NEW_LINE +
-            "            \"description\": \"Name of the product\"," + NEW_LINE +
             "            \"type\": \"string\"" + NEW_LINE +
             "        }," + NEW_LINE +
             "        \"price\": {" + NEW_LINE +
@@ -4111,7 +4851,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("GET")
                     .withPath(calculatePath("some_pathRequest"))
                     .withHeaders(
-                        header(not("requestHeaderNameOne"), not("requestHeaderValueOne")),
+                        header(string("requestHeaderNameOne"), not("requestHeaderValueOne")),
                         header("requestHeaderNameTwo", "requestHeaderValueTwo")
                     )
             )
@@ -4538,6 +5278,98 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
+    public void shouldRetrieveRecordedRequestsAsJsonWithJsonBody() {
+        // when
+        mockServerClient
+            .when(
+                request()
+            )
+            .respond(
+                response()
+                    .withBody("some_body")
+            );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withBody("{\"digests\": [ ]}"),
+                headersToIgnore)
+        );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withBody("{\"digests\": [\"sha256:one\"]}"),
+                headersToIgnore)
+        );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withBody("{\"digests\": [ ]}"),
+                headersToIgnore)
+        );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withBody("{\"digests\": [\"sha256:two\"]}"),
+                headersToIgnore)
+        );
+
+        // then
+        verifyRequestsMatches(
+            new HttpRequestSerializer(new MockServerLogger()).deserializeArray(mockServerClient.retrieveRecordedRequests(request().withBody("{\"digests\": [ ]}"), Format.JSON)),
+            request().withBody("{\"digests\": [ ]}"),
+            request().withBody("{\"digests\": [ ]}")
+        );
+
+        verifyRequestsMatches(
+            new HttpRequestSerializer(new MockServerLogger()).deserializeArray(mockServerClient.retrieveRecordedRequests(request().withBody(json("{\"digests\": [ ]}")), Format.JSON)),
+            request().withBody("{\"digests\": [ ]}"),
+            request().withBody("{\"digests\": [\"sha256:one\"]}"),
+            request().withBody("{\"digests\": [ ]}"),
+            request().withBody("{\"digests\": [\"sha256:two\"]}")
+        );
+
+        verifyRequestsMatches(
+            new HttpRequestSerializer(new MockServerLogger()).deserializeArray(mockServerClient.retrieveRecordedRequests(request().withBody("{\"digests\": [\"sha256:one\"]}"), Format.JSON)),
+            request().withBody("{\"digests\": [\"sha256:one\"]}")
+        );
+
+        verifyRequestsMatches(
+            new HttpRequestSerializer(new MockServerLogger()).deserializeArray(mockServerClient.retrieveRecordedRequests(request().withBody(json("{\"digests\": [\"sha256:one\"]}")), Format.JSON)),
+            request().withBody("{\"digests\": [\"sha256:one\"]}")
+        );
+
+        verifyRequestsMatches(
+            new HttpRequestSerializer(new MockServerLogger()).deserializeArray(mockServerClient.retrieveRecordedRequests(request().withBody("{\"digests\": [\"sha256:two\"]}"), Format.JSON)),
+            request().withBody("{\"digests\": [\"sha256:two\"]}")
+        );
+
+        verifyRequestsMatches(
+            new HttpRequestSerializer(new MockServerLogger()).deserializeArray(mockServerClient.retrieveRecordedRequests(request().withBody(json("{\"digests\": [\"sha256:two\"]}")), Format.JSON)),
+            request().withBody("{\"digests\": [\"sha256:two\"]}")
+        );
+
+        verifyRequestsMatches(
+            new HttpRequestSerializer(new MockServerLogger()).deserializeArray(mockServerClient.retrieveRecordedRequests(request().withBody(json("{ }")), Format.JSON)),
+            request().withBody("{\"digests\": [ ]}"),
+            request().withBody("{\"digests\": [\"sha256:one\"]}"),
+            request().withBody("{\"digests\": [ ]}"),
+            request().withBody("{\"digests\": [\"sha256:two\"]}")
+        );
+
+        verifyRequestsMatches(
+            new HttpRequestSerializer(new MockServerLogger()).deserializeArray(mockServerClient.retrieveRecordedRequests(request(), Format.JSON)),
+            request().withBody("{\"digests\": [ ]}"),
+            request().withBody("{\"digests\": [\"sha256:one\"]}"),
+            request().withBody("{\"digests\": [ ]}"),
+            request().withBody("{\"digests\": [\"sha256:two\"]}")
+        );
+    }
+
+    @Test
     public void shouldRetrieveRecordedRequestsAsLogEntries() {
         // given
         mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(response().withBody("some_body"));
@@ -4583,13 +5415,13 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .setType(RECEIVED_REQUEST)
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(requestOne)
-                .setMessageFormat("received request:{}")
+                .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                 .setArguments(requestOne),
             new LogEntry()
                 .setType(RECEIVED_REQUEST)
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(requestTwo)
-                .setMessageFormat("received request:{}")
+                .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                 .setArguments(requestTwo)
         );
 
@@ -4970,7 +5802,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         );
 
         // when
-        mockServerClient.clear(null);
+        mockServerClient.clear((RequestDefinition) null);
 
         // then
         assertThat(mockServerClient.retrieveActiveExpectations(null), emptyArray());
@@ -5112,15 +5944,12 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         JsonSchemaBody jsonSchemaBodyOne = jsonSchema("{" + NEW_LINE +
             "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
             "    \"title\": \"Product\"," + NEW_LINE +
-            "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
             "    \"type\": \"object\"," + NEW_LINE +
             "    \"properties\": {" + NEW_LINE +
             "        \"id\": {" + NEW_LINE +
-            "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
             "            \"type\": \"integer\"" + NEW_LINE +
             "        }," + NEW_LINE +
             "        \"name\": {" + NEW_LINE +
-            "            \"description\": \"Name of the product\"," + NEW_LINE +
             "            \"type\": \"string\"" + NEW_LINE +
             "        }," + NEW_LINE +
             "        \"price\": {" + NEW_LINE +

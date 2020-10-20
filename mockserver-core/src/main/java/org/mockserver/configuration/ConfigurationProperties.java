@@ -5,8 +5,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
-import io.netty.util.NettyRuntime;
-import io.netty.util.internal.SystemPropertyUtil;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -51,8 +49,8 @@ public class ConfigurationProperties {
     private static final String DEFAULT_ENABLE_CORS_FOR_API = "false";
     private static final String DEFAULT_ENABLE_CORS_FOR_ALL_RESPONSES = "false";
     private static final String DEFAULT_PREVENT_CERTIFICATE_DYNAMIC_UPDATE = "false";
-    private static final int DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT = Math.max(35, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors()));
-    private static final int DEFAULT_ACTION_HANDLER_THREAD_COUNT = Math.max(20, Runtime.getRuntime().availableProcessors());
+    private static final int DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT = 5;
+    private static final int DEFAULT_ACTION_HANDLER_THREAD_COUNT = Math.max(5, Runtime.getRuntime().availableProcessors());
     private static final int DEFAULT_WEB_SOCKET_CLIENT_EVENT_LOOP_THREAD_COUNT = 5;
     private static final String DEFAULT_CERTIFICATE_AUTHORITY_PRIVATE_KEY = "org/mockserver/socket/PKCS8CertificateAuthorityPrivateKey.pem";
     private static final String DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE = "org/mockserver/socket/CertificateAuthorityCertificate.pem";
@@ -75,6 +73,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_MAX_EXPECTATIONS = "mockserver.maxExpectations";
     private static final String MOCKSERVER_MAX_LOG_ENTRIES = "mockserver.maxLogEntries";
     private static final String MOCKSERVER_OUTPUT_MEMORY_USAGE_CSV = "mockserver.outputMemoryUsageCsv";
+    private static final String MOCKSERVER_MEMORY_USAGE_DIRECTORY = "mockserver.memoryUsageCsvDirectory";
     private static final String MOCKSERVER_MAX_WEB_SOCKET_EXPECTATIONS = "mockserver.maxWebSocketExpectations";
     private static final String MOCKSERVER_MAX_INITIAL_LINE_LENGTH = "mockserver.maxInitialLineLength";
     private static final String MOCKSERVER_MAX_HEADER_SIZE = "mockserver.maxHeaderSize";
@@ -107,6 +106,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_METRICS_ENABLED = "mockserver.metricsEnabled";
     private static final String MOCKSERVER_DISABLE_SYSTEM_OUT = "mockserver.disableSystemOut";
     private static final String MOCKSERVER_DETAILED_MATCH_FAILURES = "mockserver.detailedMatchFailures";
+    private static final String MOCKSERVER_LAUNCH_UI_FOR_LOG_LEVEL_DEBUG = "mockserver.launchUIForLogLevelDebug";
     private static final String MOCKSERVER_MATCHERS_FAIL_FAST = "mockserver.matchersFailFast";
     private static final String MOCKSERVER_LOCAL_BOUND_IP = "mockserver.localBoundIP";
     private static final String MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION = "mockserver.attemptToProxyIfNoMatchingExpectation";
@@ -207,7 +207,7 @@ public class ConfigurationProperties {
     private static String javaLoggerLogLevel = getSLF4JOrJavaLoggerToJavaLoggerLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, "MOCKSERVER_LOG_LEVEL", DEFAULT_LOG_LEVEL).toUpperCase());
     private static boolean metricsEnabled = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_METRICS_ENABLED, "MOCKSERVER_METRICS_ENABLED", "" + false));
     private static boolean disableSystemOut = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DISABLE_SYSTEM_OUT, "MOCKSERVER_DISABLE_SYSTEM_OUT", "" + false));
-    private static boolean detailedMatchFailures = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DETAILED_MATCH_FAILURES, "MOCKSERVER_DETAILED_MATCH_FAILURES", "" + true));
+    private static boolean detailedMatchFailures = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_LAUNCH_UI_FOR_LOG_LEVEL_DEBUG, "MOCKSERVER_DETAILED_MATCH_FAILURES", "" + true));
     private static boolean matchersFailFast = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DETAILED_MATCH_FAILURES, "MOCKSERVER_DETAILED_MATCH_FAILURES", "" + true));
     private static boolean attemptToProxyIfNoMatchingExpectation = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION, "MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION", "" + true));
     private static boolean enableMTLS = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_REQUIRED, "MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_REQUIRED", DEFAULT_TLS_MUTUAL_AUTHENTICATION_REQUIRED));
@@ -232,8 +232,8 @@ public class ConfigurationProperties {
         ALL_SUBJECT_ALTERNATIVE_IPS.clear();
         REBUILD_KEY_STORE.set(false);
         REBUILD_SERVER_KEY_STORE.set(false);
-        logLevel = Level.valueOf(DEFAULT_LOG_LEVEL);
-        javaLoggerLogLevel = DEFAULT_LOG_LEVEL;
+        logLevel = Level.valueOf(getSLF4JOrJavaLoggerToSLF4JLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, "MOCKSERVER_LOG_LEVEL", DEFAULT_LOG_LEVEL).toUpperCase()));
+        javaLoggerLogLevel = getSLF4JOrJavaLoggerToJavaLoggerLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, "MOCKSERVER_LOG_LEVEL", DEFAULT_LOG_LEVEL).toUpperCase());
         metricsEnabled = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_METRICS_ENABLED, "MOCKSERVER_METRICS_ENABLED", "" + false));
         disableSystemOut = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DISABLE_SYSTEM_OUT, "MOCKSERVER_DISABLE_SYSTEM_OUT", "" + false));
         detailedMatchFailures = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DETAILED_MATCH_FAILURES, "MOCKSERVER_DETAILED_MATCH_FAILURES", "" + true));
@@ -312,6 +312,15 @@ public class ConfigurationProperties {
 
     public static void outputMemoryUsageCsv(boolean enable) {
         System.setProperty(MOCKSERVER_OUTPUT_MEMORY_USAGE_CSV, "" + enable);
+    }
+
+    public static String memoryUsageCsvDirectory() {
+        return readPropertyHierarchically(MOCKSERVER_MEMORY_USAGE_DIRECTORY, "MOCKSERVER_MEMORY_USAGE_DIRECTORY", ".");
+    }
+
+    public static void memoryUsageCsvDirectory(String directory) {
+        fileExists(directory);
+        System.setProperty(MOCKSERVER_MEMORY_USAGE_DIRECTORY, directory);
     }
 
     public static int maxWebSocketExpectations() {
@@ -499,17 +508,16 @@ public class ConfigurationProperties {
      * - avoiding bugs in the X509 creation logic Java JDK (i.e. such as the format of SAN and CN)
      * <p>
      * When enabling this setting the following dependencies must be provided on the classpath (they are not included with MockServer)
-     * <dependency>
-     * <groupId>org.bouncycastle</groupId>
-     * <artifactId>bcprov-jdk15on</artifactId>
-     * <version>1.65</version>
-     * </dependency>
-     * <dependency>
-     * <groupId>org.bouncycastle</groupId>
-     * <artifactId>bcpkix-jdk15on</artifactId>
-     * <version>1.65</version>
-     * </dependency>
-     * </p>
+     * <pre>&lt;dependency&gt;
+     *   &lt;groupId&gt;org.bouncycastle&lt;/groupId&gt;
+     *   &lt;artifactId&gt;bcprov-jdk15on&lt;/artifactId&gt;
+     *   &lt;version&gt;1.66&lt;/version&gt;
+     * &lt;/dependency&gt;
+     * &lt;dependency&gt;
+     *   &lt;groupId&gt;org.bouncycastle&lt;/groupId&gt;
+     *   &lt;artifactId&gt;bcpkix-jdk15on&lt;/artifactId&gt;
+     *   &lt;version&gt;1.66&lt;/version&gt;
+     * &lt;/dependency&gt;</pre>
      *
      * @param enable enable BouncyCastle instead of the Java JDK to generate Certificate and Keys
      */
@@ -792,6 +800,19 @@ public class ConfigurationProperties {
     public static void detailedMatchFailures(boolean enable) {
         System.setProperty(MOCKSERVER_DETAILED_MATCH_FAILURES, "" + enable);
         detailedMatchFailures = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DETAILED_MATCH_FAILURES, "MOCKSERVER_DETAILED_MATCH_FAILURES", "" + true));
+    }
+
+    public static boolean launchUIForLogLevelDebug() {
+        return Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_LAUNCH_UI_FOR_LOG_LEVEL_DEBUG, "MOCKSERVER_LAUNCH_UI_FOR_LOG_LEVEL_DEBUG", "" + false));
+    }
+
+    /**
+     * If true (the default) the ClientAndServer constructor will open the UI in the default browser when the log level is set to DEBUG.
+     *
+     * @param enable enabled ClientAndServer constructor launching UI when log level is DEBUG
+     */
+    public static void launchUIForLogLevelDebug(boolean enable) {
+        System.setProperty(MOCKSERVER_LAUNCH_UI_FOR_LOG_LEVEL_DEBUG, "" + enable);
     }
 
     public static boolean matchersFailFast() {
@@ -1232,12 +1253,11 @@ public class ConfigurationProperties {
                 String propertyName = String.valueOf(propertyNames.nextElement());
                 propertiesLogDump.append("  ").append(propertyName).append(" = ").append(properties.getProperty(propertyName)).append(NEW_LINE);
             }
-            if (MOCK_SERVER_LOGGER != null) {
+            if (MOCK_SERVER_LOGGER != null && MockServerLogger.isEnabled(Level.INFO)) {
                 MOCK_SERVER_LOGGER.logEvent(
                     new LogEntry()
                         .setType(SERVER_CONFIGURATION)
                         .setLogLevel(Level.INFO)
-                        .setHttpRequest(request())
                         .setMessageFormat(propertiesLogDump.toString())
                 );
             }
@@ -1254,6 +1274,10 @@ public class ConfigurationProperties {
         String defaultOrEnvironmentVariable = isBlank(System.getenv(environmentVariableKey)) ?
             defaultValue :
             System.getenv(environmentVariableKey);
-        return System.getProperty(systemPropertyKey, PROPERTIES != null ? PROPERTIES.getProperty(systemPropertyKey, defaultOrEnvironmentVariable) : defaultOrEnvironmentVariable);
+        String propertyValue = System.getProperty(systemPropertyKey, PROPERTIES != null ? PROPERTIES.getProperty(systemPropertyKey, defaultOrEnvironmentVariable) : defaultOrEnvironmentVariable);
+        if (propertyValue != null && propertyValue.startsWith("\"") && propertyValue.endsWith("\"")) {
+            propertyValue = propertyValue.replaceAll("^\"|\"$", "");
+        }
+        return propertyValue;
     }
 }

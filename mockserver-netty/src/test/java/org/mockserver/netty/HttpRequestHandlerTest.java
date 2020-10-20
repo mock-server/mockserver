@@ -47,11 +47,11 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LOG_DATE_FORMAT;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.mock.action.http.HttpActionHandler.REMOTE_SOCKET;
-import static org.mockserver.netty.HttpRequestHandler.LOCAL_HOST_HEADERS;
-import static org.mockserver.netty.HttpRequestHandler.PROXYING;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
+import static org.mockserver.netty.HttpRequestHandler.LOCAL_HOST_HEADERS;
+import static org.mockserver.netty.HttpRequestHandler.PROXYING;
 
 /**
  * @author jamesdbloom
@@ -147,7 +147,7 @@ public class HttpRequestHandlerTest {
     @Test
     public void shouldReturnStatus() {
         // given
-        when(server.getLocalPorts()).thenReturn(Arrays.asList(1080, 1090));
+        when(server.getLocalPorts()).thenReturn(Arrays.asList(1090, 1090));
         HttpRequest statusRequest = request("/mockserver/status").withMethod("PUT");
 
         // when
@@ -157,7 +157,7 @@ public class HttpRequestHandlerTest {
         HttpResponse httpResponse = embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(200));
         assertThat(httpResponse.getBodyAsString(), is(portBindingSerializer.serialize(
-            portBinding(1080, 1090)
+            portBinding(1090, 1090)
         )));
     }
 
@@ -167,7 +167,7 @@ public class HttpRequestHandlerTest {
         try {
             // given
             ConfigurationProperties.livenessHttpGetPath("/livenessProbe");
-            when(server.getLocalPorts()).thenReturn(Arrays.asList(1080, 1090));
+            when(server.getLocalPorts()).thenReturn(Arrays.asList(1090, 1090));
             HttpRequest statusRequest = request("/livenessProbe").withMethod("GET");
 
             // when
@@ -177,7 +177,7 @@ public class HttpRequestHandlerTest {
             HttpResponse httpResponse = embeddedChannel.readOutbound();
             assertThat(httpResponse.getStatusCode(), is(200));
             assertThat(httpResponse.getBodyAsString(), is(portBindingSerializer.serialize(
-                portBinding(1080, 1090)
+                portBinding(1090, 1090)
             )));
         } finally {
             ConfigurationProperties.livenessHttpGetPath(originalStatusPath);
@@ -187,22 +187,22 @@ public class HttpRequestHandlerTest {
     @Test
     public void shouldBindNewPorts() {
         // given
-        when(server.bindServerPorts(anyListOf(Integer.class))).thenReturn(Arrays.asList(1080, 1090));
+        when(server.bindServerPorts(anyList())).thenReturn(Arrays.asList(1090, 1090));
         HttpRequest statusRequest = request("/mockserver/bind")
             .withMethod("PUT")
             .withBody(portBindingSerializer.serialize(
-                portBinding(1080, 1090)
+                portBinding(1090, 1090)
             ));
 
         // when
         embeddedChannel.writeInbound(statusRequest);
 
         // then
-        verify(server).bindServerPorts(Arrays.asList(1080, 1090));
+        verify(server).bindServerPorts(Arrays.asList(1090, 1090));
         HttpResponse httpResponse = embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(200));
         assertThat(httpResponse.getBodyAsString(), is(portBindingSerializer.serialize(
-            portBinding(1080, 1090)
+            portBinding(1090, 1090)
         )));
     }
 
@@ -294,12 +294,9 @@ public class HttpRequestHandlerTest {
                     "    }" + NEW_LINE +
                     "  }" + NEW_LINE +
                     NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
+                    " with id:" + NEW_LINE +
                     NEW_LINE +
-                    "  {" + NEW_LINE +
-                    "    \"path\" : \"request_one\"" + NEW_LINE +
-                    "  }" + NEW_LINE +
+                    "  key_one" + NEW_LINE +
                     NEW_LINE))
             );
         } finally {
@@ -370,7 +367,7 @@ public class HttpRequestHandlerTest {
     public void shouldProxyRequestsWhenProxying() {
         // given
         HttpRequest request = request("request_one");
-        InetSocketAddress remoteAddress = new InetSocketAddress(1080);
+        InetSocketAddress remoteAddress = new InetSocketAddress(1090);
         embeddedChannel.attr(LOCAL_HOST_HEADERS).set(ImmutableSet.of(
             "local_address:666",
             "localhost:666",
@@ -400,7 +397,7 @@ public class HttpRequestHandlerTest {
     public void shouldProxyRequestsWhenNotProxying() {
         // given
         HttpRequest request = request("request_one");
-        InetSocketAddress remoteAddress = new InetSocketAddress(1080);
+        InetSocketAddress remoteAddress = new InetSocketAddress(1090);
         embeddedChannel.attr(LOCAL_HOST_HEADERS).set(ImmutableSet.of(
             "local_address:666",
             "localhost:666",

@@ -13,18 +13,14 @@ public class NottableStringToJavaSerializerTest {
     @Test
     public void shouldSerializeNottedString() {
         assertEquals("not(\"some_value\")",
-            NottableStringToJavaSerializer.serialize(
-                string("some_value", true)
-            )
+            NottableStringToJavaSerializer.serialize(string("some_value", true), false)
         );
     }
 
     @Test
     public void shouldSerializeString() {
         assertEquals("\"some_value\"",
-            NottableStringToJavaSerializer.serialize(
-                string("some_value", false)
-            )
+            NottableStringToJavaSerializer.serialize(string("some_value", false), false)
         );
     }
 

@@ -3,6 +3,7 @@ package org.mockserver.serialization.model;
 import org.junit.Test;
 import org.mockserver.model.Body;
 import org.mockserver.model.JsonPathBody;
+import org.mockserver.model.JsonSchemaBody;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -31,6 +32,17 @@ public class JsonPathBodyDTOTest {
         // then
         assertThat(jsonPathBody.getValue(), is("some_body"));
         assertThat(jsonPathBody.getType(), is(Body.Type.JSON_PATH));
+    }
+
+    @Test
+    public void shouldBuildCorrectObjectWithOptional() {
+        // when
+        JsonPathBody jsonPathBody = new JsonPathBodyDTO((JsonPathBody) new JsonPathBody("some_body").withOptional(true)).buildObject();
+
+        // then
+        assertThat(jsonPathBody.getValue(), is("some_body"));
+        assertThat(jsonPathBody.getType(), is(Body.Type.JSON_PATH));
+        assertThat(jsonPathBody.getOptional(), is(true));
     }
 
     @Test

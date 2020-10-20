@@ -10,7 +10,7 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.ssl.SslContext;
-import org.mockserver.codec.MockServerServerCodec;
+import org.mockserver.codec.MockServerHttpServerCodec;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
@@ -72,7 +72,7 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
 
         pipeline.addLast(new WebSocketServerHandler(mockServerLogger, registeredClients, websocketChannels, textWebSocketFrames, secure));
 
-        pipeline.addLast(new MockServerServerCodec(mockServerLogger, secure));
+        pipeline.addLast(new MockServerHttpServerCodec(mockServerLogger, secure, channel.localAddress().getPort()));
 
         if (!secure && error == EchoServer.Error.CLOSE_CONNECTION) {
             throw new IllegalArgumentException("Error type CLOSE_CONNECTION is not supported in non-secure mode");

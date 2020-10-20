@@ -19,9 +19,9 @@ import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.API;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.ui.MockServerMatcherNotifier.Cause.API;
 
 /**
  * @author jamesdbloom
@@ -43,7 +43,7 @@ public class MockServerMatcherManageExpectationsTest {
 
         // then
         assertThat(requestMatchers.postProcess(requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("somePath"))), nullValue());
-        assertThat(requestMatchers.httpRequestMatchers, empty());
+        assertThat(requestMatchers.httpRequestMatchers.toSortedList(), empty());
     }
 
     @Test
@@ -53,14 +53,14 @@ public class MockServerMatcherManageExpectationsTest {
 
         // then
         assertThat(requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("someOtherPath")), nullValue());
-        assertThat(requestMatchers.httpRequestMatchers, empty());
+        assertThat(requestMatchers.httpRequestMatchers.toSortedList(), empty());
     }
 
     @Test
     public void shouldRemoveMultipleExpiredExpectations() throws InterruptedException {
         // when
         requestMatchers.add(new Expectation(request().withPath("somePath"), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0L), 0)
-                    .thenRespond(response().withBody("someBody")), API);
+            .thenRespond(response().withBody("someBody")), API);
         Expectation expectationToExpireAfter3Seconds =
             new Expectation(request().withPath("somePath"), Times.unlimited(), TimeToLive.exactly(MILLISECONDS, 1500L), 0)
                 .thenRespond(response().withBody("someBodyOtherBody"));
@@ -75,7 +75,7 @@ public class MockServerMatcherManageExpectationsTest {
 
         // then - after 3 seconds
         assertThat(requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("someOtherPath")), nullValue());
-        assertThat(requestMatchers.httpRequestMatchers, empty());
+        assertThat(requestMatchers.httpRequestMatchers.toSortedList(), empty());
     }
 
     @Test
@@ -108,7 +108,7 @@ public class MockServerMatcherManageExpectationsTest {
         // then
         assertThat(requestMatchers.postProcess(requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("somePath"))), is(expectation));
         assertThat(requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("somePath")), nullValue());
-        assertThat(requestMatchers.httpRequestMatchers, empty());
+        assertThat(requestMatchers.httpRequestMatchers.toSortedList(), empty());
     }
 
     @Test
@@ -151,6 +151,6 @@ public class MockServerMatcherManageExpectationsTest {
         // then
         assertThat(requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("somepath")), nullValue());
         assertThat(requestMatchers.firstMatchingExpectation(new HttpRequest().withPath("someOtherPath")), nullValue());
-        assertThat(requestMatchers.httpRequestMatchers, empty());
+        assertThat(requestMatchers.httpRequestMatchers.toSortedList(), empty());
     }
 }

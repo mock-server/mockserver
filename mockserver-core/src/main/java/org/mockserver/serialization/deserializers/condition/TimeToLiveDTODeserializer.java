@@ -49,12 +49,14 @@ public class TimeToLiveDTODeserializer extends StdDeserializer<TimeToLiveDTO> {
                     timeUnit = Enum.valueOf(TimeUnit.class, timeUnitNode.asText());
                     timeToLive = TimeToLive.exactly(timeUnit, ttl);
                 } catch (IllegalArgumentException iae) {
-                    MOCK_SERVER_LOGGER.logEvent(
-                        new LogEntry()
-                            .setLogLevel(Level.TRACE)
-                            .setMessageFormat("exception parsing TimeToLiveDTO timeUnit")
-                            .setThrowable(iae)
-                    );
+                    if (MockServerLogger.isEnabled(Level.TRACE)) {
+                        MOCK_SERVER_LOGGER.logEvent(
+                            new LogEntry()
+                                .setLogLevel(Level.TRACE)
+                                .setMessageFormat("exception parsing TimeToLiveDTO timeUnit")
+                                .setThrowable(iae)
+                        );
+                    }
                 }
             }
             if (timeToLive != null) {

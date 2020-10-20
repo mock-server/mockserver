@@ -22,6 +22,9 @@ public class XPathBodyDTOSerializer extends StdSerializer<XPathBodyDTO> {
         if (xPathBodyDTO.getNot() != null && xPathBodyDTO.getNot()) {
             jgen.writeBooleanField("not", xPathBodyDTO.getNot());
         }
+        if (xPathBodyDTO.getOptional() != null && xPathBodyDTO.getOptional()) {
+            jgen.writeBooleanField("optional", xPathBodyDTO.getOptional());
+        }
         jgen.writeStringField("type", xPathBodyDTO.getType().name());
         jgen.writeStringField("xpath", xPathBodyDTO.getXPath());
         jgen.writeEndObject();

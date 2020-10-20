@@ -11,6 +11,7 @@ import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
+import org.mockserver.uuid.UUIDService;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -19,7 +20,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -54,7 +54,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
 
     @Override
     public int getServerPort() {
-        return ((ClientAndServer) mockServerClient).getLocalPort();
+        return mockServerClient.getPort();
     }
 
     @Test // same JVM due to dynamic calls to static Metrics class
@@ -619,7 +619,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                                     .withCloseSocket(true)
                             )
                     );
-                String addedHeader = UUID.randomUUID().toString();
+                String addedHeader = UUIDService.getUUID();
                 proxy = startClientAndServer();
                 proxy
                     .when(
@@ -640,7 +640,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
 
                 for (int counter = 0; counter < 500; ++counter) {
                     try {
-                        URL url = new URL("http://localhost:" + proxy.getLocalPort() + "/api/v1/employees");
+                        URL url = new URL("http://localhost:" + proxy.getPort() + "/api/v1/employees");
                         HttpURLConnection con = (HttpURLConnection) url.openConnection();
                         con.setRequestMethod("GET");
                         con.setRequestProperty("Counter", "" + counter);
@@ -691,7 +691,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                                 .withCloseSocket(true)
                         )
                 );
-            String addedHeader = UUID.randomUUID().toString();
+            String addedHeader = UUIDService.getUUID();
             proxy = startClientAndServer();
             proxy
                 .when(
@@ -712,7 +712,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
 
             for (int counter = 0; counter < 500; ++counter) {
                 try {
-                    URL url = new URL("http://localhost:" + proxy.getLocalPort() + "/api/v1/employees");
+                    URL url = new URL("http://localhost:" + proxy.getPort() + "/api/v1/employees");
                     HttpURLConnection con = (HttpURLConnection) url.openConnection();
                     con.setRequestMethod("GET");
                     con.setRequestProperty("Counter", "" + counter);
@@ -762,7 +762,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                                 .withCloseSocket(true)
                         )
                 );
-            TestExpectationForwardAndResponseCallback.addedHeader = UUID.randomUUID().toString();
+            TestExpectationForwardAndResponseCallback.addedHeader = UUIDService.getUUID();
             TestExpectationForwardAndResponseCallback.serverPort = getServerPort();
             proxy = startClientAndServer();
             proxy
@@ -774,7 +774,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
 
             for (int counter = 0; counter < 500; ++counter) {
                 try {
-                    URL url = new URL("http://localhost:" + proxy.getLocalPort() + "/api/v1/employees");
+                    URL url = new URL("http://localhost:" + proxy.getPort() + "/api/v1/employees");
                     HttpURLConnection con = (HttpURLConnection) url.openConnection();
                     con.setRequestMethod("GET");
                     con.setRequestProperty("Counter", "" + counter);

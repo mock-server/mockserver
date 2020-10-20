@@ -1,6 +1,7 @@
 package org.mockserver.model;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author jamesdbloom
@@ -15,6 +16,10 @@ public class Cookies extends KeysAndValues<Cookie, Cookies> {
         withEntries(cookies);
     }
 
+    public Cookies(Map<NottableString, NottableString> cookies) {
+        super(cookies);
+    }
+
     @Override
     public Cookie build(NottableString name, NottableString value) {
         return new Cookie(name, value);
@@ -22,6 +27,6 @@ public class Cookies extends KeysAndValues<Cookie, Cookies> {
 
     @SuppressWarnings("MethodDoesntCallSuperMethod")
     public Cookies clone() {
-        return new Cookies().withEntries(getEntries());
+        return new Cookies(getMap());
     }
 }

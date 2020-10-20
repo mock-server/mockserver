@@ -35,6 +35,12 @@ public class BinaryBodyDTOSerializerTest {
     }
 
     @Test
+    public void shouldSerializeBinaryBodyDTOWithOptional() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new BinaryBodyDTO(new BinaryBody("someBytes".getBytes(UTF_8)), false).withOptional(true)),
+                is("{\"optional\":true,\"type\":\"BINARY\",\"base64Bytes\":\"" + base64Converter.bytesToBase64String("someBytes".getBytes(UTF_8)) + "\"}"));
+    }
+
+    @Test
     public void shouldSerializeBinaryBodyDTOWithNotWithContentType() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new BinaryBodyDTO(new BinaryBody("someBytes".getBytes(UTF_8), MediaType.ANY_AUDIO_TYPE), true)),
                 is("{\"not\":true,\"type\":\"BINARY\",\"base64Bytes\":\"" + base64Converter.bytesToBase64String("someBytes".getBytes(UTF_8)) + "\",\"contentType\":\"audio/*\"}"));

@@ -7,7 +7,7 @@ public class ExpectationInitializerExamples {
 
     public void startWithInitializer() {
         System.setProperty("mockserver.initializationClass", ExpectationInitializerExample.class.getName());
-        int mockServerPort = new ClientAndServer().getLocalPort();
+        int mockServerPort = new ClientAndServer().getPort();
         // send requests
     }
 }

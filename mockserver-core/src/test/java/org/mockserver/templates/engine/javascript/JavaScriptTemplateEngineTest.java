@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.serialization.model.HttpResponseDTO;
 
@@ -151,7 +152,7 @@ public class JavaScriptTemplateEngineTest {
         if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
             Thread[] threads = new Thread[3];
             for (int i = 0; i < threads.length; i++) {
-                threads[i] = new Thread(() -> assertThat(javaScriptTemplateEngine.executeTemplate(template, request,
+                threads[i] = new Scheduler.SchedulerThreadFactory("MockServer Test " + this.getClass().getSimpleName()).newThread(() -> assertThat(javaScriptTemplateEngine.executeTemplate(template, request,
                     HttpResponseDTO.class
                 ), is(
                     response()
@@ -260,7 +261,7 @@ public class JavaScriptTemplateEngineTest {
             "    } ]," + NEW_LINE +
             "    'headers' : [ {" + NEW_LINE +
             "        'name' : \"Host\"," + NEW_LINE +
-            "        'values' : [ \"localhost:1080\" ]" + NEW_LINE +
+            "        'values' : [ \"localhost:1090\" ]" + NEW_LINE +
             "    } ]," + NEW_LINE +
             "    'body': \"{'name': 'value'}\"" + NEW_LINE +
             "};";
@@ -278,7 +279,7 @@ public class JavaScriptTemplateEngineTest {
         if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
             assertThat(actualHttpRequest, is(
                 request()
-                    .withHeader("Host", "localhost:1080")
+                    .withHeader("Host", "localhost:1090")
                     .withPath("/somePath")
                     .withQueryStringParameter("queryParameter", "someValue")
                     .withBody("{'name': 'value'}")
@@ -299,7 +300,7 @@ public class JavaScriptTemplateEngineTest {
             "    } ]," + NEW_LINE +
             "    'headers' : [ {" + NEW_LINE +
             "        'name' : \"Host\"," + NEW_LINE +
-            "        'values' : [ \"localhost:1080\" ]" + NEW_LINE +
+            "        'values' : [ \"localhost:1090\" ]" + NEW_LINE +
             "    } ]," + NEW_LINE +
             "    'body': \"{'name': 'value'}\"" + NEW_LINE +
             "};";
@@ -318,7 +319,7 @@ public class JavaScriptTemplateEngineTest {
                 "        } ]," + NEW_LINE +
                 "        'headers' : [ {" + NEW_LINE +
                 "            'name' : \"Host\"," + NEW_LINE +
-                "            'values' : [ \"localhost:1080\" ]" + NEW_LINE +
+                "            'values' : [ \"localhost:1090\" ]" + NEW_LINE +
                 "        } ]," + NEW_LINE +
                 "        'body': \"{'name': 'value'}\"" + NEW_LINE +
                 "    };" + NEW_LINE +

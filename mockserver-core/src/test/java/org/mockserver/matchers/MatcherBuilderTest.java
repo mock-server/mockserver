@@ -5,7 +5,7 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mappers.FullHttpRequestToMockServerRequest;
+import org.mockserver.mappers.FullHttpRequestToMockServerHttpRequest;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 
@@ -54,7 +54,7 @@ public class MatcherBuilderTest {
         String bodyTestString = "UTF_8 characters: Bj\u00F6rk";
 
         // given
-        FullHttpRequestToMockServerRequest fullHttpRequestToMockServerRequest = new FullHttpRequestToMockServerRequest(mockServerLogger, false);
+        FullHttpRequestToMockServerHttpRequest fullHttpRequestToMockServerRequest = new FullHttpRequestToMockServerHttpRequest(mockServerLogger, false, null);
         FullHttpRequest fullHttpRequest = new DefaultFullHttpRequest(
             HTTP_1_1,
             GET,
@@ -83,7 +83,7 @@ public class MatcherBuilderTest {
         String bodyTestString = "UTF_8 characters: Bj\u00F6rk";
 
         // given
-        FullHttpRequestToMockServerRequest fullHttpRequestToMockServerRequest = new FullHttpRequestToMockServerRequest(mockServerLogger, false);
+        FullHttpRequestToMockServerHttpRequest fullHttpRequestToMockServerRequest = new FullHttpRequestToMockServerHttpRequest(mockServerLogger, false, null);
         FullHttpRequest fullHttpRequest = new DefaultFullHttpRequest(
             HTTP_1_1,
             GET,

@@ -22,6 +22,9 @@ public class JsonPathBodySerializer extends StdSerializer<JsonPathBody> {
         if (jsonPathBody.getNot() != null && jsonPathBody.getNot()) {
             jgen.writeBooleanField("not", jsonPathBody.getNot());
         }
+        if (jsonPathBody.getOptional() != null && jsonPathBody.getOptional()) {
+            jgen.writeBooleanField("optional", jsonPathBody.getOptional());
+        }
         jgen.writeStringField("type", jsonPathBody.getType().name());
         jgen.writeStringField("jsonPath", jsonPathBody.getValue());
         jgen.writeEndObject();

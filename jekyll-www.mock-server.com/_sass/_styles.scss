@@ -76,10 +76,22 @@ The content `<div>` is where all your content goes.
     text-decoration: none
 }
 
-a img.action_image {
+img.action_image {
     max-width: 600px;
     width: 75%;
     padding-left: 10%;
+}
+
+img.ui_image {
+    max-width: 1700px;
+    width: 98%;
+    padding: 1%;
+}
+
+img.ui_image_half_width {
+    max-width: 1700px;
+    width: 60%;
+    padding: 1%;
 }
 
 /*

@@ -6,17 +6,17 @@ import org.mockserver.model.*;
 /**
  * @author jamesdbloom
  */
-@SuppressWarnings("rawtypes")
 public abstract class BodyWithContentTypeDTO extends BodyDTO {
 
     protected final String contentType;
 
-    public BodyWithContentTypeDTO(Body.Type type, Boolean not, String contentType) {
+    public BodyWithContentTypeDTO(Body.Type type, Boolean not, Body<?> body) {
         super(type, not);
-        this.contentType = contentType;
+        this.contentType = body.getContentType();
+        withOptional(body.getOptional());
     }
 
-    public static BodyWithContentTypeDTO createWithContentTypeDTO(BodyWithContentType body) {
+    public static BodyWithContentTypeDTO createWithContentTypeDTO(BodyWithContentType<?> body) {
         BodyWithContentTypeDTO result = null;
 
         if (body instanceof BinaryBody) {
@@ -31,9 +31,13 @@ public abstract class BodyWithContentTypeDTO extends BodyDTO {
         } else if (body instanceof XmlBody) {
             XmlBody xmlBody = (XmlBody) body;
             result = new XmlBodyDTO(xmlBody, xmlBody.getNot());
-        } else if (body instanceof LogEventBody) {
-            LogEventBody logEventBody = (LogEventBody) body;
-            result = new LogEventBodyDTO(logEventBody);
+        } else if (body instanceof LogEntryBody) {
+            LogEntryBody logEventBody = (LogEntryBody) body;
+            result = new LogEntryBodyDTO(logEventBody);
+        }
+
+        if (result != null) {
+            result.withOptional(body.getOptional());
         }
 
         return result;
@@ -43,11 +47,11 @@ public abstract class BodyWithContentTypeDTO extends BodyDTO {
         return contentType;
     }
 
-    public abstract BodyWithContentType buildObject();
-
     @JsonIgnore
     MediaType getMediaType() {
         return contentType != null ? MediaType.parse(contentType) : null;
     }
+
+    public abstract BodyWithContentType<?> buildObject();
 
 }

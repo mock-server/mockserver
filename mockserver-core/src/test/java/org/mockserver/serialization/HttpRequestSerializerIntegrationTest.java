@@ -49,44 +49,56 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // then
-        throwCorrectError(requestBytes, "4 errors:" + NEW_LINE +
-            " - field: \"/headers\" for schema: \"keyToMultiValue\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
-            NEW_LINE +
-            "   {" + NEW_LINE +
-            "       \"exampleRegexHeader\": [" + NEW_LINE +
-            "           \"^some +regex$\"" + NEW_LINE +
-            "       ], " + NEW_LINE +
-            "       \"exampleNottedAndSimpleStringHeader\": [" + NEW_LINE +
-            "           \"!notThisValue\", " + NEW_LINE +
-            "           \"simpleStringMatch\"" + NEW_LINE +
-            "       ]" + NEW_LINE +
-            "   }" + NEW_LINE +
-            NEW_LINE +
-            "or:" + NEW_LINE +
-            NEW_LINE +
-            "   {" + NEW_LINE +
-            "       \"exampleSchemaHeader\": [" + NEW_LINE +
-            "           {" + NEW_LINE +
-            "               \"type\": \"number\"" + NEW_LINE +
-            "           }" + NEW_LINE +
-            "       ], " + NEW_LINE +
-            "       \"exampleMultiSchemaHeader\": [" + NEW_LINE +
-            "           {" + NEW_LINE +
-            "               \"type\": \"string\", " + NEW_LINE +
-            "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
-            "           }, " + NEW_LINE +
-            "           {" + NEW_LINE +
-            "               \"type\": \"string\", " + NEW_LINE +
-            "               \"format\": \"ipv4\"" + NEW_LINE +
-            "           }" + NEW_LINE +
-            "       ]" + NEW_LINE +
-            "   }" + NEW_LINE +
-            NEW_LINE +
-            " - field: \"/headers\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"instance type (object) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
-            " - field: \"/headers\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"object instance has properties which are not allowed by the schema: [\"someHeaderName\"]\"" + NEW_LINE +
-            " - field: \"/headers/someHeaderName\" for schema: \"keyToMultiValue/oneOf/1/patternProperties/^\\S+$\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
-            NEW_LINE +
-            OPEN_API_SPECIFICATION_URL);
+        throwCorrectError(requestBytes, "incorrect request json format for:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  {" + NEW_LINE +
+            "      \"headers\" : {" + NEW_LINE +
+            "          \"someHeaderName\" : \"someHeaderValue\"" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "" + NEW_LINE +
+            " schema validation errors:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  6 errors:" + NEW_LINE +
+            "   - field: \"/headers\" for schema: \"keyToMultiValue\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
+            "  " + NEW_LINE +
+            "     {" + NEW_LINE +
+            "         \"exampleRegexHeader\": [" + NEW_LINE +
+            "             \"^some +regex$\"" + NEW_LINE +
+            "         ], " + NEW_LINE +
+            "         \"exampleNottedAndSimpleStringHeader\": [" + NEW_LINE +
+            "             \"!notThisValue\", " + NEW_LINE +
+            "             \"simpleStringMatch\"" + NEW_LINE +
+            "         ]" + NEW_LINE +
+            "     }" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  or:" + NEW_LINE +
+            "  " + NEW_LINE +
+            "     {" + NEW_LINE +
+            "         \"exampleSchemaHeader\": [" + NEW_LINE +
+            "             {" + NEW_LINE +
+            "                 \"type\": \"number\"" + NEW_LINE +
+            "             }" + NEW_LINE +
+            "         ], " + NEW_LINE +
+            "         \"exampleMultiSchemaHeader\": [" + NEW_LINE +
+            "             {" + NEW_LINE +
+            "                 \"type\": \"string\", " + NEW_LINE +
+            "                 \"pattern\": \"^some +regex$\"" + NEW_LINE +
+            "             }, " + NEW_LINE +
+            "             {" + NEW_LINE +
+            "                 \"type\": \"string\", " + NEW_LINE +
+            "                 \"format\": \"ipv4\"" + NEW_LINE +
+            "             }" + NEW_LINE +
+            "         ]" + NEW_LINE +
+            "     }" + NEW_LINE +
+            "  " + NEW_LINE +
+            "   - field: \"/headers\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"instance type (object) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
+            "   - field: \"/headers\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"object instance has properties which are not allowed by the schema: [\"someHeaderName\"]\"" + NEW_LINE +
+            "   - field: \"/headers/someHeaderName\" for schema: \"keyToMultiValue/oneOf/1/patternProperties/^(?!keyMatchStyle)\\S+$\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
+            "   - field: \"/headers/someHeaderName\" for schema: \"keyToMultiValue/oneOf/1/patternProperties/^(?!keyMatchStyle)\\S+$/oneOf/0\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
+            "   - field: \"/headers/someHeaderName\" for schema: \"keyToMultiValue/oneOf/1/patternProperties/^(?!keyMatchStyle)\\S+$/oneOf/1\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  " + OPEN_API_SPECIFICATION_URL);
     }
 
     @Test
@@ -99,44 +111,54 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // then
-        throwCorrectError(requestBytes, "4 errors:" + NEW_LINE +
-            " - field: \"/headers\" for schema: \"keyToMultiValue\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
-            NEW_LINE +
-            "   {" + NEW_LINE +
-            "       \"exampleRegexHeader\": [" + NEW_LINE +
-            "           \"^some +regex$\"" + NEW_LINE +
-            "       ], " + NEW_LINE +
-            "       \"exampleNottedAndSimpleStringHeader\": [" + NEW_LINE +
-            "           \"!notThisValue\", " + NEW_LINE +
-            "           \"simpleStringMatch\"" + NEW_LINE +
-            "       ]" + NEW_LINE +
-            "   }" + NEW_LINE +
-            NEW_LINE +
-            "or:" + NEW_LINE +
-            NEW_LINE +
-            "   {" + NEW_LINE +
-            "       \"exampleSchemaHeader\": [" + NEW_LINE +
-            "           {" + NEW_LINE +
-            "               \"type\": \"number\"" + NEW_LINE +
-            "           }" + NEW_LINE +
-            "       ], " + NEW_LINE +
-            "       \"exampleMultiSchemaHeader\": [" + NEW_LINE +
-            "           {" + NEW_LINE +
-            "               \"type\": \"string\", " + NEW_LINE +
-            "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
-            "           }, " + NEW_LINE +
-            "           {" + NEW_LINE +
-            "               \"type\": \"string\", " + NEW_LINE +
-            "               \"format\": \"ipv4\"" + NEW_LINE +
-            "           }" + NEW_LINE +
-            "       ]" + NEW_LINE +
-            "   }" + NEW_LINE +
-            NEW_LINE +
-            " - field: \"/headers\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"instance type (object) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
-            " - field: \"/headers\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"object instance has properties which are not allowed by the schema: [\"someHea derName\"]\"" + NEW_LINE +
-            " - field: \"/headers\" for schema: \"keyToMultiValue/oneOf/1\" has error: \"object instance has properties which are not allowed by the schema: [\"someHea derName\"]\"" + NEW_LINE +
-            NEW_LINE +
-            OPEN_API_SPECIFICATION_URL);
+        throwCorrectError(requestBytes, "incorrect request json format for:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  {" + NEW_LINE +
+            "      \"headers\" : {" + NEW_LINE +
+            "          \"someHea derName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "" + NEW_LINE +
+            " schema validation errors:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  4 errors:" + NEW_LINE +
+            "   - field: \"/headers\" for schema: \"keyToMultiValue\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
+            "  " + NEW_LINE +
+            "     {" + NEW_LINE +
+            "         \"exampleRegexHeader\": [" + NEW_LINE +
+            "             \"^some +regex$\"" + NEW_LINE +
+            "         ], " + NEW_LINE +
+            "         \"exampleNottedAndSimpleStringHeader\": [" + NEW_LINE +
+            "             \"!notThisValue\", " + NEW_LINE +
+            "             \"simpleStringMatch\"" + NEW_LINE +
+            "         ]" + NEW_LINE +
+            "     }" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  or:" + NEW_LINE +
+            "  " + NEW_LINE +
+            "     {" + NEW_LINE +
+            "         \"exampleSchemaHeader\": [" + NEW_LINE +
+            "             {" + NEW_LINE +
+            "                 \"type\": \"number\"" + NEW_LINE +
+            "             }" + NEW_LINE +
+            "         ], " + NEW_LINE +
+            "         \"exampleMultiSchemaHeader\": [" + NEW_LINE +
+            "             {" + NEW_LINE +
+            "                 \"type\": \"string\", " + NEW_LINE +
+            "                 \"pattern\": \"^some +regex$\"" + NEW_LINE +
+            "             }, " + NEW_LINE +
+            "             {" + NEW_LINE +
+            "                 \"type\": \"string\", " + NEW_LINE +
+            "                 \"format\": \"ipv4\"" + NEW_LINE +
+            "             }" + NEW_LINE +
+            "         ]" + NEW_LINE +
+            "     }" + NEW_LINE +
+            "  " + NEW_LINE +
+            "   - field: \"/headers\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"instance type (object) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
+            "   - field: \"/headers\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"object instance has properties which are not allowed by the schema: [\"someHea derName\"]\"" + NEW_LINE +
+            "   - field: \"/headers\" for schema: \"keyToMultiValue/oneOf/1\" has error: \"object instance has properties which are not allowed by the schema: [\"someHea derName\"]\"" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  " + OPEN_API_SPECIFICATION_URL);
     }
 
     @Test
@@ -149,44 +171,56 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // then
-        throwCorrectError(requestBytes, "4 errors:" + NEW_LINE +
-            " - field: \"/pathParameters\" for schema: \"keyToMultiValue\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
-            NEW_LINE +
-            "   {" + NEW_LINE +
-            "       \"exampleRegexParameter\": [" + NEW_LINE +
-            "           \"^some +regex$\"" + NEW_LINE +
-            "       ], " + NEW_LINE +
-            "       \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
-            "           \"!notThisValue\", " + NEW_LINE +
-            "           \"simpleStringMatch\"" + NEW_LINE +
-            "       ]" + NEW_LINE +
-            "   }" + NEW_LINE +
-            NEW_LINE +
-            "or:" + NEW_LINE +
-            NEW_LINE +
-            "   {" + NEW_LINE +
-            "       \"exampleSchemaParameter\": [" + NEW_LINE +
-            "           {" + NEW_LINE +
-            "               \"type\": \"number\"" + NEW_LINE +
-            "           }" + NEW_LINE +
-            "       ], " + NEW_LINE +
-            "       \"exampleMultiSchemaParameter\": [" + NEW_LINE +
-            "           {" + NEW_LINE +
-            "               \"type\": \"string\", " + NEW_LINE +
-            "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
-            "           }, " + NEW_LINE +
-            "           {" + NEW_LINE +
-            "               \"type\": \"string\", " + NEW_LINE +
-            "               \"format\": \"ipv4\"" + NEW_LINE +
-            "           }" + NEW_LINE +
-            "       ]" + NEW_LINE +
-            "   }" + NEW_LINE +
-            NEW_LINE +
-            " - field: \"/pathParameters\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"instance type (object) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
-            " - field: \"/pathParameters\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"object instance has properties which are not allowed by the schema: [\"path_someParameterName\"]\"" + NEW_LINE +
-            " - field: \"/pathParameters/path_someParameterName\" for schema: \"keyToMultiValue/oneOf/1/patternProperties/^\\S+$\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
-            NEW_LINE +
-            OPEN_API_SPECIFICATION_URL);
+        throwCorrectError(requestBytes, "incorrect request json format for:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  {" + NEW_LINE +
+            "      \"pathParameters\" : {" + NEW_LINE +
+            "          \"path_someParameterName\" : \"path_someParameterValue\"" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "" + NEW_LINE +
+            " schema validation errors:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  6 errors:" + NEW_LINE +
+            "   - field: \"/pathParameters\" for schema: \"keyToMultiValue\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
+            "  " + NEW_LINE +
+            "     {" + NEW_LINE +
+            "         \"exampleRegexParameter\": [" + NEW_LINE +
+            "             \"^some +regex$\"" + NEW_LINE +
+            "         ], " + NEW_LINE +
+            "         \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
+            "             \"!notThisValue\", " + NEW_LINE +
+            "             \"simpleStringMatch\"" + NEW_LINE +
+            "         ]" + NEW_LINE +
+            "     }" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  or:" + NEW_LINE +
+            "  " + NEW_LINE +
+            "     {" + NEW_LINE +
+            "         \"exampleSchemaParameter\": [" + NEW_LINE +
+            "             {" + NEW_LINE +
+            "                 \"type\": \"number\"" + NEW_LINE +
+            "             }" + NEW_LINE +
+            "         ], " + NEW_LINE +
+            "         \"exampleMultiSchemaParameter\": [" + NEW_LINE +
+            "             {" + NEW_LINE +
+            "                 \"type\": \"string\", " + NEW_LINE +
+            "                 \"pattern\": \"^some +regex$\"" + NEW_LINE +
+            "             }, " + NEW_LINE +
+            "             {" + NEW_LINE +
+            "                 \"type\": \"string\", " + NEW_LINE +
+            "                 \"format\": \"ipv4\"" + NEW_LINE +
+            "             }" + NEW_LINE +
+            "         ]" + NEW_LINE +
+            "     }" + NEW_LINE +
+            "  " + NEW_LINE +
+            "   - field: \"/pathParameters\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"instance type (object) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
+            "   - field: \"/pathParameters\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"object instance has properties which are not allowed by the schema: [\"path_someParameterName\"]\"" + NEW_LINE +
+            "   - field: \"/pathParameters/path_someParameterName\" for schema: \"keyToMultiValue/oneOf/1/patternProperties/^(?!keyMatchStyle)\\S+$\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
+            "   - field: \"/pathParameters/path_someParameterName\" for schema: \"keyToMultiValue/oneOf/1/patternProperties/^(?!keyMatchStyle)\\S+$/oneOf/0\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
+            "   - field: \"/pathParameters/path_someParameterName\" for schema: \"keyToMultiValue/oneOf/1/patternProperties/^(?!keyMatchStyle)\\S+$/oneOf/1\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  " + OPEN_API_SPECIFICATION_URL);
     }
 
     @Test
@@ -199,44 +233,54 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // then
-        throwCorrectError(requestBytes, "4 errors:" + NEW_LINE +
-            " - field: \"/pathParameters\" for schema: \"keyToMultiValue\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
-            NEW_LINE +
-            "   {" + NEW_LINE +
-            "       \"exampleRegexParameter\": [" + NEW_LINE +
-            "           \"^some +regex$\"" + NEW_LINE +
-            "       ], " + NEW_LINE +
-            "       \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
-            "           \"!notThisValue\", " + NEW_LINE +
-            "           \"simpleStringMatch\"" + NEW_LINE +
-            "       ]" + NEW_LINE +
-            "   }" + NEW_LINE +
-            NEW_LINE +
-            "or:" + NEW_LINE +
-            NEW_LINE +
-            "   {" + NEW_LINE +
-            "       \"exampleSchemaParameter\": [" + NEW_LINE +
-            "           {" + NEW_LINE +
-            "               \"type\": \"number\"" + NEW_LINE +
-            "           }" + NEW_LINE +
-            "       ], " + NEW_LINE +
-            "       \"exampleMultiSchemaParameter\": [" + NEW_LINE +
-            "           {" + NEW_LINE +
-            "               \"type\": \"string\", " + NEW_LINE +
-            "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
-            "           }, " + NEW_LINE +
-            "           {" + NEW_LINE +
-            "               \"type\": \"string\", " + NEW_LINE +
-            "               \"format\": \"ipv4\"" + NEW_LINE +
-            "           }" + NEW_LINE +
-            "       ]" + NEW_LINE +
-            "   }" + NEW_LINE +
-            NEW_LINE +
-            " - field: \"/pathParameters\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"instance type (object) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
-            " - field: \"/pathParameters\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"object instance has properties which are not allowed by the schema: [\"path_somePara meterName\"]\"" + NEW_LINE +
-            " - field: \"/pathParameters\" for schema: \"keyToMultiValue/oneOf/1\" has error: \"object instance has properties which are not allowed by the schema: [\"path_somePara meterName\"]\"" + NEW_LINE +
-            NEW_LINE +
-            OPEN_API_SPECIFICATION_URL);
+        throwCorrectError(requestBytes, "incorrect request json format for:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  {" + NEW_LINE +
+            "      \"pathParameters\" : {" + NEW_LINE +
+            "          \"path_somePara meterName\" : [ \"path_someParameterValue\" ]" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "" + NEW_LINE +
+            " schema validation errors:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  4 errors:" + NEW_LINE +
+            "   - field: \"/pathParameters\" for schema: \"keyToMultiValue\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
+            "  " + NEW_LINE +
+            "     {" + NEW_LINE +
+            "         \"exampleRegexParameter\": [" + NEW_LINE +
+            "             \"^some +regex$\"" + NEW_LINE +
+            "         ], " + NEW_LINE +
+            "         \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
+            "             \"!notThisValue\", " + NEW_LINE +
+            "             \"simpleStringMatch\"" + NEW_LINE +
+            "         ]" + NEW_LINE +
+            "     }" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  or:" + NEW_LINE +
+            "  " + NEW_LINE +
+            "     {" + NEW_LINE +
+            "         \"exampleSchemaParameter\": [" + NEW_LINE +
+            "             {" + NEW_LINE +
+            "                 \"type\": \"number\"" + NEW_LINE +
+            "             }" + NEW_LINE +
+            "         ], " + NEW_LINE +
+            "         \"exampleMultiSchemaParameter\": [" + NEW_LINE +
+            "             {" + NEW_LINE +
+            "                 \"type\": \"string\", " + NEW_LINE +
+            "                 \"pattern\": \"^some +regex$\"" + NEW_LINE +
+            "             }, " + NEW_LINE +
+            "             {" + NEW_LINE +
+            "                 \"type\": \"string\", " + NEW_LINE +
+            "                 \"format\": \"ipv4\"" + NEW_LINE +
+            "             }" + NEW_LINE +
+            "         ]" + NEW_LINE +
+            "     }" + NEW_LINE +
+            "  " + NEW_LINE +
+            "   - field: \"/pathParameters\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"instance type (object) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
+            "   - field: \"/pathParameters\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"object instance has properties which are not allowed by the schema: [\"path_somePara meterName\"]\"" + NEW_LINE +
+            "   - field: \"/pathParameters\" for schema: \"keyToMultiValue/oneOf/1\" has error: \"object instance has properties which are not allowed by the schema: [\"path_somePara meterName\"]\"" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  " + OPEN_API_SPECIFICATION_URL);
     }
 
     @Test
@@ -249,44 +293,56 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // then
-        throwCorrectError(requestBytes, "4 errors:" + NEW_LINE +
-            " - field: \"/queryStringParameters\" for schema: \"keyToMultiValue\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
-            NEW_LINE +
-            "   {" + NEW_LINE +
-            "       \"exampleRegexParameter\": [" + NEW_LINE +
-            "           \"^some +regex$\"" + NEW_LINE +
-            "       ], " + NEW_LINE +
-            "       \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
-            "           \"!notThisValue\", " + NEW_LINE +
-            "           \"simpleStringMatch\"" + NEW_LINE +
-            "       ]" + NEW_LINE +
-            "   }" + NEW_LINE +
-            NEW_LINE +
-            "or:" + NEW_LINE +
-            NEW_LINE +
-            "   {" + NEW_LINE +
-            "       \"exampleSchemaParameter\": [" + NEW_LINE +
-            "           {" + NEW_LINE +
-            "               \"type\": \"number\"" + NEW_LINE +
-            "           }" + NEW_LINE +
-            "       ], " + NEW_LINE +
-            "       \"exampleMultiSchemaParameter\": [" + NEW_LINE +
-            "           {" + NEW_LINE +
-            "               \"type\": \"string\", " + NEW_LINE +
-            "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
-            "           }, " + NEW_LINE +
-            "           {" + NEW_LINE +
-            "               \"type\": \"string\", " + NEW_LINE +
-            "               \"format\": \"ipv4\"" + NEW_LINE +
-            "           }" + NEW_LINE +
-            "       ]" + NEW_LINE +
-            "   }" + NEW_LINE +
-            NEW_LINE +
-            " - field: \"/queryStringParameters\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"instance type (object) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
-            " - field: \"/queryStringParameters\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"object instance has properties which are not allowed by the schema: [\"someParameterName\"]\"" + NEW_LINE +
-            " - field: \"/queryStringParameters/someParameterName\" for schema: \"keyToMultiValue/oneOf/1/patternProperties/^\\S+$\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
-            NEW_LINE +
-            OPEN_API_SPECIFICATION_URL);
+        throwCorrectError(requestBytes, "incorrect request json format for:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  {" + NEW_LINE +
+            "      \"queryStringParameters\" : {" + NEW_LINE +
+            "          \"someParameterName\" : \"someParameterValue\"" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "" + NEW_LINE +
+            " schema validation errors:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  6 errors:" + NEW_LINE +
+            "   - field: \"/queryStringParameters\" for schema: \"keyToMultiValue\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
+            "  " + NEW_LINE +
+            "     {" + NEW_LINE +
+            "         \"exampleRegexParameter\": [" + NEW_LINE +
+            "             \"^some +regex$\"" + NEW_LINE +
+            "         ], " + NEW_LINE +
+            "         \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
+            "             \"!notThisValue\", " + NEW_LINE +
+            "             \"simpleStringMatch\"" + NEW_LINE +
+            "         ]" + NEW_LINE +
+            "     }" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  or:" + NEW_LINE +
+            "  " + NEW_LINE +
+            "     {" + NEW_LINE +
+            "         \"exampleSchemaParameter\": [" + NEW_LINE +
+            "             {" + NEW_LINE +
+            "                 \"type\": \"number\"" + NEW_LINE +
+            "             }" + NEW_LINE +
+            "         ], " + NEW_LINE +
+            "         \"exampleMultiSchemaParameter\": [" + NEW_LINE +
+            "             {" + NEW_LINE +
+            "                 \"type\": \"string\", " + NEW_LINE +
+            "                 \"pattern\": \"^some +regex$\"" + NEW_LINE +
+            "             }, " + NEW_LINE +
+            "             {" + NEW_LINE +
+            "                 \"type\": \"string\", " + NEW_LINE +
+            "                 \"format\": \"ipv4\"" + NEW_LINE +
+            "             }" + NEW_LINE +
+            "         ]" + NEW_LINE +
+            "     }" + NEW_LINE +
+            "  " + NEW_LINE +
+            "   - field: \"/queryStringParameters\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"instance type (object) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
+            "   - field: \"/queryStringParameters\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"object instance has properties which are not allowed by the schema: [\"someParameterName\"]\"" + NEW_LINE +
+            "   - field: \"/queryStringParameters/someParameterName\" for schema: \"keyToMultiValue/oneOf/1/patternProperties/^(?!keyMatchStyle)\\S+$\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
+            "   - field: \"/queryStringParameters/someParameterName\" for schema: \"keyToMultiValue/oneOf/1/patternProperties/^(?!keyMatchStyle)\\S+$/oneOf/0\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
+            "   - field: \"/queryStringParameters/someParameterName\" for schema: \"keyToMultiValue/oneOf/1/patternProperties/^(?!keyMatchStyle)\\S+$/oneOf/1\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  " + OPEN_API_SPECIFICATION_URL);
     }
 
     @Test
@@ -299,44 +355,54 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // then
-        throwCorrectError(requestBytes, "4 errors:" + NEW_LINE +
-            " - field: \"/queryStringParameters\" for schema: \"keyToMultiValue\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
-            NEW_LINE +
-            "   {" + NEW_LINE +
-            "       \"exampleRegexParameter\": [" + NEW_LINE +
-            "           \"^some +regex$\"" + NEW_LINE +
-            "       ], " + NEW_LINE +
-            "       \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
-            "           \"!notThisValue\", " + NEW_LINE +
-            "           \"simpleStringMatch\"" + NEW_LINE +
-            "       ]" + NEW_LINE +
-            "   }" + NEW_LINE +
-            NEW_LINE +
-            "or:" + NEW_LINE +
-            NEW_LINE +
-            "   {" + NEW_LINE +
-            "       \"exampleSchemaParameter\": [" + NEW_LINE +
-            "           {" + NEW_LINE +
-            "               \"type\": \"number\"" + NEW_LINE +
-            "           }" + NEW_LINE +
-            "       ], " + NEW_LINE +
-            "       \"exampleMultiSchemaParameter\": [" + NEW_LINE +
-            "           {" + NEW_LINE +
-            "               \"type\": \"string\", " + NEW_LINE +
-            "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
-            "           }, " + NEW_LINE +
-            "           {" + NEW_LINE +
-            "               \"type\": \"string\", " + NEW_LINE +
-            "               \"format\": \"ipv4\"" + NEW_LINE +
-            "           }" + NEW_LINE +
-            "       ]" + NEW_LINE +
-            "   }" + NEW_LINE +
-            NEW_LINE +
-            " - field: \"/queryStringParameters\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"instance type (object) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
-            " - field: \"/queryStringParameters\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"object instance has properties which are not allowed by the schema: [\"somePara meterName\"]\"" + NEW_LINE +
-            " - field: \"/queryStringParameters\" for schema: \"keyToMultiValue/oneOf/1\" has error: \"object instance has properties which are not allowed by the schema: [\"somePara meterName\"]\"" + NEW_LINE +
-            NEW_LINE +
-            OPEN_API_SPECIFICATION_URL);
+        throwCorrectError(requestBytes, "incorrect request json format for:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  {" + NEW_LINE +
+            "      \"queryStringParameters\" : {" + NEW_LINE +
+            "          \"somePara meterName\" : [ \"someParameterValue\" ]" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "" + NEW_LINE +
+            " schema validation errors:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  4 errors:" + NEW_LINE +
+            "   - field: \"/queryStringParameters\" for schema: \"keyToMultiValue\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
+            "  " + NEW_LINE +
+            "     {" + NEW_LINE +
+            "         \"exampleRegexParameter\": [" + NEW_LINE +
+            "             \"^some +regex$\"" + NEW_LINE +
+            "         ], " + NEW_LINE +
+            "         \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
+            "             \"!notThisValue\", " + NEW_LINE +
+            "             \"simpleStringMatch\"" + NEW_LINE +
+            "         ]" + NEW_LINE +
+            "     }" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  or:" + NEW_LINE +
+            "  " + NEW_LINE +
+            "     {" + NEW_LINE +
+            "         \"exampleSchemaParameter\": [" + NEW_LINE +
+            "             {" + NEW_LINE +
+            "                 \"type\": \"number\"" + NEW_LINE +
+            "             }" + NEW_LINE +
+            "         ], " + NEW_LINE +
+            "         \"exampleMultiSchemaParameter\": [" + NEW_LINE +
+            "             {" + NEW_LINE +
+            "                 \"type\": \"string\", " + NEW_LINE +
+            "                 \"pattern\": \"^some +regex$\"" + NEW_LINE +
+            "             }, " + NEW_LINE +
+            "             {" + NEW_LINE +
+            "                 \"type\": \"string\", " + NEW_LINE +
+            "                 \"format\": \"ipv4\"" + NEW_LINE +
+            "             }" + NEW_LINE +
+            "         ]" + NEW_LINE +
+            "     }" + NEW_LINE +
+            "  " + NEW_LINE +
+            "   - field: \"/queryStringParameters\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"instance type (object) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
+            "   - field: \"/queryStringParameters\" for schema: \"keyToMultiValue/oneOf/0\" has error: \"object instance has properties which are not allowed by the schema: [\"somePara meterName\"]\"" + NEW_LINE +
+            "   - field: \"/queryStringParameters\" for schema: \"keyToMultiValue/oneOf/1\" has error: \"object instance has properties which are not allowed by the schema: [\"somePara meterName\"]\"" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  " + OPEN_API_SPECIFICATION_URL);
     }
 
     @Test
@@ -349,36 +415,46 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // then
-        throwCorrectError(requestBytes, "4 errors:" + NEW_LINE +
-            " - field: \"/cookies\" for schema: \"keyToValue\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
-            NEW_LINE +
-            "   {" + NEW_LINE +
-            "       \"exampleRegexCookie\": \"^some +regex$\", " + NEW_LINE +
-            "       \"exampleNottedRegexCookie\": \"!notThisValue\", " + NEW_LINE +
-            "       \"exampleSimpleStringCookie\": \"simpleStringMatch\"" + NEW_LINE +
-            "   }" + NEW_LINE +
-            NEW_LINE +
-            "or:" + NEW_LINE +
-            NEW_LINE +
-            "   {" + NEW_LINE +
-            "       \"exampleNumberSchemaCookie\": {" + NEW_LINE +
-            "           \"type\": \"number\"" + NEW_LINE +
-            "       }, " + NEW_LINE +
-            "       \"examplePatternSchemaCookie\": {" + NEW_LINE +
-            "           \"type\": \"string\", " + NEW_LINE +
-            "           \"pattern\": \"^some +regex$\"" + NEW_LINE +
-            "       }, " + NEW_LINE +
-            "       \"exampleFormatSchemaCookie\": {" + NEW_LINE +
-            "           \"type\": \"string\", " + NEW_LINE +
-            "           \"format\": \"ipv4\"" + NEW_LINE +
-            "       }" + NEW_LINE +
-            "   }" + NEW_LINE +
-            NEW_LINE +
-            " - field: \"/cookies\" for schema: \"keyToValue/oneOf/0\" has error: \"instance type (object) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
-            " - field: \"/cookies\" for schema: \"keyToValue/oneOf/0\" has error: \"object instance has properties which are not allowed by the schema: [\"someCoo kieName\"]\"" + NEW_LINE +
-            " - field: \"/cookies\" for schema: \"keyToValue/oneOf/1\" has error: \"object instance has properties which are not allowed by the schema: [\"someCoo kieName\"]\"" + NEW_LINE +
-            NEW_LINE +
-            OPEN_API_SPECIFICATION_URL);
+        throwCorrectError(requestBytes, "incorrect request json format for:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  {" + NEW_LINE +
+            "      \"cookies\" : {" + NEW_LINE +
+            "          \"someCoo kieName\" : \"someCookieValue\"" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "" + NEW_LINE +
+            " schema validation errors:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  4 errors:" + NEW_LINE +
+            "   - field: \"/cookies\" for schema: \"keyToValue\" has error: \" only one of the following example formats is allowed: " + NEW_LINE +
+            "  " + NEW_LINE +
+            "     {" + NEW_LINE +
+            "         \"exampleRegexCookie\": \"^some +regex$\", " + NEW_LINE +
+            "         \"exampleNottedRegexCookie\": \"!notThisValue\", " + NEW_LINE +
+            "         \"exampleSimpleStringCookie\": \"simpleStringMatch\"" + NEW_LINE +
+            "     }" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  or:" + NEW_LINE +
+            "  " + NEW_LINE +
+            "     {" + NEW_LINE +
+            "         \"exampleNumberSchemaCookie\": {" + NEW_LINE +
+            "             \"type\": \"number\"" + NEW_LINE +
+            "         }, " + NEW_LINE +
+            "         \"examplePatternSchemaCookie\": {" + NEW_LINE +
+            "             \"type\": \"string\", " + NEW_LINE +
+            "             \"pattern\": \"^some +regex$\"" + NEW_LINE +
+            "         }, " + NEW_LINE +
+            "         \"exampleFormatSchemaCookie\": {" + NEW_LINE +
+            "             \"type\": \"string\", " + NEW_LINE +
+            "             \"format\": \"ipv4\"" + NEW_LINE +
+            "         }" + NEW_LINE +
+            "     }" + NEW_LINE +
+            "  " + NEW_LINE +
+            "   - field: \"/cookies\" for schema: \"keyToValue/oneOf/0\" has error: \"instance type (object) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
+            "   - field: \"/cookies\" for schema: \"keyToValue/oneOf/0\" has error: \"object instance has properties which are not allowed by the schema: [\"someCoo kieName\"]\"" + NEW_LINE +
+            "   - field: \"/cookies\" for schema: \"keyToValue/oneOf/1\" has error: \"object instance has properties which are not allowed by the schema: [\"someCoo kieName\"]\"" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  " + OPEN_API_SPECIFICATION_URL);
     }
 
     @Test
@@ -390,11 +466,19 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // then
-        throwCorrectError(requestBytes, "1 error:" + NEW_LINE +
-            " - object instance has properties which are not allowed by the schema: [\"extra_field\"]"
-            + NEW_LINE
-            + NEW_LINE
-            + OPEN_API_SPECIFICATION_URL);
+        throwCorrectError(requestBytes, "incorrect request json format for:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  {" + NEW_LINE +
+            "      \"path\": \"somePath\"," + NEW_LINE +
+            "      \"extra_field\": \"extra_value\"" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "" + NEW_LINE +
+            " schema validation errors:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  1 error:" + NEW_LINE +
+            "   - object instance has properties which are not allowed by the schema: [\"extra_field\"]" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  " + OPEN_API_SPECIFICATION_URL);
     }
 
     @Test
@@ -523,7 +607,9 @@ public class HttpRequestSerializerIntegrationTest {
         String requestBytes = "{" + NEW_LINE +
             "  \"body\" : {" + NEW_LINE +
             "    \"type\" : \"JSON\"," + NEW_LINE +
-            "    \"json\" : \"{ \\\"key\\\": \\\"value\\\" }\"" + NEW_LINE +
+            "    \"json\" : {" + NEW_LINE +
+            "      \"key\" : \"value\"" + NEW_LINE +
+            "    }" + NEW_LINE +
             "  }" + NEW_LINE +
             "}";
 
@@ -532,7 +618,9 @@ public class HttpRequestSerializerIntegrationTest {
 
         // then
         HttpRequest expected = new HttpRequestDTO()
-            .setBody(BodyDTO.createDTO(json("{ \"key\": \"value\" }")))
+            .setBody(BodyDTO.createDTO(json("{" + NEW_LINE +
+                "  \"key\" : \"value\"" + NEW_LINE +
+                "}")))
             .buildObject();
         assertEquals(expected, httpRequest);
     }
@@ -543,7 +631,9 @@ public class HttpRequestSerializerIntegrationTest {
         String requestBytes = "{" + NEW_LINE +
             "  \"body\" : {" + NEW_LINE +
             "    \"type\" : \"JSON_SCHEMA\"," + NEW_LINE +
-            "    \"jsonSchema\" : \"{ \\\"key\\\": \\\"value\\\" }\"" + NEW_LINE +
+            "    \"jsonSchema\" : {" + NEW_LINE +
+            "      \"key\" : \"value\"" + NEW_LINE +
+            "    }" + NEW_LINE +
             "  }" + NEW_LINE +
             "}";
 
@@ -552,7 +642,9 @@ public class HttpRequestSerializerIntegrationTest {
 
         // then
         assertEquals(new HttpRequestDTO()
-            .setBody(BodyDTO.createDTO(jsonSchema("{ \"key\": \"value\" }")))
+            .setBody(BodyDTO.createDTO(jsonSchema("{" + NEW_LINE +
+            "  \"key\" : \"value\"" + NEW_LINE +
+            "}")))
             .buildObject(), httpRequest);
     }
 
@@ -925,11 +1017,7 @@ public class HttpRequestSerializerIntegrationTest {
         // then
         assertEquals("{" + NEW_LINE +
             "  \"body\" : {" + NEW_LINE +
-            "    \"type\" : \"JSON\"," + NEW_LINE +
-            "    \"json\" : {" + NEW_LINE +
-            "      \"key\" : \"value\"" + NEW_LINE +
-            "    }," + NEW_LINE +
-            "    \"rawBytes\" : \"eyJrZXkiOiAidmFsdWUifQ==\"" + NEW_LINE +
+            "    \"key\" : \"value\"" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonHttpRequest);
     }

@@ -40,7 +40,7 @@ public class HttpForwardObjectCallbackActionHandlerTest {
 
         // then
         verify(mockWebSocketClientRegistry).registerForwardCallbackHandler(any(String.class), any(WebSocketRequestCallback.class));
-        verify(mockWebSocketClientRegistry).sendClientMessage(eq("some_clientId"), any(HttpRequest.class), isNull(HttpResponse.class));
+        verify(mockWebSocketClientRegistry).sendClientMessage(eq("some_clientId"), any(HttpRequest.class), isNull());
     }
 
     @Test
@@ -54,14 +54,14 @@ public class HttpForwardObjectCallbackActionHandlerTest {
         ResponseWriter mockResponseWriter = mock(ResponseWriter.class);
         when(mockHttpStateHandler.getWebSocketClientRegistry()).thenReturn(mockWebSocketClientRegistry);
         when(mockHttpStateHandler.getMockServerLogger()).thenReturn(new MockServerLogger());
-        when(mockWebSocketClientRegistry.sendClientMessage(eq("some_clientId"), any(HttpRequest.class), isNull(HttpResponse.class))).thenReturn(false);
+        when(mockWebSocketClientRegistry.sendClientMessage(eq("some_clientId"), any(HttpRequest.class), isNull())).thenReturn(false);
 
         // when
         new HttpForwardObjectCallbackActionHandler(mockHttpStateHandler, null).handle(mockActionHandler, httpObjectCallback, request, mockResponseWriter, true, null);
 
         // then
         verify(mockWebSocketClientRegistry).registerForwardCallbackHandler(any(String.class), any(WebSocketRequestCallback.class));
-        verify(mockWebSocketClientRegistry).sendClientMessage(eq("some_clientId"), any(HttpRequest.class), isNull(HttpResponse.class));
+        verify(mockWebSocketClientRegistry).sendClientMessage(eq("some_clientId"), any(HttpRequest.class), isNull());
         ArgumentCaptor<HttpForwardActionResult> httpForwardActionResultArgumentCaptor = ArgumentCaptor.forClass(HttpForwardActionResult.class);
         verify(mockActionHandler).writeForwardActionResponse(httpForwardActionResultArgumentCaptor.capture(), same(mockResponseWriter), same(request), same(httpObjectCallback), eq(true));
         assertThat(httpForwardActionResultArgumentCaptor.getValue().getHttpResponse().get(), is(notFoundResponse()));

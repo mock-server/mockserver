@@ -1,11 +1,45 @@
 {
-  "title": "string or json schema",
+  "title": "string value that can be support nottable, optional or a json schema",
   "oneOf": [
     {
       "type": "string"
     },
     {
-      "$ref": "http://json-schema.org/draft-04/schema"
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
+        },
+        "optional": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "string"
+        },
+        "schema": {
+          "$ref": "http://json-schema.org/draft-04/schema"
+        },
+        "parameterStyle": {
+          "type": "string",
+          "enum": [
+            "SIMPLE",
+            "SIMPLE_EXPLODED",
+            "LABEL",
+            "LABEL_EXPLODED",
+            "MATRIX",
+            "MATRIX_EXPLODED",
+            "FORM_EXPLODED",
+            "FORM",
+            "SPACE_DELIMITED_EXPLODED",
+            "SPACE_DELIMITED",
+            "PIPE_DELIMITED_EXPLODED",
+            "PIPE_DELIMITED",
+            "DEEP_OBJECT"
+          ],
+          "default": ""
+        }
+      }
     }
   ],
   "definitions": {

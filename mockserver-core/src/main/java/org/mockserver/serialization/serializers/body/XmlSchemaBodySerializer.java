@@ -22,6 +22,9 @@ public class XmlSchemaBodySerializer extends StdSerializer<XmlSchemaBody> {
         if (xmlSchemaBody.getNot() != null && xmlSchemaBody.getNot()) {
             jgen.writeBooleanField("not", xmlSchemaBody.getNot());
         }
+        if (xmlSchemaBody.getOptional() != null && xmlSchemaBody.getOptional()) {
+            jgen.writeBooleanField("optional", xmlSchemaBody.getOptional());
+        }
         jgen.writeStringField("type", xmlSchemaBody.getType().name());
         jgen.writeStringField("xmlSchema", xmlSchemaBody.getValue());
         jgen.writeEndObject();

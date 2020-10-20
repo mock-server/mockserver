@@ -5,10 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
@@ -18,11 +16,13 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.NottableSchemaString.schemaString;
 import static org.mockserver.model.NottableString.string;
+import static org.mockserver.model.SocketAddress.Scheme.HTTP;
+import static org.mockserver.model.SocketAddress.Scheme.HTTPS;
 
 /**
  * @author jamesdbloom
  */
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({"rawtypes", "UnusedReturnValue"})
 public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRequest, Body> {
     private int hashCode;
     private NottableString method = string("");
@@ -64,12 +64,12 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
-     * Match on whether the request was made over SSL (i.e. HTTPS)
+     * Match on whether the request was made over TLS or SSL (i.e. HTTPS)
      *
-     * @param isSsl true if the request was made with SSL
+     * @param isSecure true if the request was made with TLS or SSL
      */
-    public HttpRequest withSecure(Boolean isSsl) {
-        this.secure = isSsl;
+    public HttpRequest withSecure(Boolean isSecure) {
+        this.secure = isSecure;
         this.hashCode = 0;
         return this;
     }
@@ -108,6 +108,50 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
+     * Specify remote address by attempting to derive it from the host header and / or the specified port
+     *
+     * @param host the remote host or ip to send request to
+     * @param port the remote port to send request to
+     */
+    public HttpRequest withSocketAddress(String host, Integer port) {
+        withSocketAddress(secure, host, port);
+        this.hashCode = 0;
+        return this;
+    }
+
+    /**
+     * Specify remote address by attempting to derive it from the host header
+     */
+    public HttpRequest withSocketAddressFromHostHeader() {
+        withSocketAddress(secure, getFirstHeader("host"), null);
+        this.hashCode = 0;
+        return this;
+    }
+
+    /**
+     * Specify remote address by attempting to derive it from the host header and / or the specified port
+     *
+     * @param isSecure true if the request was made with TLS or SSL
+     * @param host     the remote host or ip to send request to
+     * @param port     the remote port to send request to
+     */
+    public HttpRequest withSocketAddress(Boolean isSecure, String host, Integer port) {
+        if (isNotBlank(host)) {
+            String[] hostParts = host.split(":");
+            boolean secure = Boolean.TRUE.equals(isSecure);
+            if (hostParts.length > 1) {
+                withSocketAddress(hostParts[0], port != null ? port : Integer.parseInt(hostParts[1]), secure ? HTTPS : HTTP);
+            } else if (secure) {
+                withSocketAddress(host, port != null ? port : 443, HTTPS);
+            } else {
+                withSocketAddress(host, port != null ? port : 80, HTTP);
+            }
+        }
+        this.hashCode = 0;
+        return this;
+    }
+
+    /**
      * The HTTP method to match on such as "GET" or "POST"
      *
      * @param method the HTTP method such as "GET" or "POST"
@@ -139,7 +183,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      *     "format": "ipv4"
      * }
      * </pre>
-     *
+     * <p>
      * For full details of JSON Schema see, https://json-schema.org/understanding-json-schema/reference/string.html
      *
      * @param method the HTTP method to match on as a JSON Schema
@@ -222,7 +266,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      *     "format": "ipv4"
      * }
      * </pre>
-     *
+     * <p>
      * For full details of JSON Schema see, https://json-schema.org/understanding-json-schema/reference/string.html
      *
      * @param path the path to match on as a JSON Schema
@@ -274,7 +318,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
-     * The query string parameters to match on as a list of Parameter objects where the values or keys of each parameter can be either a string or a regex
+     * The path parameter to match on as a list of Parameter objects where the values or keys of each parameter can be either a string or a regex
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameters the list of Parameter objects where the values or keys of each parameter can be either a string or a regex
@@ -286,7 +330,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
-     * The query string parameters to match on as a varags Parameter objects where the values or keys of each parameter can be either a string or a regex
+     * The path parameter to match on as a varags Parameter objects where the values or keys of each parameter can be either a string or a regex
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameters the varags Parameter objects where the values or keys of each parameter can be either a string or a regex
@@ -298,7 +342,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
-     * The query string parameters to match on as a Map<String, List<String>> where the values or keys of each parameter can be either a string or a regex
+     * The path parameter to match on as a Map<String, List<String>> where the values or keys of each parameter can be either a string or a regex
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameters the Map<String, List<String>> object where the values or keys of each parameter can be either a string or a regex
@@ -310,7 +354,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
-     * Adds one query string parameter to match on as a Parameter object where the parameter values list can be a list of strings or regular expressions
+     * Adds one path parameter to match on as a Parameter object where the parameter values list can be a list of strings or regular expressions
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameter the Parameter object which can have a values list of strings or regular expressions
@@ -322,7 +366,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
-     * Adds one query string parameter to match which can specified using plain strings or regular expressions
+     * Adds one path parameter to match which can specified using plain strings or regular expressions
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param name   the parameter name
@@ -335,7 +379,20 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
-     * Adds one query string parameter to match on or to not match on using the NottableString, each NottableString can either be a positive matching
+     * Adds one path parameter to match which the values are JSON schema i.e. "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }"
+     * (for more details of the supported JSON schema see https://json-schema.org)
+     *
+     * @param name   the parameter name
+     * @param values the parameter values which can be a varags of JSON schemas
+     */
+    public HttpRequest withSchemaPathParameter(String name, String... values) {
+        getOrCreatePathParameters().withEntry(string(name), Arrays.stream(values).map(NottableSchemaString::schemaString).toArray(NottableString[]::new));
+        this.hashCode = 0;
+        return this;
+    }
+
+    /**
+     * Adds one path parameter to match on or to not match on using the NottableString, each NottableString can either be a positive matching
      * value, such as string("match"), or a value to not match on, such as not("do not match"), the string values passed to the NottableString
      * can also be a plain string or a regex (for more details of the supported regex syntax
      * see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
@@ -454,7 +511,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
-     * Adds one query string parameter to match which can specified using plain strings or regular expressions
+     * Adds one query string parameter to match which the values are plain strings or regular expressions
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param name   the parameter name
@@ -462,6 +519,19 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      */
     public HttpRequest withQueryStringParameter(String name, String... values) {
         getOrCreateQueryStringParameters().withEntry(name, values);
+        this.hashCode = 0;
+        return this;
+    }
+
+    /**
+     * Adds one query string parameter to match which the values are JSON schema i.e. "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }"
+     * (for more details of the supported JSON schema see https://json-schema.org)
+     *
+     * @param name   the parameter name
+     * @param values the parameter values which can be a varags of JSON schemas
+     */
+    public HttpRequest withSchemaQueryStringParameter(String name, String... values) {
+        getOrCreateQueryStringParameters().withEntry(string(name), Arrays.stream(values).map(NottableSchemaString::schemaString).toArray(NottableString[]::new));
         this.hashCode = 0;
         return this;
     }
@@ -647,6 +717,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
             return null;
         }
     }
+
     @JsonIgnore
     public String getBodyAsJsonOrXmlString() {
         if (body != null) {
@@ -729,6 +800,19 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      */
     public HttpRequest withHeader(String name, String... values) {
         getOrCreateHeaders().withEntry(header(name, values));
+        this.hashCode = 0;
+        return this;
+    }
+
+    /**
+     * Adds one header to match which the values are JSON schema i.e. "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }"
+     * (for more details of the supported JSON schema see https://json-schema.org)
+     *
+     * @param name   the header name
+     * @param values the header values which can be a varags of JSON schemas
+     */
+    public HttpRequest withSchemaHeader(String name, String... values) {
+        getOrCreateHeaders().withEntry(header(string(name), Arrays.stream(values).map(NottableSchemaString::schemaString).toArray(NottableString[]::new)));
         this.hashCode = 0;
         return this;
     }
@@ -894,7 +978,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
-     * Adds one cookie to match on, which can specified using either plain strings or regular expressions
+     * Adds one cookie to match on, which the value is plain strings or regular expressions
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param name  the cookies name
@@ -902,6 +986,19 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      */
     public HttpRequest withCookie(String name, String value) {
         getOrCreateCookies().withEntry(name, value);
+        this.hashCode = 0;
+        return this;
+    }
+
+    /**
+     * Adds one cookie to match on, which the value the values is JSON schema i.e. "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }"
+     * (for more details of the supported JSON schema see https://json-schema.org)
+     *
+     * @param name  the cookies name
+     * @param value the cookies value as JSON schema
+     */
+    public HttpRequest withSchemaCookie(String name, String value) {
+        getOrCreateCookies().withEntry(string(name), schemaString(value));
         this.hashCode = 0;
         return this;
     }
@@ -940,6 +1037,20 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         } else {
             throw new IllegalArgumentException("Host header must be provided to determine remote socket address, the request does not include the \"Host\" header:" + NEW_LINE + this);
         }
+    }
+
+    public HttpRequest shallowClone() {
+        return not(request(), not)
+            .withMethod(method)
+            .withPath(path)
+            .withPathParameters(pathParameters)
+            .withQueryStringParameters(queryStringParameters)
+            .withBody(body)
+            .withHeaders(headers)
+            .withCookies(cookies)
+            .withKeepAlive(keepAlive)
+            .withSecure(secure)
+            .withSocketAddress(socketAddress);
     }
 
     @SuppressWarnings("MethodDoesntCallSuperMethod")

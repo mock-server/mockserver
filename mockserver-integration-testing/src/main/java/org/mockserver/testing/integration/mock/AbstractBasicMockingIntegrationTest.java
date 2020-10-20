@@ -13,12 +13,12 @@ import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequest;
 import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequestAndResponse;
+import org.mockserver.testing.integration.callback.PrecannedTestExpectationResponseCallback;
 import org.mockserver.uuid.UUIDService;
 import org.mockserver.verify.VerificationTimes;
 import org.slf4j.event.Level;
 
 import java.util.Arrays;
-import java.util.UUID;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -204,6 +204,68 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 request()
                     .withPath(calculatePath("some_path"))
                     .withMethod("PUT"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingSchemaPathVariable() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some/path/{variableOne}/{variableTwo}")
+                    .withPathParameters(
+                        schemaParam("variableO[a-z]{2}", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"variableOneV[a-z]{4}$\"" + NEW_LINE +
+                            "}"),
+                        schemaParam("variableTwo", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"variableTwoV[a-z]{4}$\"" + NEW_LINE +
+                            "}")
+                    )
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path/variableOneValue/variableTwoValue")),
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/other/path")),
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path/variableOneValue/variableTwoOtherValue")),
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path/variableOneOtherValue/variableTwoValue")),
                 headersToIgnore)
         );
     }
@@ -478,7 +540,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             )
             .respond(
                 callback()
-                    .withCallbackClass("org.mockserver.testing.integration.callback.PrecannedTestExpectationResponseCallback")
+                    .withCallbackClass(PrecannedTestExpectationResponseCallback.class)
                     .withDelay(new Delay(SECONDS, 2))
             );
 
@@ -521,7 +583,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             )
             .respond(
                 callback()
-                    .withCallbackClass("org.mockserver.testing.integration.callback.PrecannedTestExpectationResponseCallback")
+                    .withCallbackClass(PrecannedTestExpectationResponseCallback.class)
             );
 
         // then
@@ -689,7 +751,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 request()
                     .withMethod("GET")
                     .withPath("/pets/12345")
-                    .withHeader("x-request-id", UUID.randomUUID().toString()),
+                    .withHeader("x-request-id", UUIDService.getUUID()),
                 headersToIgnore)
         );
 
@@ -808,7 +870,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 request()
                     .withMethod("GET")
                     .withPath("/pets/12345")
-                    .withHeader("x-request-id", UUID.randomUUID().toString()),
+                    .withHeader("x-request-id", UUIDService.getUUID()),
                 headersToIgnore)
         );
 
@@ -1033,6 +1095,46 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withBody(exact("some_body"))
                     .withHeaders(header("headerName", "headerValue"))
                     .withCookies(cookie("cookieName", "cookieValue")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldNotReturnResponseForNottedHeader() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withMethod("GET")
+                    .withHeaders(new Headers(header(NottableString.not("headerName"))))
+            )
+            .respond(
+                response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                    .withBody("some_body")
+            );
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withHeaders(header("headerName", "headerValue")),
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withHeaders(header("otherHeaderName", "headerValue")),
                 headersToIgnore)
         );
     }
@@ -1332,11 +1434,11 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             fail("expected exception to be thrown");
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + NEW_LINE +
-                "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_petstore_example.json\"," + NEW_LINE +
-                "  \"operationId\" : \"createPets\"" + NEW_LINE +
+                "  \"operationId\" : \"createPets\"," + NEW_LINE +
+                "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_petstore_example.json\"" + NEW_LINE +
                 "}, {" + NEW_LINE +
-                "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_petstore_example.json\"," + NEW_LINE +
-                "  \"operationId\" : \"listPets\"" + NEW_LINE +
+                "  \"operationId\" : \"listPets\"," + NEW_LINE +
+                "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_petstore_example.json\"" + NEW_LINE +
                 "} ]> but was:<[ {" + NEW_LINE +
                 "  \"method\" : \"GET\"," + NEW_LINE +
                 "  \"path\" : \"/pets\","));
@@ -1653,7 +1755,11 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "    \"httpResponse\" : {" + NEW_LINE +
                     "      \"body\" : \"some_body\"" + NEW_LINE +
                     "    }" + NEW_LINE +
-                    "  }" + NEW_LINE,
+                    "  }" + NEW_LINE +
+                    NEW_LINE +
+                    " with id:" + NEW_LINE +
+                    NEW_LINE +
+                    "  " + UUIDService.getUUID() + NEW_LINE,
 
                 new String[]{
                     "received request:" + NEW_LINE +
@@ -2110,21 +2216,40 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
 
         // then
         assertThat(httpResponse.getStatusCode(), is(400));
-        assertThat(httpResponse.getBodyAsString(), is("12 errors:" + NEW_LINE +
-            " - object instance has properties which are not allowed by the schema: [\"incorrectField\"]" + NEW_LINE +
-            " - oneOf of the following must be specified [\"httpResponse\", \"httpResponseTemplate\", \"httpResponseObjectCallback\", \"httpResponseClassCallback\", \"httpForward\", \"httpForwardTemplate\", \"httpForwardObjectCallback\", \"httpForwardClassCallback\", \"httpOverrideForwardedRequest\", \"httpError\"] but found 0 without errors" + NEW_LINE +
-            " - schema: \"/oneOf/0\" has error: \"object has missing required properties ([\"httpResponse\"])\"" + NEW_LINE +
-            " - schema: \"/oneOf/1\" has error: \"object has missing required properties ([\"httpResponseTemplate\"])\"" + NEW_LINE +
-            " - schema: \"/oneOf/2\" has error: \"object has missing required properties ([\"httpResponseObjectCallback\"])\"" + NEW_LINE +
-            " - schema: \"/oneOf/3\" has error: \"object has missing required properties ([\"httpResponseClassCallback\"])\"" + NEW_LINE +
-            " - schema: \"/oneOf/4\" has error: \"object has missing required properties ([\"httpForward\"])\"" + NEW_LINE +
-            " - schema: \"/oneOf/5\" has error: \"object has missing required properties ([\"httpForwardTemplate\"])\"" + NEW_LINE +
-            " - schema: \"/oneOf/6\" has error: \"object has missing required properties ([\"httpForwardObjectCallback\"])\"" + NEW_LINE +
-            " - schema: \"/oneOf/7\" has error: \"object has missing required properties ([\"httpForwardClassCallback\"])\"" + NEW_LINE +
-            " - schema: \"/oneOf/8\" has error: \"object has missing required properties ([\"httpOverrideForwardedRequest\"])\"" + NEW_LINE +
-            " - schema: \"/oneOf/9\" has error: \"object has missing required properties ([\"httpError\"])\"" + NEW_LINE +
-            NEW_LINE +
-            OPEN_API_SPECIFICATION_URL));
+        assertThat(httpResponse.getBodyAsString(), is("incorrect expectation json format for:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  {" + NEW_LINE +
+            "    \"httpRequest\" : {" + NEW_LINE +
+            "      \"path\" : \"/path_one\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"incorrectField\" : {" + NEW_LINE +
+            "      \"body\" : \"some_body_one\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"times\" : {" + NEW_LINE +
+            "      \"remainingTimes\" : 1" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"timeToLive\" : {" + NEW_LINE +
+            "      \"unlimited\" : true" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "" + NEW_LINE +
+            " schema validation errors:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  12 errors:" + NEW_LINE +
+            "   - object instance has properties which are not allowed by the schema: [\"incorrectField\"]" + NEW_LINE +
+            "   - oneOf of the following must be specified [\"httpResponse\", \"httpResponseTemplate\", \"httpResponseObjectCallback\", \"httpResponseClassCallback\", \"httpForward\", \"httpForwardTemplate\", \"httpForwardObjectCallback\", \"httpForwardClassCallback\", \"httpOverrideForwardedRequest\", \"httpError\"] but found 0 without errors" + NEW_LINE +
+            "   - schema: \"/oneOf/0\" has error: \"object has missing required properties ([\"httpResponse\"])\"" + NEW_LINE +
+            "   - schema: \"/oneOf/1\" has error: \"object has missing required properties ([\"httpResponseTemplate\"])\"" + NEW_LINE +
+            "   - schema: \"/oneOf/2\" has error: \"object has missing required properties ([\"httpResponseObjectCallback\"])\"" + NEW_LINE +
+            "   - schema: \"/oneOf/3\" has error: \"object has missing required properties ([\"httpResponseClassCallback\"])\"" + NEW_LINE +
+            "   - schema: \"/oneOf/4\" has error: \"object has missing required properties ([\"httpForward\"])\"" + NEW_LINE +
+            "   - schema: \"/oneOf/5\" has error: \"object has missing required properties ([\"httpForwardTemplate\"])\"" + NEW_LINE +
+            "   - schema: \"/oneOf/6\" has error: \"object has missing required properties ([\"httpForwardObjectCallback\"])\"" + NEW_LINE +
+            "   - schema: \"/oneOf/7\" has error: \"object has missing required properties ([\"httpForwardClassCallback\"])\"" + NEW_LINE +
+            "   - schema: \"/oneOf/8\" has error: \"object has missing required properties ([\"httpOverrideForwardedRequest\"])\"" + NEW_LINE +
+            "   - schema: \"/oneOf/9\" has error: \"object has missing required properties ([\"httpError\"])\"" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  " + OPEN_API_SPECIFICATION_URL));
     }
 
     @Test
@@ -2144,19 +2269,29 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
 
         // then
         assertThat(httpResponse.getStatusCode(), is(400));
-        assertThat(httpResponse.getBodyAsString(), is("10 errors:" + NEW_LINE +
-            " - field: \"/keepAlive\" for schema: \"httpRequest/properties/keepAlive\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"boolean\"])\"" + NEW_LINE +
-            " - field: \"/method\" for schema: \"stringOrJsonSchema\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
-            " - field: \"/method\" for schema: \"stringOrJsonSchema/oneOf/0\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
-            " - field: \"/method\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-            " - field: \"/path\" for schema: \"stringOrJsonSchema\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
-            " - field: \"/path\" for schema: \"stringOrJsonSchema/oneOf/0\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
-            " - field: \"/path\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-            " - oneOf of the following must be specified [\"httpRequest\", \"openAPIDefinition\"] but found 0 without errors" + NEW_LINE +
-            " - schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
-            " - schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"keepAlive\",\"method\",\"path\"]\"" + NEW_LINE +
-            NEW_LINE +
-            OPEN_API_SPECIFICATION_URL));
+        assertThat(httpResponse.getBodyAsString(), is("incorrect request matcher json format for:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  {" + NEW_LINE +
+            "      \"path\" : 500," + NEW_LINE +
+            "      \"method\" : true," + NEW_LINE +
+            "      \"keepAlive\" : \"false\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "" + NEW_LINE +
+            " schema validation errors:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  10 errors:" + NEW_LINE +
+            "   - field: \"/keepAlive\" for schema: \"httpRequest/properties/keepAlive\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"boolean\"])\"" + NEW_LINE +
+            "   - field: \"/method\" for schema: \"stringOrJsonSchema\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
+            "   - field: \"/method\" for schema: \"stringOrJsonSchema/oneOf/0\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
+            "   - field: \"/method\" for schema: \"stringOrJsonSchema/oneOf/1\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            "   - field: \"/path\" for schema: \"stringOrJsonSchema\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
+            "   - field: \"/path\" for schema: \"stringOrJsonSchema/oneOf/0\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
+            "   - field: \"/path\" for schema: \"stringOrJsonSchema/oneOf/1\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            "   - oneOf of the following must be specified [\"httpRequest\", \"openAPIDefinition\"] but found 0 without errors" + NEW_LINE +
+            "   - schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
+            "   - schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"keepAlive\",\"method\",\"path\"]\"" + NEW_LINE +
+            "  " + NEW_LINE +
+            "  " + OPEN_API_SPECIFICATION_URL));
     }
 
     @Test
@@ -2852,7 +2987,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
-    public void shouldForwardCallbackClassToOverrideRequestInTestClasspath() {
+    public void shouldForwardCallbackClassToOverrideRequestInTestClasspathAsClass() {
         // when
         Expectation[] upsertedExpectations = mockServerClient
             .when(
@@ -2862,6 +2997,77 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             .forward(
                 callback()
                     .withCallbackClass(PrecannedTestExpectationForwardCallbackRequest.class)
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body"),
+                        header("x-echo-server-port", insecureEchoServer.getPort())
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore
+            )
+        );
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+                .thenForward(
+                    callback()
+                        .withCallbackClass(PrecannedTestExpectationForwardCallbackRequest.class)
+                )
+        ));
+
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body"),
+                        header("x-echo-server-port", secureEchoServer.getPort())
+                    )
+                    .withBody("an_example_body_https"),
+                headersToIgnore
+            )
+        );
+    }
+
+    @Test
+    public void shouldForwardCallbackClassToOverrideRequestInTestClasspathAsString() {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                callback()
+                    .withCallbackClass("org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequest")
             );
 
         // then

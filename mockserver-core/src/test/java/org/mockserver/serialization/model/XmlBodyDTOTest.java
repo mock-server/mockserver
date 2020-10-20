@@ -79,6 +79,19 @@ public class XmlBodyDTOTest {
     }
 
     @Test
+    public void shouldBuildCorrectObjectWithOptional() {
+        // when
+        XmlBody xmlBody = new XmlBodyDTO((XmlBody) new XmlBody("some_body").withOptional(true)).buildObject();
+
+        // then
+        assertThat(xmlBody.getValue(), is("some_body"));
+        assertThat(xmlBody.getType(), is(Body.Type.XML));
+        assertThat(xmlBody.getContentType(), is("application/xml; charset=utf-8"));
+        assertThat(xmlBody.getRawBytes(), is("some_body".getBytes(StandardCharsets.UTF_8)));
+        assertThat(xmlBody.getOptional(), is(true));
+    }
+
+    @Test
     public void shouldBuildCorrectObjectWithMediaTypeAndRawBytes() {
         // when
         byte[] rawBytes = RandomUtils.nextBytes(20);
@@ -119,8 +132,6 @@ public class XmlBodyDTOTest {
     public void shouldReturnCorrectObjectFromStaticBuilder() {
         assertThat(xml("some_body"), is(new XmlBody("some_body")));
     }
-
-
 
     @Test
     public void shouldHandleNull() {

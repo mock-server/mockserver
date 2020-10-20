@@ -5,9 +5,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.model.HttpResponse;
-import org.mockserver.model.HttpStatusCode;
-import org.mockserver.model.Not;
+import org.mockserver.model.*;
 import org.mockserver.netty.MockServer;
 import org.mockserver.testing.integration.mock.AbstractBasicMockingIntegrationTest;
 import org.mockserver.uuid.UUIDService;
@@ -28,6 +26,7 @@ import static org.mockserver.model.Header.schemaHeader;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpStatusCode.ACCEPTED_202;
 import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.Parameter.schemaParam;
@@ -119,7 +118,11 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     "    \"httpResponse\" : {" + NEW_LINE +
                     "      \"body\" : \"some_body\"" + NEW_LINE +
                     "    }" + NEW_LINE +
-                    "  }" + NEW_LINE,
+                    "  }" + NEW_LINE +
+                    NEW_LINE +
+                    " with id:" + NEW_LINE +
+                    NEW_LINE +
+                    "  " + UUIDService.getUUID() + NEW_LINE,
                 new String[]{  // 2
                     "received request:" + NEW_LINE +
                         NEW_LINE +
@@ -532,4 +535,48 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                 headersToIgnore)
         );
     }
+
+    @Test
+    public void shouldNotReturnResponseForNottedHeader() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withMethod("GET")
+                    .withHeaders(new Headers(header(NottableString.not("headerName"))))
+            )
+            .respond(
+                response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                    .withBody("some_body")
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(header("headerName", "headerValue")),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withHeaders(header("headerName", "headerValue")),
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withHeaders(header("otherHeaderName", "headerValue")),
+                headersToIgnore)
+        );
+    }
+
 }

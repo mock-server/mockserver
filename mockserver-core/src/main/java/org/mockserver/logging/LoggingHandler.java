@@ -75,10 +75,6 @@ public class LoggingHandler extends ChannelDuplexHandler {
         logger = LoggerFactory.getLogger(loggerName);
     }
 
-    public LoggingHandler(final Class loggerClass) {
-        logger = LoggerFactory.getLogger(loggerClass.getName());
-    }
-
     public void addLoggingHandler(ChannelHandlerContext ctx) {
         ChannelPipeline pipeline = ctx.pipeline();
         if (pipeline.get(LoggingHandler.class) != null) {

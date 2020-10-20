@@ -13,7 +13,7 @@ import org.slf4j.event.Level;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsArrayContainingInOrder.arrayContaining;
+import static org.hamcrest.collection.ArrayMatching.arrayContaining;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.mockito.Mockito.*;
 import static org.mockserver.character.Character.NEW_LINE;

@@ -1,9 +1,6 @@
 package org.mockserver.serialization.model;
 
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
-import org.mockserver.model.OpenAPIDefinition;
-import org.mockserver.model.RequestDefinition;
+import org.mockserver.model.*;
 import org.mockserver.verify.VerificationSequence;
 
 import java.util.ArrayList;
@@ -14,6 +11,7 @@ import java.util.List;
  */
 public class VerificationSequenceDTO extends ObjectWithReflectiveEqualsHashCodeToString implements DTO<VerificationSequence> {
     private List<RequestDefinitionDTO> httpRequests = new ArrayList<>();
+    private List<ExpectationId> expectationIds = new ArrayList<>();
 
     public VerificationSequenceDTO(VerificationSequence verification) {
         if (verification != null) {
@@ -24,6 +22,7 @@ public class VerificationSequenceDTO extends ObjectWithReflectiveEqualsHashCodeT
                     httpRequests.add(new OpenAPIDefinitionDTO((OpenAPIDefinition) httpRequest));
                 }
             }
+            expectationIds.addAll(verification.getExpectationIds());
         }
     }
 
@@ -36,7 +35,8 @@ public class VerificationSequenceDTO extends ObjectWithReflectiveEqualsHashCodeT
             httpRequests.add(httpRequest.buildObject());
         }
         return new VerificationSequence()
-            .withRequests(httpRequests);
+            .withRequests(httpRequests)
+            .withExpectationIds(expectationIds);
     }
 
     public List<RequestDefinitionDTO> getHttpRequests() {
@@ -45,6 +45,15 @@ public class VerificationSequenceDTO extends ObjectWithReflectiveEqualsHashCodeT
 
     public VerificationSequenceDTO setHttpRequests(List<RequestDefinitionDTO> httpRequests) {
         this.httpRequests = httpRequests;
+        return this;
+    }
+
+    public List<ExpectationId> getExpectationIds() {
+        return expectationIds;
+    }
+
+    public VerificationSequenceDTO setExpectationIds(List<ExpectationId> expectationIds) {
+        this.expectationIds = expectationIds;
         return this;
     }
 }

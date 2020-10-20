@@ -18,8 +18,7 @@ public class IntegerStringListParser {
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(IntegerStringListParser.class);
 
     public Integer[] toArray(String integers) {
-        List<Integer> integerList = toList(integers);
-        return integerList.toArray(new Integer[0]);
+        return toList(integers).toArray(new Integer[0]);
     }
 
     List<Integer> toList(String integers) {

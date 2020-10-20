@@ -42,11 +42,9 @@ page at http://checkstyle.sourceforge.net/config.html -->
             <property name="severity" value="error"/>
         </module>
 
-        <module name="ImportOrder">
-            <!-- This ensures that static imports go last. -->
-            <property name="option" value="under"/>
-            <property name="ordered" value="false"/>
-            <property name="severity" value="error"/>
+        <module name="CustomImportOrder">
+            <property name="separateLineBetweenGroups" value="true"/>
+            <property name="customImportOrderRules" value="THIRD_PARTY_PACKAGE###SPECIAL_IMPORTS###STANDARD_JAVA_PACKAGE###STATIC"/>
         </module>
 
         <!--

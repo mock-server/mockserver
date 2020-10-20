@@ -19,12 +19,16 @@ public class StringBodyDTOSerializer extends StdSerializer<StringBodyDTO> {
     @Override
     public void serialize(StringBodyDTO stringBodyDTO, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         boolean notFieldSetAndNotDefault = stringBodyDTO.getNot() != null && stringBodyDTO.getNot();
+        boolean optionalFieldSetAndNotDefault = stringBodyDTO.getOptional() != null && stringBodyDTO.getOptional();
         boolean subStringFieldNotDefault = stringBodyDTO.isSubString();
         boolean contentTypeFieldSet = stringBodyDTO.getContentType() != null;
-        if (notFieldSetAndNotDefault || contentTypeFieldSet || subStringFieldNotDefault) {
+        if (notFieldSetAndNotDefault || optionalFieldSetAndNotDefault || contentTypeFieldSet || subStringFieldNotDefault) {
             jgen.writeStartObject();
             if (notFieldSetAndNotDefault) {
                 jgen.writeBooleanField("not", true);
+            }
+            if (optionalFieldSetAndNotDefault) {
+                jgen.writeBooleanField("optional", true);
             }
             jgen.writeStringField("type", stringBodyDTO.getType().name());
             jgen.writeStringField("string", stringBodyDTO.getString());

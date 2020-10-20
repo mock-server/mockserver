@@ -1,14 +1,12 @@
 package org.mockserver.serialization;
 
 import org.junit.Test;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.serialization.model.VerificationDTO;
 import org.mockserver.serialization.model.VerificationTimesDTO;
-import org.mockserver.logging.MockServerLogger;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationTimes;
-
-import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;

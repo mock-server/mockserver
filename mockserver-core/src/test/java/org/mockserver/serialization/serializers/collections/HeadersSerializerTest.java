@@ -23,7 +23,7 @@ public class HeadersSerializerTest {
     private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
 
     @Test
-    public void shouldAllowSingleObjectForArray() throws IOException {
+    public void shouldSerializeCompleteObject() throws IOException {
         // given
         String expectedString = "{" + NEW_LINE +
             "  \"some_name\" : [ \"some_value\", \"some_other_value\" ]," + NEW_LINE +
@@ -32,7 +32,7 @@ public class HeadersSerializerTest {
 
         // when
         String actualString = objectWriter
-            .writeValueAsString(new Headers().withEntries(
+            .writeValueAsString(new Headers(
                 header(string("some_name"), Arrays.asList(string("some_value"), string("some_other_value"))),
                 header(string("some_other_name"), string("some_value")),
                 header(string("some_other_name"), not("some_other_value"))

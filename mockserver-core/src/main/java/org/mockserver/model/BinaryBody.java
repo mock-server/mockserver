@@ -36,6 +36,7 @@ public class BinaryBody extends BodyWithContentType<byte[]> {
         return bytes;
     }
 
+    @JsonIgnore
     public byte[] getRawBytes() {
         return bytes;
     }

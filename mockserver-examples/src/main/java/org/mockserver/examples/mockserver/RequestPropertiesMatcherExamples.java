@@ -6,24 +6,26 @@ import org.mockserver.matchers.MatchType;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.HttpStatusCode;
-import org.mockserver.model.Not;
+import org.mockserver.model.*;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.model.BinaryBody.binary;
-import static org.mockserver.model.Cookie.cookie;
-import static org.mockserver.model.Header.header;
+import static org.mockserver.model.Cookie.optionalCookie;
+import static org.mockserver.model.Cookie.schemaCookie;
+import static org.mockserver.model.Header.*;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.JsonPathBody.jsonPath;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
+import static org.mockserver.model.NottableOptionalString.optional;
+import static org.mockserver.model.NottableSchemaString.schemaString;
 import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
-import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.Parameter.*;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.StringBody.exact;
@@ -129,7 +131,56 @@ public class RequestPropertiesMatcherExamples {
             );
     }
 
-    public void matchRequestByQueryParameterNameRegex() {
+    public void matchRequestByPathAndPathParametersAndQueryParametersName() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path/{cartId}")
+                    .withPathParameters(
+                        param("cartId", "055CA455-1DF7-45BB-8535-4F83E7266092")
+                    )
+                    .withQueryStringParameters(
+                        param("type", "[A-Z0-9\\-]+")
+                    )
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+    }
+
+    public void matchRequestByPathParameterRegexValue() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path/{cartId}")
+                    .withPathParameters(
+                        param("cartId", "[A-Z0-9\\-]+")
+                    )
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+    }
+
+    public void matchRequestByPathParameterJsonSchemaValue() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path/{cartId}/{maxItemCount}")
+                    .withPathParameters(
+                        schemaParam("cartId", "{\"type\": \"string\", \"pattern\": \"^[A-Z0-9\\-]+$\"}"),
+                        param(string("maxItemCount"), schemaString("{ \"type\": \"integer\" }"))
+                    )
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+    }
+
+    public void matchRequestByQueryParameterRegexName() {
         new MockServerClient("localhost", 1080)
             .when(
                 request()
@@ -152,6 +203,71 @@ public class RequestPropertiesMatcherExamples {
                     .withQueryStringParameters(
                         param("cartId", "[A-Z0-9\\-]+")
                     )
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+    }
+
+    public void matchRequestByOptionalQueryParameterRegexValue() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+                    .withQueryStringParameters(
+                        optionalParam("cartId", "[A-Z0-9\\-]+"),
+                        param(optional("maxItemCount"), schemaString("{ \"type\": \"integer\" }")),
+                        schemaParam(optional("userId"), "{ \"type\": \"string\", \"format\": \"uuid\" }")
+                    )
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+    }
+
+    public void matchRequestByQueryParameterJsonSchemaValue() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+                    .withQueryStringParameters(
+                        schemaParam("cartId", "{\"type\": \"string\", \"pattern\": \"^[A-Z0-9\\-]+$\"}"),
+                        param(string("maxItemCount"), schemaString("{ \"type\": \"integer\" }"))
+                    )
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+    }
+
+    public void matchRequestByQueryParameterSubSet() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+                    .withQueryStringParameters(new Parameters(
+                        schemaParam("multiValuedParameter", "{\"type\": \"string\", \"pattern\": \"^[A-Z0-9\\-]+$\"}"),
+                        param(string("maxItemCount"), schemaString("{ \"type\": \"integer\" }"))
+                    ).withKeyMatchStyle(KeyMatchStyle.SUB_SET))
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+    }
+
+    public void matchRequestByQueryParameterKeyMatching() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+                    .withQueryStringParameters(new Parameters(
+                        schemaParam("multiValuedParameter", "{\"type\": \"string\", \"pattern\": \"^[A-Z0-9\\-]+$\"}"),
+                        param(string("maxItemCount"), schemaString("{ \"type\": \"integer\" }"))
+                    ).withKeyMatchStyle(KeyMatchStyle.MATCHING_KEY))
             )
             .respond(
                 response()
@@ -206,6 +322,54 @@ public class RequestPropertiesMatcherExamples {
             );
     }
 
+    public void matchRequestByHeaderJsonSchemaValue() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+                    .withHeader(
+                        schemaHeader("Accept.*", "{\"type\": \"string\", \"pattern\": \"^.*gzip.*$\"}")
+                    )
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+    }
+
+    public void matchRequestByEitherOrOptionalHeader() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+                    .withHeaders(
+                        header("headerOne|headerTwo", ".*"),
+                        optionalHeader("headerOne", "headerOneValue"),
+                        optionalHeader("headerTwo", "headerTwoValue")
+                    )
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+    }
+
+    public void matchRequestByHeaderKeyMatching() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+                    .withHeaders(new Headers(
+                        header("multiValuedHeader", "value.*"),
+                        header("headerTwo", "headerTwoValue")
+                    ).withKeyMatchStyle(KeyMatchStyle.MATCHING_KEY))
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+    }
+
     public void matchRequestByNotMatchingHeaderValue() {
         new MockServerClient("localhost", 1080)
             .when(
@@ -248,10 +412,47 @@ public class RequestPropertiesMatcherExamples {
                     .withMethod("GET")
                     .withPath("/view/cart")
                     .withCookies(
-                        cookie("session", "4930456C-C718-476F-971F-CB8E047AB349")
+                        schemaCookie("session", "{ \"type\": \"string\", \"format\": \"uuid\" }")
                     )
                     .withQueryStringParameters(
-                        param("cartId", "055CA455-1DF7-45BB-8535-4F83E7266092")
+                        schemaParam("cartId", "{ \"type\": \"string\", \"format\": \"uuid\" }")
+                    )
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+    }
+
+    public void matchRequestByCookiesAndQueryParameterJsonSchemaValues() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withMethod("GET")
+                    .withPath("/view/cart")
+                    .withQueryStringParameters(
+                        schemaParam("cartId", "{ \"type\": \"string\", \"format\": \"uuid\" }")
+                    )
+                    .withCookies(
+                        schemaCookie("session", "{ \"type\": \"string\", \"format\": \"uuid\" }")
+                    )
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+    }
+
+    public void matchRequestByOptionalCookiesAndQueryParameterJsonSchemaValues() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/view/cart")
+                    .withCookies(
+                        optionalCookie("session", schemaString("{ \"type\": \"string\", \"format\": \"uuid\" }"))
+                    )
+                    .withQueryStringParameters(
+                        schemaParam("cartId", "{ \"type\": \"string\", \"format\": \"uuid\" }")
                     )
             )
             .respond(
@@ -332,30 +533,30 @@ public class RequestPropertiesMatcherExamples {
                     .withBody("some_response_body")
             );
 
-        // matches a request with the following body:
-        /*
-        <?xml version="1.0" encoding="ISO-8859-1"?>
-        <bookstore>
-          <book category="COOKING">
-            <title lang="en">Everyday Italian</title>
-            <author>Giada De Laurentiis</author>
-            <year>2005</year>
-            <price>30.00</price>
-          </book>
-          <book category="CHILDREN">
-            <title lang="en">Harry Potter</title>
-            <author>J K. Rowling</author>
-            <year>2005</year>
-            <price>29.99</price>
-          </book>
-          <book category="WEB">
-            <title lang="en">Learning XML</title>
-            <author>Erik T. Ray</author>
-            <year>2003</year>
-            <price>31.95</price>
-          </book>
-        </bookstore>
-         */
+// matches a request with the following body:
+/*
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<bookstore>
+  <book category="COOKING">
+    <title lang="en">Everyday Italian</title>
+    <author>Giada De Laurentiis</author>
+    <year>2005</year>
+    <price>30.00</price>
+  </book>
+  <book category="CHILDREN">
+    <title lang="en">Harry Potter</title>
+    <author>J K. Rowling</author>
+    <year>2005</year>
+    <price>29.99</price>
+  </book>
+  <book category="WEB">
+    <title lang="en">Learning XML</title>
+    <author>Erik T. Ray</author>
+    <year>2003</year>
+    <price>31.95</price>
+  </book>
+</bookstore>
+ */
     }
 
     public void matchRequestByNotMatchingBodyWithXPath() {
@@ -384,6 +585,27 @@ public class RequestPropertiesMatcherExamples {
                             "       <title lang=\"en\">Everyday Italian</title>" + System.lineSeparator() +
                             "       <author>Giada De Laurentiis</author>" + System.lineSeparator() +
                             "       <year>2005</year>" + System.lineSeparator() +
+                            "       <price>30.00</price>" + System.lineSeparator() +
+                            "   </book>" + System.lineSeparator() +
+                            "</bookstore>")
+                    )
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+    }
+
+    public void matchRequestByBodyWithXmlWithPlaceholders() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withBody(
+                        xml("<bookstore>" + System.lineSeparator() +
+                            "   <book nationality=\"ITALIAN\" category=\"COOKING\">" + System.lineSeparator() +
+                            "       <title lang=\"en\">Everyday Italian</title>" + System.lineSeparator() +
+                            "       <author>${xmlunit.ignore}</author>" + System.lineSeparator() +
+                            "       <year>${xmlunit.isNumber}</year>" + System.lineSeparator() +
                             "       <price>30.00</price>" + System.lineSeparator() +
                             "   </book>" + System.lineSeparator() +
                             "</bookstore>")
@@ -474,6 +696,29 @@ public class RequestPropertiesMatcherExamples {
                                 "    \"id\": 1," + System.lineSeparator() +
                                 "    \"name\": \"A green door\"," + System.lineSeparator() +
                                 "    \"price\": 12.50," + System.lineSeparator() +
+                                "    \"tags\": [\"home\", \"green\"]" + System.lineSeparator() +
+                                "}",
+                            MatchType.ONLY_MATCHING_FIELDS
+                        )
+                    )
+            )
+            .respond(
+                response()
+                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                    .withBody("some_response_body")
+            );
+    }
+
+    public void matchRequestByBodyWithJsonWithPlaceholders() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withBody(
+                        json("{" + System.lineSeparator() +
+                                "    \"id\": 1," + System.lineSeparator() +
+                                "    \"name\": \"A green door\"," + System.lineSeparator() +
+                                "    \"price\": \"${json-unit.ignore-element}\"," + System.lineSeparator() +
+                                "    \"enabled\": \"${json-unit.any-boolean}\"," + System.lineSeparator() +
                                 "    \"tags\": [\"home\", \"green\"]" + System.lineSeparator() +
                                 "}",
                             MatchType.ONLY_MATCHING_FIELDS

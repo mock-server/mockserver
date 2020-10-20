@@ -54,6 +54,7 @@ import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.*;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.Parameter.schemaParam;
 import static org.mockserver.model.PortBinding.portBinding;
 import static org.mockserver.testing.closurecallback.ViaWebSocket.viaWebSocket;
 import static org.mockserver.testing.tls.SSLSocketFactory.sslSocketFactory;
@@ -114,6 +115,190 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     )
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingQueryParametersWithPipeDelimitedParameters() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some/path")
+                    .withQueryStringParameters(new Parameters(
+                        schemaParam("variableO[a-z]{2}", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"variableOneV[a-z]{4}$\"" + NEW_LINE +
+                            "}").withStyle(ParameterStyle.PIPE_DELIMITED),
+                        schemaParam("?variableTwo", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"variableTwoV[a-z]{4}$\"" + NEW_LINE +
+                            "}").withStyle(ParameterStyle.PIPE_DELIMITED)
+                    ).withKeyMatchStyle(KeyMatchStyle.MATCHING_KEY))
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc" +
+                        "&variableTwo=variableTwoValue|variableTwoValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValab" +
+                        "&variableTwo=variableTwoValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaax|variableOneValbb|variableOneValcc")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaa|variableOneValbbx|variableOneValcc")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaa|variableOneValbb|variableOneValccx")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc" +
+                        "&variableTwo=variableTwoOtherValue|variableTwoValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc" +
+                        "&variableTwo=variableTwoValue|variableTwoOtherValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "?variableOne=variableOneValaax|variableOneValbb|variableOneValcc" +
+                        "&variableTwo=variableTwoValue|variableTwoOtherValue")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingPathParametersWithMatrixStyleParameters() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some/path/{variableOne}/{variableTwo}")
+                    .withPathParameters(new Parameters(
+                        schemaParam("variableO[a-z]{2}", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"variableOneV[a-z]{4}$\"" + NEW_LINE +
+                            "}").withStyle(ParameterStyle.MATRIX_EXPLODED),
+                        schemaParam("variableTwo", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"variableTwoV[a-z]{4}$\"" + NEW_LINE +
+                            "}").withStyle(ParameterStyle.MATRIX)
+                    ).withKeyMatchStyle(KeyMatchStyle.MATCHING_KEY))
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "/;variableOne=variableOneValaa;variableOne=variableOneValbb;variableOne=variableOneValcc" +
+                        "/;variableTwo=variableTwoValue,variableTwoValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "/;variableOne=variableOneValab" +
+                        "/;variableTwo=variableTwoValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "/;variableOne=variableOneValaa;variableOne=variableOneValbb;variableOne=variableOneValcc" +
+                        "/;variableTwo=variableTwoOtherValue,variableTwoValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "/;variableOne=variableOneValaa;variableOne=variableOneValbb;variableOne=variableOneValcc" +
+                        "/;variableTwo=variableTwoValue,variableTwoOtherValue")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path" +
+                        "/;variableOne=variableOneValaax;variableOne=variableOneValbb;variableOne=variableOneValcc" +
+                        "/;variableTwo=variableTwoValue,variableTwoOtherValue")),
                 headersToIgnore)
         );
     }
@@ -661,6 +846,58 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     )
                     .withBody("an_example_body_https"),
                 headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldForwardByObjectCallbackViaLocalJVMWithPathVariables() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some/path/{variableOne}/{variableTwo}")
+                    .withPathParameters(
+                        schemaParam("variableO[a-z]{2}", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"variableOneV[a-z]{4}$\"" + NEW_LINE +
+                            "}"),
+                        schemaParam("variableTwo", "{" + NEW_LINE +
+                            "   \"type\": \"string\"," + NEW_LINE +
+                            "   \"pattern\": \"variableTwoV[a-z]{4}$\"" + NEW_LINE +
+                            "}")
+                    )
+            )
+            .forward(
+                httpRequest -> request()
+                    .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
+                    .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
+                    .withBody("some_overridden_body " + httpRequest.getPathParameters())
+                    .withSecure(httpRequest.isSecure())
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overridden_body {" + NEW_LINE +
+                    "  \"variableOne\" : [ \"variableOneValue\" ]," + NEW_LINE +
+                    "  \"variableTwo\" : [ \"variableTwoValue\" ]" + NEW_LINE +
+                    "}"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some/path/variableOneValue/variableTwoValue"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore
+            )
         );
     }
 
@@ -1335,7 +1572,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             assertThat(IOStreamUtils.readInputStreamToString(socket), is("" +
                 "HTTP/1.1 200 OK" + NEW_LINE +
                 "content-type: audio/*" + NEW_LINE +
-                "connection: close" + NEW_LINE
+                "connection: keep-alive" + NEW_LINE
             ));
 
             TimeUnit.SECONDS.sleep(3);
@@ -1380,7 +1617,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             assertThat(IOStreamUtils.readInputStreamToString(sslSocket), is("" +
                 "HTTP/1.1 200 OK" + NEW_LINE +
                 "content-type: audio/*" + NEW_LINE +
-                "connection: close" + NEW_LINE
+                "connection: keep-alive" + NEW_LINE
             ));
         }
     }
@@ -1419,7 +1656,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             // then
             String actual = IOUtils.toString(socket.getInputStream(), StandardCharsets.UTF_8.name());
             assertThat(actual, is("HTTP/1.1 200 OK\r\n" +
-                "connection: close\r\n" +
+                "connection: keep-alive\r\n" +
                 "transfer-encoding: chunked\r\n" +
                 "\r\n" +
                 "a\r\n" +
@@ -1448,7 +1685,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             // then
             String actual = IOUtils.toString(sslSocket.getInputStream(), StandardCharsets.UTF_8.name());
             assertThat(actual, is("HTTP/1.1 200 OK\r\n" +
-                "connection: close\r\n" +
+                "connection: keep-alive\r\n" +
                 "transfer-encoding: chunked\r\n" +
                 "\r\n" +
                 "a\r\n" +
@@ -1612,7 +1849,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     }
 
     @Test
-    public void shouldCallbackToSpecifiedClassInTestClasspath() {
+    public void shouldCallbackToSpecifiedClassInTestClasspathAsString() {
         // given
         TestClasspathTestExpectationResponseCallback.httpRequests.clear();
         TestClasspathTestExpectationResponseCallback.httpResponse = response()
@@ -1632,6 +1869,76 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             .respond(
                 callback()
                     .withCallbackClass("org.mockserver.netty.integration.mock.TestClasspathTestExpectationResponseCallback")
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withHeaders(
+                    header("x-callback", "test_callback_header")
+                )
+                .withBody("a_callback_response"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("callback"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("X-Test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore)
+        );
+        assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(0).getBody().getValue(), "an_example_body_http");
+        assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(0).getPath().getValue(), calculatePath("callback"));
+
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withHeaders(
+                    header("x-callback", "test_callback_header")
+                )
+                .withBody("a_callback_response"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("callback"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("X-Test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_https"),
+                headersToIgnore)
+        );
+        assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");
+        assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(1).getPath().getValue(), calculatePath("callback"));
+    }
+
+    @Test
+    public void shouldCallbackToSpecifiedClassInTestClasspathAsClass() {
+        // given
+        TestClasspathTestExpectationResponseCallback.httpRequests.clear();
+        TestClasspathTestExpectationResponseCallback.httpResponse = response()
+            .withStatusCode(ACCEPTED_202.code())
+            .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+            .withHeaders(
+                header("x-callback", "test_callback_header")
+            )
+            .withBody("a_callback_response");
+
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("callback"))
+            )
+            .respond(
+                callback()
+                    .withCallbackClass(TestClasspathTestExpectationResponseCallback.class)
             );
 
         // then

@@ -2,19 +2,18 @@ package org.mockserver.collections;
 
 import org.junit.Test;
 import org.mockserver.mock.Expectation;
+import org.mockserver.mock.SortableExpectationId;
 
-import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.mockserver.mock.Expectation.EXPECTATION_PRIORITY_COMPARATOR;
 import static org.mockserver.mock.Expectation.when;
+import static org.mockserver.mock.SortableExpectationId.EXPECTATION_SORTABLE_PRIORITY_COMPARATOR;
 import static org.mockserver.model.HttpRequest.request;
 
 public class CircularPriorityQueueTest {
@@ -22,62 +21,150 @@ public class CircularPriorityQueueTest {
     @Test
     public void shouldNotAllowAddingMoreThenMaximumNumberOfEntriesWhenUsingAdd() {
         // given
-        CircularPriorityQueue<String, String> concurrentLinkedQueue = new CircularPriorityQueue<>(3, String.class, String::compareToIgnoreCase, string -> string);
+        CircularPriorityQueue<String, SortableExpectationId, SortableExpectationId> concurrentLinkedQueue = new CircularPriorityQueue<>(
+            3,
+            EXPECTATION_SORTABLE_PRIORITY_COMPARATOR,
+            sortableExpectationId -> sortableExpectationId,
+            sortableExpectationId -> sortableExpectationId.id
+        );
 
         // when
-        concurrentLinkedQueue.add("1");
-        concurrentLinkedQueue.add("2");
-        concurrentLinkedQueue.add("3");
-        concurrentLinkedQueue.add("4");
+        concurrentLinkedQueue.add(new SortableExpectationId("1", 0, 0));
+        concurrentLinkedQueue.add(new SortableExpectationId("2", 0, 0));
+        concurrentLinkedQueue.add(new SortableExpectationId("3", 0, 0));
+        concurrentLinkedQueue.add(new SortableExpectationId("4", 0, 0));
 
         // then
         assertEquals(3, concurrentLinkedQueue.size());
-        assertThat(concurrentLinkedQueue, not(contains("1")));
-        assertThat(concurrentLinkedQueue, containsInAnyOrder("2", "3", "4"));
-    }
-
-    @Test
-    public void shouldNotAllowAddingMoreThenMaximumNumberOfEntriesWhenUsingAddAll() {
-        // given
-        CircularPriorityQueue<String, String> concurrentLinkedQueue = new CircularPriorityQueue<>(3, String.class, String::compareToIgnoreCase, string -> string);
-
-        // when
-        concurrentLinkedQueue.addAll(Arrays.asList("1", "2", "3", "4"));
-
-        // then
-        assertEquals(3, concurrentLinkedQueue.size());
-        assertThat(concurrentLinkedQueue, not(contains("1")));
-        assertThat(concurrentLinkedQueue, containsInAnyOrder("2", "3", "4"));
+        List<SortableExpectationId> actual = concurrentLinkedQueue.toSortedList();
+        assertThat(actual, not(contains(new SortableExpectationId("1", 0, 0))));
+        assertThat(actual, containsInAnyOrder(
+            new SortableExpectationId("2", 0, 0),
+            new SortableExpectationId("3", 0, 0),
+            new SortableExpectationId("4", 0, 0)
+        ));
     }
 
     @Test
     public void shouldSortOrder() {
         // given
-        CircularPriorityQueue<String, String> concurrentLinkedQueue = new CircularPriorityQueue<>(3, String.class, String::compareToIgnoreCase, string -> string);
+        CircularPriorityQueue<String, SortableExpectationId, SortableExpectationId> concurrentLinkedQueue = new CircularPriorityQueue<>(
+            3,
+            EXPECTATION_SORTABLE_PRIORITY_COMPARATOR,
+            sortableExpectationId -> sortableExpectationId,
+            sortableExpectationId -> sortableExpectationId.id
+        );
 
         // when
-        concurrentLinkedQueue.add("4");
-        assertThat(concurrentLinkedQueue.toSortedList().toArray(new String[0]), is(new String[]{"4"}));
-        concurrentLinkedQueue.add("1");
-        assertThat(concurrentLinkedQueue.toSortedList().toArray(new String[0]), is(new String[]{"1", "4"}));
-        concurrentLinkedQueue.add("3");
-        assertThat(concurrentLinkedQueue.toSortedList().toArray(new String[0]), is(new String[]{"1", "3", "4"}));
-        concurrentLinkedQueue.add("2");
-        assertThat(concurrentLinkedQueue.toSortedList().toArray(new String[0]), is(new String[]{"1", "2", "3"}));
-        concurrentLinkedQueue.add("5");
-        assertThat(concurrentLinkedQueue.toSortedList().toArray(new String[0]), is(new String[]{"2", "3", "5"}));
+        concurrentLinkedQueue.add(new SortableExpectationId("4", 0, 0));
+        assertThat(concurrentLinkedQueue.toSortedList().toArray(new SortableExpectationId[0]), is(new SortableExpectationId[]{
+            new SortableExpectationId("4", 0, 0)
+        }));
+        concurrentLinkedQueue.add(new SortableExpectationId("1", 0, 0));
+        assertThat(concurrentLinkedQueue.toSortedList().toArray(new SortableExpectationId[0]), is(new SortableExpectationId[]{
+            new SortableExpectationId("1", 0, 0),
+            new SortableExpectationId("4", 0, 0)
+        }));
+        concurrentLinkedQueue.add(new SortableExpectationId("3", 0, 0));
+        assertThat(concurrentLinkedQueue.toSortedList().toArray(new SortableExpectationId[0]), is(new SortableExpectationId[]{
+            new SortableExpectationId("1", 0, 0),
+            new SortableExpectationId("3", 0, 0),
+            new SortableExpectationId("4", 0, 0)
+        }));
+        concurrentLinkedQueue.add(new SortableExpectationId("2", 0, 0));
+        assertThat(concurrentLinkedQueue.toSortedList().toArray(new SortableExpectationId[0]), is(new SortableExpectationId[]{
+            new SortableExpectationId("1", 0, 0),
+            new SortableExpectationId("2", 0, 0),
+            new SortableExpectationId("3", 0, 0)
+        }));
+        concurrentLinkedQueue.add(new SortableExpectationId("5", 0, 0));
+        assertThat(concurrentLinkedQueue.toSortedList().toArray(new SortableExpectationId[0]), is(new SortableExpectationId[]{
+            new SortableExpectationId("2", 0, 0),
+            new SortableExpectationId("3", 0, 0),
+            new SortableExpectationId("5", 0, 0)
+        }));
 
         // then
         assertEquals(3, concurrentLinkedQueue.size());
-        assertThat(concurrentLinkedQueue, not(contains("1")));
-        assertThat(concurrentLinkedQueue, not(contains("2")));
-        assertThat(concurrentLinkedQueue.toSortedList(), contains("2", "3", "5"));
+        List<SortableExpectationId> actual = concurrentLinkedQueue.toSortedList();
+        assertThat(actual, not(contains(new SortableExpectationId("1", 0, 0))));
+        assertThat(actual, not(contains(new SortableExpectationId("2", 0, 0))));
+        assertThat(actual, contains(
+            new SortableExpectationId("2", 0, 0),
+            new SortableExpectationId("3", 0, 0),
+            new SortableExpectationId("5", 0, 0)
+        ));
+    }
+
+    @Test
+    public void shouldSortOrderAndRemove() {
+        // given
+        CircularPriorityQueue<String, SortableExpectationId, SortableExpectationId> concurrentLinkedQueue = new CircularPriorityQueue<>(
+            3,
+            EXPECTATION_SORTABLE_PRIORITY_COMPARATOR,
+            sortableExpectationId -> sortableExpectationId,
+            sortableExpectationId -> sortableExpectationId.id
+        );
+
+        // when
+        concurrentLinkedQueue.add(new SortableExpectationId("4", 0, 0));
+        assertThat(concurrentLinkedQueue.toSortedList().toArray(new SortableExpectationId[0]), is(new SortableExpectationId[]{
+            new SortableExpectationId("4", 0, 0)
+        }));
+        concurrentLinkedQueue.add(new SortableExpectationId("1", 0, 0));
+        assertThat(concurrentLinkedQueue.toSortedList().toArray(new SortableExpectationId[0]), is(new SortableExpectationId[]{
+            new SortableExpectationId("1", 0, 0),
+            new SortableExpectationId("4", 0, 0)
+        }));
+        concurrentLinkedQueue.remove(new SortableExpectationId("4", 0, 0)); // remove last
+        assertThat(concurrentLinkedQueue.toSortedList().toArray(new SortableExpectationId[0]), is(new SortableExpectationId[]{
+            new SortableExpectationId("1", 0, 0)
+        }));
+        concurrentLinkedQueue.add(new SortableExpectationId("3", 0, 0));
+        assertThat(concurrentLinkedQueue.toSortedList().toArray(new SortableExpectationId[0]), is(new SortableExpectationId[]{
+            new SortableExpectationId("1", 0, 0),
+            new SortableExpectationId("3", 0, 0)
+        }));
+        concurrentLinkedQueue.add(new SortableExpectationId("2", 0, 0));
+        assertThat(concurrentLinkedQueue.toSortedList().toArray(new SortableExpectationId[0]), is(new SortableExpectationId[]{
+            new SortableExpectationId("1", 0, 0),
+            new SortableExpectationId("2", 0, 0),
+            new SortableExpectationId("3", 0, 0)
+        }));
+        concurrentLinkedQueue.remove(new SortableExpectationId("2", 0, 0)); // remove middle
+        assertThat(concurrentLinkedQueue.toSortedList().toArray(new SortableExpectationId[0]), is(new SortableExpectationId[]{
+            new SortableExpectationId("1", 0, 0),
+            new SortableExpectationId("3", 0, 0)
+        }));
+        concurrentLinkedQueue.add(new SortableExpectationId("5", 0, 0));
+        assertThat(concurrentLinkedQueue.toSortedList().toArray(new SortableExpectationId[0]), is(new SortableExpectationId[]{
+            new SortableExpectationId("1", 0, 0),
+            new SortableExpectationId("3", 0, 0),
+            new SortableExpectationId("5", 0, 0)
+        }));
+        concurrentLinkedQueue.remove(new SortableExpectationId("1", 0, 0)); // remove first
+        assertThat(concurrentLinkedQueue.toSortedList().toArray(new SortableExpectationId[0]), is(new SortableExpectationId[]{
+            new SortableExpectationId("3", 0, 0),
+            new SortableExpectationId("5", 0, 0)
+        }));
+
+        // then
+        assertEquals(2, concurrentLinkedQueue.size());
+        List<SortableExpectationId> actual = concurrentLinkedQueue.toSortedList();
+        assertThat(actual, not(contains(new SortableExpectationId("1", 0, 0))));
+        assertThat(actual, not(contains(new SortableExpectationId("2", 0, 0))));
+        assertThat(actual, not(contains(new SortableExpectationId("3", 0, 0))));
+        assertThat(actual, not(contains(new SortableExpectationId("4", 0, 0))));
+        assertThat(actual, contains(
+            new SortableExpectationId("3", 0, 0),
+            new SortableExpectationId("5", 0, 0)
+        ));
     }
 
     @Test
     public void shouldSortExpectationOrderSamePriorityInsertedInOrder() {
         // given
-        CircularPriorityQueue<String, Expectation> concurrentLinkedQueue = new CircularPriorityQueue<>(3, Expectation.class, EXPECTATION_PRIORITY_COMPARATOR, Expectation::getId);
+        CircularPriorityQueue<String, Expectation, SortableExpectationId> concurrentLinkedQueue = new CircularPriorityQueue<>(3, EXPECTATION_SORTABLE_PRIORITY_COMPARATOR, Expectation::getSortableId, Expectation::getId);
 
         long currentTimeMillis = System.currentTimeMillis();
         Expectation one = when(request("one"), 0).withCreated(currentTimeMillis + 1);
@@ -117,15 +204,15 @@ public class CircularPriorityQueueTest {
 
         // then
         assertEquals(3, concurrentLinkedQueue.size());
-        assertThat(concurrentLinkedQueue, not(contains(one)));
-        assertThat(concurrentLinkedQueue, not(contains(two)));
+        assertThat(concurrentLinkedQueue.toSortedList(), not(contains(one)));
+        assertThat(concurrentLinkedQueue.toSortedList(), not(contains(two)));
         assertThat(concurrentLinkedQueue.toSortedList(), contains(three, four, five));
     }
 
     @Test
     public void shouldSortExpectationOrderSamePriorityInsertedOutOfOrder() {
         // given
-        CircularPriorityQueue<String, Expectation> concurrentLinkedQueue = new CircularPriorityQueue<>(3, Expectation.class, EXPECTATION_PRIORITY_COMPARATOR, Expectation::getId);
+        CircularPriorityQueue<String, Expectation, SortableExpectationId> concurrentLinkedQueue = new CircularPriorityQueue<>(3, EXPECTATION_SORTABLE_PRIORITY_COMPARATOR, Expectation::getSortableId, Expectation::getId);
 
         long currentTimeMillis = System.currentTimeMillis();
         Expectation one = when(request("one"), 0).withCreated(currentTimeMillis + 1);
@@ -165,8 +252,8 @@ public class CircularPriorityQueueTest {
 
         // then
         assertEquals(3, concurrentLinkedQueue.size());
-        assertThat(concurrentLinkedQueue, not(contains(one)));
-        assertThat(concurrentLinkedQueue, not(contains(two)));
+        assertThat(concurrentLinkedQueue.toSortedList(), not(contains(one)));
+        assertThat(concurrentLinkedQueue.toSortedList(), not(contains(two)));
         assertThat(concurrentLinkedQueue.toSortedList(), contains(one, four, five));
         assertThat(concurrentLinkedQueue.getByKey(five.getId()), is(Optional.of(five)));
         assertThat(concurrentLinkedQueue.getByKey(four.getId()), is(Optional.of(four)));
@@ -176,9 +263,61 @@ public class CircularPriorityQueueTest {
     }
 
     @Test
+    public void shouldSortExpectationOrderDifferentIdsButConsistentWithTimeInsertedInOrderAndPriority() {
+        // given
+        CircularPriorityQueue<String, Expectation, SortableExpectationId> concurrentLinkedQueue = new CircularPriorityQueue<>(3, EXPECTATION_SORTABLE_PRIORITY_COMPARATOR, Expectation::getSortableId, Expectation::getId);
+
+        long currentTimeMillis = System.currentTimeMillis();
+        Expectation one = when(request("one"), 0).withCreated(currentTimeMillis).withId("4");
+        Expectation two = when(request("two"), 0).withCreated(currentTimeMillis).withId("3");
+        Expectation three = when(request("three"), 0).withCreated(currentTimeMillis).withId("2");
+        Expectation four = when(request("four"), 0).withCreated(currentTimeMillis).withId("1");
+        Expectation five = when(request("five"), 0).withCreated(currentTimeMillis).withId("4");
+
+        // when
+        concurrentLinkedQueue.add(one);
+        assertThat(concurrentLinkedQueue.toSortedList().toArray(new Expectation[0]), is(new Expectation[]{
+            one
+        }));
+        concurrentLinkedQueue.add(two);
+        assertThat(concurrentLinkedQueue.toSortedList().toArray(new Expectation[0]), is(new Expectation[]{
+            two,
+            one
+        }));
+        concurrentLinkedQueue.add(three);
+        assertThat(concurrentLinkedQueue.toSortedList().toArray(new Expectation[0]), is(new Expectation[]{
+            three,
+            two,
+            one
+        }));
+        concurrentLinkedQueue.add(four);
+        assertThat(concurrentLinkedQueue.toSortedList().toArray(new Expectation[0]), is(new Expectation[]{
+            four,
+            three,
+            two
+        }));
+        concurrentLinkedQueue.add(five);
+        assertThat(concurrentLinkedQueue.toSortedList().toArray(new Expectation[0]), is(new Expectation[]{
+            four,
+            three,
+            five
+        }));
+
+        // then
+        assertEquals(3, concurrentLinkedQueue.size());
+        assertThat(concurrentLinkedQueue.toSortedList(), not(contains(one)));
+        assertThat(concurrentLinkedQueue.toSortedList(), not(contains(two)));
+        assertThat(concurrentLinkedQueue.toSortedList(), contains(four, three, five));
+        assertThat(concurrentLinkedQueue.getByKey(five.getId()), is(Optional.of(five)));
+        assertThat(concurrentLinkedQueue.getByKey(four.getId()), is(Optional.of(four)));
+        assertThat(concurrentLinkedQueue.getByKey(three.getId()), is(Optional.of(three)));
+        assertThat(concurrentLinkedQueue.getByKey(two.getId()), is(Optional.empty()));
+    }
+
+    @Test
     public void shouldSortExpectationOrderDifferentPriorityButConsistentWithTimeInsertedInOrder() {
         // given
-        CircularPriorityQueue<String, Expectation> concurrentLinkedQueue = new CircularPriorityQueue<>(3, Expectation.class, EXPECTATION_PRIORITY_COMPARATOR, Expectation::getId);
+        CircularPriorityQueue<String, Expectation, SortableExpectationId> concurrentLinkedQueue = new CircularPriorityQueue<>(3, EXPECTATION_SORTABLE_PRIORITY_COMPARATOR, Expectation::getSortableId, Expectation::getId);
 
         long currentTimeMillis = System.currentTimeMillis();
         Expectation one = when(request("one"), 4).withCreated(currentTimeMillis + 1);
@@ -218,8 +357,8 @@ public class CircularPriorityQueueTest {
 
         // then
         assertEquals(3, concurrentLinkedQueue.size());
-        assertThat(concurrentLinkedQueue, not(contains(one)));
-        assertThat(concurrentLinkedQueue, not(contains(two)));
+        assertThat(concurrentLinkedQueue.toSortedList(), not(contains(one)));
+        assertThat(concurrentLinkedQueue.toSortedList(), not(contains(two)));
         assertThat(concurrentLinkedQueue.toSortedList(), contains(three, four, five));
         assertThat(concurrentLinkedQueue.getByKey(five.getId()), is(Optional.of(five)));
         assertThat(concurrentLinkedQueue.getByKey(four.getId()), is(Optional.of(four)));
@@ -231,7 +370,7 @@ public class CircularPriorityQueueTest {
     @Test
     public void shouldSortExpectationOrderDifferentPriorityButConsistentWithTimeInsertedOutOfOrder() {
         // given
-        CircularPriorityQueue<String, Expectation> concurrentLinkedQueue = new CircularPriorityQueue<>(3, Expectation.class, EXPECTATION_PRIORITY_COMPARATOR, Expectation::getId);
+        CircularPriorityQueue<String, Expectation, SortableExpectationId> concurrentLinkedQueue = new CircularPriorityQueue<>(3, EXPECTATION_SORTABLE_PRIORITY_COMPARATOR, Expectation::getSortableId, Expectation::getId);
 
         long currentTimeMillis = System.currentTimeMillis();
         Expectation one = when(request("one"), 4).withCreated(currentTimeMillis + 1);
@@ -271,8 +410,8 @@ public class CircularPriorityQueueTest {
 
         // then
         assertEquals(3, concurrentLinkedQueue.size());
-        assertThat(concurrentLinkedQueue, not(contains(two)));
-        assertThat(concurrentLinkedQueue, not(contains(three)));
+        assertThat(concurrentLinkedQueue.toSortedList(), not(contains(two)));
+        assertThat(concurrentLinkedQueue.toSortedList(), not(contains(three)));
         assertThat(concurrentLinkedQueue.toSortedList(), contains(one, four, five));
         assertThat(concurrentLinkedQueue.getByKey(five.getId()), is(Optional.of(five)));
         assertThat(concurrentLinkedQueue.getByKey(four.getId()), is(Optional.of(four)));
@@ -284,7 +423,7 @@ public class CircularPriorityQueueTest {
     @Test
     public void shouldSortExpectationOrderDifferentPriorityInconsistentWithTimeInsertedOutOfOrder() {
         // given
-        CircularPriorityQueue<String, Expectation> concurrentLinkedQueue = new CircularPriorityQueue<>(3, Expectation.class, EXPECTATION_PRIORITY_COMPARATOR, Expectation::getId);
+        CircularPriorityQueue<String, Expectation, SortableExpectationId> concurrentLinkedQueue = new CircularPriorityQueue<>(3, EXPECTATION_SORTABLE_PRIORITY_COMPARATOR, Expectation::getSortableId, Expectation::getId);
 
         long currentTimeMillis = 0;
         Expectation one = when(request("one"), 0).withCreated(currentTimeMillis + 1);
@@ -324,8 +463,8 @@ public class CircularPriorityQueueTest {
 
         // then
         assertEquals(3, concurrentLinkedQueue.size());
-        assertThat(concurrentLinkedQueue, not(contains(one)));
-        assertThat(concurrentLinkedQueue, not(contains(two)));
+        assertThat(concurrentLinkedQueue.toSortedList(), not(contains(one)));
+        assertThat(concurrentLinkedQueue.toSortedList(), not(contains(two)));
         assertThat(concurrentLinkedQueue.toSortedList(), contains(five, three, four));
         assertThat(concurrentLinkedQueue.getByKey(five.getId()), is(Optional.of(five)));
         assertThat(concurrentLinkedQueue.getByKey(four.getId()), is(Optional.of(four)));
@@ -337,7 +476,7 @@ public class CircularPriorityQueueTest {
     @Test
     public void shouldSortExpectationOrderDifferentPriorityGroupsLargerQueue() {
         // given
-        CircularPriorityQueue<String, Expectation> concurrentLinkedQueue = new CircularPriorityQueue<>(5, Expectation.class, EXPECTATION_PRIORITY_COMPARATOR, Expectation::getId);
+        CircularPriorityQueue<String, Expectation, SortableExpectationId> concurrentLinkedQueue = new CircularPriorityQueue<>(5, EXPECTATION_SORTABLE_PRIORITY_COMPARATOR, Expectation::getSortableId, Expectation::getId);
 
         long currentTimeMillis = 0;
         Expectation one = when(request("one"), 1).withCreated(currentTimeMillis);
@@ -391,7 +530,7 @@ public class CircularPriorityQueueTest {
     @Test
     public void shouldRemove() {
         // given - a queue
-        CircularPriorityQueue<String, Expectation> concurrentLinkedQueue = new CircularPriorityQueue<>(5, Expectation.class, EXPECTATION_PRIORITY_COMPARATOR, Expectation::getId);
+        CircularPriorityQueue<String, Expectation, SortableExpectationId> concurrentLinkedQueue = new CircularPriorityQueue<>(5, EXPECTATION_SORTABLE_PRIORITY_COMPARATOR, Expectation::getSortableId, Expectation::getId);
 
         long currentTimeMillis = 0;
         Expectation one = when(request("one"), 1).withCreated(currentTimeMillis);

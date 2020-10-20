@@ -3,7 +3,6 @@ package org.mockserver.examples.mockserver;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.ClearType;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.model.RequestDefinition;
 import org.mockserver.verify.VerificationTimes;
 

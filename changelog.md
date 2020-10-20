@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- clearing by expectation id
+- verifying by expectation id
+
+### Changed
+- improved reliability and performance around stopping especially when stop is called multiple times for the same instance
+
+### Fixed
+- fixed recursive loop on stopAsync for ClientAndServer
+- header matching for subsets to ensure notted header keys don't exist 
+
+## [5.11.1] - 2020-07-22
+
+### Added
+- port is now printed at start of each log line
+- shutdown log message specifying port
+- UI updated prior to stopping MockServer to ensure all pending log messages are sent over UI web socket 
+- added listener for expectation modifications that can be used with ExpectationInitializer for custom expectation persistence
+
+### Changed
+- performance improvements of expectation sorting and comparisons
+- reduced creation of objects at WARN log level
+- ensured all threads are daemon threads (except port binding thread)
+- simplified and improve performance of matching for headers, query string parameters, path parameters, cookies and body parameters
+- only mark log events as deleted for log level of TRACE, DEBUG, or INFO so log can be view in UI
+- improved performance of handling large OpenAPI specifications
+- improved error message format for errors when loading OpenAPI specifications
+- changed name of `optionalString` static factory method to `optional` to improve consistency with `not`
+
+### Fixed
+- fixed field name error when serializing ParameterBody
+- error when log level DEBUG cleared log events were returned from the API 
+
+## [5.11.0] - 2020-07-08
+
+### Added
 - added basic support to proxy binary requests that are not HTTP
 - dynamic maximum log events and maximum expectations based on available memory
 - added ability to switch between BouncyCastle and vanillar JDK for key and certificate generation
@@ -15,6 +50,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - create expectation using OpenAPI or Swagger specification with automatic example responses
 - verifications of requests or request sequences using OpenAPI or Swagger specification
 - clear log, clear expectations, retrieve logs and retrieve requests using OpenAPI or Swagger specification
+- json schema matchers for method, path, headers, query string parameters and cookies
+- path variables matched by nottable string, regex or json schema (as per query string parameters)  
+- support for optional query parameters, header and cookies
+- support for nullable keyword in JSON Schemas (part of Open API specification not JSON Schema specification)
+- matching xml bodies against JSON Schema matchers
+- matching parameter bodies against JSON Schema matchers
+- support to match path parameters, query parameters and header either by sub set or by matching key
+- grouping of log events in UI to simplify analysis of expectation matches / non matches for a request
+- added extra log messages to indicate progress for large json expectation initializers
+- added log messages for invalid control plane request to make control plane errors clearer in the UI
+- added support for easily mapping jar and config into the docker container
+- added support for easily mapping jar and config into the helm chart
 
 ### Changed
 - reduced time range of CA certificates to increase likelihood they will be accepted by strict systems (i.e. VMWare vCenter Server)
@@ -34,12 +81,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - reduced expiry of certification to one year to avoid errors from modern systems that don't like long lived certificates (such as Chrome or VMWare)
 - defaulted charset for XML and JSON to UTF8 as per rfc3470 and rfc8259
 - version matching logic for client now only matches on major and minor version and not bug fix version
+- improved handling of body matching for control plane to clearly separate control plane and data plan matching
+- simplified and improved stability for UI by moving all data processing into back-end and other simplifications 
 
 ### Fixed
-- fixed but with environment vairable configuration for long, integer and integer list values
+- fixed but with environment variable configuration for long, integer and integer list values
 - removed call to ReflectionToStringBuilder.setDefaultStyle to avoid impacting toString globally for JVM
 - fixed destination port and ip in Socks5CommandResponse which prevented SOCKS5 proxied connections
-- fixed Subject Alternative Names with wildcards or other valid DNS name formats not supported by certain versions of the JDK (<= 1.8) 
+- fixed Subject Alternative Names with wildcards or other valid DNS name formats not supported by certain versions of the JDK (<= 1.8)
+- fixed json body responses by returning blank or null fields, objects and arrays
+- fixed generics for withCallbackClass to allow ExpectationResponseCallback to be specified as a Class (not only a string) 
 
 ## [5.10.0] - 2020-03-24
 

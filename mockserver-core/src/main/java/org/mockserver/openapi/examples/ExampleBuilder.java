@@ -18,9 +18,9 @@ package org.mockserver.openapi.examples;
 
 import io.swagger.util.Json;
 import io.swagger.v3.oas.models.media.*;
+import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.openapi.examples.models.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -34,7 +34,7 @@ import java.util.*;
  */
 @SuppressWarnings("rawtypes")
 public class ExampleBuilder {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ExampleBuilder.class);
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(ExampleBuilder.class);
 
     public static final String SAMPLE_EMAIL_PROPERTY_VALUE = "some_email@mockserver.com";
     public static final String SAMPLE_UUID_PROPERTY_VALUE = "3fa85f64-5717-4562-b3fc-2c963f66afa6";
@@ -265,7 +265,11 @@ public class ExampleBuilder {
                 try {
                     output = Json.mapper().readValue(example.toString(), ObjectExample.class);
                 } catch (IOException e) {
-                    LOGGER.error("unable to convert `" + example + "` to JsonNode");
+                    MOCK_SERVER_LOGGER.logEvent(
+                        new LogEntry()
+                            .setMessageFormat("unable to convert{}to JsonNode")
+                            .setArguments(example)
+                    );
                     output = new ObjectExample();
                 }
             } else {
@@ -287,7 +291,11 @@ public class ExampleBuilder {
                 try {
                     output = Json.mapper().readValue(example.toString(), ArrayExample.class);
                 } catch (IOException e) {
-                    LOGGER.error("unable to convert `" + example + "` to JsonNode");
+                    MOCK_SERVER_LOGGER.logEvent(
+                        new LogEntry()
+                            .setMessageFormat("unable to convert{}to JsonNode")
+                            .setArguments(example)
+                    );
                     output = new ArrayExample();
                 }
             } else {
@@ -355,7 +363,11 @@ public class ExampleBuilder {
                 try {
                     output = Json.mapper().readValue(example.toString(), ObjectExample.class);
                 } catch (IOException e) {
-                    LOGGER.error("unable to convert `" + example + "` to JsonNode");
+                    MOCK_SERVER_LOGGER.logEvent(
+                        new LogEntry()
+                            .setMessageFormat("unable to convert{}to JsonNode")
+                            .setArguments(example)
+                    );
                     output = new ObjectExample();
                 }
             } else {

@@ -47,13 +47,44 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldRemoveLeadingAndTrailingQuotes() {
+        // given
+        System.clearProperty("mockserver.initializationJsonPath");
+
+        // when - leading and trailing
+        assertEquals("", initializationJsonPath());
+        initializationJsonPath("\"org/mockserver/server/initialize/initializerJson.json\"");
+
+        // then
+        assertEquals("org/mockserver/server/initialize/initializerJson.json", initializationJsonPath());
+        assertEquals("\"org/mockserver/server/initialize/initializerJson.json\"", System.getProperty("mockserver.initializationJsonPath"));
+
+        // when - only trailing
+        System.clearProperty("mockserver.initializationJsonPath");
+        assertEquals("", initializationJsonPath());
+        initializationJsonPath("org/mockserver/server/initialize/initializerJson.json\"");
+
+        // then
+        assertEquals("org/mockserver/server/initialize/initializerJson.json\"", initializationJsonPath());
+        assertEquals("org/mockserver/server/initialize/initializerJson.json\"", System.getProperty("mockserver.initializationJsonPath"));
+
+        // when - only leading
+        System.clearProperty("mockserver.initializationJsonPath");
+        assertEquals("", initializationJsonPath());
+        initializationJsonPath("\"org/mockserver/server/initialize/initializerJson.json");
+
+        // then
+        assertEquals("\"org/mockserver/server/initialize/initializerJson.json", initializationJsonPath());
+        assertEquals("\"org/mockserver/server/initialize/initializerJson.json", System.getProperty("mockserver.initializationJsonPath"));
+    }
+
+    @Test
     public void shouldSetAndReadNIOEventLoopThreadCount() {
         // given
         System.clearProperty("mockserver.nioEventLoopThreadCount");
-        int eventLoopCount = Math.max(35, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors()));
 
         // when
-        assertEquals(eventLoopCount, nioEventLoopThreadCount());
+        assertEquals(5, nioEventLoopThreadCount());
         nioEventLoopThreadCount(2);
 
         // then
@@ -65,7 +96,7 @@ public class ConfigurationPropertiesTest {
     public void shouldSetAndReadActionHandlerThreadCount() {
         // given
         System.clearProperty("mockserver.actionHandlerThreadCount");
-        int actionHandlerThreadCount = Math.max(20, Runtime.getRuntime().availableProcessors());
+        int actionHandlerThreadCount = Math.max(5, Runtime.getRuntime().availableProcessors());
 
         // when
         assertEquals(actionHandlerThreadCount, actionHandlerThreadCount());
@@ -94,10 +125,9 @@ public class ConfigurationPropertiesTest {
     public void shouldHandleInvalidNIOEventLoopThreadCount() {
         // given
         System.setProperty("mockserver.nioEventLoopThreadCount", "invalid");
-        int eventLoopCount = Math.max(35, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors()));
 
         // then
-        assertEquals(eventLoopCount, nioEventLoopThreadCount());
+        assertEquals(5, nioEventLoopThreadCount());
     }
 
     @Test
@@ -144,6 +174,44 @@ public class ConfigurationPropertiesTest {
 
         // then
         assertEquals(defaultMaxLogEntries(), maxLogEntries());
+    }
+
+    @Test
+    public void shouldSetAndReadOutputMemoryUsageCsv() {
+        // given
+        boolean originalSetting = outputMemoryUsageCsv();
+        try {
+            // when
+            outputMemoryUsageCsv(true);
+
+            // then
+            assertTrue(outputMemoryUsageCsv());
+            assertEquals("true", System.getProperty("mockserver.outputMemoryUsageCsv"));
+
+            // when
+            outputMemoryUsageCsv(false);
+
+            // then
+            assertFalse(outputMemoryUsageCsv());
+            assertEquals("false", System.getProperty("mockserver.outputMemoryUsageCsv"));
+        } finally {
+            outputMemoryUsageCsv(originalSetting);
+        }
+    }
+
+    @Test
+    public void shouldSetAndReadMemoryUsageCsvDirectory() throws IOException {
+        // given
+        System.clearProperty("mockserver.memoryUsageCsvDirectory");
+
+        // when
+        assertEquals(".", memoryUsageCsvDirectory());
+        File tempFile = File.createTempFile("prefix", "suffix");
+        memoryUsageCsvDirectory(tempFile.getAbsolutePath());
+
+        // then
+        assertEquals(tempFile.getAbsolutePath(), memoryUsageCsvDirectory());
+        assertEquals(tempFile.getAbsolutePath(), System.getProperty("mockserver.memoryUsageCsvDirectory"));
     }
 
     @Test
@@ -351,7 +419,7 @@ public class ConfigurationPropertiesTest {
         // when
         assertThat(Arrays.asList(sslSubjectAlternativeNameDomains()), empty());
         addSslSubjectAlternativeNameDomains("a", "b", "c");
-        addSubjectAlternativeName("d:1080");
+        addSubjectAlternativeName("d:1090");
 
         // then
         assertThat(Arrays.asList(sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d"));
@@ -691,6 +759,7 @@ public class ConfigurationPropertiesTest {
         try {
             // given
             System.clearProperty("mockserver.logLevel");
+            ConfigurationProperties.reset();
 
             // when
             assertEquals(Level.INFO, logLevel());
@@ -713,7 +782,7 @@ public class ConfigurationPropertiesTest {
         try {
             // given
             System.clearProperty("mockserver.logLevel");
-            logLevel(null);
+            ConfigurationProperties.reset();
 
             // when
             assertEquals(Level.INFO, logLevel());
@@ -788,6 +857,28 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldSetAndReadLaunchUIForLogLevelDebug() {
+        boolean originalSetting = launchUIForLogLevelDebug();
+        try {
+            // when
+            launchUIForLogLevelDebug(true);
+
+            // then
+            assertTrue(launchUIForLogLevelDebug());
+            assertEquals("true", System.getProperty("mockserver.launchUIForLogLevelDebug"));
+
+            // when
+            launchUIForLogLevelDebug(false);
+
+            // then
+            assertFalse(launchUIForLogLevelDebug());
+            assertEquals("false", System.getProperty("mockserver.launchUIForLogLevelDebug"));
+        } finally {
+            launchUIForLogLevelDebug(originalSetting);
+        }
+    }
+
+    @Test
     public void shouldSetAndReadMatchersFailFast() {
         boolean originalSetting = matchersFailFast();
         try {
@@ -853,11 +944,11 @@ public class ConfigurationPropertiesTest {
 
         // when
         assertNull(httpProxy());
-        httpProxy("127.0.0.1:1080");
+        httpProxy("127.0.0.1:1090");
 
         // then
-        assertEquals("/127.0.0.1:1080", httpProxy().toString());
-        assertEquals("127.0.0.1:1080", System.getProperty("mockserver.httpProxy"));
+        assertEquals("/127.0.0.1:1090", httpProxy().toString());
+        assertEquals("127.0.0.1:1090", System.getProperty("mockserver.httpProxy"));
     }
 
     @Test
@@ -877,11 +968,11 @@ public class ConfigurationPropertiesTest {
 
         // when
         assertNull(httpsProxy());
-        httpsProxy("127.0.0.1:1080");
+        httpsProxy("127.0.0.1:1090");
 
         // then
-        assertEquals("/127.0.0.1:1080", httpsProxy().toString());
-        assertEquals("127.0.0.1:1080", System.getProperty("mockserver.httpsProxy"));
+        assertEquals("/127.0.0.1:1090", httpsProxy().toString());
+        assertEquals("127.0.0.1:1090", System.getProperty("mockserver.httpsProxy"));
     }
 
     @Test
@@ -901,11 +992,11 @@ public class ConfigurationPropertiesTest {
 
         // when
         assertNull(socksProxy());
-        socksProxy("127.0.0.1:1080");
+        socksProxy("127.0.0.1:1090");
 
         // then
-        assertEquals("/127.0.0.1:1080", socksProxy().toString());
-        assertEquals("127.0.0.1:1080", System.getProperty("mockserver.socksProxy"));
+        assertEquals("/127.0.0.1:1090", socksProxy().toString());
+        assertEquals("127.0.0.1:1090", System.getProperty("mockserver.socksProxy"));
     }
 
     @Test
@@ -924,11 +1015,11 @@ public class ConfigurationPropertiesTest {
 
         // when
         assertNull(forwardHttpProxy());
-        forwardHttpProxy("127.0.0.1:1080");
+        forwardHttpProxy("127.0.0.1:1090");
 
         // then
-        assertEquals("/127.0.0.1:1080", forwardHttpProxy().toString());
-        assertEquals("127.0.0.1:1080", System.getProperty("mockserver.forwardHttpProxy"));
+        assertEquals("/127.0.0.1:1090", forwardHttpProxy().toString());
+        assertEquals("127.0.0.1:1090", System.getProperty("mockserver.forwardHttpProxy"));
     }
 
     @Test
@@ -946,11 +1037,11 @@ public class ConfigurationPropertiesTest {
 
         // when
         assertNull(forwardHttpsProxy());
-        forwardHttpsProxy("127.0.0.1:1080");
+        forwardHttpsProxy("127.0.0.1:1090");
 
         // then
-        assertEquals("/127.0.0.1:1080", forwardHttpsProxy().toString());
-        assertEquals("127.0.0.1:1080", System.getProperty("mockserver.forwardHttpsProxy"));
+        assertEquals("/127.0.0.1:1090", forwardHttpsProxy().toString());
+        assertEquals("127.0.0.1:1090", System.getProperty("mockserver.forwardHttpsProxy"));
     }
 
     @Test
@@ -968,11 +1059,11 @@ public class ConfigurationPropertiesTest {
 
         // when
         assertNull(forwardSocksProxy());
-        forwardSocksProxy("127.0.0.1:1080");
+        forwardSocksProxy("127.0.0.1:1090");
 
         // then
-        assertEquals("/127.0.0.1:1080", forwardSocksProxy().toString());
-        assertEquals("127.0.0.1:1080", System.getProperty("mockserver.forwardSocksProxy"));
+        assertEquals("/127.0.0.1:1090", forwardSocksProxy().toString());
+        assertEquals("127.0.0.1:1090", System.getProperty("mockserver.forwardSocksProxy"));
     }
 
     @Test

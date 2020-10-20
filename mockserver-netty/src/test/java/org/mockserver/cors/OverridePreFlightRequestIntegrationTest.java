@@ -66,9 +66,9 @@ public class OverridePreFlightRequestIntegrationTest {
                     .withMethod("OPTIONS")
                     .withPath("/expectation")
                     .withHeader("Access-Control-Request-Method", "PUT")
-                    .withHeader(HOST.toString(), "localhost:" + clientAndServer.getLocalPort())
+                    .withHeader(HOST.toString(), "localhost:" + clientAndServer.getPort())
                     .withHeader("Origin", "http://127.0.0.1:1234"),
-                new InetSocketAddress(clientAndServer.getLocalPort())
+                new InetSocketAddress(clientAndServer.getPort())
             );
 
         // then
@@ -79,7 +79,7 @@ public class OverridePreFlightRequestIntegrationTest {
         assertThat(response.getHeader("access-control-allow-headers"), containsInAnyOrder("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"));
         assertThat(response.getHeader("access-control-expose-headers"), containsInAnyOrder("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"));
         assertThat(response.getHeader("access-control-max-age"), containsInAnyOrder("300"));
-        assertThat(response.getFirstHeader("version"), not(isEmptyString()));
+        assertThat(response.getFirstHeader("version"), not(emptyString()));
     }
 
     @Test
@@ -90,12 +90,12 @@ public class OverridePreFlightRequestIntegrationTest {
                 request()
                     .withMethod("OPTIONS")
                     .withPath("/settings/account")
-                    .withHeader(HOST.toString(), "localhost:" + clientAndServer.getLocalPort())
+                    .withHeader(HOST.toString(), "localhost:" + clientAndServer.getPort())
                     .withHeader("Origin", "http://localhost:8000")
                     .withHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/69.0.3497.100 Safari/537.36")
                     .withHeader("Access-Control-Request-Method", "PATCH")
-                    .withHeader( "Access-Control-Request-Headers", "extra-header, other-extra-header"),
-                new InetSocketAddress(clientAndServer.getLocalPort())
+                    .withHeader("Access-Control-Request-Headers", "extra-header, other-extra-header"),
+                new InetSocketAddress(clientAndServer.getPort())
             );
 
         // then
@@ -106,7 +106,7 @@ public class OverridePreFlightRequestIntegrationTest {
         assertThat(httpResponse.getHeader("access-control-allow-headers"), containsInAnyOrder("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization, extra-header, other-extra-header"));
         assertThat(httpResponse.getHeader("access-control-expose-headers"), containsInAnyOrder("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization, extra-header, other-extra-header"));
         assertThat(httpResponse.getHeader("access-control-max-age"), containsInAnyOrder("300"));
-        assertThat(httpResponse.getFirstHeader("version"), not(isEmptyString()));
+        assertThat(httpResponse.getFirstHeader("version"), not(emptyString()));
     }
 
     @Test
@@ -133,9 +133,9 @@ public class OverridePreFlightRequestIntegrationTest {
                     .withMethod("OPTIONS")
                     .withPath("/expectation")
                     .withHeader("Access-Control-Request-Method", "PUT")
-                    .withHeader(HOST.toString(), "localhost:" + clientAndServer.getLocalPort())
+                    .withHeader(HOST.toString(), "localhost:" + clientAndServer.getPort())
                     .withHeader("Origin", "http://127.0.0.1:1234"),
-                new InetSocketAddress(clientAndServer.getLocalPort())
+                new InetSocketAddress(clientAndServer.getPort())
             );
 
         // then
@@ -146,8 +146,8 @@ public class OverridePreFlightRequestIntegrationTest {
         assertThat(response.getHeader("access-control-allow-headers"), containsInAnyOrder("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization, Authorization"));
         assertThat(response.getHeader("access-control-expose-headers"), containsInAnyOrder("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization, Authorization"));
         assertThat(response.getHeader("access-control-max-age"), containsInAnyOrder("300"));
-        assertThat(response.getFirstHeader("x-cors"), isEmptyString());
-        assertThat(response.getFirstHeader("version"), isEmptyString());
+        assertThat(response.getFirstHeader("x-cors"), emptyString());
+        assertThat(response.getFirstHeader("version"), emptyString());
     }
 
 }

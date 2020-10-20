@@ -16,6 +16,7 @@ import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.cli.Main.Arguments.*;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
+import static org.mockserver.mock.HttpState.setPort;
 import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.ERROR;
 
@@ -98,6 +99,7 @@ public class Main {
                 } else {
                     new MockServer(localPorts);
                 }
+                setPort(localPorts);
 
                 if (ConfigurationProperties.logLevel() != null) {
                     MOCK_SERVER_LOGGER.logEvent(
@@ -112,15 +114,13 @@ public class Main {
             }
 
         } catch (Throwable throwable) {
-            if (MockServerLogger.isEnabled(ERROR)) {
-                MOCK_SERVER_LOGGER.logEvent(
-                    new LogEntry()
-                        .setType(SERVER_CONFIGURATION)
-                        .setLogLevel(ERROR)
-                        .setMessageFormat("exception while starting:{}")
-                        .setThrowable(throwable)
-                );
-            }
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(SERVER_CONFIGURATION)
+                    .setLogLevel(ERROR)
+                    .setMessageFormat("exception while starting:{}")
+                    .setThrowable(throwable)
+            );
             if (ConfigurationProperties.disableSystemOut()) {
                 System.out.println("exception while starting: " + throwable);
             }

@@ -27,11 +27,4 @@ public class ConnectionOptionsTest {
         assertThat(connectionOptions.getCloseSocket(), is(true));
     }
 
-    @Test
-    public void shouldTestFalseOrNull() {
-        assertThat(ConnectionOptions.isFalseOrNull(false), is(true));
-        assertThat(ConnectionOptions.isFalseOrNull(null), is(true));
-        assertThat(ConnectionOptions.isFalseOrNull(true), is(false));
-    }
-
 }

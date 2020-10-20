@@ -14,7 +14,6 @@ import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
 import static org.mockserver.mock.HttpState.PATH_PREFIX;
-import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
@@ -69,15 +68,16 @@ public abstract class ResponseWriter {
 
         HttpResponse responseWithConnectionHeader = response.clone();
 
-        if (connectionOptions != null && connectionOptions.getKeepAliveOverride() != null) {
-            if (connectionOptions.getKeepAliveOverride()) {
-                responseWithConnectionHeader.replaceHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()));
-            } else {
-                responseWithConnectionHeader.replaceHeader(header(CONNECTION.toString(), CLOSE.toString()));
+        if (connectionOptions != null && (connectionOptions.getSuppressConnectionHeader() != null || connectionOptions.getKeepAliveOverride() != null)) {
+            if (!Boolean.TRUE.equals(connectionOptions.getSuppressConnectionHeader())) {
+                if (Boolean.TRUE.equals(connectionOptions.getKeepAliveOverride())) {
+                    responseWithConnectionHeader.replaceHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()));
+                } else {
+                    responseWithConnectionHeader.replaceHeader(header(CONNECTION.toString(), CLOSE.toString()));
+                }
             }
-        } else if (connectionOptions == null || isFalseOrNull(connectionOptions.getSuppressConnectionHeader())) {
-            if (request.isKeepAlive() != null && request.isKeepAlive()
-                && (connectionOptions == null || isFalseOrNull(connectionOptions.getCloseSocket()))) {
+        } else {
+            if (Boolean.TRUE.equals(request.isKeepAlive())) {
                 responseWithConnectionHeader.replaceHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()));
             } else {
                 responseWithConnectionHeader.replaceHeader(header(CONNECTION.toString(), CLOSE.toString()));

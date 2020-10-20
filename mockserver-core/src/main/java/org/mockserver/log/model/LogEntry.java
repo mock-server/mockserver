@@ -17,28 +17,29 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Objects;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
  * @author jamesdbloom
  */
-public class LogEntry extends ObjectWithJsonToString implements EventTranslator<LogEntry> {
+public class LogEntry implements EventTranslator<LogEntry> {
 
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
-    private static final String[] EXCLUDED_FIELDS = {
-        "id",
-        "timestamp",
-        "message",
-        "throwable"
-    };
+    private static final RequestDefinition[] EMPTY_REQUEST_DEFINITIONS = new RequestDefinition[0];
+    private static final RequestDefinition[] DEFAULT_REQUESTS_DEFINITIONS = {request()};
+    private int hashCode;
     private String id;
+    private String correlationId;
+    private Integer port;
     private Level logLevel = Level.INFO;
     public static final DateFormat LOG_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     private long epochTime = TimeService.currentTimeMillis();
     private String timestamp;
-    private LogEntry.LogMessageType type;
+    private LogMessageType type;
     private RequestDefinition[] httpRequests;
     private RequestDefinition[] httpUpdatedRequests;
     private HttpResponse httpResponse;
@@ -47,13 +48,20 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     private Expectation expectation;
     private Throwable throwable;
     private Runnable consumer;
+    private boolean deleted = false;
 
     private String messageFormat;
-    private Object[] arguments;
     private String message;
+    private Object[] arguments;
+    private String because;
 
     public LogEntry() {
 
+    }
+
+    private LogEntry setId(String id) {
+        this.id = id;
+        return this;
     }
 
     @JsonIgnore
@@ -65,18 +73,24 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     }
 
     public void clear() {
+        id = null;
         logLevel = Level.INFO;
+        correlationId = null;
+        port = null;
         epochTime = -1;
-        httpRequests = null;
         timestamp = null;
+        type = null;
+        httpRequests = null;
         httpResponse = null;
         httpError = null;
         expectation = null;
         throwable = null;
         consumer = null;
+        deleted = false;
         messageFormat = null;
-        arguments = null;
         message = null;
+        arguments = null;
+        because = null;
     }
 
     public Level getLogLevel() {
@@ -108,19 +122,37 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         return timestamp;
     }
 
-    public LogEntry.LogMessageType getType() {
+    public LogMessageType getType() {
         return type;
     }
 
-    public LogEntry setType(LogEntry.LogMessageType type) {
+    public LogEntry setType(LogMessageType type) {
         this.type = type;
         return this;
+    }
+
+    public String getCorrelationId() {
+        return correlationId;
+    }
+
+    public LogEntry setCorrelationId(String correlationId) {
+        this.correlationId = correlationId;
+        return this;
+    }
+
+    public LogEntry setPort(Integer port) {
+        this.port = port;
+        return this;
+    }
+
+    public Integer getPort() {
+        return port;
     }
 
     @JsonIgnore
     public RequestDefinition[] getHttpRequests() {
         if (httpRequests == null) {
-            return new RequestDefinition[0];
+            return EMPTY_REQUEST_DEFINITIONS;
         } else {
             return httpRequests;
         }
@@ -129,7 +161,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     @JsonIgnore
     public RequestDefinition[] getHttpUpdatedRequests() {
         if (httpRequests == null) {
-            return new RequestDefinition[0];
+            return EMPTY_REQUEST_DEFINITIONS;
         } else if (httpUpdatedRequests == null) {
             httpUpdatedRequests = Arrays
                 .stream(httpRequests)
@@ -150,7 +182,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
             return true;
         }
         for (RequestDefinition httpRequest : httpRequests) {
-            if (matcher.matches(httpRequest)) {
+            if (matcher.matches(httpRequest.cloneWithLogCorrelationId())) {
                 return true;
             }
         }
@@ -172,9 +204,12 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
 
     public LogEntry setHttpRequest(RequestDefinition httpRequest) {
         if (httpRequest != null) {
+            if (isNotBlank(httpRequest.getLogCorrelationId())) {
+                setCorrelationId(httpRequest.getLogCorrelationId());
+            }
             this.httpRequests = new RequestDefinition[]{httpRequest};
         } else {
-            this.httpRequests = new RequestDefinition[]{request()};
+            this.httpRequests = DEFAULT_REQUESTS_DEFINITIONS;
         }
         return this;
     }
@@ -240,36 +275,21 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         return this;
     }
 
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public LogEntry setDeleted(boolean deleted) {
+        this.deleted = deleted;
+        return this;
+    }
+
     public String getMessageFormat() {
         return messageFormat;
     }
 
     public LogEntry setMessageFormat(String messageFormat) {
         this.messageFormat = messageFormat;
-        return this;
-    }
-
-    public Object[] getArguments() {
-        return arguments;
-    }
-
-    public LogEntry setArguments(Object... arguments) {
-        if (arguments != null) {
-            this.arguments = Arrays
-                .stream(arguments)
-                .map(argument -> {
-                    if (argument instanceof HttpRequest) {
-                        return updateBody((HttpRequest) argument);
-                    } else if (argument instanceof HttpResponse) {
-                        return updateBody((HttpResponse) argument);
-                    } else {
-                        return argument;
-                    }
-                })
-                .toArray(Object[]::new);
-        } else {
-            this.arguments = null;
-        }
         return this;
     }
 
@@ -285,6 +305,41 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         return message;
     }
 
+    public Object[] getArguments() {
+        return arguments;
+    }
+
+    public LogEntry setArguments(Object... arguments) {
+        if (arguments != null) {
+            this.arguments = Arrays
+                .stream(arguments)
+                .map(argument -> {
+                    if (argument instanceof HttpRequest) {
+                        return updateBody((HttpRequest) argument);
+                    } else if (argument instanceof HttpResponse) {
+                        return updateBody((HttpResponse) argument);
+                    } else if (argument == null) {
+                        return "";
+                    } else {
+                        return argument;
+                    }
+                })
+                .toArray(Object[]::new);
+        } else {
+            this.arguments = null;
+        }
+        return this;
+    }
+
+    public String getBecause() {
+        return because;
+    }
+
+    public LogEntry setBecause(String because) {
+        this.because = because;
+        return this;
+    }
+
     private RequestDefinition updateBody(RequestDefinition requestDefinition) {
         if (requestDefinition instanceof HttpRequest) {
             HttpRequest httpRequest = (HttpRequest) requestDefinition;
@@ -292,22 +347,28 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
             if (body instanceof JsonBody) {
                 try {
                     return httpRequest
-                        .clone()
+                        .shallowClone()
                         .withBody(
-                            new LogEventBody(OBJECT_MAPPER.readTree(body.toString()))
+                            new LogEntryBody(OBJECT_MAPPER.readTree(body.toString()))
                         );
                 } catch (Throwable throwable) {
                     return httpRequest
-                        .clone()
+                        .shallowClone()
                         .withBody(
-                            new LogEventBody(body.toString())
+                            new LogEntryBody(body.toString())
                         );
                 }
-            } else if (body instanceof BodyWithContentType && !(body instanceof LogEventBody)) {
+            } else if (body instanceof ParameterBody) {
                 return httpRequest
-                    .clone()
+                    .shallowClone()
                     .withBody(
-                        new LogEventBody(body.toString())
+                        new LogEntryBody(body.toString())
+                    );
+            } else if (body instanceof BodyWithContentType && !(body instanceof LogEntryBody)) {
+                return httpRequest
+                    .shallowClone()
+                    .withBody(
+                        new LogEntryBody(body.toString())
                     );
             } else {
                 return httpRequest;
@@ -323,22 +384,22 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
             if (body != null && JsonBody.class.isAssignableFrom(body.getClass())) {
                 try {
                     return httpResponse
-                        .clone()
+                        .shallowClone()
                         .withBody(
-                            new LogEventBody(OBJECT_MAPPER.readTree(body.toString()))
+                            new LogEntryBody(OBJECT_MAPPER.readTree(body.toString()))
                         );
                 } catch (Throwable throwable) {
                     return httpResponse
-                        .clone()
+                        .shallowClone()
                         .withBody(
-                            new LogEventBody(body.toString())
+                            new LogEntryBody(body.toString())
                         );
                 }
-            } else if (body != null && !(body instanceof LogEventBody)) {
+            } else if (body != null && !(body instanceof LogEntryBody)) {
                 return httpResponse
-                    .clone()
+                    .shallowClone()
                     .withBody(
-                        new LogEventBody(body.toString())
+                        new LogEntryBody(body.toString())
                     );
             } else {
                 return httpResponse;
@@ -357,34 +418,91 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     @SuppressWarnings("MethodDoesntCallSuperMethod")
     public LogEntry clone() {
         return new LogEntry()
+            .setId(id())
             .setType(getType())
             .setLogLevel(getLogLevel())
             .setEpochTime(getEpochTime())
+            .setCorrelationId(getCorrelationId())
+            .setPort(getPort())
             .setHttpRequests(getHttpRequests())
             .setHttpResponse(getHttpResponse())
             .setHttpError(getHttpError())
             .setExpectation(getExpectation())
             .setMessageFormat(getMessageFormat())
             .setArguments(getArguments())
+            .setBecause(getBecause())
             .setThrowable(getThrowable())
-            .setConsumer(getConsumer());
+            .setConsumer(getConsumer())
+            .setDeleted(isDeleted());
     }
 
     @Override
     public void translateTo(LogEntry event, long sequence) {
         event
+            .setId(id())
             .setType(getType())
             .setLogLevel(getLogLevel())
             .setEpochTime(getEpochTime())
+            .setCorrelationId(getCorrelationId())
+            .setPort(getPort())
             .setHttpRequests(getHttpRequests())
             .setHttpResponse(getHttpResponse())
             .setHttpError(getHttpError())
             .setExpectation(getExpectation())
             .setMessageFormat(getMessageFormat())
             .setArguments(getArguments())
+            .setBecause(getBecause())
             .setThrowable(getThrowable())
-            .setConsumer(getConsumer());
+            .setConsumer(getConsumer())
+            .setDeleted(isDeleted());
         clear();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (hashCode() != o.hashCode()) {
+            return false;
+        }
+        LogEntry logEntry = (LogEntry) o;
+        return epochTime == logEntry.epochTime &&
+            deleted == logEntry.deleted &&
+            type == logEntry.type &&
+            logLevel == logEntry.logLevel &&
+            Objects.equals(messageFormat, logEntry.messageFormat) &&
+            Objects.equals(httpResponse, logEntry.httpResponse) &&
+            Objects.equals(httpError, logEntry.httpError) &&
+            Objects.equals(expectation, logEntry.expectation) &&
+            Objects.equals(consumer, logEntry.consumer) &&
+            Arrays.equals(arguments, logEntry.arguments) &&
+            Arrays.equals(httpRequests, logEntry.httpRequests);
+    }
+
+    @Override
+    public int hashCode() {
+        if (hashCode == 0) {
+            int result = Objects.hash(epochTime, deleted, type, logLevel, messageFormat, httpResponse, httpError, expectation, consumer);
+            result = 31 * result + Arrays.hashCode(arguments);
+            result = 31 * result + Arrays.hashCode(httpRequests);
+            hashCode = result;
+        }
+        return hashCode;
+    }
+
+    @Override
+    public String toString() {
+        try {
+            return ObjectMapperFactory
+                .createObjectMapper(true)
+                .writeValueAsString(this);
+        } catch (Exception e) {
+            return super.toString();
+        }
     }
 
     public enum LogMessageType {
@@ -402,18 +520,14 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         REMOVED_EXPECTATION,
         RECEIVED_REQUEST,
         EXPECTATION_RESPONSE,
-        EXPECTATION_NOT_MATCHED_RESPONSE,
         EXPECTATION_MATCHED,
         EXPECTATION_NOT_MATCHED,
+        NO_MATCH_RESPONSE,
         VERIFICATION,
         VERIFICATION_FAILED,
+        VERIFICATION_PASSED,
         FORWARDED_REQUEST,
         TEMPLATE_GENERATED,
         SERVER_CONFIGURATION,
-    }
-
-    @Override
-    protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return EXCLUDED_FIELDS;
     }
 }

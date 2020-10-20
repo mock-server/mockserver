@@ -1,4 +1,3 @@
-
 package org.mockserver.echo.http;
 
 import io.netty.channel.*;
@@ -7,7 +6,7 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
-import org.mockserver.codec.MockServerServerCodec;
+import org.mockserver.codec.MockServerHttpServerCodec;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.uuid.UUIDService;
@@ -87,20 +86,24 @@ public class WebSocketServerHandler extends ChannelInboundHandlerAdapter {
                     ctx.channel().newPromise()
                 )
                 .addListener((ChannelFutureListener) future -> {
-                    ctx.pipeline().remove(MockServerServerCodec.class);
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setLogLevel(Level.TRACE)
-                            .setMessageFormat("registering client " + clientId)
-                    );
-                    registeredClients.add(clientId);
-                    websocketChannels.add(future.channel());
-                    future.channel().closeFuture().addListener((ChannelFutureListener) future1 -> {
+                    ctx.pipeline().remove(MockServerHttpServerCodec.class);
+                    if (MockServerLogger.isEnabled(Level.TRACE)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(Level.TRACE)
-                                .setMessageFormat("unregistering callback for client " + clientId)
+                                .setMessageFormat("registering client " + clientId)
                         );
+                    }
+                    registeredClients.add(clientId);
+                    websocketChannels.add(future.channel());
+                    future.channel().closeFuture().addListener((ChannelFutureListener) closeFuture -> {
+                        if (MockServerLogger.isEnabled(Level.TRACE)) {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setLogLevel(Level.TRACE)
+                                    .setMessageFormat("unregistering callback for client " + clientId)
+                            );
+                        }
                         registeredClients.remove(clientId);
                         websocketChannels.remove(future.channel());
                     });

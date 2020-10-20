@@ -5,7 +5,7 @@ import org.mockserver.logging.MockServerLogger;
 
 import static org.junit.Assert.*;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.matchers.NotMatcher.not;
+import static org.mockserver.matchers.NotMatcher.notMatcher;
 
 /**
  * @author jamesdbloom
@@ -49,6 +49,42 @@ public class JsonStringMatcherTest {
     }
 
     @Test
+    public void shouldMatchExactMatchingJsonWithPlaceholder() {
+        // given
+        String matched = "" +
+            "{" + NEW_LINE +
+            "    \"menu\": {" + NEW_LINE +
+            "        \"id\": \"file\"," + NEW_LINE +
+            "        \"optional\": true," + NEW_LINE +
+            "        \"popup\": {" + NEW_LINE +
+            "            \"menuitem\": [" + NEW_LINE +
+            "                {" + NEW_LINE +
+            "                    \"value\": \"Close\"," + NEW_LINE +
+            "                    \"onclick\": \"CloseDoc()\"" + NEW_LINE +
+            "                }" + NEW_LINE +
+            "            ]" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}";
+
+        // then
+        assertTrue(new JsonStringMatcher(new MockServerLogger(), "{" + NEW_LINE +
+            "    \"menu\": {" + NEW_LINE +
+            "        \"id\": \"file\"," + NEW_LINE +
+            "        \"optional\": \"${json-unit.any-boolean}\"," + NEW_LINE +
+            "        \"popup\": {" + NEW_LINE +
+            "            \"menuitem\": [" + NEW_LINE +
+            "                {" + NEW_LINE +
+            "                    \"value\": \"${json-unit.ignore-element}\"," + NEW_LINE +
+            "                    \"onclick\": \"CloseDoc()\"" + NEW_LINE +
+            "                }" + NEW_LINE +
+            "            ]" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}", MatchType.ONLY_MATCHING_FIELDS).matches(null, matched));
+    }
+
+    @Test
     public void shouldNotMatchExactMatchingJson() {
         // given
         String matched = "" +
@@ -68,7 +104,7 @@ public class JsonStringMatcherTest {
             "}";
 
         // then
-        assertFalse(not(new JsonStringMatcher(new MockServerLogger(), "{" + NEW_LINE +
+        assertFalse(notMatcher(new JsonStringMatcher(new MockServerLogger(), "{" + NEW_LINE +
             "    \"menu\": {" + NEW_LINE +
             "        \"id\": \"file\"," + NEW_LINE +
             "        \"value\": \"File\"," + NEW_LINE +
@@ -271,7 +307,7 @@ public class JsonStringMatcherTest {
             "}";
 
         // then
-        assertTrue(not(new JsonStringMatcher(new MockServerLogger(), "{" + NEW_LINE +
+        assertTrue(notMatcher(new JsonStringMatcher(new MockServerLogger(), "{" + NEW_LINE +
             "    \"glossary\": {" + NEW_LINE +
             "        \"GlossDiv\": {" + NEW_LINE +
             "            \"title\": \"S\"," + NEW_LINE +

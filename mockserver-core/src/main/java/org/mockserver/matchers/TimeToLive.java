@@ -3,6 +3,7 @@ package org.mockserver.matchers;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -16,6 +17,8 @@ public class TimeToLive extends ObjectWithReflectiveEqualsHashCodeToString {
             return true;
         }
     };
+
+    private int hashCode;
     private final TimeUnit timeUnit;
     private final Long timeToLive;
     private final boolean unlimited;
@@ -72,5 +75,30 @@ public class TimeToLive extends ObjectWithReflectiveEqualsHashCodeToString {
     @JsonIgnore
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
         return EXCLUDED_FIELDS;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (hashCode() != o.hashCode()) {
+            return false;
+        }
+        TimeToLive that = (TimeToLive) o;
+        return unlimited == that.unlimited &&
+            timeUnit == that.timeUnit &&
+            Objects.equals(timeToLive, that.timeToLive);
+    }
+
+    @Override
+    public int hashCode() {
+        if (hashCode == 0) {
+            hashCode = Objects.hash(timeUnit, timeToLive, unlimited);
+        }
+        return hashCode;
     }
 }

@@ -36,11 +36,6 @@ public abstract class BodyWithContentType<T> extends Body<T> {
         return determineCharacterSet(contentType, defaultIfNotSet);
     }
 
-    @JsonIgnore
-    public Charset getCharsetOrDefault() {
-        return DEFAULT_HTTP_CHARACTER_SET;
-    }
-
     @Override
     public String getContentType() {
         return (contentType != null ? contentType.toString() : null);

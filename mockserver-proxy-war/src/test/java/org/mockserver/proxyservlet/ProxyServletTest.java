@@ -1,7 +1,6 @@
 package org.mockserver.proxyservlet;
 
 import com.google.common.collect.ImmutableSet;
-import io.netty.channel.ChannelHandlerContext;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -30,7 +29,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import java.util.Collections;
 import java.util.Date;
 
-import static org.apache.commons.codec.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -40,6 +39,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LOG_DATE_FORMAT;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
+import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE_FORMAT;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
@@ -191,7 +191,7 @@ public class ProxyServletTest {
         MockHttpServletRequest statusRequest = buildHttpServletRequest(
             "PUT",
             "/bind", portBindingSerializer.serialize(
-                portBinding(1080, 1090)
+                portBinding(1090, 1090)
             ));
 
         // when
@@ -253,7 +253,7 @@ public class ProxyServletTest {
                     .setType(RECEIVED_REQUEST)
                     .setLogLevel(Level.INFO)
                     .setHttpRequest(request("request_one"))
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_one"))
             );
 
@@ -271,13 +271,6 @@ public class ProxyServletTest {
             assertThat(
                 new String(response.getContentAsByteArray(), UTF_8),
                 is(endsWith(LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - received request:" + NEW_LINE +
-                    NEW_LINE +
-                    "  {" + NEW_LINE +
-                    "    \"path\" : \"request_one\"" + NEW_LINE +
-                    "  }" + NEW_LINE +
-                    NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"path\" : \"request_one\"" + NEW_LINE +
@@ -309,7 +302,7 @@ public class ProxyServletTest {
                     .withKeepAlive(true)
             ),
             any(ServletResponseWriter.class),
-            isNull(ChannelHandlerContext.class),
+            isNull(),
             eq(ImmutableSet.of(
                 "local_address",
                 "localhost",
@@ -339,7 +332,7 @@ public class ProxyServletTest {
                     .withKeepAlive(true)
             ),
             any(ServletResponseWriter.class),
-            isNull(ChannelHandlerContext.class),
+            isNull(),
             eq(ImmutableSet.of(
                 "local_address:666",
                 "localhost:666",
@@ -370,7 +363,7 @@ public class ProxyServletTest {
                     .withKeepAlive(true)
             ),
             any(ServletResponseWriter.class),
-            isNull(ChannelHandlerContext.class),
+            isNull(),
             eq(ImmutableSet.of(
                 "local_address",
                 "localhost",
@@ -401,7 +394,7 @@ public class ProxyServletTest {
                     .withKeepAlive(true)
             ),
             any(ServletResponseWriter.class),
-            isNull(ChannelHandlerContext.class),
+            isNull(),
             eq(ImmutableSet.of(
                 "local_address:666",
                 "localhost:666",

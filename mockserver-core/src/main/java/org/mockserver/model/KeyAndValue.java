@@ -2,6 +2,7 @@ package org.mockserver.model;
 
 import java.util.Objects;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -13,7 +14,11 @@ public class KeyAndValue extends ObjectWithJsonToString {
     private final int hashCode;
 
     public KeyAndValue(String name, String value) {
-        this(string(name), string(value));
+        this(string(name), string(isBlank(value) ? "" : value));
+    }
+
+    public KeyAndValue(NottableString name, String value) {
+        this(name, string(isBlank(value) ? "" : value));
     }
 
     public KeyAndValue(NottableString name, NottableString value) {

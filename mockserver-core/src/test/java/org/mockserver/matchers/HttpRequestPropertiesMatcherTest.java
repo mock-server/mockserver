@@ -6,13 +6,14 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.serialization.model.*;
 
+import static java.nio.charset.StandardCharsets.UTF_16;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.jar.Attributes.Name.CONTENT_TYPE;
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.matchers.NotMatcher.not;
+import static org.mockserver.matchers.NotMatcher.notMatcher;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.Cookie.schemaCookie;
 import static org.mockserver.model.Header.schemaHeader;
@@ -20,9 +21,13 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.JsonPathBody.jsonPath;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
+import static org.mockserver.model.KeyMatchStyle.MATCHING_KEY;
+import static org.mockserver.model.KeyMatchStyle.SUB_SET;
+import static org.mockserver.model.Not.not;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.Parameter.schemaParam;
 import static org.mockserver.model.ParameterBody.params;
+import static org.mockserver.model.ParameterStyle.*;
 import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.XPathBody.xpath;
@@ -83,37 +88,37 @@ public class HttpRequestPropertiesMatcherTest {
     @Test
     public void shouldMatchWithNottedMatcher() {
         // requests match - matcher HttpRequest notted
-        assertFalse(update(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))).matches(null, new HttpRequest().withMethod("HEAD")));
+        assertFalse(update(not(new HttpRequest().withMethod("HEAD"))).matches(null, new HttpRequest().withMethod("HEAD")));
 
         // requests match - matched HttpRequest notted
-        assertFalse(update(new HttpRequest().withMethod("HEAD")).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))));
+        assertFalse(update(new HttpRequest().withMethod("HEAD")).matches(null, not(new HttpRequest().withMethod("HEAD"))));
 
         // requests match - matcher HttpRequest notted & HttpRequestMatch notted
-        assertTrue(not(update(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD")))).matches(null, new HttpRequest().withMethod("HEAD")));
+        assertTrue(notMatcher(update(not(new HttpRequest().withMethod("HEAD")))).matches(null, new HttpRequest().withMethod("HEAD")));
 
         // requests match - matched HttpRequest notted & HttpRequestMatch notted
-        assertTrue(not(update(new HttpRequest().withMethod("HEAD"))).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))));
+        assertTrue(notMatcher(update(new HttpRequest().withMethod("HEAD"))).matches(null, not(new HttpRequest().withMethod("HEAD"))));
 
         // requests match - matcher HttpRequest notted & matched HttpRequest notted & HttpRequestMatch notted
-        assertFalse(not(update(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD")))).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))));
+        assertFalse(notMatcher(update(not(new HttpRequest().withMethod("HEAD")))).matches(null, not(new HttpRequest().withMethod("HEAD"))));
     }
 
     @Test
     public void shouldNotMatchWithNottedMatcher() {
         // requests don't match - matcher HttpRequest notted
-        assertTrue(update(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD"))).matches(null, new HttpRequest().withMethod("OPTIONS")));
+        assertTrue(update(not(new HttpRequest().withMethod("HEAD"))).matches(null, new HttpRequest().withMethod("OPTIONS")));
 
         // requests don't match - matched HttpRequest notted
-        assertTrue(update(new HttpRequest().withMethod("HEAD")).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("OPTIONS"))));
+        assertTrue(update(new HttpRequest().withMethod("HEAD")).matches(null, not(new HttpRequest().withMethod("OPTIONS"))));
 
         // requests don't match - matcher HttpRequest notted & HttpRequestMatch notted
-        assertFalse(not(update(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD")))).matches(null, new HttpRequest().withMethod("OPTIONS")));
+        assertFalse(notMatcher(update(not(new HttpRequest().withMethod("HEAD")))).matches(null, new HttpRequest().withMethod("OPTIONS")));
 
         // requests don't match - matched HttpRequest notted & HttpRequestMatch notted
-        assertFalse(not(update(new HttpRequest().withMethod("HEAD"))).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("OPTIONS"))));
+        assertFalse(notMatcher(update(new HttpRequest().withMethod("HEAD"))).matches(null, not(new HttpRequest().withMethod("OPTIONS"))));
 
         // requests don't match - matcher HttpRequest notted & matched HttpRequest notted & HttpRequestMatch notted
-        assertTrue(not(update(org.mockserver.model.Not.not(new HttpRequest().withMethod("HEAD")))).matches(null, org.mockserver.model.Not.not(new HttpRequest().withMethod("OPTIONS"))));
+        assertTrue(notMatcher(update(not(new HttpRequest().withMethod("HEAD")))).matches(null, not(new HttpRequest().withMethod("OPTIONS"))));
     }
 
     // KEEP ALIVE
@@ -472,7 +477,219 @@ public class HttpRequestPropertiesMatcherTest {
     // PATH PARAMETERS
 
     @Test
-    public void shouldMatchPathParameter() {
+    public void shouldMatchPathParameterInPath() {
+        assertTrue(update(new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValue")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/someValue"
+            )
+        ));
+        assertTrue(update(new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValueOne", "someValueTwo")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/someValueOne,someValueTwo"
+            )
+        ));
+        assertTrue(update(new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValue")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/someValue"
+            )
+            .withPathParameters(
+                new Parameter("someKeyTwo", "someValueTwo")
+            )
+        ));
+        assertTrue(update(new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValueOne", "someValueTwo")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/someValueOne,someValueTwo"
+            )
+            .withPathParameters(
+                new Parameter("someKeyTwo", "someValueOne", "someValueTwo")
+            )
+        ));
+    }
+
+    @Test
+    public void shouldMatchNottedPathParameterInPath() {
+        assertTrue(update(new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "!someValue")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/someOtherValue"
+            )
+        ));
+        assertTrue(update(new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "!someValueOne", "someValueTwo")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/someOtherValueOne,someValueTwo"
+            )
+        ));
+        assertTrue(update(new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValueOne", "!someValueTwo")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/someValueOne,someOtherValueTwo"
+            )
+        ));
+    }
+
+    @Test
+    public void shouldNotMatchPathParameterKeyInPath() {
+        assertFalse(update(new HttpRequest()
+            .withPath(
+                "/some/path/"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValue")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/someOtherValue"
+            )
+        ));
+        assertFalse(update(new HttpRequest()
+            .withPath(
+                "/some/path"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValue")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/someOtherValue"
+            )
+        ));
+        assertFalse(update(new HttpRequest()
+            .withPath(
+                "/some/path/"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValue")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/someOtherValue"
+            )
+            .withPathParameters(
+                new Parameter("someKeyTwo", "someValueTwo")
+            )
+        ));
+    }
+
+    @Test
+    public void shouldNotMatchPathParameterValueInPath() {
+        assertFalse(update(new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValue")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/someOtherValue"
+            )
+        ));
+        assertFalse(update(new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValue")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/someOtherValue"
+            )
+            .withPathParameters(
+                new Parameter("someKeyTwo", "someValueTwo")
+            )
+        ));
+    }
+
+    @Test
+    public void shouldNotMatchNottedPathParameterInPath() {
+        assertFalse(update(new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "!someValue")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/someValue"
+            )
+        ));
+        assertFalse(update(new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "!someValueOne", "someValueTwo")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/someValueOne,someValueTwo"
+            )
+        ));
+        assertFalse(update(new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValueOne", "!someValueTwo")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/someValueOne,someValueTwo"
+            )
+        ));
+    }
+
+    @Test
+    public void shouldMatchPathParameterInParameterObject() {
         assertTrue(update(new HttpRequest().withPathParameters(
             new Parameter("someKey", "someValue")
         )).matches(null, new HttpRequest().withPathParameter(
@@ -498,74 +715,225 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
-    public void shouldNotMatchPathParameterKey() {
-        assertFalse(update(new HttpRequest().withPathParameters(
-            new Parameter("someKey", "someValue")
-        )).matches(null, new HttpRequest().withPathParameter(
-            new Parameter("someOtherKey", "someValue")
-        )));
-        assertFalse(update(new HttpRequest().withPathParameters(
-            new Parameter("someKey", "someValue")
-        )).matches(null, new HttpRequest().withPathParameters(
-            new Parameter("someOtherKey", "someValue"),
-            new Parameter("someKeyTwo", "someValueTwo")
-        )));
+    public void shouldMatchPathParameterInPathForControlPlane() {
+        assertTrue(updateForControlPlane(new HttpRequest()
+            .withPath(
+                "/some/path/someValue"
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValue")
+            )
+        ));
+        assertTrue(updateForControlPlane(new HttpRequest()
+            .withPath(
+                "/some/path/someValueOne,someValueTwo"
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValueOne", "someValueTwo")
+            )
+        ));
+        assertTrue(updateForControlPlane(new HttpRequest()
+            .withPath(
+                "/some/path/someValue"
+            )
+            .withPathParameters(
+                new Parameter("someKeyTwo", "someValueTwo")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValue")
+            )
+        ));
+        assertTrue(updateForControlPlane(new HttpRequest()
+            .withPath(
+                "/some/path/someValueOne,someValueTwo"
+            )
+            .withPathParameters(
+                new Parameter("someKeyTwo", "someValueOne", "someValueTwo")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValueOne", "someValueTwo")
+            )
+        ));
+        assertFalse(update(new HttpRequest()
+            .withPath(
+                "/some/path/someValue"
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValue")
+            )
+        ));
+        assertFalse(update(new HttpRequest()
+            .withPath(
+                "/some/path/someValueOne,someValueTwo"
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValueOne", "someValueTwo")
+            )
+        ));
+        assertFalse(update(new HttpRequest()
+            .withPath(
+                "/some/path/someValue"
+            )
+            .withPathParameters(
+                new Parameter("someKeyTwo", "someValueTwo")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValue")
+            )
+        ));
+        assertFalse(update(new HttpRequest()
+            .withPath(
+                "/some/path/someValueOne,someValueTwo"
+            )
+            .withPathParameters(
+                new Parameter("someKeyTwo", "someValueOne", "someValueTwo")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValueOne", "someValueTwo")
+            )
+        ));
     }
 
     @Test
-    public void shouldNotMatchPathParameterValue() {
-        assertFalse(update(new HttpRequest().withPathParameters(
-            new Parameter("someKey", "someValue")
-        )).matches(null, new HttpRequest().withPathParameter(
-            new Parameter("someKey", "someOtherValue")
-        )));
-        assertFalse(update(new HttpRequest().withPathParameters(
-            new Parameter("someKey", "someValueOne", "someValueTwo")
-        )).matches(null, new HttpRequest().withPathParameter(
-            new Parameter("someKey", "someOtherValueOne", "someValueTwo")
-        )));
-        assertFalse(update(new HttpRequest().withPathParameters(
-            new Parameter("someKey", "someValueOne", "someValueTwo")
-        )).matches(null, new HttpRequest().withPathParameter(
-            new Parameter("someKey", "someValueOne", "someOtherValueTwo")
-        )));
-        assertFalse(update(new HttpRequest().withPathParameters(
-            new Parameter("someKey", "someValue")
-        )).matches(null, new HttpRequest().withPathParameters(
-            new Parameter("someKey", "someOtherValue"),
-            new Parameter("someKeyTwo", "someValueTwo")
-        )));
-        assertFalse(update(new HttpRequest().withPathParameters(
-            new Parameter("someKey", "someValueOne", "someValueTwo")
-        )).matches(null, new HttpRequest().withPathParameters(
-            new Parameter("someKey", "someOtherValueOne", "someValueTwo"),
-            new Parameter("someKeyTwo", "someValueTwoOne", "someValueTwoTwo")
-        )));
-        assertFalse(update(new HttpRequest().withPathParameters(
-            new Parameter("someKey", "someValueOne", "someValueTwo")
-        )).matches(null, new HttpRequest().withPathParameters(
-            new Parameter("someKey", "someValueOne", "someOtherValueTwo"),
-            new Parameter("someKeyOther", "someValueTwoOne", "someValueTwoTwo")
-        )));
+    public void shouldNotMatchPathParameterKeyInPathForControlPlane() {
+        assertFalse(updateForControlPlane(new HttpRequest()
+            .withPath(
+                "/some/path/someOtherValue"
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValue")
+            )
+        ));
+        assertFalse(updateForControlPlane(new HttpRequest()
+            .withPath(
+                "/some/path/someOtherValue"
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValue")
+            )
+        ));
+        assertFalse(updateForControlPlane(new HttpRequest()
+            .withPath(
+                "/some/path/someOtherValue"
+            )
+            .withPathParameters(
+                new Parameter("someKeyTwo", "someValueTwo")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValue")
+            )
+        ));
     }
 
     @Test
-    public void shouldNotMatchPathParameterKeyAndValue() {
-        assertFalse(update(new HttpRequest().withPathParameters(
-            new Parameter("someKey", "someValue")
-        )).matches(null, new HttpRequest().withPathParameter(
-            new Parameter("someOtherKey", "someOtherValue")
-        )));
-        assertFalse(update(new HttpRequest().withPathParameters(
-            new Parameter("someKey", "someValue")
-        )).matches(null, new HttpRequest().withPathParameters(
-            new Parameter("someOtherKey", "someOtherValue"),
-            new Parameter("someOtherKeyTwo", "someOtherValueTwo")
-        )));
+    public void shouldNotMatchPathParameterValueInPathForControlPlane() {
+        assertFalse(updateForControlPlane(new HttpRequest()
+            .withPath(
+                "/some/path/someOtherValue"
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValue")
+            )
+        ));
+        assertFalse(updateForControlPlane(new HttpRequest()
+            .withPath(
+                "/some/path/someOtherValue"
+            )
+            .withPathParameters(
+                new Parameter("someKeyTwo", "someValueTwo")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someKey", "someValue")
+            )
+        ));
     }
 
     @Test
-    public void shouldMatchPathParameterWithRegex() {
+    public void shouldMatchPathParameterWithRegexInPath() {
+        assertTrue(update(new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/someValue"
+            )
+        ));
+    }
+
+    @Test
+    public void shouldNotMatchPathParameterValueWithRegexInPath() {
+        assertFalse(update(new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/someOtherValue"
+            )
+        ));
+    }
+
+    @Test
+    public void shouldMatchPathParameterWithRegexInParameterObject() {
         assertTrue(update(new HttpRequest().withPathParameters(
             new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
         )).matches(null, new HttpRequest().withPathParameter(
@@ -574,80 +942,39 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
-    public void shouldNotMatchPathParameterKeyWithRegex() {
-        assertFalse(update(new HttpRequest().withPathParameters(
-            new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
-        )).matches(null, new HttpRequest().withPathParameter(
-            new Parameter("someOtherKey", "someValue")
-        )));
+    public void shouldMatchPathParameterWithRegexInPathForControlPlane() {
+        assertTrue(updateForControlPlane(new HttpRequest()
+            .withPath(
+                "/some/path/someValue"
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
+            )
+        ));
     }
 
     @Test
-    public void shouldNotMatchPathParameterValueWithRegex() {
-        assertFalse(update(new HttpRequest().withPathParameters(
-            new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
-        )).matches(null, new HttpRequest().withPathParameter(
-            new Parameter("someKey", "someOtherValue")
-        )));
+    public void shouldNotMatchPathParameterValueWithRegexInPathForControlPlane() {
+        assertFalse(updateForControlPlane(new HttpRequest()
+            .withPath(
+                "/some/path/someOtherValue"
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
+            )
+        ));
     }
 
     @Test
-    public void shouldNotMatchPathParameterKeyAndValueWithRegex() {
-        assertFalse(update(new HttpRequest().withPathParameters(
-            new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
-        )).matches(null, new HttpRequest().withPathParameter(
-            new Parameter("someOtherKey", "someOtherValue")
-        )));
-    }
-
-    @Test
-    public void shouldMatchPathParameterWithRegexForControlPlane() {
-        assertTrue(updateForControlPlane(new HttpRequest().withPathParameters(
-            new Parameter("someKey", "someValue")
-        )).matches(null, new HttpRequest().withPathParameter(
-            new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
-        )));
-        assertTrue(updateForControlPlane(new HttpRequest().withPathParameters(
-            new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
-        )).matches(null, new HttpRequest().withPathParameter(
-            new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
-        )));
-        assertFalse(update(new HttpRequest().withPathParameters(
-            new Parameter("someKey", "someValue")
-        )).matches(null, new HttpRequest().withPathParameter(
-            new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
-        )));
-    }
-
-    @Test
-    public void shouldNotMatchPathParameterKeyWithRegexForControlPlane() {
-        assertFalse(updateForControlPlane(new HttpRequest().withPathParameters(
-            new Parameter("someOtherKey", "someValue")
-        )).matches(null, new HttpRequest().withPathParameter(
-            new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
-        )));
-    }
-
-    @Test
-    public void shouldNotMatchPathParameterValueWithRegexForControlPlane() {
-        assertFalse(updateForControlPlane(new HttpRequest().withPathParameters(
-            new Parameter("someKey", "someOtherValue")
-        )).matches(null, new HttpRequest().withPathParameter(
-            new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
-        )));
-    }
-
-    @Test
-    public void shouldNotMatchPathParameterKeyAndValueWithRegexForControlPlane() {
-        assertFalse(updateForControlPlane(new HttpRequest().withPathParameters(
-            new Parameter("someOtherKey", "someOtherValue")
-        )).matches(null, new HttpRequest().withPathParameter(
-            new Parameter("someK[a-z]{2}", "someV[a-z]{4}")
-        )));
-    }
-
-    @Test
-    public void shouldMatchPathParameterWithSchema() {
+    public void shouldMatchPathParameterWithSchemaInPathObject() {
         assertTrue(update(new HttpRequest().withPathParameters(
             schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
         )).matches(null, new HttpRequest().withPathParameters(
@@ -656,81 +983,79 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
-    public void shouldNotMatchPathParameterKeyWithSchema() {
-        assertFalse(update(new HttpRequest().withPathParameters(
-            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
-        )).matches(null, new HttpRequest().withPathParameters(
-            new Parameter("someOtherKey", "someValue")
-        )));
+    public void shouldMatchPathParameterWithSchemaInParameterObject() {
+        assertTrue(update(new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/someValue"
+            )
+        ));
     }
 
     @Test
-    public void shouldNotMatchPathParameterValueWithSchema() {
-        assertFalse(update(new HttpRequest().withPathParameters(
-            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
-        )).matches(null, new HttpRequest().withPathParameters(
-            new Parameter("someKey", "someOtherValue")
-        )));
+    public void shouldNotMatchPathParameterWithSchemaInParameterObject() {
+        assertFalse(update(new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/someOtherValue"
+            )
+        ));
     }
 
     @Test
-    public void shouldNotMatchPathParameterKeyAndValueWithSchema() {
-        assertFalse(update(new HttpRequest().withPathParameters(
-            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
-        )).matches(null, new HttpRequest().withPathParameter(
-            new Parameter("someOtherKey", "someOtherValue")
-        )));
+    public void shouldMatchPathParameterWithSchemaInPathObjectForControlPlane() {
+        assertTrue(updateForControlPlane(new HttpRequest()
+            .withPath(
+                "/some/path/someValue"
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
+            )
+        ));
+        assertFalse(update(new HttpRequest()
+            .withPath(
+                "/some/path/someValue"
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
+            )
+        ));
     }
 
     @Test
-    public void shouldMatchPathParameterWithSchemaForControlPlane() {
-        assertTrue(updateForControlPlane(new HttpRequest().withPathParameters(
-            new Parameter("someKey", "someValue")
-        )).matches(null, new HttpRequest().withPathParameters(
-            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
-        )));
-        assertTrue(updateForControlPlane(new HttpRequest().withPathParameters(
-            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
-        )).matches(null, new HttpRequest().withPathParameters(
-            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
-        )));
-        assertFalse(update(new HttpRequest().withPathParameters(
-            new Parameter("someKey", "someValue")
-        )).matches(null, new HttpRequest().withPathParameters(
-            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
-        )));
-        assertFalse(update(new HttpRequest().withPathParameters(
-            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
-        )).matches(null, new HttpRequest().withPathParameters(
-            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
-        )));
-    }
-
-    @Test
-    public void shouldNotMatchPathParameterKeyWithSchemaForControlPlane() {
-        assertFalse(updateForControlPlane(new HttpRequest().withPathParameters(
-            new Parameter("someOtherKey", "someValue")
-        )).matches(null, new HttpRequest().withPathParameters(
-            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
-        )));
-    }
-
-    @Test
-    public void shouldNotMatchPathParameterValueWithSchemaForControlPlane() {
-        assertFalse(updateForControlPlane(new HttpRequest().withPathParameters(
-            new Parameter("someKey", "someOtherValue")
-        )).matches(null, new HttpRequest().withPathParameters(
-            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
-        )));
-    }
-
-    @Test
-    public void shouldNotMatchPathParameterKeyAndValueWithSchemaForControlPlane() {
-        assertFalse(updateForControlPlane(new HttpRequest().withPathParameters(
-            new Parameter("someOtherKey", "someOtherValue")
-        )).matches(null, new HttpRequest().withPathParameter(
-            schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
-        )));
+    public void shouldNotMatchPathParameterWithSchemaInPathObjectForControlPlane() {
+        assertFalse(updateForControlPlane(new HttpRequest()
+            .withPath(
+                "/some/path/someOtherValue"
+            )
+        ).matches(null, new HttpRequest()
+            .withPath(
+                "/some/path/{someKey}"
+            )
+            .withPathParameters(
+                schemaParam("someK[a-z]{2}", "{ \"type\": \"string\", \"pattern\": \"^someV[a-z]{4}$\" }")
+            )
+        ));
     }
 
     // QUERY STRING PARAMETERS
@@ -758,6 +1083,478 @@ public class HttpRequestPropertiesMatcherTest {
         )).matches(null, new HttpRequest().withQueryStringParameters(
             new Parameter("someKey", "someValueOne", "someValueTwo"),
             new Parameter("someKeyTwo", "someValueOne", "someValueTwo")
+        )));
+    }
+
+    @Test
+    public void shouldMatchQueryStringFormStyleParameter() {
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1,1,1")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1,1,1")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM),
+                new Parameter("someKeyTwo", "a")
+                    .withStyle(FORM)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "1,1,1"),
+            new Parameter("someKeyTwo", "a,a,a")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1,1,1", "1,1,1")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1,2,3", "1,2,3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM)
+            ).withKeyMatchStyle(SUB_SET)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1,2,3", "1,2,3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM)
+            )
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1,2,3", "1,2,3")
+        )));
+    }
+
+    @Test
+    public void shouldMatchQueryStringFormExpandedStyleParameter() {
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1", "1", "1")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1", "1", "1")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM_EXPLODED),
+                new Parameter("someKeyTwo", "a")
+                    .withStyle(FORM_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "1", "1", "1"),
+            new Parameter("someKeyTwo", "a", "a", "a")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1", "1", "1", "1", "1", "1")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1", "2", "3", "1", "2", "3")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1", "2", "3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM_EXPLODED)
+            ).withKeyMatchStyle(SUB_SET)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1", "2", "3", "1", "2", "3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM_EXPLODED)
+            )
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1", "2", "3", "1", "2", "3")
+        )));
+    }
+
+    @Test
+    public void shouldMatchQueryStringSpaceDelimitedStyleParameter() {
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1%201%201")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1+1+1")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1 1 1")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1%201%201")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1+1+1")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1 1 1")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED),
+                new Parameter("someKeyTwo", "a")
+                    .withStyle(SPACE_DELIMITED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "1+1+1"),
+            new Parameter("someKeyTwo", "a+a+a")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1+1+1", "1+1+1")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1+2+3", "1+2+3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED)
+            ).withKeyMatchStyle(SUB_SET)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1%202%203", "1%202%203")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED)
+            ).withKeyMatchStyle(SUB_SET)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1+2+3", "1+2+3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED)
+            ).withKeyMatchStyle(SUB_SET)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1 2 3", "1 2 3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED)
+            )
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1%202%203", "1%202%203")
+        )));
+    }
+
+    @Test
+    public void shouldMatchQueryStringSpaceDelimitedExpandedStyleParameter() {
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1", "1", "1")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1", "1", "1")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED_EXPLODED),
+                new Parameter("someKeyTwo", "a")
+                    .withStyle(SPACE_DELIMITED_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "1", "1", "1"),
+            new Parameter("someKeyTwo", "a", "a", "a")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1", "1", "1", "1", "1", "1")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1", "2", "3", "1", "2", "3")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1", "2", "3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED_EXPLODED)
+            ).withKeyMatchStyle(SUB_SET)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1", "2", "3", "1", "2", "3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED_EXPLODED)
+            )
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1", "2", "3", "1", "2", "3")
+        )));
+    }
+
+    @Test
+    public void shouldMatchQueryStringPipeDelimitedStyleParameter() {
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(PIPE_DELIMITED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1|1|1")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1|1|1")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(PIPE_DELIMITED),
+                new Parameter("someKeyTwo", "a")
+                    .withStyle(PIPE_DELIMITED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "1|1|1"),
+            new Parameter("someKeyTwo", "a|a|a")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(PIPE_DELIMITED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1|1|1", "1|1|1")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(PIPE_DELIMITED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1|2|3", "1|2|3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(PIPE_DELIMITED)
+            ).withKeyMatchStyle(SUB_SET)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1|2|3", "1|2|3")
+        )));
+    }
+
+    @Test
+    public void shouldMatchQueryStringPipeDelimitedExpandedStyleParameter() {
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(PIPE_DELIMITED_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1", "1", "1")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1", "1", "1")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(PIPE_DELIMITED_EXPLODED),
+                new Parameter("someKeyTwo", "a")
+                    .withStyle(PIPE_DELIMITED_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "1", "1", "1"),
+            new Parameter("someKeyTwo", "a", "a", "a")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(PIPE_DELIMITED_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1", "1", "1", "1", "1", "1")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(PIPE_DELIMITED_EXPLODED)
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1", "2", "3", "1", "2", "3")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+            ).withKeyMatchStyle(MATCHING_KEY)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1", "2", "3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(PIPE_DELIMITED_EXPLODED)
+            ).withKeyMatchStyle(SUB_SET)
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1", "2", "3", "1", "2", "3")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameters(
+                new Parameter("someKey", "1")
+                    .withStyle(PIPE_DELIMITED_EXPLODED)
+            )
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "1", "2", "3", "1", "2", "3")
+        )));
+    }
+
+    @Test
+    public void shouldMatchEmptyQueryStringParameter() {
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "someValue")
+        )));
+    }
+
+    @Test
+    public void shouldMatchNottedQueryStringParameter() {
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "!someValue")
+        )).matches(null, new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "someOtherValue")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "!someValue")
+        )).matches(null, new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "someOtherValueOne", "someOtherValueTwo")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameter("!someKey", "someValue")
+        )).matches(null, new HttpRequest().withQueryStringParameters(
+            new Parameter("someOtherKey", "someValue")
+        )));
+        assertTrue(update(new HttpRequest().withQueryStringParameters(
+            new Parameter("!someKey", "!someValue")
+        )).matches(null, new HttpRequest().withQueryStringParameters(
+            new Parameter("someOtherKey", "someOtherValue"),
+            new Parameter("notSomeKey", "someOtherValueOne", "someOtherValueTwo"),
+            new Parameter("someOtherKey", "someValue")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameter("!someKey", "someValue")
+        )).matches(null, new HttpRequest().withQueryStringParameters(
+            new Parameter("someOtherKey", "someOtherValue"),
+            new Parameter("someKey", "someOtherValueOne", "someOtherValueTwo"),
+            new Parameter("someOtherKey", "someValue")
         )));
     }
 
@@ -825,6 +1622,63 @@ public class HttpRequestPropertiesMatcherTest {
         )).matches(null, new HttpRequest().withQueryStringParameters(
             new Parameter("someOtherKey", "someOtherValue"),
             new Parameter("someOtherKeyTwo", "someOtherValueTwo")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedQueryStringParameterKey() {
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameter("!someKey", "someValue")
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "someValue")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameter("!someKey", "someValue")
+        )).matches(null, new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "someValue"),
+            new Parameter("someKeyTwo", "someValueTwo")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedQueryStringParameterValue() {
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "!someValue")
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "someValue")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "!someValue")
+        )).matches(null, new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "someValue"),
+            new Parameter("someKeyTwo", "someValueTwo")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedQueryStringParameterKeyAndValue() {
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameter("!someKey", "!someValue")
+        )).matches(null, new HttpRequest().withQueryStringParameter(
+            new Parameter("someKey", "someValue")
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameter("!someKey", "!someValue")
+        )).matches(null, new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "someOtherValue"),
+            new Parameter("someOtherKey", "someValue")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchEmptyQueryStringParameterForControlPlane() {
+        assertFalse(updateForControlPlane(new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "someValue")
+        )).matches(null, new HttpRequest().withQueryStringParameters(
+        )));
+        assertFalse(update(new HttpRequest().withQueryStringParameters(
+            new Parameter("someKey", "someValue")
+        )).matches(null, new HttpRequest().withQueryStringParameters(
         )));
     }
 
@@ -1026,6 +1880,40 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchEmptyHeader() {
+        assertTrue(update(new HttpRequest().withHeaders(
+        )).matches(null, new HttpRequest().withHeader(
+            new Header("someKey", "someValue")
+        )));
+    }
+
+    @Test
+    public void shouldMatchNottedHeader() {
+        assertTrue(update(new HttpRequest().withHeaders(
+            new Header("someKey", "!someValue")
+        )).matches(null, new HttpRequest().withHeaders(
+            new Header("someKey", "someOtherValue")
+        )));
+        assertTrue(update(new HttpRequest().withHeaders(
+            new Header("someKey", "!someValue")
+        )).matches(null, new HttpRequest().withHeaders(
+            new Header("someKey", "someOtherValueOne", "someOtherValueTwo")
+        )));
+        assertTrue(update(new HttpRequest().withHeaders(
+            new Header("!someKey", "someValue")
+        )).matches(null, new HttpRequest().withHeaders(
+            new Header("someOtherKey", "someValue")
+        )));
+        assertTrue(update(new HttpRequest().withHeaders(
+            new Header("!someKey", "!someValue")
+        )).matches(null, new HttpRequest().withHeaders(
+            new Header("someOtherKey", "someOtherValue"),
+            new Header("notSomeKey", "someOtherValueOne", "someOtherValueTwo"),
+            new Header("someOtherKey", "someValue")
+        )));
+    }
+
+    @Test
     public void shouldNotMatchHeaderKey() {
         assertFalse(update(new HttpRequest().withHeaders(
             new Header("someKey", "someValue")
@@ -1089,6 +1977,63 @@ public class HttpRequestPropertiesMatcherTest {
         )).matches(null, new HttpRequest().withHeaders(
             new Header("someOtherKey", "someOtherValue"),
             new Header("someOtherKeyTwo", "someOtherValueTwo")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedHeaderKey() {
+        assertFalse(update(new HttpRequest().withHeaders(
+            new Header("!someKey", "someValue")
+        )).matches(null, new HttpRequest().withHeader(
+            new Header("someKey", "someValue")
+        )));
+        assertFalse(update(new HttpRequest().withHeaders(
+            new Header("!someKey", "someValue")
+        )).matches(null, new HttpRequest().withHeaders(
+            new Header("someKey", "someValue"),
+            new Header("someKeyTwo", "someValueTwo")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedHeaderValue() {
+        assertFalse(update(new HttpRequest().withHeaders(
+            new Header("someKey", "!someValue")
+        )).matches(null, new HttpRequest().withHeader(
+            new Header("someKey", "someValue")
+        )));
+        assertFalse(update(new HttpRequest().withHeaders(
+            new Header("someKey", "!someValue")
+        )).matches(null, new HttpRequest().withHeaders(
+            new Header("someKey", "someValue"),
+            new Header("someKeyTwo", "someValueTwo")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedHeaderKeyAndValue() {
+        assertFalse(update(new HttpRequest().withHeaders(
+            new Header("!someKey", "!someValue")
+        )).matches(null, new HttpRequest().withHeader(
+            new Header("someKey", "someValue")
+        )));
+        assertFalse(update(new HttpRequest().withHeaders(
+            new Header("!someKey", "!someValue")
+        )).matches(null, new HttpRequest().withHeaders(
+            new Header("someKey", "someOtherValue"),
+            new Header("someOtherKey", "someValue")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchEmptyHeaderForControlPlane() {
+        assertFalse(updateForControlPlane(new HttpRequest().withHeaders(
+            new Header("someKey", "someValue")
+        )).matches(null, new HttpRequest().withHeaders(
+        )));
+        assertFalse(update(new HttpRequest().withHeaders(
+            new Header("someKey", "someValue")
+        )).matches(null, new HttpRequest().withHeaders(
         )));
     }
 
@@ -1279,17 +2224,29 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
-    public void shouldNotMatchCookieKey() {
-        assertFalse(update(new HttpRequest().withCookies(
+    public void shouldMatchEmptyCookie() {
+        assertTrue(update(new HttpRequest().withCookies(
+        )).matches(null, new HttpRequest().withCookie(
             new Cookie("someKey", "someValue")
+        )));
+    }
+
+    @Test
+    public void shouldMatchNottedCookie() {
+        assertTrue(update(new HttpRequest().withCookies(
+            new Cookie("someKey", "!someValue")
+        )).matches(null, new HttpRequest().withCookie(
+            new Cookie("someKey", "someOtherValue")
+        )));
+        assertTrue(update(new HttpRequest().withCookies(
+            new Cookie("!someKey", "someValue")
         )).matches(null, new HttpRequest().withCookie(
             new Cookie("someOtherKey", "someValue")
         )));
-        assertFalse(update(new HttpRequest().withCookies(
-            new Cookie("someKey", "someValue")
-        )).matches(null, new HttpRequest().withCookies(
-            new Cookie("someOtherKey", "someValue"),
-            new Cookie("someKeyTwo", "someValueTwo")
+        assertTrue(update(new HttpRequest().withCookies(
+            new Cookie("!someKey", "!someValue")
+        )).matches(null, new HttpRequest().withCookie(
+            new Cookie("someOtherKey", "someOtherValue")
         )));
     }
 
@@ -1309,6 +2266,21 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldNotMatchCookieKey() {
+        assertFalse(update(new HttpRequest().withCookies(
+            new Cookie("someKey", "someValue")
+        )).matches(null, new HttpRequest().withCookie(
+            new Cookie("someOtherKey", "someValue")
+        )));
+        assertFalse(update(new HttpRequest().withCookies(
+            new Cookie("someKey", "someValue")
+        )).matches(null, new HttpRequest().withCookies(
+            new Cookie("someOtherKey", "someValue"),
+            new Cookie("someKeyTwo", "someValueTwo")
+        )));
+    }
+
+    @Test
     public void shouldNotMatchCookieKeyAndValue() {
         assertFalse(update(new HttpRequest().withCookies(
             new Cookie("someKey", "someValue")
@@ -1320,6 +2292,63 @@ public class HttpRequestPropertiesMatcherTest {
         )).matches(null, new HttpRequest().withCookies(
             new Cookie("someOtherKey", "someOtherValue"),
             new Cookie("someOtherKeyTwo", "someOtherValueTwo")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedCookieKey() {
+        assertFalse(update(new HttpRequest().withCookies(
+            new Cookie("!someKey", "someValue")
+        )).matches(null, new HttpRequest().withCookie(
+            new Cookie("someKey", "someValue")
+        )));
+        assertFalse(update(new HttpRequest().withCookies(
+            new Cookie("!someKey", "someValue")
+        )).matches(null, new HttpRequest().withCookies(
+            new Cookie("someKey", "someValue"),
+            new Cookie("someKeyTwo", "someValueTwo")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedCookieValue() {
+        assertFalse(update(new HttpRequest().withCookies(
+            new Cookie("someKey", "!someValue")
+        )).matches(null, new HttpRequest().withCookie(
+            new Cookie("someKey", "someValue")
+        )));
+        assertFalse(update(new HttpRequest().withCookies(
+            new Cookie("someKey", "!someValue")
+        )).matches(null, new HttpRequest().withCookies(
+            new Cookie("someKey", "someValue"),
+            new Cookie("someKeyTwo", "someValueTwo")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedCookieKeyAndValue() {
+        assertFalse(update(new HttpRequest().withCookies(
+            new Cookie("!someKey", "!someValue")
+        )).matches(null, new HttpRequest().withCookie(
+            new Cookie("someKey", "someValue")
+        )));
+        assertFalse(update(new HttpRequest().withCookies(
+            new Cookie("!someKey", "!someValue")
+        )).matches(null, new HttpRequest().withCookies(
+            new Cookie("someKey", "someOtherValue"),
+            new Cookie("someOtherKey", "someValue")
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchEmptyCookieForControlPlane() {
+        assertFalse(updateForControlPlane(new HttpRequest().withCookies(
+            new Cookie("someKey", "someValue")
+        )).matches(null, new HttpRequest().withCookies(
+        )));
+        assertFalse(update(new HttpRequest().withCookies(
+            new Cookie("someKey", "someValue")
+        )).matches(null, new HttpRequest().withCookies(
         )));
     }
 
@@ -1506,12 +2535,55 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchNottedBinaryBody() {
+        assertTrue(update(new HttpRequest().withBody(
+            not(binary("some binary value".getBytes(UTF_8)))
+        )).matches(null, new HttpRequest().withBody(
+            "some other binary value".getBytes(UTF_8)
+        )));
+    }
+
+    @Test
+    public void shouldMatchBinaryBodyWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            binary("some binary value".getBytes(UTF_8))
+                .withOptional(true)
+        )).matches(null, new HttpRequest().withBody(
+            "some binary value".getBytes(UTF_8)
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            binary("some binary value".getBytes(UTF_8))
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
     public void shouldNotMatchBinaryBody() {
         assertFalse(update(new HttpRequest().withBody(
             binary("some binary value".getBytes(UTF_8))
         )).matches(null, new HttpRequest().withBody(
             "some other binary value".getBytes(UTF_8)
         )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedBinaryBody() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(binary("some binary value".getBytes(UTF_8)))
+        )).matches(null, new HttpRequest().withBody(
+            "some binary value".getBytes(UTF_8)
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchBinaryBodyWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            binary("some binary value".getBytes(UTF_8))
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            binary("some binary value".getBytes(UTF_8))
+        )).matches(null, new HttpRequest()));
     }
 
     @Test
@@ -1562,6 +2634,70 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchNottedJsonBody() {
+        assertTrue(update(new HttpRequest().withBody(
+            not(json("{ \"some_field\": \"some_value\" }"))
+        )).matches(null, new HttpRequest().withHeader(CONTENT_TYPE.toString(), MediaType.APPLICATION_JSON_UTF_8.toString()).withBody(
+            "{ \"some_other_field\": \"some_other_value\" }"
+        )));
+    }
+
+    @Test
+    public void shouldMatchJsonBodyWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            json("{ \"some_field\": \"some_value\" }")
+                .withOptional(true)
+        )).matches(null, new HttpRequest().withBody(
+            "" +
+                "{ " +
+                "   \"some_field\": \"some_value\", " +
+                "   \"some_other_field\": \"some_other_value\" " +
+                "}"
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            json("{ \"some_field\": \"some_value\" }")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
+    public void shouldMatchJsonArrayBody() {
+        assertTrue(update(new HttpRequest().withBody(
+            json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ ]" + NEW_LINE +
+                "}" + NEW_LINE)
+        )).matches(null, new HttpRequest().withBody(
+            "" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ ]" + NEW_LINE +
+                "}" + NEW_LINE
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ ]" + NEW_LINE +
+                "}" + NEW_LINE)
+        )).matches(null, new HttpRequest().withBody(
+            json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
+                "}" + NEW_LINE)
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ ]" + NEW_LINE +
+                "}" + NEW_LINE)
+        )).matches(null, new HttpRequest().withBody(
+            "" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
+                "}" + NEW_LINE
+        )));
+    }
+
+    @Test
     public void shouldMatchJsonBodyWithCharset() {
         assertTrue(update(new HttpRequest().withBody(
             json("{ \"some_field\": \"我说中国话\" }", UTF_8, MatchType.ONLY_MATCHING_FIELDS)
@@ -1598,6 +2734,30 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldNotMatchNottedJsonBody() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(json("{ \"some_field\": \"some_value\" }"))
+        )).matches(null, new HttpRequest().withBody(
+            "" +
+                "{ " +
+                "   \"some_field\": \"some_value\", " +
+                "   \"some_other_field\": \"some_other_value\" " +
+                "}"
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchJsonBodyWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            json("{ \"some_field\": \"some_value\" }")
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            json("{ \"some_field\": \"some_value\" }")
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
     public void shouldNotMatchJsonBodyWithCharset() {
         assertFalse(update(new HttpRequest().withBody(
             json("{ \"some_field\": \"我说中国话\" }", UTF_8, MatchType.ONLY_MATCHING_FIELDS)
@@ -1620,16 +2780,16 @@ public class HttpRequestPropertiesMatcherTest {
                 "   \"some_other_field\": \"some_other_value\" " +
                 "}"
         )).matches(null, new HttpRequest().withBody(
-            new JsonBodyDTO(json("{ \"some_field\": \"some_value\" }")).toString()
+            new JsonBodyDTO(json("{ \"some_field\": \"some_value\" }", MediaType.APPLICATION_JSON)).toString()
         )));
         assertTrue(updateForControlPlane(new HttpRequest().withBody(
             json("" +
                 "{ " +
                 "   \"some_field\": \"some_value\", " +
                 "   \"some_other_field\": \"some_other_value\" " +
-                "}")
+                "}", MediaType.APPLICATION_JSON)
         )).matches(null, new HttpRequest().withBody(
-            new JsonBodyDTO(json("{ \"some_field\": \"some_value\" }")).toString()
+            new JsonBodyDTO(json("{ \"some_field\": \"some_value\" }", MediaType.APPLICATION_JSON)).toString()
         )));
         assertFalse(update(new HttpRequest().withBody(
             "" +
@@ -1638,16 +2798,89 @@ public class HttpRequestPropertiesMatcherTest {
                 "   \"some_other_field\": \"some_other_value\" " +
                 "}"
         )).matches(null, new HttpRequest().withBody(
-            new JsonBodyDTO(json("{ \"some_field\": \"some_value\" }")).toString()
+            new JsonBodyDTO(json("{ \"some_field\": \"some_value\" }", MediaType.APPLICATION_JSON)).toString()
         )));
         assertFalse(update(new HttpRequest().withBody(
             json("" +
                 "{ " +
                 "   \"some_field\": \"some_value\", " +
                 "   \"some_other_field\": \"some_other_value\" " +
-                "}")
+                "}", MediaType.APPLICATION_JSON)
         )).matches(null, new HttpRequest().withBody(
-            new JsonBodyDTO(json("{ \"some_field\": \"some_value\" }")).toString()
+            new JsonBodyDTO(json("{ \"some_field\": \"some_value\" }", MediaType.APPLICATION_JSON)).toString()
+        )));
+    }
+
+    @Test
+    public void shouldMatchJsonArrayBodyForControlPlane() {
+        // matches without being serialised BodyDTO
+        assertTrue(updateForControlPlane(new HttpRequest().withBody(
+            json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ ]" + NEW_LINE +
+                "}" + NEW_LINE)
+        )).matches(null, new HttpRequest().withBody(
+            "" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
+                "}" + NEW_LINE
+        )));
+        assertTrue(updateForControlPlane(new HttpRequest().withBody(
+            json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ ]" + NEW_LINE +
+                "}" + NEW_LINE)
+        )).matches(null, new HttpRequest().withBody(
+            json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
+                "}" + NEW_LINE)
+        )));
+        // matches as serialised BodyDTO for control-plane
+        assertTrue(updateForControlPlane(new HttpRequest().withBody(
+            json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
+                "}" + NEW_LINE, MediaType.APPLICATION_JSON)
+        )).matches(null, new HttpRequest().withBody(
+            new JsonBodyDTO(json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
+                "}" + NEW_LINE, MediaType.APPLICATION_JSON)).toString()
+        )));
+        assertTrue(updateForControlPlane(new HttpRequest().withBody(
+            json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
+                "}" + NEW_LINE, MediaType.APPLICATION_JSON)
+        )).matches(null, new HttpRequest().withBody(
+            new JsonBodyDTO(json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ ]" + NEW_LINE +
+                "}" + NEW_LINE, MediaType.APPLICATION_JSON)).toString()
+        )));
+        assertFalse(updateForControlPlane(new HttpRequest().withBody(
+            json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ ]" + NEW_LINE +
+                "}" + NEW_LINE, MediaType.APPLICATION_JSON)
+        )).matches(null, new HttpRequest().withBody(
+            new JsonBodyDTO(json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
+                "}" + NEW_LINE, MediaType.APPLICATION_JSON)).toString()
+        )));
+        // doesn't work as serialised BodyDTO for non-control-plane
+        assertFalse(update(new HttpRequest().withBody(
+            json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ ]" + NEW_LINE +
+                "}" + NEW_LINE, MediaType.APPLICATION_JSON)
+        )).matches(null, new HttpRequest().withBody(
+            new JsonBodyDTO(json("" +
+                "{" + NEW_LINE +
+                "  \"digests\" : [ \"sha256:one\" ]" + NEW_LINE +
+                "}" + NEW_LINE, MediaType.APPLICATION_JSON)).toString()
         )));
     }
 
@@ -1658,36 +2891,36 @@ public class HttpRequestPropertiesMatcherTest {
                 "{ " +
                 "   \"some_field\": \"我说中国话\", " +
                 "   \"some_other_field\": \"some_other_value\" " +
-                "}", UTF_8
+                "}", UTF_16
         )).matches(null, new HttpRequest().withHeader(CONTENT_TYPE.toString(), MediaType.APPLICATION_JSON_UTF_8.toString()).withBody(
-            new JsonBodyDTO(json("{ \"some_field\": \"我说中国话\" }", UTF_8, MatchType.ONLY_MATCHING_FIELDS)).toString()
+            new JsonBodyDTO(json("{ \"some_field\": \"我说中国话\" }", UTF_16, MatchType.ONLY_MATCHING_FIELDS)).toString()
         )));
         assertTrue(updateForControlPlane(new HttpRequest().withBody(
             json("" +
                 "{ " +
                 "   \"some_field\": \"我说中国话\", " +
                 "   \"some_other_field\": \"some_other_value\" " +
-                "}", UTF_8)
+                "}", UTF_16)
         )).matches(null, new HttpRequest().withHeader(CONTENT_TYPE.toString(), MediaType.APPLICATION_JSON_UTF_8.toString()).withBody(
-            new JsonBodyDTO(json("{ \"some_field\": \"我说中国话\" }", UTF_8, MatchType.ONLY_MATCHING_FIELDS)).toString()
+            new JsonBodyDTO(json("{ \"some_field\": \"我说中国话\" }", UTF_16, MatchType.ONLY_MATCHING_FIELDS)).toString()
         )));
         assertFalse(update(new HttpRequest().withHeader(CONTENT_TYPE.toString(), MediaType.APPLICATION_JSON_UTF_8.toString()).withBody(
             "" +
                 "{ " +
                 "   \"some_field\": \"我说中国话\", " +
                 "   \"some_other_field\": \"some_other_value\" " +
-                "}", UTF_8
+                "}", UTF_16
         )).matches(null, new HttpRequest().withHeader(CONTENT_TYPE.toString(), MediaType.APPLICATION_JSON_UTF_8.toString()).withBody(
-            new JsonBodyDTO(json("{ \"some_field\": \"我说中国话\" }", UTF_8, MatchType.ONLY_MATCHING_FIELDS)).toString()
+            new JsonBodyDTO(json("{ \"some_field\": \"我说中国话\" }", UTF_16, MatchType.ONLY_MATCHING_FIELDS)).toString()
         )));
         assertFalse(update(new HttpRequest().withBody(
             json("" +
                 "{ " +
                 "   \"some_field\": \"我说中国话\", " +
                 "   \"some_other_field\": \"some_other_value\" " +
-                "}", UTF_8)
+                "}", UTF_16)
         )).matches(null, new HttpRequest().withBody(
-            new JsonBodyDTO(json("{ \"some_field\": \"我说中国话\" }", UTF_8, MatchType.ONLY_MATCHING_FIELDS)).toString()
+            new JsonBodyDTO(json("{ \"some_field\": \"我说中国话\" }", UTF_16, MatchType.ONLY_MATCHING_FIELDS)).toString()
         )));
     }
 
@@ -1755,6 +2988,49 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchNottedJsonPathBody() {
+        assertTrue(update(new HttpRequest().withBody(
+            not(jsonPath("$..book[?(@.price > $['expensive'])]"))
+        )).matches(null, new HttpRequest().withBody(
+            "{" + NEW_LINE +
+                "    \"store\": {" + NEW_LINE +
+                "        \"book\": [" + NEW_LINE +
+                "            {" + NEW_LINE +
+                "                \"category\": \"reference\"," + NEW_LINE +
+                "                \"author\": \"Nigel Rees\"," + NEW_LINE +
+                "                \"title\": \"Sayings of the Century\"," + NEW_LINE +
+                "                \"price\": 8.95" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            {" + NEW_LINE +
+                "                \"category\": \"fiction\"," + NEW_LINE +
+                "                \"author\": \"Herman Melville\"," + NEW_LINE +
+                "                \"title\": \"Moby Dick\"," + NEW_LINE +
+                "                \"isbn\": \"0-553-21311-3\"," + NEW_LINE +
+                "                \"price\": 8.99" + NEW_LINE +
+                "            }" + NEW_LINE +
+                "        ]," + NEW_LINE +
+                "        \"bicycle\": {" + NEW_LINE +
+                "            \"color\": \"red\"," + NEW_LINE +
+                "            \"price\": 9.95" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"expensive\": 10" + NEW_LINE +
+                "}"
+        )));
+    }
+
+    @Test
+    public void shouldMatchJsonPathBodyWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            jsonPath("$..book[?(@.price > $['expensive'])]")
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            jsonPath("$..book[?(@.price > $['expensive'])]")
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
     public void shouldNotMatchJsonPathBody() {
         assertFalse(update(new HttpRequest().withBody(
             jsonPath("$..book[?(@.price > $['expensive'])]")
@@ -1784,6 +3060,75 @@ public class HttpRequestPropertiesMatcherTest {
                 "    \"expensive\": 10" + NEW_LINE +
                 "}"
         )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedJsonPathBody() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(jsonPath("$..book[?(@.price > $['expensive'])]"))
+        )).matches(null, new HttpRequest().withBody(
+            "{" + NEW_LINE +
+                "    \"store\": {" + NEW_LINE +
+                "        \"book\": [" + NEW_LINE +
+                "            {" + NEW_LINE +
+                "                \"category\": \"reference\"," + NEW_LINE +
+                "                \"author\": \"Nigel Rees\"," + NEW_LINE +
+                "                \"title\": \"Sayings of the Century\"," + NEW_LINE +
+                "                \"price\": 8.95" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            {" + NEW_LINE +
+                "                \"category\": \"fiction\"," + NEW_LINE +
+                "                \"author\": \"Herman Melville\"," + NEW_LINE +
+                "                \"title\": \"Moby Dick\"," + NEW_LINE +
+                "                \"isbn\": \"0-553-21311-3\"," + NEW_LINE +
+                "                \"price\": 18.99" + NEW_LINE +
+                "            }" + NEW_LINE +
+                "        ]," + NEW_LINE +
+                "        \"bicycle\": {" + NEW_LINE +
+                "            \"color\": \"red\"," + NEW_LINE +
+                "            \"price\": 19.95" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"expensive\": 10" + NEW_LINE +
+                "}"
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchJsonPathBodyWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            jsonPath("$..book[?(@.price > $['expensive'])]")
+                .withOptional(true)
+        )).matches(null, new HttpRequest().withBody(
+            "{" + NEW_LINE +
+                "    \"store\": {" + NEW_LINE +
+                "        \"book\": [" + NEW_LINE +
+                "            {" + NEW_LINE +
+                "                \"category\": \"reference\"," + NEW_LINE +
+                "                \"author\": \"Nigel Rees\"," + NEW_LINE +
+                "                \"title\": \"Sayings of the Century\"," + NEW_LINE +
+                "                \"price\": 8.95" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            {" + NEW_LINE +
+                "                \"category\": \"fiction\"," + NEW_LINE +
+                "                \"author\": \"Herman Melville\"," + NEW_LINE +
+                "                \"title\": \"Moby Dick\"," + NEW_LINE +
+                "                \"isbn\": \"0-553-21311-3\"," + NEW_LINE +
+                "                \"price\": 18.99" + NEW_LINE +
+                "            }" + NEW_LINE +
+                "        ]," + NEW_LINE +
+                "        \"bicycle\": {" + NEW_LINE +
+                "            \"color\": \"red\"," + NEW_LINE +
+                "            \"price\": 19.95" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"expensive\": 10" + NEW_LINE +
+                "}"
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            jsonPath("$..book[?(@.price > $['expensive'])]")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
     }
 
     @Test
@@ -1880,6 +3225,8 @@ public class HttpRequestPropertiesMatcherTest {
 
     // - JsonSchemaBody
 
+    // - with Json
+
     @Test
     public void shouldMatchJsonSchemaBody() {
         assertTrue(update(new HttpRequest().withBody(
@@ -1901,20 +3248,49 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchNottedJsonSchemaBody() {
+        assertTrue(update(new HttpRequest().withBody(
+            not(jsonSchema("{" + NEW_LINE +
+                "   \"type\": \"string\"," + NEW_LINE +
+                "   \"pattern\": \"^someB[a-z]{3}$\"" + NEW_LINE +
+                "}"))
+        )).matches(null, new HttpRequest().withBody(
+            "\"someOtherBody\""
+        )));
+    }
+
+    @Test
+    public void shouldMatchJsonSchemaBodyWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "   \"type\": \"string\"," + NEW_LINE +
+                "   \"pattern\": \"^someB[a-z]{3}$\"" + NEW_LINE +
+                "}")
+                .withOptional(true)
+        )).matches(null, new HttpRequest().withBody(
+            "\"someBody\""
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "   \"type\": \"string\"," + NEW_LINE +
+                "   \"pattern\": \"^someB[a-z]{3}$\"" + NEW_LINE +
+                "}")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
     public void shouldMatchJsonSchemaBodyWithComplexSchema() {
         assertTrue(update(new HttpRequest().withBody(
             jsonSchema("{" + NEW_LINE +
                 "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
                 "    \"title\": \"Product\"," + NEW_LINE +
-                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
                 "    \"type\": \"object\"," + NEW_LINE +
                 "    \"properties\": {" + NEW_LINE +
                 "        \"id\": {" + NEW_LINE +
-                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
                 "            \"type\": \"integer\"" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"name\": {" + NEW_LINE +
-                "            \"description\": \"Name of the product\"," + NEW_LINE +
                 "            \"type\": \"string\"" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"price\": {" + NEW_LINE +
@@ -1946,15 +3322,12 @@ public class HttpRequestPropertiesMatcherTest {
             jsonSchema("{" + NEW_LINE +
                 "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
                 "    \"title\": \"Product\"," + NEW_LINE +
-                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
                 "    \"type\": \"object\"," + NEW_LINE +
                 "    \"properties\": {" + NEW_LINE +
                 "        \"id\": {" + NEW_LINE +
-                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
                 "            \"type\": \"integer\"" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"name\": {" + NEW_LINE +
-                "            \"description\": \"Name of the product\"," + NEW_LINE +
                 "            \"type\": \"string\"" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"price\": {" + NEW_LINE +
@@ -2005,21 +3378,47 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldNotMatchNottedJsonSchemaBody() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(jsonSchema("{" + NEW_LINE +
+                "   \"type\": \"string\"," + NEW_LINE +
+                "   \"pattern\": \"^someB[a-z]{3}$\"" + NEW_LINE +
+                "}"))
+        )).matches(null, new HttpRequest().withBody(
+            "\"someBody\""
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchJsonSchemaBodyWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "   \"type\": \"string\"," + NEW_LINE +
+                "   \"pattern\": \"^someB[a-z]{3}$\"" + NEW_LINE +
+                "}")
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "   \"type\": \"string\"," + NEW_LINE +
+                "   \"pattern\": \"^someB[a-z]{3}$\"" + NEW_LINE +
+                "}")
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
     public void shouldNotMatchJsonSchemaBodyWithComplexSchema() {
         // too few tags in array
         assertFalse(update(new HttpRequest().withBody(
             jsonSchema("{" + NEW_LINE +
                 "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
                 "    \"title\": \"Product\"," + NEW_LINE +
-                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
                 "    \"type\": \"object\"," + NEW_LINE +
                 "    \"properties\": {" + NEW_LINE +
                 "        \"id\": {" + NEW_LINE +
-                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
                 "            \"type\": \"integer\"" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"name\": {" + NEW_LINE +
-                "            \"description\": \"Name of the product\"," + NEW_LINE +
                 "            \"type\": \"string\"" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"price\": {" + NEW_LINE +
@@ -2051,15 +3450,12 @@ public class HttpRequestPropertiesMatcherTest {
             jsonSchema("{" + NEW_LINE +
                 "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
                 "    \"title\": \"Product\"," + NEW_LINE +
-                "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
                 "    \"type\": \"object\"," + NEW_LINE +
                 "    \"properties\": {" + NEW_LINE +
                 "        \"id\": {" + NEW_LINE +
-                "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
                 "            \"type\": \"integer\"" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"name\": {" + NEW_LINE +
-                "            \"description\": \"Name of the product\"," + NEW_LINE +
                 "            \"type\": \"string\"" + NEW_LINE +
                 "        }," + NEW_LINE +
                 "        \"price\": {" + NEW_LINE +
@@ -2145,6 +3541,1001 @@ public class HttpRequestPropertiesMatcherTest {
         )));
     }
 
+    // - with Xml
+
+    @Test
+    public void shouldMatchJsonSchemaBodyWithXmlBody() {
+        assertTrue(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+        )).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_XML)
+            .withBody(
+                "" +
+                    "<root>" + NEW_LINE +
+                    "    <id>1</id>" + NEW_LINE +
+                    "    <name>A green door</name>" + NEW_LINE +
+                    "    <price>12.5</price>" + NEW_LINE +
+                    "    <tags>home</tags>" + NEW_LINE +
+                    "    <tags>green</tags>" + NEW_LINE +
+                    "</root>"
+            )
+        ));
+        assertTrue(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"خانه\", \"سبز\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+        )).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_XML_UTF_8)
+            .withBody(
+                "" +
+                    "<root>" + NEW_LINE +
+                    "    <id>1</id>" + NEW_LINE +
+                    "    <name>یک درب سبز</name>" + NEW_LINE +
+                    "    <price>12.5</price>" + NEW_LINE +
+                    "    <tags>خانه</tags>" + NEW_LINE +
+                    "    <tags>سبز</tags>" + NEW_LINE +
+                    "</root>"
+            )
+        ));
+    }
+
+    @Test
+    public void shouldMatchNottedJsonSchemaBodyWithXmlBody() {
+        // too few tags in array
+        assertTrue(update(new HttpRequest().withBody(
+            not(jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 3," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}"))
+        )).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_XML)
+            .withBody(
+                "" +
+                    "<root>" + NEW_LINE +
+                    "    <id>1</id>" + NEW_LINE +
+                    "    <name>A green door</name>" + NEW_LINE +
+                    "    <price>12.5</price>" + NEW_LINE +
+                    "    <tags>home</tags>" + NEW_LINE +
+                    "    <tags>green</tags>" + NEW_LINE +
+                    "</root>"
+            )
+        ));
+    }
+
+    @Test
+    public void shouldMatchJsonSchemaBodyWithXmlBodyWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_XML)
+            .withBody(
+                "" +
+                    "<root>" + NEW_LINE +
+                    "    <id>1</id>" + NEW_LINE +
+                    "    <name>A green door</name>" + NEW_LINE +
+                    "    <price>12.5</price>" + NEW_LINE +
+                    "    <tags>home</tags>" + NEW_LINE +
+                    "    <tags>green</tags>" + NEW_LINE +
+                    "</root>"
+            )
+        ));
+        assertTrue(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
+    public void shouldNotMatchJsonSchemaBodyWithXmlBody() {
+        // too few tags in array
+        assertFalse(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 3," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+        )).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_XML)
+            .withBody(
+                "" +
+                    "<root>" + NEW_LINE +
+                    "    <id>1</id>" + NEW_LINE +
+                    "    <name>A green door</name>" + NEW_LINE +
+                    "    <price>12.5</price>" + NEW_LINE +
+                    "    <tags>home</tags>" + NEW_LINE +
+                    "    <tags>green</tags>" + NEW_LINE +
+                    "</root>"
+            )
+        ));
+    }
+
+    @Test
+    public void shouldNotMatchNottedJsonSchemaBodyWithXmlBody() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}"))
+        )).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_XML)
+            .withBody(
+                "" +
+                    "<root>" + NEW_LINE +
+                    "    <id>1</id>" + NEW_LINE +
+                    "    <name>A green door</name>" + NEW_LINE +
+                    "    <price>12.5</price>" + NEW_LINE +
+                    "    <tags>home</tags>" + NEW_LINE +
+                    "    <tags>green</tags>" + NEW_LINE +
+                    "</root>"
+            )
+        ));
+    }
+
+    @Test
+    public void shouldNotMatchJsonSchemaBodyWithXmlBodyWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
+    public void shouldMatchJsonSchemaBodyWithXmlBodyForControlPlane() {
+        assertTrue(updateForControlPlane(new HttpRequest()
+            .withContentType(MediaType.APPLICATION_XML)
+            .withBody(
+                "" +
+                    "<root>" + NEW_LINE +
+                    "    <id>1</id>" + NEW_LINE +
+                    "    <name>A green door</name>" + NEW_LINE +
+                    "    <price>12.5</price>" + NEW_LINE +
+                    "    <tags>home</tags>" + NEW_LINE +
+                    "    <tags>green</tags>" + NEW_LINE +
+                    "</root>"
+            )
+        ).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_XML)
+            .withBody(
+                jsonSchema("{" + NEW_LINE +
+                    "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                    "    \"title\": \"Product\"," + NEW_LINE +
+                    "    \"type\": \"object\"," + NEW_LINE +
+                    "    \"properties\": {" + NEW_LINE +
+                    "        \"id\": {" + NEW_LINE +
+                    "            \"type\": \"integer\"" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"name\": {" + NEW_LINE +
+                    "            \"type\": \"string\"" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"price\": {" + NEW_LINE +
+                    "            \"type\": \"number\"," + NEW_LINE +
+                    "            \"minimum\": 0," + NEW_LINE +
+                    "            \"exclusiveMinimum\": true" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"tags\": {" + NEW_LINE +
+                    "            \"type\": \"array\"," + NEW_LINE +
+                    "            \"items\": {" + NEW_LINE +
+                    "                \"type\": \"string\"," + NEW_LINE +
+                    "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                    "            }," + NEW_LINE +
+                    "            \"minItems\": 1," + NEW_LINE +
+                    "            \"uniqueItems\": true" + NEW_LINE +
+                    "        }" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                    "}")
+            )
+        ));
+        assertFalse(update(new HttpRequest()
+            .withContentType(MediaType.APPLICATION_XML)
+            .withBody(
+                "" +
+                    "<root>" + NEW_LINE +
+                    "    <id>1</id>" + NEW_LINE +
+                    "    <name>A green door</name>" + NEW_LINE +
+                    "    <price>12.5</price>" + NEW_LINE +
+                    "    <tags>home</tags>" + NEW_LINE +
+                    "    <tags>green</tags>" + NEW_LINE +
+                    "</root>"
+            )
+        ).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_XML)
+            .withBody(
+                jsonSchema("{" + NEW_LINE +
+                    "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                    "    \"title\": \"Product\"," + NEW_LINE +
+                    "    \"type\": \"object\"," + NEW_LINE +
+                    "    \"properties\": {" + NEW_LINE +
+                    "        \"id\": {" + NEW_LINE +
+                    "            \"type\": \"integer\"" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"name\": {" + NEW_LINE +
+                    "            \"type\": \"string\"" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"price\": {" + NEW_LINE +
+                    "            \"type\": \"number\"," + NEW_LINE +
+                    "            \"minimum\": 0," + NEW_LINE +
+                    "            \"exclusiveMinimum\": true" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"tags\": {" + NEW_LINE +
+                    "            \"type\": \"array\"," + NEW_LINE +
+                    "            \"items\": {" + NEW_LINE +
+                    "                \"type\": \"string\"," + NEW_LINE +
+                    "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                    "            }," + NEW_LINE +
+                    "            \"minItems\": 1," + NEW_LINE +
+                    "            \"uniqueItems\": true" + NEW_LINE +
+                    "        }" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                    "}")
+            )
+        ));
+    }
+
+    @Test
+    public void shouldNotMatchJsonSchemaBodyWithXmlBodyForControlPlane() {
+        // too few tags in array
+        assertFalse(updateForControlPlane(new HttpRequest()
+            .withContentType(MediaType.APPLICATION_XML)
+            .withBody(
+                "" +
+                    "<root>" + NEW_LINE +
+                    "    <id>1</id>" + NEW_LINE +
+                    "    <name>A green door</name>" + NEW_LINE +
+                    "    <price>12.5</price>" + NEW_LINE +
+                    "    <tags>home</tags>" + NEW_LINE +
+                    "    <tags>green</tags>" + NEW_LINE +
+                    "</root>"
+            )
+        ).matches(null, new HttpRequest()
+            .withBody(
+                jsonSchema("{" + NEW_LINE +
+                    "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                    "    \"title\": \"Product\"," + NEW_LINE +
+                    "    \"type\": \"object\"," + NEW_LINE +
+                    "    \"properties\": {" + NEW_LINE +
+                    "        \"id\": {" + NEW_LINE +
+                    "            \"type\": \"integer\"" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"name\": {" + NEW_LINE +
+                    "            \"type\": \"string\"" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"price\": {" + NEW_LINE +
+                    "            \"type\": \"number\"," + NEW_LINE +
+                    "            \"minimum\": 0," + NEW_LINE +
+                    "            \"exclusiveMinimum\": true" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"tags\": {" + NEW_LINE +
+                    "            \"type\": \"array\"," + NEW_LINE +
+                    "            \"items\": {" + NEW_LINE +
+                    "                \"type\": \"string\"," + NEW_LINE +
+                    "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                    "            }," + NEW_LINE +
+                    "            \"minItems\": 3," + NEW_LINE +
+                    "            \"uniqueItems\": true" + NEW_LINE +
+                    "        }" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                    "}")
+            )
+        ));
+    }
+
+    // - with Form Parameters
+
+    @Test
+    public void shouldMatchJsonSchemaBodyWithFormParameters() {
+        assertTrue(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+        )).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .withBody("" +
+                "id=1" +
+                "&name=A+green+door" +
+                "&price=12.5" +
+                "&tags=home" +
+                "&tags=green")
+        ));
+        assertTrue(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"خانه\", \"سبز\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+        )).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED.withCharset(UTF_8))
+            .withBody("" +
+                "id=1" +
+                "&name=یک درب سبز" +
+                "&price=12.5" +
+                "&tags=خانه" +
+                "&tags=سبز")
+        ));
+    }
+
+    @Test
+    public void shouldMatchNottedJsonSchemaBodyWithFormParameters() {
+        assertTrue(update(new HttpRequest().withBody(
+            not(jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 3," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}"))
+        )).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .withBody("" +
+                "id=1" +
+                "&name=A+green+door" +
+                "&price=12.5" +
+                "&tags=home" +
+                "&tags=green")
+        ));
+    }
+
+    @Test
+    public void shouldMatchJsonSchemaBodyWithFormParametersWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .withBody("" +
+                "id=1" +
+                "&name=A+green+door" +
+                "&price=12.5" +
+                "&tags=home" +
+                "&tags=green")
+        ));
+        assertTrue(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
+    public void shouldNotMatchJsonSchemaBodyWithFormParameters() {
+        assertFalse(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 3," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+        )).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .withBody("" +
+                "id=1" +
+                "&name=A+green+door" +
+                "&price=12.5" +
+                "&tags=home" +
+                "&tags=green")
+        ));
+    }
+
+    @Test
+    public void shouldNotMatchNottedJsonSchemaBodyWithFormParameters() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}"))
+        )).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .withBody("" +
+                "id=1" +
+                "&name=A+green+door" +
+                "&price=12.5" +
+                "&tags=home" +
+                "&tags=green")
+        ));
+    }
+
+    @Test
+    public void shouldNotMatchJsonSchemaBodyWithFormParametersWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            jsonSchema("{" + NEW_LINE +
+                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                "    \"title\": \"Product\"," + NEW_LINE +
+                "    \"type\": \"object\"," + NEW_LINE +
+                "    \"properties\": {" + NEW_LINE +
+                "        \"id\": {" + NEW_LINE +
+                "            \"type\": \"integer\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"name\": {" + NEW_LINE +
+                "            \"type\": \"string\"" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"price\": {" + NEW_LINE +
+                "            \"type\": \"number\"," + NEW_LINE +
+                "            \"minimum\": 0," + NEW_LINE +
+                "            \"exclusiveMinimum\": true" + NEW_LINE +
+                "        }," + NEW_LINE +
+                "        \"tags\": {" + NEW_LINE +
+                "            \"type\": \"array\"," + NEW_LINE +
+                "            \"items\": {" + NEW_LINE +
+                "                \"type\": \"string\"," + NEW_LINE +
+                "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            \"minItems\": 1," + NEW_LINE +
+                "            \"uniqueItems\": true" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                "}")
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
+    public void shouldMatchJsonSchemaBodyWithFormParametersForControlPlane() {
+        assertTrue(updateForControlPlane(new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .withBody("" +
+                "id=1" +
+                "&name=A+green+door" +
+                "&price=12.5" +
+                "&tags=home" +
+                "&tags=green")
+        ).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .withBody(
+                jsonSchema("{" + NEW_LINE +
+                    "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                    "    \"title\": \"Product\"," + NEW_LINE +
+                    "    \"type\": \"object\"," + NEW_LINE +
+                    "    \"properties\": {" + NEW_LINE +
+                    "        \"id\": {" + NEW_LINE +
+                    "            \"type\": \"integer\"" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"name\": {" + NEW_LINE +
+                    "            \"type\": \"string\"" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"price\": {" + NEW_LINE +
+                    "            \"type\": \"number\"," + NEW_LINE +
+                    "            \"minimum\": 0," + NEW_LINE +
+                    "            \"exclusiveMinimum\": true" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"tags\": {" + NEW_LINE +
+                    "            \"type\": \"array\"," + NEW_LINE +
+                    "            \"items\": {" + NEW_LINE +
+                    "                \"type\": \"string\"," + NEW_LINE +
+                    "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                    "            }," + NEW_LINE +
+                    "            \"minItems\": 1," + NEW_LINE +
+                    "            \"uniqueItems\": true" + NEW_LINE +
+                    "        }" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                    "}")
+            )
+        ));
+        assertFalse(update(new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .withBody("" +
+                "id=1" +
+                "&name=A+green+door" +
+                "&price=12.5" +
+                "&tags=home" +
+                "&tags=green")
+        ).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .withBody(
+                jsonSchema("{" + NEW_LINE +
+                    "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                    "    \"title\": \"Product\"," + NEW_LINE +
+                    "    \"type\": \"object\"," + NEW_LINE +
+                    "    \"properties\": {" + NEW_LINE +
+                    "        \"id\": {" + NEW_LINE +
+                    "            \"type\": \"integer\"" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"name\": {" + NEW_LINE +
+                    "            \"type\": \"string\"" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"price\": {" + NEW_LINE +
+                    "            \"type\": \"number\"," + NEW_LINE +
+                    "            \"minimum\": 0," + NEW_LINE +
+                    "            \"exclusiveMinimum\": true" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"tags\": {" + NEW_LINE +
+                    "            \"type\": \"array\"," + NEW_LINE +
+                    "            \"items\": {" + NEW_LINE +
+                    "                \"type\": \"string\"," + NEW_LINE +
+                    "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                    "            }," + NEW_LINE +
+                    "            \"minItems\": 1," + NEW_LINE +
+                    "            \"uniqueItems\": true" + NEW_LINE +
+                    "        }" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                    "}")
+            )
+        ));
+
+    }
+
+    @Test
+    public void shouldNotMatchJsonSchemaBodyWithFormParametersForControlPlane() {
+        assertFalse(updateForControlPlane(new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .withBody("" +
+                "id=1" +
+                "&name=A+green+door" +
+                "&price=12.5" +
+                "&tags=home" +
+                "&tags=green")
+        ).matches(null, new HttpRequest()
+            .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .withBody(
+                jsonSchema("{" + NEW_LINE +
+                    "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+                    "    \"title\": \"Product\"," + NEW_LINE +
+                    "    \"type\": \"object\"," + NEW_LINE +
+                    "    \"properties\": {" + NEW_LINE +
+                    "        \"id\": {" + NEW_LINE +
+                    "            \"type\": \"integer\"" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"name\": {" + NEW_LINE +
+                    "            \"type\": \"string\"" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"price\": {" + NEW_LINE +
+                    "            \"type\": \"number\"," + NEW_LINE +
+                    "            \"minimum\": 0," + NEW_LINE +
+                    "            \"exclusiveMinimum\": true" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        \"tags\": {" + NEW_LINE +
+                    "            \"type\": \"array\"," + NEW_LINE +
+                    "            \"items\": {" + NEW_LINE +
+                    "                \"type\": \"string\"," + NEW_LINE +
+                    "                \"enum\": [\"home\", \"green\"]" + NEW_LINE +
+                    "            }," + NEW_LINE +
+                    "            \"minItems\": 3," + NEW_LINE +
+                    "            \"uniqueItems\": true" + NEW_LINE +
+                    "        }" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+                    "}")
+            )
+        ));
+    }
+
     // - ParameterBody
 
     @Test
@@ -2214,43 +4605,67 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchNottedParameterBody() {
+        assertTrue(update(new HttpRequest().withBody(
+            not(new ParameterBody(new Parameter("name", "value"))))
+        ).matches(null, new HttpRequest().withBody(
+            new ParameterBody(new Parameter("wrongName", "value"))
+        )));
+    }
+
+    @Test
+    public void shouldMatchParameterBodyWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            new ParameterBody(
+                new Parameter("nameOne", "valueOne")
+            )
+                .withOptional(true)
+        )).matches(null, new HttpRequest().withBody(
+            new ParameterBody(
+                new Parameter("nameOne", "valueOne"),
+                new Parameter("nameTwo", "valueTwo")
+            )
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            new ParameterBody(
+                new Parameter("nameOne", "valueOne")
+            )
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
     public void shouldMatchParameterBodyWithUrlEncodedBodyParameters() {
         // pass exact match
-        assertTrue(update(new HttpRequest().withBody(
-            params(param("name one", "value one"), param("nameTwo", "valueTwo"))
+        assertTrue(update(new HttpRequest().withBody(params(param("name one", "value one"), param("nameTwo", "valueTwo"))
         )).matches(null, new HttpRequest().withBody(
             "name+one=value+one&nameTwo=valueTwo"
         )));
 
         // ignore extra parameters
-        assertTrue(update(new HttpRequest().withBody(
-            params(param("name one", "value one"))
+        assertTrue(update(new HttpRequest().withBody(params(param("name one", "value one"))
         )).matches(null, new HttpRequest().withBody(
             "name+one=value+one&nameTwo=valueTwo"
         )));
 
         // matches multi-value parameters
-        assertTrue(update(new HttpRequest().withBody(
-            params(param("name one", "value one one", "value one two"))
+        assertTrue(update(new HttpRequest().withBody(params(param("name one", "value one one", "value one two"))
         )).matches(null, new HttpRequest().withBody(
             "name+one=value+one+one&name+one=value+one+two"
         )));
 
         // matches multi-value parameters (ignore extra values)
-        assertTrue(update(new HttpRequest().withBody(
-            params(param("name one", "value one one"))
+        assertTrue(update(new HttpRequest().withBody(params(param("name one", "value one one"))
         )).matches(null, new HttpRequest().withBody(
             "name+one=value+one+one&name+one=value+one+two"
         )));
-        assertTrue(update(new HttpRequest().withBody(
-            params(param("name one", "value one two"))
+        assertTrue(update(new HttpRequest().withBody(params(param("name one", "value one two"))
         )).matches(null, new HttpRequest().withBody(
             "name+one=value+one+one&name+one=value+one+two"
         )));
 
         // matches using regex
-        assertTrue(update(new HttpRequest().withBody(
-            params(param("name one", "value [a-z]{0,10}"), param("nameTwo", "valueT[a-z]{0,10}"))
+        assertTrue(update(new HttpRequest().withBody(params(param("name one", "value [a-z]{0,10}"), param("nameTwo", "valueT[a-z]{0,10}"))
         )).matches(null, new HttpRequest().withBody(
             "name+one=value+one&nameTwo=valueTwo"
         )));
@@ -2261,6 +4676,328 @@ public class HttpRequestPropertiesMatcherTest {
         )).matches(null, new HttpRequest().withBody(
             "name+one=value+two"
         )));
+    }
+
+    @Test
+    public void shouldMatchBodyFormStyleParameter() {
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(FORM)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1,1,1")
+        ))));
+        assertFalse(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1,1,1")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(FORM),
+            new Parameter("someKeyTwo", "a")
+                .withStyle(FORM)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1,1,1"),
+            new Parameter("someKeyTwo", "a,a,a")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(FORM)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1,1,1", "1,1,1")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(FORM)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1,2,3", "1,2,3")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(FORM)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1,2,3", "1,2,3")
+        ))));
+        assertFalse(update(new HttpRequest().withBody(
+            params(
+                new Parameter("someKey", "1")
+                    .withStyle(FORM)
+            ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "a,2,3")
+        ))));
+    }
+
+    @Test
+    public void shouldMatchBodyFormExpandedStyleParameter() {
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(FORM_EXPLODED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1", "1", "1")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1", "1", "1")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(FORM_EXPLODED),
+            new Parameter("someKeyTwo", "a")
+                .withStyle(FORM_EXPLODED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1", "1", "1"),
+            new Parameter("someKeyTwo", "a", "a", "a")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(FORM_EXPLODED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1", "1", "1", "1", "1", "1")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(FORM_EXPLODED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1", "2", "3", "1", "2", "3")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(FORM_EXPLODED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1", "2", "3", "1", "2", "3")
+        ))));
+        assertFalse(update(new HttpRequest().withBody(
+            params(
+                new Parameter("someKey", "1")
+            ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "a", "2", "3")
+        ))));
+    }
+
+    @Test
+    public void shouldMatchBodySpaceDelimitedStyleParameter() {
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(SPACE_DELIMITED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1%201%201")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(SPACE_DELIMITED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1+1+1")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(SPACE_DELIMITED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1 1 1")
+        ))));
+        assertFalse(update(new HttpRequest().withBody(
+            params(
+                new Parameter("someKey", "1")
+            ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1%201%201")
+        ))));
+        assertFalse(update(new HttpRequest().withBody(
+            params(
+                new Parameter("someKey", "1")
+            ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1+1+1")
+        ))));
+        assertFalse(update(new HttpRequest().withBody(
+            params(
+                new Parameter("someKey", "1")
+            ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1 1 1")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(SPACE_DELIMITED),
+            new Parameter("someKeyTwo", "a")
+                .withStyle(SPACE_DELIMITED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1+1+1"),
+            new Parameter("someKeyTwo", "a+a+a")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(SPACE_DELIMITED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1+1+1", "1+1+1")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(SPACE_DELIMITED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1%202%203", "1%202%203")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(SPACE_DELIMITED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1+2+3", "1+2+3")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(SPACE_DELIMITED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1 2 3", "1 2 3")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(SPACE_DELIMITED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1%202%203", "1%202%203")
+        ))));
+        assertFalse(update(new HttpRequest().withBody(
+            params(
+                new Parameter("someKey", "1")
+                    .withStyle(SPACE_DELIMITED)
+            ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "a+2+3")
+        ))));
+    }
+
+    @Test
+    public void shouldMatchBodySpaceDelimitedExpandedStyleParameter() {
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(SPACE_DELIMITED_EXPLODED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1", "1", "1")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1", "1", "1")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(SPACE_DELIMITED_EXPLODED),
+            new Parameter("someKeyTwo", "a")
+                .withStyle(SPACE_DELIMITED_EXPLODED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1", "1", "1"),
+            new Parameter("someKeyTwo", "a", "a", "a")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(SPACE_DELIMITED_EXPLODED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1", "1", "1", "1", "1", "1")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(SPACE_DELIMITED_EXPLODED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1", "2", "3", "1", "2", "3")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(SPACE_DELIMITED_EXPLODED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1", "2", "3", "1", "2", "3")
+        ))));
+        assertFalse(update(new HttpRequest().withBody(
+            params(
+                new Parameter("someKey", "1")
+            ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "a", "2", "3")
+        ))));
+    }
+
+    @Test
+    public void shouldMatchBodyPipeDelimitedStyleParameter() {
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(PIPE_DELIMITED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1|1|1")
+        ))));
+        assertFalse(update(new HttpRequest().withBody(
+            params(
+                new Parameter("someKey", "1")
+            ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1|1|1")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(PIPE_DELIMITED),
+            new Parameter("someKeyTwo", "a")
+                .withStyle(PIPE_DELIMITED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1|1|1"),
+            new Parameter("someKeyTwo", "a|a|a")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(PIPE_DELIMITED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1|1|1", "1|1|1")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(PIPE_DELIMITED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1|2|3", "1|2|3")
+        ))));
+        assertFalse(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(PIPE_DELIMITED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "a|2|3", "b|2|3")
+        ))));
+    }
+
+    @Test
+    public void shouldMatchBodyPipeDelimitedExpandedStyleParameter() {
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(PIPE_DELIMITED_EXPLODED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1", "1", "1")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1", "1", "1")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(PIPE_DELIMITED_EXPLODED),
+            new Parameter("someKeyTwo", "a")
+                .withStyle(PIPE_DELIMITED_EXPLODED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1", "1", "1"),
+            new Parameter("someKeyTwo", "a", "a", "a")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(PIPE_DELIMITED_EXPLODED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1", "1", "1", "1", "1", "1")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(PIPE_DELIMITED_EXPLODED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1", "2", "3", "1", "2", "3")
+        ))));
+        assertTrue(update(new HttpRequest().withBody(params(
+            new Parameter("someKey", "1")
+                .withStyle(PIPE_DELIMITED_EXPLODED)
+        ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "1", "2", "3", "1", "2", "3")
+        ))));
+        assertFalse(update(new HttpRequest().withBody(
+            params(
+                new Parameter("someKey", "1")
+            ))).matches(null, new HttpRequest().withBody(params(
+            new Parameter("someKey", "a", "2", "3")
+        ))));
     }
 
     @Test
@@ -2285,6 +5022,35 @@ public class HttpRequestPropertiesMatcherTest {
         )).matches(null, new HttpRequest().withBody(
             new ParameterBody(new Parameter("name", "wrongValue"))
         )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedParameterBody() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(new ParameterBody(
+                new Parameter("nameOne", "valueOne")
+            ))
+        )).matches(null, new HttpRequest().withBody(
+            new ParameterBody(
+                new Parameter("nameOne", "valueOne"),
+                new Parameter("nameTwo", "valueTwo")
+            )
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchParameterBodyWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            new ParameterBody(
+                new Parameter("nameOne", "valueOne")
+            )
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            new ParameterBody(
+                new Parameter("nameOne", "valueOne")
+            )
+        )).matches(null, new HttpRequest()));
     }
 
     @Test
@@ -2406,6 +5172,29 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchNottedRegexBody() {
+        assertTrue(update(new HttpRequest().withBody(
+            not(new RegexBody("someb[a-z]{3}"))
+        )).matches(null, new HttpRequest().withBody(
+            "wrongBody"
+        )));
+    }
+
+    @Test
+    public void shouldMatchRegexBodyWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            new RegexBody("someb[a-z]{3}")
+                .withOptional(true)
+        )).matches(null, new HttpRequest().withBody(
+            "somebody"
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            new RegexBody("someb[a-z]{3}")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
     public void shouldNotMatchRegexBody() {
         assertFalse(update(new HttpRequest().withBody(
             new RegexBody("someb[a-z]{3}")
@@ -2422,6 +5211,26 @@ public class HttpRequestPropertiesMatcherTest {
         )).matches(null, new HttpRequest().withBody(
             ""
         )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedRegexBody() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(new RegexBody("someb[a-z]{3}"))
+        )).matches(null, new HttpRequest().withBody(
+            "somebody"
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchRegexBodyWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            new RegexBody("someb[a-z]{3}")
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            new RegexBody("someb[a-z]{3}")
+        )).matches(null, new HttpRequest()));
     }
 
     @Test
@@ -2504,6 +5313,29 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchNottedStringBody() {
+        assertTrue(update(new HttpRequest().withBody(
+            not(new StringBody("somebody"))
+        )).matches(null, new HttpRequest().withBody(
+            "wrongBody"
+        )));
+    }
+
+    @Test
+    public void shouldMatchStringBodyWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            new StringBody("somebody")
+                .withOptional(true)
+        )).matches(null, new HttpRequest().withBody(
+            "somebody"
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            new StringBody("somebody")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
     public void shouldNotMatchStringBody() {
         assertFalse(update(new HttpRequest().withBody(
             new StringBody("somebody")
@@ -2520,6 +5352,26 @@ public class HttpRequestPropertiesMatcherTest {
         )).matches(null, new HttpRequest().withBody(
             ""
         )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedStringBody() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(new StringBody("somebody"))
+        )).matches(null, new HttpRequest().withBody(
+            "somebody"
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchStringBodyWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            new StringBody("somebody")
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            new StringBody("somebody")
+        )).matches(null, new HttpRequest()));
     }
 
     @Test
@@ -2604,6 +5456,36 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchNottedXPathBody() {
+        assertTrue(update(new HttpRequest().withBody(
+            not(xpath("/element[key = 'some_key' and value = 'some_value']"))
+        )).matches(null, new HttpRequest().withBody(
+            "" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "</element>"
+        )));
+    }
+
+    @Test
+    public void shouldMatchXPathBodyWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            xpath("/element[key = 'some_key' and value = 'some_value']")
+                .withOptional(true)
+        )).matches(null, new HttpRequest().withBody(
+            "" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>"
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            xpath("/element[key = 'some_key' and value = 'some_value']")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
     public void shouldNotMatchXPathBody() {
         assertFalse(update(new HttpRequest().withBody(
             xpath("/element[key = 'some_key' and value = 'some_value']")
@@ -2613,6 +5495,30 @@ public class HttpRequestPropertiesMatcherTest {
                 "   <key>some_key</key>" +
                 "</element>"
         )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedXPathBody() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(xpath("/element[key = 'some_key' and value = 'some_value']"))
+        )).matches(null, new HttpRequest().withBody(
+            "" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>"
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchXPathBodyWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            xpath("/element[key = 'some_key' and value = 'some_value']")
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            xpath("/element[key = 'some_key' and value = 'some_value']")
+        )).matches(null, new HttpRequest()));
     }
 
     @Test
@@ -2669,6 +5575,48 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchNottedXmlBody() {
+        assertTrue(update(new HttpRequest().withBody(
+            not(xml("" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>"))
+        )).matches(null, new HttpRequest().withBody(
+            "" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "</element>"
+        )));
+    }
+
+    @Test
+    public void shouldMatchXmlBodyWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            xml("" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>")
+                .withOptional(true)
+        )).matches(null, new HttpRequest().withBody(
+            "" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>"
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            xml("" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
     public void shouldNotMatchXmlBody() {
         assertFalse(update(new HttpRequest().withBody(
             xml("" +
@@ -2682,6 +5630,42 @@ public class HttpRequestPropertiesMatcherTest {
                 "   <key>some_key</key>" +
                 "</element>"
         )));
+    }
+
+    @Test
+    public void shouldNotMatchNottedXmlBody() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(xml("" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>"))
+        )).matches(null, new HttpRequest().withBody(
+            "" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>"
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchXmlBodyWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            xml("" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>")
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            xml("" +
+                "<element>" +
+                "   <key>some_key</key>" +
+                "   <value>some_value</value>" +
+                "</element>")
+        )).matches(null, new HttpRequest()));
     }
 
     @Test
@@ -2776,6 +5760,117 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
+    public void shouldMatchNottedXMLSchemaBody() {
+        // from missing in first note
+        assertTrue(update(new HttpRequest().withBody(
+            not(xmlSchema("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+                "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+                "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+                "    <xs:element name=\"notes\">" + NEW_LINE +
+                "        <xs:complexType>" + NEW_LINE +
+                "            <xs:sequence>" + NEW_LINE +
+                "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+                "                    <xs:complexType>" + NEW_LINE +
+                "                        <xs:sequence>" + NEW_LINE +
+                "                            <xs:element name=\"to\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"from\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"heading\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"body\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                        </xs:sequence>" + NEW_LINE +
+                "                    </xs:complexType>" + NEW_LINE +
+                "                </xs:element>" + NEW_LINE +
+                "            </xs:sequence>" + NEW_LINE +
+                "        </xs:complexType>" + NEW_LINE +
+                "    </xs:element>" + NEW_LINE +
+                "</xs:schema>"))
+        )).matches(null, new HttpRequest().withBody("" +
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+            "<notes>" + NEW_LINE +
+            "    <note>" + NEW_LINE +
+            "        <to>Bob</to>" + NEW_LINE +
+            "        <heading>Reminder</heading>" + NEW_LINE +
+            "        <body>Buy Bread</body>" + NEW_LINE +
+            "    </note>" + NEW_LINE +
+            "    <note>" + NEW_LINE +
+            "        <to>Jack</to>" + NEW_LINE +
+            "        <from>Jill</from>" + NEW_LINE +
+            "        <heading>Reminder</heading>" + NEW_LINE +
+            "        <body>Wash Shirts</body>" + NEW_LINE +
+            "    </note>" + NEW_LINE +
+            "</notes>"
+        )));
+    }
+
+    @Test
+    public void shouldMatchXMLSchemaBodyWithOptional() {
+        assertTrue(update(new HttpRequest().withBody(
+            xmlSchema("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+                "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+                "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+                "    <xs:element name=\"notes\">" + NEW_LINE +
+                "        <xs:complexType>" + NEW_LINE +
+                "            <xs:sequence>" + NEW_LINE +
+                "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+                "                    <xs:complexType>" + NEW_LINE +
+                "                        <xs:sequence>" + NEW_LINE +
+                "                            <xs:element name=\"to\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"from\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"heading\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"body\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                        </xs:sequence>" + NEW_LINE +
+                "                    </xs:complexType>" + NEW_LINE +
+                "                </xs:element>" + NEW_LINE +
+                "            </xs:sequence>" + NEW_LINE +
+                "        </xs:complexType>" + NEW_LINE +
+                "    </xs:element>" + NEW_LINE +
+                "</xs:schema>")
+                .withOptional(true)
+        )).matches(null, new HttpRequest().withBody("" +
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+            "<notes>" + NEW_LINE +
+            "    <note>" + NEW_LINE +
+            "        <to>Bob</to>" + NEW_LINE +
+            "        <from>Bill</from>" + NEW_LINE +
+            "        <heading>Reminder</heading>" + NEW_LINE +
+            "        <body>Buy Bread</body>" + NEW_LINE +
+            "    </note>" + NEW_LINE +
+            "    <note>" + NEW_LINE +
+            "        <to>Jack</to>" + NEW_LINE +
+            "        <from>Jill</from>" + NEW_LINE +
+            "        <heading>Reminder</heading>" + NEW_LINE +
+            "        <body>Wash Shirts</body>" + NEW_LINE +
+            "    </note>" + NEW_LINE +
+            "</notes>"
+        )));
+        assertTrue(update(new HttpRequest().withBody(
+            xmlSchema("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+                "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+                "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+                "    <xs:element name=\"notes\">" + NEW_LINE +
+                "        <xs:complexType>" + NEW_LINE +
+                "            <xs:sequence>" + NEW_LINE +
+                "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+                "                    <xs:complexType>" + NEW_LINE +
+                "                        <xs:sequence>" + NEW_LINE +
+                "                            <xs:element name=\"to\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"from\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"heading\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"body\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                        </xs:sequence>" + NEW_LINE +
+                "                    </xs:complexType>" + NEW_LINE +
+                "                </xs:element>" + NEW_LINE +
+                "            </xs:sequence>" + NEW_LINE +
+                "        </xs:complexType>" + NEW_LINE +
+                "    </xs:element>" + NEW_LINE +
+                "</xs:schema>")
+                .withOptional(true)
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
     public void shouldNotMatchXMLSchemaBody() {
         // from missing in first note
         assertFalse(update(new HttpRequest().withBody(
@@ -2819,9 +5914,30 @@ public class HttpRequestPropertiesMatcherTest {
     }
 
     @Test
-    public void shouldMatchXMLSchemaBodyForControlPlane() {
-        assertTrue(updateForControlPlane(new HttpRequest().withBody(
-            "" +
+    public void shouldNotMatchNottedXMLSchemaBody() {
+        assertFalse(update(new HttpRequest().withBody(
+            not(xmlSchema("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+                "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+                "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+                "    <xs:element name=\"notes\">" + NEW_LINE +
+                "        <xs:complexType>" + NEW_LINE +
+                "            <xs:sequence>" + NEW_LINE +
+                "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+                "                    <xs:complexType>" + NEW_LINE +
+                "                        <xs:sequence>" + NEW_LINE +
+                "                            <xs:element name=\"to\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"from\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"heading\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"body\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                        </xs:sequence>" + NEW_LINE +
+                "                    </xs:complexType>" + NEW_LINE +
+                "                </xs:element>" + NEW_LINE +
+                "            </xs:sequence>" + NEW_LINE +
+                "        </xs:complexType>" + NEW_LINE +
+                "    </xs:element>" + NEW_LINE +
+                "</xs:schema>"))
+        )).matches(null, new HttpRequest().withBody("" +
             "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
             "<notes>" + NEW_LINE +
             "    <note>" + NEW_LINE +
@@ -2837,6 +5953,79 @@ public class HttpRequestPropertiesMatcherTest {
             "        <body>Wash Shirts</body>" + NEW_LINE +
             "    </note>" + NEW_LINE +
             "</notes>"
+        )));
+    }
+
+    @Test
+    public void shouldNotMatchXMLSchemaBodyWithOptional() {
+        assertFalse(update(new HttpRequest().withBody(
+            xmlSchema("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+                "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+                "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+                "    <xs:element name=\"notes\">" + NEW_LINE +
+                "        <xs:complexType>" + NEW_LINE +
+                "            <xs:sequence>" + NEW_LINE +
+                "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+                "                    <xs:complexType>" + NEW_LINE +
+                "                        <xs:sequence>" + NEW_LINE +
+                "                            <xs:element name=\"to\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"from\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"heading\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"body\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                        </xs:sequence>" + NEW_LINE +
+                "                    </xs:complexType>" + NEW_LINE +
+                "                </xs:element>" + NEW_LINE +
+                "            </xs:sequence>" + NEW_LINE +
+                "        </xs:complexType>" + NEW_LINE +
+                "    </xs:element>" + NEW_LINE +
+                "</xs:schema>")
+                .withOptional(false)
+        )).matches(null, new HttpRequest()));
+        assertFalse(update(new HttpRequest().withBody(
+            xmlSchema("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+                "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+                "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+                "    <xs:element name=\"notes\">" + NEW_LINE +
+                "        <xs:complexType>" + NEW_LINE +
+                "            <xs:sequence>" + NEW_LINE +
+                "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+                "                    <xs:complexType>" + NEW_LINE +
+                "                        <xs:sequence>" + NEW_LINE +
+                "                            <xs:element name=\"to\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"from\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"heading\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                            <xs:element name=\"body\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                "                        </xs:sequence>" + NEW_LINE +
+                "                    </xs:complexType>" + NEW_LINE +
+                "                </xs:element>" + NEW_LINE +
+                "            </xs:sequence>" + NEW_LINE +
+                "        </xs:complexType>" + NEW_LINE +
+                "    </xs:element>" + NEW_LINE +
+                "</xs:schema>")
+        )).matches(null, new HttpRequest()));
+    }
+
+    @Test
+    public void shouldMatchXMLSchemaBodyForControlPlane() {
+        assertTrue(updateForControlPlane(new HttpRequest().withBody(
+            "" +
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+                "<notes>" + NEW_LINE +
+                "    <note>" + NEW_LINE +
+                "        <to>Bob</to>" + NEW_LINE +
+                "        <from>Bill</from>" + NEW_LINE +
+                "        <heading>Reminder</heading>" + NEW_LINE +
+                "        <body>Buy Bread</body>" + NEW_LINE +
+                "    </note>" + NEW_LINE +
+                "    <note>" + NEW_LINE +
+                "        <to>Jack</to>" + NEW_LINE +
+                "        <from>Jill</from>" + NEW_LINE +
+                "        <heading>Reminder</heading>" + NEW_LINE +
+                "        <body>Wash Shirts</body>" + NEW_LINE +
+                "    </note>" + NEW_LINE +
+                "</notes>"
         )).matches(null, new HttpRequest().withBody(
             new XmlSchemaBodyDTO(xmlSchema("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
                 "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
@@ -2862,21 +6051,21 @@ public class HttpRequestPropertiesMatcherTest {
         )));
         assertFalse(update(new HttpRequest().withBody(
             "" +
-            "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
-            "<notes>" + NEW_LINE +
-            "    <note>" + NEW_LINE +
-            "        <to>Bob</to>" + NEW_LINE +
-            "        <from>Bill</from>" + NEW_LINE +
-            "        <heading>Reminder</heading>" + NEW_LINE +
-            "        <body>Buy Bread</body>" + NEW_LINE +
-            "    </note>" + NEW_LINE +
-            "    <note>" + NEW_LINE +
-            "        <to>Jack</to>" + NEW_LINE +
-            "        <from>Jill</from>" + NEW_LINE +
-            "        <heading>Reminder</heading>" + NEW_LINE +
-            "        <body>Wash Shirts</body>" + NEW_LINE +
-            "    </note>" + NEW_LINE +
-            "</notes>"
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+                "<notes>" + NEW_LINE +
+                "    <note>" + NEW_LINE +
+                "        <to>Bob</to>" + NEW_LINE +
+                "        <from>Bill</from>" + NEW_LINE +
+                "        <heading>Reminder</heading>" + NEW_LINE +
+                "        <body>Buy Bread</body>" + NEW_LINE +
+                "    </note>" + NEW_LINE +
+                "    <note>" + NEW_LINE +
+                "        <to>Jack</to>" + NEW_LINE +
+                "        <from>Jill</from>" + NEW_LINE +
+                "        <heading>Reminder</heading>" + NEW_LINE +
+                "        <body>Wash Shirts</body>" + NEW_LINE +
+                "    </note>" + NEW_LINE +
+                "</notes>"
         )).matches(null, new HttpRequest().withBody(
             new XmlSchemaBodyDTO(xmlSchema("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
                 "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +

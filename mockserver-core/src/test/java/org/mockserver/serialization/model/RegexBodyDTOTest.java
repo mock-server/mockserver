@@ -3,6 +3,7 @@ package org.mockserver.serialization.model;
 import org.junit.Test;
 import org.mockserver.model.Body;
 import org.mockserver.model.RegexBody;
+import org.mockserver.model.XmlSchemaBody;
 
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -32,6 +33,17 @@ public class RegexBodyDTOTest {
         // then
         assertThat(regexBody.getValue(), is("some_body"));
         assertThat(regexBody.getType(), is(Body.Type.REGEX));
+    }
+
+    @Test
+    public void shouldBuildCorrectObjectWithOptional() {
+        // when
+        RegexBody regexBody = new RegexBodyDTO((RegexBody) new RegexBody("some_body").withOptional(true)).buildObject();
+
+        // then
+        assertThat(regexBody.getValue(), is("some_body"));
+        assertThat(regexBody.getType(), is(Body.Type.REGEX));
+        assertThat(regexBody.getOptional(), is(true));
     }
 
     @Test

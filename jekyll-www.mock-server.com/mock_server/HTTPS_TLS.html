@@ -1,7 +1,7 @@
 ---
 title: HTTPS & TLS
 layout: page
-pageOrder: 6
+pageOrder: 7
 section: 'General'
 subsection: true
 sitemap:
@@ -20,7 +20,7 @@ sitemap:
     <li><strong>TLS for outbound connections</strong> (also called forward proxy TLS) to authenticate any client sending HTTPS requests</li>
 </ul>
 
-<p style="width: 100%; padding-top: 25px; padding-bottom: 25px;"><a href="../images/https_tls.png" target="_blank"><img src="../images/https_tls.png" alt="MockServer HTTPS & TLS" style="max-width:100%;"></a></p>
+<p style="width: 100%; padding-top: 25px; padding-bottom: 25px;"><img src="../images/https_tls.png" alt="MockServer HTTPS & TLS" style="max-width:100%;"></p>
 
 <p>The majority of HTTP clients perform the following steps when making an HTTPS request: </p>
 
@@ -37,7 +37,7 @@ sitemap:
 
 <ul>
     <li>How dynamic certificate are created including, hostname (i.e. <a href="#button_configuration_ssl_certificate_domain_name">CN</a> & <a href="#button_configuration_ssl_subject_alternative_name_domains">SAN</a>) and ip address (i.e. <a href="#button_configuration_ssl_subject_alternative_name_ips">SAN</a>)</li>
-    <li>The Certificate Authority <a href="button_configuration_tls_certificate_authority_certificate">X.509 Certificate</a> and <a href="#button_configuration_tls_certificate_authority_private_key">Private Key</a> used to sign all generated X.509</li>
+    <li>The Certificate Authority <a href="#button_configuration_tls_certificate_authority_certificate">X.509 Certificate</a> and <a href="#button_configuration_tls_certificate_authority_private_key">Private Key</a> used to sign all generated X.509</li>
     <li>Dynamic creation of a <a href="#button_configuration_dynamically_create_ca_certificate">unique (i.e. local) Certificate Authority X509 Certificate and Private Key</a> instead of using the fixed Certificate Authority X509 Certificate and Private Key in the <a href="https://github.com/mock-server/mockserver/blob/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem">git repo</a>.</li>
     <li>Require <a href="#button_configuration_require_mtls_for_all_tls_connections">mTLS (also called client authentication or two-way TLS)</a> for all TLS connections / HTTPS requests to MockServer</li>
     <li>Configure <a href="#button_configuration_trusted_tls_certs_group_for_proxied_reqs">trust store</a> and <a href="#button_configuration_forward_proxy_certificate_chain">client X.509</a> used during forwarded and proxied requests to endpoints requiring mTLS</li>
@@ -90,26 +90,35 @@ public String loadFileFromLocation(String location) {
 }
 
 private String loadFileFromClasspath(String location) {
-    InputStream inputStream = this.getClass().getResourceAsStream(location);
-
-    if (inputStream == null) {
-        inputStream = this.getClass().getClassLoader().getResourceAsStream(location);
-    }
-
-    if (inputStream == null) {
-        inputStream = ClassLoader.getSystemResourceAsStream(location);
-    }
-
-    if (inputStream != null) {
+    try {
+        InputStream inputStream = this.getClass().getResourceAsStream(location);
         try {
-            // org.apache.commons.io.IOUtils
-            return IOUtils.toString(inputStream, Charsets.UTF_8);
-        } catch (IOException e) {
-            throw new RuntimeException("Could not read " + location + " from the classpath", e);
-        }
-    }
+            if (inputStream == null) {
+                inputStream = this.getClass().getClassLoader().getResourceAsStream(location);
+            }
 
-    throw new RuntimeException("Could not find " + location + " on the classpath");
+            if (inputStream == null) {
+                inputStream = ClassLoader.getSystemResourceAsStream(location);
+            }
+
+            if (inputStream != null) {
+                try {
+                    // org.apache.commons.io.IOUtils
+                    return IOUtils.toString(inputStream, Charsets.UTF_8);
+                } catch (IOException e) {
+                    throw new RuntimeException("Could not read " + location + " from the classpath", e);
+                }
+            }
+
+            throw new RuntimeException("Could not find " + location + " on the classpath");
+        } finally {
+            if (inputStream != null) {
+                inputStream.close();
+            }
+        }
+    } catch (IOException ioe) {
+        throw new RuntimeException("Exception closing input stream for " + location, ioe);
+    }
 }</code></pre>
 
 <h3>Java DefaultSSLSocketFactory</h3>

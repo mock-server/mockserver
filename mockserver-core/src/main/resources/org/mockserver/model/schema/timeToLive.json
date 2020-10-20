@@ -1,27 +1,27 @@
 {
-    "title": "time expectation is valid for",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-        "timeUnit": {
-            "enum": [
-                "DAYS",
-                "HOURS",
-                "MINUTES",
-                "SECONDS",
-                "MILLISECONDS",
-                "MICROSECONDS",
-                "NANOSECONDS"
-            ]
-        },
-        "timeToLive": {
-            "type": "integer"
-        },
-        "endDate": {
-            "type": "integer"
-        },
-        "unlimited": {
-            "type": "boolean"
-        }
+  "title": "time expectation is valid for",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "timeUnit": {
+      "enum": [
+        "DAYS",
+        "HOURS",
+        "MINUTES",
+        "SECONDS",
+        "MILLISECONDS",
+        "MICROSECONDS",
+        "NANOSECONDS"
+      ]
+    },
+    "timeToLive": {
+      "type": "integer"
+    },
+    "endDate": {
+      "type": "integer"
+    },
+    "unlimited": {
+      "type": "boolean"
     }
+  }
 }

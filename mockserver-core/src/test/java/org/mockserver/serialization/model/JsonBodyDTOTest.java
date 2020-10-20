@@ -5,6 +5,7 @@ import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 import org.mockserver.model.Body;
 import org.mockserver.model.JsonBody;
+import org.mockserver.model.JsonPathBody;
 import org.mockserver.model.MediaType;
 
 import java.nio.charset.StandardCharsets;
@@ -94,6 +95,20 @@ public class JsonBodyDTOTest {
         assertThat(jsonBody.getMatchType(), is(ONLY_MATCHING_FIELDS));
         assertThat(jsonBody.getContentType(), is("application/json; charset=utf-8"));
         assertThat(jsonBody.getRawBytes(), is("some_body".getBytes(StandardCharsets.UTF_8)));
+    }
+
+    @Test
+    public void shouldBuildCorrectObjectWithOptional() {
+        // when
+        JsonBody jsonBody = new JsonBodyDTO((JsonBody) new JsonBody("some_body").withOptional(true)).buildObject();
+
+        // then
+        assertThat(jsonBody.getValue(), is("some_body"));
+        assertThat(jsonBody.getType(), is(Body.Type.JSON));
+        assertThat(jsonBody.getMatchType(), is(ONLY_MATCHING_FIELDS));
+        assertThat(jsonBody.getContentType(), is("application/json; charset=utf-8"));
+        assertThat(jsonBody.getRawBytes(), is("some_body".getBytes(StandardCharsets.UTF_8)));
+        assertThat(jsonBody.getOptional(), is(true));
     }
 
     @Test

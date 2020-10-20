@@ -14,6 +14,7 @@ import static org.hamcrest.core.IsSame.sameInstance;
 import static org.junit.Assert.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.NottableSchemaString.schemaString;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -55,6 +56,8 @@ public class HttpRequestTest {
         assertEquals(new Parameter("name", "value"), new HttpRequest().withPathParameters(Collections.singletonList(new Parameter("name", "value"))).getPathParameterList().get(0));
         assertEquals(new Parameter("name", "value"), new HttpRequest().withPathParameter(new Parameter("name", "value")).getPathParameterList().get(0));
         assertEquals(new Parameter("name", "value"), new HttpRequest().withPathParameter("name", "value").getPathParameterList().get(0));
+        assertEquals(new Parameter(string("name"), schemaString("{ \"type\": \"string\" }")), new HttpRequest().withSchemaPathParameter("name", "{ \"type\": \"string\" }").getPathParameterList().get(0));
+        assertEquals(new Parameter(string("name"), schemaString("{ \"type\": \"string\" }"), schemaString("{ \"type\": \"integer\" }")), new HttpRequest().withSchemaPathParameter("name", "{ \"type\": \"string\" }", "{ \"type\": \"integer\" }").getPathParameterList().get(0));
         assertEquals(new Parameter("name", "value_one", "value_two"), new HttpRequest().withPathParameter(new Parameter("name", "value_one")).withPathParameter(new Parameter("name", "value_two")).getPathParameterList().get(0));
         assertEquals(new Parameter("name", "value_one", "value_two"), new HttpRequest().withPathParameter(new Parameter("name", "value_one")).withPathParameter("name", "value_two").getPathParameterList().get(0));
     }
@@ -65,6 +68,8 @@ public class HttpRequestTest {
         assertEquals(new Parameter("name", "value"), new HttpRequest().withQueryStringParameters(Collections.singletonList(new Parameter("name", "value"))).getQueryStringParameterList().get(0));
         assertEquals(new Parameter("name", "value"), new HttpRequest().withQueryStringParameter(new Parameter("name", "value")).getQueryStringParameterList().get(0));
         assertEquals(new Parameter("name", "value"), new HttpRequest().withQueryStringParameter("name", "value").getQueryStringParameterList().get(0));
+        assertEquals(new Parameter(string("name"), schemaString("{ \"type\": \"string\" }")), new HttpRequest().withSchemaQueryStringParameter("name", "{ \"type\": \"string\" }").getQueryStringParameterList().get(0));
+        assertEquals(new Parameter(string("name"), schemaString("{ \"type\": \"string\" }"), schemaString("{ \"type\": \"integer\" }")), new HttpRequest().withSchemaQueryStringParameter("name", "{ \"type\": \"string\" }", "{ \"type\": \"integer\" }").getQueryStringParameterList().get(0));
         assertEquals(new Parameter("name", "value_one", "value_two"), new HttpRequest().withQueryStringParameter(new Parameter("name", "value_one")).withQueryStringParameter(new Parameter("name", "value_two")).getQueryStringParameterList().get(0));
         assertEquals(new Parameter("name", "value_one", "value_two"), new HttpRequest().withQueryStringParameter(new Parameter("name", "value_one")).withQueryStringParameter("name", "value_two").getQueryStringParameterList().get(0));
     }
@@ -80,6 +85,8 @@ public class HttpRequestTest {
         assertEquals(new Header("name", "value"), new HttpRequest().withHeaders(Collections.singletonList(new Header("name", "value"))).getHeaderList().get(0));
         assertEquals(new Header("name", "value"), new HttpRequest().withHeader(new Header("name", "value")).getHeaderList().get(0));
         assertEquals(new Header("name", "value"), new HttpRequest().withHeader("name", "value").getHeaderList().get(0));
+        assertEquals(new Header(string("name"), schemaString("{ \"type\": \"string\" }")), new HttpRequest().withSchemaHeader("name", "{ \"type\": \"string\" }").getHeaderList().get(0));
+        assertEquals(new Header(string("name"), schemaString("{ \"type\": \"string\" }"), schemaString("{ \"type\": \"integer\" }")), new HttpRequest().withSchemaHeader("name", "{ \"type\": \"string\" }", "{ \"type\": \"integer\" }").getHeaderList().get(0));
         assertEquals(new Header("name", ".*"), new HttpRequest().withHeader(string("name")).getHeaderList().get(0));
         assertEquals(new Header("name", ".*"), new HttpRequest().withHeader("name").getHeaderList().get(0));
         assertEquals(new Header("name", "value_one", "value_two"), new HttpRequest().withHeader(new Header("name", "value_one")).withHeader(new Header("name", "value_two")).getHeaderList().get(0));
@@ -125,6 +132,7 @@ public class HttpRequestTest {
 
         assertEquals(new Cookie("name", "value"), new HttpRequest().withCookie(new Cookie("name", "value")).getCookieList().get(0));
         assertEquals(new Cookie("name", "value"), new HttpRequest().withCookie("name", "value").getCookieList().get(0));
+        assertEquals(new Cookie(string("name"), schemaString("{ \"type\": \"string\" }")), new HttpRequest().withSchemaCookie("name", "{ \"type\": \"string\" }").getCookieList().get(0));
         assertEquals(new Cookie("name", ""), new HttpRequest().withCookie(new Cookie("name", "")).getCookieList().get(0));
         assertEquals(new Cookie("name", null), new HttpRequest().withCookie(new Cookie("name", null)).getCookieList().get(0));
     }

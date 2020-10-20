@@ -75,6 +75,10 @@ public class HttpRequestTemplateObject extends RequestDefinition {
         return secure;
     }
 
+    public HttpRequestTemplateObject shallowClone() {
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

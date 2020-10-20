@@ -3,7 +3,7 @@
 <h2>Clustering MockServer</h2>
 
 <p>MockServer supports a <a href="/mock_server/performance.html">very high request throughput</a>, however if a higher request per second rate is required it is possible to cluster MockServer so that all nodes share expectations.</p>
-<p>Currently there is no support for clustering the MockServer log therefore request verifications will only work against the node that received the request.</p>
+<p>Although expectations are clustered, currently there is no support for clustering the MockServer log therefore request verifications will only work against the node that received the request.</p>
 
 <p>To create a MockServer cluster all instances need to:</p>
 <ul>
@@ -18,7 +18,7 @@
 MOCKSERVER_INITIALIZATION_JSON_PATH=mockserverInitialization.json \
 MOCKSERVER_PERSIST_EXPECTATIONS=true \
 MOCKSERVER_PERSISTED_EXPECTATIONS_PATH=mockserverInitialization.json \
-java -jar ~/Downloads/mockserver-netty-5.10.0-jar-with-dependencies.jar -serverPort 1080 -logLevel INFO</code></pre>
+java -jar ~/Downloads/mockserver-netty-5.11.1-jar-with-dependencies.jar -serverPort 1080 -logLevel INFO</code></pre>
 
 <p>or</p>
 
@@ -27,4 +27,4 @@ java -jar ~/Downloads/mockserver-netty-5.10.0-jar-with-dependencies.jar -serverP
 -Dmockserver.initializationJsonPath=mockserverInitialization.json \
 -Dmockserver.persistExpectations=true \
 -Dmockserver.persistedExpectationsPath=mockserverInitialization.json \
--jar ~/Downloads/mockserver-netty-5.10.0-jar-with-dependencies.jar -serverPort 1080 -logLevel INFO</code></pre>
+-jar ~/Downloads/mockserver-netty-5.11.1-jar-with-dependencies.jar -serverPort 1080 -logLevel INFO</code></pre>

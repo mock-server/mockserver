@@ -37,9 +37,11 @@ Release Steps
    1. ./scripts/local_deploy_snapshot.sh
    1. release on Maven https://oss.sonatype.org/index.html#stagingRepositories
 1. update docker image
-   1. update Dockerfile
-   1. docker build -t mockserver/mockserver:mockserver-x.x.x ./docker
-   1. docker build -t jamesdbloom/mockserver:mockserver-x.x.x ./docker
+   1. ensure maven returns the latest release 
+      1. curl -v https://oss.sonatype.org/service/local/artifact/maven/redirect\?r\=releases\&g\=org.mock-server\&a\=mockserver-netty\&c\=jar-with-dependencies\&e\=jar\&v\=RELEASE
+   1. update Dockerfile (no longer required)
+   1. docker build --no-cache -t mockserver/mockserver:mockserver-x.x.x ./docker
+   1. docker build --no-cache -t jamesdbloom/mockserver:mockserver-x.x.x ./docker
    1. docker login
    1. docker push mockserver/mockserver:mockserver-x.x.x
    1. docker push jamesdbloom/mockserver:mockserver-x.x.x
@@ -68,7 +70,7 @@ Release Steps
    1. login to https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi
    1. create new version
    1. publish version
-   1. update references to 5.x.x (i.e. 5.10.x) to correct version
+   1. update references to 5.x.x (i.e. 5.11.x) to correct version
 1. update www.mock-server.com
    1. find and replace MockServer version
    1. upload to S3
@@ -95,7 +97,7 @@ Release Steps
    1. brew doctor
    1. delete https://github.com/jamesdbloom/homebrew-core
    1. git -C "$(brew --repo homebrew/core)" checkout master
-   1. git -C "$(brew --repo homebrew/core)" branch -D mockserver-didn't match request matcher
+   1. git -C "$(brew --repo homebrew/core)" branch -D mockserver-x.x.x
    1. git -C "$(brew --repo homebrew/core)" reset --hard HEAD
    1. brew update
    1. brew bump-formula-pr --strict mockserver --url=https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/x.x.x/mockserver-netty-x.x.x-brew-tar.tar

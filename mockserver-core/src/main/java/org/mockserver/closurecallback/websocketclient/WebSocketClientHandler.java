@@ -6,7 +6,7 @@ import io.netty.handler.codec.http.websocketx.*;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mappers.FullHttpResponseToMockServerResponse;
+import org.mockserver.mappers.FullHttpResponseToMockServerHttpResponse;
 import org.mockserver.model.MediaType;
 import org.slf4j.event.Level;
 
@@ -117,7 +117,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
                 }
                 registrationFuture.complete(clientId);
             } else {
-                registrationFuture.completeExceptionally(new WebSocketException("handshake failure unsupported message received " + new FullHttpResponseToMockServerResponse(mockServerLogger).mapFullHttpResponseToMockServerResponse(httpResponse)));
+                registrationFuture.completeExceptionally(new WebSocketException("handshake failure unsupported message received " + new FullHttpResponseToMockServerHttpResponse(mockServerLogger).mapFullHttpResponseToMockServerResponse(httpResponse)));
                 if (MockServerLogger.isEnabled(WARN)) {
                     mockServerLogger.logEvent(
                         new LogEntry()

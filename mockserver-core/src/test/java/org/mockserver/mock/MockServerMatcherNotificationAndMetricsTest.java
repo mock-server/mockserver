@@ -1,28 +1,30 @@
 package org.mockserver.mock;
 
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.metrics.Metrics;
+import org.mockserver.mock.listeners.MockServerMatcherNotifier;
 import org.mockserver.model.HttpObjectCallback;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.ui.MockServerMatcherNotifier;
+import org.mockserver.uuid.UUIDService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.mock;
+import static org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.API;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.ui.MockServerMatcherNotifier.Cause.API;
 
 /**
  * @author jamesdbloom
@@ -63,12 +65,12 @@ public class MockServerMatcherNotificationAndMetricsTest {
 
         // when
         requestMatchers.add(new Expectation(
-                    request()
-                        .withPath("somePath")
-                ).thenRespond(
-                    response()
-                        .withBody("someBody")
-                ), API);
+            request()
+                .withPath("somePath")
+        ).thenRespond(
+            response()
+                .withBody("someBody")
+        ), API);
 
         // then
         MILLISECONDS.sleep(500);
@@ -85,18 +87,18 @@ public class MockServerMatcherNotificationAndMetricsTest {
             causes.add(cause);
         });
         requestMatchers.add(new Expectation(
-                    request()
-                        .withPath("somePath")
-                ).thenForward(
-                    forward()
-                ), API);
+            request()
+                .withPath("somePath")
+        ).thenForward(
+            forward()
+        ), API);
         requestMatchers.add(new Expectation(
-                    request()
-                        .withPath("somePath")
-                ).thenRespond(
-                    response()
-                        .withBody("someBody")
-                ), API);
+            request()
+                .withPath("somePath")
+        ).thenRespond(
+            response()
+                .withBody("someBody")
+        ), API);
 
         // then
         MILLISECONDS.sleep(500);
@@ -125,12 +127,12 @@ public class MockServerMatcherNotificationAndMetricsTest {
             causes.add(cause);
         });
         requestMatchers.add(new Expectation(
-                    request()
-                        .withPath("somePath")
-                ).withId("one").thenRespond(
-                    response()
-                        .withBody("someBody")
-                ), API);
+            request()
+                .withPath("somePath")
+        ).withId("one").thenRespond(
+            response()
+                .withBody("someBody")
+        ), API);
 
         // then
         MILLISECONDS.sleep(500);
@@ -141,12 +143,12 @@ public class MockServerMatcherNotificationAndMetricsTest {
         // when
         causes.clear();
         requestMatchers.add(new Expectation(
-                    request()
-                        .withPath("someOtherPath")
-                ).withId("one").thenRespond(
-                    response()
-                        .withBody("someOtherBody")
-                ), API);
+            request()
+                .withPath("someOtherPath")
+        ).withId("one").thenRespond(
+            response()
+                .withBody("someOtherBody")
+        ), API);
 
         // then
         MILLISECONDS.sleep(500);
@@ -156,7 +158,6 @@ public class MockServerMatcherNotificationAndMetricsTest {
     }
 
 
-
     @Test
     public void shouldUpdateAllExpectationWithNewExistingAndRemoved() throws InterruptedException {
         // given
@@ -164,17 +165,17 @@ public class MockServerMatcherNotificationAndMetricsTest {
         requestMatchers.registerListener((requestMatchers, cause) -> {
             causes.add(cause);
         });
-        String keyOne = UUID.randomUUID().toString();
+        String keyOne = UUIDService.getUUID();
         requestMatchers.add(new Expectation(request().withPath("path_one")).withId(keyOne).thenRespond(response().withBody("body_one")), API);
-        String keyTwo = UUID.randomUUID().toString();
-        requestMatchers.add(new Expectation(request().withPath("path_two")).withId(keyTwo).thenForward(new HttpObjectCallback(){
+        String keyTwo = UUIDService.getUUID();
+        requestMatchers.add(new Expectation(request().withPath("path_two")).withId(keyTwo).thenForward(new HttpObjectCallback() {
 
         }), API);
-        String keyThree = UUID.randomUUID().toString();
-        requestMatchers.add(new Expectation(request().withPath("path_three")).withId(keyThree).thenRespond(new HttpObjectCallback(){
+        String keyThree = UUIDService.getUUID();
+        requestMatchers.add(new Expectation(request().withPath("path_three")).withId(keyThree).thenRespond(new HttpObjectCallback() {
 
         }), API);
-        String keyFour = UUID.randomUUID().toString();
+        String keyFour = UUIDService.getUUID();
 
         // then
         MILLISECONDS.sleep(500);

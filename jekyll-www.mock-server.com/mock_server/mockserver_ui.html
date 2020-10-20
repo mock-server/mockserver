@@ -1,0 +1,87 @@
+---
+title: MockServer UI
+layout: page
+pageOrder: 3
+section: 'General'
+subsection: true
+sitemap:
+  priority: 0.7
+  changefreq: 'monthly'
+  lastmod: 2019-11-10T08:00:00+01:00
+---
+
+<p>MockServer has a UI that can be used to view the internal state within MockServer, including:</p>
+
+<ul>
+    <li><strong><a href="#ui_logs_section">logs</a></strong></li>
+    <li><strong><a href="#ui_active_expectations_section">active expectations</a></strong></li>
+    <li><strong><a href="#ui_requests_received_section">requests received</a></strong></li>
+    <li><strong><a href="#ui_proxied_requests_section">proxied requests</a></strong></li>
+</ul>
+
+<p>The UI is available for all <a href="/mock_server/getting_started.html#start_mockserver">versions of MockServer</a> except the deployable WAR</p>
+
+<a id="launch_ui" class="anchor" href="#launch_ui">&nbsp;</a>
+
+<h2>Launch UI</h2>
+
+<h3>Browser</h3>
+
+<p>The UI can be opened in any browser using the URL</p>
+<span class="ui_link"><strong>http(s)://&lt;host&gt;:&lt;port&gt;/mockserver/dashboard</strong></span>
+
+<p>For example if MockServer is running on <strong>localhost</strong> on port <strong>1080</strong> use <strong>http://localhost:1080/mockserver/dashboard</strong></p>
+
+<h3>MockServerClient or ClientAndServer</h3>
+
+<p>The UI can be opened by using the <span class="keyword">openUI()</span> function on the <span class="this_value">MockServerClient</span> or <span class="this_value">ClientAndServer</span>.</p>
+
+<p>The UI is launched using the default browser which the JVM determines from the operating system.</p>
+
+<p>The <span class="keyword">openUI()</span> method pauses for 1 second after launching the browser to allow the UI to launch and start collecting logs, this ensures that the log are visible in the UI even if MockServer is shutdown quickly by a test shutdown function, such as After, AfterClass, AfterAll, etc. The pause period can be configured using the method <span class="keyword">openUI(TimeUnit timeUnit, long pause)</span>.</p>
+
+<p>To simplify debugging request matching when multiple instances of MockServer are created if the <a href="/mock_server/debugging_issues.html#logging-levels">logLevel</a> is set to <span class="string_literal">DEBUG</span> and the <strong><a href="/mock_server/configuration_properties.html#button_configuration_launch_ui__debug">launchUIForLogLevelDebug</a></strong> configuration property is enabled (default: false) the <span class="this_value">ClientAndServer</span> constructor or static factor methods will launch the UI so that it is possible to see all logs events for every instance of MockServer.</p>
+
+<a id="ui_logs_section" class="anchor" href="#ui_logs_section">&nbsp;</a>
+
+<h2>Logs</h2>
+
+<p>The logs section list all the logs events recorded by MockServer, including errors, request matching, exception creation, deletion, etc, as shown below:</p>
+
+<img class="ui_image" src="/images/LogMessageUISection.png" alt="Log Message UI Section">
+
+<p>To simplify the process of understand how each request is handled and which expectation have or have not been matched all logs events for a single request are grouped together.</p>
+
+<p>In addition, to simplify the process or understand why a given expectation has or has not been matched a <strong>because</strong> section is shown for any <strong>EXPECTATION_NOT_MATCHED</strong> this can be expanded to show the full details of which properties did or did not match.</p>
+<p>When <a href="/mock_server/debugging_issues.html#logging-levels">logLevel</a> is set to <span class="string_literal">DEBUG</span>:</p>
+<ul>
+    <li>a detailed reason will be included (see white text in image below)</li>
+    <li><a href="/mock_server/clearing_and_resetting.html">clear</a> does not delete logs from the event log, this allows the UI to continue to display logs that would have otherwise been deleted to improve the ability to debug issues</li>
+</ul>
+
+<img class="ui_image" src="/images/LogMessageUIExpectationNotMatched.png" alt="Log Message UI Expectation Not Matched">
+
+<a id="ui_active_expectations_section" class="anchor" href="#ui_active_expectations_section">&nbsp;</a>
+
+<h2>Active Expectations</h2>
+
+<p>The active expectations section shows all active expectations in the order they are applied, taking into account all factors such as when the expectation was created, its <strong>priority</strong>, its <strong>timeToLive</strong> and its <strong>times</strong></p>
+
+<img class="ui_image_half_width" src="/images/ActiveExpectationsUISection.png" alt="Active Expectations UI Section">
+
+<a id="ui_requests_received_section" class="anchor" href="#ui_requests_received_section">&nbsp;</a>
+
+<h2>Received Requests</h2>
+
+<p>The received request section shows all request received in the order were received.</p>
+<p>The list includes request that are matched against an expectation, requests that are proxied and request that are not proxied or matched against any expectation.</p>
+
+<img class="ui_image_half_width" src="/images/ReceivedRequestsUISection.png" alt="Received Requests UI Section">
+
+<a id="ui_proxied_requests_section" class="anchor" href="#ui_proxied_requests_section">&nbsp;</a>
+
+<h2>Proxied Requests</h2>
+
+<p>The proxied requests section shows request that have been proxied the corresponding response returned.</p>
+
+<img class="ui_image_half_width" src="/images/ProxiedRequestUISection.png" alt="Proxied Requests UI Section">

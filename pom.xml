@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.mock-server</groupId>
     <artifactId>mockserver</artifactId>
-    <version>5.10.1-SNAPSHOT</version>
+    <version>5.11.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>MockServer</name>
@@ -55,20 +54,20 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
-        <jetty.version>9.4.29.v20200521</jetty.version>
+        <jetty.version>9.4.31.v20200723</jetty.version>
         <slf4j.version>1.7.30</slf4j.version>
-        <jackson.version>2.10.4</jackson.version>
+        <jackson.version>2.11.3</jackson.version>
         <velocity.version>2.2</velocity.version>
-        <netty.version>4.1.50.Final</netty.version>
+        <netty.version>4.1.53.Final</netty.version>
         <httpcomponents.version>4.4.1</httpcomponents.version>
-        <boucycastle.verion>1.65</boucycastle.verion>
-        <spring.version>5.2.7.RELEASE</spring.version>
-        <mockito.version>3.3.3</mockito.version>
+        <boucycastle.verion>1.66</boucycastle.verion>
+        <spring.version>5.2.9.RELEASE</spring.version>
+        <mockito.version>3.5.15</mockito.version>
         <xmlunit.version>2.7.0</xmlunit.version>
         <skipTests>false</skipTests>
         <skipAssembly>false</skipAssembly>
-        <release.arguments/>
-        <javadoc.additional.parameters/>
+        <release.arguments />
+        <javadoc.additional.parameters />
     </properties>
 
     <modules>
@@ -82,6 +81,7 @@
         <module>mockserver-examples</module>
         <module>mockserver-junit-rule</module>
         <module>mockserver-junit-jupiter</module>
+        <module>mockserver-spring-test-listener</module>
     </modules>
 
     <dependencyManagement>
@@ -163,12 +163,12 @@
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-core</artifactId>
-                <version>9.0.36</version>
+                <version>9.0.39</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-logging-juli</artifactId>
-                <version>8.0.53</version>
+                <version>8.5.2</version>
                 <scope>runtime</scope>
             </dependency>
 
@@ -193,7 +193,7 @@
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
-                <version>4.5.12</version>
+                <version>4.5.13</version>
             </dependency>
 
             <!-- Netty -->
@@ -245,6 +245,13 @@
                 <version>1.1.3</version>
             </dependency>
 
+            <!-- non-blocking UUID -->
+            <dependency>
+                <groupId>com.fasterxml.uuid</groupId>
+                <artifactId>java-uuid-generator</artifactId>
+                <version>4.0.1</version>
+            </dependency>
+
             <!-- SSL X509 -->
             <dependency>
                 <groupId>org.bouncycastle</groupId>
@@ -290,7 +297,7 @@
             <dependency>
                 <groupId>net.javacrumbs.json-unit</groupId>
                 <artifactId>json-unit-core</artifactId>
-                <version>2.14.0</version>
+                <version>2.19.0</version>
             </dependency>
 
             <!-- json validation -->
@@ -305,22 +312,17 @@
                 <version>2.4.0</version>
             </dependency>
 
-            <!-- swagger -->
+            <!-- open api -->
             <dependency>
                 <groupId>io.swagger.parser.v3</groupId>
                 <artifactId>swagger-parser</artifactId>
-                <version>2.0.20</version>
+                <version>2.0.22</version>
                 <exclusions>
                     <exclusion>
                         <groupId>com.github.fge</groupId>
                         <artifactId>json-patch</artifactId>
                     </exclusion>
                 </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>com.atlassian.oai</groupId>
-                <artifactId>swagger-request-validator-core</artifactId>
-                <version>2.10.0</version>
             </dependency>
 
             <!-- xml -->
@@ -344,27 +346,27 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
-                <version>3.10</version>
+                <version>3.11</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-text</artifactId>
-                <version>1.8</version>
+                <version>1.9</version>
             </dependency>
             <dependency>
                 <groupId>commons-codec</groupId>
                 <artifactId>commons-codec</artifactId>
-                <version>1.14</version>
+                <version>1.15</version>
             </dependency>
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
-                <version>2.7</version>
+                <version>2.8.0</version>
             </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <version>28.2-android</version>
+                <version>30.0-android</version>
             </dependency>
 
             <!-- logging -->
@@ -380,17 +382,41 @@
                 <optional>true</optional> <!-- do not impose on project importing mock-server -->
             </dependency>
 
+            <!-- spring -->
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-beans</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-context</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-test</artifactId>
+                <version>${spring.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-web</artifactId>
+                <version>${spring.version}</version>
+                <scope>test</scope>
+            </dependency>
+
             <!-- test -->
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.12</version>
+                <version>4.13.1</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-engine</artifactId>
-                <version>5.6.2</version>
+                <version>5.7.0</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -407,22 +433,8 @@
             </dependency>
             <dependency>
                 <groupId>org.hamcrest</groupId>
-                <artifactId>hamcrest-all</artifactId>
-                <version>1.3</version>
-                <scope>test</scope>
-            </dependency>
-
-            <!-- integration testing -->
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-test</artifactId>
-                <version>${spring.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-web</artifactId>
-                <version>${spring.version}</version>
+                <artifactId>hamcrest</artifactId>
+                <version>2.2</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
@@ -443,7 +455,7 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>exec-maven-plugin</artifactId>
-                        <version>1.6.0</version>
+                        <version>3.0.0</version>
                         <inherited>false</inherited>
                         <configuration>
                             <workingDirectory>${basedir}/build</workingDirectory>
@@ -482,7 +494,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
-                        <version>3.0.1</version>
+                        <version>3.2.1</version>
                         <executions>
                             <execution>
                                 <id>attach-sources</id>
@@ -496,9 +508,8 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.1.0</version>
+                        <version>3.2.0</version>
                         <configuration>
-                            <excludePackageNames>org.mockserver.examples:org.mockserver.examples.*</excludePackageNames>
                             <failOnError>false</failOnError>
                             <doclint>none</doclint>
                         </configuration>
@@ -516,10 +527,7 @@
                                 </goals>
                                 <phase>site</phase>
                                 <configuration>
-                                    <excludePackageNames>org.mockserver.examples:org.mockserver.examples.*
-                                    </excludePackageNames>
-                                    <reportOutputDirectory>${basedir}/jekyll-www.mock-server.com/_site
-                                    </reportOutputDirectory>
+                                    <reportOutputDirectory>${basedir}/jekyll-www.mock-server.com/_site</reportOutputDirectory>
                                     <destDir>apidocs</destDir>
                                 </configuration>
                             </execution>
@@ -569,7 +577,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
+                <version>3.8.1</version>
                 <configuration>
                     <fork>false</fork>
                     <source>1.8</source>
@@ -613,7 +621,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.1.1</version>
+                <version>3.2.0</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -664,7 +672,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.22.1</version>
+                <version>2.22.2</version>
                 <configuration>
                     <!-- allow debugging tests -->
                     <!--<forkCount>0</forkCount>-->
@@ -692,7 +700,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.22.1</version>
+                <version>2.22.2</version>
                 <configuration>
                     <!-- allow debugging tests -->
                     <!--<forkCount>0</forkCount>-->
@@ -728,7 +736,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.0.0</version>
+                <version>3.1.1</version>
                 <configuration>
                     <encoding>UTF-8</encoding>
                     <linkXRef>false</linkXRef>

@@ -1,4 +1,3 @@
-
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -8,12 +7,18 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mockserver.model.NottableOptionalString.OPTIONAL_CHAR;
+import static org.mockserver.model.NottableOptionalString.optional;
+import static org.mockserver.model.ParameterStyle.DEEP_OBJECT;
+
 /**
  * @author jamesdbloom
  */
 public class NottableString extends ObjectWithJsonToString implements Comparable<NottableString> {
 
     public static final char NOT_CHAR = '!';
+    private static final String EMPTY_STRING = "";
     private final String value;
     private final boolean isBlank;
     private final Boolean not;
@@ -21,6 +26,7 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
     private final String json;
     private Pattern pattern;
     private Pattern lowercasePattern;
+    private ParameterStyle parameterStyle;
 
     NottableString(String value, Boolean not) {
         this.value = value;
@@ -31,11 +37,7 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
             this.not = Boolean.FALSE;
         }
         this.hashCode = Objects.hash(this.value, this.not);
-        if (this.not) {
-            this.json = NOT_CHAR + this.value;
-        } else {
-            this.json = !this.isBlank ? this.value : "";
-        }
+        this.json = serialise();
     }
 
     NottableString(String value) {
@@ -48,10 +50,16 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
             this.not = Boolean.FALSE;
         }
         this.hashCode = Objects.hash(this.value, this.not);
-        if (this.not) {
-            this.json = NOT_CHAR + this.value;
+        this.json = serialise();
+    }
+
+    private String serialise() {
+        if (this.isOptional() || this.not) {
+            return (this.isOptional() ? "" + OPTIONAL_CHAR : "") + (this.not ? "" + NOT_CHAR : "") + (!this.isBlank ? this.value : EMPTY_STRING);
+        } else if (this.isBlank) {
+            return EMPTY_STRING;
         } else {
-            this.json = !this.isBlank ? this.value : "";
+            return this.value;
         }
     }
 
@@ -75,7 +83,7 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
         return nottableString.toString();
     }
 
-    public static List<String> serialiseNottableString(Collection<NottableString> nottableStrings) {
+    public static List<String> serialiseNottableStrings(Collection<NottableString> nottableStrings) {
         List<String> strings = new LinkedList<>();
         for (NottableString nottableString : nottableStrings) {
             strings.add(nottableString.toString());
@@ -88,7 +96,27 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
     }
 
     public static NottableString string(String value) {
-        return new NottableString(value);
+        Boolean not = null;
+        boolean optional = false;
+        if (isNotBlank(value)) {
+            if (value.charAt(0) == OPTIONAL_CHAR) {
+                optional = true;
+                value = value.substring(1);
+            }
+            if (value.charAt(0) == NOT_CHAR) {
+                not = true;
+                value = value.substring(1);
+            }
+            if (value.charAt(0) == OPTIONAL_CHAR) {
+                optional = true;
+                value = value.substring(1);
+            }
+        }
+        if (optional) {
+            return optional(value, not);
+        } else {
+            return new NottableString(value, not);
+        }
     }
 
     public static NottableString not(String value) {
@@ -122,6 +150,22 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
     @JsonIgnore
     public boolean isNot() {
         return not;
+    }
+
+    public boolean isOptional() {
+        return false;
+    }
+
+    public ParameterStyle getParameterStyle() {
+        return parameterStyle;
+    }
+
+    public NottableString withStyle(ParameterStyle style) {
+        if (style.equals(DEEP_OBJECT)) {
+            throw new IllegalArgumentException("deep object style is not supported");
+        }
+        this.parameterStyle = style;
+        return this;
     }
 
     NottableString capitalize() {
@@ -180,6 +224,15 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
         return lowercasePattern.matcher(input.toLowerCase()).matches();
     }
 
+    public boolean fieldsEqual(NottableString that) {
+        if (this == that) {
+            return true;
+        }
+        return isBlank == that.isBlank &&
+            Objects.equals(json, that.json) &&
+            parameterStyle == that.parameterStyle;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other instanceof String) {
@@ -197,21 +250,28 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
     }
 
     private boolean equalsSchema(NottableSchemaString schema, NottableString string) {
-        if (schema.getValue() == null && string.getValue() == null) {
+        if (schema.getValue() == null && string.value == null) {
             return true;
-        } else if (schema.getValue() == null || string.getValue() == null) {
+        } else if (schema.getValue() == null || string.value == null) {
             return false;
         } else {
-            return schema.matches(string.getValue());
+            return schema.matches(string.value);
+        }
+    }
+
+    private boolean equalsString(NottableString one, NottableString two) {
+        if (one.value == null && two.value == null) {
+            return true;
+        } else if (one.value == null || two.value == null) {
+            return false;
+        } else {
+            boolean reverse = (two.not != one.not) && (two.not || one.not);
+            return reverse != two.value.equals(one.value);
         }
     }
 
     private boolean equalsValue(NottableString other) {
-        if (other.getValue() == null) {
-            return this.value == null;
-        }
-        boolean reverse = (other.not != this.not) && (other.not || this.not);
-        return reverse != other.getValue().equals(this.value);
+        return equalsString(this, other);
     }
 
     @Override

@@ -8,20 +8,19 @@ import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
-import org.mockserver.codec.MockServerServerCodec;
-import org.mockserver.dashboard.DashboardWebSocketServerHandler;
+import org.mockserver.codec.MockServerHttpServerCodec;
+import org.mockserver.dashboard.DashboardWebSocketHandler;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpState;
 import org.mockserver.netty.HttpRequestHandler;
+import org.mockserver.uuid.UUIDService;
 import org.slf4j.event.Level;
 
-import java.util.UUID;
-
 import static com.google.common.net.HttpHeaders.HOST;
+import static org.mockserver.closurecallback.websocketclient.WebSocketClient.CLIENT_REGISTRATION_ID_HEADER;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
 import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabledUpstream;
-import static org.mockserver.closurecallback.websocketclient.WebSocketClient.CLIENT_REGISTRATION_ID_HEADER;
 
 /**
  * @author jamesdbloom
@@ -77,7 +76,7 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
         if (handshaker == null) {
             WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
         } else {
-            final String clientId = httpRequest.headers().contains(CLIENT_REGISTRATION_ID_HEADER) ? httpRequest.headers().get(CLIENT_REGISTRATION_ID_HEADER) : UUID.randomUUID().toString();
+            final String clientId = httpRequest.headers().contains(CLIENT_REGISTRATION_ID_HEADER) ? httpRequest.headers().get(CLIENT_REGISTRATION_ID_HEADER) : UUIDService.getUUID();
             if (LocalCallbackRegistry.responseClientExists(clientId)
                 || LocalCallbackRegistry.forwardClientExists(clientId)) {
                 // found locally to indicate to client
@@ -93,21 +92,25 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
                         ctx.channel().newPromise()
                     )
                     .addListener((ChannelFutureListener) future -> {
-                        ctx.pipeline().remove(DashboardWebSocketServerHandler.class);
-                        ctx.pipeline().remove(MockServerServerCodec.class);
+                        ctx.pipeline().remove(DashboardWebSocketHandler.class);
+                        ctx.pipeline().remove(MockServerHttpServerCodec.class);
                         ctx.pipeline().remove(HttpRequestHandler.class);
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setLogLevel(Level.TRACE)
-                                .setMessageFormat("registering client " + clientId)
-                        );
-                        webSocketClientRegistry.registerClient(clientId, ctx);
-                        future.channel().closeFuture().addListener((ChannelFutureListener) closeFuture -> {
+                        if (MockServerLogger.isEnabled(Level.TRACE)) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setLogLevel(Level.TRACE)
-                                    .setMessageFormat("unregistering callback for client " + clientId)
+                                    .setMessageFormat("registering client " + clientId)
                             );
+                        }
+                        webSocketClientRegistry.registerClient(clientId, ctx);
+                        future.channel().closeFuture().addListener((ChannelFutureListener) closeFuture -> {
+                            if (MockServerLogger.isEnabled(Level.TRACE)) {
+                                mockServerLogger.logEvent(
+                                    new LogEntry()
+                                        .setLogLevel(Level.TRACE)
+                                        .setMessageFormat("unregistering callback for client " + clientId)
+                                );
+                            }
                             webSocketClientRegistry.unregisterClient(clientId);
                         });
                     });

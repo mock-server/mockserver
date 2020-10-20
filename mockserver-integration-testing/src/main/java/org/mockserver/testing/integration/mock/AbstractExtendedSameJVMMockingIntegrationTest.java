@@ -43,7 +43,7 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
             )
             .respond(
                 callback()
-                    .withCallbackClass("org.mockserver.testing.integration.callback.StaticTestExpectationResponseCallback")
+                    .withCallbackClass(StaticTestExpectationResponseCallback.class)
             );
 
         // then

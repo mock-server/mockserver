@@ -2,7 +2,7 @@ package org.mockserver.servlet.responsewriter;
 
 import org.mockserver.cors.CORSHeaders;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
+import org.mockserver.mappers.MockServerHttpResponseToHttpServletResponseEncoder;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
@@ -20,11 +20,11 @@ import static org.mockserver.model.HttpResponse.response;
 public class ServletResponseWriter extends ResponseWriter {
     private static final CORSHeaders CORS_HEADERS = new CORSHeaders();
     private final HttpServletResponse httpServletResponse;
-    private MockServerResponseToHttpServletResponseEncoder mockServerResponseToHttpServletResponseEncoder;
+    private MockServerHttpResponseToHttpServletResponseEncoder mockServerResponseToHttpServletResponseEncoder;
 
     public ServletResponseWriter(MockServerLogger mockServerLogger, HttpServletResponse httpServletResponse) {
         this.httpServletResponse = httpServletResponse;
-        this.mockServerResponseToHttpServletResponseEncoder = new MockServerResponseToHttpServletResponseEncoder(mockServerLogger);
+        this.mockServerResponseToHttpServletResponseEncoder = new MockServerHttpResponseToHttpServletResponseEncoder(mockServerLogger);
     }
 
     @Override

@@ -114,7 +114,7 @@ public class JsonSchemaMatcherTest {
             assertFalse(jsonSchemaMatcher.matches(new MatchDifference(request()), json));
 
             // then
-            verify(logger).debug("json schema match failed expected:" + NEW_LINE +
+            verify(logger).trace("json schema match failed expected:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "      \"type\": \"object\"," + NEW_LINE +
@@ -181,7 +181,7 @@ public class JsonSchemaMatcherTest {
             assertFalse(jsonSchemaMatcher.matches(new MatchDifference(request()), json));
 
             // then
-            verify(logger).debug("json schema match failed expected:" + NEW_LINE +
+            verify(logger).trace("json schema match failed expected:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "      \"type\": \"object\"," + NEW_LINE +

@@ -2,6 +2,7 @@ package org.mockserver.model;
 
 import org.mockserver.file.FileReader;
 
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -10,6 +11,7 @@ import java.util.Objects;
 public class JsonSchemaBody extends Body<String> {
     private int hashCode;
     private final String jsonSchema;
+    private Map<String, ParameterStyle> parameterStyles;
 
     public JsonSchemaBody(String jsonSchema) {
         super(Type.JSON_SCHEMA);
@@ -22,6 +24,15 @@ public class JsonSchemaBody extends Body<String> {
 
     public static JsonSchemaBody jsonSchemaFromResource(String jsonSchemaPath) {
         return new JsonSchemaBody(FileReader.readFileFromClassPathOrPath(jsonSchemaPath));
+    }
+
+    public Map<String, ParameterStyle> getParameterStyles() {
+        return parameterStyles;
+    }
+
+    public JsonSchemaBody withParameterStyles(Map<String, ParameterStyle> parameterStyles) {
+        this.parameterStyles = parameterStyles;
+        return this;
     }
 
     public String getValue() {

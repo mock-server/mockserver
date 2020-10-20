@@ -5,7 +5,7 @@ import org.mockserver.logging.MockServerLogger;
 
 import static org.junit.Assert.*;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.matchers.NotMatcher.not;
+import static org.mockserver.matchers.NotMatcher.notMatcher;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -107,8 +107,8 @@ public class XmlStringMatcherTest {
             "   <key>some_key</key>" +
             "   <value>some_value</value>" +
             "</element>";
-        assertFalse(not(new XmlStringMatcher(new MockServerLogger(), "<element><key>some_key</key><value>some_value</value></element>")).matches(matched));
-        assertFalse(not(new XmlStringMatcher(new MockServerLogger(), "" +
+        assertFalse(notMatcher(new XmlStringMatcher(new MockServerLogger(), "<element><key>some_key</key><value>some_value</value></element>")).matches(matched));
+        assertFalse(notMatcher(new XmlStringMatcher(new MockServerLogger(), "" +
             "<element>" +
             "   <key>some_key</key>" +
             "   <value>some_value</value>" +
@@ -182,12 +182,12 @@ public class XmlStringMatcherTest {
             "   <key>some_key</key>" +
             "   <value>some_value</value>" +
             "</element>";
-        assertTrue(not(new XmlStringMatcher(new MockServerLogger(), "" +
+        assertTrue(notMatcher(new XmlStringMatcher(new MockServerLogger(), "" +
             "<another_element>" +
             "   <key>some_key</key>" +
             "   <value>some_value</value>" +
             "</another_element>")).matches(matched));
-        assertTrue(not(new XmlStringMatcher(new MockServerLogger(), "" +
+        assertTrue(notMatcher(new XmlStringMatcher(new MockServerLogger(), "" +
             "<element>" +
             "   <another_key>some_key</another_key>" +
             "   <value>some_value</value>" +
@@ -221,8 +221,8 @@ public class XmlStringMatcherTest {
 
     @Test
     public void shouldMatchNullTest() {
-        assertTrue(not(new XmlStringMatcher(new MockServerLogger(), "some_value")).matches(null, null));
-        assertTrue(not(new XmlStringMatcher(new MockServerLogger(), "some_value")).matches(null));
+        assertTrue(notMatcher(new XmlStringMatcher(new MockServerLogger(), "some_value")).matches(null, null));
+        assertTrue(notMatcher(new XmlStringMatcher(new MockServerLogger(), "some_value")).matches(null));
     }
 
     @Test

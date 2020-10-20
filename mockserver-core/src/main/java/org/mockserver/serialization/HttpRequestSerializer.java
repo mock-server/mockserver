@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Joiner;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -18,6 +19,7 @@ import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator.jsonSchemaHttpRequestValidator;
 import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 
@@ -129,7 +131,7 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                             .setArguments(jsonHttpRequest)
                             .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonHttpRequest + "] for HttpRequest", throwable);
+                    throw new IllegalArgumentException("exception while parsing [" + jsonHttpRequest + "] for HttpRequest", throwable);
                 }
             }
             String validationErrors = getValidator().isValid(jsonHttpRequest);
@@ -148,18 +150,11 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                             .setArguments(jsonHttpRequest)
                             .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonHttpRequest + "] for HttpRequest", throwable);
+                    throw new IllegalArgumentException("exception while parsing [" + jsonHttpRequest + "] for HttpRequest", throwable);
                 }
                 return httpRequest;
             } else {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(Level.ERROR)
-                        .setHttpRequest(null)
-                        .setMessageFormat("validation failed:{}request:{}")
-                        .setArguments(validationErrors, jsonHttpRequest)
-                );
-                throw new IllegalArgumentException(validationErrors);
+                throw new IllegalArgumentException(StringUtils.removeEndIgnoreCase(formatLogMessage("incorrect request json format for:{}schema validation errors:{}", jsonHttpRequest, validationErrors), "\n"));
             }
         }
     }

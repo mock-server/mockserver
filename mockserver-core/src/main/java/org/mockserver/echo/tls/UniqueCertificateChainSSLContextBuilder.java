@@ -7,7 +7,9 @@ import org.mockserver.socket.tls.jdk.CertificateSigningRequest;
 import org.mockserver.socket.tls.jdk.X509AndPrivateKey;
 import org.mockserver.socket.tls.jdk.X509Generator;
 
-import javax.net.ssl.*;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.X509KeyManager;
 import java.net.Socket;
 import java.security.Principal;
 import java.security.PrivateKey;
@@ -16,9 +18,10 @@ import java.security.cert.X509Certificate;
 import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.socket.tls.KeyAndCertificateFactory.KEY_GENERATION_ALGORITHM;
 import static org.mockserver.socket.tls.KeyAndCertificateFactory.SIGNING_ALGORITHM;
+import static org.mockserver.socket.tls.PEMToFile.privateKeyFromPEM;
+import static org.mockserver.socket.tls.PEMToFile.x509FromPEM;
 import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.*;
 import static org.slf4j.event.Level.ERROR;
-import static org.slf4j.event.Level.WARN;
 
 public class UniqueCertificateChainSSLContextBuilder {
 
@@ -57,17 +60,15 @@ public class UniqueCertificateChainSSLContextBuilder {
                         .setKeyPairSize(MOCK_KEY_SIZE),
                     buildDistinguishedName(ROOT_COMMON_NAME),
                     certificateAuthorityX509AndPrivateKey.getPrivateKey(),
-                    X509Generator.x509FromPEM(certificateAuthorityX509AndPrivateKey.getCert())
+                    x509FromPEM(certificateAuthorityX509AndPrivateKey.getCert())
                 );
             } catch (Throwable throwable) {
-                if (MockServerLogger.isEnabled(ERROR)) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setLogLevel(ERROR)
-                            .setMessageFormat("exception create fake certificates and private keys")
-                            .setThrowable(throwable)
-                    );
-                }
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(ERROR)
+                        .setMessageFormat("exception create fake certificates and private keys")
+                        .setThrowable(throwable)
+                );
             }
         }
 
@@ -94,14 +95,14 @@ public class UniqueCertificateChainSSLContextBuilder {
         @Override
         public X509Certificate[] getCertificateChain(String alias) {
             return new X509Certificate[]{
-                X509Generator.x509FromPEM(x509AndPrivateKey.getCert()),
-                X509Generator.x509FromPEM(certificateAuthorityX509AndPrivateKey.getCert())
+                x509FromPEM(x509AndPrivateKey.getCert()),
+                x509FromPEM(certificateAuthorityX509AndPrivateKey.getCert())
             };
         }
 
         @Override
         public PrivateKey getPrivateKey(String alias) {
-            return X509Generator.privateKeyFromPEM(x509AndPrivateKey.getPrivateKey());
+            return privateKeyFromPEM(x509AndPrivateKey.getPrivateKey());
         }
     }
 

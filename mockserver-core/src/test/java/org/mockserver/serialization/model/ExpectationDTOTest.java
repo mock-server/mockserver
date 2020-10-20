@@ -439,7 +439,7 @@ public class ExpectationDTOTest {
     @Test
     public void shouldBuildObjectWithNulls() {
         // when
-        Expectation expectation = new ExpectationDTO(new Expectation(null, null, null, null).thenRespond((HttpResponse) null).thenForward((HttpForward) null).thenError(null).thenRespond((HttpClassCallback) null).thenRespond((HttpObjectCallback) null)).buildObject();
+        Expectation expectation = new ExpectationDTO(new Expectation(null, null, null, 0).thenRespond((HttpResponse) null).thenForward((HttpForward) null).thenError(null).thenRespond((HttpClassCallback) null).thenRespond((HttpObjectCallback) null)).buildObject();
 
         // then
         assertThat(expectation.getTimes(), is(Times.unlimited()));
@@ -535,12 +535,12 @@ public class ExpectationDTOTest {
     @Test
     public void shouldHandleNullFieldInput() {
         // when
-        ExpectationDTO expectationDTO = new ExpectationDTO(new Expectation(null, null, null, null));
+        ExpectationDTO expectationDTO = new ExpectationDTO(new Expectation(null, null, null, 0));
 
         // then
         assertThat(expectationDTO.getTimes(), is(nullValue()));
         assertThat(expectationDTO.getTimeToLive(), is(nullValue()));
-        assertThat(expectationDTO.getPriority(), is(nullValue()));
+        assertThat(expectationDTO.getPriority(), is(0));
         assertThat(expectationDTO.getHttpRequest(), is(nullValue()));
         assertThat(expectationDTO.getHttpResponse(), is(nullValue()));
         assertThat(expectationDTO.getHttpResponseTemplate(), is(nullValue()));

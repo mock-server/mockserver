@@ -20,7 +20,9 @@ import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
 
+import java.awt.*;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +33,8 @@ import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.apache.commons.lang3.StringUtils.*;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.mock.HttpState.LOG_SEPARATOR;
@@ -56,15 +59,26 @@ public class MockServerClient implements Stoppable {
     protected CompletableFuture<Integer> portFuture;
     private Boolean secure;
     private Integer port;
-    private NettyHttpClient nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, null, false, new NettySslContextFactory(MOCK_SERVER_LOGGER));
     private HttpRequest requestOverride;
+    @SuppressWarnings("FieldMayBeFinal")
+    private NettyHttpClient nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, null, false, new NettySslContextFactory(MOCK_SERVER_LOGGER));
+    @SuppressWarnings("FieldMayBeFinal")
     private RequestDefinitionSerializer requestDefinitionSerializer = new RequestDefinitionSerializer(MOCK_SERVER_LOGGER);
+    @SuppressWarnings("FieldMayBeFinal")
+    private ExpectationIdSerializer expectationIdSerializer = new ExpectationIdSerializer(MOCK_SERVER_LOGGER);
+    @SuppressWarnings("FieldMayBeFinal")
     private LogEventRequestAndResponseSerializer httpRequestResponseSerializer = new LogEventRequestAndResponseSerializer(MOCK_SERVER_LOGGER);
+    @SuppressWarnings("FieldMayBeFinal")
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(MOCK_SERVER_LOGGER);
+    @SuppressWarnings("FieldMayBeFinal")
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer(MOCK_SERVER_LOGGER);
+    @SuppressWarnings("FieldMayBeFinal")
     private OpenAPIExpectationSerializer openAPIExpectationSerializer = new OpenAPIExpectationSerializer(MOCK_SERVER_LOGGER);
+    @SuppressWarnings("FieldMayBeFinal")
     private VerificationSerializer verificationSerializer = new VerificationSerializer(MOCK_SERVER_LOGGER);
+    @SuppressWarnings("FieldMayBeFinal")
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer(MOCK_SERVER_LOGGER);
+    private final CompletableFuture<MockServerClient> stopFuture = new CompletableFuture<>();
 
     /**
      * Start the client communicating to a MockServer on localhost at the port
@@ -163,6 +177,10 @@ public class MockServerClient implements Stoppable {
         return contextPath;
     }
 
+    public Integer getPort() {
+        return port();
+    }
+
     @SuppressWarnings("DuplicatedCode")
     private String calculatePath(String path) {
         String cleanedPath = "/mockserver/" + path;
@@ -177,49 +195,107 @@ public class MockServerClient implements Stoppable {
     }
 
     private HttpResponse sendRequest(HttpRequest request, boolean ignoreErrors) {
-        try {
-            if (!request.containsHeader(CONTENT_TYPE.toString())
-                && request.getBody() != null
-                && isNotBlank(request.getBody().getContentType())) {
-                request.withHeader(CONTENT_TYPE.toString(), request.getBody().getContentType());
-            }
-            if (secure != null) {
-                request.withSecure(secure);
-            }
-            if (requestOverride != null) {
-                request = request.update(requestOverride);
-            }
-            HttpResponse response = nettyHttpClient.sendRequest(
-                request.withHeader(HOST.toString(), this.host + ":" + port()),
-                ConfigurationProperties.maxSocketTimeout(),
-                TimeUnit.MILLISECONDS,
-                ignoreErrors
-            );
-
-            if (response != null) {
-                if (response.getStatusCode() != null &&
-                    response.getStatusCode() == BAD_REQUEST.code()) {
-                    throw new IllegalArgumentException(response.getBodyAsString());
+        if (!stopFuture.isDone()) {
+            try {
+                if (!request.containsHeader(CONTENT_TYPE.toString())
+                    && request.getBody() != null
+                    && isNotBlank(request.getBody().getContentType())) {
+                    request.withHeader(CONTENT_TYPE.toString(), request.getBody().getContentType());
                 }
-                String serverVersion = response.getFirstHeader("version");
-                String clientVersion = Version.getVersion();
-                if (!Version.matchesMajorMinorVersion(serverVersion)) {
-                    throw new ClientException("Client version \"" + clientVersion + "\" major and minor versions do not match server version \"" + serverVersion + "\"");
+                if (secure != null) {
+                    request.withSecure(secure);
+                }
+                if (requestOverride != null) {
+                    request = request.update(requestOverride);
+                }
+                HttpResponse response = nettyHttpClient.sendRequest(
+                    request.withHeader(HOST.toString(), this.host + ":" + port()),
+                    ConfigurationProperties.maxSocketTimeout(),
+                    TimeUnit.MILLISECONDS,
+                    ignoreErrors
+                );
+
+                if (response != null) {
+                    if (response.getStatusCode() != null &&
+                        response.getStatusCode() == BAD_REQUEST.code()) {
+                        throw new IllegalArgumentException(response.getBodyAsString());
+                    }
+                    String serverVersion = response.getFirstHeader("version");
+                    String clientVersion = Version.getVersion();
+                    if (!Version.matchesMajorMinorVersion(serverVersion)) {
+                        throw new ClientException("Client version \"" + clientVersion + "\" major and minor versions do not match server version \"" + serverVersion + "\"");
+                    }
+                }
+
+                return response;
+            } catch (RuntimeException rex) {
+                if (isNotBlank(rex.getMessage()) && (rex.getMessage().contains("executor not accepting a task") || rex.getMessage().contains("loop shut down"))) {
+                    throw new IllegalStateException(this.getClass().getSimpleName() + " has already been closed, please create new " + this.getClass().getSimpleName() + " instance");
+                } else {
+                    throw rex;
                 }
             }
-
-            return response;
-        } catch (RuntimeException rex) {
-            if (isNotBlank(rex.getMessage()) && (rex.getMessage().contains("executor not accepting a task") || rex.getMessage().contains("loop shut down"))) {
-                throw new IllegalStateException(this.getClass().getSimpleName() + " has already been closed, please create new " + this.getClass().getSimpleName() + " instance");
-            } else {
-                throw rex;
-            }
+        } else {
+            throw new IllegalStateException(this.getClass().getSimpleName() + " has already been stopped, please create new " + this.getClass().getSimpleName() + " instance");
         }
     }
 
     private HttpResponse sendRequest(HttpRequest request) {
         return sendRequest(request, false);
+    }
+
+    /**
+     * Launch UI and wait the default period to allow the UI to launch and start collecting logs,
+     * this ensures that the log are visible in the UI even if MockServer is shutdown by a test
+     * shutdown function, such as After, AfterClass, AfterAll, etc
+     */
+    public MockServerClient openUI() {
+        return openUI(SECONDS, 1);
+    }
+
+    /**
+     * Launch UI and wait a specified period to allow the UI to launch and start collecting logs,
+     * this ensures that the log are visible in the UI even if MockServer is shutdown by a test
+     * shutdown function, such as After, AfterClass, AfterAll, etc
+     *
+     * @param timeUnit TimeUnit the time unit, for example TimeUnit.SECONDS
+     * @param pause    the number of time units to delay before the function returns to ensure the UI is receiving logs
+     */
+    public MockServerClient openUI(TimeUnit timeUnit, long pause) {
+        try {
+            Desktop desktop = Desktop.getDesktop();
+            if (desktop != null) {
+                if (desktop.isSupported(Desktop.Action.BROWSE)) {
+                    desktop.browse(new URI("http" + (Boolean.TRUE.equals(secure) ? "s" : "") + "://" + host + ":" + port() + "/mockserver/dashboard"));
+                    timeUnit.sleep(pause);
+                } else {
+                    if (MockServerLogger.isEnabled(WARN)) {
+                        MOCK_SERVER_LOGGER.logEvent(
+                            new LogEntry()
+                                .setLogLevel(WARN)
+                                .setMessageFormat("browse to URL not supported by the desktop instance from JVM")
+                        );
+                    }
+                }
+            } else {
+                if (MockServerLogger.isEnabled(WARN)) {
+                    MOCK_SERVER_LOGGER.logEvent(
+                        new LogEntry()
+                            .setLogLevel(WARN)
+                            .setMessageFormat("unable to obtain the desktop instance from JVM")
+                    );
+                }
+            }
+        } catch (Throwable throwable) {
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setLogLevel(ERROR)
+                    .setMessageFormat("exception while attempting to launch UI" + (isNotBlank(throwable.getMessage()) ? " " + throwable.getMessage() : ""))
+                    .setThrowable(throwable)
+            );
+            throw new ClientException("exception while attempting to launch UI" + (isNotBlank(throwable.getMessage()) ? " " + throwable.getMessage() : ""));
+        }
+        return this;
     }
 
     /**
@@ -397,40 +473,41 @@ public class MockServerClient implements Stoppable {
      * Stop MockServer gracefully (only support for Netty version, not supported for WAR version)
      */
     public Future<MockServerClient> stop(boolean ignoreFailure) {
-        getMockServerEventBus().publish(EventType.STOP);
-        removeMockServerEventBus();
-        CompletableFuture<MockServerClient> stopFuture = new CompletableFuture<>();
-        new Scheduler.SchedulerThreadFactory("ClientStop").newThread(() -> {
-            try {
-                sendRequest(request().withMethod("PUT").withPath(calculatePath("stop")));
-                if (!hasStopped()) {
-                    for (int i = 0; !hasStopped() && i < 50; i++) {
-                        TimeUnit.MILLISECONDS.sleep(5);
+        if (!stopFuture.isDone()) {
+            getMockServerEventBus().publish(EventType.STOP);
+            removeMockServerEventBus();
+            new Scheduler.SchedulerThreadFactory("ClientStop").newThread(() -> {
+                try {
+                    sendRequest(request().withMethod("PUT").withPath(calculatePath("stop")));
+                    if (!hasStopped()) {
+                        for (int i = 0; !hasStopped() && i < 50; i++) {
+                            TimeUnit.MILLISECONDS.sleep(5);
+                        }
+                    }
+                } catch (RejectedExecutionException ree) {
+                    if (!ignoreFailure && MockServerLogger.isEnabled(TRACE)) {
+                        MOCK_SERVER_LOGGER.logEvent(
+                            new LogEntry()
+                                .setLogLevel(TRACE)
+                                .setMessageFormat("request rejected while closing down, logging in case due other error " + ree)
+                                .setThrowable(ree)
+                        );
+                    }
+                } catch (Exception e) {
+                    if (!ignoreFailure && MockServerLogger.isEnabled(WARN)) {
+                        MOCK_SERVER_LOGGER.logEvent(
+                            new LogEntry()
+                                .setLogLevel(WARN)
+                                .setMessageFormat("failed to send stop request to MockServer " + e.getMessage())
+                        );
                     }
                 }
-            } catch (RejectedExecutionException ree) {
-                if (!ignoreFailure && MockServerLogger.isEnabled(TRACE)) {
-                    MOCK_SERVER_LOGGER.logEvent(
-                        new LogEntry()
-                            .setLogLevel(TRACE)
-                            .setMessageFormat("request rejected while closing down, logging in case due other error " + ree)
-                            .setThrowable(ree)
-                    );
+                if (!eventLoopGroup.isShuttingDown()) {
+                    eventLoopGroup.shutdownGracefully();
                 }
-            } catch (Exception e) {
-                if (!ignoreFailure && MockServerLogger.isEnabled(WARN)) {
-                    MOCK_SERVER_LOGGER.logEvent(
-                        new LogEntry()
-                            .setLogLevel(WARN)
-                            .setMessageFormat("failed to send stop request to MockServer " + e.getMessage())
-                    );
-                }
-            }
-            if (!eventLoopGroup.isShuttingDown()) {
-                eventLoopGroup.shutdownGracefully();
-            }
-            stopFuture.complete(clientClass.cast(this));
-        }).start();
+                stopFuture.complete(clientClass.cast(this));
+            }).start();
+        }
         return stopFuture;
     }
 
@@ -469,6 +546,22 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
+     * Clear all expectations and logs that match the http
+     *
+     * @param expectationId the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
+     */
+    public MockServerClient clear(ExpectationId expectationId) {
+        sendRequest(
+            request()
+                .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
+                .withPath(calculatePath("clear"))
+                .withBody(expectationId != null ? expectationIdSerializer.serialize(expectationId) : "", StandardCharsets.UTF_8)
+        );
+        return clientClass.cast(this);
+    }
+
+    /**
      * Clear expectations, logs or both that match the http
      *
      * @param requestDefinition the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
@@ -482,6 +575,24 @@ public class MockServerClient implements Stoppable {
                 .withPath(calculatePath("clear"))
                 .withQueryStringParameter("type", type.name().toLowerCase())
                 .withBody(requestDefinition != null ? requestDefinitionSerializer.serialize(requestDefinition) : "", StandardCharsets.UTF_8)
+        );
+        return clientClass.cast(this);
+    }
+
+    /**
+     * Clear expectations, logs or both that match the http
+     *
+     * @param expectationId the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
+     * @param type              the type to clear, EXPECTATION, LOG or BOTH
+     */
+    public MockServerClient clear(ExpectationId expectationId, ClearType type) {
+        sendRequest(
+            request()
+                .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
+                .withPath(calculatePath("clear"))
+                .withQueryStringParameter("type", type.name().toLowerCase())
+                .withBody(expectationId != null ? expectationIdSerializer.serialize(expectationId) : "", StandardCharsets.UTF_8)
         );
         return clientClass.cast(this);
     }
@@ -509,6 +620,43 @@ public class MockServerClient implements Stoppable {
         }
 
         VerificationSequence verificationSequence = new VerificationSequence().withRequests(requestDefinitions);
+        String result = sendRequest(
+            request()
+                .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
+                .withPath(calculatePath("verifySequence"))
+                .withBody(verificationSequenceSerializer.serialize(verificationSequence), StandardCharsets.UTF_8)
+        ).getBodyAsString();
+
+        if (result != null && !result.isEmpty()) {
+            throw new AssertionError(result);
+        }
+        return clientClass.cast(this);
+    }
+
+    /**
+     * Verify a list of requests have been sent in the order specified for example:
+     * <pre>
+     * mockServerClient
+     *  .verify(
+     *      request()
+     *          .withPath("/first_request")
+     *          .withBody("some_request_body"),
+     *      request()
+     *          .withPath("/second_request")
+     *          .withBody("some_request_body")
+     *  );
+     * </pre>
+     *
+     * @param expectationIds the http requests that must be matched for this verification to pass
+     * @throws AssertionError if the request has not been found
+     */
+    public MockServerClient verify(ExpectationId... expectationIds) throws AssertionError {
+        if (expectationIds == null || expectationIds.length == 0 || expectationIds[0] == null) {
+            throw new IllegalArgumentException("verify(RequestDefinition...) requires a non-null non-empty array of RequestDefinition objects");
+        }
+
+        VerificationSequence verificationSequence = new VerificationSequence().withExpectationIds(expectationIds);
         String result = sendRequest(
             request()
                 .withMethod("PUT")
@@ -569,6 +717,51 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
+     * Verify a request has been sent for example:
+     * <pre>
+     * mockServerClient
+     *  .verify(
+     *      request()
+     *          .withPath("/some_path")
+     *          .withBody("some_request_body"),
+     *      VerificationTimes.exactly(3)
+     *  );
+     * </pre>
+     * VerificationTimes supports multiple static factory methods:
+     * <p>
+     * once()      - verify the request was only received once
+     * exactly(n)  - verify the request was only received exactly n times
+     * atLeast(n)  - verify the request was only received at least n times
+     *
+     * @param expectationId the http request that must be matched for this verification to pass
+     * @param times             the number of times this request must be matched
+     * @throws AssertionError if the request has not been found
+     */
+    @SuppressWarnings("DuplicatedCode")
+    public MockServerClient verify(ExpectationId expectationId, VerificationTimes times) throws AssertionError {
+        if (expectationId == null) {
+            throw new IllegalArgumentException("verify(RequestDefinition, VerificationTimes) requires a non null RequestDefinition object");
+        }
+        if (times == null) {
+            throw new IllegalArgumentException("verify(RequestDefinition, VerificationTimes) requires a non null VerificationTimes object");
+        }
+
+        Verification verification = verification().withExpectationId(expectationId).withTimes(times);
+        String result = sendRequest(
+            request()
+                .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
+                .withPath(calculatePath("verify"))
+                .withBody(verificationSerializer.serialize(verification), StandardCharsets.UTF_8)
+        ).getBodyAsString();
+
+        if (result != null && !result.isEmpty()) {
+            throw new AssertionError(result);
+        }
+        return clientClass.cast(this);
+    }
+
+    /**
      * Verify no requests have been sent.
      *
      * @throws AssertionError if any request has been found
@@ -598,7 +791,7 @@ public class MockServerClient implements Stoppable {
      */
     public RequestDefinition[] retrieveRecordedRequests(RequestDefinition requestDefinition) {
         String recordedRequests = retrieveRecordedRequests(requestDefinition, Format.JSON);
-        if (isNotEmpty(recordedRequests) && !recordedRequests.equals("[]")) {
+        if (isNotBlank(recordedRequests) && !recordedRequests.equals("[]")) {
             return requestDefinitionSerializer.deserializeArray(recordedRequests);
         } else {
             return new RequestDefinition[0];
@@ -633,7 +826,7 @@ public class MockServerClient implements Stoppable {
      */
     public LogEventRequestAndResponse[] retrieveRecordedRequestsAndResponses(RequestDefinition requestDefinition) {
         String recordedRequests = retrieveRecordedRequestsAndResponses(requestDefinition, Format.JSON);
-        if (isNotEmpty(recordedRequests) && !recordedRequests.equals("[]")) {
+        if (isNotBlank(recordedRequests) && !recordedRequests.equals("[]")) {
             return httpRequestResponseSerializer.deserializeArray(recordedRequests);
         } else {
             return new LogEventRequestAndResponse[0];
@@ -839,9 +1032,9 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
-     * Specify OpenAPI / Swagger and operations and responses to create matchers and example responses
+     * Specify OpenAPI and operations and responses to create matchers and example responses
      *
-     * @param openAPIExpectations the OpenAPI / Swagger and operations and responses to create matchers and example responses
+     * @param openAPIExpectations the OpenAPI and operations and responses to create matchers and example responses
      * @return upserted expectations
      */
     public Expectation[] upsert(OpenAPIExpectation... openAPIExpectations) {

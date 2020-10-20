@@ -1,7 +1,6 @@
 package org.mockserver.mockservlet;
 
 import com.google.common.collect.ImmutableSet;
-import io.netty.channel.ChannelHandlerContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -37,6 +36,7 @@ import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
+import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE_FORMAT;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.MediaType.APPLICATION_JSON_UTF_8;
@@ -91,7 +91,7 @@ public class MockServerServletTest {
                 .setType(RECEIVED_REQUEST)
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request("request_one"))
-                .setMessageFormat("received request:{}")
+                .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                 .setArguments(request("request_one"))
         );
         httpStateHandler.log(
@@ -99,7 +99,7 @@ public class MockServerServletTest {
                 .setType(RECEIVED_REQUEST)
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request("request_two"))
-                .setMessageFormat("received request:{}")
+                .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                 .setArguments(request("request_two"))
         );
 
@@ -196,7 +196,7 @@ public class MockServerServletTest {
         MockHttpServletRequest statusRequest = buildHttpServletRequest(
             "PUT",
             "/mockserver/bind", portBindingSerializer.serialize(
-                portBinding(1080, 1090)
+                portBinding(1090, 1090)
             ));
 
         // when
@@ -384,7 +384,7 @@ public class MockServerServletTest {
                     .withSecure(false)
             ),
             any(ServletResponseWriter.class),
-            isNull(ChannelHandlerContext.class),
+            isNull(),
             eq(ImmutableSet.of(
                 "local_address",
                 "localhost",
@@ -418,7 +418,7 @@ public class MockServerServletTest {
                     .withSecure(false)
             ),
             any(ServletResponseWriter.class),
-            isNull(ChannelHandlerContext.class),
+            isNull(),
             eq(ImmutableSet.of(
                 "local_address:666",
                 "localhost:666",
@@ -453,7 +453,7 @@ public class MockServerServletTest {
                     .withSecure(true)
             ),
             any(ServletResponseWriter.class),
-            isNull(ChannelHandlerContext.class),
+            isNull(),
             eq(ImmutableSet.of(
                 "local_address",
                 "localhost",
@@ -488,7 +488,7 @@ public class MockServerServletTest {
                     .withSecure(true)
             ),
             any(ServletResponseWriter.class),
-            isNull(ChannelHandlerContext.class),
+            isNull(),
             eq(ImmutableSet.of(
                 "local_address:666",
                 "localhost:666",

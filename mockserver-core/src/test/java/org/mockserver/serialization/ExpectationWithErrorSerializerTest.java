@@ -182,8 +182,21 @@ public class ExpectationWithErrorSerializerTest {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("" +
             "[" + NEW_LINE +
-            "  an error," + NEW_LINE +
-            "  an error" + NEW_LINE +
+            "  incorrect expectation json format for:" + NEW_LINE +
+            "  " + NEW_LINE +
+            "    requestBytes" + NEW_LINE +
+            "  " + NEW_LINE +
+            "   schema validation errors:" + NEW_LINE +
+            "  " + NEW_LINE +
+            "    an error," + NEW_LINE +
+            "  " + NEW_LINE +
+            "  incorrect expectation json format for:" + NEW_LINE +
+            "  " + NEW_LINE +
+            "    requestBytes" + NEW_LINE +
+            "  " + NEW_LINE +
+            "   schema validation errors:" + NEW_LINE +
+            "  " + NEW_LINE +
+            "    an error" + NEW_LINE +
             "]");
 
         // when

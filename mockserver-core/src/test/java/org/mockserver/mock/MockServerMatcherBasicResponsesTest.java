@@ -10,9 +10,9 @@ import org.mockserver.scheduler.Scheduler;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
+import static org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.API;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.ui.MockServerMatcherNotifier.Cause.*;
 
 /**
  * @author jamesdbloom
@@ -23,10 +23,9 @@ public class MockServerMatcherBasicResponsesTest {
 
     @Before
     public void prepareTestFixture() {
-        MockServerLogger mockLogFormatter = mock(MockServerLogger.class);
         Scheduler scheduler = mock(Scheduler.class);
         WebSocketClientRegistry webSocketClientRegistry = mock(WebSocketClientRegistry.class);
-        requestMatchers = new RequestMatchers(mockLogFormatter, scheduler, webSocketClientRegistry);
+        requestMatchers = new RequestMatchers(new MockServerLogger(), scheduler, webSocketClientRegistry);
     }
 
     @Test
@@ -297,8 +296,9 @@ public class MockServerMatcherBasicResponsesTest {
 
         // then
         assertEquals(expectation, requestMatchers.firstMatchingExpectation(new HttpRequest().withQueryStringParameters(
-                new Parameter("nameExtra", "valueExtra"), new Parameter("name", "value"),
-                new Parameter("nameExtraExtra", "valueExtraExtra")
+            new Parameter("nameExtra", "valueExtra"),
+            new Parameter("name", "value"),
+            new Parameter("nameExtraExtra", "valueExtraExtra")
         )));
     }
 
@@ -310,9 +310,9 @@ public class MockServerMatcherBasicResponsesTest {
 
         // then
         assertEquals(expectation, requestMatchers.firstMatchingExpectation(new HttpRequest().withBody(new ParameterBody(
-                new Parameter("nameExtra", "valueExtra"),
-                new Parameter("name", "value"),
-                new Parameter("nameExtraExtra", "valueExtraExtra")
+            new Parameter("nameExtra", "valueExtra"),
+            new Parameter("name", "value"),
+            new Parameter("nameExtraExtra", "valueExtraExtra")
         ))));
     }
 
@@ -362,9 +362,9 @@ public class MockServerMatcherBasicResponsesTest {
 
         // then
         assertEquals(expectation, requestMatchers.firstMatchingExpectation(new HttpRequest().withQueryStringParameters(
-                new Parameter("nameExtra", "valueExtra"),
-                new Parameter("name", "value"),
-                new Parameter("nameExtraExtra", "valueExtraExtra")
+            new Parameter("nameExtra", "valueExtra"),
+            new Parameter("name", "value"),
+            new Parameter("nameExtraExtra", "valueExtraExtra")
         )));
     }
 
@@ -376,9 +376,9 @@ public class MockServerMatcherBasicResponsesTest {
 
         // then
         assertEquals(expectation, requestMatchers.firstMatchingExpectation(new HttpRequest().withBody(new ParameterBody(
-                new Parameter("nameExtra", "valueExtra"),
-                new Parameter("name", "value"),
-                new Parameter("nameExtraExtra", "valueExtraExtra")
+            new Parameter("nameExtra", "valueExtra"),
+            new Parameter("name", "value"),
+            new Parameter("nameExtraExtra", "valueExtraExtra")
         ))));
     }
 
@@ -390,8 +390,8 @@ public class MockServerMatcherBasicResponsesTest {
 
         // then
         assertEquals(expectation, requestMatchers.firstMatchingExpectation(new HttpRequest().withQueryStringParameters(
-                new Parameter("nameOne", "valueOne"),
-                new Parameter("nameTwo", "valueTwo")
+            new Parameter("nameOne", "valueOne"),
+            new Parameter("nameTwo", "valueTwo")
         )));
     }
 
@@ -403,8 +403,8 @@ public class MockServerMatcherBasicResponsesTest {
 
         // then
         assertEquals(expectation, requestMatchers.firstMatchingExpectation(new HttpRequest().withBody(new ParameterBody(
-                new Parameter("nameOne", "valueOne"),
-                new Parameter("nameTwo", "valueTwo")
+            new Parameter("nameOne", "valueOne"),
+            new Parameter("nameTwo", "valueTwo")
         ))));
     }
 
@@ -415,8 +415,8 @@ public class MockServerMatcherBasicResponsesTest {
 
         // then
         assertNull(requestMatchers.firstMatchingExpectation(new HttpRequest().withQueryStringParameters(
-                new Parameter("nameOne", "valueOne"),
-                new Parameter("nameTwo", "valueTwo")
+            new Parameter("nameOne", "valueOne"),
+            new Parameter("nameTwo", "valueTwo")
         )));
     }
 
@@ -427,8 +427,8 @@ public class MockServerMatcherBasicResponsesTest {
 
         // then
         assertNull(requestMatchers.firstMatchingExpectation(new HttpRequest().withQueryStringParameters(
-                new Parameter("nameOne", "valueOne"),
-                new Parameter("nameTwo", "valueTwo")
+            new Parameter("nameOne", "valueOne"),
+            new Parameter("nameTwo", "valueTwo")
         )));
     }
 
@@ -439,8 +439,8 @@ public class MockServerMatcherBasicResponsesTest {
 
         // then
         assertNull(requestMatchers.firstMatchingExpectation(new HttpRequest().withBody(new ParameterBody(
-                new Parameter("nameOne", "valueTwo"),
-                new Parameter("nameTwo", "valueOne")
+            new Parameter("nameOne", "valueTwo"),
+            new Parameter("nameTwo", "valueOne")
         ))));
     }
 

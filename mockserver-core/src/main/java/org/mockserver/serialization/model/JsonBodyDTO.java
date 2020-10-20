@@ -18,7 +18,7 @@ public class JsonBodyDTO extends BodyWithContentTypeDTO {
     }
 
     public JsonBodyDTO(JsonBody jsonBody, Boolean not) {
-        super(Body.Type.JSON, not, jsonBody.getContentType());
+        super(Body.Type.JSON, not, jsonBody);
         json = jsonBody.getValue();
         matchType = jsonBody.getMatchType();
         rawBytes = jsonBody.getRawBytes();
@@ -37,6 +37,6 @@ public class JsonBodyDTO extends BodyWithContentTypeDTO {
     }
 
     public JsonBody buildObject() {
-        return new JsonBody(getJson(), getRawBytes(), getMediaType(), getMatchType());
+        return (JsonBody) new JsonBody(getJson(), getRawBytes(), getMediaType(), getMatchType()).withOptional(getOptional());
     }
 }

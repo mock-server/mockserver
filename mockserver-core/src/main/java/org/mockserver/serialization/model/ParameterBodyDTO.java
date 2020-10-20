@@ -19,6 +19,7 @@ public class ParameterBodyDTO extends BodyDTO {
     public ParameterBodyDTO(ParameterBody parameterBody, Boolean not) {
         super(parameterBody.getType(), not);
         parameters = parameterBody.getValue();
+        withOptional(parameterBody.getOptional());
     }
 
     public Parameters getParameters() {
@@ -26,23 +27,7 @@ public class ParameterBodyDTO extends BodyDTO {
     }
 
     public ParameterBody buildObject() {
-        return new ParameterBody(parameters);
+        return (ParameterBody) new ParameterBody(parameters).withOptional(getOptional());
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof ParameterBodyDTO)) {
-            return false;
-        }
-        ParameterBodyDTO that = (ParameterBodyDTO) o;
-        return Objects.equals(parameters, that.parameters);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(parameters);
-    }
 }

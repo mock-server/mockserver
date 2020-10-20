@@ -42,7 +42,7 @@ public abstract class BooksPageEndToEndIntegrationTest {
         System.setProperty("bookService.port", "" + PortFactory.findFreePort());
         proxy = ClientAndServer.startClientAndServer();
         System.setProperty("http.proxyHost", "127.0.0.1");
-        System.setProperty("http.proxyPort", String.valueOf(proxy.getLocalPort()));
+        System.setProperty("http.proxyPort", String.valueOf(proxy.getPort()));
     }
 
     @AfterClass

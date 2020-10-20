@@ -51,6 +51,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LOG_DATE_FORMAT;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
+import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE_FORMAT;
 import static org.mockserver.mock.Expectation.when;
 import static org.mockserver.mock.OpenAPIExpectation.openAPIExpectation;
 import static org.mockserver.model.Format.LOG_ENTRIES;
@@ -180,7 +181,7 @@ public class HttpStateTest {
         HttpRequest statusRequest = request("/mockserver/bind")
             .withMethod("PUT")
             .withBody(portBindingSerializer.serialize(
-                portBinding(1080, 1090)
+                portBinding(1090, 1090)
             ));
         FakeResponseWriter responseWriter = new FakeResponseWriter();
 
@@ -280,12 +281,9 @@ public class HttpStateTest {
                     "    }" + NEW_LINE +
                     "  }" + NEW_LINE +
                     NEW_LINE +
-                    "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
+                    " with id:" + NEW_LINE +
                     NEW_LINE +
-                    "  {" + NEW_LINE +
-                    "    \"path\" : \"request_one\"" + NEW_LINE +
-                    "  }" + NEW_LINE +
+                    "  key_one" + NEW_LINE +
                     NEW_LINE))
             );
         } finally {
@@ -393,16 +391,14 @@ public class HttpStateTest {
         // then
         assertThat(handle, is(true));
         assertThat(responseWriter.response.getStatusCode(), is(400));
-        assertThat(responseWriter.response.getBodyAsString(), is("Unable to load API spec from provided URL or payload because while parsing a block mapping" + NEW_LINE +
+        assertThat(responseWriter.response.getBodyAsString(), is("Unable to load API spec, while parsing a block mapping" + NEW_LINE +
             " in 'reader', line 1, column 1:" + NEW_LINE +
             "    \"openapi\": \"3.0.0\"," + NEW_LINE +
             "    ^" + NEW_LINE +
             "expected <block end>, but found ','" + NEW_LINE +
             " in 'reader', line 1, column 19:" + NEW_LINE +
             "    \"openapi\": \"3.0.0\"," + NEW_LINE +
-            "                      ^" + NEW_LINE +
-            NEW_LINE +
-            " at [Source: (StringReader); line: 1, column: 19]"));
+            "                      ^"));
     }
 
     @Test
@@ -465,16 +461,14 @@ public class HttpStateTest {
         // then
         assertThat(handle, is(true));
         assertThat(responseWriter.response.getStatusCode(), is(400));
-        assertThat(responseWriter.response.getBodyAsString(), is("Unable to load API spec from provided URL or payload because while scanning a simple key" + NEW_LINE +
+        assertThat(responseWriter.response.getBodyAsString(), is("Unable to load API spec, while scanning a simple key" + NEW_LINE +
             " in 'reader', line 8, column 1:" + NEW_LINE +
             "    servers" + NEW_LINE +
             "    ^" + NEW_LINE +
             "could not find expected ':'" + NEW_LINE +
             " in 'reader', line 8, column 8:" + NEW_LINE +
             "    servers" + NEW_LINE +
-            "           ^" + NEW_LINE +
-            NEW_LINE +
-            " at [Source: (StringReader); line: 8, column: 1]"));
+            "           ^"));
     }
 
     @Test
@@ -887,6 +881,11 @@ public class HttpStateTest {
                             .withQueryStringParameter("type", "logs")
                     ),
                 is(response().withBody("" +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - cleared logs that match:" + NEW_LINE +
+                        "" + NEW_LINE +
+                        "  {}" + NEW_LINE +
+                        "" + NEW_LINE +
+                        "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
@@ -908,15 +907,9 @@ public class HttpStateTest {
                         "    }" + NEW_LINE +
                         "  }" + NEW_LINE +
                         NEW_LINE +
-                        "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing expectations and logs that match:" + NEW_LINE +
+                        " with id:" + NEW_LINE +
                         NEW_LINE +
-                        "  {}" + NEW_LINE +
-                        NEW_LINE +
-                        "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                        NEW_LINE +
-                        "  { }" + NEW_LINE +
+                        "  one" + NEW_LINE +
                         NEW_LINE,
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
             );
@@ -1005,12 +998,23 @@ public class HttpStateTest {
                         "    }" + NEW_LINE +
                         "  }" + NEW_LINE +
                         NEW_LINE +
+                        " with id:" + NEW_LINE +
+                        NEW_LINE +
+                        "  key_one" + NEW_LINE +
+                        NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - some random" + NEW_LINE +
                         NEW_LINE +
                         "  argument_one" + NEW_LINE +
                         NEW_LINE +
                         " message" + NEW_LINE +
+                        "------------------------------------" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - cleared logs that match:" + NEW_LINE +
+                        "" + NEW_LINE +
+                        "  {" + NEW_LINE +
+                        "    \"path\" : \"request_four\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
+                        "" + NEW_LINE +
                         "------------------------------------" + NEW_LINE +
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
                         NEW_LINE +
@@ -1033,17 +1037,16 @@ public class HttpStateTest {
                         "    }" + NEW_LINE +
                         "  }" + NEW_LINE +
                         NEW_LINE +
+                        " with id:" + NEW_LINE +
+                        NEW_LINE +
+                        "  key_four" + NEW_LINE +
+                        NEW_LINE +
                         "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing expectations and logs that match:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - cleared expectations that match:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"path\" : \"request_four\"" + NEW_LINE +
                         "  }" + NEW_LINE +
-                        NEW_LINE +
-                        "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                        NEW_LINE +
-                        "  { }" + NEW_LINE +
                         NEW_LINE,
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
             );
@@ -1126,14 +1129,9 @@ public class HttpStateTest {
                             .withQueryStringParameter("type", "logs")
                     ),
                 is(response().withBody("" +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing logs that match:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - cleared logs that match:" + NEW_LINE +
                         NEW_LINE +
                         "  {}" + NEW_LINE +
-                        NEW_LINE +
-                        "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                        NEW_LINE +
-                        "  { }" + NEW_LINE +
                         NEW_LINE,
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
             );
@@ -1278,7 +1276,7 @@ public class HttpStateTest {
                     .setType(RECEIVED_REQUEST)
                     .setLogLevel(Level.INFO)
                     .setHttpRequest(request("request_one"))
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_one"))
             );
         httpState
@@ -1287,7 +1285,7 @@ public class HttpStateTest {
                     .setType(RECEIVED_REQUEST)
                     .setLogLevel(Level.INFO)
                     .setHttpRequest(request("request_two"))
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_two"))
             );
         httpState
@@ -1296,7 +1294,7 @@ public class HttpStateTest {
                     .setType(RECEIVED_REQUEST)
                     .setLogLevel(Level.INFO)
                     .setHttpRequest(request("request_one"))
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_one"))
             );
 
@@ -1315,13 +1313,13 @@ public class HttpStateTest {
                     .setType(RECEIVED_REQUEST)
                     .setLogLevel(Level.INFO)
                     .setHttpRequest(request("request_one"))
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_one")),
                 new LogEntry()
                     .setType(RECEIVED_REQUEST)
                     .setLogLevel(Level.INFO)
                     .setHttpRequest(request("request_one"))
-                    .setMessageFormat("received request:{}")
+                    .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request("request_one"))
             )), MediaType.JSON_UTF_8).withStatusCode(200))
         );
@@ -1369,7 +1367,7 @@ public class HttpStateTest {
         httpState.log(
             new LogEntry()
                 .setLogLevel(INFO)
-                .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                .setType(NO_MATCH_RESPONSE)
                 .setHttpRequest(request("request_one"))
                 .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
                 .setMessageFormat("no expectation for:{}returning response:{}")
@@ -1420,7 +1418,7 @@ public class HttpStateTest {
         httpState.log(
             new LogEntry()
                 .setLogLevel(INFO)
-                .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                .setType(NO_MATCH_RESPONSE)
                 .setHttpRequest(request("request_one"))
                 .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
                 .setMessageFormat("no expectation for:{}returning response:{}")
@@ -1451,7 +1449,7 @@ public class HttpStateTest {
                 "  {" + NEW_LINE +
                 "    \"logLevel\" : \"INFO\"," + NEW_LINE +
                 "    \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\"," + NEW_LINE +
-                "    \"type\" : \"EXPECTATION_NOT_MATCHED_RESPONSE\"," + NEW_LINE +
+                "    \"type\" : \"NO_MATCH_RESPONSE\"," + NEW_LINE +
                 "    \"httpRequest\" : {" + NEW_LINE +
                 "      \"path\" : \"request_one\"" + NEW_LINE +
                 "    }," + NEW_LINE +
@@ -1718,7 +1716,7 @@ public class HttpStateTest {
             httpState.log(
                 new LogEntry()
                     .setLogLevel(INFO)
-                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                    .setType(NO_MATCH_RESPONSE)
                     .setHttpRequest(request("request_one"))
                     .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
                     .setMessageFormat("no expectation for:{}returning response:{}")
@@ -1868,12 +1866,7 @@ public class HttpStateTest {
                         NEW_LINE +
                         "  argument_one" + NEW_LINE +
                         NEW_LINE +
-                        " message" + NEW_LINE +
-                        "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                        NEW_LINE +
-                        "  { }" + NEW_LINE +
-                        NEW_LINE,
+                        " message" + NEW_LINE,
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
             );
         } finally {
@@ -1890,7 +1883,7 @@ public class HttpStateTest {
             httpState.log(
                 new LogEntry()
                     .setLogLevel(INFO)
-                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                    .setType(NO_MATCH_RESPONSE)
                     .setHttpRequest(request("request_one"))
                     .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
                     .setMessageFormat("no expectation for:{}returning response:{}")
@@ -1983,13 +1976,6 @@ public class HttpStateTest {
                         "      \"body\" : \"response_two\"" + NEW_LINE +
                         "    }" + NEW_LINE +
                         "  }" + NEW_LINE +
-                        NEW_LINE +
-                        "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                        NEW_LINE +
-                        "  {" + NEW_LINE +
-                        "    \"path\" : \"request_one\"" + NEW_LINE +
-                        "  }" + NEW_LINE +
                         NEW_LINE,
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
             );
@@ -2055,12 +2041,7 @@ public class HttpStateTest {
                             .withQueryStringParameter("type", "logs")
                     ),
                 is(response().withBody("" +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - resetting all expectations and request logs" + NEW_LINE +
-                        "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
-                        NEW_LINE +
-                        "  { }" + NEW_LINE +
-                        NEW_LINE,
+                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - resetting all expectations and request logs" + NEW_LINE,
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
             );
             assertThat(

@@ -9,8 +9,7 @@ import org.mockserver.model.HttpObjectCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
-
-import java.util.UUID;
+import org.mockserver.uuid.UUIDService;
 
 import static org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
@@ -67,7 +66,7 @@ public class HttpResponseObjectCallbackActionHandler {
     }
 
     private void handleViaWebSocket(HttpActionHandler actionHandler, HttpObjectCallback httpObjectCallback, HttpRequest request, ResponseWriter responseWriter, boolean synchronous, Runnable expectationPostProcessor, String clientId) {
-        final String webSocketCorrelationId = UUID.randomUUID().toString();
+        final String webSocketCorrelationId = UUIDService.getUUID();
         webSocketClientRegistry.registerResponseCallbackHandler(webSocketCorrelationId, response -> {
             if (MockServerLogger.isEnabled(TRACE)) {
                 mockServerLogger.logEvent(

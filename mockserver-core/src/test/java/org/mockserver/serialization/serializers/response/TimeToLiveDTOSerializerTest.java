@@ -34,7 +34,6 @@ public class TimeToLiveDTOSerializerTest {
     @Test
     public void shouldDeserializeEndDateWithDTO() throws JsonProcessingException, InterruptedException {
         long endDate = System.currentTimeMillis() + 1;
-        SECONDS.sleep(2);
         assertThat(
             objectMapper.readValue("{" + NEW_LINE +
                 "  \"timeUnit\" : \"SECONDS\"," + NEW_LINE +

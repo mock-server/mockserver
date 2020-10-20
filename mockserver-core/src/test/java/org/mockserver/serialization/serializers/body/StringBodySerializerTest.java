@@ -47,6 +47,12 @@ public class StringBodySerializerTest {
     }
 
     @Test
+    public void shouldSerializeStringBodyWithOptional() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBody("string_body").withOptional(true)),
+                is("{\"optional\":true,\"type\":\"STRING\",\"string\":\"string_body\"}"));
+    }
+
+    @Test
     public void shouldSerializeStringBodyWithCharsetAndNot() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(not(new StringBody("string_body", StandardCharsets.UTF_16))),
                 is("{\"not\":true,\"type\":\"STRING\",\"string\":\"string_body\",\"contentType\":\"text/plain; charset=utf-16\"}"));

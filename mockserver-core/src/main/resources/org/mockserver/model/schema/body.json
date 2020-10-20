@@ -1,214 +1,214 @@
 {
-    "title": "request body matcher",
-    "anyOf": [
-        {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "not": {
-                    "type": "boolean"
-                },
-                "type": {
-                    "enum": [
-                        "BINARY"
-                    ]
-                },
-                "base64Bytes": {
-                    "type": "string"
-                },
-                "contentType": {
-                    "type": "string"
-                }
-            }
+  "title": "request body matcher",
+  "anyOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
         },
-        {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "not": {
-                    "type": "boolean"
-                },
-                "type": {
-                    "enum": [
-                        "JSON"
-                    ]
-                },
-                "json": {
-                    "type": "string"
-                },
-                "contentType": {
-                    "type": "string"
-                },
-                "matchType": {
-                    "enum": [
-                        "STRICT",
-                        "ONLY_MATCHING_FIELDS"
-                    ]
-                }
-            }
+        "type": {
+          "enum": [
+            "BINARY"
+          ]
         },
-        {
-            "type": "object",
-            "additionalProperties": true
+        "base64Bytes": {
+          "type": "string"
         },
-        {
-            "type": "array",
-            "additionalProperties": true
-        },
-        {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "not": {
-                    "type": "boolean"
-                },
-                "type": {
-                    "enum": [
-                        "JSON_SCHEMA"
-                    ]
-                },
-                "jsonSchema": {
-                    "oneOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "$ref": "http://json-schema.org/draft-04/schema"
-                        }
-                    ]
-                }
-            }
-        },
-        {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "not": {
-                    "type": "boolean"
-                },
-                "type": {
-                    "enum": [
-                        "JSON_PATH"
-                    ]
-                },
-                "jsonPath": {
-                    "type": "string"
-                }
-            }
-        },
-        {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "not": {
-                    "type": "boolean"
-                },
-                "type": {
-                    "enum": [
-                        "PARAMETERS"
-                    ]
-                },
-                "parameters": {
-                    "$ref": "#/definitions/keyToMultiValue"
-                }
-            }
-        },
-        {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "not": {
-                    "type": "boolean"
-                },
-                "type": {
-                    "enum": [
-                        "REGEX"
-                    ]
-                },
-                "regex": {
-                    "type": "string"
-                }
-            }
-        },
-        {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "not": {
-                    "type": "boolean"
-                },
-                "type": {
-                    "enum": [
-                        "STRING"
-                    ]
-                },
-                "string": {
-                    "type": "string"
-                },
-                "subString": {
-                    "type": "boolean"
-                },
-                "contentType": {
-                    "type": "string"
-                }
-            }
-        },
-        {
-            "type": "string"
-        },
-        {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "not": {
-                    "type": "boolean"
-                },
-                "type": {
-                    "enum": [
-                        "XML"
-                    ]
-                },
-                "xml": {
-                    "type": "string"
-                },
-                "contentType": {
-                    "type": "string"
-                }
-            }
-        },
-        {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "not": {
-                    "type": "boolean"
-                },
-                "type": {
-                    "enum": [
-                        "XML_SCHEMA"
-                    ]
-                },
-                "xmlSchema": {
-                    "type": "string"
-                }
-            }
-        },
-        {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "not": {
-                    "type": "boolean"
-                },
-                "type": {
-                    "enum": [
-                        "XPATH"
-                    ]
-                },
-                "xpath": {
-                    "type": "string"
-                }
-            }
+        "contentType": {
+          "type": "string"
         }
-    ]
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "JSON"
+          ]
+        },
+        "json": {
+          "type": "string"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "matchType": {
+          "enum": [
+            "STRICT",
+            "ONLY_MATCHING_FIELDS"
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": true
+    },
+    {
+      "type": "array",
+      "additionalProperties": true
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "JSON_SCHEMA"
+          ]
+        },
+        "jsonSchema": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "http://json-schema.org/draft-04/schema"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "JSON_PATH"
+          ]
+        },
+        "jsonPath": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "PARAMETERS"
+          ]
+        },
+        "parameters": {
+          "$ref": "#/definitions/keyToMultiValue"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "REGEX"
+          ]
+        },
+        "regex": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "STRING"
+          ]
+        },
+        "string": {
+          "type": "string"
+        },
+        "subString": {
+          "type": "boolean"
+        },
+        "contentType": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "string"
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "XML"
+          ]
+        },
+        "xml": {
+          "type": "string"
+        },
+        "contentType": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "XML_SCHEMA"
+          ]
+        },
+        "xmlSchema": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "not": {
+          "type": "boolean"
+        },
+        "type": {
+          "enum": [
+            "XPATH"
+          ]
+        },
+        "xpath": {
+          "type": "string"
+        }
+      }
+    }
+  ]
 }

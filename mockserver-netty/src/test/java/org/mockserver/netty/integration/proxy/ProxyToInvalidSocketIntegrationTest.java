@@ -65,7 +65,7 @@ public class ProxyToInvalidSocketIntegrationTest {
                 request()
                     .withPath("/some_path")
                     .withHeader(HOST.toString(), "localhost:" + PortFactory.findFreePort()),
-                new InetSocketAddress(clientAndServer.getLocalPort())
+                new InetSocketAddress(clientAndServer.getPort())
             );
 
         // then
@@ -80,7 +80,7 @@ public class ProxyToInvalidSocketIntegrationTest {
                 request()
                     .withPath("/some_path")
                     .withHeader(HOST.toString(), "localhost:" + PortFactory.findFreePort()),
-                new InetSocketAddress(clientAndServer.getLocalPort())
+                new InetSocketAddress(clientAndServer.getPort())
             );
 
         // then

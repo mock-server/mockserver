@@ -1,13 +1,17 @@
 package org.mockserver.serialization.serializers.body;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.JsonSchemaBodyDTO;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author jamesdbloom
@@ -26,8 +30,14 @@ public class JsonSchemaBodyDTOSerializer extends StdSerializer<JsonSchemaBodyDTO
         if (jsonSchemaBodyDTO.getNot() != null && jsonSchemaBodyDTO.getNot()) {
             jgen.writeBooleanField("not", jsonSchemaBodyDTO.getNot());
         }
+        if (jsonSchemaBodyDTO.getOptional() != null && jsonSchemaBodyDTO.getOptional()) {
+            jgen.writeBooleanField("optional", jsonSchemaBodyDTO.getOptional());
+        }
         jgen.writeStringField("type", jsonSchemaBodyDTO.getType().name());
         jgen.writeObjectField("jsonSchema", OBJECT_MAPPER.readTree(jsonSchemaBodyDTO.getJson()));
+        if (jsonSchemaBodyDTO.getParameterStyles() != null) {
+            jgen.writeObjectField("parameterStyles", jsonSchemaBodyDTO.getParameterStyles());
+        }
         jgen.writeEndObject();
     }
 }

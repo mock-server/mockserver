@@ -1,10 +1,10 @@
 <h2>Deploying MockServer Helm Chart</h2>
 
-<p>To run MockServer in Kubernetes the easiest way is to use the existing <a href="https://www.mock-server.com/mockserver-5.10.0.tgz">MockServer helm chart</a>.</p>
+<p>To run MockServer in Kubernetes the easiest way is to use the existing <a href="https://www.mock-server.com/mockserver-5.11.1.tgz">MockServer helm chart</a>.</p>
 
 <p>This is available by using <strong>www.mock-server.com</strong> as a chart repo, with the following command:</p>
 
-<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver mockserver http://www.mock-server.com/mockserver-5.10.0.tgz</code></pre>
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver mockserver http://www.mock-server.com/mockserver-5.11.1.tgz</code></pre>
 
 <p><strong>OR</strong></p>
 
@@ -15,9 +15,13 @@
 <p>The two commands above will install MockServer into a <strong>namespace</strong> called <span class="keyword">mockserver</span> with default configuration (as per the embedded <a href="https://github.com/mock-server/mockserver/blob/master/helm/mockserver/values.yaml">values.yaml</a>).</p>
 <p>MockServer will then be available on domain name <span class="keyword">mockserver.mockserver.svc.cluster.local</span>, as long as the namespace you are calling from isn't prevented (by network policy) to call the <span class="keyword">mockserver</span> namespace.</p>
 
+<a id="logs" class="anchor" href="#logs">&nbsp</a>
+
 <p>To view the logs:</p>
 
 <pre class="prettyprint code"><code class="code">kubectl -n mockserver logs --tail=100 -l app=mockserver,release=mockserver</code></pre>
+
+<p>or open the <a href="/mock_server/mockserver_ui.html">UI</a></p>
 
 <p>To wait until the deployment is complete run:</p>
 
@@ -27,11 +31,13 @@
 
 <pre class="prettyprint code"><code class="code">kubectl -n mockserver get po -l release=mockserver</code></pre>
 
+<a id="basic_mockserver_configuration" class="anchor" href="#basic_mockserver_configuration">&nbsp</a>
+
 <h2>Basic MockServer Configuration</h2>
 
 <p>Modify the arguments used to start the docker container by setting values explicitly using <span class="keyword">--set</span>, as follows:</p>
 
-<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.serverPort=1080 --set app.logLevel=INFO mockserver http://www.mock-server.com/mockserver-5.10.0.tgz</code></pre>
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.serverPort=1080 --set app.logLevel=INFO mockserver http://www.mock-server.com/mockserver-5.11.1.tgz</code></pre>
 
 <p>The following values are supported:</p>
 <ul>
@@ -45,32 +51,54 @@
 
 <p>For example configure a proxyRemoteHost and proxyRemotePort, as follows:</p>
 
-<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.serverPort=1080 --set app.proxyRemoteHost=www.mock-server.com --set app.proxyRemotePort=443 mockserver http://www.mock-server.com/mockserver-5.10.0.tgz</code></pre>
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.serverPort=1080 --set app.proxyRemoteHost=www.mock-server.com --set app.proxyRemotePort=443 mockserver http://www.mock-server.com/mockserver-5.11.1.tgz</code></pre>
 
 <p>Double check the correct arguments have been passed to the pod, as follows:</p>
 
 <pre class="prettyprint code"><code class="code">kubectl -n mockserver logs -l app=mockserver,release=mockserver</code></pre>
 
+<a id="detailed_mockserver_configuration" class="anchor" href="#detailed_mockserver_configuration">&nbsp</a>
+
 <h2>Detailed MockServer Configuration</h2>
 
-<p>The MockServer helm chart also supports providing detailed configuration such as:</p>
+<p>If a configmap called <strong>mockserver-config</strong> exists in the same namespace this will be mapped into the MockServer container under the <strong>mountPath</strong> <strong>/config</strong>.</p>
+<p>This configmap can be used to configure MockServer by containing a <strong>mockserver.properties</strong> file and other related configuration files such as a:</p>
 <ul>
-    <li>a <strong>properties file</strong> to configure all MockServer properties, or</li>
-    <li>a <strong>json expectation initialization file</strong> to initialize expectations at start-up.</li>
+    <li><a href="/mock_server/initializing_expectations.html">json expectation initialization</a>, or</li>
+    <li>custom <a href="/mock_server/HTTPS_TLS.html#configuration">TLS CA, X.509 Certificate or Private Key</a></li>
 </ul>
+<p>The <strong>mockserver.properties</strong> file should load these additional files from the directory <strong>/config</strong> which is the <strong>mountPath</strong> for the configmap.</p>
+<p>See <a href="/mock_server/configuration_properties.html">MockServer Configuration</a> for details of all configuration options.</p>
 
-<p>This is done by deploying a <strong>configmap</strong> to kubernetes with files embedded in the yaml as shown in <a href="https://github.com/mock-server/mockserver/tree/master/helm/mockserver-config">mockserver-config</a> helm chart.</p>
-<p>The MockServer helm chart to configure to control how to mount the files from the <strong>configmap</strong>, as follows:</p>
+<p>The mapping of the configuration configmap can be configured as follows:</p>
 <ul>
-    <li><span class="keyword">app.mountConfigMap</span> (default: false) - enables the mounting of the configmap into the MockServer container file system</li>
-    <li><span class="keyword">app.mountedConfigMapName</span> (default: mockserver-config) - name of the configmap (in the same namespace) to mount</li>
+    <li><span class="keyword">app.mountedConfigMapName</span> (default: mockserver-config) - name of the configuration configmap (in the same namespace) to mount</li>
     <li><span class="keyword">app.propertiesFileName</span> (default: mockserver.properties) - name of the property file in the configmap</li>
-    <li><span class="keyword">app.initializationJsonFileName</span> (default: initializerJson.json) - name of the JSON initialization file in the configmap</li>
 </ul>
 
 For example:
 
-<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.mountConfigMap=true --set app.mountedConfigMapName=mockserver-config --set app.propertiesFileNamem=mockserver.properties --set app.initializationJsonFileName=initializerJson.json mockserver helm/mockserver</code></pre>
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.mountedConfigMapName=other-mockserver-config --set app.propertiesFileNamem=other-mockserver.properties mockserver helm/mockserver</code></pre>
+
+An example of a helm chart to configure MockServer is <a href="https://github.com/mock-server/mockserver/tree/master/helm/mockserver-config">helm/mockserver-config</a>
+
+<a id="helm_extend_classpath" class="anchor" href="#helm_extend_classpath">&nbsp</a>
+
+<h2>Extending MockServer Classpath</h2>
+
+<p>To use <a href="/mock_server/creating_expectations.html#button_response_class_callback">class callbacks</a> or an <a href="/mock_server/initializing_expectations.html#expectation_initializer_class">expectation initializer class</a> the classpath for MockServer must include the specified classes.</p>
+<p>To support adding classes to the classpath if a configmap called <strong>mockserver-config</strong> exists in the same namespace any jar files contained in this configmap will be added into MockServer classpath.</p>
+
+<p>The mapping of the libs configmap can be configured as follows:</p>
+<ul>
+    <li><span class="keyword">app.mountedLibsConfigMapName</span> (default: mockserver-config) - name of the libs configmap (in the same namespace) to mount</li>
+</ul>
+
+For example:
+
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.mountedLibsConfigMapName=mockserver-libs mockserver helm/mockserver</code></pre>
+
+<a id="mockserver_url" class="anchor" href="#mockserver_url">&nbsp</a>
 
 <h2>MockServer URL</h2>
 
@@ -89,16 +117,23 @@ echo http://$MOCKSERVER_HOST</code></pre>
 
 <h3>Docker for Desktop</h3>
 
-<p><a href="https://www.docker.com/products/docker-desktop">Docker for Desktop</a> creates automatic port bindings for LoadBalancer or NodePort services.</p>
-<p>In addition on MacOS Docker for Desktop runs inside <a href="https://github.com/moby/hyperkit">Hyperkit</a> so the node IP address is not reachable, therefore the only way to call NodePort or LoadBalancer services is via the port bindings added by Docker for Desktop.</p>
+<p><a href="https://www.docker.com/products/docker-desktop">Docker for Desktop</a> automatically exposes <strong>LoadBalancer</strong> services.</p>
 
-<p>If the <span class="keyword">service</span> type hasn't been modified the following will provide the MockServer URL from outside the cluster.</p>
+<p>On MacOS Docker for Desktop runs inside <a href="https://github.com/moby/hyperkit">Hyperkit</a> so the node IP address is not reachable, therefore the only way to call services is via the exposed <strong>LoadBalancer</strong> service added by Docker for Desktop.</p>
 
-<pre class="prettyprint code"><code class="code">export NODE_PORT=$(kubectl get -n mockserver -o jsonpath="{.spec.ports[0].nodePort}" services mockserver)
-export MOCKSERVER_HOST=127.0.0.1:$NODE_PORT
+<p>To ensure that Docker for Desktop exposes MockServer update the service type to <strong>LoadBalancer</strong> using <strong>--set service.type=LoadBalancer</strong> and set the exposed port using <strong>--set service.port=1080</strong>, as follows:</p>
+
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set service.type=LoadBalancer --set service.port=1080 mockserver http://www.mock-server.com/mockserver-5.11.1.tgz</code></pre>
+
+<p>MockServer will then be reachable on <strong>http://localhost:1080</strong></p>
+
+<p>For <strong>LoadBalancer</strong> services it is possible to query kubernetes to programmatically determine the MockServer base URL as follows:</p>
+
+<pre class="prettyprint code"><code class="code">export SERVICE_IP=$(kubectl get svc --namespace mockserver mockserver -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+export MOCKSERVER_HOST=$SERVICE_IP:1081
 echo http://$MOCKSERVER_HOST</code></pre>
 
-<h3>Outside Remote Kubernetes Cluster (i.e. Azure AKS, AWS EKS, etc)</h3>
+<h3>Outside Remote Kubernetes Cluster (i.e. Azure AKS, AWS EKS, etc) via Port Forward</h3>
 
 <pre class="prettyprint code"><code class="code">kubectl -n mockserver port-forward svc/mockserver 1080:1080 &
 export MOCKSERVER_HOST=127.0.0.1:1080
@@ -107,6 +142,8 @@ echo http://$MOCKSERVER_HOST</code></pre>
 <h3>Inside Kubernetes Cluster</h3>
 
 <p>If a <a href="https://kubernetes.io/docs/concepts/services-networking/service/#dns">DNS server</a> has been installed in the Kubernetes cluster the following DNS name should be available <span class="keyword">mockserver.&lt;namespace&gt;.svc.cluster.local</span>, i.e. <span class="keyword">mockserver.mockserver.svc.cluster.local</span></p>
+
+<a id="helm_delete" class="anchor" href="#helm_delete">&nbsp</a>
 
 <h2>Helm Delete</h2>
 

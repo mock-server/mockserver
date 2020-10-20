@@ -15,9 +15,9 @@ import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.closurecallback.websocketregistry.CallbackWebSocketServerHandler;
-import org.mockserver.codec.MockServerServerCodec;
+import org.mockserver.codec.MockServerHttpServerCodec;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.dashboard.DashboardWebSocketServerHandler;
+import org.mockserver.dashboard.DashboardWebSocketHandler;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.LoggingHandler;
@@ -46,7 +46,6 @@ import static java.util.Collections.unmodifiableSet;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.tlsMutualAuthenticationRequired;
 import static org.mockserver.exception.ExceptionHandling.*;
-import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED_RESPONSE;
 import static org.mockserver.logging.MockServerLogger.isEnabled;
 import static org.mockserver.mock.action.http.HttpActionHandler.REMOTE_SOCKET;
 import static org.mockserver.model.HttpResponse.response;
@@ -154,11 +153,12 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     }
 
     private void logStage(ChannelHandlerContext ctx, String message) {
-        if (isEnabled(Level.DEBUG)) {
+        if (isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setLogLevel(Level.DEBUG)
-                    .setMessageFormat(message + " for channel: " + ctx.channel() + "pipeline: " + ctx.pipeline().names())
+                    .setLogLevel(Level.TRACE)
+                    .setMessageFormat(message + " for channel:{}pipeline:{}")
+                    .setArguments(ctx.channel().toString(), ctx.pipeline().names())
             );
         }
     }
@@ -230,13 +230,14 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                 .withStatusCode(426)
                 .withHeader("Upgrade", "TLS/1.2, HTTP/1.1")
                 .withHeader("Connection", "Upgrade");
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
-                    .setLogLevel(Level.INFO)
-                    .setMessageFormat("no tls for connection:{}returning response:{}")
-                    .setArguments(ctx.channel().localAddress(), httpResponse)
-            );
+            if (MockServerLogger.isEnabled(Level.INFO)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(Level.INFO)
+                        .setMessageFormat("no tls for connection:{}returning response:{}")
+                        .setArguments(ctx.channel().localAddress(), httpResponse)
+                );
+            }
             ctx
                 .channel()
                 .writeAndFlush(mockServerHttpResponseToFullHttpResponse
@@ -248,8 +249,8 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                 .addListener((ChannelFuture future) -> future.channel().disconnect().awaitUninterruptibly());
         } else {
             addLastIfNotPresent(pipeline, new CallbackWebSocketServerHandler(httpStateHandler));
-            addLastIfNotPresent(pipeline, new DashboardWebSocketServerHandler(httpStateHandler, isSslEnabledUpstream(ctx.channel())));
-            addLastIfNotPresent(pipeline, new MockServerServerCodec(mockServerLogger, isSslEnabledUpstream(ctx.channel())));
+            addLastIfNotPresent(pipeline, new DashboardWebSocketHandler(httpStateHandler, isSslEnabledUpstream(ctx.channel()), false));
+            addLastIfNotPresent(pipeline, new MockServerHttpServerCodec(mockServerLogger, isSslEnabledUpstream(ctx.channel()), ctx.channel().localAddress()));
             addLastIfNotPresent(pipeline, new HttpRequestHandler(server, httpStateHandler, actionHandler));
             pipeline.remove(this);
 

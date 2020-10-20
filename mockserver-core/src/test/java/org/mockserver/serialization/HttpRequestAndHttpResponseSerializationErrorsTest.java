@@ -91,8 +91,14 @@ public class HttpRequestAndHttpResponseSerializationErrorsTest {
             fail("expected exception to be thrown");
         } catch (IllegalArgumentException iae) {
             // then
-            assertThat(iae.getMessage(), is("JsonParseException - Unrecognized token 'requestBytes': was expecting (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
-                " at [Source: (String)\"requestBytes\"; line: 1, column: 13]"));
+            assertThat(iae.getMessage(), is("incorrect json format for:" + NEW_LINE +
+                "" + NEW_LINE +
+                "  requestBytes" + NEW_LINE +
+                "" + NEW_LINE +
+                " schema validation errors:" + NEW_LINE +
+                "" + NEW_LINE +
+                "  JsonParseException - Unrecognized token 'requestBytes': was expecting (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
+                "   at [Source: (String)\"requestBytes\"; line: 1, column: 13]"));
         }
     }
 

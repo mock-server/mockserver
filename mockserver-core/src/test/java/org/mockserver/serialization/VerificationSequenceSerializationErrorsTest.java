@@ -1,6 +1,5 @@
 package org.mockserver.serialization;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import org.junit.Before;
 import org.junit.Rule;
@@ -17,11 +16,12 @@ import java.io.IOException;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 
 /**
  * @author jamesdbloom
@@ -63,8 +63,75 @@ public class VerificationSequenceSerializationErrorsTest {
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
             // then
-            assertThat(iae.getMessage(), is("JsonParseException - Unrecognized token 'requestBytes': was expecting (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
-                " at [Source: (String)\"requestBytes\"; line: 1, column: 13]"));
+            assertThat(iae.getMessage(), is("incorrect verification sequence json format for:" + NEW_LINE +
+                "" + NEW_LINE +
+                "  requestBytes" + NEW_LINE +
+                "" + NEW_LINE +
+                " schema validation errors:" + NEW_LINE +
+                "" + NEW_LINE +
+                "  JsonParseException - Unrecognized token 'requestBytes': was expecting (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
+                "   at [Source: (String)\"requestBytes\"; line: 1, column: 13]"));
+        }
+    }
+
+    @Test
+    public void shouldHandleExceptionWhileDeserializingObjectWithExpectationIdsAndRequests() {
+        // given
+        String requestBytes = "{" + NEW_LINE +
+            "  \"expectationIds\" : [ {" + NEW_LINE +
+            "    \"id\" : \"one\"" + NEW_LINE +
+            "  }, {" + NEW_LINE +
+            "    \"id\" : \"two\"" + NEW_LINE +
+            "  } ]," + NEW_LINE +
+            "  \"httpRequests\" : [ {" + NEW_LINE +
+            "    \"path\" : \"some_path_one\"," + NEW_LINE +
+            "    \"body\" : \"some_body_one\"" + NEW_LINE +
+            "  }, {" + NEW_LINE +
+            "    \"path\" : \"some_body_multiple\"," + NEW_LINE +
+            "    \"body\" : \"some_body_multiple\"" + NEW_LINE +
+            "  }, {" + NEW_LINE +
+            "    \"path\" : \"some_path_three\"," + NEW_LINE +
+            "    \"body\" : \"some_body_three\"" + NEW_LINE +
+            "  }, {" + NEW_LINE +
+            "    \"path\" : \"some_body_multiple\"," + NEW_LINE +
+            "    \"body\" : \"some_body_multiple\"" + NEW_LINE +
+            "  } ]" + NEW_LINE +
+            "}";
+        try {
+            // when
+            new VerificationSequenceSerializer(new MockServerLogger()).deserialize(requestBytes);
+            fail("expected exception");
+        } catch (IllegalArgumentException iae) {
+            // then
+            assertThat(iae.getMessage(), is("incorrect verification sequence json format for:" + NEW_LINE +
+                NEW_LINE +
+                "  {" + NEW_LINE +
+                "    \"expectationIds\" : [ {" + NEW_LINE +
+                "      \"id\" : \"one\"" + NEW_LINE +
+                "    }, {" + NEW_LINE +
+                "      \"id\" : \"two\"" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"httpRequests\" : [ {" + NEW_LINE +
+                "      \"path\" : \"some_path_one\"," + NEW_LINE +
+                "      \"body\" : \"some_body_one\"" + NEW_LINE +
+                "    }, {" + NEW_LINE +
+                "      \"path\" : \"some_body_multiple\"," + NEW_LINE +
+                "      \"body\" : \"some_body_multiple\"" + NEW_LINE +
+                "    }, {" + NEW_LINE +
+                "      \"path\" : \"some_path_three\"," + NEW_LINE +
+                "      \"body\" : \"some_body_three\"" + NEW_LINE +
+                "    }, {" + NEW_LINE +
+                "      \"path\" : \"some_body_multiple\"," + NEW_LINE +
+                "      \"body\" : \"some_body_multiple\"" + NEW_LINE +
+                "    } ]" + NEW_LINE +
+                "  }" + NEW_LINE +
+                NEW_LINE +
+                " schema validation errors:" + NEW_LINE +
+                "" + NEW_LINE +
+                "  1 error:" + NEW_LINE +
+                "   - instance failed to match exactly one schema (matched 2 out of 2)" + NEW_LINE +
+                "  " + NEW_LINE +
+                "  " + OPEN_API_SPECIFICATION_URL));
         }
     }
 

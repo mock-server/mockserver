@@ -1,6 +1,7 @@
 package org.mockserver.serialization.model;
 
 import org.mockserver.model.BinaryBody;
+import org.mockserver.model.JsonBody;
 
 /**
  * @author jamesdbloom
@@ -14,7 +15,7 @@ public class BinaryBodyDTO extends BodyWithContentTypeDTO {
     }
 
     public BinaryBodyDTO(BinaryBody binaryBody, Boolean not) {
-        super(binaryBody.getType(), not, binaryBody.getContentType());
+        super(binaryBody.getType(), not, binaryBody);
         if (binaryBody.getRawBytes() != null) {
             base64Bytes = binaryBody.getRawBytes();
         } else {
@@ -27,6 +28,6 @@ public class BinaryBodyDTO extends BodyWithContentTypeDTO {
     }
 
     public BinaryBody buildObject() {
-        return new BinaryBody(getBase64Bytes(), getMediaType());
+        return (BinaryBody) new BinaryBody(getBase64Bytes(), getMediaType()).withOptional(getOptional());
     }
 }

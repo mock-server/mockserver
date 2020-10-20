@@ -31,7 +31,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsCollectionContaining.hasItems;
+import static org.hamcrest.core.IsIterableContaining.hasItems;
 import static org.hamcrest.core.IsSame.sameInstance;
 import static org.junit.Assert.fail;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -1169,7 +1169,6 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSendClearRequest() {
         // given
-        ConfigurationProperties.disableSystemOut(false);
         echoServerOne.withNextResponse(response().withStatusCode(201));
 
         // when
@@ -1250,7 +1249,7 @@ public class MockServerClientIntegrationTest {
         echoServerOne.withNextResponse(response().withStatusCode(201));
 
         // when
-        mockServerClientOne.clear(null);
+        mockServerClientOne.clear((RequestDefinition) null);
 
         // then
         assertThat(retrieveRequests(request()).size(), is(1));

@@ -6,7 +6,6 @@ import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
 import org.mockserver.uuid.UUIDService;
 
-import java.util.Comparator;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -18,14 +17,15 @@ import static org.mockserver.model.OpenAPIDefinition.openAPI;
 @SuppressWarnings("rawtypes")
 public class Expectation extends ObjectWithJsonToString {
 
-    private static final String[] excludedFields = {"id", "created"};
+    private static final String[] excludedFields = {"id", "created", "sortableExpectationId"};
     private static final AtomicInteger EXPECTATION_COUNTER = new AtomicInteger(0);
     private static final long START_TIME = System.currentTimeMillis();
     private int hashCode;
     private String id;
     @JsonIgnore
     private long created;
-    private final Integer priority;
+    private int priority;
+    private SortableExpectationId sortableExpectationId;
     private final RequestDefinition httpRequest;
     private final Times times;
     private final TimeToLive timeToLive;
@@ -40,12 +40,8 @@ public class Expectation extends ObjectWithJsonToString {
     private HttpOverrideForwardedRequest httpOverrideForwardedRequest;
     private HttpError httpError;
 
-    public static final Comparator<Expectation> EXPECTATION_PRIORITY_COMPARATOR = Comparator
-        .comparing(Expectation::getPriority, Comparator.nullsLast(Comparator.reverseOrder()))
-        .thenComparing(Expectation::getCreated, Comparator.nullsLast(Comparator.naturalOrder()));
-
     /**
-     * Specify the OpenAPI / Swagger and operationId to match against by URL or payload and string as follows:
+     * Specify the OpenAPI and operationId to match against by URL or payload and string as follows:
      * <p><pre>
      *   // Create from a publicly hosted HTTP location (json or yaml)
      *   when("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById")
@@ -56,12 +52,12 @@ public class Expectation extends ObjectWithJsonToString {
      *   // Create from a classpath resource in the /api package (json or yaml)
      *   when("org/mockserver/mock/openapi_petstore_example.json", "showPetById");
      *
-     *   // Create from an OpenAPI / Swagger payload (json or yaml)
+     *   // Create from an OpenAPI payload (json or yaml)
      *   when("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById")
      * </pre><p>
      *
-     * @param specUrlOrPayload the OpenAPI / Swagger to match against by URL or payload
-     * @param operationId      operationId from the OpenAPI / Swagger to match against i.e. "showPetById"
+     * @param specUrlOrPayload the OpenAPI to match against by URL or payload
+     * @param operationId      operationId from the OpenAPI to match against i.e. "showPetById"
      * @return the Expectation
      */
     public static Expectation when(String specUrlOrPayload, String operationId) {
@@ -69,7 +65,7 @@ public class Expectation extends ObjectWithJsonToString {
     }
 
     /**
-     * Specify the OpenAPI / Swagger and operationId to match against by URL or payload and string with a match priority as follows:
+     * Specify the OpenAPI and operationId to match against by URL or payload and string with a match priority as follows:
      * <p><pre>
      *   // Create from a publicly hosted HTTP location (json or yaml)
      *   when("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById", 10)
@@ -80,21 +76,21 @@ public class Expectation extends ObjectWithJsonToString {
      *   // Create from a classpath resource in the /api package (json or yaml)
      *   when("org/mockserver/mock/openapi_petstore_example.json", "showPetById", 10);
      *
-     *   // Create from an OpenAPI / Swagger payload (json or yaml)
+     *   // Create from an OpenAPI payload (json or yaml)
      *   when("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById", 10)
      * </pre><p>
      *
-     * @param specUrlOrPayload the OpenAPI / Swagger to match against by URL or payload
-     * @param operationId      operationId from the OpenAPI / Swagger to match against i.e. "showPetById"
+     * @param specUrlOrPayload the OpenAPI to match against by URL or payload
+     * @param operationId      operationId from the OpenAPI to match against i.e. "showPetById"
      * @param priority         the priority with which this expectation is used to match requests compared to other expectations (high first)
      * @return the Expectation
      */
-    public static Expectation when(String specUrlOrPayload, String operationId, Integer priority) {
+    public static Expectation when(String specUrlOrPayload, String operationId, int priority) {
         return new Expectation(openAPI(specUrlOrPayload, operationId), Times.unlimited(), TimeToLive.unlimited(), priority);
     }
 
     /**
-     * Specify the OpenAPI / Swagger and operationId to match against by URL or payload and string for a limit number of times or time as follows:
+     * Specify the OpenAPI and operationId to match against by URL or payload and string for a limit number of times or time as follows:
      * <p><pre>
      *   // Create from a publicly hosted HTTP location (json or yaml)
      *   when("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById", 5, exactly(TimeUnit.SECONDS, 90))
@@ -105,12 +101,12 @@ public class Expectation extends ObjectWithJsonToString {
      *   // Create from a classpath resource in the /api package (json or yaml)
      *   when("org/mockserver/mock/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
      *
-     *   // Create from an OpenAPI / Swagger payload (json or yaml)
+     *   // Create from an OpenAPI payload (json or yaml)
      *   when("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById", 5, exactly(TimeUnit.SECONDS, 90))
      * </pre><p>
      *
-     * @param specUrlOrPayload the OpenAPI / Swagger to match against by URL or payload
-     * @param operationId      operationId from the OpenAPI / Swagger to match against i.e. "showPetById"
+     * @param specUrlOrPayload the OpenAPI to match against by URL or payload
+     * @param operationId      operationId from the OpenAPI to match against i.e. "showPetById"
      * @param times            the number of times to use this expectation to match requests
      * @param timeToLive       the time this expectation should be used to match requests
      * @return the Expectation
@@ -120,7 +116,7 @@ public class Expectation extends ObjectWithJsonToString {
     }
 
     /**
-     * Specify the OpenAPI / Swagger and operationId to match against by URL or payload and string for a limit number of times or time and a match priority as follows:
+     * Specify the OpenAPI and operationId to match against by URL or payload and string for a limit number of times or time and a match priority as follows:
      * <p><pre>
      *   // Create from a publicly hosted HTTP location (json or yaml)
      *   when("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById", 5, exactly(TimeUnit.SECONDS, 90))
@@ -131,18 +127,18 @@ public class Expectation extends ObjectWithJsonToString {
      *   // Create from a classpath resource in the /api package (json or yaml)
      *   when("org/mockserver/mock/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
      *
-     *   // Create from an OpenAPI / Swagger payload (json or yaml)
+     *   // Create from an OpenAPI payload (json or yaml)
      *   when("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById", 5, exactly(TimeUnit.SECONDS, 90))
      * </pre><p>
      *
-     * @param specUrlOrPayload the OpenAPI / Swagger to match against by URL or payload
-     * @param operationId      operationId from the OpenAPI / Swagger to match against i.e. "showPetById"
+     * @param specUrlOrPayload the OpenAPI to match against by URL or payload
+     * @param operationId      operationId from the OpenAPI to match against i.e. "showPetById"
      * @param times            the number of times to use this expectation to match requests
      * @param timeToLive       the time this expectation should be used to match requests
      * @param priority         the priority with which this expectation is used to match requests compared to other expectations (high first)
      * @return the Expectation
      */
-    public static Expectation when(String specUrlOrPayload, String operationId, Times times, TimeToLive timeToLive, Integer priority) {
+    public static Expectation when(String specUrlOrPayload, String operationId, Times times, TimeToLive timeToLive, int priority) {
         return new Expectation(openAPI(specUrlOrPayload, operationId), times, timeToLive, priority);
     }
 
@@ -186,7 +182,7 @@ public class Expectation extends ObjectWithJsonToString {
      * @param priority    the priority with which this expectation is used to match requests compared to other expectations (high first)
      * @return the Expectation
      */
-    public static Expectation when(HttpRequest httpRequest, Integer priority) {
+    public static Expectation when(HttpRequest httpRequest, int priority) {
         return new Expectation(httpRequest, Times.unlimited(), TimeToLive.unlimited(), priority);
     }
 
@@ -238,7 +234,7 @@ public class Expectation extends ObjectWithJsonToString {
      * @param priority    the priority with which this expectation is used to match requests compared to other expectations (high first)
      * @return the Expectation
      */
-    public static Expectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive, Integer priority) {
+    public static Expectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive, int priority) {
         return new Expectation(httpRequest, times, timeToLive, priority);
     }
 
@@ -246,7 +242,7 @@ public class Expectation extends ObjectWithJsonToString {
         this(requestDefinition, Times.unlimited(), TimeToLive.unlimited(), 0);
     }
 
-    public Expectation(RequestDefinition requestDefinition, Times times, TimeToLive timeToLive, Integer priority) {
+    public Expectation(RequestDefinition requestDefinition, Times times, TimeToLive timeToLive, int priority) {
         // ensure created enforces insertion order by relying on system time, and a counter
         EXPECTATION_COUNTER.compareAndSet(Integer.MAX_VALUE, 0);
         this.created = System.currentTimeMillis() - START_TIME + EXPECTATION_COUNTER.incrementAndGet();
@@ -258,6 +254,7 @@ public class Expectation extends ObjectWithJsonToString {
 
     public Expectation withId(String key) {
         this.id = key;
+        this.sortableExpectationId = null;
         return this;
     }
 
@@ -268,17 +265,32 @@ public class Expectation extends ObjectWithJsonToString {
         return id;
     }
 
-    public Integer getPriority() {
+    public Expectation withPriority(int priority) {
+        this.priority = priority;
+        this.sortableExpectationId = null;
+        return this;
+    }
+
+    public int getPriority() {
         return priority;
     }
 
     public Expectation withCreated(long created) {
         this.created = created;
+        this.sortableExpectationId = null;
         return this;
     }
 
     public long getCreated() {
         return created;
+    }
+
+    @JsonIgnore
+    public SortableExpectationId getSortableId() {
+        if (sortableExpectationId == null) {
+            sortableExpectationId = new SortableExpectationId(getId(), priority, created);
+        }
+        return sortableExpectationId;
     }
 
     public RequestDefinition getHttpRequest() {
@@ -327,29 +339,32 @@ public class Expectation extends ObjectWithJsonToString {
 
     @JsonIgnore
     public Action getAction() {
+        Action action = null;
         if (httpResponse != null) {
-            return getHttpResponse();
+            action = getHttpResponse();
         } else if (httpResponseTemplate != null) {
-            return getHttpResponseTemplate();
+            action = getHttpResponseTemplate();
         } else if (httpResponseClassCallback != null) {
-            return getHttpResponseClassCallback();
+            action = getHttpResponseClassCallback();
         } else if (httpResponseObjectCallback != null) {
-            return getHttpResponseObjectCallback();
+            action = getHttpResponseObjectCallback();
         } else if (httpForward != null) {
-            return getHttpForward();
+            action = getHttpForward();
         } else if (httpForwardTemplate != null) {
-            return getHttpForwardTemplate();
+            action = getHttpForwardTemplate();
         } else if (httpForwardClassCallback != null) {
-            return getHttpForwardClassCallback();
+            action = getHttpForwardClassCallback();
         } else if (httpForwardObjectCallback != null) {
-            return getHttpForwardObjectCallback();
+            action = getHttpForwardObjectCallback();
         } else if (httpOverrideForwardedRequest != null) {
-            return getHttpOverrideForwardedRequest();
+            action = getHttpOverrideForwardedRequest();
         } else if (httpError != null) {
-            return getHttpError();
-        } else {
-            return null;
+            action = getHttpError();
         }
+        if (action != null) {
+            action.setExpectationId(getId());
+        }
+        return action;
     }
 
     public Times getTimes() {
@@ -550,13 +565,11 @@ public class Expectation extends ObjectWithJsonToString {
             return false;
         }
         Expectation that = (Expectation) o;
-        boolean equals = Objects.equals(httpResponse, that.httpResponse);
-        boolean equals1 = Objects.equals(httpRequest, that.httpRequest);
         return Objects.equals(priority, that.priority) &&
-            equals1 &&
+            Objects.equals(httpRequest, that.httpRequest) &&
             Objects.equals(times, that.times) &&
             Objects.equals(timeToLive, that.timeToLive) &&
-            equals &&
+            Objects.equals(httpResponse, that.httpResponse) &&
             Objects.equals(httpResponseTemplate, that.httpResponseTemplate) &&
             Objects.equals(httpResponseClassCallback, that.httpResponseClassCallback) &&
             Objects.equals(httpResponseObjectCallback, that.httpResponseObjectCallback) &&

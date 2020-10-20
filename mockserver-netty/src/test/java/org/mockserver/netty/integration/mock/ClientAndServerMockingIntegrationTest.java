@@ -18,7 +18,7 @@ public class ClientAndServerMockingIntegrationTest extends AbstractBasicMockingI
     @BeforeClass
     public static void startServer() {
         mockServerClient = startClientAndServer();
-        mockServerPort = ((ClientAndServer) mockServerClient).getLocalPort();
+        mockServerPort = mockServerClient.getPort();
     }
 
     @AfterClass

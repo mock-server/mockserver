@@ -1,18 +1,18 @@
 {
-    "title": "override forwarded request",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-        "delay": {
-            "$ref": "#/definitions/delay"
-        },
-        "httpRequest": {
-            "$ref": "#/definitions/httpRequest"
-        },
-        "httpResponse": {
-            "$ref": "#/definitions/httpResponse"
-        }
+  "title": "override forwarded request",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "delay": {
+      "$ref": "#/definitions/delay"
     },
-    "definitions": {
+    "httpRequest": {
+      "$ref": "#/definitions/httpRequest"
+    },
+    "httpResponse": {
+      "$ref": "#/definitions/httpResponse"
     }
+  },
+  "definitions": {
+  }
 }

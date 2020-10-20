@@ -33,7 +33,7 @@ import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.OK_200;
-import static org.mockserver.socket.tls.jdk.X509Generator.x509FromPEMFile;
+import static org.mockserver.socket.tls.PEMToFile.x509FromPEMFile;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**

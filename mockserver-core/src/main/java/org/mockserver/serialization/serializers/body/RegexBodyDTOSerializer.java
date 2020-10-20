@@ -22,6 +22,9 @@ public class RegexBodyDTOSerializer extends StdSerializer<RegexBodyDTO> {
         if (regexBodyDTO.getNot() != null && regexBodyDTO.getNot()) {
             jgen.writeBooleanField("not", regexBodyDTO.getNot());
         }
+        if (regexBodyDTO.getOptional() != null && regexBodyDTO.getOptional()) {
+            jgen.writeBooleanField("optional", regexBodyDTO.getOptional());
+        }
         jgen.writeStringField("type", regexBodyDTO.getType().name());
         jgen.writeStringField("regex", regexBodyDTO.getRegex());
         jgen.writeEndObject();

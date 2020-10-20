@@ -4,10 +4,6 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
-import io.swagger.v3.parser.OpenAPIResolver;
-import io.swagger.v3.parser.OpenAPIV3Parser;
-import io.swagger.v3.parser.core.models.SwaggerParseResult;
-import io.swagger.v3.parser.util.ResolverFully;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mockserver.log.model.LogEntry;
@@ -16,13 +12,12 @@ import org.mockserver.model.OpenAPIDefinition;
 import org.mockserver.openapi.examples.JsonNodeExampleSerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.matchers.OpenAPIMatcher.OPEN_API_LOAD_ERROR;
+import static org.mockserver.openapi.OpenAPIParser.buildOpenAPI;
+import static org.mockserver.openapi.OpenAPIParser.mapOperations;
 import static org.slf4j.event.Level.ERROR;
 
 public class OpenAPISerialiser {
@@ -34,11 +29,10 @@ public class OpenAPISerialiser {
         this.mockServerLogger = mockServerLogger;
     }
 
-
     public String asString(OpenAPIDefinition openAPIDefinition) {
         try {
             if (isBlank(openAPIDefinition.getOperationId())) {
-                return OBJECT_WRITER.writeValueAsString(buildOpenAPI(openAPIDefinition.getSpecUrlOrPayload(), false));
+                return OBJECT_WRITER.writeValueAsString(buildOpenAPI(openAPIDefinition.getSpecUrlOrPayload()));
             } else {
                 Optional<Pair<String, Operation>> operation = retrieveOperation(openAPIDefinition.getSpecUrlOrPayload(), openAPIDefinition.getOperationId());
                 if (operation.isPresent()) {
@@ -57,8 +51,8 @@ public class OpenAPISerialiser {
         return "";
     }
 
-    private Optional<Pair<String, Operation>> retrieveOperation(String specUrlOrPayload, String operationId) {
-        return buildOpenAPI(specUrlOrPayload, true)
+    public Optional<Pair<String, Operation>> retrieveOperation(String specUrlOrPayload, String operationId) {
+        return buildOpenAPI(specUrlOrPayload)
             .getPaths()
             .values()
             .stream()
@@ -67,65 +61,25 @@ public class OpenAPISerialiser {
             .findFirst();
     }
 
-    private List<Pair<String, Operation>> mapOperations(PathItem pathItem) {
-        List<Pair<String, Operation>> allOperations = new ArrayList<>();
-        if (pathItem.getGet() != null) {
-            allOperations.add(new ImmutablePair<>("GET", pathItem.getGet()));
+    public Map<String, List<Pair<String, Operation>>> retrieveOperations(OpenAPI openAPI, String operationId) {
+        Map<String, List<Pair<String, Operation>>> operations = new LinkedHashMap<>();
+        if (openAPI != null) {
+            openAPI
+                .getPaths()
+                .forEach((key, value) -> {
+                    if (key != null && value != null) {
+                        List<Pair<String, Operation>> filteredOperations = mapOperations(value)
+                            .stream()
+                            .filter(operation -> isBlank(operationId) || operationId.equals(operation.getRight().getOperationId()))
+                            .sorted(Comparator.comparing(Pair::getLeft))
+                            .collect(Collectors.toList());
+                        if (!filteredOperations.isEmpty()) {
+                            operations.put(key, filteredOperations);
+                        }
+                    }
+                });
         }
-        if (pathItem.getPut() != null) {
-            allOperations.add(new ImmutablePair<>("PUT", pathItem.getPut()));
-        }
-        if (pathItem.getHead() != null) {
-            allOperations.add(new ImmutablePair<>("HEAD", pathItem.getHead()));
-        }
-        if (pathItem.getPost() != null) {
-            allOperations.add(new ImmutablePair<>("POST", pathItem.getPost()));
-        }
-        if (pathItem.getDelete() != null) {
-            allOperations.add(new ImmutablePair<>("DELETE", pathItem.getDelete()));
-        }
-        if (pathItem.getPatch() != null) {
-            allOperations.add(new ImmutablePair<>("PATCH", pathItem.getPatch()));
-        }
-        if (pathItem.getOptions() != null) {
-            allOperations.add(new ImmutablePair<>("OPTIONS", pathItem.getOptions()));
-        }
-        if (pathItem.getTrace() != null) {
-            allOperations.add(new ImmutablePair<>("TRACE", pathItem.getTrace()));
-        }
-        return allOperations;
+        return operations;
     }
 
-    private OpenAPI buildOpenAPI(String specUrlOrPayload, boolean resolve) {
-        if (specUrlOrPayload.endsWith(".json") || specUrlOrPayload.endsWith(".yaml")) {
-            try {
-                OpenAPI openAPI = new OpenAPIV3Parser().read(specUrlOrPayload);
-                if (resolve) {
-                    return resolve(openAPI);
-                } else {
-                    return openAPI;
-                }
-            } catch (Throwable throwable) {
-                throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + throwable.getMessage());
-            }
-        } else {
-            SwaggerParseResult swaggerParseResult = new OpenAPIV3Parser().readContents(specUrlOrPayload);
-            OpenAPI openAPI = swaggerParseResult.getOpenAPI();
-            if (openAPI != null) {
-                if (resolve) {
-                    return resolve(openAPI);
-                } else {
-                    return openAPI;
-                }
-            } else {
-                throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + String.join(" and ", swaggerParseResult.getMessages()).trim());
-            }
-        }
-    }
-
-    private OpenAPI resolve(OpenAPI openAPI) {
-        openAPI = new OpenAPIResolver(openAPI).resolve();
-        new ResolverFully().resolveFully(openAPI);
-        return openAPI;
-    }
 }

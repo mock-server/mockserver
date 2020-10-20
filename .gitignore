@@ -25,10 +25,8 @@ mods
 *.log.*
 *.sql
 *.sqlite
-test.csv
+*.csv
 TODO.md
-persistedExpectations.json
-mockserverInitialization.json
 
 # Runtime artifacts #
 #####################
@@ -96,3 +94,15 @@ mockserver-proxy-war/tomcat/
 mockserver-proxy-war/tomcat_proxy/
 mockserver-war/tomcat/
 mockserver-war/tomcat_mockserver/
+
+# test output #
+###############
+mockserver_keystore_*_jks
+/CertificateAuthorityCertificate.pem
+!/*/CertificateAuthorityCertificate.pem
+/PKCS8CertificateAuthorityPrivateKey.pem
+!/*/PKCS8CertificateAuthorityPrivateKey.pem
+/*/mockserverInitialization*.json
+persistedExpectations.json
+mockserverInitialization.json
+/*.pem

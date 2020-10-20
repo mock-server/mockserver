@@ -217,10 +217,23 @@ public class MapMatcherTest {
     }
 
     @Test
-    public void doesNotMatchDifferentEmptyValue() {
+    public void doesNotMatchDifferentEmptyValueForControlPlane() {
         // given
         matcher.withEntry("foo", "bar");
         MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher, true);
+
+        // when
+        matched.withEntry("foo", "");
+
+        // then
+        assertFalse(mapMatcher.matches(null, matched));
+    }
+
+    @Test
+    public void doesNotMatchDifferentEmptyValue() {
+        // given
+        matcher.withEntry("foo", "bar");
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher, false);
 
         // when
         matched.withEntry("foo", "");

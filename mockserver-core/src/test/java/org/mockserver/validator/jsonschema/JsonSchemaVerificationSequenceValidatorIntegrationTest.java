@@ -193,10 +193,10 @@ public class JsonSchemaVerificationSequenceValidatorIntegrationTest {
                     " - field: \"/httpRequests/0\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"method\",\"path\"]\"" + NEW_LINE +
                     " - field: \"/httpRequests/0/method\" for schema: \"stringOrJsonSchema\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
                     " - field: \"/httpRequests/0/method\" for schema: \"stringOrJsonSchema/oneOf/0\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequests/0/method\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequests/0/method\" for schema: \"stringOrJsonSchema/oneOf/1\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
                     " - field: \"/httpRequests/0/path\" for schema: \"stringOrJsonSchema\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
                     " - field: \"/httpRequests/0/path\" for schema: \"stringOrJsonSchema/oneOf/0\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequests/0/path\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+                    " - field: \"/httpRequests/0/path\" for schema: \"stringOrJsonSchema/oneOf/1\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));

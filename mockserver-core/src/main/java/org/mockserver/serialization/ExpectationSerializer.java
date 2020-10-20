@@ -3,6 +3,7 @@ package org.mockserver.serialization;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Joiner;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
@@ -16,8 +17,11 @@ import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator.jsonSchemaExpectationValidator;
 import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
+import static org.slf4j.event.Level.DEBUG;
+import static org.slf4j.event.Level.INFO;
 
 /**
  * @author jamesdbloom
@@ -123,18 +127,11 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                             .setArguments(jsonExpectation)
                             .setThrowable(throwable)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonExpectation + "] for Expectation", throwable);
+                    throw new IllegalArgumentException("exception while parsing [" + jsonExpectation + "] for Expectation", throwable);
                 }
                 return expectation;
             } else {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(Level.ERROR)
-                        .setHttpRequest(null)
-                        .setMessageFormat("validation failed:{}expectation:{}")
-                        .setArguments(validationErrors, jsonExpectation)
-                );
-                throw new IllegalArgumentException(validationErrors);
+                throw new IllegalArgumentException(StringUtils.removeEndIgnoreCase(formatLogMessage("incorrect expectation json format for:{}schema validation errors:{}", jsonExpectation, validationErrors), "\n"));
             }
         }
     }
@@ -151,17 +148,34 @@ public class ExpectationSerializer implements Serializer<Expectation> {
         } else {
             List<String> jsonExpectationList = jsonArraySerializer.returnJSONObjects(jsonExpectations);
             if (!jsonExpectationList.isEmpty()) {
-                List<String> validationErrorsList = new ArrayList<String>();
-                for (String jsonExpecation : jsonExpectationList) {
+                List<String> validationErrorsList = new ArrayList<>();
+                for (int i = 0; i < jsonExpectationList.size(); i++) {
+                    String jsonExpectation = jsonExpectationList.get(i);
+                    if (jsonExpectationList.size() > 100) {
+                        if (MockServerLogger.isEnabled(DEBUG)) {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setLogLevel(DEBUG)
+                                    .setMessageFormat("processing JSON expectation " + (i + 1) + " of " + jsonExpectationList.size() + ":{}")
+                                    .setArguments(jsonExpectation)
+                            );
+                        } else if (MockServerLogger.isEnabled(INFO)) {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setLogLevel(INFO)
+                                    .setMessageFormat("processing JSON expectation " + (i + 1) + " of " + jsonExpectationList.size())
+                            );
+                        }
+                    }
                     try {
-                        expectations.add(deserialize(jsonExpecation));
+                        expectations.add(deserialize(jsonExpectation));
                     } catch (IllegalArgumentException iae) {
                         validationErrorsList.add(iae.getMessage());
                     }
                 }
                 if (!validationErrorsList.isEmpty()) {
                     if (validationErrorsList.size() > 1) {
-                        throw new IllegalArgumentException(("[" + NEW_LINE + Joiner.on("," + NEW_LINE).join(validationErrorsList)).replaceAll(NEW_LINE, NEW_LINE + "  ") + NEW_LINE + "]");
+                        throw new IllegalArgumentException(("[" + NEW_LINE + Joiner.on("," + NEW_LINE + NEW_LINE).join(validationErrorsList)).replaceAll(NEW_LINE, NEW_LINE + "  ") + NEW_LINE + "]");
                     } else {
                         throw new IllegalArgumentException(validationErrorsList.get(0));
                     }

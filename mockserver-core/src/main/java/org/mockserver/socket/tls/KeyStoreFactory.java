@@ -4,6 +4,7 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.uuid.UUIDService;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -13,7 +14,6 @@ import java.io.FileOutputStream;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
-import java.util.UUID;
 
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.mockserver.socket.tls.KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory;
@@ -28,7 +28,7 @@ public class KeyStoreFactory {
     public static final String KEY_STORE_PASSWORD = "changeit";
     public static final String KEY_STORE_CERT_ALIAS = "mockserver-client-cert";
     public static final String KEY_STORE_CA_ALIAS = "mockserver-ca-cert";
-    public final String keyStoreFileName = "mockserver_keystore_" + UUID.randomUUID().toString() + "_" + KEY_STORE_TYPE;
+    public final String keyStoreFileName = "mockserver_keystore_" + UUIDService.getUUID() + "_" + KEY_STORE_TYPE;
     /**
      * Enforce TLS 1.2 if available, since it's not default up to Java 8.
      * <p>

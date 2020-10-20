@@ -19,7 +19,6 @@ import java.util.Map;
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 
 /**
  * @author jamesdbloom
@@ -34,7 +33,7 @@ public class MockServerHttpResponseToFullHttpResponse {
         this.bodyDecoderEncoder = new BodyDecoderEncoder();
     }
 
-    public List<DefaultHttpObject>  mapMockServerResponseToNettyResponse(HttpResponse httpResponse) {
+    public List<DefaultHttpObject> mapMockServerResponseToNettyResponse(HttpResponse httpResponse) {
         try {
             ConnectionOptions connectionOptions = httpResponse.getConnectionOptions();
             if (connectionOptions != null && connectionOptions.getChunkSize() != null && connectionOptions.getChunkSize() > 0) {
@@ -57,14 +56,14 @@ public class MockServerHttpResponseToFullHttpResponse {
                 httpMessages.add(new DefaultLastHttpContent(chunks[chunks.length - 1]));
                 return httpMessages;
             } else {
-            ByteBuf body = getBody(httpResponse);
-            DefaultFullHttpResponse defaultFullHttpResponse = new DefaultFullHttpResponse(
-                HttpVersion.HTTP_1_1,
-                getStatus(httpResponse),
-                body
-            );
-            setHeaders(httpResponse, defaultFullHttpResponse, body);
-            setCookies(httpResponse, defaultFullHttpResponse);
+                ByteBuf body = getBody(httpResponse);
+                DefaultFullHttpResponse defaultFullHttpResponse = new DefaultFullHttpResponse(
+                    HttpVersion.HTTP_1_1,
+                    getStatus(httpResponse),
+                    body
+                );
+                setHeaders(httpResponse, defaultFullHttpResponse, body);
+                setCookies(httpResponse, defaultFullHttpResponse);
                 return Collections.singletonList(defaultFullHttpResponse);
             }
         } catch (Throwable throwable) {
@@ -116,7 +115,7 @@ public class MockServerHttpResponseToFullHttpResponse {
         ConnectionOptions connectionOptions = httpResponse.getConnectionOptions();
         if (isBlank(httpResponse.getFirstHeader(CONTENT_LENGTH.toString()))) {
             boolean overrideContentLength = connectionOptions != null && connectionOptions.getContentLengthHeaderOverride() != null;
-            boolean addContentLength = connectionOptions == null || isFalseOrNull(connectionOptions.getSuppressContentLengthHeader());
+            boolean addContentLength = connectionOptions == null || !Boolean.TRUE.equals(connectionOptions.getSuppressContentLengthHeader());
             boolean chunkedEncoding = connectionOptions != null && connectionOptions.getChunkSize() != null;
             if (overrideContentLength) {
                 response.headers().set(CONTENT_LENGTH, connectionOptions.getContentLengthHeaderOverride());

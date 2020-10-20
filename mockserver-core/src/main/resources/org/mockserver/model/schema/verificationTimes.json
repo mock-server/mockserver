@@ -1,13 +1,13 @@
 {
-    "title": "number of request to verify",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-        "atLeast": {
-            "type": "integer"
-        },
-        "atMost": {
-            "type": "integer"
-        }
+  "title": "number of request to verify",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "atLeast": {
+      "type": "integer"
+    },
+    "atMost": {
+      "type": "integer"
     }
+  }
 }

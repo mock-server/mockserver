@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.mockserver.model.Body;
 import org.mockserver.model.Parameter;
 import org.mockserver.model.ParameterBody;
+import org.mockserver.model.RegexBody;
 
 import java.util.Collections;
 
@@ -39,6 +40,19 @@ public class ParameterBodyDTOTest {
         // then
         assertThat(parameterBody.getValue().getEntries(), containsInAnyOrder(new Parameter("some", "value")));
         assertThat(parameterBody.getType(), is(Body.Type.PARAMETERS));
+    }
+
+    @Test
+    public void shouldBuildCorrectObjectWithOptional() {
+        // when
+        ParameterBody parameterBody = new ParameterBodyDTO((ParameterBody) new ParameterBody(
+            new Parameter("some", "value")
+        ).withOptional(true)).buildObject();
+
+        // then
+        assertThat(parameterBody.getValue().getEntries(), containsInAnyOrder(new Parameter("some", "value")));
+        assertThat(parameterBody.getType(), is(Body.Type.PARAMETERS));
+        assertThat(parameterBody.getOptional(), is(true));
     }
 
     @Test

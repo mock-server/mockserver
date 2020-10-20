@@ -19,7 +19,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -85,8 +85,14 @@ public class HttpResponseSerializationErrorsTest {
             fail("expected exception to be thrown");
         } catch (IllegalArgumentException iae) {
             // then
-            assertThat(iae.getMessage(), is("JsonParseException - Unrecognized token 'responseBytes': was expecting (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
-                " at [Source: (String)\"responseBytes\"; line: 1, column: 14]"));
+            assertThat(iae.getMessage(), is("incorrect response json format for:" + NEW_LINE +
+                "" + NEW_LINE +
+                "  responseBytes" + NEW_LINE +
+                "" + NEW_LINE +
+                " schema validation errors:" + NEW_LINE +
+                "" + NEW_LINE +
+                "  JsonParseException - Unrecognized token 'responseBytes': was expecting (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
+                "   at [Source: (String)\"responseBytes\"; line: 1, column: 14]"));
         }
     }
 

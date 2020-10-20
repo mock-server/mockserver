@@ -52,7 +52,7 @@ public class BinaryProxyIntegrationTest {
                 ClientAndServer proxyClientAndServer = startClientAndServer("127.0.0.1", serverSocketPort);
 
                 CompletableFuture<Socket> socketFuture = new CompletableFuture<>();
-                new Thread(() -> {
+                new Scheduler.SchedulerThreadFactory("MockServer Test " + this.getClass().getSimpleName()).newThread(() -> {
                     try {
                         socketFuture.complete(serverSocket.accept());
                     } catch (Throwable throwable) {
@@ -84,18 +84,36 @@ public class BinaryProxyIntegrationTest {
                 assertThat(ByteBufUtil.hexDump(binaryResponse.getBytes()), is(ByteBufUtil.hexDump(randomResponseBytes)));
             }
         } catch (java.net.SocketException se) {
-            if (MockServerLogger.isEnabled(ERROR)) {
-                new MockServerLogger().logEvent(
-                    new LogEntry()
-                        .setLogLevel(ERROR)
-                        .setMessageFormat("Exception sending bytes")
-                        .setThrowable(se)
-                );
-            }
+            new MockServerLogger().logEvent(
+                new LogEntry()
+                    .setLogLevel(ERROR)
+                    .setMessageFormat("Exception sending bytes")
+                    .setThrowable(se)
+            );
             throw se;
         }
     }
 
+    // TODO(jamesdbloom) make this test more stable:
+    //      org.mockserver.client.SocketConnectionException: Channel handler removed before valid response has been received
+    //        at org.mockserver.client.HttpClientConnectionErrorHandler.handlerRemoved(HttpClientConnectionErrorHandler.java:20)
+    //        at io.netty.channel.AbstractChannelHandlerContext.callHandlerRemoved(AbstractChannelHandlerContext.java:946)
+    //        at io.netty.channel.DefaultChannelPipeline.callHandlerRemoved0(DefaultChannelPipeline.java:637)
+    //        at io.netty.channel.DefaultChannelPipeline.destroyDown(DefaultChannelPipeline.java:876)
+    //        at io.netty.channel.DefaultChannelPipeline.destroyUp(DefaultChannelPipeline.java:844)
+    //        at io.netty.channel.DefaultChannelPipeline.destroy(DefaultChannelPipeline.java:836)
+    //        at io.netty.channel.DefaultChannelPipeline.access$700(DefaultChannelPipeline.java:46)
+    //        at io.netty.channel.DefaultChannelPipeline$HeadContext.channelUnregistered(DefaultChannelPipeline.java:1392)
+    //        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelUnregistered(AbstractChannelHandlerContext.java:198)
+    //        at io.netty.channel.AbstractChannelHandlerContext.invokeChannelUnregistered(AbstractChannelHandlerContext.java:184)
+    //        at io.netty.channel.DefaultChannelPipeline.fireChannelUnregistered(DefaultChannelPipeline.java:821)
+    //        at io.netty.channel.AbstractChannel$AbstractUnsafe$8.run(AbstractChannel.java:826)
+    //        at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:164)
+    //        at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:472)
+    //        at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:497)
+    //        at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:989)
+    //        at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+    //        at java.lang.Thread.run(Thread.java:748)
     @Test
     public void shouldForwardBinaryMessagesOverTLS() throws Exception {
         // given
@@ -107,7 +125,7 @@ public class BinaryProxyIntegrationTest {
                 ClientAndServer proxyClientAndServer = startClientAndServer("127.0.0.1", serverSocket.getLocalPort());
 
                 CompletableFuture<Socket> socketFuture = new CompletableFuture<>();
-                new Thread(() -> {
+                new Scheduler.SchedulerThreadFactory("MockServer Test " + this.getClass().getSimpleName()).newThread(() -> {
                     try {
                         socketFuture.complete(serverSocket.accept());
                     } catch (Throwable throwable) {
@@ -120,7 +138,7 @@ public class BinaryProxyIntegrationTest {
                     .sendRequest(
                         bytes(randomRequestBytes),
                         true,
-                        new InetSocketAddress(proxyClientAndServer.getLocalPort()),
+                        new InetSocketAddress(proxyClientAndServer.getPort()),
                         (int) SECONDS.toMillis(10)
                     );
 
@@ -139,14 +157,12 @@ public class BinaryProxyIntegrationTest {
                 assertThat(ByteBufUtil.hexDump(binaryResponse.getBytes()), is(ByteBufUtil.hexDump(randomResponseBytes)));
             }
         } catch (java.net.SocketException se) {
-            if (MockServerLogger.isEnabled(ERROR)) {
-                new MockServerLogger().logEvent(
-                    new LogEntry()
-                        .setLogLevel(ERROR)
-                        .setMessageFormat("Exception sending bytes")
-                        .setThrowable(se)
-                );
-            }
+            new MockServerLogger().logEvent(
+                new LogEntry()
+                    .setLogLevel(ERROR)
+                    .setMessageFormat("Exception sending bytes")
+                    .setThrowable(se)
+            );
             throw se;
         }
     }
@@ -162,7 +178,7 @@ public class BinaryProxyIntegrationTest {
             .sendRequest(
                 bytes(randomRequestBytes),
                 true,
-                new InetSocketAddress(clientAndServer.getLocalPort()),
+                new InetSocketAddress(clientAndServer.getPort()),
                 (int) SECONDS.toMillis(10)
             )
             .get(10, SECONDS);
@@ -170,7 +186,5 @@ public class BinaryProxyIntegrationTest {
         // then
         assertThat(ByteBufUtil.hexDump(binaryResponse.getBytes()), is(ByteBufUtil.hexDump("unknown message format".getBytes(StandardCharsets.UTF_8))));
     }
-
-    // TODO (jamesdbloom) test for proxying via SOCKS4/5 and HTTP CONNECT?
 
 }

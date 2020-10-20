@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 public abstract class Action<T extends Action> extends ObjectWithJsonToString {
     private int hashCode;
     private Delay delay;
+    private String expectationId;
 
     /**
      * The delay before responding with this request as a Delay object, for example new Delay(TimeUnit.SECONDS, 3)
@@ -27,8 +28,8 @@ public abstract class Action<T extends Action> extends ObjectWithJsonToString {
     /**
      * The delay before responding with this request as a Delay object, for example new Delay(TimeUnit.SECONDS, 3)
      *
-     * @param timeUnit a the time unit, for example TimeUnit.SECONDS
-     * @param value    a the number of time units to delay the response
+     * @param timeUnit the time unit, for example TimeUnit.SECONDS
+     * @param value    the number of time units to delay the response
      */
     public T withDelay(TimeUnit timeUnit, long value) {
         this.delay = new Delay(timeUnit, value);
@@ -37,6 +38,17 @@ public abstract class Action<T extends Action> extends ObjectWithJsonToString {
 
     public Delay getDelay() {
         return delay;
+    }
+
+    @JsonIgnore
+    public String getExpectationId() {
+        return expectationId;
+    }
+
+    @JsonIgnore
+    public Action setExpectationId(String expectationId) {
+        this.expectationId = expectationId;
+        return this;
     }
 
     @JsonIgnore
