@@ -134,9 +134,9 @@ public class VerificationTimesTest {
     @Test
     public void shouldGenerateCorrectToString() {
         // then
-        assertThat(never().toString(), is("exactly never"));
+        assertThat(never().toString(), is("exactly 0 times"));
         assertThat(once().toString(), is("exactly once"));
-        assertThat(exactly(0).toString(), is("exactly never"));
+        assertThat(exactly(0).toString(), is("exactly 0 times"));
         assertThat(exactly(1).toString(), is("exactly once"));
         assertThat(exactly(2).toString(), is("exactly 2 times"));
         assertThat(atLeast(0).toString(), is("at least 0 times"));

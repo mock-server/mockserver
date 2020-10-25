@@ -59,9 +59,7 @@ public class VerificationTimes extends ObjectWithReflectiveEqualsHashCodeToStrin
         String string = "";
         if (atLeast == atMost) {
             string += "exactly ";
-            if (atMost == 0) {
-                string += "never";
-            } else if (atMost == 1) {
+            if (atMost == 1) {
                 string += "once";
             } else {
                 string += atMost + " times";
