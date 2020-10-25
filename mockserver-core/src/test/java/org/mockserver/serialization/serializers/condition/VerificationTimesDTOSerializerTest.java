@@ -31,6 +31,21 @@ public class VerificationTimesDTOSerializerTest {
     }
 
     @Test
+    public void shouldSerializeNever() throws JsonProcessingException {
+    assertThat(ObjectMapperFactory
+                .createObjectMapper(true)
+                .writeValueAsString(
+                    new VerificationTimesDTO(
+                        never()
+                    )
+                ),
+            is("{" + NEW_LINE +
+                "  \"atLeast\" : 0," + NEW_LINE +
+                "  \"atMost\" : 0" + NEW_LINE +
+                "}"));
+    }
+
+    @Test
     public void shouldSerializeOnce() throws JsonProcessingException {
         assertThat(ObjectMapperFactory
                 .createObjectMapper(true)
