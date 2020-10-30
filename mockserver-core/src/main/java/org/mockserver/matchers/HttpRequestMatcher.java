@@ -12,7 +12,7 @@ public interface HttpRequestMatcher extends Matcher<RequestDefinition> {
 
     boolean matches(final RequestDefinition request);
 
-    boolean matches(MatchDifference matchDifference, RequestDefinition httpRequest);
+    boolean matches(MatchDifference context, RequestDefinition httpRequest);
 
     Expectation getExpectation();
 

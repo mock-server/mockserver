@@ -4505,13 +4505,13 @@ public class HttpRequestsPropertiesMatcherTest {
                 .withOperationId("")
         ));
         HttpRequest httpRequest = request();
-        MatchDifference matchDifference = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
 
         // then
-        thenMatchesEmptyFieldDifferences(matchDifference, matches, true);
+        thenMatchesEmptyFieldDifferences(context, matches, true);
     }
 
     // SECURITY SCHEMES
@@ -5964,13 +5964,13 @@ public class HttpRequestsPropertiesMatcherTest {
                 .withOperationId(null)
         ));
         HttpRequest httpRequest = request();
-        MatchDifference matchDifference = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
 
         // then
-        thenMatchesEmptyFieldDifferences(matchDifference, matches, true);
+        thenMatchesEmptyFieldDifferences(context, matches, true);
     }
 
     @Test
@@ -6053,13 +6053,13 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("GET")
             .withPath("/pets")
             .withQueryStringParameter("limit", "10");
-        MatchDifference matchDifference = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
 
         // then
-        thenMatchesEmptyFieldDifferences(matchDifference, matches, true);
+        thenMatchesEmptyFieldDifferences(context, matches, true);
     }
 
     @Test
@@ -6076,13 +6076,13 @@ public class HttpRequestsPropertiesMatcherTest {
             .withPath("/pets/12345")
             .withHeader("X-Request-ID", UUID.randomUUID().toString())
             .withHeader("Other-Header", UUID.randomUUID().toString());
-        MatchDifference matchDifference = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
 
         // then
-        thenMatchesEmptyFieldDifferences(matchDifference, matches, true);
+        thenMatchesEmptyFieldDifferences(context, matches, true);
     }
 
     @Test
@@ -6098,13 +6098,13 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("GET")
             .withPath("/pets")
             .withQueryStringParameter("limit", "10");
-        MatchDifference matchDifference = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
 
         // then
-        thenMatchesEmptyFieldDifferences(matchDifference, matches, true);
+        thenMatchesEmptyFieldDifferences(context, matches, true);
     }
 
     @Test
@@ -6120,13 +6120,13 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("GET")
             .withPath("/pets")
             .withQueryStringParameter("limit", "10");
-        MatchDifference matchDifference = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
 
         // then
-        thenMatchesEmptyFieldDifferences(matchDifference, matches, true);
+        thenMatchesEmptyFieldDifferences(context, matches, true);
     }
 
     @Test
@@ -6142,13 +6142,13 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("GET")
             .withPath("/pets")
             .withQueryStringParameter("limit", "10");
-        MatchDifference matchDifference = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
 
         // then
-        thenMatchesEmptyFieldDifferences(matchDifference, matches, true);
+        thenMatchesEmptyFieldDifferences(context, matches, true);
     }
 
     @Test
@@ -6164,13 +6164,13 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("GET")
             .withPath("/pets")
             .withQueryStringParameter("limit", "10");
-        MatchDifference matchDifference = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
 
         // then
-        thenMatchesEmptyFieldDifferences(matchDifference, matches, true);
+        thenMatchesEmptyFieldDifferences(context, matches, true);
     }
 
     @Test
@@ -6186,15 +6186,15 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("GET")
             .withPath("/pets")
             .withQueryStringParameter("limit", "10");
-        MatchDifference matchDifference = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
 
         // then
         assertThat(matches, is(false));
-        assertThat(matchDifference.getDifferences(METHOD), nullValue());
-        assertThat(matchDifference.getDifferences(PATH), containsInAnyOrder(
+        assertThat(context.getDifferences(METHOD), nullValue());
+        assertThat(context.getDifferences(PATH), containsInAnyOrder(
             "  string or regex match failed expected:" + NEW_LINE +
                 NEW_LINE +
                 "    /pets/.*" + NEW_LINE +
@@ -6204,14 +6204,14 @@ public class HttpRequestsPropertiesMatcherTest {
                 "    /pets" + NEW_LINE,
             "  expected path /pets/{petId} has 2 parts but path /pets has 1 part "
         ));
-        assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
-        assertThat(matchDifference.getDifferences(COOKIES), nullValue());
-        assertThat(matchDifference.getDifferences(HEADERS), nullValue());
-        assertThat(matchDifference.getDifferences(BODY), nullValue());
-        assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
-        assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
-        assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(OPENAPI), nullValue());
+        assertThat(context.getDifferences(QUERY_PARAMETERS), nullValue());
+        assertThat(context.getDifferences(COOKIES), nullValue());
+        assertThat(context.getDifferences(HEADERS), nullValue());
+        assertThat(context.getDifferences(BODY), nullValue());
+        assertThat(context.getDifferences(SSL_MATCHES), nullValue());
+        assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
+        assertThat(context.getDifferences(OPERATION), nullValue());
+        assertThat(context.getDifferences(OPENAPI), nullValue());
     }
 
     @Test
@@ -6227,13 +6227,13 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("GET")
             .withPath("/pets")
             .withQueryStringParameter("limit", "10");
-        MatchDifference matchDifference = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(httpRequest);
 
         // when
         boolean matches = httpRequestsPropertiesMatcher.matches(httpRequest);
 
         // then
-        thenMatchesEmptyFieldDifferences(matchDifference, matches, false);
+        thenMatchesEmptyFieldDifferences(context, matches, false);
     }
 
     @Test
@@ -6249,29 +6249,29 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("PUT")
             .withPath("/pets")
             .withQueryStringParameter("limit", "10");
-        MatchDifference matchDifference = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
 
         // then
         assertThat(matches, is(false));
-        assertThat(matchDifference.getDifferences(METHOD), containsInAnyOrder("  string or regex match failed expected:" + NEW_LINE +
+        assertThat(context.getDifferences(METHOD), containsInAnyOrder("  string or regex match failed expected:" + NEW_LINE +
             NEW_LINE +
             "    GET" + NEW_LINE +
             NEW_LINE +
             "   found:" + NEW_LINE +
             NEW_LINE +
             "    PUT" + NEW_LINE));
-        assertThat(matchDifference.getDifferences(PATH), nullValue());
-        assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
-        assertThat(matchDifference.getDifferences(COOKIES), nullValue());
-        assertThat(matchDifference.getDifferences(HEADERS), nullValue());
-        assertThat(matchDifference.getDifferences(BODY), nullValue());
-        assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
-        assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
-        assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(OPENAPI), nullValue());
+        assertThat(context.getDifferences(PATH), nullValue());
+        assertThat(context.getDifferences(QUERY_PARAMETERS), nullValue());
+        assertThat(context.getDifferences(COOKIES), nullValue());
+        assertThat(context.getDifferences(HEADERS), nullValue());
+        assertThat(context.getDifferences(BODY), nullValue());
+        assertThat(context.getDifferences(SSL_MATCHES), nullValue());
+        assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
+        assertThat(context.getDifferences(OPERATION), nullValue());
+        assertThat(context.getDifferences(OPENAPI), nullValue());
     }
 
     @Test
@@ -6287,15 +6287,15 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("GET")
             .withPath("/wrong")
             .withQueryStringParameter("limit", "10");
-        MatchDifference matchDifference = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
 
         // then
         assertThat(matches, is(false));
-        assertThat(matchDifference.getDifferences(METHOD), nullValue());
-        assertThat(matchDifference.getDifferences(PATH), containsInAnyOrder(
+        assertThat(context.getDifferences(METHOD), nullValue());
+        assertThat(context.getDifferences(PATH), containsInAnyOrder(
             "  string or regex match failed expected:" + NEW_LINE +
                 NEW_LINE +
                 "    /pets/.*" + NEW_LINE +
@@ -6305,14 +6305,14 @@ public class HttpRequestsPropertiesMatcherTest {
                 "    /wrong" + NEW_LINE,
             "  expected path /pets/{petId} has 2 parts but path /wrong has 1 part "
         ));
-        assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
-        assertThat(matchDifference.getDifferences(COOKIES), nullValue());
-        assertThat(matchDifference.getDifferences(HEADERS), nullValue());
-        assertThat(matchDifference.getDifferences(BODY), nullValue());
-        assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
-        assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
-        assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(OPENAPI), nullValue());
+        assertThat(context.getDifferences(QUERY_PARAMETERS), nullValue());
+        assertThat(context.getDifferences(COOKIES), nullValue());
+        assertThat(context.getDifferences(HEADERS), nullValue());
+        assertThat(context.getDifferences(BODY), nullValue());
+        assertThat(context.getDifferences(SSL_MATCHES), nullValue());
+        assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
+        assertThat(context.getDifferences(OPERATION), nullValue());
+        assertThat(context.getDifferences(OPENAPI), nullValue());
     }
 
     @Test
@@ -6328,18 +6328,18 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("GET")
             .withPath("/some/path")
             .withQueryStringParameter("limit", "10");
-        MatchDifference matchDifference = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
 
         // then
         assertThat(matches, is(false));
-        assertThat(matchDifference.getDifferences(METHOD), nullValue());
-        assertThat(matchDifference.getDifferences(PATH), nullValue());
-        assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
-        assertThat(matchDifference.getDifferences(COOKIES), nullValue());
-        assertThat(matchDifference.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:" + NEW_LINE +
+        assertThat(context.getDifferences(METHOD), nullValue());
+        assertThat(context.getDifferences(PATH), nullValue());
+        assertThat(context.getDifferences(QUERY_PARAMETERS), nullValue());
+        assertThat(context.getDifferences(COOKIES), nullValue());
+        assertThat(context.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:" + NEW_LINE +
             NEW_LINE +
             "    {" + NEW_LINE +
             "      \"keyMatchStyle\" : \"MATCHING_KEY\"," + NEW_LINE +
@@ -6361,11 +6361,11 @@ public class HttpRequestsPropertiesMatcherTest {
             "   failed because:" + NEW_LINE +
             NEW_LINE +
             "    none is not a subset" + NEW_LINE));
-        assertThat(matchDifference.getDifferences(BODY), nullValue());
-        assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
-        assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
-        assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(OPENAPI), nullValue());
+        assertThat(context.getDifferences(BODY), nullValue());
+        assertThat(context.getDifferences(SSL_MATCHES), nullValue());
+        assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
+        assertThat(context.getDifferences(OPERATION), nullValue());
+        assertThat(context.getDifferences(OPENAPI), nullValue());
     }
 
     @Test
@@ -6381,18 +6381,18 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("GET")
             .withPath("/some/path")
             .withQueryStringParameter("limit", "not_a_number");
-        MatchDifference matchDifference = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
 
         // then
         assertThat(matches, is(false));
-        assertThat(matchDifference.getDifferences(METHOD), nullValue());
-        assertThat(matchDifference.getDifferences(PATH), nullValue());
-        assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
-        assertThat(matchDifference.getDifferences(COOKIES), nullValue());
-        assertThat(matchDifference.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:" + NEW_LINE +
+        assertThat(context.getDifferences(METHOD), nullValue());
+        assertThat(context.getDifferences(PATH), nullValue());
+        assertThat(context.getDifferences(QUERY_PARAMETERS), nullValue());
+        assertThat(context.getDifferences(COOKIES), nullValue());
+        assertThat(context.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:" + NEW_LINE +
             NEW_LINE +
             "    {" + NEW_LINE +
             "      \"keyMatchStyle\" : \"MATCHING_KEY\"," + NEW_LINE +
@@ -6414,11 +6414,11 @@ public class HttpRequestsPropertiesMatcherTest {
             "   failed because:" + NEW_LINE +
             NEW_LINE +
             "    none is not a subset" + NEW_LINE));
-        assertThat(matchDifference.getDifferences(BODY), nullValue());
-        assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
-        assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
-        assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(OPENAPI), nullValue());
+        assertThat(context.getDifferences(BODY), nullValue());
+        assertThat(context.getDifferences(SSL_MATCHES), nullValue());
+        assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
+        assertThat(context.getDifferences(OPERATION), nullValue());
+        assertThat(context.getDifferences(OPENAPI), nullValue());
     }
 
     @Test
@@ -6433,14 +6433,14 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("GET")
             .withPath("/some/path")
             .withQueryStringParameter("limit", "not_a_number");
-        MatchDifference matchDifference = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
 
         // then
         assertThat(matches, is(false));
-        assertThat(matchDifference.getDifferences(PATH), containsInAnyOrder("  string or regex match failed expected:" + NEW_LINE +
+        assertThat(context.getDifferences(PATH), containsInAnyOrder("  string or regex match failed expected:" + NEW_LINE +
                 NEW_LINE +
                 "    /pets" + NEW_LINE +
                 NEW_LINE +
@@ -6454,7 +6454,7 @@ public class HttpRequestsPropertiesMatcherTest {
                 "   found:" + NEW_LINE +
                 NEW_LINE +
                 "    /some/path" + NEW_LINE));
-        assertThat(matchDifference.getDifferences(METHOD), containsInAnyOrder("  string or regex match failed expected:" + NEW_LINE +
+        assertThat(context.getDifferences(METHOD), containsInAnyOrder("  string or regex match failed expected:" + NEW_LINE +
                 NEW_LINE +
                 "    POST" + NEW_LINE +
                 NEW_LINE +
@@ -6468,9 +6468,9 @@ public class HttpRequestsPropertiesMatcherTest {
                 "   found:" + NEW_LINE +
                 NEW_LINE +
                 "    GET" + NEW_LINE));
-        assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
-        assertThat(matchDifference.getDifferences(COOKIES), nullValue());
-        assertThat(matchDifference.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:" + NEW_LINE +
+        assertThat(context.getDifferences(QUERY_PARAMETERS), nullValue());
+        assertThat(context.getDifferences(COOKIES), nullValue());
+        assertThat(context.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:" + NEW_LINE +
             NEW_LINE +
             "    {" + NEW_LINE +
             "      \"keyMatchStyle\" : \"MATCHING_KEY\"," + NEW_LINE +
@@ -6492,11 +6492,11 @@ public class HttpRequestsPropertiesMatcherTest {
             "   failed because:" + NEW_LINE +
             NEW_LINE +
             "    none is not a subset" + NEW_LINE));
-        assertThat(matchDifference.getDifferences(BODY), nullValue());
-        assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
-        assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
-        assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(OPENAPI), nullValue());
+        assertThat(context.getDifferences(BODY), nullValue());
+        assertThat(context.getDifferences(SSL_MATCHES), nullValue());
+        assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
+        assertThat(context.getDifferences(OPERATION), nullValue());
+        assertThat(context.getDifferences(OPENAPI), nullValue());
     }
 
     @Test
@@ -6517,18 +6517,18 @@ public class HttpRequestsPropertiesMatcherTest {
                 "    \"name\": \"scruffles\", " + NEW_LINE +
                 "    \"tag\": \"dog\"" + NEW_LINE +
                 "}"));
-        MatchDifference matchDifference = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
 
         // then
         assertThat(matches, is(false));
-        assertThat(matchDifference.getDifferences(METHOD), nullValue());
-        assertThat(matchDifference.getDifferences(PATH), nullValue());
-        assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
-        assertThat(matchDifference.getDifferences(COOKIES), nullValue());
-        assertThat(matchDifference.getDifferences(HEADERS), nullValue());
+        assertThat(context.getDifferences(METHOD), nullValue());
+        assertThat(context.getDifferences(PATH), nullValue());
+        assertThat(context.getDifferences(QUERY_PARAMETERS), nullValue());
+        assertThat(context.getDifferences(COOKIES), nullValue());
+        assertThat(context.getDifferences(HEADERS), nullValue());
         String bodyError = "  json schema match failed expected:" + NEW_LINE +
             NEW_LINE +
             "    {" + NEW_LINE +
@@ -6561,11 +6561,11 @@ public class HttpRequestsPropertiesMatcherTest {
             "    2 errors:" + NEW_LINE +
             "     - field: \"/id\" for schema: \"/properties/id\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])\"" + NEW_LINE +
             "     - schema: \"/properties/id\" has error: \"format attribute \"int64\" not supported\"" + NEW_LINE;
-        assertThat(matchDifference.getDifferences(BODY), containsInAnyOrder(bodyError, bodyError));
-        assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
-        assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
-        assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(OPENAPI), nullValue());
+        assertThat(context.getDifferences(BODY), containsInAnyOrder(bodyError, bodyError));
+        assertThat(context.getDifferences(SSL_MATCHES), nullValue());
+        assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
+        assertThat(context.getDifferences(OPERATION), nullValue());
+        assertThat(context.getDifferences(OPENAPI), nullValue());
     }
 
     @Test
@@ -6585,10 +6585,10 @@ public class HttpRequestsPropertiesMatcherTest {
                 "    \"name\": \"scruffles\", " + NEW_LINE +
                 "    \"tag\": \"dog\"" + NEW_LINE +
                 "}"));
-        MatchDifference matchDifference = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
 
         // then
         assertThat(matches, is(false));
@@ -6599,11 +6599,11 @@ public class HttpRequestsPropertiesMatcherTest {
             "   found:" + NEW_LINE +
             NEW_LINE +
             "    POST" + NEW_LINE;
-        assertThat(matchDifference.getDifferences(METHOD), containsInAnyOrder(methodError, methodError, methodError));
-        assertThat(matchDifference.getDifferences(PATH), nullValue());
-        assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
-        assertThat(matchDifference.getDifferences(COOKIES), nullValue());
-        assertThat(matchDifference.getDifferences(HEADERS), nullValue());
+        assertThat(context.getDifferences(METHOD), containsInAnyOrder(methodError, methodError, methodError));
+        assertThat(context.getDifferences(PATH), nullValue());
+        assertThat(context.getDifferences(QUERY_PARAMETERS), nullValue());
+        assertThat(context.getDifferences(COOKIES), nullValue());
+        assertThat(context.getDifferences(HEADERS), nullValue());
         String bodyError = "  json schema match failed expected:" + NEW_LINE +
             NEW_LINE +
             "    {" + NEW_LINE +
@@ -6636,11 +6636,11 @@ public class HttpRequestsPropertiesMatcherTest {
             "    2 errors:" + NEW_LINE +
             "     - field: \"/id\" for schema: \"/properties/id\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])\"" + NEW_LINE +
             "     - schema: \"/properties/id\" has error: \"format attribute \"int64\" not supported\"" + NEW_LINE;
-        assertThat(matchDifference.getDifferences(BODY), containsInAnyOrder(bodyError, bodyError));
-        assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
-        assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
-        assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(OPENAPI), nullValue());
+        assertThat(context.getDifferences(BODY), containsInAnyOrder(bodyError, bodyError));
+        assertThat(context.getDifferences(SSL_MATCHES), nullValue());
+        assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
+        assertThat(context.getDifferences(OPERATION), nullValue());
+        assertThat(context.getDifferences(OPENAPI), nullValue());
     }
 
     @Test
@@ -6660,18 +6660,18 @@ public class HttpRequestsPropertiesMatcherTest {
                 "    \"name\": \"scruffles\", " + NEW_LINE +
                 "    \"tag\": \"dog\"" + NEW_LINE +
                 "}"));
-        MatchDifference matchDifference = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(httpRequest);
 
         // when
-        boolean matches = httpRequestsPropertiesMatcher.matches(matchDifference, httpRequest);
+        boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
 
         // then
         assertThat(matches, is(false));
-        assertThat(matchDifference.getDifferences(METHOD), nullValue());
-        assertThat(matchDifference.getDifferences(PATH), nullValue());
-        assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
-        assertThat(matchDifference.getDifferences(COOKIES), nullValue());
-        assertThat(matchDifference.getDifferences(HEADERS), nullValue());
+        assertThat(context.getDifferences(METHOD), nullValue());
+        assertThat(context.getDifferences(PATH), nullValue());
+        assertThat(context.getDifferences(QUERY_PARAMETERS), nullValue());
+        assertThat(context.getDifferences(COOKIES), nullValue());
+        assertThat(context.getDifferences(HEADERS), nullValue());
         String schemaValidationError = "  json schema match failed expected:" + NEW_LINE +
             NEW_LINE +
             "    {" + NEW_LINE +
@@ -6704,25 +6704,25 @@ public class HttpRequestsPropertiesMatcherTest {
             "    2 errors:" + NEW_LINE +
             "     - field: \"/id\" for schema: \"/properties/id\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])\"" + NEW_LINE +
             "     - schema: \"/properties/id\" has error: \"format attribute \"int64\" not supported\"" + NEW_LINE;
-        assertThat(matchDifference.getDifferences(BODY), containsInAnyOrder(schemaValidationError, schemaValidationError));
-        assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
-        assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
-        assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(OPENAPI), nullValue());
+        assertThat(context.getDifferences(BODY), containsInAnyOrder(schemaValidationError, schemaValidationError));
+        assertThat(context.getDifferences(SSL_MATCHES), nullValue());
+        assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
+        assertThat(context.getDifferences(OPERATION), nullValue());
+        assertThat(context.getDifferences(OPENAPI), nullValue());
     }
 
-    private void thenMatchesEmptyFieldDifferences(MatchDifference matchDifference, boolean matches, boolean expected) {
+    private void thenMatchesEmptyFieldDifferences(MatchDifference context, boolean matches, boolean expected) {
         assertThat(matches, is(expected));
-        assertThat(matchDifference.getDifferences(METHOD), nullValue());
-        assertThat(matchDifference.getDifferences(PATH), nullValue());
-        assertThat(matchDifference.getDifferences(QUERY_PARAMETERS), nullValue());
-        assertThat(matchDifference.getDifferences(COOKIES), nullValue());
-        assertThat(matchDifference.getDifferences(HEADERS), nullValue());
-        assertThat(matchDifference.getDifferences(BODY), nullValue());
-        assertThat(matchDifference.getDifferences(SSL_MATCHES), nullValue());
-        assertThat(matchDifference.getDifferences(KEEP_ALIVE), nullValue());
-        assertThat(matchDifference.getDifferences(OPERATION), nullValue());
-        assertThat(matchDifference.getDifferences(OPENAPI), nullValue());
+        assertThat(context.getDifferences(METHOD), nullValue());
+        assertThat(context.getDifferences(PATH), nullValue());
+        assertThat(context.getDifferences(QUERY_PARAMETERS), nullValue());
+        assertThat(context.getDifferences(COOKIES), nullValue());
+        assertThat(context.getDifferences(HEADERS), nullValue());
+        assertThat(context.getDifferences(BODY), nullValue());
+        assertThat(context.getDifferences(SSL_MATCHES), nullValue());
+        assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
+        assertThat(context.getDifferences(OPERATION), nullValue());
+        assertThat(context.getDifferences(OPENAPI), nullValue());
     }
 
 }

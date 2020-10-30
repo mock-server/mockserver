@@ -76,7 +76,7 @@ public abstract class AbstractHttpRequestMatcher extends NotMatcher<RequestDefin
     }
 
     @Override
-    public abstract boolean matches(MatchDifference matchDifference, RequestDefinition requestDefinition);
+    public abstract boolean matches(MatchDifference context, RequestDefinition requestDefinition);
 
     @Override
     public Expectation getExpectation() {

@@ -455,19 +455,19 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
     }
 
     @Override
-    public boolean matches(MatchDifference matchDifference, RequestDefinition requestDefinition) {
+    public boolean matches(MatchDifference context, RequestDefinition requestDefinition) {
         boolean result = false;
         if (httpRequestPropertiesMatchers != null && !httpRequestPropertiesMatchers.isEmpty()) {
             for (HttpRequestPropertiesMatcher httpRequestPropertiesMatcher : httpRequestPropertiesMatchers) {
-                if (matchDifference == null) {
+                if (context == null) {
                     if (MockServerLogger.isEnabled(Level.TRACE) && requestDefinition instanceof HttpRequest) {
-                        matchDifference = new MatchDifference(requestDefinition);
+                        context = new MatchDifference(requestDefinition);
                     }
-                    result = httpRequestPropertiesMatcher.matches(matchDifference, requestDefinition);
+                    result = httpRequestPropertiesMatcher.matches(context, requestDefinition);
                 } else {
-                    MatchDifference singleMatchDifference = new MatchDifference(matchDifference.getHttpRequest());
+                    MatchDifference singleMatchDifference = new MatchDifference(context.getHttpRequest());
                     result = httpRequestPropertiesMatcher.matches(singleMatchDifference, requestDefinition);
-                    matchDifference.addDifferences(singleMatchDifference.getAllDifferences());
+                    context.addDifferences(singleMatchDifference.getAllDifferences());
                 }
                 if (result) {
                     break;

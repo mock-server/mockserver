@@ -195,11 +195,11 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
         this.sslMatcher = new BooleanMatcher(mockServerLogger, isSsl);
     }
 
-    public boolean matches(final MatchDifference matchDifference, final RequestDefinition requestDefinition) {
+    public boolean matches(final MatchDifference context, final RequestDefinition requestDefinition) {
         if (requestDefinition instanceof HttpRequest) {
             HttpRequest request = (HttpRequest) requestDefinition;
             StringBuilder becauseBuilder = new StringBuilder();
-            boolean overallMatch = matches(matchDifference, request, becauseBuilder);
+            boolean overallMatch = matches(context, request, becauseBuilder);
             if (!controlPlaneMatcher) {
                 if (overallMatch) {
                     if (MockServerLogger.isEnabled(Level.INFO)) {
@@ -250,52 +250,52 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
         }
     }
 
-    private boolean matches(MatchDifference matchDifference, HttpRequest request, StringBuilder becauseBuilder) {
+    private boolean matches(MatchDifference context, HttpRequest request, StringBuilder becauseBuilder) {
         if (isActive()) {
             if (request == this.httpRequest) {
                 return true;
             } else if (this.httpRequest == null) {
                 return true;
             } else {
-                if (MockServerLogger.isEnabled(Level.TRACE) && matchDifference == null) {
-                    matchDifference = new MatchDifference(request);
+                if (MockServerLogger.isEnabled(Level.TRACE) && context == null) {
+                    context = new MatchDifference(request);
                 }
                 MatchDifferenceCount matchDifferenceCount = new MatchDifferenceCount(request);
                 if (request != null) {
-                    boolean methodMatches = StringUtils.isBlank(request.getMethod().getValue()) || matches(METHOD, matchDifference, methodMatcher, request.getMethod());
-                    if (failFast(methodMatcher, matchDifference, matchDifferenceCount, becauseBuilder, methodMatches, METHOD)) {
+                    boolean methodMatches = StringUtils.isBlank(request.getMethod().getValue()) || matches(METHOD, context, methodMatcher, request.getMethod());
+                    if (failFast(methodMatcher, context, matchDifferenceCount, becauseBuilder, methodMatches, METHOD)) {
                         return false;
                     }
 
-                    boolean pathMatches = StringUtils.isBlank(request.getPath().getValue()) || matches(PATH, matchDifference, pathMatcher, controlPlaneMatcher ? pathParametersParser.normalisePathWithParametersForMatching(request) : request.getPath());
+                    boolean pathMatches = StringUtils.isBlank(request.getPath().getValue()) || matches(PATH, context, pathMatcher, controlPlaneMatcher ? pathParametersParser.normalisePathWithParametersForMatching(request) : request.getPath());
                     Parameters pathParameters = null;
                     try {
                         pathParameters = controlPlaneMatcher ? pathParametersParser.extractPathParameters(request, httpRequest) : pathParametersParser.extractPathParameters(httpRequest, request);
                     } catch (IllegalArgumentException iae) {
                         if (!httpRequest.getPath().isBlank()) {
-                            if (matchDifference != null) {
-                                matchDifference.currentField(PATH);
-                                matchDifference.addDifference(mockServerLogger, iae.getMessage());
+                            if (context != null) {
+                                context.currentField(PATH);
+                                context.addDifference(mockServerLogger, iae.getMessage());
                             }
                             pathMatches = false;
                         }
                     }
-                    if (failFast(pathMatcher, matchDifference, matchDifferenceCount, becauseBuilder, pathMatches, PATH)) {
+                    if (failFast(pathMatcher, context, matchDifferenceCount, becauseBuilder, pathMatches, PATH)) {
                         return false;
                     }
 
-                    boolean bodyMatches = bodyMatches(matchDifference, request);
-                    if (failFast(bodyMatcher, matchDifference, matchDifferenceCount, becauseBuilder, bodyMatches, BODY)) {
+                    boolean bodyMatches = bodyMatches(context, request);
+                    if (failFast(bodyMatcher, context, matchDifferenceCount, becauseBuilder, bodyMatches, BODY)) {
                         return false;
                     }
 
-                    boolean headersMatch = matches(HEADERS, matchDifference, headerMatcher, request.getHeaders());
-                    if (failFast(headerMatcher, matchDifference, matchDifferenceCount, becauseBuilder, headersMatch, HEADERS)) {
+                    boolean headersMatch = matches(HEADERS, context, headerMatcher, request.getHeaders());
+                    if (failFast(headerMatcher, context, matchDifferenceCount, becauseBuilder, headersMatch, HEADERS)) {
                         return false;
                     }
 
-                    boolean cookiesMatch = matches(COOKIES, matchDifference, cookieMatcher, request.getCookies());
-                    if (failFast(cookieMatcher, matchDifference, matchDifferenceCount, becauseBuilder, cookiesMatch, COOKIES)) {
+                    boolean cookiesMatch = matches(COOKIES, context, cookieMatcher, request.getCookies());
+                    if (failFast(cookieMatcher, context, matchDifferenceCount, becauseBuilder, cookiesMatch, COOKIES)) {
                         return false;
                     }
 
@@ -305,27 +305,27 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                             expandedParameterDecoder.splitParameters(httpRequest.getPathParameters(), request.getPathParameters());
                         }
                         MultiValueMapMatcher pathParameterMatcher = controlPlaneMatcher ? new MultiValueMapMatcher(mockServerLogger, request.getPathParameters(), controlPlaneMatcher) : this.pathParameterMatcher;
-                        pathParametersMatches = matches(PATH_PARAMETERS, matchDifference, pathParameterMatcher, pathParameters);
+                        pathParametersMatches = matches(PATH_PARAMETERS, context, pathParameterMatcher, pathParameters);
                     }
-                    if (failFast(pathParameterMatcher, matchDifference, matchDifferenceCount, becauseBuilder, pathParametersMatches, PATH_PARAMETERS)) {
+                    if (failFast(pathParameterMatcher, context, matchDifferenceCount, becauseBuilder, pathParametersMatches, PATH_PARAMETERS)) {
                         return false;
                     }
 
                     if (!controlPlaneMatcher) {
                         expandedParameterDecoder.splitParameters(httpRequest.getQueryStringParameters(), request.getQueryStringParameters());
                     }
-                    boolean queryStringParametersMatches = matches(QUERY_PARAMETERS, matchDifference, queryStringParameterMatcher, request.getQueryStringParameters());
-                    if (failFast(queryStringParameterMatcher, matchDifference, matchDifferenceCount, becauseBuilder, queryStringParametersMatches, QUERY_PARAMETERS)) {
+                    boolean queryStringParametersMatches = matches(QUERY_PARAMETERS, context, queryStringParameterMatcher, request.getQueryStringParameters());
+                    if (failFast(queryStringParameterMatcher, context, matchDifferenceCount, becauseBuilder, queryStringParametersMatches, QUERY_PARAMETERS)) {
                         return false;
                     }
 
-                    boolean keepAliveMatches = matches(KEEP_ALIVE, matchDifference, keepAliveMatcher, request.isKeepAlive());
-                    if (failFast(keepAliveMatcher, matchDifference, matchDifferenceCount, becauseBuilder, keepAliveMatches, KEEP_ALIVE)) {
+                    boolean keepAliveMatches = matches(KEEP_ALIVE, context, keepAliveMatcher, request.isKeepAlive());
+                    if (failFast(keepAliveMatcher, context, matchDifferenceCount, becauseBuilder, keepAliveMatches, KEEP_ALIVE)) {
                         return false;
                     }
 
-                    boolean sslMatches = matches(SSL_MATCHES, matchDifference, sslMatcher, request.isSecure());
-                    if (failFast(sslMatcher, matchDifference, matchDifferenceCount, becauseBuilder, sslMatches, SSL_MATCHES)) {
+                    boolean sslMatches = matches(SSL_MATCHES, context, sslMatcher, request.isSecure());
+                    if (failFast(sslMatcher, context, matchDifferenceCount, becauseBuilder, sslMatches, SSL_MATCHES)) {
                         return false;
                     }
 
@@ -338,16 +338,16 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
         return false;
     }
 
-    private boolean failFast(Matcher<?> matcher, MatchDifference matchDifference, MatchDifferenceCount matchDifferenceCount, StringBuilder becauseBuilder, boolean fieldMatches, MatchDifference.Field fieldName) {
+    private boolean failFast(Matcher<?> matcher, MatchDifference context, MatchDifferenceCount matchDifferenceCount, StringBuilder becauseBuilder, boolean fieldMatches, MatchDifference.Field fieldName) {
         // update because builder
         if (!controlPlaneMatcher) {
             becauseBuilder
                 .append(NEW_LINE)
                 .append(fieldName.getName()).append(fieldMatches ? MATCHED : DID_NOT_MATCH);
-            if (matchDifference != null && matchDifference.getDifferences(fieldName) != null && !matchDifference.getDifferences(fieldName).isEmpty()) {
+            if (context != null && context.getDifferences(fieldName) != null && !context.getDifferences(fieldName).isEmpty()) {
                 becauseBuilder
                     .append(COLON_NEW_LINES)
-                    .append(Joiner.on(NEW_LINE).join(matchDifference.getDifferences(fieldName)));
+                    .append(Joiner.on(NEW_LINE).join(context.getDifferences(fieldName)));
             }
         }
         if (!fieldMatches) {
