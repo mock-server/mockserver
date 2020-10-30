@@ -14,11 +14,7 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
 
-import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
-import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
-import static org.mockserver.model.Header.header;
-import static org.mockserver.model.HttpResponse.response;
-import static org.slf4j.event.Level.DEBUG;
+import static org.slf4j.event.Level.TRACE;
 import static org.slf4j.event.Level.WARN;
 
 /**
@@ -76,10 +72,10 @@ public class NettyResponseWriter extends ResponseWriter {
                             .close()
                             .addListener(closeFuture -> {
                                 if (disconnectFuture.isSuccess()) {
-                                    if (MockServerLogger.isEnabled(DEBUG)) {
+                                    if (MockServerLogger.isEnabled(TRACE)) {
                                         mockServerLogger
                                             .logEvent(new LogEntry()
-                                                .setLogLevel(DEBUG)
+                                                .setLogLevel(TRACE)
                                                 .setMessageFormat("disconnected and closed socket " + future.channel().localAddress())
                                             );
                                     }
