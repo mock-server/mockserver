@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lmax.disruptor.EventTranslator;
 import org.mockserver.log.TimeService;
 import org.mockserver.matchers.HttpRequestMatcher;
+import org.mockserver.matchers.MatchDifference;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
@@ -182,7 +183,8 @@ public class LogEntry implements EventTranslator<LogEntry> {
             return true;
         }
         for (RequestDefinition httpRequest : httpRequests) {
-            if (matcher.matches(httpRequest.cloneWithLogCorrelationId())) {
+            RequestDefinition request = httpRequest.cloneWithLogCorrelationId();
+            if (matcher.matches(type == LogMessageType.RECEIVED_REQUEST ? new MatchDifference(request) : null, request)) {
                 return true;
             }
         }

@@ -257,9 +257,6 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             } else if (this.httpRequest == null) {
                 return true;
             } else {
-                if (MockServerLogger.isEnabled(Level.TRACE) && context == null) {
-                    context = new MatchDifference(request);
-                }
                 MatchDifferenceCount matchDifferenceCount = new MatchDifferenceCount(request);
                 if (request != null) {
                     boolean methodMatches = StringUtils.isBlank(request.getMethod().getValue()) || matches(METHOD, context, methodMatcher, request.getMethod());

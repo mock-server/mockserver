@@ -46,8 +46,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
-import static org.mockserver.log.model.LogEntry.LogMessageType.FORWARDED_REQUEST;
-import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
+import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
@@ -371,7 +370,7 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
                             if (logEntryDTO != null) {
                                 if (logMessages.size() < UI_UPDATE_ITEM_LIMIT) {
                                     DashboardLogEntryDTO dashboardLogEntryDTO = logEntryDTO.setDescription(logMessagesDescriptionProcessor.description(logEntryDTO));
-                                    if (isNotBlank(logEntryDTO.getCorrelationId())) {
+                                    if (isNotBlank(logEntryDTO.getCorrelationId()) && logEntryDTO.getType() != TRACE) {
                                         DashboardLogEntryDTOGroup logEntryGroup = logEntryGroups.get(logEntryDTO.getCorrelationId());
                                         if (logEntryGroup == null) {
                                             logEntryGroup = new DashboardLogEntryDTOGroup(logMessagesDescriptionProcessor);

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - improved reliability and performance around stopping especially when stop is called multiple times for the same instance
+- improved grouping of logs and stopped TRACE level logs from being grouped which caused inconsistency in the UI
 
 ### Fixed
 - fixed recursive loop on stopAsync for ClientAndServer
