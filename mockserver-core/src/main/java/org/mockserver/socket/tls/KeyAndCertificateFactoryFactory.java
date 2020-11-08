@@ -34,12 +34,12 @@ public class KeyAndCertificateFactoryFactory {
                         .setArguments("<dependency>\n" +
                             "    <groupId>org.bouncycastle</groupId>\n" +
                             "    <artifactId>bcprov-jdk15on</artifactId>\n" +
-                            "    <version>1.66</version>\n" +
+                            "    <version>1.67</version>\n" +
                             "</dependency>\n" +
                             "<dependency>\n" +
                             "    <groupId>org.bouncycastle</groupId>\n" +
                             "    <artifactId>bcpkix-jdk15on</artifactId>\n" +
-                            "    <version>1.66</version>\n" +
+                            "    <version>1.67</version>\n" +
                             "</dependency>")
                 );
             }
