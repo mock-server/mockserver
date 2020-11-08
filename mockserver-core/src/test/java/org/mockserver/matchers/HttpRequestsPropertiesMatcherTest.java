@@ -14,6 +14,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.MatchDifference.Field.*;
@@ -6036,7 +6037,7 @@ public class HttpRequestsPropertiesMatcherTest {
             // then
             fail("expected exception");
         } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec, Unable to read location `org/mockserver/mock/does_not_exist.json`"));
+            assertThat(iae.getMessage(), containsString("Unable to load API spec, Unable to read location `org/mockserver/mock/does_not_exist.json`"));
         }
     }
 
