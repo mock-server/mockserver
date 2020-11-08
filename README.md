@@ -65,6 +65,7 @@ Docker Hub contains the following artifacts:
 ##### Helm Chart
 
 * [MockServer Helm Chart](helm/mockserver/README.md) - a Helm Chart that installs MockServer to a Kubernetes cluster, available versions:
+  * [5.11.2](http://www.mock-server.com/mockserver-5.11.2.tgz)
   * [5.11.1](http://www.mock-server.com/mockserver-5.11.1.tgz)
   * [5.11.0](http://www.mock-server.com/mockserver-5.11.0.tgz)
   * [5.10.0](http://www.mock-server.com/mockserver-5.10.0.tgz)
@@ -91,6 +92,7 @@ Docker Hub contains the following artifacts:
 ##### Previous Versions
 Version | Date        | Git & Docker Tag / Git Hash                                                                                                                                                                 | Documentation                                                         | Java API                                                              | REST API
 :-------|:------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:--------------------------------------------------------------------- |:--------------------------------------------------------------------- |:---------------------------------------------------------------------------------------
+5.11.2  | 08 Nov 2020 | [mockserver-5.11.2](https://github.com/mock-server/mockserver/tree/mockserver-5.11.2) / [eb84f2](https://github.com/mock-server/mockserver/commit/eb84f20b9485233c6926e4067e1e8de652a112d6) | [Documentation](http://mock-server.com)	                            | [Java API](http://mock-server.com/versions/5.11.2/apidocs/index.html) | [5.11.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x)
 5.11.1  | 22 Jul 2020 | [mockserver-5.11.1](https://github.com/mock-server/mockserver/tree/mockserver-5.11.1) / [361e5c](https://github.com/mock-server/mockserver/commit/361e5c74e5c7fd906957edbd5a46bb27582e4f5c) | [Documentation](http://mock-server.com)	                            | [Java API](http://mock-server.com/versions/5.11.1/apidocs/index.html) | [5.11.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x)
 5.11.0  | 08 Jul 2020 | [mockserver-5.11.0](https://github.com/mock-server/mockserver/tree/mockserver-5.11.0) / [756758](https://github.com/mock-server/mockserver/commit/756758ebe3d032f3852411a9bb91c3c66d819ddc) | [Documentation](http://mock-server.com)	                            | [Java API](http://mock-server.com/versions/5.11.0/apidocs/index.html) | [5.11.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x)
 5.10.0  | 24 Mar 2020 | [mockserver-5.10.0](https://github.com/mock-server/mockserver/tree/mockserver-5.10.0) / [14124d](https://github.com/mock-server/mockserver/commit/14124d32ef96c207cc73cc5334c1d7236d8c7640) | [Documentation](http://5-10.mock-server.com)	                        | [Java API](http://mock-server.com/versions/5.10.0/apidocs/index.html) | [5.10.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.10.x)
@@ -121,7 +123,7 @@ Version | Date        | Git & Docker Tag / Git Hash                             
 ### Issues
 
 If you have any problems, please [check the project issues](https://github.com/mock-server/mockserver/issues?state=open) and avoid opening issues that have already been fixed.  When you open an issue please provide the following information:
-- MockServer version (i.e. 5.11.1)
+- MockServer version (i.e. 5.11.2)
 - How your running the MockServer (i.e maven plugin, docker, etc)
 - MockServer log output, at INFO level (or higher)
 - What the error is

@@ -1,7 +1,7 @@
 apiVersion: v1
 name: mockserver-config
-version: "5.11.1"
-appVersion: "5.11.1"
+version: "5.11.2"
+appVersion: "5.11.2"
 description: Chart to provide config to MockServer
 keywords:
   - mocking
