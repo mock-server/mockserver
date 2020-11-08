@@ -137,5 +137,3 @@ Feature requests are submitted to [github issues](https://github.com/mock-server
 
 ### Maintainers
 * [James D Bloom](http://blog.jamesdbloom.com)
-
-[![Analytics](https://ga-beacon.appspot.com/UA-32687194-4/mockserver/README.md)](https://github.com/igrigorik/ga-beacon)
