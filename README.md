@@ -3,17 +3,15 @@ MockServer &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [![Tweet
 [![GitHub stars](https://img.shields.io/github/stars/mock-server/mockserver.svg)](https://github.com/mock-server/mockserver/stargazers)&nbsp;<a href="https://trello.com/b/dsfTCP46/mockserver"><img height="20px" width="47px" src="http://mock-server.com/images/trello_badge.png" alt="Trello Backlog"></a>&nbsp;&nbsp;<a height="40px" width="66px" href="https://join-mock-server-slack.herokuapp.com"><img height="40px" src="http://mock-server.com/images/slack-logo-slim.png" alt="Join Slack"></a>
 =====
 
-mock server <join.mock.server@gmail.com>
-
-# Documentation
+### Documentation
 
 For usage guide please see: [www.mock-server.com](http://www.mock-server.com/)
 
-# Change Log
+### Change Log
 
 Please see: [Change Log](https://github.com/mock-server/mockserver/blob/master/changelog.md)
 
-# Community
+### Community
 
 <table>
     <tr> 
@@ -34,9 +32,9 @@ Please see: [Change Log](https://github.com/mock-server/mockserver/blob/master/c
     </tr>
 </table>
 
-# Versions
+### Versions
 
-### Maven Central [![mockserver](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-netty/badge.svg?style=flat)](http://search.maven.org/#search%7Cga%7C1%7Cmockserver)
+##### Maven Central [![mockserver](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-netty/badge.svg?style=flat)](http://search.maven.org/#search%7Cga%7C1%7Cmockserver)
 
 Maven Central contains the following MockServer artifacts:
 
@@ -49,7 +47,7 @@ Maven Central contains the following MockServer artifacts:
 
 In addition MockServer SNAPSHOT artifacts can also be found on [Sonatype](https://oss.sonatype.org/index.html#nexus-search;quick~org.mock-server).
 
-### Node Module & Grunt Plugin
+##### Node Module & Grunt Plugin
 
 NPM Registry contains the following module:
 
@@ -58,13 +56,13 @@ NPM Registry contains the following module:
 * [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js client for both the MockServer and the proxy 
     [![mockserver-client-node](https://nodei.co/npm/mockserver-client.png?downloads=true)](https://www.npmjs.org/package/mockserver-client)
 
-### Docker Hub
+##### Docker Hub
 
 Docker Hub contains the following artifacts:
 
 * [MockServer Docker Container](https://hub.docker.com/r/mockserver/mockserver/) - a Docker container containing the Netty MockServer and proxy
 
-### Helm Chart
+##### Helm Chart
 
 * [MockServer Helm Chart](helm/mockserver/README.md) - a Helm Chart that installs MockServer to a Kubernetes cluster, available versions:
   * [5.11.1](http://www.mock-server.com/mockserver-5.11.1.tgz)
@@ -84,13 +82,13 @@ Docker Hub contains the following artifacts:
   * [5.4.1](http://www.mock-server.com/mockserver-5.4.1.tgz) 
   * [5.3.0](http://www.mock-server.com/mockserver-5.3.0.tgz)
 
-### MockServer Clients
+##### MockServer Clients
 
 * [mockserver-client-ruby ![mockserver-client](https://badge.fury.io/rb/mockserver-client.png)](https://rubygems.org/gems/mockserver-client) - Ruby client for both the MockServer and the proxy 
 * [mockserver-client-java](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client-java) - a Java client for both the MockServer and the proxy 
 * [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js and [browser](https://raw.githubusercontent.com/mock-server/mockserver-client-node/mockserver-5.10.0/mockServerClient.js) client for both the MockServer and the proxy
 
-### Document
+##### Previous Versions
 Version | Date        | Git & Docker Tag / Git Hash                                                                                                                                                                 | Documentation                                                         | Java API                                                              | REST API
 :-------|:------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:--------------------------------------------------------------------- |:--------------------------------------------------------------------- |:---------------------------------------------------------------------------------------
 5.11.1  | 22 Jul 2020 | [mockserver-5.11.1](https://github.com/mock-server/mockserver/tree/mockserver-5.11.1) / [361e5c](https://github.com/mock-server/mockserver/commit/361e5c74e5c7fd906957edbd5a46bb27582e4f5c) | [Documentation](http://mock-server.com)	                            | [Java API](http://mock-server.com/versions/5.11.1/apidocs/index.html) | [5.11.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x)
@@ -120,7 +118,7 @@ Version | Date        | Git & Docker Tag / Git Hash                             
 4.1.0   | 30 Nov 2017 | [mockserver-4.1.0](https://github.com/mock-server/mockserver/tree/mockserver-4.1.0)   / [4e37b2](https://github.com/mock-server/mockserver/commit/4e37b27b9b1bc786d0b5f53d5f1a39dd457f5d34) | [Documentation](https://4-1.mock-server.com)                          | [Java API](http://mock-server.com/versions/4.1.0/apidocs/index.html)  | [4.x.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/4.x.x)
 4.0.0   | 28 Nov 2017 | [mockserver-4.0.0](https://github.com/mock-server/mockserver/tree/mockserver-4.0.0)   / [8b2455](https://github.com/mock-server/mockserver/commit/8b24553c6b7aabbe4ef5e99b37449330f5b908d7) | [Documentation](https://4-0.mock-server.com)                          | [Java API](http://mock-server.com/versions/4.0.0/apidocs/index.html)  | [4.x.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/4.x.x)
 
-# Issues
+### Issues
 
 If you have any problems, please [check the project issues](https://github.com/mock-server/mockserver/issues?state=open) and avoid opening issues that have already been fixed.  When you open an issue please provide the following information:
 - MockServer version (i.e. 5.11.1)
@@ -129,15 +127,15 @@ If you have any problems, please [check the project issues](https://github.com/m
 - What the error is
 - What you are trying to do
 
-# Contributions
+### Contributions
 
 Pull requests are, of course, very welcome! Please read our [contributing to the project](https://github.com/mock-server/mockserver/wiki/Contributing-to-the-project) guide first. Then head over to the [open issues](https://github.com/mock-server/mockserver/issues?state=open) to see what we need help with. Make sure you let us know if you intend to work on something. Also check out <a href="https://trello.com/b/dsfTCP46/mockserver" target="_blank"><img height="20px" src="http://mock-server.com/images/trello_badge-md.png" alt="Trello Backlog"></a> to see what is already in the backlog.
 
-# Feature Requests
+### Feature Requests
 
 Feature requests are submitted to [github issues](https://github.com/mock-server/mockserver/issues?state=open).  Once accepted they will be added to the <a href="https://trello.com/b/dsfTCP46/mockserver" target="_blank">backlog</a>.  Please check out <a href="https://trello.com/b/dsfTCP46/mockserver" target="_blank"><img height="20px" src="http://mock-server.com/images/trello_badge-md.png" alt="Trello Backlog"></a> to see what is already in the backlog.
 
-# Maintainers
+### Maintainers
 * [James D Bloom](http://blog.jamesdbloom.com)
 
 [![Analytics](https://ga-beacon.appspot.com/UA-32687194-4/mockserver/README.md)](https://github.com/igrigorik/ga-beacon)
