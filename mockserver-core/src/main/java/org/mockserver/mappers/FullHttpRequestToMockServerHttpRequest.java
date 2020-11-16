@@ -81,7 +81,7 @@ public class FullHttpRequestToMockServerHttpRequest {
 
     private void setQueryString(HttpRequest httpRequest, FullHttpRequest fullHttpRequest) {
         if (fullHttpRequest.uri().contains("?")) {
-            httpRequest.withQueryStringParameters(formParameterParser.retrieveFormParameters(fullHttpRequest.uri(), true));
+            httpRequest.withQueryStringParameters(formParameterParser.retrieveQueryParameters(fullHttpRequest.uri(), true));
         }
     }
 

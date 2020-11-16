@@ -55,7 +55,7 @@ public class HttpServletRequestToMockServerHttpRequestDecoder {
     private void setQueryString(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
         Parameters parameters;
         if (isNotBlank(httpServletRequest.getQueryString())) {
-            parameters = formParameterParser.retrieveFormParameters(httpServletRequest.getQueryString(), false);
+            parameters = formParameterParser.retrieveQueryParameters(httpServletRequest.getQueryString(), false);
         } else {
             parameters = new Parameters();
         }
