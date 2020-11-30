@@ -63,7 +63,7 @@ public class HttpForwardTest {
                 "  \"host\" : \"some_host\"," + NEW_LINE +
                 "  \"port\" : 9090," + NEW_LINE +
                 "  \"scheme\" : \"HTTPS\"" + NEW_LINE +
-                "}", 
+                "}",
             forward()
                 .withHost("some_host")
                 .withPort(9090)
