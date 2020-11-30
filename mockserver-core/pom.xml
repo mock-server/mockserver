@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.mock-server</groupId>
@@ -228,6 +227,32 @@
             <artifactId>spring-web</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.skyscreamer</groupId>
+            <artifactId>jsonassert</artifactId>
+            <version>1.5.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
+<build>
+        <plugins>
+            <plugin>
+                <groupId>edu.illinois.cs</groupId>
+                <artifactId>testrunner-maven-plugin</artifactId>
+                <version>1.0</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>edu.illinois.cs</groupId>
+                        <artifactId>idflakies</artifactId>
+                        <version>1.0.1</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <className>edu.illinois.cs.dt.tools.detection.DetectorPlugin</className>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
+

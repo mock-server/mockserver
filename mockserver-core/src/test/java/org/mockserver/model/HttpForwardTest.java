@@ -1,7 +1,9 @@
 package org.mockserver.model;
 
 import junit.framework.TestCase;
+import org.json.JSONException;
 import org.junit.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.concurrent.TimeUnit;
 
@@ -15,6 +17,14 @@ import static org.mockserver.model.HttpForward.forward;
  */
 @SuppressWarnings({"RedundantSuppression", "deprecation"})
 public class HttpForwardTest {
+
+    public void assertJsonEqualsNonStrict(String json1, String json2) {
+        try {
+            JSONAssert.assertEquals(json1, json2, false);
+        } catch (JSONException jse) {
+            throw new IllegalArgumentException(jse.getMessage());
+        }
+    }
 
     @Test
     public void shouldAlwaysCreateNewObject() {
@@ -45,7 +55,7 @@ public class HttpForwardTest {
 
     @Test
     public void shouldReturnFormattedRequestInToString() {
-        TestCase.assertEquals("{" + NEW_LINE +
+        assertJsonEqualsNonStrict("{" + NEW_LINE +
                 "  \"delay\" : {" + NEW_LINE +
                 "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
                 "    \"value\" : 1" + NEW_LINE +
@@ -53,7 +63,7 @@ public class HttpForwardTest {
                 "  \"host\" : \"some_host\"," + NEW_LINE +
                 "  \"port\" : 9090," + NEW_LINE +
                 "  \"scheme\" : \"HTTPS\"" + NEW_LINE +
-                "}",
+                "}", 
             forward()
                 .withHost("some_host")
                 .withPort(9090)
