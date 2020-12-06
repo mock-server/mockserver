@@ -24,7 +24,7 @@ public class ClientAuthenticationDynamicCAMockingIntegrationTest extends Abstrac
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void startServer() throws Exception {
         // temporary directory
-        File temporaryDirectory = new File(File.createTempFile("random", "temp").getParent() + UUIDService.getUUID());
+        File temporaryDirectory = new File(File.createTempFile("random", "temp").getParent(), UUIDService.getUUID());
         temporaryDirectory.mkdirs();
 
         useBouncyCastleForKeyAndCertificateGeneration(true);
