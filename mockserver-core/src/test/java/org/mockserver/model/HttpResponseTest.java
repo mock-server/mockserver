@@ -1,7 +1,9 @@
 package org.mockserver.model;
 
+import org.json.JSONException;
 import org.junit.Test;
 import org.mockserver.serialization.Base64Converter;
+import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -26,6 +28,14 @@ import static org.mockserver.model.HttpResponse.response;
  * @author jamesdbloom
  */
 public class HttpResponseTest {
+
+    public void assertJsonEqualsNonStrict(String json1, String json2) {
+        try {
+            JSONAssert.assertEquals(json1, json2, false);
+        } catch (JSONException jse) {
+            throw new IllegalArgumentException(jse.getMessage());
+        }
+    }
 
     private final Base64Converter base64Converter = new Base64Converter();
 
@@ -156,7 +166,7 @@ public class HttpResponseTest {
 
     @Test
     public void shouldReturnFormattedRequestInToString() {
-        assertEquals("{" + NEW_LINE +
+        assertJsonEqualsNonStrict("{" + NEW_LINE +
                 "  \"statusCode\" : 666," + NEW_LINE +
                 "  \"reasonPhrase\" : \"randomPhrase\"," + NEW_LINE +
                 "  \"headers\" : {" + NEW_LINE +
