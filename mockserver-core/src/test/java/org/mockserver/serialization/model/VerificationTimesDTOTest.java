@@ -21,7 +21,14 @@ public class VerificationTimesDTOTest {
     @Test
     public void shouldBuildCorrectObject() {
         // when
-        VerificationTimes times = new VerificationTimesDTO(VerificationTimes.once()).buildObject();
+        VerificationTimes times = new VerificationTimesDTO(VerificationTimes.never()).buildObject();
+
+        // then
+        assertThat(times.getAtLeast(), is(0));
+        assertThat(times.getAtMost(), is(0));
+
+        // when
+        times = new VerificationTimesDTO(VerificationTimes.once()).buildObject();
 
         // then
         assertThat(times.getAtLeast(), is(1));

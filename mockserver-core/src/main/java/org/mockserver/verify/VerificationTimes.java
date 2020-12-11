@@ -15,6 +15,10 @@ public class VerificationTimes extends ObjectWithReflectiveEqualsHashCodeToStrin
         this.atLeast = atLeast;
     }
 
+    public static VerificationTimes never() {
+        return new VerificationTimes(0, 0);
+    }
+
     public static VerificationTimes once() {
         return new VerificationTimes(1, 1);
     }

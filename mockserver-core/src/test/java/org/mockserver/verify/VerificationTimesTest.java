@@ -32,6 +32,16 @@ public class VerificationTimesTest {
     }
 
     @Test
+    public void shouldCreateCorrectObjectForNever() {
+        // when
+        VerificationTimes times = never();
+
+        //then
+        assertThat(times.getAtLeast(), is(0));
+        assertThat(times.getAtMost(), is(0));
+    }
+
+    @Test
     public void shouldCreateCorrectObjectForOnce() {
         // when
         VerificationTimes times = once();
@@ -124,6 +134,7 @@ public class VerificationTimesTest {
     @Test
     public void shouldGenerateCorrectToString() {
         // then
+        assertThat(never().toString(), is("exactly 0 times"));
         assertThat(once().toString(), is("exactly once"));
         assertThat(exactly(0).toString(), is("exactly 0 times"));
         assertThat(exactly(1).toString(), is("exactly once"));
