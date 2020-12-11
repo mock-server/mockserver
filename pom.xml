@@ -62,7 +62,7 @@
         <httpcomponents.version>4.4.1</httpcomponents.version>
         <boucycastle.verion>1.67</boucycastle.verion>
         <spring.version>5.3.1</spring.version>
-        <mockito.version>3.6.0</mockito.version>
+        <mockito.version>3.6.28</mockito.version>
         <xmlunit.version>2.8.1</xmlunit.version>
         <skipTests>false</skipTests>
         <skipAssembly>false</skipAssembly>
