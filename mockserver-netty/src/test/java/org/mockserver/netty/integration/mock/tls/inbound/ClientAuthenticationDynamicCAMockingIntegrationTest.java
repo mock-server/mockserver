@@ -24,7 +24,7 @@ public class ClientAuthenticationDynamicCAMockingIntegrationTest extends Abstrac
     public static void startServer() throws Exception {
         tlsMutualAuthenticationRequired(true);
         dynamicallyCreateCertificateAuthorityCertificate(true);
-        File temporaryDirectory = new File(File.createTempFile("random", "temp").getParent() + UUIDService.getUUID());
+        File temporaryDirectory = new File(File.createTempFile("random", "temp").getParent(), UUIDService.getUUID());
         temporaryDirectory.mkdirs();
         directoryToSaveDynamicSSLCertificate(temporaryDirectory.getAbsolutePath());
         Main.main("-serverPort", "" + severHttpPort);
