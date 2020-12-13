@@ -1,7 +1,9 @@
 package org.mockserver.model;
 
+import org.json.JSONException;
 import org.junit.Test;
 import org.mockserver.matchers.MatchType;
+import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.nio.charset.StandardCharsets;
 
@@ -15,6 +17,14 @@ import static org.mockserver.model.JsonBody.json;
  * @author jamesdbloom
  */
 public class JsonBodyTest {
+
+    public void assertJsonEqualsNonStrict(String json1, String json2) {
+        try {
+            JSONAssert.assertEquals(json1, json2, false);
+        } catch (JSONException jse) {
+            throw new IllegalArgumentException(jse.getMessage());
+        }
+    }
 
     @Test
     public void shouldReturnValuesSetInConstructor() {
@@ -131,7 +141,7 @@ public class JsonBodyTest {
         JsonBody jsonBody = json(new TestObject());
 
         // then
-        assertThat(jsonBody.getValue(), is("{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}"));
+        assertJsonEqualsNonStrict(jsonBody.getValue(), "{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}");
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(ONLY_MATCHING_FIELDS));
         assertThat(jsonBody.getContentType(), is("application/json; charset=utf-8"));
@@ -143,7 +153,7 @@ public class JsonBodyTest {
         JsonBody jsonBody = json(new TestObject(), STRICT);
 
         // then
-        assertThat(jsonBody.getValue(), is("{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}"));
+        assertJsonEqualsNonStrict(jsonBody.getValue(), "{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}");
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(STRICT));
         assertThat(jsonBody.getContentType(), is("application/json; charset=utf-8"));
@@ -155,7 +165,7 @@ public class JsonBodyTest {
         JsonBody jsonBody = json(new TestObject(), StandardCharsets.UTF_16, STRICT);
 
         // then
-        assertThat(jsonBody.getValue(), is("{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}"));
+        assertJsonEqualsNonStrict(jsonBody.getValue(), "{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}");
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(STRICT));
         assertThat(jsonBody.getContentType(), is("application/json; charset=utf-16"));
@@ -167,7 +177,7 @@ public class JsonBodyTest {
         JsonBody jsonBody = json(new TestObject(), MediaType.parse("application/json; charset=utf-16"), STRICT);
 
         // then
-        assertThat(jsonBody.getValue(), is("{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}"));
+        assertJsonEqualsNonStrict(jsonBody.getValue(), "{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}");
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(STRICT));
         assertThat(jsonBody.getContentType(), is("application/json; charset=utf-16"));
@@ -179,7 +189,7 @@ public class JsonBodyTest {
         JsonBody jsonBody = json(new TestObject(), StandardCharsets.UTF_16, STRICT);
 
         // then
-        assertThat(jsonBody.getValue(), is("{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}"));
+        assertJsonEqualsNonStrict(jsonBody.getValue(), "{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}");
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(STRICT));
         assertThat(jsonBody.getContentType(), is("application/json; charset=utf-16"));
