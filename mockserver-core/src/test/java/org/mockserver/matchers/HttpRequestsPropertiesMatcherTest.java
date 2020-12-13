@@ -6346,28 +6346,6 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(context.getDifferences(PATH), nullValue());
         assertThat(context.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(context.getDifferences(COOKIES), nullValue());
-//        assertThat(context.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:" + NEW_LINE +
-//            NEW_LINE +
-//            "    {" + NEW_LINE +
-//            "      \"keyMatchStyle\" : \"MATCHING_KEY\"," + NEW_LINE +
-//            "      \"X-Request-ID\" : {" + NEW_LINE +
-//            "        \"parameterStyle\" : \"SIMPLE\"," + NEW_LINE +
-//            "        \"values\" : [ {" + NEW_LINE +
-//            "          \"schema\" : {" + NEW_LINE +
-//            "            \"type\" : \"string\"," + NEW_LINE +
-//            "            \"format\" : \"uuid\"" + NEW_LINE +
-//            "          }" + NEW_LINE +
-//            "        } ]" + NEW_LINE +
-//            "      }" + NEW_LINE +
-//            "    }" + NEW_LINE +
-//            NEW_LINE +
-//            "   found:" + NEW_LINE +
-//            NEW_LINE +
-//            "    none" + NEW_LINE +
-//            NEW_LINE +
-//            "   failed because:" + NEW_LINE +
-//            NEW_LINE +
-//            "    none is not a subset" + NEW_LINE));
         jsonCompareObject(context.getDifferences(HEADERS).toString(), "  multimap subset match failed expected:" + NEW_LINE +
             NEW_LINE +
             "    {" + NEW_LINE +
@@ -6446,29 +6424,6 @@ public class HttpRequestsPropertiesMatcherTest {
             NEW_LINE +
             "    none is not a subset" + NEW_LINE);
 
-
-//        assertThat(context.getDifferences(HEADERS), containsInAnyOrder("  multimap subset match failed expected:" + NEW_LINE +
-//            NEW_LINE +
-//            "    {" + NEW_LINE +
-//            "      \"keyMatchStyle\" : \"MATCHING_KEY\"," + NEW_LINE +
-//            "      \"X-Request-ID\" : {" + NEW_LINE +
-//            "        \"parameterStyle\" : \"SIMPLE\"," + NEW_LINE +
-//            "        \"values\" : [ {" + NEW_LINE +
-//            "          \"schema\" : {" + NEW_LINE +
-//            "            \"type\" : \"string\"," + NEW_LINE +
-//            "            \"format\" : \"uuid\"" + NEW_LINE +
-//            "          }" + NEW_LINE +
-//            "        } ]" + NEW_LINE +
-//            "      }" + NEW_LINE +
-//            "    }" + NEW_LINE +
-//            NEW_LINE +
-//            "   found:" + NEW_LINE +
-//            NEW_LINE +
-//            "    none" + NEW_LINE +
-//            NEW_LINE +
-//            "   failed because:" + NEW_LINE +
-//            NEW_LINE +
-//            "    none is not a subset" + NEW_LINE));
         assertThat(context.getDifferences(BODY), nullValue());
         assertThat(context.getDifferences(SSL_MATCHES), nullValue());
         assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
@@ -6617,7 +6572,6 @@ public class HttpRequestsPropertiesMatcherTest {
             "     - field: \"/id\" for schema: \"/properties/id\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])\"" + NEW_LINE +
             "     - schema: \"/properties/id\" has error: \"format attribute \"int64\" not supported\"" + NEW_LINE;
         jsonCompareObject(context.getDifferences(BODY).toString(), bodyError);
-//        assertThat(context.getDifferences(BODY), containsInAnyOrder(bodyError, bodyError));
         assertThat(context.getDifferences(SSL_MATCHES), nullValue());
         assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(context.getDifferences(OPERATION), nullValue());
@@ -6694,8 +6648,6 @@ public class HttpRequestsPropertiesMatcherTest {
             "     - schema: \"/properties/id\" has error: \"format attribute \"int64\" not supported\"" + NEW_LINE;
 
         jsonCompareObject(context.getDifferences(BODY).toString(), bodyError);
-
-//        assertThat(context.getDifferences(BODY), containsInAnyOrder(bodyError, bodyError));
         assertThat(context.getDifferences(SSL_MATCHES), nullValue());
         assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(context.getDifferences(OPERATION), nullValue());
@@ -6823,7 +6775,5 @@ public class HttpRequestsPropertiesMatcherTest {
             }
         }
         return ret;
-
     }
-
 }
