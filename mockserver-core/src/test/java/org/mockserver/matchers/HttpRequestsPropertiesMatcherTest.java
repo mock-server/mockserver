@@ -10,12 +10,10 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.OpenAPIDefinition;
 import org.mockserver.uuid.UUIDService;
 import org.skyscreamer.jsonassert.JSONAssert;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 import java.util.UUID;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
@@ -6400,7 +6398,6 @@ public class HttpRequestsPropertiesMatcherTest {
         assertThat(context.getDifferences(QUERY_PARAMETERS), nullValue());
         assertThat(context.getDifferences(COOKIES), nullValue());
 
-
         jsonCompareObject(context.getDifferences(HEADERS).toString(), "  multimap subset match failed expected:" + NEW_LINE +
             NEW_LINE +
             "    {" + NEW_LINE +
@@ -6716,14 +6713,12 @@ public class HttpRequestsPropertiesMatcherTest {
             "     - field: \"/id\" for schema: \"/properties/id\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])\"" + NEW_LINE +
             "     - schema: \"/properties/id\" has error: \"format attribute \"int64\" not supported\"" + NEW_LINE;
 
-
         List<String> schemaValidationErrorList = stringJsonCombinationToJson(context.getDifferences(BODY).toString());
         List<String> contextList = stringJsonCombinationToJson(schemaValidationError);
 
         for (int i = 0 ; i < contextList.size() ; i++){
             JSONAssert.assertEquals(schemaValidationErrorList.get(i), contextList.get(i), false);
         }
-
         assertThat(context.getDifferences(SSL_MATCHES), nullValue());
         assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
         assertThat(context.getDifferences(OPERATION), nullValue());
@@ -6752,7 +6747,6 @@ public class HttpRequestsPropertiesMatcherTest {
             JSONAssert.assertEquals(schemaValidationErrorList.get(i), contextList.get(i), false);
         }
     }
-
 
     private List<String> stringJsonCombinationToJson(String str){
         Stack<Pair> stack = new Stack<>();
