@@ -62,7 +62,7 @@ public class DescriptionProcessor {
             }
         } else if (object instanceof DashboardLogEntryDTO) {
             DashboardLogEntryDTO logEntryDTO = (DashboardLogEntryDTO) object;
-            description = new LogMessageDescription(idMessage + StringUtils.substringAfter(logEntryDTO.getTimestamp(), "-"), logEntryDTO.getType().name(), this);
+            description = new LogMessageDescription(idMessage + StringUtils.substringAfter(logEntryDTO.getTimestamp(), "-"), logEntryDTO.getType() != null ? logEntryDTO.getType().name() : "", this);
             if (description.length() >= maxLogEventLength) {
                 maxLogEventLength = description.length();
             }
