@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.FullHttpRequest;
 import org.junit.Before;
@@ -104,6 +105,33 @@ public class MatcherBuilderTest {
 
         // then - request used default charset, then body charset is NULL
         assertNull(httpRequest.getBody().getCharset(null));
+        assertTrue(httpRequestMapper.matches(null, httpRequest));
+    }
+
+    @Test
+    public void shouldSupportSemiColonInQueryParameter() {
+        final String uri = "/uri?a=1.0;1.0";
+
+        // given
+        FullHttpRequestToMockServerHttpRequest fullHttpRequestToMockServerRequest = new FullHttpRequestToMockServerHttpRequest(mockServerLogger, false, null);
+
+        FullHttpRequest fullHttpRequest = new DefaultFullHttpRequest(
+            HTTP_1_1,
+            GET,
+            uri
+        );
+
+        // when
+        HttpRequest httpRequest = fullHttpRequestToMockServerRequest.mapFullHttpRequestToMockServerRequest(fullHttpRequest);
+
+        // and
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(new MockServerLogger()).transformsToMatcher(new Expectation(
+            new HttpRequest()
+                .withPath("/uri")
+                .withQueryStringParameter("a", "1.0;1.0")
+        ));
+
+        // then
         assertTrue(httpRequestMapper.matches(null, httpRequest));
     }
 

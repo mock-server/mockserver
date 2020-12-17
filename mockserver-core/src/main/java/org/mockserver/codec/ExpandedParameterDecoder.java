@@ -1,5 +1,6 @@
 package org.mockserver.codec;
 
+import io.netty.handler.codec.http.HttpConstants;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -37,6 +38,25 @@ public class ExpandedParameterDecoder {
         if (isNotBlank(parameterString)) {
             try {
                 parameterMap.putAll(new QueryStringDecoder(parameterString, parameterString.contains("/") || hasPath).parameters());
+            } catch (IllegalArgumentException iae) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(Level.ERROR)
+                        .setMessageFormat("exception{}while parsing query string{}")
+                        .setArguments(parameterString, iae.getMessage())
+                        .setThrowable(iae)
+                );
+            }
+        }
+        return parameters.withEntries(parameterMap);
+    }
+
+    public Parameters retrieveQueryParameters(String parameterString, boolean hasPath) {
+        Parameters parameters = new Parameters();
+        Map<String, List<String>> parameterMap = new HashMap<>();
+        if (isNotBlank(parameterString)) {
+            try {
+                parameterMap.putAll(new QueryStringDecoder(parameterString, HttpConstants.DEFAULT_CHARSET, parameterString.contains("/") || hasPath, 1024, true).parameters());
             } catch (IllegalArgumentException iae) {
                 mockServerLogger.logEvent(
                     new LogEntry()
