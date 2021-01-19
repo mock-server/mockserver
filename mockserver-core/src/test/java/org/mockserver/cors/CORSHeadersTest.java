@@ -49,9 +49,15 @@ public class CORSHeadersTest {
         // given
         HttpRequest request = request();
         HttpResponse response = response();
+        CORSHeaders corsHeaders = new CORSHeaders(
+            "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization",
+            "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE",
+            true,
+            300
+        );
 
         // when
-        new CORSHeaders().addCORSHeaders(request, response);
+        corsHeaders.addCORSHeaders(request, response);
 
         // then
         assertThat(response.getFirstHeader("access-control-allow-origin"), is("*"));
@@ -67,9 +73,16 @@ public class CORSHeadersTest {
         HttpRequest request = request()
             .withHeader("origin", "null");
         HttpResponse response = response();
+        CORSHeaders corsHeaders = new CORSHeaders(
+            "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization",
+            "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE",
+            true,
+            300
+        );
+
 
         // when
-        new CORSHeaders().addCORSHeaders(request, response);
+        corsHeaders.addCORSHeaders(request, response);
 
         // then
         assertThat(response.getFirstHeader("access-control-allow-origin"), is("null"));
@@ -83,15 +96,22 @@ public class CORSHeadersTest {
     public void shouldAddCORSHeaderForAllowCredentials() {
         // given
         HttpRequest request = request()
-            .withHeader("origin", "some_origin_value")
-            .withHeader("access-control-allow-credentials", "true");
+            .withHeader("origin", "some_origin_value");
         HttpResponse response = response();
+        CORSHeaders corsHeaders = new CORSHeaders(
+            "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization",
+            "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE",
+            true,
+            300
+        );
+
 
         // when
-        new CORSHeaders().addCORSHeaders(request, response);
+        corsHeaders.addCORSHeaders(request, response);
 
         // then
         assertThat(response.getFirstHeader("access-control-allow-origin"), is("some_origin_value"));
+        assertThat(response.getFirstHeader("access-control-allow-credentials"), is("true"));
         assertThat(response.getFirstHeader("access-control-allow-methods"), is("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE"));
         assertThat(response.getFirstHeader("access-control-allow-headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"));
         assertThat(response.getFirstHeader("access-control-expose-headers"), is("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"));
@@ -101,12 +121,18 @@ public class CORSHeadersTest {
     @Test
     public void shouldAddCORSHeaderForAllowCredentialsWithoutOrigin() {
         // given
-        HttpRequest request = request()
-            .withHeader("access-control-allow-credentials", "true");
+        HttpRequest request = request();
         HttpResponse response = response();
+        CORSHeaders corsHeaders = new CORSHeaders(
+            "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization",
+            "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE",
+            true,
+            300
+        );
+
 
         // when
-        new CORSHeaders().addCORSHeaders(request, response);
+        corsHeaders.addCORSHeaders(request, response);
 
         // then
         assertThat(response.getFirstHeader("access-control-allow-origin"), is("*"));
@@ -123,9 +149,16 @@ public class CORSHeadersTest {
             .withMethod("OPTIONS")
             .withHeader("Access-Control-Request-Headers", "X-API-Key");
         HttpResponse response = response();
+        CORSHeaders corsHeaders = new CORSHeaders(
+            "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization",
+            "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE",
+            true,
+            300
+        );
+
 
         // when
-        new CORSHeaders().addCORSHeaders(request, response);
+        corsHeaders.addCORSHeaders(request, response);
 
         // then
         assertThat(response.getFirstHeader("access-control-allow-headers"), containsString("X-API-Key"));
