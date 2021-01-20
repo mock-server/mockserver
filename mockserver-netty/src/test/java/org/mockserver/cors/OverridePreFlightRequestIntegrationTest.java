@@ -101,7 +101,7 @@ public class OverridePreFlightRequestIntegrationTest {
         // then
         HttpResponse httpResponse = responseFuture.get(10, TimeUnit.SECONDS);
         assertThat(httpResponse.getStatusCode(), is(200));
-        assertThat(httpResponse.getHeader("access-control-allow-origin"), containsInAnyOrder("*"));
+        assertThat(httpResponse.getHeader("access-control-allow-origin"), containsInAnyOrder("http://localhost:8000"));
         assertThat(httpResponse.getHeader("access-control-allow-methods"), containsInAnyOrder("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE"));
         assertThat(httpResponse.getHeader("access-control-allow-headers"), containsInAnyOrder("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization, extra-header, other-extra-header"));
         assertThat(httpResponse.getHeader("access-control-expose-headers"), containsInAnyOrder("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization, extra-header, other-extra-header"));
