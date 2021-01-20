@@ -81,7 +81,7 @@ spec:
               mountPath: /config
             - name: libs-volume
               mountPath: /libs
-{{- if .Values.app.resources }}
+{{- if .Values.resources }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
 {{- end }}
