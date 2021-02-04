@@ -45,7 +45,11 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                 if (!System.getProperty("java.version").contains("1.8") && !System.getProperty("java.version").contains("1.9")) {
                     try {
                         this.getClass().getClassLoader().loadClass("jdk.nashorn.api.scripting.NashornScriptEngineFactory");
-                        System.err.println("Loading JavaScript to validate ECMA262 regular expression in JsonSchema because java.util.regex package in Java does not match ECMA262");
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(Level.WARN)
+                                .setMessageFormat("Loading JavaScript to validate ECMA262 regular expression in JsonSchema because java.util.regex package in Java does not match ECMA262")
+                        );
                     } catch (ClassNotFoundException ignore) {
                     }
                 }
