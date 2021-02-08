@@ -144,7 +144,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                     break;
                 case XPATH:
                     XPathBody xPathBody = (XPathBody) body;
-                    bodyMatcher = new XPathMatcher(mockServerLogger, xPathBody.getValue());
+                    bodyMatcher = new XPathMatcher(mockServerLogger, xPathBody.getValue(), xPathBody.getNamespacePrefixes());
                     break;
                 case XML:
                     XmlBody xmlBody = (XmlBody) body;
