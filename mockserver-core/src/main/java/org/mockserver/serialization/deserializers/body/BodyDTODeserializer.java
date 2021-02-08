@@ -70,6 +70,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
         MatchType matchType = JsonBody.DEFAULT_MATCH_TYPE;
         Parameters parameters = null;
         Map<String, ParameterStyle> parameterStyles = null;
+        Map<String, String> namespacePrefixes = null;
         if (currentToken == JsonToken.START_OBJECT) {
             @SuppressWarnings("unchecked") Map<Object, Object> body = (Map<Object, Object>) ctxt.readValue(jsonParser, Map.class);
             for (Map.Entry<Object, Object> entry : body.entrySet()) {
@@ -171,6 +172,23 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                             }
                         }
                     }
+                    if (key.equalsIgnoreCase("namespacePrefixes") && entry.getValue() instanceof Map) {
+                      try {
+                          namespacePrefixes = new HashMap<>();
+                          for (Map.Entry<?, ?> namespacePrefixEntry : ((Map<?, ?>) entry.getValue()).entrySet()) {
+                              namespacePrefixes.put(String.valueOf(namespacePrefixEntry.getKey()), String.valueOf(namespacePrefixEntry.getValue()));
+                          }
+                      } catch (IllegalArgumentException uce) {
+                          if (MockServerLogger.isEnabled(DEBUG)) {
+                              MOCK_SERVER_LOGGER.logEvent(
+                                  new LogEntry()
+                                      .setLogLevel(DEBUG)
+                                      .setMessageFormat("ignoring unsupported namespacePrefixEntry with value \"" + entry.getValue() + "\"")
+                                      .setThrowable(uce)
+                              );
+                          }
+                      }
+                   }
                     if (key.equalsIgnoreCase("contentType")) {
                         try {
                             String mediaTypeHeader = String.valueOf(entry.getValue());
@@ -284,7 +302,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         result = new XmlSchemaBodyDTO(new XmlSchemaBody(valueJsonValue), not);
                         break;
                     case XPATH:
-                        result = new XPathBodyDTO(new XPathBody(valueJsonValue), not);
+                        result = new XPathBodyDTO(new XPathBody(valueJsonValue, namespacePrefixes), not);
                         break;
                 }
             } else if (body.size() > 0) {

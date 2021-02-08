@@ -19,7 +19,12 @@ import java.io.StringReader;
 public class StringToXmlDocumentParser extends ObjectWithReflectiveEqualsHashCodeToString {
 
     public Document buildDocument(final String matched, final ErrorLogger errorLogger) throws ParserConfigurationException, IOException, SAXException {
+        return buildDocument(matched, errorLogger, false);
+    }
+
+    public Document buildDocument(final String matched, final ErrorLogger errorLogger, boolean namespaceAware) throws ParserConfigurationException, IOException, SAXException {
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        documentBuilderFactory.setNamespaceAware(namespaceAware);
         DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
         documentBuilder.setErrorHandler(new ErrorHandler() {
             @Override

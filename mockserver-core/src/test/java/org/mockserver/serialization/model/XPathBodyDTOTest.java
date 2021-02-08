@@ -7,6 +7,8 @@ import org.mockserver.model.XmlBody;
 
 import java.nio.charset.StandardCharsets;
 
+import com.google.common.collect.ImmutableMap;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.model.XPathBody.xpath;
@@ -50,5 +52,10 @@ public class XPathBodyDTOTest {
     @Test
     public void shouldReturnCorrectObjectFromStaticBuilder() {
         assertThat(xpath("some_body"), is(new XPathBody("some_body")));
+    }
+
+    @Test
+    public void shouldReturnCorrectObjectFromStaticBuilderWithNamespacePrefixes() {
+        assertThat(xpath("some_body", ImmutableMap.of("foo", "http://foo")), is(new XPathBody("some_body", ImmutableMap.of("foo", "http://foo"))));
     }
 }

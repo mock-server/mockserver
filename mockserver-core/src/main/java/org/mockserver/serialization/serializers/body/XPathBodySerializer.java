@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.mockserver.model.XPathBody;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * @author jamesdbloom
@@ -27,6 +28,14 @@ public class XPathBodySerializer extends StdSerializer<XPathBody> {
         }
         jgen.writeStringField("type", xPathBody.getType().name());
         jgen.writeStringField("xpath", xPathBody.getValue());
+        if (xPathBody.getNamespacePrefixes() != null) {
+          jgen.writeObjectFieldStart("namespacePrefixes");
+          for (Map.Entry<String, String> entry : xPathBody.getNamespacePrefixes().entrySet()) {
+            jgen.writeStringField(entry.getKey(), entry.getValue());
+          }
+          jgen.writeEndObject();
+        }
+
         jgen.writeEndObject();
     }
 }
