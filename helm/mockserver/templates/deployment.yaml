@@ -26,6 +26,7 @@ spec:
         app: {{ template "chart.name" . }}
         release: {{ .Release.Name }}
     spec:
+      serviceAccountName: {{ .Values.app.serviceAccountName }}
       containers:
         - name: {{ template "chart.name" . }}
           image: {{ .Values.image.repository }}/mockserver:mockserver-{{- if .Values.image.snapshot }}snapshot{{- else }}{{ .Chart.Version }}{{- end }}
