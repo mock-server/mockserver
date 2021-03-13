@@ -56,7 +56,7 @@ spec:
             successThreshold: 1
             failureThreshold: 10
           env:
-            - name: LOG_LEVEL
+            - name: MOCKSERVER_LOG_LEVEL
               value: {{ .Values.app.logLevel | quote }}
             - name: SERVER_PORT
               value: {{ .Values.app.serverPort | quote }}
