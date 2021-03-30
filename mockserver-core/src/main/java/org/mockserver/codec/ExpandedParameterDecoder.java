@@ -1,7 +1,7 @@
 package org.mockserver.codec;
 
 import io.netty.handler.codec.http.HttpConstants;
-import io.netty.handler.codec.http.QueryStringDecoder;
+//import io.netty.handler.codec.http.QueryStringDecoder;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.NottableString;
@@ -37,7 +37,7 @@ public class ExpandedParameterDecoder {
         Map<String, List<String>> parameterMap = new HashMap<>();
         if (isNotBlank(parameterString)) {
             try {
-                parameterMap.putAll(new QueryStringDecoder(parameterString, parameterString.contains("/") || hasPath).parameters());
+                parameterMap.putAll(new PatchedQueryStringDecoder(parameterString, parameterString.contains("/") || hasPath).parameters());
             } catch (IllegalArgumentException iae) {
                 mockServerLogger.logEvent(
                     new LogEntry()
@@ -56,7 +56,7 @@ public class ExpandedParameterDecoder {
         Map<String, List<String>> parameterMap = new HashMap<>();
         if (isNotBlank(parameterString)) {
             try {
-                parameterMap.putAll(new QueryStringDecoder(parameterString, HttpConstants.DEFAULT_CHARSET, parameterString.contains("/") || hasPath, 1024, true).parameters());
+                parameterMap.putAll(new PatchedQueryStringDecoder(parameterString, HttpConstants.DEFAULT_CHARSET, parameterString.contains("/") || hasPath, 1024, true).parameters());
             } catch (IllegalArgumentException iae) {
                 mockServerLogger.logEvent(
                     new LogEntry()

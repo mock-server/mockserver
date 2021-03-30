@@ -56,6 +56,8 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
     private String serialise() {
         if (this.isOptional() || this.not) {
             return (this.isOptional() ? "" + OPTIONAL_CHAR : "") + (this.not ? "" + NOT_CHAR : "") + (!this.isBlank ? this.value : EMPTY_STRING);
+        } else if (this.value == null) {
+            return null;
         } else if (this.isBlank) {
             return EMPTY_STRING;
         } else {

@@ -24,6 +24,14 @@ public class ExpandedParameterDecoderTest {
     private final MockServerLogger mockServerLogger = new MockServerLogger(ExpandedParameterDecoderTest.class);
 
     @Test
+    public void blank() {
+        shouldParseParameters(
+            "/users?foo",
+            param("foo", new String[] { null })
+        );
+    }
+
+    @Test
     public void shouldParseQueryParameters() {
         shouldParseParameters(
             "/users?one=5",
