@@ -1,5 +1,6 @@
 package org.mockserver.mock;
 
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.collections.CircularPriorityQueue;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -10,20 +11,38 @@ import org.mockserver.matchers.MatchDifference;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.metrics.Metrics;
 import org.mockserver.mock.listeners.MockServerMatcherNotifier;
-import org.mockserver.model.*;
+import org.mockserver.model.Action;
+import org.mockserver.model.ExpectationId;
+import org.mockserver.model.HttpObjectCallback;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.RequestDefinition;
 import org.mockserver.scheduler.Scheduler;
 import org.slf4j.event.Level;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.maxExpectations;
-import static org.mockserver.log.model.LogEntry.LogMessageType.*;
-import static org.mockserver.log.model.LogEntryMessages.*;
-import static org.mockserver.metrics.Metrics.Name.*;
+import static org.mockserver.log.model.LogEntry.LogMessageType.CLEARED;
+import static org.mockserver.log.model.LogEntry.LogMessageType.CREATED_EXPECTATION;
+import static org.mockserver.log.model.LogEntry.LogMessageType.REMOVED_EXPECTATION;
+import static org.mockserver.log.model.LogEntry.LogMessageType.UPDATED_EXPECTATION;
+import static org.mockserver.log.model.LogEntryMessages.CREATED_EXPECTATION_MESSAGE_FORMAT;
+import static org.mockserver.log.model.LogEntryMessages.REMOVED_EXPECTATION_MESSAGE_FORMAT;
+import static org.mockserver.log.model.LogEntryMessages.UPDATED_EXPECTATION_MESSAGE_FORMAT;
+import static org.mockserver.metrics.Metrics.Name.EXPECTATION_NOT_MATCHED_COUNT;
+import static org.mockserver.metrics.Metrics.Name.FORWARD_EXPECTATION_MATCHED_COUNT;
+import static org.mockserver.metrics.Metrics.Name.RESPONSE_EXPECTATION_MATCHED_COUNT;
 import static org.mockserver.mock.SortableExpectationId.EXPECTATION_SORTABLE_PRIORITY_COMPARATOR;
 import static org.mockserver.mock.SortableExpectationId.NULL;
 import static org.slf4j.event.Level.DEBUG;
@@ -223,30 +242,54 @@ public class RequestMatchers extends MockServerMatcherNotifier {
 
     public void clear(RequestDefinition requestDefinition) {
         if (requestDefinition != null) {
-            HttpRequestMatcher clearHttpRequestMatcher = matcherBuilder.transformsToMatcher(requestDefinition);
-            getHttpRequestMatchersCopy().forEach(httpRequestMatcher -> {
-                RequestDefinition request = httpRequestMatcher
-                    .getExpectation()
-                    .getHttpRequest();
-                if (isNotBlank(requestDefinition.getLogCorrelationId())) {
-                    request = request
-                        .shallowClone()
-                        .withLogCorrelationId(requestDefinition.getLogCorrelationId());
+
+            if (StringUtils.isNotBlank(requestDefinition.getId())) {
+
+                Optional<HttpRequestMatcher> matcher = httpRequestMatchers.getByKey(requestDefinition.getId());
+
+                if (matcher.isPresent()) {
+                    removeHttpRequestMatcher(matcher.get());
+                } else {
+                    if (MockServerLogger.isEnabled(Level.INFO)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setType(CLEARED)
+                                .setLogLevel(Level.INFO)
+                                .setCorrelationId(requestDefinition.getLogCorrelationId())
+                                .setHttpRequest(requestDefinition)
+                                .setMessageFormat("no cleared expectations that match Id:{}")
+                                .setArguments(requestDefinition.getId())
+                        );
+                    }
                 }
-                if (clearHttpRequestMatcher.matches(request)) {
-                    removeHttpRequestMatcher(httpRequestMatcher);
+
+            } else {
+                HttpRequestMatcher clearHttpRequestMatcher = matcherBuilder.transformsToMatcher(requestDefinition);
+                getHttpRequestMatchersCopy().forEach(httpRequestMatcher -> {
+                    RequestDefinition request = httpRequestMatcher
+                        .getExpectation()
+                        .getHttpRequest();
+                    if (isNotBlank(requestDefinition.getLogCorrelationId())) {
+                        request = request
+                            .shallowClone()
+                            .withLogCorrelationId(requestDefinition.getLogCorrelationId());
+                    }
+                    if (clearHttpRequestMatcher.matches(request)) {
+                        removeHttpRequestMatcher(httpRequestMatcher);
+                    }
+                });
+                if (MockServerLogger.isEnabled(Level.INFO)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(CLEARED)
+                            .setLogLevel(Level.INFO)
+                            .setCorrelationId(requestDefinition.getLogCorrelationId())
+                            .setHttpRequest(requestDefinition)
+                            .setMessageFormat("cleared expectations that match:{}")
+                            .setArguments(requestDefinition)
+                    );
                 }
-            });
-            if (MockServerLogger.isEnabled(Level.INFO)) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setType(CLEARED)
-                        .setLogLevel(Level.INFO)
-                        .setCorrelationId(requestDefinition.getLogCorrelationId())
-                        .setHttpRequest(requestDefinition)
-                        .setMessageFormat("cleared expectations that match:{}")
-                        .setArguments(requestDefinition)
-                );
+
             }
         } else {
             reset();

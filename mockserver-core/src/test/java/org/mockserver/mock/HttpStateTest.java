@@ -15,6 +15,7 @@ import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.TimeService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
@@ -23,7 +24,14 @@ import org.mockserver.model.MediaType;
 import org.mockserver.model.RetrieveType;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.serialization.*;
+import org.mockserver.serialization.ExpectationSerializer;
+import org.mockserver.serialization.HttpRequestSerializer;
+import org.mockserver.serialization.LogEntrySerializer;
+import org.mockserver.serialization.ObjectMapperFactory;
+import org.mockserver.serialization.OpenAPIExpectationSerializer;
+import org.mockserver.serialization.PortBindingSerializer;
+import org.mockserver.serialization.VerificationSequenceSerializer;
+import org.mockserver.serialization.VerificationSerializer;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.verify.Verification;
@@ -35,10 +43,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -50,7 +61,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LOG_DATE_FORMAT;
-import static org.mockserver.log.model.LogEntry.LogMessageType.*;
+import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_MATCHED;
+import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_RESPONSE;
+import static org.mockserver.log.model.LogEntry.LogMessageType.FORWARDED_REQUEST;
+import static org.mockserver.log.model.LogEntry.LogMessageType.NO_MATCH_RESPONSE;
+import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
+import static org.mockserver.log.model.LogEntry.LogMessageType.TRACE;
 import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE_FORMAT;
 import static org.mockserver.mock.Expectation.when;
 import static org.mockserver.mock.OpenAPIExpectation.openAPIExpectation;
@@ -1221,6 +1237,149 @@ public class HttpStateTest {
         assertThat(httpState.firstMatchingExpectation(request("request_one")), nullValue());
         assertThat(httpState.firstMatchingExpectation(request("request_two")), is(new Expectation(request("request_two")).thenRespond(response("response_two"))));
     }
+
+    @Test
+    public void shouldClearExpectationsOnlyMatchId() {
+        // given
+        Expectation expectation1 = new Expectation(request("request_with_id")).withId("request_id_1")
+            .thenRespond(response("request_with_id_response"));
+        Expectation expectation2 = new Expectation(request("request_with_id")).withId("request_id_2")
+            .thenRespond(response("request_with_id_response"));
+        httpState.add(expectation1);
+        httpState.add(expectation2);
+
+        httpState.log(
+            new LogEntry()
+                .setHttpRequest(request("request_with_id"))
+                .setHttpResponse(response("request_with_id_response"))
+                .setExpectation(expectation1)
+                .setType(EXPECTATION_RESPONSE)
+        );
+
+
+        // when
+        httpState
+            .clear(
+                request()
+                    .withQueryStringParameter("type", "expectations")
+                    .withBody("{\"id\": \"request_id_1\"}")
+            );
+
+        // then - log is here
+        HttpResponse retrieve = httpState
+            .retrieve(
+                request()
+                    .withQueryStringParameter("type", REQUEST_RESPONSES.name())
+                    .withQueryStringParameter("format", LOG_ENTRIES.name())
+                    .withBody(httpRequestSerializer.serialize(request("request_with_id")))
+            );
+        assertThat(
+            retrieve.getBodyAsString(),
+            is(new LogEntrySerializer(new MockServerLogger()).serialize(Collections.singletonList(
+                new LogEntry()
+                    .setHttpRequest(request("request_with_id"))
+                    .setHttpResponse(response("request_with_id_response"))
+                    .setExpectation(expectation1)
+                    .setType(EXPECTATION_RESPONSE)
+            )))
+        );
+        // then - correct expectations removed
+        Optional<HttpRequestMatcher> requestId1 = httpState.getRequestMatchers().httpRequestMatchers.getByKey("request_id_1");
+        assertFalse(requestId1.isPresent());
+        Optional<HttpRequestMatcher> requestId2 = httpState.getRequestMatchers().httpRequestMatchers.getByKey("request_id_2");
+        assertTrue(requestId2.isPresent());
+
+    }
+
+    @Test
+    public void shouldNotClearExpectationsWhenNotMatchId() {
+        // given
+        httpState.add(new Expectation(request("request_with_id")).withId("request_id_1")
+            .thenRespond(response("request_with_id_response")));
+        httpState.add(new Expectation(request("request_with_id")).withId("request_id_2")
+            .thenRespond(response("request_with_id_response")));
+
+        // when
+        httpState
+            .clear(
+                request()
+                    .withQueryStringParameter("type", "expectations")
+                    .withBody("{\"id\": \"request_id_not_exist\"}")
+            );
+
+        Optional<HttpRequestMatcher> requestId1 = httpState.getRequestMatchers().httpRequestMatchers.getByKey("request_id_1");
+        assertTrue(requestId1.isPresent());
+        Optional<HttpRequestMatcher> requestId2 = httpState.getRequestMatchers().httpRequestMatchers.getByKey("request_id_2");
+        assertTrue(requestId2.isPresent());
+    }
+
+
+    @Test
+    public void shouldClearExpectationsAllMatchId() {
+        // given
+        Expectation expectation1 = new Expectation(request("request_with_id")).withId("request_id_1")
+            .thenRespond(response("request_with_id_response"));
+        Expectation expectation2 = new Expectation(request("request_with_id")).withId("request_id_2")
+            .thenRespond(response("request_with_id_response"));
+        httpState.add(expectation1);
+        httpState.add(expectation2);
+
+        httpState.log(
+            new LogEntry()
+                .setHttpRequest(request("request_with_id"))
+                .setHttpResponse(response("request_with_id_response"))
+                .setExpectation(expectation1)
+                .setType(EXPECTATION_RESPONSE)
+        );
+        httpState.log(
+            new LogEntry()
+                .setHttpRequest(request("request_with_id"))
+                .setHttpResponse(response("request_with_id_response"))
+                .setMessageFormat("returning response:{}for request:{}for action:{}from expectation:{}")
+                .setArguments(request("request_with_id"), response("request_with_id_response"), new Object(), "request_id_1")
+                .setType(EXPECTATION_RESPONSE)
+        );
+        httpState.log(
+            new LogEntry()
+                .setHttpRequest(request("request_with_id"))
+                .setHttpError(error().withResponseBytes("request_with_id_response".getBytes(UTF_8)))
+                .setExpectation(expectation2)
+                .setType(EXPECTATION_RESPONSE)
+        );
+
+        // when
+        httpState
+            .clear(
+                request()
+                    .withQueryStringParameter("type", "all")
+                    .withBody("{\"id\": \"request_id_1\"}")
+            );
+
+        // then - correct log entries removed (no log1)
+        HttpResponse retrieve = httpState
+            .retrieve(
+                request()
+                    .withQueryStringParameter("type", REQUEST_RESPONSES.name())
+                    .withQueryStringParameter("format", LOG_ENTRIES.name())
+                    .withBody(httpRequestSerializer.serialize(request("request_with_id")))
+            );
+        assertThat(
+            retrieve.getBodyAsString(),
+            is(new LogEntrySerializer(new MockServerLogger()).serialize(Collections.singletonList(
+                new LogEntry()
+                    .setHttpRequest(request("request_with_id"))
+                    .setHttpError(error().withResponseBytes("request_with_id_response".getBytes(UTF_8)))
+                    .setExpectation(expectation2)
+                    .setType(EXPECTATION_RESPONSE)
+            )))
+        );
+        // then - correct expectations removed
+        Optional<HttpRequestMatcher> requestId1 = httpState.getRequestMatchers().httpRequestMatchers.getByKey("request_id_1");
+        assertFalse(requestId1.isPresent());
+        Optional<HttpRequestMatcher> requestId2 = httpState.getRequestMatchers().httpRequestMatchers.getByKey("request_id_2");
+        assertTrue(requestId2.isPresent());
+    }
+
 
     @Test
     public void shouldThrowExceptionForInvalidClearType() {

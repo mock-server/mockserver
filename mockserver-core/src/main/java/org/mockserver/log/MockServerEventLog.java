@@ -2,6 +2,8 @@ package org.mockserver.log;
 
 import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.dsl.Disruptor;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.collections.CircularConcurrentLinkedDeque;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
@@ -21,7 +23,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Spliterators;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -36,7 +42,16 @@ import java.util.stream.StreamSupport;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.log.model.LogEntry.LogMessageType.*;
+import static org.mockserver.log.model.LogEntry.LogMessageType.CLEARED;
+import static org.mockserver.log.model.LogEntry.LogMessageType.EXCEPTION;
+import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_RESPONSE;
+import static org.mockserver.log.model.LogEntry.LogMessageType.FORWARDED_REQUEST;
+import static org.mockserver.log.model.LogEntry.LogMessageType.NO_MATCH_RESPONSE;
+import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
+import static org.mockserver.log.model.LogEntry.LogMessageType.RUNNABLE;
+import static org.mockserver.log.model.LogEntry.LogMessageType.VERIFICATION;
+import static org.mockserver.log.model.LogEntry.LogMessageType.VERIFICATION_FAILED;
+import static org.mockserver.log.model.LogEntry.LogMessageType.VERIFICATION_PASSED;
 import static org.mockserver.log.model.LogEntryMessages.VERIFICATION_REQUESTS_MESSAGE_FORMAT;
 import static org.mockserver.log.model.LogEntryMessages.VERIFICATION_REQUEST_SEQUENCES_MESSAGE_FORMAT;
 import static org.mockserver.logging.MockServerLogger.writeToSystemOut;
@@ -189,20 +204,42 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             .setType(RUNNABLE)
             .setConsumer(() -> {
                 String logCorrelationId = UUIDService.getUUID();
-                RequestDefinition matcher = requestDefinition != null ? requestDefinition : request().withLogCorrelationId(logCorrelationId);
-                HttpRequestMatcher requestMatcher = matcherBuilder.transformsToMatcher(matcher);
+
+                HttpRequestMatcher requestMatcher = null;
+                String expectationKey = null;
+
+                if (requestDefinition == null || StringUtils.isBlank(requestDefinition.getId())) {
+                    RequestDefinition matcher = requestDefinition != null ? requestDefinition : request().withLogCorrelationId(logCorrelationId);
+                    requestMatcher = matcherBuilder.transformsToMatcher(matcher);
+                } else {
+                    expectationKey = requestDefinition.getId();
+                }
+
                 for (LogEntry logEntry : new LinkedList<>(eventLog)) {
-                    RequestDefinition[] requests = logEntry.getHttpRequests();
                     boolean matches = false;
-                    if (requests != null) {
-                        for (RequestDefinition request : requests) {
-                            if (requestMatcher.matches(request.cloneWithLogCorrelationId())) {
-                                matches = true;
+
+                    if (requestDefinition == null || StringUtils.isBlank(requestDefinition.getId())) {
+                        RequestDefinition[] requests = logEntry.getHttpRequests();
+                        if (requests != null) {
+                            for (RequestDefinition request : requests) {
+                                if (requestMatcher.matches(request.cloneWithLogCorrelationId())) {
+                                    matches = true;
+                                }
                             }
+                        } else {
+                            matches = true;
                         }
+
                     } else {
-                        matches = true;
+                        Expectation expectation = logEntry.getExpectation();
+                        if (expectation != null) {
+                            matches = expectationKey.equals(expectation.getId());
+                        } else if (logEntry.getType() != null && logEntry.getType() == EXPECTATION_RESPONSE
+                            && ArrayUtils.isNotEmpty(logEntry.getArguments()) && logEntry.getArguments().length == 4) {
+                            matches = expectationKey.equals(logEntry.getArguments()[3]);
+                        }
                     }
+
                     if (matches) {
                         if (markAsDeletedOnly) {
                             logEntry.setDeleted(true);

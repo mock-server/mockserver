@@ -10,6 +10,17 @@ public abstract class RequestDefinition extends Not {
 
     private String logCorrelationId;
 
+    // present for expectation id(key), used for "/mockserver/clear" - api
+    private String id;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
     @JsonIgnore
     public String getLogCorrelationId() {
         return logCorrelationId;

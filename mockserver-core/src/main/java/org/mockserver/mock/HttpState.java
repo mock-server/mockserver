@@ -1,19 +1,38 @@
 package org.mockserver.mock;
 
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.memory.MemoryMonitoring;
 import org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause;
-import org.mockserver.model.*;
+import org.mockserver.model.Action;
+import org.mockserver.model.ClearType;
+import org.mockserver.model.ExpectationId;
+import org.mockserver.model.Format;
+import org.mockserver.model.HttpError;
+import org.mockserver.model.HttpObjectCallback;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
+import org.mockserver.model.MediaType;
+import org.mockserver.model.RequestDefinition;
+import org.mockserver.model.RetrieveType;
 import org.mockserver.openapi.OpenAPIConverter;
 import org.mockserver.persistence.ExpectationFileSystemPersistence;
 import org.mockserver.persistence.ExpectationFileWatcher;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.serialization.*;
+import org.mockserver.serialization.ExpectationIdSerializer;
+import org.mockserver.serialization.ExpectationSerializer;
+import org.mockserver.serialization.LogEntrySerializer;
+import org.mockserver.serialization.LogEventRequestAndResponseSerializer;
+import org.mockserver.serialization.OpenAPIExpectationSerializer;
+import org.mockserver.serialization.RequestDefinitionSerializer;
+import org.mockserver.serialization.VerificationSequenceSerializer;
+import org.mockserver.serialization.VerificationSerializer;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.server.initialize.ExpectationInitializerLoader;
 import org.mockserver.uuid.UUIDService;
@@ -24,6 +43,7 @@ import org.slf4j.event.Level;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -32,11 +52,17 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
-import static io.netty.handler.codec.http.HttpResponseStatus.*;
+import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.CREATED;
+import static io.netty.handler.codec.http.HttpResponseStatus.NOT_ACCEPTABLE;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.apache.commons.lang3.StringUtils.*;
+import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.addSubjectAlternativeName;
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
@@ -130,7 +156,25 @@ public class HttpState {
         if (isNotBlank(request.getBodyAsString())) {
             String body = request.getBodyAsJsonOrXmlString();
             try {
-                requestDefinition = resolveExpectationId(getExpectationIdSerializer().deserialize(body));
+                ExpectationId deserializedExp = getExpectationIdSerializer().deserialize(body);
+                if (StringUtils.isNotBlank(deserializedExp.getId())) {
+                    requestDefinition = resolveExpectationIdByKey(deserializedExp.getId());
+                    // stop clear if no expectation match.
+                    if (requestDefinition == null) {
+                        if (MockServerLogger.isEnabled(Level.INFO)) {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setType(CLEARED)
+                                    .setLogLevel(Level.INFO)
+                                    .setMessageFormat("no expectations that match Id:{}, now stop clear")
+                                    .setArguments(deserializedExp.getId())
+                            );
+                        }
+                        return;
+                    }
+                } else {
+                    requestDefinition = resolveExpectationId(deserializedExp);
+                }
             } catch (IllegalArgumentException ignore) {
                 // assume not expectationId
                 requestDefinition = getRequestDefinitionSerializer().deserialize(body);
@@ -171,6 +215,16 @@ public class HttpState {
             .findFirst()
             .map(Expectation::getHttpRequest)
             .orElse(null);
+    }
+
+    private RequestDefinition resolveExpectationIdByKey(String key) {
+        Optional<HttpRequestMatcher> exp = requestMatchers.httpRequestMatchers.getByKey(key);
+        if (exp.isPresent()) {
+            RequestDefinition requestDefinition = exp.get().getExpectation().getHttpRequest();
+            requestDefinition.setId(key);
+            return requestDefinition;
+        }
+        return null;
     }
 
     private RequestDefinition[] resolveExpectationIds(ExpectationId... expectationId) {
