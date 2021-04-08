@@ -29,7 +29,7 @@ spec:
       serviceAccountName: {{ .Values.app.serviceAccountName }}
       containers:
         - name: {{ template "chart.name" . }}
-          image: {{ .Values.image.repository }}/mockserver:mockserver-{{- if .Values.image.snapshot }}snapshot{{- else }}{{ .Chart.Version }}{{- end }}
+          image: {{ .Values.image.repository }}/{{- if .Values.image.tag }}{{ .Values.image.registry }}:{{ .Values.image.tag }}{{- else }}mockserver:mockserver-{{- if .Values.image.snapshot }}snapshot{{- else }}{{ .Chart.Version }}{{- end }}{{- end }}
 {{- if .Values.image.snapshot }}
           imagePullPolicy: Always
 {{- else }}
