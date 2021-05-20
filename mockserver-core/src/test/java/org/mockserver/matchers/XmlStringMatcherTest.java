@@ -101,6 +101,13 @@ public class XmlStringMatcherTest {
     }
 
     @Test
+    public void shouldMatchMatchingXMLWithDifferentNamespacePrefixes() {
+        String matcher = "<a:element xmlns:a=\"the_namespace\"><a:key>some_key</a:key><a:value>some_value</a:value></a:element>";
+        String matched = "<b:element xmlns:b=\"the_namespace\"><b:key>some_key</b:key><b:value>some_value</b:value></b:element>";
+        assertTrue(new XmlStringMatcher(new MockServerLogger(), matcher).matches(matched));
+    }
+
+    @Test
     public void shouldNotMatchMatchingXMLWithNot() {
         String matched = "" +
             "<element>" +
