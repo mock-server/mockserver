@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.mock-server</groupId>
+    <groupId>io.github.arkinator</groupId>
     <artifactId>mockserver</artifactId>
     <version>5.11.3-SNAPSHOT</version>
     <packaging>pom</packaging>
@@ -23,9 +23,9 @@
     </licenses>
 
     <scm>
-        <url>https://github.com/jamesdbloom/mockservice.git</url>
-        <connection>scm:git:https://github.com/jamesdbloom/mockservice.git</connection>
-        <developerConnection>scm:git:git@github.com:jamesdbloom/mockservice.git</developerConnection>
+        <url>https://github.com/arkinator/mockserver.git</url>
+        <connection>scm:git:https://github.com/arkinator/mockserver.git</connection>
+        <developerConnection>scm:git:git@github.com:arkinator/mockserver.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
