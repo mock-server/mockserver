@@ -17,3 +17,5 @@ openssl pkcs8 -topk8 -inform PEM -in leaf-key.pem -out leaf-key-pkcs8.pem -nocry
 
 # download certificates from domain
 openssl s_client -host stackoverflow.com -port 443 -prexit -showcerts > stackoverflow-chain.pem
+
+# finally update the chains

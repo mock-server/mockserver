@@ -21,6 +21,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.function.Function;
+import javax.net.ssl.SSLException;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.socket.tls.KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory;
@@ -31,6 +33,15 @@ import static org.mockserver.socket.tls.PEMToFile.x509ChainFromPEMFile;
  * @author jamesdbloom
  */
 public class NettySslContextFactory {
+
+    public static Function<SslContextBuilder, SslContext> clientSslContextBuilderFunction =
+        sslContextBuilder -> {
+            try {
+                return sslContextBuilder.build();
+            } catch (SSLException e) {
+                throw new RuntimeException(e);
+            }
+        };
 
     private final MockServerLogger mockServerLogger;
     private final KeyAndCertificateFactory keyAndCertificateFactory;
@@ -72,7 +83,8 @@ public class NettySslContextFactory {
                 } else {
                     sslContextBuilder.trustManager(trustCertificateChain());
                 }
-                clientSslContext = sslContextBuilder.build();
+                clientSslContext = clientSslContextBuilderFunction
+                    .apply(sslContextBuilder);
                 ConfigurationProperties.rebuildTLSContext(false);
             } catch (Throwable throwable) {
                 throw new RuntimeException("Exception creating SSL context for client", throwable);
