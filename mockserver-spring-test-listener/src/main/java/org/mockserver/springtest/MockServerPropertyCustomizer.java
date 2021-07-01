@@ -34,6 +34,22 @@ public class MockServerPropertyCustomizer implements ContextCustomizer {
 
                 TestPropertySourceUtils.addInlinedPropertiesToEnvironment(context, replacement);
             }
-        );
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        MockServerPropertyCustomizer that = (MockServerPropertyCustomizer) o;
+        return Objects.equals(properties, that.properties);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(properties);
     }
 }
