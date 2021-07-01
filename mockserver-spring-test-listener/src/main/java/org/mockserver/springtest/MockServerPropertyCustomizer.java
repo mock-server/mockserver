@@ -37,14 +37,14 @@ public class MockServerPropertyCustomizer implements ContextCustomizer {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) {
+    public boolean equals(Object other) {
+        if (this == other) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (other == null || getClass() != other.getClass()) {
             return false;
         }
-        MockServerPropertyCustomizer that = (MockServerPropertyCustomizer) o;
+        MockServerPropertyCustomizer that = (MockServerPropertyCustomizer) other;
         return Objects.equals(properties, that.properties);
     }
 
