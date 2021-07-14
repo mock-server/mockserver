@@ -254,6 +254,8 @@ public class MediaType extends ObjectWithJsonToString {
     public boolean isJson() {
         return !isBlank && contentTypeContains(new String[]{
             "json"
+        }) && !contentTypeContains(new String[]{
+            "ndjson"
         });
     }
 
