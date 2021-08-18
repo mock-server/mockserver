@@ -102,7 +102,6 @@ public class MockServer extends LifeCycle {
             portBindings = Arrays.asList(localPorts);
         }
 
-        NettySslContextFactory nettySslContextFactory = new NettySslContextFactory(mockServerLogger);
         serverServerBootstrap = new ServerBootstrap()
             .group(bossGroup, workerGroup)
             .option(ChannelOption.SO_BACKLOG, 1024)
@@ -110,7 +109,9 @@ public class MockServer extends LifeCycle {
             .childOption(ChannelOption.AUTO_READ, true)
             .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
             .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
-            .childHandler(new MockServerUnificationInitializer(MockServer.this, httpState, new HttpActionHandler(getEventLoopGroup(), httpState, proxyConfiguration, nettySslContextFactory), nettySslContextFactory))
+            .childHandler(
+                new MockServerUnificationInitializer(MockServer.this, httpState, new HttpActionHandler(getEventLoopGroup(), httpState, proxyConfiguration, new NettySslContextFactory(mockServerLogger, false)),
+                    new NettySslContextFactory(mockServerLogger, true)))
             .childAttr(REMOTE_SOCKET, remoteSocket)
             .childAttr(PROXYING, remoteSocket != null);
 

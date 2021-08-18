@@ -12,7 +12,7 @@ public class CustomKeyAndCertificateFactorySupplierTest {
     @Test
     public void setSupplier_shouldUseSupplier() {
         KeyAndCertificateFactory factoryInstance = new BCKeyAndCertificateFactory(null);
-        KeyAndCertificateFactoryFactory.setCustomKeyAndCertificateFactorySupplier(logger -> factoryInstance);
+        KeyAndCertificateFactoryFactory.setCustomKeyAndCertificateFactorySupplier((logger, isServer) -> factoryInstance);
 
         assertTrue("Should give exact instance",
             KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory(null)

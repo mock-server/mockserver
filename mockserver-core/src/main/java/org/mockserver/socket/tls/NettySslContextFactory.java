@@ -20,9 +20,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.function.Function;
-import javax.net.ssl.SSLException;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.socket.tls.KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory;
@@ -34,24 +33,26 @@ import static org.mockserver.socket.tls.PEMToFile.x509ChainFromPEMFile;
  */
 public class NettySslContextFactory {
 
-    public static Function<SslContextBuilder, SslContext> clientSslContextBuilderFunction =
-        sslContextBuilder -> {
-            try {
-                return sslContextBuilder.build();
-            } catch (SSLException e) {
-                throw new RuntimeException(e);
-            }
-        };
+    public static Consumer<NettySslContextFactory> nettySslContextFactoryCustomizer = factory -> {
+    };
 
     private final MockServerLogger mockServerLogger;
     private final KeyAndCertificateFactory keyAndCertificateFactory;
     private SslContext clientSslContext = null;
     private SslContext serverSslContext = null;
+    private final boolean isServerInstance;
 
     public NettySslContextFactory(MockServerLogger mockServerLogger) {
+        this(mockServerLogger, true);
+    }
+
+    public NettySslContextFactory(MockServerLogger mockServerLogger, boolean isServerInstance) {
+        this.isServerInstance = isServerInstance;
         this.mockServerLogger = mockServerLogger;
-        keyAndCertificateFactory = createKeyAndCertificateFactory(mockServerLogger);
+        keyAndCertificateFactory = createKeyAndCertificateFactory(mockServerLogger, isServerInstance);
         System.setProperty("https.protocols", "SSLv3,TLSv1,TLSv1.1,TLSv1.2");
+
+        nettySslContextFactoryCustomizer.accept(this);
     }
 
     public synchronized SslContext createClientSslContext(boolean forwardProxyClient) {
@@ -83,8 +84,7 @@ public class NettySslContextFactory {
                 } else {
                     sslContextBuilder.trustManager(trustCertificateChain());
                 }
-                clientSslContext = clientSslContextBuilderFunction
-                    .apply(sslContextBuilder);
+                clientSslContext = sslContextBuilder.build();
                 ConfigurationProperties.rebuildTLSContext(false);
             } catch (Throwable throwable) {
                 throw new RuntimeException("Exception creating SSL context for client", throwable);
@@ -176,4 +176,7 @@ public class NettySslContextFactory {
         }
     }
 
+    public boolean isServerInstance() {
+        return isServerInstance;
+    }
 }
