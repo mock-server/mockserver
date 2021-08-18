@@ -59,7 +59,7 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
         }
 
         if (secure) {
-            pipeline.addLast((sslContext != null ? sslContext : new NettySslContextFactory(configuration, mockServerLogger).createServerSslContext()).newHandler(channel.alloc()));
+            pipeline.addLast((sslContext != null ? sslContext : new NettySslContextFactory(configuration, mockServerLogger, true).createServerSslContext()).newHandler(channel.alloc()));
         }
 
         if (MockServerLogger.isEnabled(TRACE)) {
