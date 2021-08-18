@@ -84,7 +84,7 @@ public class AuthenticatedControlPlaneUsingMTLSClientNotAuthenticatedIntegration
 
         mockServerClient = new MockServerClient("localhost", mockServerClient.getPort()).withSecure(true);
         MockServerLogger mockServerLogger = new MockServerLogger();
-        NettySslContextFactory nettySslContextFactory = new NettySslContextFactory(configuration(), MOCK_SERVER_LOGGER);
+        NettySslContextFactory nettySslContextFactory = new NettySslContextFactory(configuration(), MOCK_SERVER_LOGGER, false);
         nettySslContextFactory.withClientSslContextBuilderFunction(
             sslContextBuilder -> {
                 try {

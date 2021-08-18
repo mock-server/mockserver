@@ -156,11 +156,12 @@ public class MockServer extends LifeCycle {
             portBindings = Arrays.asList(localPorts);
         }
 
-        NettySslContextFactory nettySslContextFactory = new NettySslContextFactory(configuration, mockServerLogger);
+        final NettySslContextFactory nettyServerSslContextFactory = new NettySslContextFactory(configuration, mockServerLogger, true);
+        final NettySslContextFactory nettyClientSslContextFactory = new NettySslContextFactory(configuration, mockServerLogger, false);
         if (configuration.controlPlaneTLSMutualAuthenticationRequired() && configuration.controlPlaneJWTAuthenticationRequired()) {
             httpState.setControlPlaneAuthenticationHandler(
                 new ChainedAuthenticationHandler(
-                    new MTLSAuthenticationHandler(mockServerLogger, nettySslContextFactory.trustCertificateChain(configuration.controlPlaneTLSMutualAuthenticationCAChain())),
+                    new MTLSAuthenticationHandler(mockServerLogger, nettyServerSslContextFactory.trustCertificateChain(configuration.controlPlaneTLSMutualAuthenticationCAChain())),
                     new JWTAuthenticationHandler(mockServerLogger, configuration.controlPlaneJWTAuthenticationJWKSource())
                         .withExpectedAudience(configuration.controlPlaneJWTAuthenticationExpectedAudience())
                         .withMatchingClaims(configuration.controlPlaneJWTAuthenticationMatchingClaims())
@@ -169,7 +170,7 @@ public class MockServer extends LifeCycle {
             );
         } else if (configuration.controlPlaneTLSMutualAuthenticationRequired()) {
             httpState.setControlPlaneAuthenticationHandler(
-                new MTLSAuthenticationHandler(mockServerLogger, nettySslContextFactory.trustCertificateChain(configuration.controlPlaneTLSMutualAuthenticationCAChain()))
+                new MTLSAuthenticationHandler(mockServerLogger, nettyServerSslContextFactory.trustCertificateChain(configuration.controlPlaneTLSMutualAuthenticationCAChain()))
             );
         } else if (configuration.controlPlaneJWTAuthenticationRequired()) {
             httpState.setControlPlaneAuthenticationHandler(
@@ -186,7 +187,7 @@ public class MockServer extends LifeCycle {
             .childOption(ChannelOption.AUTO_READ, true)
             .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
             .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
-            .childHandler(new MockServerUnificationInitializer(configuration, MockServer.this, httpState, new HttpActionHandler(configuration, getEventLoopGroup(), httpState, proxyConfigurations, nettySslContextFactory), nettySslContextFactory))
+            .childHandler(new MockServerUnificationInitializer(configuration, MockServer.this, httpState, new HttpActionHandler(configuration, getEventLoopGroup(), httpState, proxyConfigurations, nettyClientSslContextFactory), nettyServerSslContextFactory))
             .childAttr(REMOTE_SOCKET, remoteSocket)
             .childAttr(PROXYING, remoteSocket != null);
 
