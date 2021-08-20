@@ -81,7 +81,9 @@ public class NettySslContextFactory {
                             break;
                     }
                 } else {
-                    sslContextBuilder.trustManager(trustCertificateChain());
+                    sslContextBuilder.trustManager(
+                        mergeX509Certificates(jvmCAX509TrustCertificates(), trustCertificateChain())
+                    );
                 }
                 clientSslContext = clientSslContextBuilderFunction
                     .apply(sslContextBuilder);
@@ -91,6 +93,12 @@ public class NettySslContextFactory {
             }
         }
         return clientSslContext;
+    }
+
+    private X509Certificate[] mergeX509Certificates(X509Certificate[] first, X509Certificate[] second) {
+        X509Certificate[] merged = Arrays.copyOf(first, first.length + second.length);
+        System.arraycopy(second, 0, merged, first.length, second.length);
+        return merged;
     }
 
     private PrivateKey forwardProxyPrivateKey() {
