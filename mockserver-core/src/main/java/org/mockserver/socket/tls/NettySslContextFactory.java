@@ -82,7 +82,7 @@ public class NettySslContextFactory {
                     }
                 } else {
                     sslContextBuilder.trustManager(
-                        mergeX509Certificates(jvmCAX509TrustCertificates(), trustCertificateChain())
+                        concatX509Certificates(jvmCAX509TrustCertificates(), trustCertificateChain())
                     );
                 }
                 clientSslContext = clientSslContextBuilderFunction
@@ -95,7 +95,7 @@ public class NettySslContextFactory {
         return clientSslContext;
     }
 
-    private X509Certificate[] mergeX509Certificates(X509Certificate[] first, X509Certificate[] second) {
+    private X509Certificate[] concatX509Certificates(X509Certificate[] first, X509Certificate[] second) {
         X509Certificate[] merged = Arrays.copyOf(first, first.length + second.length);
         System.arraycopy(second, 0, merged, first.length, second.length);
         return merged;
