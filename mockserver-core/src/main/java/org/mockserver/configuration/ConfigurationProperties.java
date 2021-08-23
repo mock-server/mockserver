@@ -57,6 +57,7 @@ public class ConfigurationProperties {
     private static final String DEFAULT_MOCKSERVER_DYNAMICALLY_CREATE_CERTIFICATE_AUTHORITY_CERTIFICATE = "false";
     private static final String DEFAULT_TLS_MUTUAL_AUTHENTICATION_REQUIRED = "false";
     private static final String DEFAULT_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN = "";
+    private static final String DEFAULT_TLS_USE_JVM_TRUST_CERTIFICATES = "false";
     private static final String DEFAULT_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER_TYPE = "ANY";
     private static final String DEFAULT_FORWARD_PROXY_TLS_CUSTOM_TRUST_X509_CERTIFICATES = "";
     private static final String DEFAULT_FORWARD_PROXY_TLS_PRIVATE_KEY = "";
@@ -97,6 +98,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_DYNAMICALLY_CREATE_CERTIFICATE_AUTHORITY_CERTIFICATE = "mockserver.dynamicallyCreateCertificateAuthorityCertificate";
     private static final String MOCKSERVER_CERTIFICATE_DIRECTORY_TO_SAVE_DYNAMIC_SSL_CERTIFICATE = "mockserver.directoryToSaveDynamicSSLCertificate";
     private static final String MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_REQUIRED = "mockserver.tlsMutualAuthenticationRequired";
+    private static final String MOCKSERVER_TLS_USE_JVM_TRUST_CERTIFICATES = "mockserver.useJvmTrustCertificates";
     private static final String MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN = "mockserver.tlsMutualAuthenticationCertificateChain";
     private static final String MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER_TYPE = "mockserver.forwardProxyTLSX509CertificatesTrustManagerType";
     private static final String MOCKSERVER_FORWARD_PROXY_TLS_CUSTOM_TRUST_X509_CERTIFICATES = "mockserver.forwardProxyTLSCustomTrustX509Certificates";
@@ -212,6 +214,7 @@ public class ConfigurationProperties {
     private static boolean attemptToProxyIfNoMatchingExpectation = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION, "MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION", "" + true));
     private static boolean enableMTLS = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_REQUIRED, "MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_REQUIRED", DEFAULT_TLS_MUTUAL_AUTHENTICATION_REQUIRED));
     private static String tlsMutualAuthenticationCertificateChain = readPropertyHierarchically(MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN, "MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN", DEFAULT_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN);
+    private static boolean useJvmTrustCertificates = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_TLS_USE_JVM_TRUST_CERTIFICATES, "MOCKSERVER_TLS_USE_JVM_TRUST_CERTIFICATES", DEFAULT_TLS_USE_JVM_TRUST_CERTIFICATES));
     private static ForwardProxyTLSX509CertificatesTrustManager forwardProxyTLSX509CertificatesTrustManagerType = validateTrustManagerType(readPropertyHierarchically(MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER_TYPE, "MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER_TYPE", DEFAULT_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER_TYPE));
     private static String forwardProxyTLSCustomTrustX509Certificates = readPropertyHierarchically(MOCKSERVER_FORWARD_PROXY_TLS_CUSTOM_TRUST_X509_CERTIFICATES, "MOCKSERVER_FORWARD_PROXY_TLS_CUSTOM_TRUST_X509_CERTIFICATES", DEFAULT_FORWARD_PROXY_TLS_CUSTOM_TRUST_X509_CERTIFICATES);
     private static String forwardProxyPrivateKey = readPropertyHierarchically(MOCKSERVER_FORWARD_PROXY_TLS_PRIVATE_KEY, "MOCKSERVER_FORWARD_PROXY_TLS_PRIVATE_KEY", DEFAULT_FORWARD_PROXY_TLS_PRIVATE_KEY);
@@ -659,6 +662,20 @@ public class ConfigurationProperties {
 
     public static String tlsMutualAuthenticationCertificateChain() {
         return tlsMutualAuthenticationCertificateChain;
+    }
+
+    /**
+     * Use JVM Trust Store for Trusting (i.e. signature verification of) Client X.509 Certificates.
+     *
+     * @param use JVM Trust Store
+     */
+    public static void useJvmTrustCertificates(boolean use) {
+        System.setProperty(MOCKSERVER_TLS_USE_JVM_TRUST_CERTIFICATES, "" + use);
+        useJvmTrustCertificates = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_TLS_USE_JVM_TRUST_CERTIFICATES, "MOCKSERVER_TLS_USE_JVM_TRUST_CERTIFICATES", DEFAULT_TLS_USE_JVM_TRUST_CERTIFICATES));
+    }
+
+    public static boolean useJvmTrustCertificates() {
+        return useJvmTrustCertificates;
     }
 
     /**

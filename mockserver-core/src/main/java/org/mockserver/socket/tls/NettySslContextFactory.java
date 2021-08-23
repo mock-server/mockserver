@@ -81,9 +81,7 @@ public class NettySslContextFactory {
                             break;
                     }
                 } else {
-                    sslContextBuilder.trustManager(
-                        concatX509Certificates(jvmCAX509TrustCertificates(), trustCertificateChain())
-                    );
+                    sslContextBuilder.trustManager(getX509TrustCertificates());
                 }
                 clientSslContext = clientSslContextBuilderFunction
                     .apply(sslContextBuilder);
@@ -93,6 +91,16 @@ public class NettySslContextFactory {
             }
         }
         return clientSslContext;
+    }
+
+    private X509Certificate[] getX509TrustCertificates() throws NoSuchAlgorithmException, KeyStoreException {
+        X509Certificate[] trustCerts;
+        if (ConfigurationProperties.useJvmTrustCertificates()) {
+            trustCerts = concatX509Certificates(jvmCAX509TrustCertificates(), trustCertificateChain());
+        } else {
+            trustCerts = trustCertificateChain();
+        }
+        return trustCerts;
     }
 
     private X509Certificate[] concatX509Certificates(X509Certificate[] first, X509Certificate[] second) {
