@@ -335,9 +335,9 @@
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.tlsMutualAuthenticationCertificateChain="/some/existing/path"</code></pre>
 </div>
 
-<button id="button_configuration_mockserver_client_use_jvm_truststore" class="accordion title"><strong>Inbound TLS X.509 Trusted Certificates (for Trusting Client X.509 Certificates)</strong></button>
+<button id="button_configuration_mockserver_client_use_jvm_truststore" class="accordion title"><strong>Inbound TLS X.509 JVM Trusted Certificates</strong></button>
 <div class="panel title">
-    <p>Use JVM X.509 Certificates Trust Store for trusting custom certificates. This the trusted certificates will only be used if MockServerClient performs TLS to calls to MockServer.</p>
+    <p>Use JVM X.509 Certificates Trust Store for trusting custom certificates. The trusted certificates will only be used if MockServerClient performs TLS to calls to MockServer.</p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
     <p>Java Code:</p>
     <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.useJvmTrustCertificates(boolean use)</code></pre>
