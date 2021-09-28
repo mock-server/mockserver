@@ -15,6 +15,7 @@ import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.util.IPAddress;
 import org.mockserver.configuration.Configuration;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.file.FileCreator;
 import org.mockserver.file.FilePath;
 import org.mockserver.file.FileReader;
@@ -376,4 +377,11 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
         }
     }
 
+    @Override
+    public List<X509Certificate> certificateChain() {
+        final List<X509Certificate> result = new ArrayList<>();
+        result.add(x509Certificate());
+        result.add(certificateAuthorityX509Certificate());
+        return result;
+    }
 }

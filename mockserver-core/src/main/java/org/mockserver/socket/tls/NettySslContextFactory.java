@@ -193,8 +193,7 @@ public class NettySslContextFactory {
                 SslContextBuilder sslContextBuilder = SslContextBuilder
                     .forServer(
                         keyAndCertificateFactory.privateKey(),
-                        keyAndCertificateFactory.x509Certificate(),
-                        keyAndCertificateFactory.certificateAuthorityX509Certificate()
+                        keyAndCertificateFactory.certificateChain()
                     )
                     .protocols(TLS_PROTOCOLS)
 //                    .sslProvider(SslProvider.JDK)
