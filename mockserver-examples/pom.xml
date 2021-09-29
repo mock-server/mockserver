@@ -20,6 +20,17 @@
         <google-http-client.version>1.38.0</google-http-client.version>
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <!-- Conflicting versions in jersey-media-json-jackson -->
+                <groupId>jakarta.activation</groupId>
+                <artifactId>jakarta.activation-api</artifactId>
+                <version>1.2.2</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <!-- mockserver -->
         <dependency>
