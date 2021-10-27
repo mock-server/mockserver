@@ -25,6 +25,9 @@ service:
   nodePort: ""
 
 ingress:
+  ingressClass:
+    enabled: false
+    name: ""
   enabled: false
   annotations: {}
   path: /
