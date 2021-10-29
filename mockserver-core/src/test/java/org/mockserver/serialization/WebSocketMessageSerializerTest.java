@@ -12,7 +12,6 @@ import org.mockserver.serialization.model.*;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Delay.minutes;
@@ -85,8 +84,7 @@ public class WebSocketMessageSerializerTest {
         );
 
         // then
-        assertTrue(jsonHttpResponse.equals(
-            "{" + NEW_LINE +
+        assertEquals("{" + NEW_LINE +
             "  \"type\" : \"org.mockserver.model.HttpResponse\"," + NEW_LINE +
             "  \"value\" : \"{" + StringEscapeUtils.escapeJava(NEW_LINE) +
             "  \\\"statusCode\\\" : 123," + StringEscapeUtils.escapeJava(NEW_LINE) +
@@ -102,26 +100,7 @@ public class WebSocketMessageSerializerTest {
             "    \\\"value\\\" : 1" + StringEscapeUtils.escapeJava(NEW_LINE) +
             "  }" + StringEscapeUtils.escapeJava(NEW_LINE) +
             "}\"" + NEW_LINE +
-            "}"
-        ) || jsonHttpResponse.equals(
-            "{" + NEW_LINE +
-            "  \"type\" : \"org.mockserver.model.HttpResponse\"," + NEW_LINE +
-            "  \"value\" : \"{" + StringEscapeUtils.escapeJava(NEW_LINE) +
-            "  \\\"statusCode\\\" : 123," + StringEscapeUtils.escapeJava(NEW_LINE) +
-            "  \\\"headers\\\" : {" + StringEscapeUtils.escapeJava(NEW_LINE) +
-            "    \\\"someHeaderName\\\" : [ \\\"someHeaderValue\\\" ]" + StringEscapeUtils.escapeJava(NEW_LINE) +
-            "  }," + StringEscapeUtils.escapeJava(NEW_LINE) +
-            "  \\\"cookies\\\" : {" + StringEscapeUtils.escapeJava(NEW_LINE) +
-            "    \\\"someCookieName\\\" : \\\"someCookieValue\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) +
-            "  }," + StringEscapeUtils.escapeJava(NEW_LINE) +
-            "  \\\"body\\\" : \\\"somebody\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
-            "  \\\"delay\\\" : {" + StringEscapeUtils.escapeJava(NEW_LINE) +
-            "    \\\"value\\\" : 1," + StringEscapeUtils.escapeJava(NEW_LINE) +
-            "    \\\"timeUnit\\\" : \\\"MINUTES\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) +
-            "  }" + StringEscapeUtils.escapeJava(NEW_LINE) +
-            "}\"" + NEW_LINE +
-            "}"
-        ));
+            "}", jsonHttpResponse);
     }
 
     @Test
