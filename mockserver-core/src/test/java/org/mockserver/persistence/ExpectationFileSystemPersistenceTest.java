@@ -1,5 +1,8 @@
 package org.mockserver.persistence;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
@@ -11,16 +14,24 @@ import org.mockserver.mock.listeners.MockServerMatcherNotifier;
 import org.mockserver.scheduler.Scheduler;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Iterator;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.API;
-import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.HttpResponse.response;
+import static java.util.concurrent.TimeUnit.*;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.*;
+import static org.mockserver.character.Character.*;
+import static org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.*;
+import static org.mockserver.model.HttpRequest.*;
+import static org.mockserver.model.HttpResponse.*;
 
 public class ExpectationFileSystemPersistenceTest {
 
@@ -121,7 +132,8 @@ public class ExpectationFileSystemPersistenceTest {
                 "    \"body\" : \"some third response\"" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "} ]";
-            assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8), is(expectedFileContents));
+
+            assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", process(persistedExpectations, expectedFileContents), is(true));
         } finally {
             ConfigurationProperties.persistedExpectationsPath(persistedExpectationsPath);
             ConfigurationProperties.persistExpectations(false);
@@ -129,6 +141,61 @@ public class ExpectationFileSystemPersistenceTest {
                 expectationFileSystemPersistence.stop();
             }
         }
+    }
+
+    private boolean process(File file, String expectedStr) throws JSONException, IOException {
+        long len = file.length();
+        byte[] fileContent = new byte[(int) len];
+        try {
+            FileInputStream in = new FileInputStream(file);
+            in.read(fileContent);
+            in.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        JSONArray actual = new JSONArray(new String(fileContent, StandardCharsets.UTF_8));
+        JSONArray expected = new JSONArray(expectedStr);
+        SortedMap<String, Object> actualMap;
+        SortedMap<String, Object> expectedMap;
+        if (actual.length() != expected.length()) {
+            return false;
+        }
+        for (int i = 0; i < actual.length(); ++i) {
+            expectedMap = new TreeMap<>();
+            actualMap = new TreeMap<>();
+            JSONObject actualObj = (JSONObject) actual.get(i);
+            JSONObject expectedObj = (JSONObject) expected.get(i);
+            Iterator iterator1 = actualObj.keys();
+            Iterator iterator2 = expectedObj.keys();
+            while(iterator1.hasNext()) {
+                String key = iterator1.next().toString();
+                Object value =  actualObj.get(key);
+                actualMap.put(key, value);
+            }
+            while(iterator2.hasNext()) {
+                String key = iterator2.next().toString();
+                Object value = expectedObj.get(key);
+                expectedMap.put(key, value);
+            }
+            if (!compareTwoMaps(expectedMap, actualMap)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean compareTwoMaps(SortedMap<String, Object> map1, SortedMap<String, Object> map2) {
+        for (String key : map1.keySet()) {
+            if (!map2.containsKey(key)) {
+                return false;
+            }
+            Object val1 = map1.get(key);
+            Object val2 = map2.get(key);
+            if (!val1.toString().equals(val2.toString())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Test
