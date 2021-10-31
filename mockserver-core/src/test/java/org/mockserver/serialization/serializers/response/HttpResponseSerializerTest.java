@@ -1,11 +1,6 @@
 package org.mockserver.serialization.serializers.response;
 
-import com.fasterxml.jackson.core.FormatSchema;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import org.junit.Test;
 import org.mockserver.model.ConnectionOptions;
 import org.mockserver.model.Cookie;
