@@ -1,6 +1,11 @@
 package org.mockserver.serialization.serializers.response;
 
+import com.fasterxml.jackson.core.FormatSchema;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.junit.Test;
 import org.mockserver.model.ConnectionOptions;
 import org.mockserver.model.Cookie;
@@ -28,7 +33,8 @@ public class HttpResponseSerializerTest {
 
     @Test
     public void shouldReturnFormattedResponseWithAllFieldsSet() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper(true).writeValueAsString(
+        assertThat(ObjectMapperFactory.createObjectMapper(true)
+                .writeValueAsString(
             response()
                 .withStatusCode(302)
                 .withReasonPhrase("randomReason")
@@ -62,16 +68,16 @@ public class HttpResponseSerializerTest {
                 "    \"value\" : 1" + NEW_LINE +
                 "  }," + NEW_LINE +
                 "  \"connectionOptions\" : {" + NEW_LINE +
-                "    \"suppressContentLengthHeader\" : true," + NEW_LINE +
-                "    \"contentLengthHeaderOverride\" : 50," + NEW_LINE +
-                "    \"suppressConnectionHeader\" : true," + NEW_LINE +
                 "    \"chunkSize\" : 100," + NEW_LINE +
-                "    \"keepAliveOverride\" : true," + NEW_LINE +
                 "    \"closeSocket\" : true," + NEW_LINE +
                 "    \"closeSocketDelay\" : {" + NEW_LINE +
                 "      \"timeUnit\" : \"MILLISECONDS\"," + NEW_LINE +
                 "      \"value\" : 100" + NEW_LINE +
-                "    }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"contentLengthHeaderOverride\" : 50," + NEW_LINE +
+                "    \"keepAliveOverride\" : true," + NEW_LINE +
+                "    \"suppressConnectionHeader\" : true," + NEW_LINE +
+                "    \"suppressContentLengthHeader\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}"));
     }

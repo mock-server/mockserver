@@ -130,7 +130,7 @@ public class ObjectMapperFactory {
 
     private static ObjectMapper buildObjectMapperWithDeserializerAndSerializers(List<JsonDeserializer> replacementJsonDeserializers, List<JsonSerializer> replacementJsonSerializers) {
         ObjectMapper objectMapper = buildObjectMapperWithoutDeserializerAndSerializers();
-
+        objectMapper.configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY,true);
         // register our own module with our serializers and deserializers
         SimpleModule module = new SimpleModule();
         addDeserializers(module, replacementJsonDeserializers.toArray(new JsonDeserializer[0]));
