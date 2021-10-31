@@ -68,16 +68,16 @@ public class HttpResponseDTOSerializerTest {
                 "    \"value\" : 1" + NEW_LINE +
                 "  }," + NEW_LINE +
                 "  \"connectionOptions\" : {" + NEW_LINE +
-                "    \"suppressContentLengthHeader\" : true," + NEW_LINE +
-                "    \"contentLengthHeaderOverride\" : 50," + NEW_LINE +
-                "    \"suppressConnectionHeader\" : true," + NEW_LINE +
                 "    \"chunkSize\" : 100," + NEW_LINE +
-                "    \"keepAliveOverride\" : true," + NEW_LINE +
                 "    \"closeSocket\" : true," + NEW_LINE +
                 "    \"closeSocketDelay\" : {" + NEW_LINE +
                 "      \"timeUnit\" : \"MILLISECONDS\"," + NEW_LINE +
                 "      \"value\" : 100" + NEW_LINE +
-                "    }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"contentLengthHeaderOverride\" : 50," + NEW_LINE +
+                "    \"keepAliveOverride\" : true," + NEW_LINE +
+                "    \"suppressConnectionHeader\" : true," + NEW_LINE +
+                "    \"suppressContentLengthHeader\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}"));
     }
