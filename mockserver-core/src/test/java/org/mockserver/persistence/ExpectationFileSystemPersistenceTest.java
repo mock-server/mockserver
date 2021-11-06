@@ -397,7 +397,7 @@ public class ExpectationFileSystemPersistenceTest {
             MILLISECONDS.sleep(1500);
 
             // then
-            assertThat("reason", match(new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8)));
+            assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", match(new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8)));
         } finally {
             ConfigurationProperties.persistedExpectationsPath(persistedExpectationsPath);
             ConfigurationProperties.persistExpectations(false);
