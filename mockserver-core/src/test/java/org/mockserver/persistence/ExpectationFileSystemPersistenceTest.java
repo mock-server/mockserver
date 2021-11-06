@@ -13,6 +13,7 @@ import org.mockserver.scheduler.Scheduler;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.*;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.CoreMatchers.is;
@@ -396,53 +397,7 @@ public class ExpectationFileSystemPersistenceTest {
             MILLISECONDS.sleep(1500);
 
             // then
-            String expectedFileContents = "[ {" + NEW_LINE +
-                "  \"id\" : \"one\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
-                "  \"httpRequest\" : {" + NEW_LINE +
-                "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"timeToLive\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some first response\"" + NEW_LINE +
-                "  }" + NEW_LINE +
-                "}, {" + NEW_LINE +
-                "  \"id\" : \"two\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
-                "  \"httpRequest\" : {" + NEW_LINE +
-                "    \"path\" : \"/simpleSecondUpdated\"" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"timeToLive\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some second updated response\"" + NEW_LINE +
-                "  }" + NEW_LINE +
-                "}, {" + NEW_LINE +
-                "  \"id\" : \"four\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
-                "  \"httpRequest\" : {" + NEW_LINE +
-                "    \"path\" : \"/simpleFourth\"" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"timeToLive\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some fourth response\"" + NEW_LINE +
-                "  }" + NEW_LINE +
-                "} ]";
-            assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8), is(expectedFileContents));
+            assertThat("reason", match(new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8)));
         } finally {
             ConfigurationProperties.persistedExpectationsPath(persistedExpectationsPath);
             ConfigurationProperties.persistExpectations(false);
@@ -450,6 +405,118 @@ public class ExpectationFileSystemPersistenceTest {
                 expectationFileSystemPersistence.stop();
             }
         }
+    }
+
+    private boolean match(String actualFileContent) {
+        String prefix = "[ {" + NEW_LINE;
+        String middle = "}, {" + NEW_LINE;
+        String suffix = "} ]";
+
+        String id1 = "  \"id\" : \"one\"";
+        String priority1 = "  \"priority\" : 0";
+        String httpRequest1 = "  \"httpRequest\" : {" + NEW_LINE +
+        "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
+        "  }";
+        String times1 = "  \"times\" : {" + NEW_LINE +
+        "    \"unlimited\" : true" + NEW_LINE +
+        "  }";
+        String timeToLive1 = "  \"timeToLive\" : {" + NEW_LINE +
+        "    \"unlimited\" : true" + NEW_LINE +
+        "  }";
+        String httpResponse1 = "  \"httpResponse\" : {" + NEW_LINE +
+        "    \"body\" : \"some first response\"" + NEW_LINE +
+        "  }";
+
+        String id2 = "  \"id\" : \"two\"";
+        String priority2 = "  \"priority\" : 0";
+        String httpRequest2 = "  \"httpRequest\" : {" + NEW_LINE +
+        "    \"path\" : \"/simpleSecondUpdated\"" + NEW_LINE +
+        "  }";
+        String times2 = "  \"times\" : {" + NEW_LINE +
+        "    \"unlimited\" : true" + NEW_LINE +
+        "  }";
+        String timeToLive2 = "  \"timeToLive\" : {" + NEW_LINE +
+        "    \"unlimited\" : true" + NEW_LINE +
+        "  }";
+        String httpResponse2 = "  \"httpResponse\" : {" + NEW_LINE +
+        "    \"body\" : \"some second updated response\"" + NEW_LINE +
+        "  }";
+
+        String id4 = "  \"id\" : \"four\"";
+        String priority4 = "  \"priority\" : 0";
+        String httpRequest4 = "  \"httpRequest\" : {" + NEW_LINE +
+        "    \"path\" : \"/simpleFourth\"" + NEW_LINE +
+        "  }";
+        String times4 = "  \"times\" : {" + NEW_LINE +
+        "    \"unlimited\" : true" + NEW_LINE +
+        "  }";
+        String timeToLive4 = "  \"timeToLive\" : {" + NEW_LINE +
+        "    \"unlimited\" : true" + NEW_LINE +
+        "  }";
+        String httpResponse4 = "  \"httpResponse\" : {" + NEW_LINE +
+        "    \"body\" : \"some fourth response\"" + NEW_LINE +
+        "  }";
+
+        String[] arr1 = {id1, priority1, httpRequest1, times1, timeToLive1, httpResponse1};
+        String[] arr2 = {id2, priority2, httpRequest2, times2, timeToLive2, httpResponse2};
+        String[] arr4 = {id4, priority4, httpRequest4, times4, timeToLive4, httpResponse4};
+        Set<String> expectedFileContents1 = getAllPossibleFileContents(arr1);
+        Set<String> expectedFileContents2 = getAllPossibleFileContents(arr2);
+        Set<String> expectedFileContents4 = getAllPossibleFileContents(arr4);
+        for (String content1 : expectedFileContents1) {
+            for (String content2 : expectedFileContents2) {
+                for (String content4 : expectedFileContents4) {
+                    if (actualFileContent.equals(prefix + content1 + middle + content2 + middle + content4 + suffix)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private Set<String> getAllPossibleFileContents(String[] arr) {
+        List<List<String>> allPermutations = new ArrayList<>();
+        List<String> currPermutation = new ArrayList<>();
+        dfs(arr, allPermutations, currPermutation, 0);
+        return buildAllPossibleFileContents(allPermutations);
+    }
+
+    private Set<String> buildAllPossibleFileContents(List<List<String>> allPermutations) {
+        Set<String> set = new HashSet<>();
+        for (List<String> list : allPermutations) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < list.size(); i++) {
+                sb.append(list.get(i));
+                if (i != list.size() - 1) {
+                    sb.append("," + NEW_LINE);
+                } else {
+                    sb.append(NEW_LINE);
+                }
+            }
+            set.add(sb.toString());
+        }
+        return set;
+    }
+
+    private void dfs(String[] arr, List<List<String>> res, List<String> list, int index) {
+        if (index == arr.length) {
+            res.add(new ArrayList<>(list));
+            return;
+        }
+        for (int i = index; i < arr.length; i++) {
+            swap(arr, index, i);
+            list.add(arr[index]);
+            dfs(arr, res, list, index + 1);
+            list.remove(list.size() - 1);
+            swap(arr, index, i);
+        }
+    }
+
+    private void swap(String[] arr, int i, int j) {
+        String tmp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = tmp;
     }
 
     @Test
