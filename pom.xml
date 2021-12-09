@@ -58,7 +58,7 @@
         <slf4j.version>1.7.30</slf4j.version>
         <jackson.version>2.11.3</jackson.version>
         <velocity.version>2.2</velocity.version>
-        <netty.version>4.1.55.Final</netty.version>
+        <netty.version>4.1.71.Final</netty.version>
         <httpcomponents.version>4.4.1</httpcomponents.version>
         <boucycastle.verion>1.67</boucycastle.verion>
         <spring.version>5.3.2</spring.version>
