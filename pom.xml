@@ -56,7 +56,7 @@
         <project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
         <jetty.version>9.4.35.v20201120</jetty.version>
         <slf4j.version>1.7.30</slf4j.version>
-        <jackson.version>2.11.3</jackson.version>
+        <jackson.version>2.13.1</jackson.version>
         <velocity.version>2.2</velocity.version>
         <netty.version>4.1.55.Final</netty.version>
         <httpcomponents.version>4.4.1</httpcomponents.version>
