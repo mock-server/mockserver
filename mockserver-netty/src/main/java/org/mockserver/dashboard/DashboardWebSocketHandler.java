@@ -33,10 +33,7 @@ import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.ExpectationDTO;
 import org.slf4j.event.Level;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -354,9 +351,10 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
                                     ((ObjectNode) httpRequestJsonNode).set("requestMatchers", objectMapper.valueToTree(requestMatcher.getHttpRequests()));
                                 }
                             }
+                            Description description = activeExpectationsDescriptionProcessor.description(requestMatcher.getExpectation().getHttpRequest(), requestMatcher.getExpectation().getId());
                             return ImmutableMap.of(
                                 "key", requestMatcher.getExpectation().getId(),
-                                "description", activeExpectationsDescriptionProcessor.description(requestMatcher.getExpectation().getHttpRequest(), requestMatcher.getExpectation().getId()),
+                                "description", description != null ? description : "",
                                 "value", expectationJsonNode
                             );
                         })
