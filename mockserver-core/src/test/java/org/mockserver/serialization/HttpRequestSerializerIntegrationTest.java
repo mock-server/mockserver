@@ -1155,8 +1155,8 @@ public class HttpRequestSerializerIntegrationTest {
             "  \"body\" : {" + NEW_LINE +
             "    \"type\" : \"PARAMETERS\"," + NEW_LINE +
             "    \"parameters\" : {" + NEW_LINE +
-            "      \"nameOne\" : [ \"valueOne\" ]," + NEW_LINE +
-            "      \"nameTwo\" : [ \"valueTwo_One\", \"valueTwo_Two\" ]" + NEW_LINE +
+            "      \"nameTwo\" : [ \"valueTwo_One\", \"valueTwo_Two\" ]," + NEW_LINE +
+            "      \"nameOne\" : [ \"valueOne\" ]" + NEW_LINE +
             "    }" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonHttpRequest);

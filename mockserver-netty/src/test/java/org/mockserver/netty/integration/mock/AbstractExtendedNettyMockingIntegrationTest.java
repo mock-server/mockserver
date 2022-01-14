@@ -885,8 +885,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     header("x-test", "test_headers_and_body")
                 )
                 .withBody("some_overridden_body {" + NEW_LINE +
-                    "  \"variableOne\" : [ \"variableOneValue\" ]," + NEW_LINE +
-                    "  \"variableTwo\" : [ \"variableTwoValue\" ]" + NEW_LINE +
+                    "  \"variableTwo\" : [ \"variableTwoValue\" ]," + NEW_LINE +
+                    "  \"variableOne\" : [ \"variableOneValue\" ]" + NEW_LINE +
                     "}"),
             makeRequest(
                 request()
