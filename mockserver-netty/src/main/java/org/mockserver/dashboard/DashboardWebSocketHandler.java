@@ -354,7 +354,7 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
                             Description description = activeExpectationsDescriptionProcessor.description(requestMatcher.getExpectation().getHttpRequest(), requestMatcher.getExpectation().getId());
                             return ImmutableMap.of(
                                 "key", requestMatcher.getExpectation().getId(),
-                                "description", description != null ? description : "",
+                                "description", description != null ? description : requestMatcher.getExpectation().getId(),
                                 "value", expectationJsonNode
                             );
                         })
