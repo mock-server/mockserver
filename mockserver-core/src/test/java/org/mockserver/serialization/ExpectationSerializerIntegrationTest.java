@@ -1215,12 +1215,12 @@ public class ExpectationSerializerIntegrationTest {
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"pathParameters\" : {" + NEW_LINE +
-            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
-            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"headers\" : {" + NEW_LINE +
             "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
@@ -1562,12 +1562,12 @@ public class ExpectationSerializerIntegrationTest {
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"pathParameters\" : {" + NEW_LINE +
-            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
-            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"headers\" : {" + NEW_LINE +
             "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
@@ -1656,12 +1656,12 @@ public class ExpectationSerializerIntegrationTest {
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"pathParameters\" : {" + NEW_LINE +
-            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
-            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"headers\" : {" + NEW_LINE +
             "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
@@ -1731,12 +1731,12 @@ public class ExpectationSerializerIntegrationTest {
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"pathParameters\" : {" + NEW_LINE +
-            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
-            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"headers\" : {" + NEW_LINE +
             "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
@@ -1802,12 +1802,12 @@ public class ExpectationSerializerIntegrationTest {
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"pathParameters\" : {" + NEW_LINE +
-            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
-            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"headers\" : {" + NEW_LINE +
             "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
@@ -1875,12 +1875,12 @@ public class ExpectationSerializerIntegrationTest {
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"pathParameters\" : {" + NEW_LINE +
-            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
-            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"headers\" : {" + NEW_LINE +
             "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
@@ -1950,12 +1950,12 @@ public class ExpectationSerializerIntegrationTest {
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"pathParameters\" : {" + NEW_LINE +
-            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
-            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"headers\" : {" + NEW_LINE +
             "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
@@ -2025,12 +2025,12 @@ public class ExpectationSerializerIntegrationTest {
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"pathParameters\" : {" + NEW_LINE +
-            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
-            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"headers\" : {" + NEW_LINE +
             "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
@@ -2096,12 +2096,12 @@ public class ExpectationSerializerIntegrationTest {
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"pathParameters\" : {" + NEW_LINE +
-            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
-            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"headers\" : {" + NEW_LINE +
             "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
@@ -2174,12 +2174,12 @@ public class ExpectationSerializerIntegrationTest {
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"pathParameters\" : {" + NEW_LINE +
-            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
-            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"headers\" : {" + NEW_LINE +
             "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
@@ -2254,12 +2254,12 @@ public class ExpectationSerializerIntegrationTest {
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"pathParameters\" : {" + NEW_LINE +
-            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
-            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"headers\" : {" + NEW_LINE +
             "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
@@ -2333,12 +2333,12 @@ public class ExpectationSerializerIntegrationTest {
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"pathParameters\" : {" + NEW_LINE +
-            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
-            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
-            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"headers\" : {" + NEW_LINE +
             "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
@@ -2718,8 +2718,8 @@ public class ExpectationSerializerIntegrationTest {
             "    \"body\" : {" + NEW_LINE +
             "      \"type\" : \"PARAMETERS\"," + NEW_LINE +
             "      \"parameters\" : {" + NEW_LINE +
-            "        \"parameterOneName\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]," + NEW_LINE +
-            "        \"parameterTwoName\" : [ \"parameterTwoValue\" ]" + NEW_LINE +
+            "        \"parameterTwoName\" : [ \"parameterTwoValue\" ]," + NEW_LINE +
+            "        \"parameterOneName\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + NEW_LINE +
             "      }" + NEW_LINE +
             "    }" + NEW_LINE +
             "  }," + NEW_LINE +

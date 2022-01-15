@@ -20,7 +20,8 @@ public class JsonSchemaVerificationValidator extends JsonSchemaValidator {
             "body",
             "keyToMultiValue",
             "keyToValue",
-            "verificationTimes"
+            "verificationTimes",
+            "socketAddress"
         );
     }
 

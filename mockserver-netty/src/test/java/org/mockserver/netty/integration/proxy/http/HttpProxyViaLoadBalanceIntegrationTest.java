@@ -168,8 +168,8 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
                 "    \"statusCode\" : 200," + NEW_LINE +
                 "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
                 "    \"headers\" : {" + NEW_LINE +
-                "      \"connection\" : [ \"keep-alive\" ]," + NEW_LINE +
-                "      \"content-length\" : [ \"15\" ]" + NEW_LINE +
+                "      \"content-length\" : [ \"15\" ]," + NEW_LINE +
+                "      \"connection\" : [ \"keep-alive\" ]" + NEW_LINE +
                 "    }," + NEW_LINE +
                 "    \"body\" : \"target_response\"" + NEW_LINE +
                 "  }" + NEW_LINE +
@@ -270,8 +270,8 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
                 "    \"statusCode\" : 200," + NEW_LINE +
                 "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
                 "    \"headers\" : {" + NEW_LINE +
-                "      \"connection\" : [ \"keep-alive\" ]," + NEW_LINE +
-                "      \"content-length\" : [ \"15\" ]" + NEW_LINE +
+                "      \"content-length\" : [ \"15\" ]," + NEW_LINE +
+                "      \"connection\" : [ \"keep-alive\" ]" + NEW_LINE +
                 "    }," + NEW_LINE +
                 "    \"body\" : \"target_response\"" + NEW_LINE +
                 "  }" + NEW_LINE +

@@ -328,6 +328,17 @@ public class MediaTypeTest {
     }
 
     @Test
+    public void shouldNotDetectAsJson() {
+        List<String> jsonContentTypes = Arrays.asList(
+            "application/x-ndjson"
+        );
+        for (String contentType : jsonContentTypes) {
+            MediaType parse = MediaType.parse(contentType);
+            assertThat(contentType + " should not be json", parse.isJson(), is(false));
+        }
+    }
+
+    @Test
     public void shouldDetectAsXml() {
         List<String> xmlContentTypes = Arrays.asList(
             "application/xml",

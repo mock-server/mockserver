@@ -21,7 +21,7 @@
 
    OR
 
-   kubectl -n mockserver port-forward svc/mockserver 1080:1080 &
+   kubectl -n {{ .Release.Namespace }} port-forward svc/mockserver 1080:1080 &
    export MOCKSERVER_HOST=127.0.0.1:1080
    echo http://$MOCKSERVER_HOST
 {{- else if contains "LoadBalancer" .Values.service.type }}
@@ -34,7 +34,7 @@
 
    OR
 
-   kubectl -n mockserver port-forward svc/mockserver 1080:1080 &
+   kubectl -n {{ .Release.Namespace }} port-forward svc/mockserver 1080:1080 &
    export MOCKSERVER_HOST=127.0.0.1:1080
    echo http://$MOCKSERVER_HOST
 {{- else if contains "ClusterIP" .Values.service.type }}
@@ -46,7 +46,7 @@
 
    OR
 
-   kubectl -n mockserver port-forward svc/mockserver 1080:1080 &
+   kubectl -n {{ .Release.Namespace }} port-forward svc/mockserver 1080:1080 &
    export MOCKSERVER_HOST=127.0.0.1:1080
    echo http://$MOCKSERVER_HOST
 {{- end }}

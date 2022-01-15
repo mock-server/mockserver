@@ -32,7 +32,7 @@ layout: default
 	<li>both a <a href="/proxy/getting_started.html">proxy</a> for some requests and a <a href="/mock_server/getting_started.html">mock</a> for other requests at the same time</li>
 </ul>
 
-<p>When MockServer receives a request it matches the request against active <strong>expectations</strong> that have been configured, if no matches are found it proxies the request if appropriate otherwise a 404 is returned.</p>
+<p>When MockServer receives a request it matches the request against active <strong>expectations</strong> that have been configured. Then, if no matches are found, it proxies the request if appropriate; otherwise a 404 is returned.</p>
 
 <p>For each request received the following steps happen:</p>
 
@@ -108,7 +108,7 @@ layout: default
 	</li>
 	<li><strong>Secure Web Proxying</strong> (i.e. HTTPS tunneling proxying)
 		<ul>
-			<li>requests are forwarded using a CONNECT request that setups an HTTP tunnel</li>
+			<li>requests are forwarded using a CONNECT request that sets up an HTTP tunnel</li>
 			<li>an SSL certificate is auto-generated allowing encrypted HTTPS traffic to be recorded transparently</li>
 			<li>to proxy requests the <strong>HTTP client</strong> should <a href="/proxy/configuring_sut.html">be configured to use an HTTP Proxy</a></li>
 		</ul>
@@ -155,7 +155,7 @@ layout: default
 		<ul>
 			<li>easily recreate all types of responses for HTTP dependencies such as REST or RPC services to test applications easily and affectively</li>
 			<li>isolate the system-under-test to ensure tests run reliably and only fail when there is a genuine bug. It is important only the system-under-test is tested and not its dependencies to avoid tests failing due to irrelevant external changes such as network failure or a server being rebooted / redeployed.</li>
-			<li>easily setup mock responses independently for each test to ensure test data is encapsulated with each test. Avoid sharing data between tests that is difficult to manage and maintain and risks tests infecting each other</li>
+			<li>easily set up mock responses independently for each test to ensure test data is encapsulated with each test. Avoid sharing data between tests that is difficult to manage and maintain and risks tests infecting each other</li>
 			<li>create test assertions that verify the requests the system-under-test has sent</li>
 		</ul>
 	</li>
