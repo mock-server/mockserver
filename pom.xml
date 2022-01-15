@@ -56,8 +56,8 @@
         <project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
         <jetty.version>9.4.35.v20201120</jetty.version>
         <slf4j.version>1.7.33</slf4j.version>
-        <jackson.version>2.12.0</jackson.version>
-        <velocity.version>2.2</velocity.version>
+        <jackson.version>2.13.1</jackson.version>
+        <velocity.version>2.3</velocity.version>
         <netty.version>4.1.72.Final</netty.version>
         <httpcomponents.version>4.4.1</httpcomponents.version>
         <boucycastle.verion>1.69</boucycastle.verion>
@@ -366,7 +366,7 @@
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <version>30.0-android</version>
+                <version>31.0.1-android</version>
             </dependency>
 
             <!-- logging -->
