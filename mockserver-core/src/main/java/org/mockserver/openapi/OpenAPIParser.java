@@ -1,5 +1,6 @@
 package org.mockserver.openapi;
 
+import com.google.common.base.Joiner;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
@@ -65,13 +66,13 @@ public class OpenAPIParser {
                     }
                 }
             } catch (Throwable throwable) {
-                throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + (isNotBlank(throwable.getMessage()) ? ", " + throwable.getMessage() : ""), throwable);
+                throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + (isNotBlank(throwable.getMessage()) ? ", " + throwable.getMessage() : ", " + Joiner.on(", ").skipNulls().join(errorMessage)), throwable);
             }
             if (openAPI != null) {
                 try {
                     openAPI = resolve(openAPI, auths, specUrlOrPayload);
                 } catch (Throwable throwable) {
-                    throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + (isNotBlank(throwable.getMessage()) ? ", " + throwable.getMessage() : ""), throwable);
+                    throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + (isNotBlank(throwable.getMessage()) ? ", " + throwable.getMessage() : ", " + Joiner.on(", ").skipNulls().join(errorMessage)), throwable);
                 }
             } else {
                 if (swaggerParseResult != null) {
