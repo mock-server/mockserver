@@ -9,7 +9,7 @@ import org.mockserver.matchers.MatchType;
 import java.nio.charset.StandardCharsets;
 
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.Not.not;
 
@@ -38,8 +38,10 @@ public class JsonBodySerializerTest {
 
     @Test
     public void shouldSerializeJsonBodyAsObject() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(json(new TestObject())),
-                is("{\"type\":\"JSON\",\"json\":{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}}"));
+        String actual = ObjectMapperFactory.createObjectMapper().writeValueAsString(json(new TestObject()));
+        String expectedCase1 = "{\"type\":\"JSON\",\"json\":{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}}";
+        String expectedCase2 = "{\"type\":\"JSON\",\"json\":{\"fieldTwo\":\"valueTwo\",\"fieldOne\":\"valueOne\"}}";
+        assertTrue(actual.equals(expectedCase1) || actual.equals(expectedCase2));
     }
 
     @Test

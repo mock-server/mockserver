@@ -393,8 +393,8 @@ public class HttpRequestDTOSerializerTest {
                 "  \"body\" : {" + NEW_LINE +
                 "    \"type\" : \"PARAMETERS\"," + NEW_LINE +
                 "    \"parameters\" : {" + NEW_LINE +
-                "      \"path_parameterOneName\" : [ \"path_parameterOneValueOne\", \"path_parameterOneValueTwo\" ]," + NEW_LINE +
-                "      \"path_parameterTwoName\" : [ \"path_parameterTwoValue\" ]" + NEW_LINE +
+                "      \"path_parameterTwoName\" : [ \"path_parameterTwoValue\" ]," + NEW_LINE +
+                "      \"path_parameterOneName\" : [ \"path_parameterOneValueOne\", \"path_parameterOneValueTwo\" ]" + NEW_LINE +
                 "    }" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}")

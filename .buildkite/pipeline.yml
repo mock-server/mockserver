@@ -5,6 +5,6 @@ steps:
   - wait
 
   - label: "build"
-    command: "docker run -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME/mockserver:/build -w /build/mockserver -a stdout -a stderr -e BUILDKITE_BRANCH=$BUILDKITE_BRANCH mockserver/mockserver:maven /build/mockserver/scripts/buildkite_quick_build.sh"
+    command: "docker run -v $(pwd):/build/mockserver -w /build/mockserver -a stdout -a stderr -e BUILDKITE_BRANCH=$BUILDKITE_BRANCH mockserver/mockserver:maven /build/mockserver/scripts/buildkite_quick_build.sh"
     artifact_paths:
       - "**/*.log"

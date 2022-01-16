@@ -7,6 +7,7 @@ app:
   mountedLibsConfigMapName: "mockserver-config"
   propertiesFileName: "mockserver.properties"
   readOnlyRootFilesystem: false
+  serviceAccountName: default
 
 
 image:
@@ -25,6 +26,9 @@ service:
   nodePort: ""
 
 ingress:
+  ingressClass:
+    enabled: false
+    name: ""
   enabled: false
   annotations: {}
   path: /

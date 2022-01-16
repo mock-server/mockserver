@@ -19,7 +19,8 @@ public class JsonSchemaVerificationSequenceValidator extends JsonSchemaValidator
             "stringOrJsonSchema",
             "body",
             "keyToMultiValue",
-            "keyToValue"
+            "keyToValue",
+            "socketAddress"
         );
     }
 

@@ -29,8 +29,8 @@ public class ParametersSerializerTest {
     public void shouldSerializeCompleteObject() throws IOException {
         // given
         String expectedString = "{" + NEW_LINE +
-            "  \"some_name\" : [ \"some_value\", \"some_other_value\" ]," + NEW_LINE +
-            "  \"some_other_name\" : [ \"some_value\", \"!some_other_value\" ]" + NEW_LINE +
+            "  \"some_other_name\" : [ \"some_value\", \"!some_other_value\" ]," + NEW_LINE +
+            "  \"some_name\" : [ \"some_value\", \"some_other_value\" ]" + NEW_LINE +
             "}";
 
         // when
@@ -50,8 +50,8 @@ public class ParametersSerializerTest {
         // given
         String expectedString = "{" + NEW_LINE +
             "  \"keyMatchStyle\" : \"MATCHING_KEY\"," + NEW_LINE +
-            "  \"some_name\" : [ \"some_value\", \"some_other_value\" ]," + NEW_LINE +
-            "  \"some_other_name\" : [ \"some_value\", \"!some_other_value\" ]" + NEW_LINE +
+            "  \"some_other_name\" : [ \"some_value\", \"!some_other_value\" ]," + NEW_LINE +
+            "  \"some_name\" : [ \"some_value\", \"some_other_value\" ]" + NEW_LINE +
             "}";
 
         // when
@@ -70,8 +70,8 @@ public class ParametersSerializerTest {
     public void shouldSerializeCompleteObjectWithSubSetKeyMatch() throws IOException {
         // given
         String expectedString = "{" + NEW_LINE +
-            "  \"some_name\" : [ \"some_value\", \"some_other_value\" ]," + NEW_LINE +
-            "  \"some_other_name\" : [ \"some_value\", \"!some_other_value\" ]" + NEW_LINE +
+            "  \"some_other_name\" : [ \"some_value\", \"!some_other_value\" ]," + NEW_LINE +
+            "  \"some_name\" : [ \"some_value\", \"some_other_value\" ]" + NEW_LINE +
             "}";
 
         // when
@@ -91,15 +91,15 @@ public class ParametersSerializerTest {
         // given
         String expectedString = "{" + NEW_LINE +
             "  \"keyMatchStyle\" : \"MATCHING_KEY\"," + NEW_LINE +
-            "  \"some_name\" : {" + NEW_LINE +
-            "    \"parameterStyle\" : \"SPACE_DELIMITED\"," + NEW_LINE +
-            "    \"values\" : [ \"some_value\", \"some_other_value\" ]" + NEW_LINE +
-            "  }," + NEW_LINE +
+            "  \"some_other_name_two\" : [ \"!some_other_value\" ]," + NEW_LINE +
             "  \"some_other_name\" : {" + NEW_LINE +
             "    \"parameterStyle\" : \"MATRIX\"," + NEW_LINE +
             "    \"values\" : [ \"some_value\" ]" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"some_other_name_two\" : [ \"!some_other_value\" ]" + NEW_LINE +
+            "  \"some_name\" : {" + NEW_LINE +
+            "    \"parameterStyle\" : \"SPACE_DELIMITED\"," + NEW_LINE +
+            "    \"values\" : [ \"some_value\", \"some_other_value\" ]" + NEW_LINE +
+            "  }" + NEW_LINE +
             "}";
 
         // when

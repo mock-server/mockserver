@@ -16,7 +16,10 @@ metadata:
 {{ toYaml . | indent 4 }}
 {{- end }}
 spec:
-{{- if .Values.ingress.tls }}
+  {{- if .Values.ingress.ingressClass.enabled }}
+  ingressClassName: {{.Values.ingress.ingressClass.name}}
+  {{- end }}
+  {{- if .Values.ingress.tls }}
   tls:
   {{- range .Values.ingress.tls }}
     - hosts:
@@ -36,4 +39,4 @@ spec:
               serviceName: {{ $fullName }}
               servicePort: serviceport
   {{- end }}
-{{- end }}
+  {{- end }}

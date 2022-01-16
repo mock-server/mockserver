@@ -26,8 +26,8 @@ public class HeadersSerializerTest {
     public void shouldSerializeCompleteObject() throws IOException {
         // given
         String expectedString = "{" + NEW_LINE +
-            "  \"some_name\" : [ \"some_value\", \"some_other_value\" ]," + NEW_LINE +
-            "  \"some_other_name\" : [ \"some_value\", \"!some_other_value\" ]" + NEW_LINE +
+            "  \"some_other_name\" : [ \"some_value\", \"!some_other_value\" ]," + NEW_LINE +
+            "  \"some_name\" : [ \"some_value\", \"some_other_value\" ]" + NEW_LINE +
             "}";
 
         // when

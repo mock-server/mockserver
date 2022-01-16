@@ -9,7 +9,9 @@ import org.mockserver.model.KeysToMultiValues;
 import org.mockserver.model.NottableString;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 import static org.mockserver.model.NottableString.serialiseNottableString;
 
@@ -28,7 +30,9 @@ public abstract class KeysToMultiValuesSerializer<T extends KeysToMultiValues<? 
         if (collection.getKeyMatchStyle() != null && collection.getKeyMatchStyle() != KeyMatchStyle.SUB_SET) {
             jgen.writeObjectField("keyMatchStyle", collection.getKeyMatchStyle());
         }
-        for (NottableString key : collection.keySet()) {
+        ArrayList<NottableString> keys = new ArrayList<>(collection.keySet());
+        Collections.sort(keys);
+        for (NottableString key : keys) {
             jgen.writeFieldName(serialiseNottableString(key));
             if (key.getParameterStyle() != null) {
                 jgen.writeStartObject();
