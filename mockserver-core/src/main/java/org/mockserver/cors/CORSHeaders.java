@@ -19,14 +19,23 @@ public class CORSHeaders {
 
     private final String corsAllowHeaders;
     private final String corsAllowMethods;
-    private final String corsAllowCredentials;
+    private final boolean corsAllowCredentials;
     private final String corsMaxAge;
 
+    public CORSHeaders(String corsAllowHeaders, String corsAllowMethods, boolean corsAllowCredentials, int corsMaxAge) {
+        this.corsAllowHeaders = corsAllowHeaders;
+        this.corsAllowMethods = corsAllowMethods;
+        this.corsAllowCredentials = corsAllowCredentials;
+        this.corsMaxAge = "" + corsMaxAge;
+    }
+
+
     public CORSHeaders() {
-        corsAllowHeaders = ConfigurationProperties.corsAllowHeaders();
-        corsAllowMethods = ConfigurationProperties.corsAllowMethods();
-        corsAllowCredentials = "" + ConfigurationProperties.corsAllowCredentials();
-        corsMaxAge = "" + ConfigurationProperties.corsMaxAgeInSeconds();
+        // Default constuctor builds from the ConfigurationProperties
+        this(ConfigurationProperties.corsAllowHeaders(),
+                ConfigurationProperties.corsAllowMethods(),
+                ConfigurationProperties.corsAllowCredentials(),
+                ConfigurationProperties.corsMaxAgeInSeconds());
     }
 
     public static boolean isPreflightRequest(HttpRequest request) {
@@ -44,9 +53,9 @@ public class CORSHeaders {
         String origin = request.getFirstHeader(HttpHeaderNames.ORIGIN.toString());
         if (NULL_ORIGIN.equals(origin)) {
             setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN.toString(), NULL_ORIGIN);
-        } else if (!origin.isEmpty() && request.getFirstHeader(HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS.toString()).equals("true")) {
+        } else if (!origin.isEmpty() && corsAllowCredentials) {
             setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN.toString(), origin);
-            setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS.toString(), corsAllowCredentials);
+            setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS.toString(), "true");
         } else {
             setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN.toString(), ANY_ORIGIN);
         }
