@@ -13,8 +13,8 @@ metadata:
     heritage: {{ .Release.Service }}
 spec:
   type: {{ .Values.service.type }}
-{{- if not (empty .Values.service.clusterIP) }}
-  clusterIP: "{{ .Values.service.clusterIP }}"
+{{- if .Values.service.clusterIP }}
+  clusterIP: {{ .Values.service.clusterIP | quote }}
 {{- end }}
 {{- if .Values.service.externalIPs }}
   externalIPs:
