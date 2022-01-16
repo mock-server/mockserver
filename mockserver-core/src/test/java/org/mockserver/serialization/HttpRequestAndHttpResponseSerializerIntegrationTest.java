@@ -53,12 +53,12 @@ public class HttpRequestAndHttpResponseSerializerIntegrationTest {
         "    \"method\" : \"GET\"," + NEW_LINE +
         "    \"path\" : \"somepath\"," + NEW_LINE +
         "    \"pathParameters\" : {" + NEW_LINE +
-        "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]," + NEW_LINE +
-        "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]" + NEW_LINE +
+        "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]," + NEW_LINE +
+        "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
         "    }," + NEW_LINE +
         "    \"queryStringParameters\" : {" + NEW_LINE +
-        "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
-        "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+        "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]," + NEW_LINE +
+        "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
         "    }," + NEW_LINE +
         "    \"headers\" : {" + NEW_LINE +
         "      \"headerName\" : [ \"headerValue\" ]" + NEW_LINE +
