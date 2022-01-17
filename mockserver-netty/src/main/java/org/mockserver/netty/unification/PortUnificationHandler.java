@@ -355,7 +355,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.WARN)
-                            .setMessageFormat("TSL handshake failure:" + NEW_LINE + NEW_LINE + " Client does not trust MockServer Certificate Authority for:{}See http://mock-server.com/mock_server/HTTPS_TLS.html to enable the client to trust MocksServer Certificate Authority." + NEW_LINE)
+                            .setMessageFormat("TLS handshake failure:" + NEW_LINE + NEW_LINE + " Client does not trust MockServer Certificate Authority for:{}See http://mock-server.com/mock_server/HTTPS_TLS.html to enable the client to trust MocksServer Certificate Authority." + NEW_LINE)
                             .setArguments(ctx.channel())
                     );
                 }
@@ -363,7 +363,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(Level.ERROR)
-                        .setMessageFormat("TSL handshake failure while a client attempted to connect to " + ctx.channel())
+                        .setMessageFormat("TLS handshake failure while a client attempted to connect to " + ctx.channel())
                         .setThrowable(throwable)
                 );
             }
