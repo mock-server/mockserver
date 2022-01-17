@@ -60,7 +60,7 @@ Release Steps
    1. commit to github
 1. add javaDoc
    1. git checkout mockserver-x.x.x
-   1. export JAVA_HOME=`/usr/libexec/java_home -v 1.8`
+   1. export JAVA_HOME=`/usr/libexec/java_home -v 1.8` or export JAVA_HOME=`/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home`
    1. ./mvnw javadoc:aggregate -P release -DreportOutputDirectory='/Users/jamesbloom/git/mockserver/javadoc/x.x.x'
    1. open /Users/jamesbloom/git/mockserver/javadoc
    1. upload as public to S3 https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq/versions/?region=us-east-1
