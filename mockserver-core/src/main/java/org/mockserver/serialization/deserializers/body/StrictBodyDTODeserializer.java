@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mockserver.serialization.ObjectMapperFactory.buildObjectMapperWithoutRemovingEmptyValues;
 import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.TRACE;
 
@@ -96,7 +97,7 @@ public class StrictBodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         if (Map.class.isAssignableFrom(entry.getValue().getClass()) ||
                             containsIgnoreCase(key, "json", "jsonSchema") && !String.class.isAssignableFrom(entry.getValue().getClass())) {
                             if (jsonBodyObjectWriter == null) {
-                                jsonBodyObjectWriter = new ObjectMapper().writerWithDefaultPrettyPrinter();
+                                jsonBodyObjectWriter = buildObjectMapperWithoutRemovingEmptyValues().writerWithDefaultPrettyPrinter();
                             }
                             valueJsonValue = jsonBodyObjectWriter.writeValueAsString(entry.getValue());
                         } else {

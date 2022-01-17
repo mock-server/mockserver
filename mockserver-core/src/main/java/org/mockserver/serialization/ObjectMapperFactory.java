@@ -91,7 +91,7 @@ public class ObjectMapperFactory {
         }
     }
 
-    public static ObjectMapper buildObjectMapperWithoutDeserializerAndSerializers() {
+    public static ObjectMapper buildObjectMapperWithoutRemovingEmptyValues() {
         ObjectMapper objectMapper = new ObjectMapper();
 
         // ignore failures
@@ -127,19 +127,25 @@ public class ObjectMapperFactory {
         // use arrays
         swallowThrowable(() -> objectMapper.configure(DeserializationFeature.USE_JAVA_ARRAY_FOR_JSON_ARRAY, true));
 
-        // remove empty values from JSON
-        swallowThrowable(() -> objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT));
-        swallowThrowable(() -> objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL));
-        swallowThrowable(() -> objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY));
-
         // consistent json output
         swallowThrowable(() -> objectMapper.configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true));
 
         return objectMapper;
     }
 
+    public static ObjectMapper buildObjectMapperWithOnlyConfigurationDefaults() {
+        ObjectMapper objectMapper = buildObjectMapperWithoutRemovingEmptyValues();
+
+        // remove empty values from JSON
+        swallowThrowable(() -> objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT));
+        swallowThrowable(() -> objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL));
+        swallowThrowable(() -> objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY));
+
+        return objectMapper;
+    }
+
     private static ObjectMapper buildObjectMapperWithDeserializerAndSerializers(List<JsonDeserializer> replacementJsonDeserializers, List<JsonSerializer> replacementJsonSerializers) {
-        ObjectMapper objectMapper = buildObjectMapperWithoutDeserializerAndSerializers();
+        ObjectMapper objectMapper = buildObjectMapperWithOnlyConfigurationDefaults();
 
         // register our own module with our serializers and deserializers
         SimpleModule module = new SimpleModule();

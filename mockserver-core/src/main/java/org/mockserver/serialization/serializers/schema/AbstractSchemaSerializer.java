@@ -20,7 +20,7 @@ import java.util.function.Consumer;
 @SuppressWarnings("rawtypes")
 public class AbstractSchemaSerializer<T extends Schema> extends StdSerializer<T> {
 
-    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.buildObjectMapperWithoutDeserializerAndSerializers();
+    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.buildObjectMapperWithOnlyConfigurationDefaults();
     private static final List<String> fieldsToRemove = Collections.singletonList(
         "exampleSetFlag"
     );

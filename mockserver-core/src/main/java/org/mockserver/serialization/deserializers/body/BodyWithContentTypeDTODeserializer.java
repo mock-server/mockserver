@@ -3,13 +3,11 @@ package org.mockserver.serialization.deserializers.body;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
-import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.*;
 
 import java.io.IOException;
@@ -22,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mockserver.serialization.ObjectMapperFactory.buildObjectMapperWithoutRemovingEmptyValues;
 import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.TRACE;
 
@@ -85,7 +84,7 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                         if (Map.class.isAssignableFrom(entry.getValue().getClass()) ||
                             containsIgnoreCase(key, "json", "jsonSchema") && !String.class.isAssignableFrom(entry.getValue().getClass())) {
                             if (jsonBodyObjectWriter == null) {
-                                jsonBodyObjectWriter = new ObjectMapper().writerWithDefaultPrettyPrinter();
+                                jsonBodyObjectWriter = buildObjectMapperWithoutRemovingEmptyValues().writerWithDefaultPrettyPrinter();
                             }
                             valueJsonValue = jsonBodyObjectWriter.writeValueAsString(entry.getValue());
                         } else {
@@ -205,13 +204,13 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                 }
             } else if (body.size() > 0) {
                 if (jsonBodyObjectWriter == null) {
-                    jsonBodyObjectWriter = new ObjectMapper().writerWithDefaultPrettyPrinter();
+                    jsonBodyObjectWriter = buildObjectMapperWithoutRemovingEmptyValues().writerWithDefaultPrettyPrinter();
                 }
                 result = new JsonBodyDTO(new JsonBody(jsonBodyObjectWriter.writeValueAsString(body), JsonBody.DEFAULT_MATCH_TYPE), null);
             }
         } else if (currentToken == JsonToken.START_ARRAY) {
             if (jsonBodyObjectWriter == null) {
-                jsonBodyObjectWriter = new ObjectMapper().writerWithDefaultPrettyPrinter();
+                jsonBodyObjectWriter = buildObjectMapperWithoutRemovingEmptyValues().writerWithDefaultPrettyPrinter();
             }
             result = new JsonBodyDTO(new JsonBody(jsonBodyObjectWriter.writeValueAsString(ctxt.readValue(jsonParser, List.class)), JsonBody.DEFAULT_MATCH_TYPE), null);
         } else if (currentToken == JsonToken.VALUE_STRING) {
