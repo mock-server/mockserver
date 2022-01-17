@@ -61,9 +61,9 @@ public class HttpState {
     private ExpectationFileSystemPersistence expectationFileSystemPersistence;
     private ExpectationFileWatcher expectationFileWatcher;
     // mockserver
-    private RequestMatchers requestMatchers;
-    private MockServerLogger mockServerLogger;
-    private WebSocketClientRegistry webSocketClientRegistry;
+    private final RequestMatchers requestMatchers;
+    private final MockServerLogger mockServerLogger;
+    private final WebSocketClientRegistry webSocketClientRegistry;
     // serializers
     private ExpectationIdSerializer expectationIdSerializer;
     private RequestDefinitionSerializer requestDefinitionSerializer;
@@ -74,7 +74,7 @@ public class HttpState {
     private VerificationSerializer verificationSerializer;
     private VerificationSequenceSerializer verificationSequenceSerializer;
     private LogEntrySerializer logEntrySerializer;
-    private MemoryMonitoring memoryMonitoring;
+    private final MemoryMonitoring memoryMonitoring;
     private OpenAPIConverter openAPIConverter;
 
     public static void setPort(final HttpRequest request) {
