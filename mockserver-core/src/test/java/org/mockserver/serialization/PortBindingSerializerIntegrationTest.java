@@ -77,7 +77,9 @@ public class PortBindingSerializerIntegrationTest {
 
         // then
         assertThat(jsonPortBinding, containsString("{" + NEW_LINE +
-                "  \"ports\" : [ 0, 1090, 0 ]," + NEW_LINE));
+            "  \"artifactId\" : \"mockserver-core\"," + NEW_LINE +
+            "  \"groupId\" : \"org.mock-server\"," + NEW_LINE +
+            "  \"ports\" : [ 0, 1090, 0 ]," + NEW_LINE));
         assertThat(jsonPortBinding, containsString("\"version\" : "));
         assertThat(jsonPortBinding, containsString("\"artifactId\" : "));
         assertThat(jsonPortBinding, containsString("\"groupId\" : "));

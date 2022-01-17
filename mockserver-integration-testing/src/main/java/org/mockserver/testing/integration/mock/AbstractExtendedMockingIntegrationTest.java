@@ -5047,9 +5047,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times, expected:<{" + NEW_LINE +
                 "  \"path\" : \"" + calculatePath("some_path") + "\"" + NEW_LINE +
-                "}> but was:<{" + NEW_LINE +
-                "  \"method\" : \"GET\"," + NEW_LINE +
-                "  \"path\" : \"" + calculatePath("some_path") + "\"," + NEW_LINE));
+                "}> but was:<{"));
         }
     }
 
@@ -5076,9 +5074,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request not found exactly 2 times, expected:<{" + NEW_LINE +
                 "  \"path\" : \"" + calculatePath("some_other_path") + "\"" + NEW_LINE +
-                "}> but was:<{" + NEW_LINE +
-                "  \"method\" : \"GET\"," + NEW_LINE +
-                "  \"path\" : \"" + calculatePath("some_path") + "\"," + NEW_LINE));
+                "}> but was:<{"));
         }
     }
 
@@ -5102,9 +5098,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             mockServerClient.verifyZeroInteractions();
             fail("expected exception to be thrown");
         } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times, expected:<{ }> but was:<{" + NEW_LINE +
-                "  \"method\" : \"GET\"," + NEW_LINE +
-                "  \"path\" : \"" + calculatePath("some_path") + "\"," + NEW_LINE));
+            assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times, expected:<{ }> but was:<{"));
         }
     }
 
@@ -5136,9 +5130,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             assertThat(ae.getMessage(), startsWith("Request not found at least once, expected:<{" + NEW_LINE +
                 "  \"path\" : \"" + calculatePath("some_path") + "\"," + NEW_LINE +
                 "  \"secure\" : true" + NEW_LINE +
-                "}> but was:<{" + NEW_LINE +
-                "  \"method\" : \"GET\"," + NEW_LINE +
-                "  \"path\" : \"" + calculatePath("some_path") + "\"," + NEW_LINE));
+                "}> but was:<{"));
         }
     }
 
@@ -5204,9 +5196,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 "  \"path\" : \"" + calculatePath("some_path_two") + "\"" + NEW_LINE +
                 "}, {" + NEW_LINE +
                 "  \"path\" : \"" + calculatePath("some_path_one") + "\"" + NEW_LINE +
-                "} ]> but was:<[ {" + NEW_LINE +
-                "  \"method\" : \"GET\"," + NEW_LINE +
-                "  \"path\" : \"" + calculatePath("some_path_one") + "\"," + NEW_LINE));
+                "} ]> but was:<[ {"));
         }
         try {
             mockServerClient.verify(request(calculatePath("some_path_three")), request(calculatePath("some_path_two")));
@@ -5216,9 +5206,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 "  \"path\" : \"" + calculatePath("some_path_three") + "\"" + NEW_LINE +
                 "}, {" + NEW_LINE +
                 "  \"path\" : \"" + calculatePath("some_path_two") + "\"" + NEW_LINE +
-                "} ]> but was:<[ {" + NEW_LINE +
-                "  \"method\" : \"GET\"," + NEW_LINE +
-                "  \"path\" : \"" + calculatePath("some_path_one") + "\"," + NEW_LINE));
+                "} ]> but was:<[ {"));
         }
         try {
             mockServerClient.verify(request(calculatePath("some_path_four")));
@@ -5226,9 +5214,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"path\" : \"" + calculatePath("some_path_four") + "\"" + NEW_LINE +
-                "} ]> but was:<[ {" + NEW_LINE +
-                "  \"method\" : \"GET\"," + NEW_LINE +
-                "  \"path\" : \"" + calculatePath("some_path_one") + "\"," + NEW_LINE));
+                "} ]> but was:<[ {"));
         }
     }
 

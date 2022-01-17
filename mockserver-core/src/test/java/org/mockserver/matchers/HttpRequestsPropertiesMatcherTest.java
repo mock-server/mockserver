@@ -6348,8 +6348,8 @@ public class HttpRequestsPropertiesMatcherTest {
             "        \"parameterStyle\" : \"SIMPLE\"," + NEW_LINE +
             "        \"values\" : [ {" + NEW_LINE +
             "          \"schema\" : {" + NEW_LINE +
-            "            \"type\" : \"string\"," + NEW_LINE +
-            "            \"format\" : \"uuid\"" + NEW_LINE +
+            "            \"format\" : \"uuid\"," + NEW_LINE +
+            "            \"type\" : \"string\"" + NEW_LINE +
             "          }" + NEW_LINE +
             "        } ]" + NEW_LINE +
             "      }" + NEW_LINE +
@@ -6401,8 +6401,8 @@ public class HttpRequestsPropertiesMatcherTest {
             "        \"parameterStyle\" : \"SIMPLE\"," + NEW_LINE +
             "        \"values\" : [ {" + NEW_LINE +
             "          \"schema\" : {" + NEW_LINE +
-            "            \"type\" : \"string\"," + NEW_LINE +
-            "            \"format\" : \"uuid\"" + NEW_LINE +
+            "            \"format\" : \"uuid\"," + NEW_LINE +
+            "            \"type\" : \"string\"" + NEW_LINE +
             "          }" + NEW_LINE +
             "        } ]" + NEW_LINE +
             "      }" + NEW_LINE +
@@ -6479,8 +6479,8 @@ public class HttpRequestsPropertiesMatcherTest {
             "        \"parameterStyle\" : \"SIMPLE\"," + NEW_LINE +
             "        \"values\" : [ {" + NEW_LINE +
             "          \"schema\" : {" + NEW_LINE +
-            "            \"type\" : \"string\"," + NEW_LINE +
-            "            \"format\" : \"uuid\"" + NEW_LINE +
+            "            \"format\" : \"uuid\"," + NEW_LINE +
+            "            \"type\" : \"string\"" + NEW_LINE +
             "          }" + NEW_LINE +
             "        } ]" + NEW_LINE +
             "      }" + NEW_LINE +
@@ -6533,12 +6533,10 @@ public class HttpRequestsPropertiesMatcherTest {
         String bodyError = "  json schema match failed expected:" + NEW_LINE +
             NEW_LINE +
             "    {" + NEW_LINE +
-            "      \"required\" : [ \"id\", \"name\" ]," + NEW_LINE +
-            "      \"type\" : \"object\"," + NEW_LINE +
             "      \"properties\" : {" + NEW_LINE +
             "        \"id\" : {" + NEW_LINE +
-            "          \"type\" : \"integer\"," + NEW_LINE +
-            "          \"format\" : \"int64\"" + NEW_LINE +
+            "          \"format\" : \"int64\"," + NEW_LINE +
+            "          \"type\" : \"integer\"" + NEW_LINE +
             "        }," + NEW_LINE +
             "        \"name\" : {" + NEW_LINE +
             "          \"type\" : \"string\"" + NEW_LINE +
@@ -6546,7 +6544,9 @@ public class HttpRequestsPropertiesMatcherTest {
             "        \"tag\" : {" + NEW_LINE +
             "          \"type\" : \"string\"" + NEW_LINE +
             "        }" + NEW_LINE +
-            "      }" + NEW_LINE +
+            "      }," + NEW_LINE +
+            "      \"required\" : [ \"id\", \"name\" ]," + NEW_LINE +
+            "      \"type\" : \"object\"" + NEW_LINE +
             "    }" + NEW_LINE +
             NEW_LINE +
             "   found:" + NEW_LINE +
@@ -6608,12 +6608,10 @@ public class HttpRequestsPropertiesMatcherTest {
         String bodyError = "  json schema match failed expected:" + NEW_LINE +
             NEW_LINE +
             "    {" + NEW_LINE +
-            "      \"required\" : [ \"id\", \"name\" ]," + NEW_LINE +
-            "      \"type\" : \"object\"," + NEW_LINE +
             "      \"properties\" : {" + NEW_LINE +
             "        \"id\" : {" + NEW_LINE +
-            "          \"type\" : \"integer\"," + NEW_LINE +
-            "          \"format\" : \"int64\"" + NEW_LINE +
+            "          \"format\" : \"int64\"," + NEW_LINE +
+            "          \"type\" : \"integer\"" + NEW_LINE +
             "        }," + NEW_LINE +
             "        \"name\" : {" + NEW_LINE +
             "          \"type\" : \"string\"" + NEW_LINE +
@@ -6621,7 +6619,9 @@ public class HttpRequestsPropertiesMatcherTest {
             "        \"tag\" : {" + NEW_LINE +
             "          \"type\" : \"string\"" + NEW_LINE +
             "        }" + NEW_LINE +
-            "      }" + NEW_LINE +
+            "      }," + NEW_LINE +
+            "      \"required\" : [ \"id\", \"name\" ]," + NEW_LINE +
+            "      \"type\" : \"object\"" + NEW_LINE +
             "    }" + NEW_LINE +
             NEW_LINE +
             "   found:" + NEW_LINE +
@@ -6676,12 +6676,10 @@ public class HttpRequestsPropertiesMatcherTest {
         String schemaValidationError = "  json schema match failed expected:" + NEW_LINE +
             NEW_LINE +
             "    {" + NEW_LINE +
-            "      \"required\" : [ \"id\", \"name\" ]," + NEW_LINE +
-            "      \"type\" : \"object\"," + NEW_LINE +
             "      \"properties\" : {" + NEW_LINE +
             "        \"id\" : {" + NEW_LINE +
-            "          \"type\" : \"integer\"," + NEW_LINE +
-            "          \"format\" : \"int64\"" + NEW_LINE +
+            "          \"format\" : \"int64\"," + NEW_LINE +
+            "          \"type\" : \"integer\"" + NEW_LINE +
             "        }," + NEW_LINE +
             "        \"name\" : {" + NEW_LINE +
             "          \"type\" : \"string\"" + NEW_LINE +
@@ -6689,7 +6687,9 @@ public class HttpRequestsPropertiesMatcherTest {
             "        \"tag\" : {" + NEW_LINE +
             "          \"type\" : \"string\"" + NEW_LINE +
             "        }" + NEW_LINE +
-            "      }" + NEW_LINE +
+            "      }," + NEW_LINE +
+            "      \"required\" : [ \"id\", \"name\" ]," + NEW_LINE +
+            "      \"type\" : \"object\"" + NEW_LINE +
             "    }" + NEW_LINE +
             NEW_LINE +
             "   found:" + NEW_LINE +

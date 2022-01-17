@@ -104,10 +104,8 @@ public class DescriptionProcessorTest {
             "{" + NEW_LINE +
             "  \"json\" : true," + NEW_LINE +
             "  \"object\" : {" + NEW_LINE +
+            "    \"components\" : { }," + NEW_LINE +
             "    \"openapi\" : \"3.0.0\"," + NEW_LINE +
-            "    \"servers\" : [ {" + NEW_LINE +
-            "      \"url\" : \"/\"" + NEW_LINE +
-            "    } ]," + NEW_LINE +
             "    \"paths\" : {" + NEW_LINE +
             "      \"/somePath\" : {" + NEW_LINE +
             "        \"get\" : {" + NEW_LINE +
@@ -115,7 +113,9 @@ public class DescriptionProcessorTest {
             "        }" + NEW_LINE +
             "      }" + NEW_LINE +
             "    }," + NEW_LINE +
-            "    \"components\" : { }" + NEW_LINE +
+            "    \"servers\" : [ {" + NEW_LINE +
+            "      \"url\" : \"/\"" + NEW_LINE +
+            "    } ]" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"first\" : \"spec \"," + NEW_LINE +
             "  \"second\" : \" showPetById\"" + NEW_LINE +
@@ -123,10 +123,8 @@ public class DescriptionProcessorTest {
             "{" + NEW_LINE +
             "  \"json\" : true," + NEW_LINE +
             "  \"object\" : {" + NEW_LINE +
+            "    \"components\" : { }," + NEW_LINE +
             "    \"openapi\" : \"3.0.0\"," + NEW_LINE +
-            "    \"servers\" : [ {" + NEW_LINE +
-            "      \"url\" : \"/\"" + NEW_LINE +
-            "    } ]," + NEW_LINE +
             "    \"paths\" : {" + NEW_LINE +
             "      \"/somePath\" : {" + NEW_LINE +
             "        \"get\" : {" + NEW_LINE +
@@ -134,7 +132,9 @@ public class DescriptionProcessorTest {
             "        }" + NEW_LINE +
             "      }" + NEW_LINE +
             "    }," + NEW_LINE +
-            "    \"components\" : { }" + NEW_LINE +
+            "    \"servers\" : [ {" + NEW_LINE +
+            "      \"url\" : \"/\"" + NEW_LINE +
+            "    } ]" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"first\" : \"spec \"," + NEW_LINE +
             "  \"second\" : \"            \"" + NEW_LINE +
@@ -244,10 +244,8 @@ public class DescriptionProcessorTest {
             "{" + NEW_LINE +
             "  \"json\" : true," + NEW_LINE +
             "  \"object\" : {" + NEW_LINE +
+            "    \"components\" : { }," + NEW_LINE +
             "    \"openapi\" : \"3.0.0\"," + NEW_LINE +
-            "    \"servers\" : [ {" + NEW_LINE +
-            "      \"url\" : \"/\"" + NEW_LINE +
-            "    } ]," + NEW_LINE +
             "    \"paths\" : {" + NEW_LINE +
             "      \"/somePath\" : {" + NEW_LINE +
             "        \"get\" : {" + NEW_LINE +
@@ -255,7 +253,9 @@ public class DescriptionProcessorTest {
             "        }" + NEW_LINE +
             "      }" + NEW_LINE +
             "    }," + NEW_LINE +
-            "    \"components\" : { }" + NEW_LINE +
+            "    \"servers\" : [ {" + NEW_LINE +
+            "      \"url\" : \"/\"" + NEW_LINE +
+            "    } ]" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"first\" : \"spec \"," + NEW_LINE +
             "  \"second\" : \" \"" + NEW_LINE +

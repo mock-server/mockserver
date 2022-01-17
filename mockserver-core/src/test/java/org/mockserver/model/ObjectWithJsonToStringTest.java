@@ -32,8 +32,8 @@ public class ObjectWithJsonToStringTest {
     @Test
     public void shouldConvertObjectToJSON() {
         assertThat(new TestObject().toString(), is("{" + NEW_LINE +
-                "  \"stringField\" : \"stringField\"," + NEW_LINE +
-                "  \"intField\" : 100" + NEW_LINE +
+                "  \"intField\" : 100," + NEW_LINE +
+                "  \"stringField\" : \"stringField\"" + NEW_LINE +
                 "}"));
     }
 

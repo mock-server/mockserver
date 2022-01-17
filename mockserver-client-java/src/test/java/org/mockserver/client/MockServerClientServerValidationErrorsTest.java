@@ -126,16 +126,16 @@ public class MockServerClientServerValidationErrorsTest {
                 " while submitted expectation:" + NEW_LINE +
                 NEW_LINE +
                 "  {" + NEW_LINE +
+                "    \"httpRequest\" : { }," + NEW_LINE +
+                "    \"httpResponse\" : { }," + NEW_LINE +
                 "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
                 "    \"priority\" : 0," + NEW_LINE +
-                "    \"httpRequest\" : { }," + NEW_LINE +
-                "    \"times\" : {" + NEW_LINE +
-                "      \"unlimited\" : true" + NEW_LINE +
-                "    }," + NEW_LINE +
                 "    \"timeToLive\" : {" + NEW_LINE +
                 "      \"unlimited\" : true" + NEW_LINE +
                 "    }," + NEW_LINE +
-                "    \"httpResponse\" : { }" + NEW_LINE +
+                "    \"times\" : {" + NEW_LINE +
+                "      \"unlimited\" : true" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "  }" + NEW_LINE
             ));
 

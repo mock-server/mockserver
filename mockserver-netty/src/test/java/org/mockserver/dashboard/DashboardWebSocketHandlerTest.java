@@ -286,8 +286,6 @@ public class DashboardWebSocketHandlerTest {
             "    \"key\" : \"" + expectations.get(0).getId() + "\"," + NEW_LINE +
             "    \"description\" : \"" + expectations.get(0).getId() + ":   one\"," + NEW_LINE +
             "    \"value\" : {" + NEW_LINE +
-            "      \"id\" : \"" + expectations.get(0).getId() + "\"," + NEW_LINE +
-            "      \"priority\" : 0," + NEW_LINE +
             "      \"httpRequest\" : {" + NEW_LINE +
             "        \"path\" : \"one\"" + NEW_LINE +
             "      }," + NEW_LINE +
@@ -296,10 +294,12 @@ public class DashboardWebSocketHandlerTest {
             "        \"reasonPhrase\" : \"OK\"," + NEW_LINE +
             "        \"body\" : \"one\"" + NEW_LINE +
             "      }," + NEW_LINE +
-            "      \"times\" : {" + NEW_LINE +
+            "      \"id\" : \"" + expectations.get(0).getId() + "\"," + NEW_LINE +
+            "      \"priority\" : 0," + NEW_LINE +
+            "      \"timeToLive\" : {" + NEW_LINE +
             "        \"unlimited\" : true" + NEW_LINE +
             "      }," + NEW_LINE +
-            "      \"timeToLive\" : {" + NEW_LINE +
+            "      \"times\" : {" + NEW_LINE +
             "        \"unlimited\" : true" + NEW_LINE +
             "      }" + NEW_LINE +
             "    }" + NEW_LINE +
@@ -1194,8 +1194,6 @@ public class DashboardWebSocketHandlerTest {
             "    \"key\" : \"" + expectations.get(0).getId() + "\"," + NEW_LINE +
             "    \"description\" : \"" + expectations.get(0).getId() + ":     one\"," + NEW_LINE +
             "    \"value\" : {" + NEW_LINE +
-            "      \"id\" : \"" + expectations.get(0).getId() + "\"," + NEW_LINE +
-            "      \"priority\" : 0," + NEW_LINE +
             "      \"httpRequest\" : {" + NEW_LINE +
             "        \"path\" : \"one\"" + NEW_LINE +
             "      }," + NEW_LINE +
@@ -1204,10 +1202,12 @@ public class DashboardWebSocketHandlerTest {
             "        \"reasonPhrase\" : \"OK\"," + NEW_LINE +
             "        \"body\" : \"one\"" + NEW_LINE +
             "      }," + NEW_LINE +
-            "      \"times\" : {" + NEW_LINE +
+            "      \"id\" : \"" + expectations.get(0).getId() + "\"," + NEW_LINE +
+            "      \"priority\" : 0," + NEW_LINE +
+            "      \"timeToLive\" : {" + NEW_LINE +
             "        \"unlimited\" : true" + NEW_LINE +
             "      }," + NEW_LINE +
-            "      \"timeToLive\" : {" + NEW_LINE +
+            "      \"times\" : {" + NEW_LINE +
             "        \"unlimited\" : true" + NEW_LINE +
             "      }" + NEW_LINE +
             "    }" + NEW_LINE +
@@ -1215,8 +1215,6 @@ public class DashboardWebSocketHandlerTest {
             "    \"key\" : \"" + expectations.get(1).getId() + "\"," + NEW_LINE +
             "    \"description\" : \"" + expectations.get(1).getId() + ":     two\"," + NEW_LINE +
             "    \"value\" : {" + NEW_LINE +
-            "      \"id\" : \"" + expectations.get(1).getId() + "\"," + NEW_LINE +
-            "      \"priority\" : 0," + NEW_LINE +
             "      \"httpRequest\" : {" + NEW_LINE +
             "        \"path\" : \"two\"" + NEW_LINE +
             "      }," + NEW_LINE +
@@ -1225,10 +1223,12 @@ public class DashboardWebSocketHandlerTest {
             "        \"reasonPhrase\" : \"OK\"," + NEW_LINE +
             "        \"body\" : \"two\"" + NEW_LINE +
             "      }," + NEW_LINE +
-            "      \"times\" : {" + NEW_LINE +
+            "      \"id\" : \"" + expectations.get(1).getId() + "\"," + NEW_LINE +
+            "      \"priority\" : 0," + NEW_LINE +
+            "      \"timeToLive\" : {" + NEW_LINE +
             "        \"unlimited\" : true" + NEW_LINE +
             "      }," + NEW_LINE +
-            "      \"timeToLive\" : {" + NEW_LINE +
+            "      \"times\" : {" + NEW_LINE +
             "        \"unlimited\" : true" + NEW_LINE +
             "      }" + NEW_LINE +
             "    }" + NEW_LINE +
@@ -1236,8 +1236,6 @@ public class DashboardWebSocketHandlerTest {
             "    \"key\" : \"" + expectations.get(2).getId() + "\"," + NEW_LINE +
             "    \"description\" : \"" + expectations.get(2).getId() + ":   three\"," + NEW_LINE +
             "    \"value\" : {" + NEW_LINE +
-            "      \"id\" : \"" + expectations.get(2).getId() + "\"," + NEW_LINE +
-            "      \"priority\" : 0," + NEW_LINE +
             "      \"httpRequest\" : {" + NEW_LINE +
             "        \"path\" : \"three\"" + NEW_LINE +
             "      }," + NEW_LINE +
@@ -1246,10 +1244,12 @@ public class DashboardWebSocketHandlerTest {
             "        \"reasonPhrase\" : \"OK\"," + NEW_LINE +
             "        \"body\" : \"three\"" + NEW_LINE +
             "      }," + NEW_LINE +
-            "      \"times\" : {" + NEW_LINE +
+            "      \"id\" : \"" + expectations.get(2).getId() + "\"," + NEW_LINE +
+            "      \"priority\" : 0," + NEW_LINE +
+            "      \"timeToLive\" : {" + NEW_LINE +
             "        \"unlimited\" : true" + NEW_LINE +
             "      }," + NEW_LINE +
-            "      \"timeToLive\" : {" + NEW_LINE +
+            "      \"times\" : {" + NEW_LINE +
             "        \"unlimited\" : true" + NEW_LINE +
             "      }" + NEW_LINE +
             "    }" + NEW_LINE +

@@ -83,49 +83,49 @@ public class ExpectationFileWatcherIntegrationTest {
 
             // when
             String watchedFileContents = "[ {" + NEW_LINE +
-                "  \"id\" : \"one\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some first response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some first response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
-                "  \"id\" : \"two\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleSecond\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some second response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"two\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some second response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
-                "  \"id\" : \"three\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleThird\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some third response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"three\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some third response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "} ]";
             Files.write(mockserverInitialization.toPath(), watchedFileContents.getBytes(StandardCharsets.UTF_8));
@@ -156,46 +156,46 @@ public class ExpectationFileWatcherIntegrationTest {
             ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
             // and - existing file contents
             String watchedFileContents = "[ {" + NEW_LINE +
-                "  \"id\" : \"one\"," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some first response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"one\"," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some first response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
-                "  \"id\" : \"two\"," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleSecond\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some second response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"two\"," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some second response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
-                "  \"id\" : \"three\"," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleThird\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some third response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"three\"," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some third response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "} ]";
             Files.write(mockserverInitialization.toPath(), watchedFileContents.getBytes(StandardCharsets.UTF_8));
@@ -287,46 +287,46 @@ public class ExpectationFileWatcherIntegrationTest {
             ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
             // and - existing file contents
             String watchedFileContents = "[ {" + NEW_LINE +
-                "  \"id\" : \"one\"," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some first response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"one\"," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some first response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
-                "  \"id\" : \"two\"," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleSecond\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some second response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"two\"," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some second response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
-                "  \"id\" : \"three\"," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleThird\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some third response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"three\"," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some third response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "} ]";
             Files.write(mockserverInitialization.toPath(), watchedFileContents.getBytes(StandardCharsets.UTF_8));
@@ -390,49 +390,49 @@ public class ExpectationFileWatcherIntegrationTest {
 
             // when
             watchedFileContents = "[ {" + NEW_LINE +
-                "  \"id\" : \"one\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some first response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some first response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
-                "  \"id\" : \"two\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleSecondUpdated\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some second updated response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"two\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some second updated response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
-                "  \"id\" : \"four\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFourth\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some fourth response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"four\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some fourth response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "} ]";
             Files.write(mockserverInitialization.toPath(), watchedFileContents.getBytes(StandardCharsets.UTF_8));

@@ -198,8 +198,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                 " didn't match expectation:" + NEW_LINE +
                 NEW_LINE +
                 "  {" + NEW_LINE +
-                "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
-                "    \"priority\" : 0," + NEW_LINE +
                 "    \"httpRequest\" : {" + NEW_LINE +
                 "      \"method\" : \"GET\"," + NEW_LINE +
                 "      \"path\" : \"some_path\"," + NEW_LINE +
@@ -207,10 +205,12 @@ public class HttpRequestPropertiesMatcherLogTest {
                 "      \"secure\" : true," + NEW_LINE +
                 "      \"body\" : \"some_body\"" + NEW_LINE +
                 "    }," + NEW_LINE +
-                "    \"times\" : {" + NEW_LINE +
+                "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                "    \"priority\" : 0," + NEW_LINE +
+                "    \"timeToLive\" : {" + NEW_LINE +
                 "      \"unlimited\" : true" + NEW_LINE +
                 "    }," + NEW_LINE +
-                "    \"timeToLive\" : {" + NEW_LINE +
+                "    \"times\" : {" + NEW_LINE +
                 "      \"unlimited\" : true" + NEW_LINE +
                 "    }" + NEW_LINE +
                 "  }" + NEW_LINE +
@@ -385,8 +385,6 @@ public class HttpRequestPropertiesMatcherLogTest {
                     " didn't match expectation:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
-                    "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
-                    "    \"priority\" : 0," + NEW_LINE +
                     "    \"httpRequest\" : {" + NEW_LINE +
                     "      \"method\" : \"GET\"," + NEW_LINE +
                     "      \"path\" : \"some_path\"," + NEW_LINE +
@@ -394,10 +392,12 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "      \"secure\" : true," + NEW_LINE +
                     "      \"body\" : \"some_body\"" + NEW_LINE +
                     "    }," + NEW_LINE +
-                    "    \"times\" : {" + NEW_LINE +
+                    "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                    "    \"priority\" : 0," + NEW_LINE +
+                    "    \"timeToLive\" : {" + NEW_LINE +
                     "      \"unlimited\" : true" + NEW_LINE +
                     "    }," + NEW_LINE +
-                    "    \"timeToLive\" : {" + NEW_LINE +
+                    "    \"times\" : {" + NEW_LINE +
                     "      \"unlimited\" : true" + NEW_LINE +
                     "    }" + NEW_LINE +
                     "  }" + NEW_LINE +
@@ -656,15 +656,15 @@ public class HttpRequestPropertiesMatcherLogTest {
                     " didn't match expectation:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
-                    "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
-                    "    \"priority\" : 0," + NEW_LINE +
                     "    \"httpRequest\" : {" + NEW_LINE +
                     "      \"keepAlive\" : true" + NEW_LINE +
                     "    }," + NEW_LINE +
-                    "    \"times\" : {" + NEW_LINE +
+                    "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                    "    \"priority\" : 0," + NEW_LINE +
+                    "    \"timeToLive\" : {" + NEW_LINE +
                     "      \"unlimited\" : true" + NEW_LINE +
                     "    }," + NEW_LINE +
-                    "    \"timeToLive\" : {" + NEW_LINE +
+                    "    \"times\" : {" + NEW_LINE +
                     "      \"unlimited\" : true" + NEW_LINE +
                     "    }" + NEW_LINE +
                     "  }" + NEW_LINE +
@@ -698,15 +698,15 @@ public class HttpRequestPropertiesMatcherLogTest {
                     " didn't match expectation:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
-                    "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
-                    "    \"priority\" : 0," + NEW_LINE +
                     "    \"httpRequest\" : {" + NEW_LINE +
                     "      \"keepAlive\" : false" + NEW_LINE +
                     "    }," + NEW_LINE +
-                    "    \"times\" : {" + NEW_LINE +
+                    "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                    "    \"priority\" : 0," + NEW_LINE +
+                    "    \"timeToLive\" : {" + NEW_LINE +
                     "      \"unlimited\" : true" + NEW_LINE +
                     "    }," + NEW_LINE +
-                    "    \"timeToLive\" : {" + NEW_LINE +
+                    "    \"times\" : {" + NEW_LINE +
                     "      \"unlimited\" : true" + NEW_LINE +
                     "    }" + NEW_LINE +
                     "  }" + NEW_LINE +

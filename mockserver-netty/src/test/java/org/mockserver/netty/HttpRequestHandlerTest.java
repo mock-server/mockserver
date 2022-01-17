@@ -276,21 +276,21 @@ public class HttpRequestHandlerTest {
                 is(endsWith(LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
-                    "    \"id\" : \"key_one\"," + NEW_LINE +
-                    "    \"priority\" : 0," + NEW_LINE +
                     "    \"httpRequest\" : {" + NEW_LINE +
                     "      \"path\" : \"request_one\"" + NEW_LINE +
-                    "    }," + NEW_LINE +
-                    "    \"times\" : {" + NEW_LINE +
-                    "      \"unlimited\" : true" + NEW_LINE +
-                    "    }," + NEW_LINE +
-                    "    \"timeToLive\" : {" + NEW_LINE +
-                    "      \"unlimited\" : true" + NEW_LINE +
                     "    }," + NEW_LINE +
                     "    \"httpResponse\" : {" + NEW_LINE +
                     "      \"statusCode\" : 200," + NEW_LINE +
                     "      \"reasonPhrase\" : \"OK\"," + NEW_LINE +
                     "      \"body\" : \"response_one\"" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"id\" : \"key_one\"," + NEW_LINE +
+                    "    \"priority\" : 0," + NEW_LINE +
+                    "    \"timeToLive\" : {" + NEW_LINE +
+                    "      \"unlimited\" : true" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"times\" : {" + NEW_LINE +
+                    "      \"unlimited\" : true" + NEW_LINE +
                     "    }" + NEW_LINE +
                     "  }" + NEW_LINE +
                     NEW_LINE +
@@ -319,9 +319,6 @@ public class HttpRequestHandlerTest {
         HttpResponse httpResponse = embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(201));
         assertThat(httpResponse.getBodyAsString(), containsString("[ {" + NEW_LINE +
-            "  \"id\" : \""));
-        assertThat(httpResponse.getBodyAsString(), containsString("\"," + NEW_LINE +
-            "  \"priority\" : 0," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"request_one\"" + NEW_LINE +
             "  }," + NEW_LINE +
@@ -330,10 +327,14 @@ public class HttpRequestHandlerTest {
             "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
             "    \"body\" : \"response_one\"" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"times\" : {" + NEW_LINE +
+            "  \"id\" : \""
+        ));
+        assertThat(httpResponse.getBodyAsString(), containsString("\"," + NEW_LINE +
+            "  \"priority\" : 0," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
             "    \"unlimited\" : true" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"timeToLive\" : {" + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
             "    \"unlimited\" : true" + NEW_LINE +
             "  }" + NEW_LINE +
             "} ]"));

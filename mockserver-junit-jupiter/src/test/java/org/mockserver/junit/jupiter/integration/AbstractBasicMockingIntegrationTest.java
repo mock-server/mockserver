@@ -1060,9 +1060,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request not found at least 2 times, expected:<{" + NEW_LINE +
                 "  \"path\" : \"" + calculatePath("some_path") + "\"" + NEW_LINE +
-                "}> but was:<{" + NEW_LINE +
-                "  \"method\" : \"GET\"," + NEW_LINE +
-                "  \"path\" : \"" + calculatePath("some_path") + "\"," + NEW_LINE));
+                "}> but was:<{"));
         }
     }
 
@@ -1389,19 +1387,19 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 "creating expectation:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
-                    "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
-                    "    \"priority\" : 0," + NEW_LINE +
                     "    \"httpRequest\" : {" + NEW_LINE +
                     "      \"path\" : \"/some_path.*\"" + NEW_LINE +
                     "    }," + NEW_LINE +
-                    "    \"times\" : {" + NEW_LINE +
-                    "      \"remainingTimes\" : 4" + NEW_LINE +
+                    "    \"httpResponse\" : {" + NEW_LINE +
+                    "      \"body\" : \"some_body\"" + NEW_LINE +
                     "    }," + NEW_LINE +
+                    "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                    "    \"priority\" : 0," + NEW_LINE +
                     "    \"timeToLive\" : {" + NEW_LINE +
                     "      \"unlimited\" : true" + NEW_LINE +
                     "    }," + NEW_LINE +
-                    "    \"httpResponse\" : {" + NEW_LINE +
-                    "      \"body\" : \"some_body\"" + NEW_LINE +
+                    "    \"times\" : {" + NEW_LINE +
+                    "      \"remainingTimes\" : 4" + NEW_LINE +
                     "    }" + NEW_LINE +
                     "  }" + NEW_LINE +
                     NEW_LINE +
@@ -1426,19 +1424,19 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     " matched expectation:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
-                        "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
-                        "    \"priority\" : 0," + NEW_LINE +
                         "    \"httpRequest\" : {" + NEW_LINE +
                         "      \"path\" : \"/some_path.*\"" + NEW_LINE +
                         "    }," + NEW_LINE +
-                        "    \"times\" : {" + NEW_LINE +
-                        "      \"remainingTimes\" : 4" + NEW_LINE +
+                        "    \"httpResponse\" : {" + NEW_LINE +
+                        "      \"body\" : \"some_body\"" + NEW_LINE +
                         "    }," + NEW_LINE +
+                        "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                        "    \"priority\" : 0," + NEW_LINE +
                         "    \"timeToLive\" : {" + NEW_LINE +
                         "      \"unlimited\" : true" + NEW_LINE +
                         "    }," + NEW_LINE +
-                        "    \"httpResponse\" : {" + NEW_LINE +
-                        "      \"body\" : \"some_body\"" + NEW_LINE +
+                        "    \"times\" : {" + NEW_LINE +
+                        "      \"remainingTimes\" : 4" + NEW_LINE +
                         "    }" + NEW_LINE +
                         "  }"
                 },
@@ -1477,19 +1475,19 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     " didn't match expectation:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
-                        "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
-                        "    \"priority\" : 0," + NEW_LINE +
                         "    \"httpRequest\" : {" + NEW_LINE +
                         "      \"path\" : \"/some_path.*\"" + NEW_LINE +
                         "    }," + NEW_LINE +
-                        "    \"times\" : {" + NEW_LINE +
-                        "      \"remainingTimes\" : 3" + NEW_LINE +
+                        "    \"httpResponse\" : {" + NEW_LINE +
+                        "      \"body\" : \"some_body\"" + NEW_LINE +
                         "    }," + NEW_LINE +
+                        "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                        "    \"priority\" : 0," + NEW_LINE +
                         "    \"timeToLive\" : {" + NEW_LINE +
                         "      \"unlimited\" : true" + NEW_LINE +
                         "    }," + NEW_LINE +
-                        "    \"httpResponse\" : {" + NEW_LINE +
-                        "      \"body\" : \"some_body\"" + NEW_LINE +
+                        "    \"times\" : {" + NEW_LINE +
+                        "      \"remainingTimes\" : 3" + NEW_LINE +
                         "    }" + NEW_LINE +
                         "  }" + NEW_LINE +
                         NEW_LINE +
@@ -1530,19 +1528,19 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     " matched expectation:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
-                        "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
-                        "    \"priority\" : 0," + NEW_LINE +
                         "    \"httpRequest\" : {" + NEW_LINE +
                         "      \"path\" : \"/some_path.*\"" + NEW_LINE +
                         "    }," + NEW_LINE +
-                        "    \"times\" : {" + NEW_LINE +
-                        "      \"remainingTimes\" : 3" + NEW_LINE +
+                        "    \"httpResponse\" : {" + NEW_LINE +
+                        "      \"body\" : \"some_body\"" + NEW_LINE +
                         "    }," + NEW_LINE +
+                        "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                        "    \"priority\" : 0," + NEW_LINE +
                         "    \"timeToLive\" : {" + NEW_LINE +
                         "      \"unlimited\" : true" + NEW_LINE +
                         "    }," + NEW_LINE +
-                        "    \"httpResponse\" : {" + NEW_LINE +
-                        "      \"body\" : \"some_body\"" + NEW_LINE +
+                        "    \"times\" : {" + NEW_LINE +
+                        "      \"remainingTimes\" : 3" + NEW_LINE +
                         "    }" + NEW_LINE +
                         "  }"
                 },

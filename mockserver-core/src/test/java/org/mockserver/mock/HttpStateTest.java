@@ -263,21 +263,21 @@ public class HttpStateTest {
                 is(endsWith(LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
-                    "    \"id\" : \"key_one\"," + NEW_LINE +
-                    "    \"priority\" : 0," + NEW_LINE +
                     "    \"httpRequest\" : {" + NEW_LINE +
                     "      \"path\" : \"request_one\"" + NEW_LINE +
-                    "    }," + NEW_LINE +
-                    "    \"times\" : {" + NEW_LINE +
-                    "      \"unlimited\" : true" + NEW_LINE +
-                    "    }," + NEW_LINE +
-                    "    \"timeToLive\" : {" + NEW_LINE +
-                    "      \"unlimited\" : true" + NEW_LINE +
                     "    }," + NEW_LINE +
                     "    \"httpResponse\" : {" + NEW_LINE +
                     "      \"statusCode\" : 200," + NEW_LINE +
                     "      \"reasonPhrase\" : \"OK\"," + NEW_LINE +
                     "      \"body\" : \"response_one\"" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"id\" : \"key_one\"," + NEW_LINE +
+                    "    \"priority\" : 0," + NEW_LINE +
+                    "    \"timeToLive\" : {" + NEW_LINE +
+                    "      \"unlimited\" : true" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"times\" : {" + NEW_LINE +
+                    "      \"unlimited\" : true" + NEW_LINE +
                     "    }" + NEW_LINE +
                     "  }" + NEW_LINE +
                     NEW_LINE +
@@ -307,9 +307,6 @@ public class HttpStateTest {
         assertThat(handle, is(true));
         assertThat(responseWriter.response.getStatusCode(), is(201));
         assertThat(responseWriter.response.getBodyAsString(), CoreMatchers.containsString("[ {" + NEW_LINE +
-            "  \"id\" : \""));
-        assertThat(responseWriter.response.getBodyAsString(), CoreMatchers.containsString("\"," + NEW_LINE +
-            "  \"priority\" : 0," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"request_one\"" + NEW_LINE +
             "  }," + NEW_LINE +
@@ -318,10 +315,13 @@ public class HttpStateTest {
             "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
             "    \"body\" : \"response_one\"" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"times\" : {" + NEW_LINE +
+            "  \"id\" : \""));
+        assertThat(responseWriter.response.getBodyAsString(), CoreMatchers.containsString("\"," + NEW_LINE +
+            "  \"priority\" : 0," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
             "    \"unlimited\" : true" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"timeToLive\" : {" + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
             "    \"unlimited\" : true" + NEW_LINE +
             "  }" + NEW_LINE +
             "} ]"));
@@ -889,21 +889,21 @@ public class HttpStateTest {
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
-                        "    \"id\" : \"one\"," + NEW_LINE +
-                        "    \"priority\" : 0," + NEW_LINE +
                         "    \"httpRequest\" : {" + NEW_LINE +
                         "      \"path\" : \"request_one\"" + NEW_LINE +
-                        "    }," + NEW_LINE +
-                        "    \"times\" : {" + NEW_LINE +
-                        "      \"unlimited\" : true" + NEW_LINE +
-                        "    }," + NEW_LINE +
-                        "    \"timeToLive\" : {" + NEW_LINE +
-                        "      \"unlimited\" : true" + NEW_LINE +
                         "    }," + NEW_LINE +
                         "    \"httpResponse\" : {" + NEW_LINE +
                         "      \"statusCode\" : 200," + NEW_LINE +
                         "      \"reasonPhrase\" : \"OK\"," + NEW_LINE +
                         "      \"body\" : \"response_one\"" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"id\" : \"one\"," + NEW_LINE +
+                        "    \"priority\" : 0," + NEW_LINE +
+                        "    \"timeToLive\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"times\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
                         "    }" + NEW_LINE +
                         "  }" + NEW_LINE +
                         NEW_LINE +
@@ -980,21 +980,21 @@ public class HttpStateTest {
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
-                        "    \"id\" : \"key_one\"," + NEW_LINE +
-                        "    \"priority\" : 0," + NEW_LINE +
                         "    \"httpRequest\" : {" + NEW_LINE +
                         "      \"path\" : \"request_one\"" + NEW_LINE +
-                        "    }," + NEW_LINE +
-                        "    \"times\" : {" + NEW_LINE +
-                        "      \"unlimited\" : true" + NEW_LINE +
-                        "    }," + NEW_LINE +
-                        "    \"timeToLive\" : {" + NEW_LINE +
-                        "      \"unlimited\" : true" + NEW_LINE +
                         "    }," + NEW_LINE +
                         "    \"httpResponse\" : {" + NEW_LINE +
                         "      \"statusCode\" : 200," + NEW_LINE +
                         "      \"reasonPhrase\" : \"OK\"," + NEW_LINE +
                         "      \"body\" : \"response_one\"" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"id\" : \"key_one\"," + NEW_LINE +
+                        "    \"priority\" : 0," + NEW_LINE +
+                        "    \"timeToLive\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"times\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
                         "    }" + NEW_LINE +
                         "  }" + NEW_LINE +
                         NEW_LINE +
@@ -1019,21 +1019,21 @@ public class HttpStateTest {
                         LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
-                        "    \"id\" : \"key_four\"," + NEW_LINE +
-                        "    \"priority\" : 0," + NEW_LINE +
                         "    \"httpRequest\" : {" + NEW_LINE +
                         "      \"path\" : \"request_four\"" + NEW_LINE +
-                        "    }," + NEW_LINE +
-                        "    \"times\" : {" + NEW_LINE +
-                        "      \"unlimited\" : true" + NEW_LINE +
-                        "    }," + NEW_LINE +
-                        "    \"timeToLive\" : {" + NEW_LINE +
-                        "      \"unlimited\" : true" + NEW_LINE +
                         "    }," + NEW_LINE +
                         "    \"httpResponse\" : {" + NEW_LINE +
                         "      \"statusCode\" : 200," + NEW_LINE +
                         "      \"reasonPhrase\" : \"OK\"," + NEW_LINE +
                         "      \"body\" : \"response_four\"" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"id\" : \"key_four\"," + NEW_LINE +
+                        "    \"priority\" : 0," + NEW_LINE +
+                        "    \"timeToLive\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"times\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
                         "    }" + NEW_LINE +
                         "  }" + NEW_LINE +
                         NEW_LINE +
@@ -1058,8 +1058,6 @@ public class HttpStateTest {
                     ),
                 is(response().withBody("" +
                         "[ {" + NEW_LINE +
-                        "  \"id\" : \"key_one\"," + NEW_LINE +
-                        "  \"priority\" : 0," + NEW_LINE +
                         "  \"httpRequest\" : {" + NEW_LINE +
                         "    \"path\" : \"request_one\"" + NEW_LINE +
                         "  }," + NEW_LINE +
@@ -1068,10 +1066,12 @@ public class HttpStateTest {
                         "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
                         "    \"body\" : \"response_one\"" + NEW_LINE +
                         "  }," + NEW_LINE +
-                        "  \"times\" : {" + NEW_LINE +
+                        "  \"id\" : \"key_one\"," + NEW_LINE +
+                        "  \"priority\" : 0," + NEW_LINE +
+                        "  \"timeToLive\" : {" + NEW_LINE +
                         "    \"unlimited\" : true" + NEW_LINE +
                         "  }," + NEW_LINE +
-                        "  \"timeToLive\" : {" + NEW_LINE +
+                        "  \"times\" : {" + NEW_LINE +
                         "    \"unlimited\" : true" + NEW_LINE +
                         "  }" + NEW_LINE +
                         "} ]",
@@ -1143,8 +1143,6 @@ public class HttpStateTest {
                     ),
                 is(response().withBody("" +
                         "[ {" + NEW_LINE +
-                        "  \"id\" : \"key_one\"," + NEW_LINE +
-                        "  \"priority\" : 0," + NEW_LINE +
                         "  \"httpRequest\" : {" + NEW_LINE +
                         "    \"path\" : \"request_one\"" + NEW_LINE +
                         "  }," + NEW_LINE +
@@ -1153,10 +1151,12 @@ public class HttpStateTest {
                         "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
                         "    \"body\" : \"response_one\"" + NEW_LINE +
                         "  }," + NEW_LINE +
-                        "  \"times\" : {" + NEW_LINE +
+                        "  \"id\" : \"key_one\"," + NEW_LINE +
+                        "  \"priority\" : 0," + NEW_LINE +
+                        "  \"timeToLive\" : {" + NEW_LINE +
                         "    \"unlimited\" : true" + NEW_LINE +
                         "  }," + NEW_LINE +
-                        "  \"timeToLive\" : {" + NEW_LINE +
+                        "  \"times\" : {" + NEW_LINE +
                         "    \"unlimited\" : true" + NEW_LINE +
                         "  }" + NEW_LINE +
                         "} ]",
@@ -1394,12 +1394,11 @@ public class HttpStateTest {
         // then
         assertThat(response,
             is(response().withBody("[ {" + NEW_LINE +
-                "  \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\"," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"request_one\"" + NEW_LINE +
-                "  }" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\"" + NEW_LINE +
                 "}, {" + NEW_LINE +
-                "  \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\"," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"request_two\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -1407,7 +1406,8 @@ public class HttpStateTest {
                 "    \"statusCode\" : 200," + NEW_LINE +
                 "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
                 "    \"body\" : \"response_two\"" + NEW_LINE +
-                "  }" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\"" + NEW_LINE +
                 "} ]", MediaType.JSON_UTF_8).withStatusCode(200))
         );
     }
@@ -1454,21 +1454,21 @@ public class HttpStateTest {
                 "      \"path\" : \"request_one\"" + NEW_LINE +
                 "    }," + NEW_LINE +
                 "    \"expectation\" : {" + NEW_LINE +
-                "      \"id\" : \"key_one\"," + NEW_LINE +
-                "      \"priority\" : 0," + NEW_LINE +
                 "      \"httpRequest\" : {" + NEW_LINE +
                 "        \"path\" : \"request_one\"" + NEW_LINE +
-                "      }," + NEW_LINE +
-                "      \"times\" : {" + NEW_LINE +
-                "        \"unlimited\" : true" + NEW_LINE +
-                "      }," + NEW_LINE +
-                "      \"timeToLive\" : {" + NEW_LINE +
-                "        \"unlimited\" : true" + NEW_LINE +
                 "      }," + NEW_LINE +
                 "      \"httpResponse\" : {" + NEW_LINE +
                 "        \"statusCode\" : 200," + NEW_LINE +
                 "        \"reasonPhrase\" : \"OK\"," + NEW_LINE +
                 "        \"body\" : \"response_two\"" + NEW_LINE +
+                "      }," + NEW_LINE +
+                "      \"id\" : \"key_one\"," + NEW_LINE +
+                "      \"priority\" : 0," + NEW_LINE +
+                "      \"timeToLive\" : {" + NEW_LINE +
+                "        \"unlimited\" : true" + NEW_LINE +
+                "      }," + NEW_LINE +
+                "      \"times\" : {" + NEW_LINE +
+                "        \"unlimited\" : true" + NEW_LINE +
                 "      }" + NEW_LINE +
                 "    }," + NEW_LINE +
                 "    \"message\" : [" + NEW_LINE +
@@ -1815,21 +1815,21 @@ public class HttpStateTest {
                         " matched expectation:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
-                        "    \"id\" : \"key_one\"," + NEW_LINE +
-                        "    \"priority\" : 0," + NEW_LINE +
                         "    \"httpRequest\" : {" + NEW_LINE +
                         "      \"path\" : \"request_one\"" + NEW_LINE +
-                        "    }," + NEW_LINE +
-                        "    \"times\" : {" + NEW_LINE +
-                        "      \"unlimited\" : true" + NEW_LINE +
-                        "    }," + NEW_LINE +
-                        "    \"timeToLive\" : {" + NEW_LINE +
-                        "      \"unlimited\" : true" + NEW_LINE +
                         "    }," + NEW_LINE +
                         "    \"httpResponse\" : {" + NEW_LINE +
                         "      \"statusCode\" : 200," + NEW_LINE +
                         "      \"reasonPhrase\" : \"OK\"," + NEW_LINE +
                         "      \"body\" : \"response_two\"" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"id\" : \"key_one\"," + NEW_LINE +
+                        "    \"priority\" : 0," + NEW_LINE +
+                        "    \"timeToLive\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"times\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
                         "    }" + NEW_LINE +
                         "  }" + NEW_LINE +
                         NEW_LINE +
@@ -1843,21 +1843,21 @@ public class HttpStateTest {
                         " matched expectation:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
-                        "    \"id\" : \"key_two\"," + NEW_LINE +
-                        "    \"priority\" : 0," + NEW_LINE +
                         "    \"httpRequest\" : {" + NEW_LINE +
                         "      \"path\" : \"request_two\"" + NEW_LINE +
-                        "    }," + NEW_LINE +
-                        "    \"times\" : {" + NEW_LINE +
-                        "      \"unlimited\" : true" + NEW_LINE +
-                        "    }," + NEW_LINE +
-                        "    \"timeToLive\" : {" + NEW_LINE +
-                        "      \"unlimited\" : true" + NEW_LINE +
                         "    }," + NEW_LINE +
                         "    \"httpResponse\" : {" + NEW_LINE +
                         "      \"statusCode\" : 200," + NEW_LINE +
                         "      \"reasonPhrase\" : \"OK\"," + NEW_LINE +
                         "      \"body\" : \"response_two\"" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"id\" : \"key_two\"," + NEW_LINE +
+                        "    \"priority\" : 0," + NEW_LINE +
+                        "    \"timeToLive\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"times\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
                         "    }" + NEW_LINE +
                         "  }" + NEW_LINE +
                         NEW_LINE +
@@ -1959,21 +1959,21 @@ public class HttpStateTest {
                         " matched expectation:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
-                        "    \"id\" : \"key_one\"," + NEW_LINE +
-                        "    \"priority\" : 0," + NEW_LINE +
                         "    \"httpRequest\" : {" + NEW_LINE +
                         "      \"path\" : \"request_one\"" + NEW_LINE +
-                        "    }," + NEW_LINE +
-                        "    \"times\" : {" + NEW_LINE +
-                        "      \"unlimited\" : true" + NEW_LINE +
-                        "    }," + NEW_LINE +
-                        "    \"timeToLive\" : {" + NEW_LINE +
-                        "      \"unlimited\" : true" + NEW_LINE +
                         "    }," + NEW_LINE +
                         "    \"httpResponse\" : {" + NEW_LINE +
                         "      \"statusCode\" : 200," + NEW_LINE +
                         "      \"reasonPhrase\" : \"OK\"," + NEW_LINE +
                         "      \"body\" : \"response_two\"" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"id\" : \"key_one\"," + NEW_LINE +
+                        "    \"priority\" : 0," + NEW_LINE +
+                        "    \"timeToLive\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"times\" : {" + NEW_LINE +
+                        "      \"unlimited\" : true" + NEW_LINE +
                         "    }" + NEW_LINE +
                         "  }" + NEW_LINE +
                         NEW_LINE,

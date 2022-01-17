@@ -76,49 +76,49 @@ public class ExpectationFileSystemPersistenceTest {
 
             // then
             String expectedFileContents = "[ {" + NEW_LINE +
-                "  \"id\" : \"one\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some first response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some first response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
-                "  \"id\" : \"two\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleSecond\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some second response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"two\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some second response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
-                "  \"id\" : \"three\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleThird\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some third response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"three\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some third response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "} ]";
             assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8), is(expectedFileContents));
@@ -178,34 +178,34 @@ public class ExpectationFileSystemPersistenceTest {
 
             // then
             String expectedFileContents = "[ {" + NEW_LINE +
-                "  \"id\" : \"one\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some first response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some first response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
-                "  \"id\" : \"three\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleThird\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some third response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"three\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some third response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "} ]";
             assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8), is(expectedFileContents));
@@ -270,49 +270,49 @@ public class ExpectationFileSystemPersistenceTest {
 
             // then
             String expectedFileContents = "[ {" + NEW_LINE +
-                "  \"id\" : \"one\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some first response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some first response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
-                "  \"id\" : \"two\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleSecondUpdated\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some second updated response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"two\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some second updated response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
-                "  \"id\" : \"three\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleThird\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some third response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"three\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some third response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "} ]";
             assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8), is(expectedFileContents));
@@ -397,49 +397,49 @@ public class ExpectationFileSystemPersistenceTest {
 
             // then
             String expectedFileContents = "[ {" + NEW_LINE +
-                "  \"id\" : \"one\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some first response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some first response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
-                "  \"id\" : \"two\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleSecondUpdated\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some second updated response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"two\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some second updated response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
-                "  \"id\" : \"four\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFourth\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some fourth response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"four\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some fourth response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "} ]";
             assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8), is(expectedFileContents));
@@ -528,49 +528,49 @@ public class ExpectationFileSystemPersistenceTest {
 
             // then
             String expectedFileContents = "[ {" + NEW_LINE +
-                "  \"id\" : \"one\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some first response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some first response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
-                "  \"id\" : \"two\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleSecond\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some second response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"two\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some second response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
-                "  \"id\" : \"three\"," + NEW_LINE +
-                "  \"priority\" : 0," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleThird\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some third response\"" + NEW_LINE +
                 "  }," + NEW_LINE +
+                "  \"id\" : \"three\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
                 "  \"timeToLive\" : {" + NEW_LINE +
                 "    \"unlimited\" : true" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some third response\"" + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "} ]";
             assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8), is(expectedFileContents));

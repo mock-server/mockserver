@@ -100,6 +100,13 @@ public class ObjectMapperFactory {
         swallowThrowable(() -> objectMapper.configure(DeserializationFeature.FAIL_ON_NUMBERS_FOR_ENUMS, false));
         swallowThrowable(() -> objectMapper.configure(DeserializationFeature.FAIL_ON_TRAILING_TOKENS, false));
         swallowThrowable(() -> objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false));
+        swallowThrowable(() -> objectMapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true));
+        swallowThrowable(() -> objectMapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS, true));
+        swallowThrowable(() -> objectMapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_VALUES, true));
+        swallowThrowable(() -> objectMapper.configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, true));
+        swallowThrowable(() -> objectMapper.configure(MapperFeature.CAN_OVERRIDE_ACCESS_MODIFIERS, true));
+        swallowThrowable(() -> objectMapper.configure(MapperFeature.REQUIRE_SETTERS_FOR_GETTERS, false));
+        swallowThrowable(() -> objectMapper.configure(MapperFeature.AUTO_DETECT_GETTERS, true));
 
         // relax parsing
         swallowThrowable(() -> objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true));
@@ -124,6 +131,9 @@ public class ObjectMapperFactory {
         swallowThrowable(() -> objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT));
         swallowThrowable(() -> objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL));
         swallowThrowable(() -> objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY));
+
+        // consistent json output
+        swallowThrowable(() -> objectMapper.configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true));
 
         return objectMapper;
     }

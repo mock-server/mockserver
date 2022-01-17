@@ -1556,8 +1556,6 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1591,22 +1589,24 @@ public class ExpectationSerializerIntegrationTest {
             "      \"value\" : 1" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"connectionOptions\" : {" + NEW_LINE +
-            "      \"suppressContentLengthHeader\" : true," + NEW_LINE +
-            "      \"contentLengthHeaderOverride\" : 50," + NEW_LINE +
-            "      \"suppressConnectionHeader\" : true," + NEW_LINE +
-            "      \"keepAliveOverride\" : true," + NEW_LINE +
             "      \"closeSocket\" : true," + NEW_LINE +
             "      \"closeSocketDelay\" : {" + NEW_LINE +
             "        \"timeUnit\" : \"MILLISECONDS\"," + NEW_LINE +
             "        \"value\" : 100" + NEW_LINE +
-            "      }" + NEW_LINE +
+            "      }," + NEW_LINE +
+            "      \"contentLengthHeaderOverride\" : 50," + NEW_LINE +
+            "      \"keepAliveOverride\" : true," + NEW_LINE +
+            "      \"suppressConnectionHeader\" : true," + NEW_LINE +
+            "      \"suppressContentLengthHeader\" : true" + NEW_LINE +
             "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"times\" : {" + NEW_LINE +
             "    \"remainingTimes\" : 5" + NEW_LINE +
-            "  }," + NEW_LINE +
-            "  \"timeToLive\" : {" + NEW_LINE +
-            "    \"unlimited\" : true" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonExpectation);
     }
@@ -1650,8 +1650,6 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1672,18 +1670,20 @@ public class ExpectationSerializerIntegrationTest {
             "    \"body\" : \"someBody\"" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"httpResponseTemplate\" : {" + NEW_LINE +
-            "    \"template\" : \"some_random_template\"," + NEW_LINE +
-            "    \"templateType\" : \"JAVASCRIPT\"," + NEW_LINE +
             "    \"delay\" : {" + NEW_LINE +
             "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
             "      \"value\" : 1" + NEW_LINE +
-            "    }" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"template\" : \"some_random_template\"," + NEW_LINE +
+            "    \"templateType\" : \"JAVASCRIPT\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"times\" : {" + NEW_LINE +
             "    \"remainingTimes\" : 5" + NEW_LINE +
-            "  }," + NEW_LINE +
-            "  \"timeToLive\" : {" + NEW_LINE +
-            "    \"unlimited\" : true" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonExpectation);
     }
@@ -1725,8 +1725,6 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1749,12 +1747,14 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpResponseClassCallback\" : {" + NEW_LINE +
             "    \"callbackClass\" : \"someClass\"" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"times\" : {" + NEW_LINE +
-            "    \"remainingTimes\" : 5" + NEW_LINE +
-            "  }," + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"timeToLive\" : {" + NEW_LINE +
             "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
             "    \"timeToLive\" : 2" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonExpectation);
     }
@@ -1796,8 +1796,6 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1820,12 +1818,14 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpResponseObjectCallback\" : {" + NEW_LINE +
             "    \"clientId\" : \"someClientId\"" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"times\" : {" + NEW_LINE +
-            "    \"remainingTimes\" : 5" + NEW_LINE +
-            "  }," + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"timeToLive\" : {" + NEW_LINE +
             "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
             "    \"timeToLive\" : 2" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonExpectation);
     }
@@ -1869,8 +1869,11 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
+            "  \"httpForward\" : {" + NEW_LINE +
+            "    \"host\" : \"someHost\"," + NEW_LINE +
+            "    \"port\" : 1234," + NEW_LINE +
+            "    \"scheme\" : \"HTTPS\"" + NEW_LINE +
+            "  }," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1890,17 +1893,14 @@ public class ExpectationSerializerIntegrationTest {
             "    }," + NEW_LINE +
             "    \"body\" : \"someBody\"" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"httpForward\" : {" + NEW_LINE +
-            "    \"host\" : \"someHost\"," + NEW_LINE +
-            "    \"port\" : 1234," + NEW_LINE +
-            "    \"scheme\" : \"HTTPS\"" + NEW_LINE +
-            "  }," + NEW_LINE +
-            "  \"times\" : {" + NEW_LINE +
-            "    \"remainingTimes\" : 5" + NEW_LINE +
-            "  }," + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"timeToLive\" : {" + NEW_LINE +
             "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
             "    \"timeToLive\" : 2" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonExpectation);
     }
@@ -1944,8 +1944,14 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
+            "  \"httpForwardTemplate\" : {" + NEW_LINE +
+            "    \"delay\" : {" + NEW_LINE +
+            "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+            "      \"value\" : 1" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"template\" : \"some_random_template\"," + NEW_LINE +
+            "    \"templateType\" : \"JAVASCRIPT\"" + NEW_LINE +
+            "  }," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1965,19 +1971,13 @@ public class ExpectationSerializerIntegrationTest {
             "    }," + NEW_LINE +
             "    \"body\" : \"someBody\"" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"httpForwardTemplate\" : {" + NEW_LINE +
-            "    \"template\" : \"some_random_template\"," + NEW_LINE +
-            "    \"templateType\" : \"JAVASCRIPT\"," + NEW_LINE +
-            "    \"delay\" : {" + NEW_LINE +
-            "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
-            "      \"value\" : 1" + NEW_LINE +
-            "    }" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"times\" : {" + NEW_LINE +
             "    \"remainingTimes\" : 5" + NEW_LINE +
-            "  }," + NEW_LINE +
-            "  \"timeToLive\" : {" + NEW_LINE +
-            "    \"unlimited\" : true" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonExpectation);
     }
@@ -2019,8 +2019,9 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
+            "  \"httpForwardClassCallback\" : {" + NEW_LINE +
+            "    \"callbackClass\" : \"someClass\"" + NEW_LINE +
+            "  }," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -2040,15 +2041,14 @@ public class ExpectationSerializerIntegrationTest {
             "    }," + NEW_LINE +
             "    \"body\" : \"someBody\"" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"httpForwardClassCallback\" : {" + NEW_LINE +
-            "    \"callbackClass\" : \"someClass\"" + NEW_LINE +
-            "  }," + NEW_LINE +
-            "  \"times\" : {" + NEW_LINE +
-            "    \"remainingTimes\" : 5" + NEW_LINE +
-            "  }," + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"timeToLive\" : {" + NEW_LINE +
             "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
             "    \"timeToLive\" : 2" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonExpectation);
     }
@@ -2090,8 +2090,9 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
+            "  \"httpForwardObjectCallback\" : {" + NEW_LINE +
+            "    \"clientId\" : \"someClientId\"" + NEW_LINE +
+            "  }," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -2111,15 +2112,14 @@ public class ExpectationSerializerIntegrationTest {
             "    }," + NEW_LINE +
             "    \"body\" : \"someBody\"" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"httpForwardObjectCallback\" : {" + NEW_LINE +
-            "    \"clientId\" : \"someClientId\"" + NEW_LINE +
-            "  }," + NEW_LINE +
-            "  \"times\" : {" + NEW_LINE +
-            "    \"remainingTimes\" : 5" + NEW_LINE +
-            "  }," + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"timeToLive\" : {" + NEW_LINE +
             "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
             "    \"timeToLive\" : 2" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonExpectation);
     }
@@ -2168,8 +2168,17 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
+            "  \"httpOverrideForwardedRequest\" : {" + NEW_LINE +
+            "    \"delay\" : {" + NEW_LINE +
+            "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+            "      \"value\" : 1" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"httpRequest\" : {" + NEW_LINE +
+            "      \"method\" : \"some_overridden_method\"," + NEW_LINE +
+            "      \"path\" : \"some_overridden_path\"," + NEW_LINE +
+            "      \"body\" : \"some_overridden_body\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -2189,22 +2198,13 @@ public class ExpectationSerializerIntegrationTest {
             "    }," + NEW_LINE +
             "    \"body\" : \"someBody\"" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"httpOverrideForwardedRequest\" : {" + NEW_LINE +
-            "    \"httpRequest\" : {" + NEW_LINE +
-            "      \"method\" : \"some_overridden_method\"," + NEW_LINE +
-            "      \"path\" : \"some_overridden_path\"," + NEW_LINE +
-            "      \"body\" : \"some_overridden_body\"" + NEW_LINE +
-            "    }," + NEW_LINE +
-            "    \"delay\" : {" + NEW_LINE +
-            "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
-            "      \"value\" : 1" + NEW_LINE +
-            "    }" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"times\" : {" + NEW_LINE +
             "    \"remainingTimes\" : 5" + NEW_LINE +
-            "  }," + NEW_LINE +
-            "  \"timeToLive\" : {" + NEW_LINE +
-            "    \"unlimited\" : true" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonExpectation);
     }
@@ -2248,8 +2248,14 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
+            "  \"httpError\" : {" + NEW_LINE +
+            "    \"delay\" : {" + NEW_LINE +
+            "      \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+            "      \"value\" : 1" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"dropConnection\" : false," + NEW_LINE +
+            "    \"responseBytes\" : \"c29tZV9ieXRlcw==\"" + NEW_LINE +
+            "  }," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -2269,20 +2275,14 @@ public class ExpectationSerializerIntegrationTest {
             "    }," + NEW_LINE +
             "    \"body\" : \"someBody\"" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"httpError\" : {" + NEW_LINE +
-            "    \"delay\" : {" + NEW_LINE +
-            "      \"timeUnit\" : \"HOURS\"," + NEW_LINE +
-            "      \"value\" : 1" + NEW_LINE +
-            "    }," + NEW_LINE +
-            "    \"dropConnection\" : false," + NEW_LINE +
-            "    \"responseBytes\" : \"c29tZV9ieXRlcw==\"" + NEW_LINE +
-            "  }," + NEW_LINE +
-            "  \"times\" : {" + NEW_LINE +
-            "    \"remainingTimes\" : 5" + NEW_LINE +
-            "  }," + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"timeToLive\" : {" + NEW_LINE +
             "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
             "    \"timeToLive\" : 2" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonExpectation);
     }
@@ -2327,8 +2327,6 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -2349,19 +2347,21 @@ public class ExpectationSerializerIntegrationTest {
             "    \"body\" : \"someBody\"" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"httpResponseTemplate\" : {" + NEW_LINE +
-            "    \"template\" : \"some_random_template\"," + NEW_LINE +
-            "    \"templateType\" : \"JAVASCRIPT\"," + NEW_LINE +
             "    \"delay\" : {" + NEW_LINE +
             "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
             "      \"value\" : 1" + NEW_LINE +
-            "    }" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"template\" : \"some_random_template\"," + NEW_LINE +
+            "    \"templateType\" : \"JAVASCRIPT\"" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"times\" : {" + NEW_LINE +
-            "    \"remainingTimes\" : 5" + NEW_LINE +
-            "  }," + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"timeToLive\" : {" + NEW_LINE +
             "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
             "    \"timeToLive\" : 2" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonExpectation);
     }
@@ -2387,20 +2387,20 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"httpResponse\" : {" + NEW_LINE +
             "    \"body\" : \"someBody\"" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"times\" : {" + NEW_LINE +
-            "    \"remainingTimes\" : 5" + NEW_LINE +
-            "  }," + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"timeToLive\" : {" + NEW_LINE +
             "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
             "    \"timeToLive\" : 2" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonExpectation);
     }
@@ -2427,8 +2427,6 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
@@ -2439,12 +2437,14 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpResponse\" : {" + NEW_LINE +
             "    \"body\" : \"someBody\"" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"times\" : {" + NEW_LINE +
-            "    \"remainingTimes\" : 5" + NEW_LINE +
-            "  }," + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"timeToLive\" : {" + NEW_LINE +
             "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
             "    \"timeToLive\" : 2" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonExpectation);
     }
@@ -2492,8 +2492,6 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
@@ -2507,12 +2505,14 @@ public class ExpectationSerializerIntegrationTest {
             "      \"fieldTwo\" : \"valueTwo\"" + NEW_LINE +
             "    }" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"times\" : {" + NEW_LINE +
-            "    \"remainingTimes\" : 5" + NEW_LINE +
-            "  }," + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"timeToLive\" : {" + NEW_LINE +
             "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
             "    \"timeToLive\" : 2" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonExpectation);
     }
@@ -2557,8 +2557,6 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
@@ -2589,12 +2587,14 @@ public class ExpectationSerializerIntegrationTest {
             "      \"fieldTwo\" : \"valueTwo\"" + NEW_LINE +
             "    }" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"times\" : {" + NEW_LINE +
-            "    \"remainingTimes\" : 5" + NEW_LINE +
-            "  }," + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"timeToLive\" : {" + NEW_LINE +
             "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
             "    \"timeToLive\" : 2" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonExpectation);
     }
@@ -2621,8 +2621,6 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
@@ -2636,11 +2634,13 @@ public class ExpectationSerializerIntegrationTest {
             "      \"fieldTwo\" : \"valueTwo\"" + NEW_LINE +
             "    }" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"times\" : {" + NEW_LINE +
-            "    \"remainingTimes\" : 5" + NEW_LINE +
-            "  }," + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"timeToLive\" : {" + NEW_LINE +
             "    \"unlimited\" : true" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonExpectation);
     }
@@ -2666,8 +2666,6 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
@@ -2678,11 +2676,13 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpResponse\" : {" + NEW_LINE +
             "    \"body\" : \"someBody\"" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"times\" : {" + NEW_LINE +
-            "    \"remainingTimes\" : 5" + NEW_LINE +
-            "  }," + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"timeToLive\" : {" + NEW_LINE +
             "    \"unlimited\" : true" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonExpectation);
     }
@@ -2711,8 +2711,6 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
@@ -2726,11 +2724,13 @@ public class ExpectationSerializerIntegrationTest {
             "  \"httpResponse\" : {" + NEW_LINE +
             "    \"body\" : \"someBody\"" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"times\" : {" + NEW_LINE +
-            "    \"remainingTimes\" : 5" + NEW_LINE +
-            "  }," + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
             "  \"timeToLive\" : {" + NEW_LINE +
             "    \"unlimited\" : true" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonExpectation);
     }
@@ -2754,18 +2754,18 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"httpResponse\" : {" + NEW_LINE +
             "    \"body\" : \"someBody\"" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"times\" : {" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
             "    \"unlimited\" : true" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"timeToLive\" : {" + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
             "    \"unlimited\" : true" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonExpectation);
@@ -2795,48 +2795,48 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("[ {" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"httpResponse\" : {" + NEW_LINE +
             "    \"body\" : \"someBody\"" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"times\" : {" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
             "    \"unlimited\" : true" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"timeToLive\" : {" + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
             "    \"unlimited\" : true" + NEW_LINE +
             "  }" + NEW_LINE +
             "}, {" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"httpResponse\" : {" + NEW_LINE +
             "    \"body\" : \"someBody\"" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"times\" : {" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
             "    \"unlimited\" : true" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"timeToLive\" : {" + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
             "    \"unlimited\" : true" + NEW_LINE +
             "  }" + NEW_LINE +
             "}, {" + NEW_LINE +
-            "  \"id\" : \"some_key\"," + NEW_LINE +
-            "  \"priority\" : 10," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"httpResponse\" : {" + NEW_LINE +
             "    \"body\" : \"someBody\"" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"times\" : {" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
             "    \"unlimited\" : true" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"timeToLive\" : {" + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
             "    \"unlimited\" : true" + NEW_LINE +
             "  }" + NEW_LINE +
             "} ]", jsonExpectation);

@@ -271,9 +271,6 @@ public class MockServerServletTest {
         // then
         assertThat(response.getStatus(), is(201));
         assertThat(new String(response.getContentAsByteArray(), UTF_8), containsString("[ {" + NEW_LINE +
-            "  \"id\" : \""));
-        assertThat(new String(response.getContentAsByteArray(), UTF_8), containsString("\"," + NEW_LINE +
-            "  \"priority\" : 0," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"request_one\"" + NEW_LINE +
             "  }," + NEW_LINE +
@@ -282,10 +279,13 @@ public class MockServerServletTest {
             "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
             "    \"body\" : \"response_one\"" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"times\" : {" + NEW_LINE +
+            "  \"id\" : \""));
+        assertThat(new String(response.getContentAsByteArray(), UTF_8), containsString("\"," + NEW_LINE +
+            "  \"priority\" : 0," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
             "    \"unlimited\" : true" + NEW_LINE +
             "  }," + NEW_LINE +
-            "  \"timeToLive\" : {" + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
             "    \"unlimited\" : true" + NEW_LINE +
             "  }" + NEW_LINE +
             "} ]"));
@@ -337,21 +337,21 @@ public class MockServerServletTest {
             assertThat(new String(response.getContentAsByteArray(), UTF_8), containsString("creating expectation:" + NEW_LINE +
                 NEW_LINE +
                 "  {" + NEW_LINE +
-                "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
-                "    \"priority\" : 0," + NEW_LINE +
                 "    \"httpRequest\" : {" + NEW_LINE +
                 "      \"path\" : \"request_one\"" + NEW_LINE +
-                "    }," + NEW_LINE +
-                "    \"times\" : {" + NEW_LINE +
-                "      \"unlimited\" : true" + NEW_LINE +
-                "    }," + NEW_LINE +
-                "    \"timeToLive\" : {" + NEW_LINE +
-                "      \"unlimited\" : true" + NEW_LINE +
                 "    }," + NEW_LINE +
                 "    \"httpResponse\" : {" + NEW_LINE +
                 "      \"statusCode\" : 200," + NEW_LINE +
                 "      \"reasonPhrase\" : \"OK\"," + NEW_LINE +
                 "      \"body\" : \"response_one\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                "    \"priority\" : 0," + NEW_LINE +
+                "    \"timeToLive\" : {" + NEW_LINE +
+                "      \"unlimited\" : true" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"times\" : {" + NEW_LINE +
+                "      \"unlimited\" : true" + NEW_LINE +
                 "    }" + NEW_LINE +
                 "  }" + NEW_LINE));
         } finally {
