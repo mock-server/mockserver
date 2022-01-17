@@ -162,7 +162,6 @@ public class HttpState {
             );
             throw new IllegalArgumentException("\"" + request.getFirstQueryStringParameter("type") + "\" is not a valid value for \"type\" parameter, only the following values are supported " + Arrays.stream(ClearType.values()).map(input -> input.name().toLowerCase()).collect(Collectors.toList()));
         }
-        System.gc();
     }
 
     private RequestDefinition resolveExpectationId(ExpectationId expectationId) {
@@ -193,7 +192,6 @@ public class HttpState {
                     .setMessageFormat("resetting all expectations and request logs")
             );
         }
-        System.gc();
         new Scheduler.SchedulerThreadFactory("MockServer Memory Metrics").newThread(() -> {
             try {
                 SECONDS.sleep(10);
