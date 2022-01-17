@@ -306,7 +306,8 @@ public class RequestMatchers extends MockServerMatcherNotifier {
             .stream(expectationIds)
             .map(expectationId -> httpRequestMatchers.getByKey(expectationId.getId()).map(HttpRequestMatcher::getExpectation))
             .filter(Optional::isPresent)
-            .map(Optional::get);
+            .map(Optional::get)
+            .filter(Expectation::isActive);
     }
 
     public List<Expectation> retrieveActiveExpectations(RequestDefinition requestDefinition) {
