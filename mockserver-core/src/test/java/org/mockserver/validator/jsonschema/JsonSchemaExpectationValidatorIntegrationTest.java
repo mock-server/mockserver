@@ -710,6 +710,66 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
     }
 
     @Test
+    public void shouldValidateInvalidExpectationWithErrorsInHttpFieldType() {
+        // when
+        assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"body\" : \"someBody\"," + NEW_LINE +
+            "    \"headers\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+            "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"keepAlive\" : \"true\"," + NEW_LINE +
+            "    \"secure\" : \"true\"," + NEW_LINE +
+            "    \"socketAddress\" : {" + NEW_LINE +
+            "      \"host\" : \"someHost\"," + NEW_LINE +
+            "      \"port\" : \"1234\"," + NEW_LINE +
+            "      \"scheme\" : \"HTTPS\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpOverrideForwardedRequest\": {" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "      \"method\": \"POST\", " + NEW_LINE +
+            "      \"secure\": false, " + NEW_LINE +
+            "      \"keepAlive\": false, " + NEW_LINE +
+            "      \"path\": \"/v1.0/publish/pubsub/deathStarStatus\", " + NEW_LINE +
+            "      \"pathParameters\": { }, " + NEW_LINE +
+            "      \"queryStringParameters\": { }, " + NEW_LINE +
+            "      \"cookies\": { }, " + NEW_LINE +
+            "      \"headers\": {" + NEW_LINE +
+            "        \"Host\": [" + NEW_LINE +
+            "          \"localhost:3500\"" + NEW_LINE +
+            "        ], " + NEW_LINE +
+            "        \"Content-Type\": [" + NEW_LINE +
+            "          \"application/json\"" + NEW_LINE +
+            "        ]" + NEW_LINE +
+            "      }, " + NEW_LINE +
+            "      \"body\": {" + NEW_LINE +
+            "        \"Content\": {" + NEW_LINE +
+            "          \"scenario\": \"MOCK_SERVER\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "      }, " + NEW_LINE +
+            "      \"socketAddress\": {" + NEW_LINE +
+            "        \"host\": \"127.0.0.1\", " + NEW_LINE +
+            "        \"port\": \"3500\", " + NEW_LINE +
+            "        \"scheme\": \"HTTP\"" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}"), is("6 errors:" + NEW_LINE +
+            " - field: \"/httpOverrideForwardedRequest/httpRequest/socketAddress/port\" for schema: \"socketAddress/properties/port\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])\"" + NEW_LINE +
+            " - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
+            " - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"body\",\"headers\",\"keepAlive\",\"method\",\"path\",\"secure\",\"socketAddress\"]\"" + NEW_LINE +
+            " - field: \"/httpRequest/keepAlive\" for schema: \"httpRequest/properties/keepAlive\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"boolean\"])\"" + NEW_LINE +
+            " - field: \"/httpRequest/secure\" for schema: \"httpRequest/properties/secure\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"boolean\"])\"" + NEW_LINE +
+            " - field: \"/httpRequest/socketAddress/port\" for schema: \"socketAddress/properties/port\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])\"" + NEW_LINE +
+            NEW_LINE +
+            OPEN_API_SPECIFICATION_URL));
+    }
+
+    @Test
     public void shouldValidateInvalidExpectationWithErrorsInHttpRequestCookiesAndHttpResponseCookies() {
         // when
         assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +

@@ -150,200 +150,202 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
             JsonNode reports = processingMessageJson.get("reports");
             String fieldPointer = pointerValue(instanceJson).replaceAll("\"", "");
             String schemaPointer = removeDefinitionPrefix(pointerValue(schemaJson));
-            if (isErrorForField(reports, fieldPointer, "/headers")) {
-                validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/headers") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "       \"exampleRegexHeader\": [" + NEW_LINE +
-                    "           \"^some +regex$\"" + NEW_LINE +
-                    "       ], " + NEW_LINE +
-                    "       \"exampleNottedAndSimpleStringHeader\": [" + NEW_LINE +
-                    "           \"!notThisValue\", " + NEW_LINE +
-                    "           \"simpleStringMatch\"" + NEW_LINE +
-                    "       ]" + NEW_LINE +
-                    "   }" + NEW_LINE + NEW_LINE +
-                    "or:" + NEW_LINE + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "       \"exampleSchemaHeader\": [" + NEW_LINE +
-                    "           {" + NEW_LINE +
-                    "               \"type\": \"number\"" + NEW_LINE +
-                    "           }" + NEW_LINE +
-                    "       ], " + NEW_LINE +
-                    "       \"exampleMultiSchemaHeader\": [" + NEW_LINE +
-                    "           {" + NEW_LINE +
-                    "               \"type\": \"string\", " + NEW_LINE +
-                    "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
-                    "           }, " + NEW_LINE +
-                    "           {" + NEW_LINE +
-                    "               \"type\": \"string\", " + NEW_LINE +
-                    "               \"format\": \"ipv4\"" + NEW_LINE +
-                    "           }" + NEW_LINE +
-                    "       ]" + NEW_LINE +
-                    "   }" + NEW_LINE);
-            }
-            if (isErrorForField(reports, fieldPointer, "/pathParameters")) {
-                validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/pathParameters") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "       \"exampleRegexParameter\": [" + NEW_LINE +
-                    "           \"^some +regex$\"" + NEW_LINE +
-                    "       ], " + NEW_LINE +
-                    "       \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
-                    "           \"!notThisValue\", " + NEW_LINE +
-                    "           \"simpleStringMatch\"" + NEW_LINE +
-                    "       ]" + NEW_LINE +
-                    "   }" + NEW_LINE + NEW_LINE +
-                    "or:" + NEW_LINE + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "       \"exampleSchemaParameter\": [" + NEW_LINE +
-                    "           {" + NEW_LINE +
-                    "               \"type\": \"number\"" + NEW_LINE +
-                    "           }" + NEW_LINE +
-                    "       ], " + NEW_LINE +
-                    "       \"exampleMultiSchemaParameter\": [" + NEW_LINE +
-                    "           {" + NEW_LINE +
-                    "               \"type\": \"string\", " + NEW_LINE +
-                    "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
-                    "           }, " + NEW_LINE +
-                    "           {" + NEW_LINE +
-                    "               \"type\": \"string\", " + NEW_LINE +
-                    "               \"format\": \"ipv4\"" + NEW_LINE +
-                    "           }" + NEW_LINE +
-                    "       ]" + NEW_LINE +
-                    "   }" + NEW_LINE);
-            }
-            if (isErrorForField(reports, fieldPointer, "/queryStringParameters")) {
-                validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/queryStringParameters") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "       \"exampleRegexParameter\": [" + NEW_LINE +
-                    "           \"^some +regex$\"" + NEW_LINE +
-                    "       ], " + NEW_LINE +
-                    "       \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
-                    "           \"!notThisValue\", " + NEW_LINE +
-                    "           \"simpleStringMatch\"" + NEW_LINE +
-                    "       ]" + NEW_LINE +
-                    "   }" + NEW_LINE + NEW_LINE +
-                    "or:" + NEW_LINE + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "       \"exampleSchemaParameter\": [" + NEW_LINE +
-                    "           {" + NEW_LINE +
-                    "               \"type\": \"number\"" + NEW_LINE +
-                    "           }" + NEW_LINE +
-                    "       ], " + NEW_LINE +
-                    "       \"exampleMultiSchemaParameter\": [" + NEW_LINE +
-                    "           {" + NEW_LINE +
-                    "               \"type\": \"string\", " + NEW_LINE +
-                    "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
-                    "           }, " + NEW_LINE +
-                    "           {" + NEW_LINE +
-                    "               \"type\": \"string\", " + NEW_LINE +
-                    "               \"format\": \"ipv4\"" + NEW_LINE +
-                    "           }" + NEW_LINE +
-                    "       ]" + NEW_LINE +
-                    "   }" + NEW_LINE);
-            }
-            if (isErrorForField(reports, fieldPointer, "/cookies")) {
-                validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/cookies") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "       \"exampleRegexCookie\": \"^some +regex$\", " + NEW_LINE +
-                    "       \"exampleNottedRegexCookie\": \"!notThisValue\", " + NEW_LINE +
-                    "       \"exampleSimpleStringCookie\": \"simpleStringMatch\"" + NEW_LINE +
-                    "   }" + NEW_LINE + NEW_LINE +
-                    "or:" + NEW_LINE + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "       \"exampleNumberSchemaCookie\": {" + NEW_LINE +
-                    "           \"type\": \"number\"" + NEW_LINE +
-                    "       }, " + NEW_LINE +
-                    "       \"examplePatternSchemaCookie\": {" + NEW_LINE +
-                    "           \"type\": \"string\", " + NEW_LINE +
-                    "           \"pattern\": \"^some +regex$\"" + NEW_LINE +
-                    "       }, " + NEW_LINE +
-                    "       \"exampleFormatSchemaCookie\": {" + NEW_LINE +
-                    "           \"type\": \"string\", " + NEW_LINE +
-                    "           \"format\": \"ipv4\"" + NEW_LINE +
-                    "       }" + NEW_LINE +
-                    "   }" + NEW_LINE);
-            }
-            if (isErrorForField(reports, fieldPointer, "/body") && !schemaPointer.contains("bodyWithContentType")) {
-                validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/body") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"BINARY\"," + NEW_LINE +
-                    "     \"base64Bytes\": \"\"," + NEW_LINE +
-                    "     \"contentType\": \"\"" + NEW_LINE +
-                    "   }, " + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"JSON\"," + NEW_LINE +
-                    "     \"json\": \"\"," + NEW_LINE +
-                    "     \"contentType\": \"\"," + NEW_LINE +
-                    "     \"matchType\": \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"JSON_SCHEMA\"," + NEW_LINE +
-                    "     \"jsonSchema\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"JSON_PATH\"," + NEW_LINE +
-                    "     \"jsonPath\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"PARAMETERS\"," + NEW_LINE +
-                    "     \"parameters\": {\"name\": \"value\"}" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"REGEX\"," + NEW_LINE +
-                    "     \"regex\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"STRING\"," + NEW_LINE +
-                    "     \"string\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"XML\"," + NEW_LINE +
-                    "     \"xml\": \"\"," + NEW_LINE +
-                    "     \"contentType\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"XML_SCHEMA\"," + NEW_LINE +
-                    "     \"xmlSchema\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"XPATH\"," + NEW_LINE +
-                    "     \"xpath\": \"\"" + NEW_LINE +
-                    "   }" + NEW_LINE);
-            }
-            if (isErrorForField(reports, fieldPointer, "/body") && schemaPointer.contains("bodyWithContentType")) {
-                validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/body") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"type\": \"BINARY\"," + NEW_LINE +
-                    "     \"base64Bytes\": \"\"," + NEW_LINE +
-                    "     \"contentType\": \"\"" + NEW_LINE +
-                    "   }, " + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"type\": \"JSON\"," + NEW_LINE +
-                    "     \"json\": \"\"," + NEW_LINE +
-                    "     \"contentType\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"type\": \"PARAMETERS\"," + NEW_LINE +
-                    "     \"parameters\": {\"name\": \"value\"}" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"type\": \"STRING\"," + NEW_LINE +
-                    "     \"string\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"type\": \"XML\"," + NEW_LINE +
-                    "     \"xml\": \"\"," + NEW_LINE +
-                    "     \"contentType\": \"\"" + NEW_LINE +
-                    "   }" + NEW_LINE);
+            if (reports != null) {
+                if (isErrorForField(reports, fieldPointer, "/headers")) {
+                    validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/headers") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "       \"exampleRegexHeader\": [" + NEW_LINE +
+                        "           \"^some +regex$\"" + NEW_LINE +
+                        "       ], " + NEW_LINE +
+                        "       \"exampleNottedAndSimpleStringHeader\": [" + NEW_LINE +
+                        "           \"!notThisValue\", " + NEW_LINE +
+                        "           \"simpleStringMatch\"" + NEW_LINE +
+                        "       ]" + NEW_LINE +
+                        "   }" + NEW_LINE + NEW_LINE +
+                        "or:" + NEW_LINE + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "       \"exampleSchemaHeader\": [" + NEW_LINE +
+                        "           {" + NEW_LINE +
+                        "               \"type\": \"number\"" + NEW_LINE +
+                        "           }" + NEW_LINE +
+                        "       ], " + NEW_LINE +
+                        "       \"exampleMultiSchemaHeader\": [" + NEW_LINE +
+                        "           {" + NEW_LINE +
+                        "               \"type\": \"string\", " + NEW_LINE +
+                        "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
+                        "           }, " + NEW_LINE +
+                        "           {" + NEW_LINE +
+                        "               \"type\": \"string\", " + NEW_LINE +
+                        "               \"format\": \"ipv4\"" + NEW_LINE +
+                        "           }" + NEW_LINE +
+                        "       ]" + NEW_LINE +
+                        "   }" + NEW_LINE);
+                }
+                if (isErrorForField(reports, fieldPointer, "/pathParameters")) {
+                    validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/pathParameters") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "       \"exampleRegexParameter\": [" + NEW_LINE +
+                        "           \"^some +regex$\"" + NEW_LINE +
+                        "       ], " + NEW_LINE +
+                        "       \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
+                        "           \"!notThisValue\", " + NEW_LINE +
+                        "           \"simpleStringMatch\"" + NEW_LINE +
+                        "       ]" + NEW_LINE +
+                        "   }" + NEW_LINE + NEW_LINE +
+                        "or:" + NEW_LINE + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "       \"exampleSchemaParameter\": [" + NEW_LINE +
+                        "           {" + NEW_LINE +
+                        "               \"type\": \"number\"" + NEW_LINE +
+                        "           }" + NEW_LINE +
+                        "       ], " + NEW_LINE +
+                        "       \"exampleMultiSchemaParameter\": [" + NEW_LINE +
+                        "           {" + NEW_LINE +
+                        "               \"type\": \"string\", " + NEW_LINE +
+                        "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
+                        "           }, " + NEW_LINE +
+                        "           {" + NEW_LINE +
+                        "               \"type\": \"string\", " + NEW_LINE +
+                        "               \"format\": \"ipv4\"" + NEW_LINE +
+                        "           }" + NEW_LINE +
+                        "       ]" + NEW_LINE +
+                        "   }" + NEW_LINE);
+                }
+                if (isErrorForField(reports, fieldPointer, "/queryStringParameters")) {
+                    validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/queryStringParameters") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "       \"exampleRegexParameter\": [" + NEW_LINE +
+                        "           \"^some +regex$\"" + NEW_LINE +
+                        "       ], " + NEW_LINE +
+                        "       \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
+                        "           \"!notThisValue\", " + NEW_LINE +
+                        "           \"simpleStringMatch\"" + NEW_LINE +
+                        "       ]" + NEW_LINE +
+                        "   }" + NEW_LINE + NEW_LINE +
+                        "or:" + NEW_LINE + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "       \"exampleSchemaParameter\": [" + NEW_LINE +
+                        "           {" + NEW_LINE +
+                        "               \"type\": \"number\"" + NEW_LINE +
+                        "           }" + NEW_LINE +
+                        "       ], " + NEW_LINE +
+                        "       \"exampleMultiSchemaParameter\": [" + NEW_LINE +
+                        "           {" + NEW_LINE +
+                        "               \"type\": \"string\", " + NEW_LINE +
+                        "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
+                        "           }, " + NEW_LINE +
+                        "           {" + NEW_LINE +
+                        "               \"type\": \"string\", " + NEW_LINE +
+                        "               \"format\": \"ipv4\"" + NEW_LINE +
+                        "           }" + NEW_LINE +
+                        "       ]" + NEW_LINE +
+                        "   }" + NEW_LINE);
+                }
+                if (isErrorForField(reports, fieldPointer, "/cookies")) {
+                    validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/cookies") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "       \"exampleRegexCookie\": \"^some +regex$\", " + NEW_LINE +
+                        "       \"exampleNottedRegexCookie\": \"!notThisValue\", " + NEW_LINE +
+                        "       \"exampleSimpleStringCookie\": \"simpleStringMatch\"" + NEW_LINE +
+                        "   }" + NEW_LINE + NEW_LINE +
+                        "or:" + NEW_LINE + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "       \"exampleNumberSchemaCookie\": {" + NEW_LINE +
+                        "           \"type\": \"number\"" + NEW_LINE +
+                        "       }, " + NEW_LINE +
+                        "       \"examplePatternSchemaCookie\": {" + NEW_LINE +
+                        "           \"type\": \"string\", " + NEW_LINE +
+                        "           \"pattern\": \"^some +regex$\"" + NEW_LINE +
+                        "       }, " + NEW_LINE +
+                        "       \"exampleFormatSchemaCookie\": {" + NEW_LINE +
+                        "           \"type\": \"string\", " + NEW_LINE +
+                        "           \"format\": \"ipv4\"" + NEW_LINE +
+                        "       }" + NEW_LINE +
+                        "   }" + NEW_LINE);
+                }
+                if (isErrorForField(reports, fieldPointer, "/body") && !schemaPointer.contains("bodyWithContentType")) {
+                    validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/body") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "     \"not\": false," + NEW_LINE +
+                        "     \"type\": \"BINARY\"," + NEW_LINE +
+                        "     \"base64Bytes\": \"\"," + NEW_LINE +
+                        "     \"contentType\": \"\"" + NEW_LINE +
+                        "   }, " + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "     \"not\": false," + NEW_LINE +
+                        "     \"type\": \"JSON\"," + NEW_LINE +
+                        "     \"json\": \"\"," + NEW_LINE +
+                        "     \"contentType\": \"\"," + NEW_LINE +
+                        "     \"matchType\": \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
+                        "   }," + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "     \"not\": false," + NEW_LINE +
+                        "     \"type\": \"JSON_SCHEMA\"," + NEW_LINE +
+                        "     \"jsonSchema\": \"\"" + NEW_LINE +
+                        "   }," + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "     \"not\": false," + NEW_LINE +
+                        "     \"type\": \"JSON_PATH\"," + NEW_LINE +
+                        "     \"jsonPath\": \"\"" + NEW_LINE +
+                        "   }," + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "     \"not\": false," + NEW_LINE +
+                        "     \"type\": \"PARAMETERS\"," + NEW_LINE +
+                        "     \"parameters\": {\"name\": \"value\"}" + NEW_LINE +
+                        "   }," + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "     \"not\": false," + NEW_LINE +
+                        "     \"type\": \"REGEX\"," + NEW_LINE +
+                        "     \"regex\": \"\"" + NEW_LINE +
+                        "   }," + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "     \"not\": false," + NEW_LINE +
+                        "     \"type\": \"STRING\"," + NEW_LINE +
+                        "     \"string\": \"\"" + NEW_LINE +
+                        "   }," + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "     \"not\": false," + NEW_LINE +
+                        "     \"type\": \"XML\"," + NEW_LINE +
+                        "     \"xml\": \"\"," + NEW_LINE +
+                        "     \"contentType\": \"\"" + NEW_LINE +
+                        "   }," + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "     \"not\": false," + NEW_LINE +
+                        "     \"type\": \"XML_SCHEMA\"," + NEW_LINE +
+                        "     \"xmlSchema\": \"\"" + NEW_LINE +
+                        "   }," + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "     \"not\": false," + NEW_LINE +
+                        "     \"type\": \"XPATH\"," + NEW_LINE +
+                        "     \"xpath\": \"\"" + NEW_LINE +
+                        "   }" + NEW_LINE);
+                }
+                if (isErrorForField(reports, fieldPointer, "/body") && schemaPointer.contains("bodyWithContentType")) {
+                    validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/body") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "     \"type\": \"BINARY\"," + NEW_LINE +
+                        "     \"base64Bytes\": \"\"," + NEW_LINE +
+                        "     \"contentType\": \"\"" + NEW_LINE +
+                        "   }, " + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "     \"type\": \"JSON\"," + NEW_LINE +
+                        "     \"json\": \"\"," + NEW_LINE +
+                        "     \"contentType\": \"\"" + NEW_LINE +
+                        "   }," + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "     \"type\": \"PARAMETERS\"," + NEW_LINE +
+                        "     \"parameters\": {\"name\": \"value\"}" + NEW_LINE +
+                        "   }," + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "     \"type\": \"STRING\"," + NEW_LINE +
+                        "     \"string\": \"\"" + NEW_LINE +
+                        "   }," + NEW_LINE +
+                        "   {" + NEW_LINE +
+                        "     \"type\": \"XML\"," + NEW_LINE +
+                        "     \"xml\": \"\"," + NEW_LINE +
+                        "     \"contentType\": \"\"" + NEW_LINE +
+                        "   }" + NEW_LINE);
+                }
             }
             if (String.valueOf(processingMessageJson.get("keyword")).contains("oneOf")) {
                 StringBuilder oneOfErrorMessage = new StringBuilder("oneOf of the following must be specified ");
