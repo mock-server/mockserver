@@ -8,6 +8,7 @@ import org.springframework.test.context.support.TestPropertySourceUtils;
 import org.springframework.util.SocketUtils;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 public class MockServerPropertyCustomizer implements ContextCustomizer {
@@ -34,7 +35,9 @@ public class MockServerPropertyCustomizer implements ContextCustomizer {
 
                 TestPropertySourceUtils.addInlinedPropertiesToEnvironment(context, replacement);
             }
+        );
     }
+
 
     @Override
     public boolean equals(Object other) {
