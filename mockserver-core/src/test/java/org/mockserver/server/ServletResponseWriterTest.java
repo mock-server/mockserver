@@ -13,7 +13,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockito.Mockito.verify;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
@@ -35,7 +35,7 @@ public class ServletResponseWriterTest {
     public void setupTestFixture() {
         httpServletResponse = new MockHttpServletResponse();
         servletResponseWriter = new ServletResponseWriter(new MockServerLogger(), httpServletResponse);
-        initMocks(this);
+        openMocks(this);
     }
 
     @Test

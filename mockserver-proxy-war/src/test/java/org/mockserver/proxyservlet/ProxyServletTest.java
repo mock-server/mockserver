@@ -35,7 +35,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LOG_DATE_FORMAT;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
@@ -76,7 +76,7 @@ public class ProxyServletTest {
         proxyServlet = new ProxyServlet();
 
 
-        initMocks(this);
+        openMocks(this);
     }
 
     private MockHttpServletRequest buildHttpServletRequest(String method, String requestURI, String body) {

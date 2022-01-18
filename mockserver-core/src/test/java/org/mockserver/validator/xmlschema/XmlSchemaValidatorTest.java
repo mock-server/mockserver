@@ -15,7 +15,7 @@ import static junit.framework.TestCase.fail;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.assertThat;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.XmlSchemaBody.xmlSchemaFromResource;
 
@@ -53,7 +53,7 @@ public class XmlSchemaValidatorTest {
 
     @Before
     public void createMocks() {
-        initMocks(this);
+        openMocks(this);
     }
 
     @Test

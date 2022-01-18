@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 
 /**
@@ -42,7 +42,7 @@ public class HttpResponseSerializationErrorsTest {
     public void setupTestFixture() {
         httpResponseSerializer = spy(new HttpResponseSerializer(new MockServerLogger()));
 
-        initMocks(this);
+        openMocks(this);
     }
 
     @Test

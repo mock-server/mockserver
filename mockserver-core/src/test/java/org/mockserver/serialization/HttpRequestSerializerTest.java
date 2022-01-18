@@ -19,7 +19,7 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.NottableString.string;
@@ -91,7 +91,7 @@ public class HttpRequestSerializerTest {
     public void setupTestFixture() {
         httpRequestSerializer = spy(new HttpRequestSerializer(new MockServerLogger()));
 
-        initMocks(this);
+        openMocks(this);
     }
 
     @Test

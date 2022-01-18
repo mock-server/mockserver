@@ -10,7 +10,7 @@ import org.springframework.ui.Model;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 
 /**
  * @author jamesdbloom
@@ -26,7 +26,7 @@ public class BooksPageControllerTest {
     public void setupMocks() {
         booksPageController = new BooksPageController();
 
-        initMocks(this);
+        openMocks(this);
     }
 
     @Test

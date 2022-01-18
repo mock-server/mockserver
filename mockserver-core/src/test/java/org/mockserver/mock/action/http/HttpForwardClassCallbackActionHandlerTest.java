@@ -15,7 +15,7 @@ import java.util.concurrent.CompletableFuture;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -33,7 +33,7 @@ public class HttpForwardClassCallbackActionHandlerTest {
         mockHttpClient = mock(NettyHttpClient.class);
         httpForwardClassCallbackActionHandler = new HttpForwardClassCallbackActionHandler(new MockServerLogger(), mockHttpClient);
 
-        initMocks(this);
+        openMocks(this);
     }
 
     @Test

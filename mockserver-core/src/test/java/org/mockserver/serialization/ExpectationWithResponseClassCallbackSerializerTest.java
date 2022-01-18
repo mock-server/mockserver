@@ -25,7 +25,7 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
@@ -101,7 +101,7 @@ public class ExpectationWithResponseClassCallbackSerializerTest {
 
     @Before
     public void setupTestFixture() {
-        initMocks(this);
+        openMocks(this);
     }
 
     @Test

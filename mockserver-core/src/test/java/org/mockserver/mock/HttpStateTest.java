@@ -47,7 +47,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LOG_DATE_FORMAT;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
@@ -92,7 +92,7 @@ public class HttpStateTest {
     public void prepareTestFixture() {
         Scheduler scheduler = mock(Scheduler.class);
         httpState = new HttpState(new MockServerLogger(), scheduler);
-        initMocks(this);
+        openMocks(this);
     }
 
     private static class FakeResponseWriter extends ResponseWriter {

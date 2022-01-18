@@ -20,7 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItemInArray;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.HttpRequest.request;
@@ -43,7 +43,7 @@ public class NettyResponseWriterTest {
 
     @Before
     public void setupTestFixture() {
-        initMocks(this);
+        openMocks(this);
 
         genericFutureListenerArgumentCaptor = ArgumentCaptor.forClass(GenericFutureListener.class);
         when(mockChannelFuture.addListener(genericFutureListenerArgumentCaptor.capture())).thenReturn(null);

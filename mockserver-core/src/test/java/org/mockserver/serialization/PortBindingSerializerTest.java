@@ -17,7 +17,7 @@ import java.util.Arrays;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.model.PortBinding.portBinding;
 
 /**
@@ -40,7 +40,7 @@ public class PortBindingSerializerTest {
     public void setupTestFixture() {
         portBindingSerializer = spy(new PortBindingSerializer(new MockServerLogger()));
 
-        initMocks(this);
+        openMocks(this);
     }
 
     @Test

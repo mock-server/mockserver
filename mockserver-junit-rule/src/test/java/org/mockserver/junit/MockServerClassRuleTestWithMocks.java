@@ -16,7 +16,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 
 /**
  * @author jamesdbloom
@@ -46,7 +46,7 @@ public class MockServerClassRuleTestWithMocks {
         MockServerRule.perTestSuiteClientAndServer = null;
         mockServerRuleDynamicPorts = new MockServerRule(MockServerClassRuleTestWithMocks.class);
 
-        initMocks(this);
+        openMocks(this);
 
         when(mockClientAndServer.getPort()).thenReturn(httpPort);
         when(mockClientAndServer.getLocalPorts()).thenReturn(Arrays.asList(httpPort + 1, httpPort + 2));

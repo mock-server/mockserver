@@ -3,7 +3,7 @@ package org.mockserver.client;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.client.MockServerEventBus.EventType.RESET;
 import static org.mockserver.client.MockServerEventBus.EventType.STOP;
 
@@ -28,7 +28,7 @@ public class MockServerEventBusTest {
 	public void setupTestFixture() {
 		bus = new MockServerEventBus();
 
-		initMocks(this);
+		openMocks(this);
 	}
 
 	@Test

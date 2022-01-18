@@ -26,7 +26,7 @@ import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE_FORMAT;
@@ -107,7 +107,7 @@ public class ActionHandlerTest {
         when(mockHttpStateHandler.getUniqueLoopPreventionHeaderValue()).thenReturn("MockServer_" + UUIDService.getUUID());
         actionHandler = new HttpActionHandler(null, mockHttpStateHandler, null, null);
 
-        initMocks(this);
+        openMocks(this);
         request = request("some_path");
         response = response("some_body").withDelay(milliseconds(0));
         responseFuture = new CompletableFuture<>();

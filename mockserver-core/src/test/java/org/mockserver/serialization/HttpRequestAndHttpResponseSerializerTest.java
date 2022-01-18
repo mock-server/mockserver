@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.NottableString.string;
@@ -119,7 +119,7 @@ public class HttpRequestAndHttpResponseSerializerTest {
     public void setupTestFixture() {
         httpRequestAndHttpResponseSerializer = spy(new HttpRequestAndHttpResponseSerializer(new MockServerLogger()));
 
-        initMocks(this);
+        openMocks(this);
     }
 
     @Test

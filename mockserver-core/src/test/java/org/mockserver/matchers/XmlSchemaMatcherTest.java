@@ -14,7 +14,7 @@ import org.slf4j.event.Level;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.logLevel;
 import static org.mockserver.model.HttpRequest.request;
@@ -68,7 +68,7 @@ public class XmlSchemaMatcherTest {
     public void setupMocks() {
         logger = mock(Logger.class);
         xmlSchemaMatcher = new XmlSchemaMatcher(new MockServerLogger(logger), XML_SCHEMA);
-        initMocks(this);
+        openMocks(this);
 
         when(logger.isTraceEnabled()).thenReturn(true);
         when(logger.isInfoEnabled()).thenReturn(true);

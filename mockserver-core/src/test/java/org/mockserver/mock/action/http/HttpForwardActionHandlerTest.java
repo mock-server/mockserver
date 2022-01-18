@@ -4,7 +4,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mock.action.http.HttpForwardActionHandler;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -16,7 +15,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsSame.sameInstance;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
 
@@ -33,7 +32,7 @@ public class HttpForwardActionHandlerTest {
         mockHttpClient = mock(NettyHttpClient.class);
         MockServerLogger logFormatter = mock(MockServerLogger.class);
         httpForwardActionHandler = new HttpForwardActionHandler(logFormatter, mockHttpClient);
-        initMocks(this);
+        openMocks(this);
     }
 
     @Test

@@ -14,7 +14,7 @@ import java.io.IOException;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 
 /**
@@ -36,7 +36,7 @@ public class JsonArraySerializationTest {
     public void setupTestFixture() {
         jsonArraySerializer = spy(new JsonArraySerializer());
 
-        initMocks(this);
+        openMocks(this);
     }
 
     @Test

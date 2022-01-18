@@ -17,7 +17,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 
 /**
  * @author jamesdbloom
@@ -59,7 +59,7 @@ public class MockServerRuleTestWithMocks {
         mockServerRulePerSuite = new MockServerRule(this, true, httpPort);
         mockServerRulePerSuiteDuplicate = new MockServerRule(this, true, httpPort);
 
-        initMocks(this);
+        openMocks(this);
 
         when(mockClientAndServer.getPort()).thenReturn(httpPort);
         when(mockClientAndServer.getLocalPorts()).thenReturn(Arrays.asList(httpPort + 1, httpPort + 2));

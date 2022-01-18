@@ -18,7 +18,7 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 
 /**
  * @author jamesdbloom
@@ -54,7 +54,7 @@ public class OpenAPIExpectationSerializerTest {
     public void setupTestFixture() {
         httpRequestSerializer = spy(new OpenAPIExpectationSerializer(new MockServerLogger()));
 
-        initMocks(this);
+        openMocks(this);
     }
 
     @Test

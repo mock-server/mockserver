@@ -20,7 +20,7 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.model.HttpRequest.request;
 
 public class VerificationSequenceSerializerTest {
@@ -55,7 +55,7 @@ public class VerificationSequenceSerializerTest {
     public void setupTestFixture() {
         verificationSequenceSerializer = spy(new VerificationSequenceSerializer(new MockServerLogger()));
 
-        initMocks(this);
+        openMocks(this);
     }
 
     @Test

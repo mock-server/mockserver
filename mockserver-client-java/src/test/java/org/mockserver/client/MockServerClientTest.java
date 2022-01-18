@@ -36,7 +36,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.matchers.Times.unlimited;
 import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;
 import static org.mockserver.model.HttpRequest.request;
@@ -76,7 +76,7 @@ public class MockServerClientTest {
     public void setupTestFixture() {
         mockServerClient = new MockServerClient("localhost", 1090);
 
-        initMocks(this);
+        openMocks(this);
     }
 
     @Test

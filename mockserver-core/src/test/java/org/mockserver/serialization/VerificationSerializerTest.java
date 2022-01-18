@@ -24,7 +24,7 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.verify.Verification.verification;
@@ -61,7 +61,7 @@ public class VerificationSerializerTest {
     public void setupTestFixture() {
         verificationSerializer = spy(new VerificationSerializer(new MockServerLogger()));
 
-        initMocks(this);
+        openMocks(this);
     }
 
     @Test

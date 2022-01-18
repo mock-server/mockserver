@@ -19,7 +19,7 @@ import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 
 /**
@@ -39,7 +39,7 @@ public class OpenAPIExpectationSerializationErrorsTest {
     public void setupTestFixture() {
         httpRequestSerializer = spy(new OpenAPIExpectationSerializer(new MockServerLogger()));
 
-        initMocks(this);
+        openMocks(this);
     }
 
     @Test

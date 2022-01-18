@@ -12,7 +12,7 @@ import javax.script.ScriptEngineManager;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.mock;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
@@ -30,7 +30,7 @@ public class HttpResponseTemplateActionHandlerTest {
     public void setupMocks() {
         MockServerLogger mockLogFormatter = mock(MockServerLogger.class);
         httpResponseTemplateActionHandler = new HttpResponseTemplateActionHandler(mockLogFormatter);
-        initMocks(this);
+        openMocks(this);
     }
 
     @Test

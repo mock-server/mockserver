@@ -8,7 +8,7 @@ import org.mockserver.logging.MockServerLogger;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 
@@ -60,7 +60,7 @@ public class JsonSchemaValidatorTest {
 
     @Before
     public void createMocks() {
-        initMocks(this);
+        openMocks(this);
     }
 
     @Test
