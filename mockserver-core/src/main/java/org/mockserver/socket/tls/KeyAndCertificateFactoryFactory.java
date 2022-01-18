@@ -7,17 +7,22 @@ import org.mockserver.socket.tls.jdk.JDKKeyAndCertificateFactory;
 import org.slf4j.event.Level;
 
 import java.lang.reflect.Constructor;
+import java.util.function.Function;
 
 /**
  * @author jamesdbloom
  */
 public class KeyAndCertificateFactoryFactory {
 
+    private static Function<MockServerLogger, KeyAndCertificateFactory> customKeyAndCertificateFactorySupplier = null;
+
     private static final ClassLoader CLASS_LOADER = KeyAndCertificateFactoryFactory.class.getClassLoader();
 
     @SuppressWarnings("unchecked")
     public static KeyAndCertificateFactory createKeyAndCertificateFactory(MockServerLogger mockServerLogger) {
-        if (ConfigurationProperties.useBouncyCastleForKeyAndCertificateGeneration()) {
+        if (customKeyAndCertificateFactorySupplier != null) {
+            return customKeyAndCertificateFactorySupplier.apply(mockServerLogger);
+        } else if (ConfigurationProperties.useBouncyCastleForKeyAndCertificateGeneration()) {
             Class<?> bouncyCastleProvider = null;
             Class<?> bouncyCastleX509Holder = null;
             try {
@@ -70,4 +75,12 @@ public class KeyAndCertificateFactoryFactory {
         }
     }
 
+    public static Function<MockServerLogger, KeyAndCertificateFactory> getCustomKeyAndCertificateFactorySupplier() {
+        return customKeyAndCertificateFactorySupplier;
+    }
+
+    public static void setCustomKeyAndCertificateFactorySupplier(
+        Function<MockServerLogger, KeyAndCertificateFactory> customKeyAndCertificateFactorySupplier) {
+        KeyAndCertificateFactoryFactory.customKeyAndCertificateFactorySupplier = customKeyAndCertificateFactorySupplier;
+    }
 }
