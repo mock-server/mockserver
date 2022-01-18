@@ -69,7 +69,7 @@ public class FullHttpResponseToMockServerHttpResponse {
                 for (NottableString cookieHeader : header.getValues()) {
                     io.netty.handler.codec.http.cookie.Cookie httpCookie = ClientCookieDecoder.LAX.decode(cookieHeader.getValue());
                     String name = httpCookie.name().trim();
-                    String value = httpCookie.value().trim();
+                    String value = httpCookie.value() != null ? httpCookie.value().trim() : "";
                     cookies.withEntry(new Cookie(name, value));
                 }
             }
@@ -77,7 +77,7 @@ public class FullHttpResponseToMockServerHttpResponse {
                 for (NottableString cookieHeader : header.getValues()) {
                     for (io.netty.handler.codec.http.cookie.Cookie httpCookie : ServerCookieDecoder.LAX.decode(cookieHeader.getValue())) {
                         String name = httpCookie.name().trim();
-                        String value = httpCookie.value().trim();
+                        String value = httpCookie.value() != null ? httpCookie.value().trim() : "";
                         cookies.withEntry(new Cookie(name, value));
                     }
                 }
