@@ -34,7 +34,7 @@ ADD chrome-xvfb /usr/bin/chrome
 ENV CHROME_BIN=/usr/bin/chrome
 
 # install node (see: https://github.com/nodesource/distributions)
-RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
+RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
 RUN apt-get install -y nodejs
 
 # install grunt
