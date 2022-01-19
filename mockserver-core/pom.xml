@@ -12,7 +12,7 @@
 
     <name>MockServer Core</name>
     <description>Functionality used by all MockServer modules for matching and expectations</description>
-    <url>http://www.mock-server.com</url>
+    <url>https://www.mock-server.com</url>
 
     <dependencies>
         <!-- mockserver -->

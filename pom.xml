@@ -12,12 +12,12 @@
         that configure how the MockServer will respond and to incoming requests can be setup using any language that can
         create JSON. In simple client is provided to make this easy in Java.
     </description>
-    <url>http://www.mock-server.org</url>
+    <url>https://www.mock-server.com</url>
 
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
             <distribution>repo</distribution>
         </license>
     </licenses>
@@ -45,7 +45,7 @@
             <id>jamesdbloom</id>
             <name>James D Bloom</name>
             <email>jamesdbloom@gmail.com</email>
-            <url>http://blog.jamesdbloom.com</url>
+            <url>https://blog.jamesdbloom.com</url>
         </developer>
     </developers>
 

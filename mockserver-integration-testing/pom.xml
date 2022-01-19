@@ -11,7 +11,7 @@
     <artifactId>mockserver-integration-testing</artifactId>
     <name>MockServer Integration Test</name>
     <description>A module used to simplify integration testing of all MockServer versions by sharing commons integration testing components</description>
-    <url>http://www.mock-server.com</url>
+    <url>https://www.mock-server.com</url>
 
     <dependencies>
         <!-- MockServer -->

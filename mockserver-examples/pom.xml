@@ -13,7 +13,7 @@
 
     <name>MockServer Examples</name>
     <description>An example project demonstration tests using the mock server and proxy</description>
-    <url>http://www.mock-server.com</url>
+    <url>https://www.mock-server.com</url>
 
     <properties>
         <jersey.version>2.32</jersey.version>

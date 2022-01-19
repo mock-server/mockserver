@@ -11,7 +11,7 @@
     <artifactId>mockserver-spring-test-listener</artifactId>
     <name>MockServer Spring Test</name>
     <description>A module containing helpers for writing mockserver tests in spring projects</description>
-    <url>http://www.mock-server.com</url>
+    <url>https://www.mock-server.com</url>
 
     <dependencies>
         <!-- mockserver -->

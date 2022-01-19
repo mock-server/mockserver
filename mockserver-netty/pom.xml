@@ -10,7 +10,7 @@
 
     <name>MockServer &amp; Proxy Netty</name>
     <artifactId>mockserver-netty</artifactId>
-    <url>http://www.mock-server.com</url>
+    <url>https://www.mock-server.com</url>
 
     <dependencies>
         <!-- mockserver -->

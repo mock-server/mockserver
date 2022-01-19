@@ -13,7 +13,7 @@
 
     <name>MockServer Proxy Web Archive</name>
     <description>An HTTP/HTTPS proxy that can be deployed as a WAR to any JEE web server</description>
-    <url>http://www.mock-server.com</url>
+    <url>https://www.mock-server.com</url>
 
     <dependencies>
         <!-- mockserver -->

@@ -10,7 +10,7 @@
 
     <name>MockServer JUnit Jupiter Integration</name>
     <description>A JUnit5 Extension for MockServer</description>
-    <url>http://www.mock-server.com</url>
+    <url>https://www.mock-server.com</url>
 
     <artifactId>mockserver-junit-jupiter</artifactId>
 
