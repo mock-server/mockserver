@@ -46,26 +46,6 @@ public class BodyWithContentTypeDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJsonWithInvalidBody() throws IOException {
-        // given
-        String json = ("{" + NEW_LINE +
-            "    \"httpResponse\": {" + NEW_LINE +
-            "        \"body\" : {" + NEW_LINE +
-            "        }" + NEW_LINE +
-            "    }" + NEW_LINE +
-            "}");
-
-        // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
-
-        // then
-        assertEquals(new ExpectationDTO()
-            .setHttpResponse(
-                new HttpResponseDTO()
-            ), expectationDTO);
-    }
-
-    @Test
     public void shouldParseJsonWithMissingValueFromBody() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
@@ -606,6 +586,47 @@ public class BodyWithContentTypeDTODeserializerTest {
                     .setBody(new JsonBodyDTO(new JsonBody("{" + NEW_LINE +
                         "  \"emptyArray\" : \"[]\"" + NEW_LINE +
                         "}")))
+            ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJsonWithJsonBodyWithSimpleEmptyArray() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"body\" : [ ]" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpResponse(
+                new HttpResponseDTO()
+                    .setBody(new JsonBodyDTO(new JsonBody("[ ]")))
+            ), expectationDTO);
+
+    }
+
+    @Test
+    public void shouldParseJsonWithJsonBodyWithEmptyObject() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"body\" : { }" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpResponse(
+                new HttpResponseDTO()
+                    .setBody(new JsonBodyDTO(new JsonBody("{ }")))
             ), expectationDTO);
     }
 

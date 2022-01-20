@@ -216,6 +216,9 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
         } else if (currentToken == JsonToken.VALUE_STRING) {
             result = new StringBodyDTO(new StringBody(jsonParser.getText()));
         }
+        if (result == null && jsonParser.currentToken() == JsonToken.END_OBJECT) {
+            result = new JsonBodyDTO(JsonBody.json("{ }"));
+        }
         if (result != null) {
             result.withOptional(optional);
         }
