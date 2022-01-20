@@ -2,6 +2,7 @@ package org.mockserver.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.node.TextNode;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -137,20 +138,6 @@ public class ExpectationWithResponseClassCallbackSerializerTest {
     }
 
     @Test
-    public void shouldDeserializeArray() throws IOException {
-        // given
-        when(jsonArraySerializer.returnJSONObjects("requestBytes")).thenReturn(Arrays.asList("requestBytes", "requestBytes"));
-        when(expectationValidator.isValid("requestBytes")).thenReturn("");
-        when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO.class))).thenReturn(fullExpectationDTO);
-
-        // when
-        Expectation[] expectations = expectationSerializer.deserializeArray("requestBytes", false);
-
-        // then
-        assertArrayEquals(new Expectation[]{fullExpectation, fullExpectation}, expectations);
-    }
-
-    @Test
     public void shouldDeserializeObjectWithError() throws IOException {
         // given
         when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO.class))).thenReturn(fullExpectationDTO);
@@ -162,37 +149,5 @@ public class ExpectationWithResponseClassCallbackSerializerTest {
 
         // when
         expectationSerializer.deserialize("requestBytes");
-    }
-
-    @Test
-    public void shouldDeserializeArrayWithError() throws IOException {
-        // given
-        when(jsonArraySerializer.returnJSONObjects("requestBytes")).thenReturn(Arrays.asList("requestBytes", "requestBytes"));
-        when(expectationValidator.isValid("requestBytes")).thenReturn("an error");
-        when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO.class))).thenReturn(fullExpectationDTO);
-
-        // then
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("" +
-            "[" + NEW_LINE +
-            "  incorrect expectation json format for:" + NEW_LINE +
-            "  " + NEW_LINE +
-            "    requestBytes" + NEW_LINE +
-            "  " + NEW_LINE +
-            "   schema validation errors:" + NEW_LINE +
-            "  " + NEW_LINE +
-            "    an error," + NEW_LINE +
-            "  " + NEW_LINE +
-            "  incorrect expectation json format for:" + NEW_LINE +
-            "  " + NEW_LINE +
-            "    requestBytes" + NEW_LINE +
-            "  " + NEW_LINE +
-            "   schema validation errors:" + NEW_LINE +
-            "  " + NEW_LINE +
-            "    an error" + NEW_LINE +
-            "]");
-
-        // when
-        expectationSerializer.deserializeArray("requestBytes", false);
     }
 }

@@ -16,7 +16,7 @@ import java.util.Map;
 /**
  * @author jamesdbloom
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings({"rawtypes", "unchecked", "FieldMayBeFinal"})
 public class WebSocketMessageSerializer {
 
     private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);

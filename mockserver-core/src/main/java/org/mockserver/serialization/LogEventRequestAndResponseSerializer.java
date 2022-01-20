@@ -108,7 +108,7 @@ public class LogEventRequestAndResponseSerializer {
         if (isBlank(jsonHttpRequestAndHttpResponse)) {
             throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a request or request array is required but value was \"" + jsonHttpRequestAndHttpResponse + "\"");
         } else {
-            List<String> jsonRequestList = jsonArraySerializer.returnJSONObjects(jsonHttpRequestAndHttpResponse);
+            List<String> jsonRequestList = jsonArraySerializer.splitJSONArray(jsonHttpRequestAndHttpResponse);
             if (jsonRequestList.isEmpty()) {
                 throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a request or array of request is required");
             } else {

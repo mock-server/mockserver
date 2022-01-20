@@ -2,6 +2,7 @@ package org.mockserver.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.node.TextNode;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -149,9 +150,9 @@ public class ExpectationWithResponseSerializerTest {
     @Test
     public void shouldDeserializeArray() throws IOException {
         // given
-        when(jsonArraySerializer.returnJSONObjects("requestBytes")).thenReturn(Arrays.asList("requestBytes", "requestBytes"));
-        when(expectationValidator.isValid("requestBytes")).thenReturn("");
-        when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO.class))).thenReturn(fullExpectationDTO);
+        when(jsonArraySerializer.splitJSONArrayToJSONNodes("requestBytes")).thenReturn(Arrays.asList(new TextNode("requestBytes"), new TextNode("requestBytes")));
+        when(expectationValidator.isValid("\"requestBytes\"")).thenReturn("");
+        when(objectMapper.readValue(eq("\"requestBytes\""), same(ExpectationDTO.class))).thenReturn(fullExpectationDTO);
 
         // when
         Expectation[] expectations = expectationSerializer.deserializeArray("requestBytes", false);
@@ -177,9 +178,9 @@ public class ExpectationWithResponseSerializerTest {
     @Test
     public void shouldDeserializeArrayWithError() throws IOException {
         // given
-        when(jsonArraySerializer.returnJSONObjects("requestBytes")).thenReturn(Arrays.asList("requestBytes", "requestBytes"));
-        when(expectationValidator.isValid("requestBytes")).thenReturn("an error");
-        when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO.class))).thenReturn(fullExpectationDTO);
+        when(jsonArraySerializer.splitJSONArrayToJSONNodes("requestBytes")).thenReturn(Arrays.asList(new TextNode("requestBytes"), new TextNode("requestBytes")));
+        when(expectationValidator.isValid("\"requestBytes\"")).thenReturn("an error");
+        when(objectMapper.readValue(eq("\"requestBytes\""), same(ExpectationDTO.class))).thenReturn(fullExpectationDTO);
 
         // then
         thrown.expect(IllegalArgumentException.class);
@@ -187,7 +188,7 @@ public class ExpectationWithResponseSerializerTest {
             "[" + NEW_LINE +
             "  incorrect expectation json format for:" + NEW_LINE +
             "  " + NEW_LINE +
-            "    requestBytes" + NEW_LINE +
+            "    \"requestBytes\"" + NEW_LINE +
             "  " + NEW_LINE +
             "   schema validation errors:" + NEW_LINE +
             "  " + NEW_LINE +
@@ -195,7 +196,7 @@ public class ExpectationWithResponseSerializerTest {
             "  " + NEW_LINE +
             "  incorrect expectation json format for:" + NEW_LINE +
             "  " + NEW_LINE +
-            "    requestBytes" + NEW_LINE +
+            "    \"requestBytes\"" + NEW_LINE +
             "  " + NEW_LINE +
             "   schema validation errors:" + NEW_LINE +
             "  " + NEW_LINE +

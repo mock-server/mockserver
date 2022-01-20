@@ -48,17 +48,17 @@ public class JsonArraySerializationTest {
         when(objectMapper.readTree(eq("requestBytes"))).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
-        jsonArraySerializer.returnJSONObjects("requestBytes");
+        jsonArraySerializer.splitJSONArray("requestBytes");
     }
 
     @Test
     public void shouldReturnArrayItems() {
         // when
-        assertThat(new JsonArraySerializer().returnJSONObjects("[{'foo':'bar'},{'foo':'bar'}]"), hasItems("{" + NEW_LINE + "  \"foo\" : \"bar\"" + NEW_LINE + "}", "{" + NEW_LINE + "  \"foo\" : \"bar\"" + NEW_LINE + "}"));
-        assertThat(new JsonArraySerializer().returnJSONObjects("[{},{}]"), hasItems("{ }", "{ }"));
-        assertThat(new JsonArraySerializer().returnJSONObjects("[{}]"), hasItems("{ }"));
-        assertThat(new JsonArraySerializer().returnJSONObjects("[\"\"]"), hasItems("\"\""));
-        assertThat(new JsonArraySerializer().returnJSONObjects("[\"\",\"\"]"), hasItems("\"\"", "\"\""));
-        assertThat(new JsonArraySerializer().returnJSONObjects("[\"ab\",\"cd\"]"), hasItems("\"ab\"", "\"cd\""));
+        assertThat(new JsonArraySerializer().splitJSONArray("[{'foo':'bar'},{'foo':'bar'}]"), hasItems("{" + NEW_LINE + "  \"foo\" : \"bar\"" + NEW_LINE + "}", "{" + NEW_LINE + "  \"foo\" : \"bar\"" + NEW_LINE + "}"));
+        assertThat(new JsonArraySerializer().splitJSONArray("[{},{}]"), hasItems("{ }", "{ }"));
+        assertThat(new JsonArraySerializer().splitJSONArray("[{}]"), hasItems("{ }"));
+        assertThat(new JsonArraySerializer().splitJSONArray("[\"\"]"), hasItems("\"\""));
+        assertThat(new JsonArraySerializer().splitJSONArray("[\"\",\"\"]"), hasItems("\"\"", "\"\""));
+        assertThat(new JsonArraySerializer().splitJSONArray("[\"ab\",\"cd\"]"), hasItems("\"ab\"", "\"cd\""));
     }
 }

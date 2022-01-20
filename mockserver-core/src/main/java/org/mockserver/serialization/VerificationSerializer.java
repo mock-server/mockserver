@@ -19,6 +19,7 @@ import static org.mockserver.validator.jsonschema.JsonSchemaVerificationValidato
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("FieldMayBeFinal")
 public class VerificationSerializer implements Serializer<Verification> {
     private final MockServerLogger mockServerLogger;
     private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);

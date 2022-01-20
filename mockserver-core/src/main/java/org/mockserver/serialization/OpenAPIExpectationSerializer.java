@@ -6,7 +6,9 @@ import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.mock.Expectation;
 import org.mockserver.mock.OpenAPIExpectation;
+import org.mockserver.openapi.OpenAPIConverter;
 import org.mockserver.serialization.model.OpenAPIExpectationDTO;
 import org.mockserver.validator.jsonschema.JsonSchemaOpenAPIExpectationValidator;
 import org.slf4j.event.Level;
@@ -24,15 +26,18 @@ import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_S
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("FieldMayBeFinal")
 public class OpenAPIExpectationSerializer implements Serializer<OpenAPIExpectation> {
     private final MockServerLogger mockServerLogger;
     private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
     private JsonSchemaOpenAPIExpectationValidator expectationValidator;
+    private OpenAPIConverter openAPIConverter;
 
     public OpenAPIExpectationSerializer(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
+        this.openAPIConverter = new OpenAPIConverter(mockServerLogger);
     }
 
     private JsonSchemaOpenAPIExpectationValidator getValidator() {
@@ -122,6 +127,11 @@ public class OpenAPIExpectationSerializer implements Serializer<OpenAPIExpectati
         }
     }
 
+    public List<Expectation> deserializeToExpectations(String jsonOpenAPIExpectation) {
+        OpenAPIExpectation openAPIExpectation = deserialize(jsonOpenAPIExpectation);
+        return openAPIConverter.buildExpectations(openAPIExpectation.getSpecUrlOrPayload(), openAPIExpectation.getOperationsAndResponses());
+    }
+
     @Override
     public Class<OpenAPIExpectation> supportsType() {
         return OpenAPIExpectation.class;
@@ -132,7 +142,7 @@ public class OpenAPIExpectationSerializer implements Serializer<OpenAPIExpectati
         if (isBlank(jsonOpenAPIExpectations)) {
             throw new IllegalArgumentException("1 error:" + NEW_LINE + " - an expectation or expectation array is required but value was \"" + jsonOpenAPIExpectations + "\"");
         } else {
-            List<String> jsonOpenAPIExpectationList = jsonArraySerializer.returnJSONObjects(jsonOpenAPIExpectations);
+            List<String> jsonOpenAPIExpectationList = jsonArraySerializer.splitJSONArray(jsonOpenAPIExpectations);
             if (!jsonOpenAPIExpectationList.isEmpty()) {
                 List<String> validationErrorsList = new ArrayList<String>();
                 for (String jsonExpecation : jsonOpenAPIExpectationList) {

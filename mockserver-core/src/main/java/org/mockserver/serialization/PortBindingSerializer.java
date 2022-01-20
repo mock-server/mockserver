@@ -10,6 +10,7 @@ import org.slf4j.event.Level;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("FieldMayBeFinal")
 public class PortBindingSerializer implements Serializer<PortBinding> {
     private final MockServerLogger mockServerLogger;
     private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);

@@ -1,7 +1,9 @@
 package org.mockserver.serialization;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.github.fge.jackson.JacksonUtils;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
@@ -26,16 +28,19 @@ import static org.slf4j.event.Level.INFO;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("FieldMayBeFinal")
 public class ExpectationSerializer implements Serializer<Expectation> {
     private final MockServerLogger mockServerLogger;
     private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
     private JsonSchemaExpectationValidator expectationValidator;
+    private OpenAPIExpectationSerializer openAPIExpectationSerializer;
     private static boolean printedECMA262Warning = false;
 
     public ExpectationSerializer(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
+        this.openAPIExpectationSerializer = new OpenAPIExpectationSerializer(mockServerLogger);
     }
 
     private JsonSchemaExpectationValidator getValidator() {
@@ -146,11 +151,11 @@ public class ExpectationSerializer implements Serializer<Expectation> {
         if (isBlank(jsonExpectations)) {
             throw new IllegalArgumentException("1 error:" + NEW_LINE + " - an expectation or expectation array is required but value was \"" + jsonExpectations + "\"");
         } else {
-            List<String> jsonExpectationList = jsonArraySerializer.returnJSONObjects(jsonExpectations);
+            List<String> validationErrorsList = new ArrayList<String>();
+            List<JsonNode> jsonExpectationList = jsonArraySerializer.splitJSONArrayToJSONNodes(jsonExpectations);
             if (!jsonExpectationList.isEmpty()) {
-                List<String> validationErrorsList = new ArrayList<>();
                 for (int i = 0; i < jsonExpectationList.size(); i++) {
-                    String jsonExpectation = jsonExpectationList.get(i);
+                    String jsonExpectation = JacksonUtils.prettyPrint(jsonExpectationList.get(i));
                     if (jsonExpectationList.size() > 100) {
                         if (MockServerLogger.isEnabled(DEBUG)) {
                             mockServerLogger.logEvent(
@@ -167,10 +172,18 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                             );
                         }
                     }
-                    try {
-                        expectations.add(deserialize(jsonExpectation));
-                    } catch (IllegalArgumentException iae) {
-                        validationErrorsList.add(iae.getMessage());
+                    if (jsonExpectationList.get(i).has("specUrlOrPayload")) {
+                        try {
+                            expectations.addAll(openAPIExpectationSerializer.deserializeToExpectations(jsonExpectation));
+                        } catch (IllegalArgumentException iae) {
+                            validationErrorsList.add(iae.getMessage());
+                        }
+                    } else {
+                        try {
+                            expectations.add(deserialize(jsonExpectation));
+                        } catch (IllegalArgumentException iae) {
+                            validationErrorsList.add(iae.getMessage());
+                        }
                     }
                 }
                 if (!validationErrorsList.isEmpty()) {

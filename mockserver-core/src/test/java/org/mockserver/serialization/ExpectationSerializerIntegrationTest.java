@@ -17,10 +17,16 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsEqual.equalTo;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.mock.Expectation.when;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
+import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
@@ -64,6 +70,142 @@ public class ExpectationSerializerIntegrationTest {
                 )
                 .buildObject()
         }, expectations);
+    }
+
+    @Test
+    public void shouldAllowSingleOpenAPIObjectForArray() {
+        // given
+        String requestBytes = ("{" + NEW_LINE +
+            "    \"specUrlOrPayload\": \"https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json\"," + NEW_LINE +
+            "    \"operationsAndResponses\": {" + NEW_LINE +
+            "      \"listPets\": \"500\"," + NEW_LINE +
+            "      \"createPets\": \"default\"," + NEW_LINE +
+            "      \"showPetById\": \"200\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }");
+        String specUrlOrPayload = "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json";
+
+        // when
+        Expectation[] expectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes, false);
+
+        // then
+        assertThat(expectations.length, equalTo(3));
+        assertThat(expectations[0], equalTo(
+            when(specUrlOrPayload, "listPets")
+                .thenRespond(
+                    response()
+                        .withStatusCode(500)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("{" + NEW_LINE +
+                            "  \"code\" : 0," + NEW_LINE +
+                            "  \"message\" : \"some_string_value\"" + NEW_LINE +
+                            "}"))
+                )
+        ));
+        assertThat(expectations[1], equalTo(
+            when(specUrlOrPayload, "createPets")
+                .thenRespond(
+                    response()
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("{" + NEW_LINE +
+                            "  \"code\" : 0," + NEW_LINE +
+                            "  \"message\" : \"some_string_value\"" + NEW_LINE +
+                            "}"))
+                )
+        ));
+        assertThat(expectations[2], equalTo(
+            when(specUrlOrPayload, "showPetById")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("{" + NEW_LINE +
+                            "  \"id\" : 0," + NEW_LINE +
+                            "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                            "  \"tag\" : \"some_string_value\"" + NEW_LINE +
+                            "}"))
+                )
+        ));
+    }
+
+    @Test
+    public void shouldAllowMixedExpectationTypesForArray() {
+        // given
+        String requestBytes = ("[ {" + NEW_LINE +
+            "    \"specUrlOrPayload\": \"https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json\"," + NEW_LINE +
+            "    \"operationsAndResponses\": {" + NEW_LINE +
+            "      \"listPets\": \"500\"," + NEW_LINE +
+            "      \"createPets\": \"default\"," + NEW_LINE +
+            "      \"showPetById\": \"200\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," +
+            "  {" + NEW_LINE +
+            "    \"id\" : \"some_key\"," + NEW_LINE +
+            "    \"priority\" : 10," + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"path\": \"somePath\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"httpResponse\": {" + NEW_LINE +
+            "        \"body\": \"someBody\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "} ]");
+        String specUrlOrPayload = "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json";
+
+        // when
+        Expectation[] expectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes, false);
+
+        // then
+        assertThat(expectations.length, equalTo(4));
+        assertThat(expectations[0], equalTo(
+            when(specUrlOrPayload, "listPets")
+                .thenRespond(
+                    response()
+                        .withStatusCode(500)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("{" + NEW_LINE +
+                            "  \"code\" : 0," + NEW_LINE +
+                            "  \"message\" : \"some_string_value\"" + NEW_LINE +
+                            "}"))
+                )
+        ));
+        assertThat(expectations[1], equalTo(
+            when(specUrlOrPayload, "createPets")
+                .thenRespond(
+                    response()
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("{" + NEW_LINE +
+                            "  \"code\" : 0," + NEW_LINE +
+                            "  \"message\" : \"some_string_value\"" + NEW_LINE +
+                            "}"))
+                )
+        ));
+        assertThat(expectations[2], equalTo(
+            when(specUrlOrPayload, "showPetById")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("{" + NEW_LINE +
+                            "  \"id\" : 0," + NEW_LINE +
+                            "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                            "  \"tag\" : \"some_string_value\"" + NEW_LINE +
+                            "}"))
+                )
+        ));
+        assertThat(expectations[3], equalTo(
+            new ExpectationDTO()
+                .setId("some_key")
+                .setPriority(10)
+                .setHttpRequest(
+                    new HttpRequestDTO()
+                        .setPath(string("somePath"))
+                )
+                .setHttpResponse(
+                    new HttpResponseDTO()
+                        .setBody(new StringBodyDTO(exact("someBody")))
+                )
+                .buildObject()
+        ));
     }
 
     @Test

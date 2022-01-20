@@ -31,6 +31,7 @@ import static org.slf4j.event.Level.DEBUG;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("FieldMayBeFinal")
 public class RequestMatchers extends MockServerMatcherNotifier {
 
     final CircularPriorityQueue<String, HttpRequestMatcher, SortableExpectationId> httpRequestMatchers = new CircularPriorityQueue<>(

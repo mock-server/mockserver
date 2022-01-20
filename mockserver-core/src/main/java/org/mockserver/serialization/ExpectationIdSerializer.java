@@ -24,6 +24,7 @@ import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_S
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("FieldMayBeFinal")
 public class ExpectationIdSerializer implements Serializer<ExpectationId> {
     private final MockServerLogger mockServerLogger;
     private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
@@ -160,7 +161,7 @@ public class ExpectationIdSerializer implements Serializer<ExpectationId> {
         if (isBlank(jsonExpectationIds)) {
             throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a request or request array is required but value was \"" + jsonExpectationIds + "\"");
         } else {
-            List<String> jsonRequestList = jsonArraySerializer.returnJSONObjects(jsonExpectationIds);
+            List<String> jsonRequestList = jsonArraySerializer.splitJSONArray(jsonExpectationIds);
             if (jsonRequestList.isEmpty()) {
                 throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a request or array of request is required");
             } else {

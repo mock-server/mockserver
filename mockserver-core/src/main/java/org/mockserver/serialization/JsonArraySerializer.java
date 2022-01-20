@@ -8,6 +8,8 @@ import com.github.fge.jackson.JacksonUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * @author jamesdbloom
@@ -15,16 +17,20 @@ import java.util.List;
 public class JsonArraySerializer {
     private static final ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
-    public List<String> returnJSONObjects(String jsonArray) {
-        List<String> arrayItems = new ArrayList<String>();
+    public List<String> splitJSONArray(String jsonArray) {
+        return splitJSONArrayToJSONNodes(jsonArray).stream().map(JacksonUtils::prettyPrint).collect(Collectors.toList());
+    }
+
+    public List<JsonNode> splitJSONArrayToJSONNodes(String jsonArray) {
+        List<JsonNode> arrayItems = new ArrayList<>();
         try {
             JsonNode jsonNode = objectMapper.readTree(jsonArray);
             if (jsonNode instanceof ArrayNode) {
                 for (JsonNode arrayElement : jsonNode) {
-                    arrayItems.add(JacksonUtils.prettyPrint(arrayElement));
+                    arrayItems.add(arrayElement);
                 }
             } else {
-                arrayItems.add(JacksonUtils.prettyPrint(jsonNode));
+                arrayItems.add(jsonNode);
             }
         } catch (IOException e) {
             throw new IllegalArgumentException(e);

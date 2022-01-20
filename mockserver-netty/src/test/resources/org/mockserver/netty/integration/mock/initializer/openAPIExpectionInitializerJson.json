@@ -1,0 +1,10 @@
+[
+  {
+    "specUrlOrPayload": "org/mockserver/mock/openapi_petstore_example.json",
+    "operationsAndResponses": {
+      "listPets": "500",
+      "createPets": "default",
+      "showPetById": "200"
+    }
+  }
+]
