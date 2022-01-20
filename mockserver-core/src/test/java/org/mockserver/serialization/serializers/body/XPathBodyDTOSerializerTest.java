@@ -7,7 +7,7 @@ import org.mockserver.serialization.model.XPathBodyDTO;
 import org.mockserver.model.XPathBody;
 
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class XPathBodyDTOSerializerTest {
 

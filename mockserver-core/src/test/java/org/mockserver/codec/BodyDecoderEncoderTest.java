@@ -13,7 +13,7 @@ import java.util.Arrays;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;

@@ -16,7 +16,7 @@ import org.mockserver.scheduler.Scheduler;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;

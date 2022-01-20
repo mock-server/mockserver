@@ -9,7 +9,7 @@ import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.JsonSchemaBodyDTO;
 
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class JsonSchemaBodyDTOSerializerTest {
 

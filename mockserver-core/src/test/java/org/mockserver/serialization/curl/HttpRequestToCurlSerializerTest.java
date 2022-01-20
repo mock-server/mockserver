@@ -9,7 +9,7 @@ import java.net.InetSocketAddress;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.Parameter.param;
 

@@ -10,7 +10,7 @@ import java.util.Map;
 import static junit.framework.TestCase.assertFalse;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsIterableContaining.hasItems;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.NottableString.not;

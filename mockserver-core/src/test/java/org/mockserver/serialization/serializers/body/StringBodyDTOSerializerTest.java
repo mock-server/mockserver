@@ -8,7 +8,7 @@ import org.mockserver.serialization.model.StringBodyDTO;
 import org.mockserver.model.StringBody;
 
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.model.Not.not;
 
 public class StringBodyDTOSerializerTest {

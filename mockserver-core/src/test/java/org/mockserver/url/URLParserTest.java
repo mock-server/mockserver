@@ -4,7 +4,7 @@ import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -38,7 +38,7 @@ public class URLParserTest {
         assertThat(URLParser.returnPath("/some/path"), is("/some/path"));
         assertThat(URLParser.returnPath("/123/456"), is("/123/456"));
     }
-    
+
     @Test
     public void shouldStripQueryString() {
         assertThat(URLParser.returnPath("http://www.mock-server.com/some/path?foo=bar"), is("/some/path"));

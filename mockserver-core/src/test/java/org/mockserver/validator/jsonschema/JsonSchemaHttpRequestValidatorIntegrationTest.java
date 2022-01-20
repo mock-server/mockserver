@@ -6,7 +6,7 @@ import org.mockserver.serialization.HttpRequestSerializer;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.HttpRequest.request;

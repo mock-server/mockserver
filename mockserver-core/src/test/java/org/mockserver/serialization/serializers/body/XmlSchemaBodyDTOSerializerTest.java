@@ -7,7 +7,7 @@ import org.mockserver.serialization.model.XmlSchemaBodyDTO;
 import org.mockserver.model.XmlSchemaBody;
 
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class XmlSchemaBodyDTOSerializerTest {
 

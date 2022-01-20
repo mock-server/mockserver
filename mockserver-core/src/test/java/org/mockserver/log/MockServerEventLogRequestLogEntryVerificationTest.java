@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;

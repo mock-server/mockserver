@@ -16,8 +16,8 @@ import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.stop.Stop.stopQuietly;
 

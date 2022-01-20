@@ -8,7 +8,7 @@ import org.mockserver.serialization.ObjectMapperFactory;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
 
 public class TimeToLiveSerializerTest {

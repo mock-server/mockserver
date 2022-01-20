@@ -22,7 +22,7 @@ import java.io.OutputStream;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockserver.model.BinaryBody.binary;
