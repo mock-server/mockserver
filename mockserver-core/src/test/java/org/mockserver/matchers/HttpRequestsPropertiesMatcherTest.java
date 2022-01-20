@@ -10,12 +10,12 @@ import org.mockserver.uuid.UUIDService;
 
 import java.util.UUID;
 
+import static junit.framework.TestCase.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.hamcrest.core.StringContains.containsString;
-import static org.junit.Assert.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.MatchDifference.Field.*;
 import static org.mockserver.model.HttpRequest.request;
@@ -5328,7 +5328,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withQueryStringParameter("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withQueryStringParameter("Authorization", "bearer " + UUID.randomUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5340,7 +5340,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withQueryStringParameter("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+                .withQueryStringParameter("Authorization", "wrong_scheme " + UUID.randomUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5390,11 +5390,11 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withQueryStringParameter("Authorization", "basic " + UUID.randomUUID().toString())
+                .withQueryStringParameter("Authorization", "basic " + UUID.randomUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withQueryStringParameter("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withQueryStringParameter("Authorization", "bearer " + UUID.randomUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5406,7 +5406,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withQueryStringParameter("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+                .withQueryStringParameter("Authorization", "wrong_scheme " + UUID.randomUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5447,7 +5447,7 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("Authorization", "basic " + UUID.randomUUID().toString())
+                .withCookie("Authorization", "basic " + UUID.randomUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5455,7 +5455,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+                .withCookie("Authorization", "wrong_scheme " + UUID.randomUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5490,7 +5490,7 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withCookie("Authorization", "bearer " + UUID.randomUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5498,7 +5498,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+                .withCookie("Authorization", "wrong_scheme " + UUID.randomUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5574,7 +5574,7 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withCookie("Authorization", "bearer " + UUID.randomUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5618,7 +5618,7 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withCookie("Authorization", "bearer " + UUID.randomUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5658,11 +5658,11 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("Authorization", "basic " + UUID.randomUUID().toString())
+                .withCookie("Authorization", "basic " + UUID.randomUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withCookie("Authorization", "bearer " + UUID.randomUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5670,7 +5670,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+                .withCookie("Authorization", "wrong_scheme " + UUID.randomUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5715,11 +5715,11 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("Authorization", "basic " + UUID.randomUUID().toString())
+                .withCookie("Authorization", "basic " + UUID.randomUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withCookie("Authorization", "bearer " + UUID.randomUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5731,7 +5731,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+                .withCookie("Authorization", "wrong_scheme " + UUID.randomUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5780,11 +5780,11 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("Authorization", "basic " + UUID.randomUUID().toString())
+                .withCookie("Authorization", "basic " + UUID.randomUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withCookie("Authorization", "bearer " + UUID.randomUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5796,7 +5796,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+                .withCookie("Authorization", "wrong_scheme " + UUID.randomUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5846,11 +5846,11 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("Authorization", "basic " + UUID.randomUUID().toString())
+                .withCookie("Authorization", "basic " + UUID.randomUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withCookie("Authorization", "bearer " + UUID.randomUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5862,7 +5862,7 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+                .withCookie("Authorization", "wrong_scheme " + UUID.randomUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5912,11 +5912,11 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("Authorization", "basic " + UUID.randomUUID().toString())
+                .withHeader("Authorization", "basic " + UUID.randomUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withCookie("Authorization", "bearer " + UUID.randomUUID())
         ));
         assertTrue(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5929,11 +5929,11 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("Authorization", "bearer " + UUID.randomUUID().toString())
+                .withHeader("Authorization", "bearer " + UUID.randomUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withHeader("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+                .withHeader("Authorization", "wrong_scheme " + UUID.randomUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
@@ -5941,11 +5941,11 @@ public class HttpRequestsPropertiesMatcherTest {
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("Authorization", "basic " + UUID.randomUUID().toString())
+                .withCookie("Authorization", "basic " + UUID.randomUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()
-                .withCookie("Authorization", "wrong_scheme " + UUID.randomUUID().toString())
+                .withCookie("Authorization", "wrong_scheme " + UUID.randomUUID())
         ));
         assertFalse(httpRequestsPropertiesMatcher.matches(
             request()

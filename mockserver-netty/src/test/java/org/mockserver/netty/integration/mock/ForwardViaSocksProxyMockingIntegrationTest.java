@@ -13,7 +13,7 @@ import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwa
 import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.junit.Assert.assertEquals;
+import static junit.framework.TestCase.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.Header.header;

@@ -6,7 +6,7 @@ import org.mockserver.model.Delay;
 import org.mockserver.model.HttpTemplate;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.junit.Assert.assertEquals;
+import static junit.framework.TestCase.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 
 /**
@@ -17,38 +17,38 @@ public class HttpTemplateToJavaSerializerTest {
     @Test
     public void shouldSerializeFullObjectWithCallbackAsJava() {
         assertEquals(NEW_LINE +
-                        "        template(HttpTemplate.TemplateType.JAVASCRIPT)" + NEW_LINE +
-                        "                .withTemplate(\"" +
-                        StringEscapeUtils.escapeJava("if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
-                                "    return {" + NEW_LINE +
-                                "        'statusCode': 200," + NEW_LINE +
-                                "        'body': JSON.stringify({name: 'value'})" + NEW_LINE +
-                                "    };" + NEW_LINE +
-                                "} else {" + NEW_LINE +
-                                "    return {" + NEW_LINE +
-                                "        'statusCode': 406," + NEW_LINE +
-                                "        'body': request.body" + NEW_LINE +
-                                "    };" + NEW_LINE +
-                                "}"
-                        ) +
-                        "\")" + NEW_LINE +
-                        "                .withDelay(new Delay(TimeUnit.SECONDS, 5))",
-                new HttpTemplateToJavaSerializer().serialize(1,
-                        new HttpTemplate(HttpTemplate.TemplateType.JAVASCRIPT)
-                                .withTemplate("if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
-                                        "    return {" + NEW_LINE +
-                                        "        'statusCode': 200," + NEW_LINE +
-                                        "        'body': JSON.stringify({name: 'value'})" + NEW_LINE +
-                                        "    };" + NEW_LINE +
-                                        "} else {" + NEW_LINE +
-                                        "    return {" + NEW_LINE +
-                                        "        'statusCode': 406," + NEW_LINE +
-                                        "        'body': request.body" + NEW_LINE +
-                                        "    };" + NEW_LINE +
-                                        "}"
-                                )
-                                .withDelay(new Delay(SECONDS, 5))
-                )
+                "        template(HttpTemplate.TemplateType.JAVASCRIPT)" + NEW_LINE +
+                "                .withTemplate(\"" +
+                StringEscapeUtils.escapeJava("if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
+                    "    return {" + NEW_LINE +
+                    "        'statusCode': 200," + NEW_LINE +
+                    "        'body': JSON.stringify({name: 'value'})" + NEW_LINE +
+                    "    };" + NEW_LINE +
+                    "} else {" + NEW_LINE +
+                    "    return {" + NEW_LINE +
+                    "        'statusCode': 406," + NEW_LINE +
+                    "        'body': request.body" + NEW_LINE +
+                    "    };" + NEW_LINE +
+                    "}"
+                ) +
+                "\")" + NEW_LINE +
+                "                .withDelay(new Delay(TimeUnit.SECONDS, 5))",
+            new HttpTemplateToJavaSerializer().serialize(1,
+                new HttpTemplate(HttpTemplate.TemplateType.JAVASCRIPT)
+                    .withTemplate("if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
+                        "    return {" + NEW_LINE +
+                        "        'statusCode': 200," + NEW_LINE +
+                        "        'body': JSON.stringify({name: 'value'})" + NEW_LINE +
+                        "    };" + NEW_LINE +
+                        "} else {" + NEW_LINE +
+                        "    return {" + NEW_LINE +
+                        "        'statusCode': 406," + NEW_LINE +
+                        "        'body': request.body" + NEW_LINE +
+                        "    };" + NEW_LINE +
+                        "}"
+                    )
+                    .withDelay(new Delay(SECONDS, 5))
+            )
         );
     }
 

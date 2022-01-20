@@ -4,10 +4,8 @@ import org.junit.Test;
 import org.mockserver.model.ConnectionOptions;
 import org.mockserver.model.Delay;
 
-import java.util.concurrent.TimeUnit;
-
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.junit.Assert.assertEquals;
+import static junit.framework.TestCase.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 
 /**

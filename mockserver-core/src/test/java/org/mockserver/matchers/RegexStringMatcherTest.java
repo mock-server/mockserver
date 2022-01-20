@@ -4,8 +4,8 @@ import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.NottableString;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
 import static org.mockserver.matchers.NotMatcher.notMatcher;
 import static org.mockserver.model.NottableString.string;
 

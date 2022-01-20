@@ -1,14 +1,13 @@
 package org.mockserver.model;
 
-import junit.framework.TestCase;
 import org.json.JSONException;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotSame;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpForward.forward;
 

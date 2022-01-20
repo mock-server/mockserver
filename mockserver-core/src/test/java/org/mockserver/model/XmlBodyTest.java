@@ -5,11 +5,11 @@ import org.junit.Test;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotSame;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
 import static org.mockserver.model.XmlBody.xml;
 
 /**

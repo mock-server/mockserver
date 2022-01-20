@@ -5,7 +5,7 @@ import org.mockserver.model.Header;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.assertEquals;
+import static junit.framework.TestCase.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.NottableOptionalString.optional;
 import static org.mockserver.model.NottableString.not;

@@ -1,17 +1,17 @@
 package org.mockserver.serialization;
 
 import org.junit.Test;
-import org.mockserver.serialization.model.*;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.Cookies;
 import org.mockserver.model.Headers;
 import org.mockserver.model.Parameters;
 import org.mockserver.model.StringBody;
+import org.mockserver.serialization.model.*;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
+import static junit.framework.TestCase.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;

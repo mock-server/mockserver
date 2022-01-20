@@ -2,8 +2,10 @@ package org.mockserver.model;
 
 import org.junit.Test;
 
+import static junit.framework.TestCase.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotEquals;
 
 /**
  * This test is mainly for coverage but also to check underlying API is called correctly
@@ -24,12 +26,12 @@ public class ObjectWithReflectiveEqualsHashCodeToStringTest {
 
     @Test
     public void equalsIdentical() {
-        assertTrue(new Header("name", "value").equals(new Header("name", "value")));
+        assertEquals(new Header("name", "value"), new Header("name", "value"));
     }
 
     @Test
     public void notEqualsDifferent() {
-        assertFalse(new Header("name", "value").equals(new Header("foo", "bar")));
+        assertNotEquals(new Header("name", "value"), new Header("foo", "bar"));
     }
 
     @Test

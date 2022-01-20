@@ -7,9 +7,10 @@ import org.mockserver.model.*;
 
 import java.util.concurrent.TimeUnit;
 
+import static junit.framework.TestCase.*;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
 import static org.mockserver.model.HttpRequest.request;
 
 /**

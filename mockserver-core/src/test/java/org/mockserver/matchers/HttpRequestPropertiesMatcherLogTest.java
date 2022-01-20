@@ -16,10 +16,10 @@ import org.slf4j.event.Level;
 import java.util.Date;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.logLevel;
 import static org.mockserver.configuration.ConfigurationProperties.matchersFailFast;

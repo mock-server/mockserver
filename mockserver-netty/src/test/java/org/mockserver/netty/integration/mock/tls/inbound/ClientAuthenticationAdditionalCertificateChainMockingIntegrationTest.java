@@ -15,19 +15,18 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.tls.KeyStoreFactory;
 import org.mockserver.socket.tls.jdk.JDKKeyAndCertificateFactory;
-import org.mockserver.socket.tls.jdk.X509Generator;
 import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
 
 import javax.net.ssl.SSLContext;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
 
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.fail;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.echo.tls.UniqueCertificateChainSSLContextBuilder.uniqueCertificateChainSSLContext;
 import static org.mockserver.model.HttpRequest.request;

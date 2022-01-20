@@ -12,7 +12,7 @@ import org.mockserver.validator.xmlschema.XmlSchemaValidator;
 import org.slf4j.Logger;
 import org.slf4j.event.Level;
 
-import static org.junit.Assert.*;
+import static junit.framework.TestCase.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;

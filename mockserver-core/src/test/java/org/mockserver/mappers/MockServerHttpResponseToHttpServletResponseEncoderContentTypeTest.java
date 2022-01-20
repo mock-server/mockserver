@@ -2,18 +2,20 @@ package org.mockserver.mappers;
 
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.*;
+import org.mockserver.model.Header;
+import org.mockserver.model.HttpResponse;
+import org.mockserver.model.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.nio.charset.StandardCharsets;
 
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNull;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.JsonBody.json;
-import static org.mockserver.model.Parameter.param;
-import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.XmlBody.xml;
 
@@ -104,8 +106,8 @@ public class MockServerHttpResponseToHttpServletResponseEncoderContentTypeTest {
     public void shouldNotSetDefaultContentTypeWhenContentTypeExplicitlySpecified() {
         // given
         HttpResponse httpResponse = response()
-                .withBody(json("somebody"))
-                .withHeaders(new Header("Content-Type", "some/value"));
+            .withBody(json("somebody"))
+            .withHeaders(new Header("Content-Type", "some/value"));
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
 
         // when

@@ -18,7 +18,7 @@ import org.mockserver.model.HttpStatusCode;
 import org.mockserver.netty.MockServer;
 import org.mockserver.testing.integration.proxy.AbstractProxyIntegrationTest;
 
-import static org.junit.Assert.assertEquals;
+import static junit.framework.TestCase.assertEquals;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;

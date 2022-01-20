@@ -41,10 +41,10 @@ import java.util.Collections;
 import java.util.List;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static junit.framework.TestCase.assertEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeThat;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.stop.Stop.stopQuietly;

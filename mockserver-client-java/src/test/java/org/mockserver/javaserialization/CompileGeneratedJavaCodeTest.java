@@ -15,7 +15,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
 
-import static org.junit.Assert.assertTrue;
+import static junit.framework.TestCase.assertTrue;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpForward.forward;

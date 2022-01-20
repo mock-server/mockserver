@@ -14,8 +14,8 @@ import org.mockserver.model.PortBinding;
 import java.io.IOException;
 import java.util.Arrays;
 
+import static junit.framework.TestCase.assertEquals;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.model.PortBinding.portBinding;

@@ -6,7 +6,7 @@ import org.mockserver.socket.tls.KeyAndCertificateFactory;
 
 import java.math.BigInteger;
 
-import static org.junit.Assert.assertTrue;
+import static junit.framework.TestCase.assertTrue;
 
 /**
  * @author jnormington

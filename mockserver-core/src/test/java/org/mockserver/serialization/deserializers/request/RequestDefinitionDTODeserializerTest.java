@@ -11,9 +11,9 @@ import org.mockserver.serialization.model.*;
 
 import java.io.IOException;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
+import static junit.framework.TestCase.assertEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.file.FileReader.openStreamToFileFromClassPathOrPath;
 import static org.mockserver.model.BinaryBody.binary;
@@ -61,7 +61,7 @@ public class RequestDefinitionDTODeserializerTest {
             "}", RequestDefinitionDTO.class), is(
             new OpenAPIDefinitionDTO(openAPI()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_simple_example.json")
-        )));
+            )));
     }
 
     @Test
@@ -74,7 +74,7 @@ public class RequestDefinitionDTODeserializerTest {
             new OpenAPIDefinitionDTO(openAPI()
                 .withSpecUrlOrPayload(FileReader.getURL("org/mockserver/mock/openapi_simple_example.json").toString())
                 .withOperationId("listPets")
-        )));
+            )));
     }
 
     @Test
@@ -85,7 +85,7 @@ public class RequestDefinitionDTODeserializerTest {
             "}", RequestDefinitionDTO.class), is(
             new OpenAPIDefinitionDTO(openAPI()
                 .withSpecUrlOrPayload(FileReader.getURL("org/mockserver/mock/openapi_simple_example.json").toString())
-        )));
+            )));
     }
 
     @Test
@@ -109,7 +109,7 @@ public class RequestDefinitionDTODeserializerTest {
             "}", RequestDefinitionDTO.class), is(
             new OpenAPIDefinitionDTO(openAPI()
                 .withSpecUrlOrPayload(ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_simple_example.json")).toPrettyString())
-        )));
+            )));
     }
 
     @Test
@@ -247,7 +247,7 @@ public class RequestDefinitionDTODeserializerTest {
 
         // then
         assertEquals(new HttpRequestDTO()
-            .setBody(BodyDTO.createDTO(json("{ \"key\": \"value\" }"))),
+                .setBody(BodyDTO.createDTO(json("{ \"key\": \"value\" }"))),
             requestDefinitionDTO);
     }
 

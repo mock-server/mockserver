@@ -1,6 +1,5 @@
 package org.mockserver.serialization;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import org.junit.Before;
 import org.junit.Rule;
@@ -14,11 +13,11 @@ import org.mockserver.serialization.model.HttpResponseDTO;
 
 import java.io.IOException;
 
+import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;

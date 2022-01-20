@@ -1,11 +1,10 @@
 package org.mockserver.socket.tls;
 
-import static org.junit.Assert.assertTrue;
-
-import java.math.BigInteger;
 import org.junit.AfterClass;
 import org.junit.Test;
 import org.mockserver.socket.tls.bouncycastle.BCKeyAndCertificateFactory;
+
+import static junit.framework.TestCase.assertTrue;
 
 public class CustomKeyAndCertificateFactorySupplierTest {
 

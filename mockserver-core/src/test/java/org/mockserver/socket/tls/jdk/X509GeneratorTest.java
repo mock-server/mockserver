@@ -19,11 +19,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static junit.framework.TestCase.fail;
+import static junit.framework.TestCase.*;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
 import static org.mockserver.socket.tls.PEMToFile.*;
 import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.*;
 import static sun.security.x509.BasicConstraintsExtension.IS_CA;
@@ -31,8 +32,8 @@ import static sun.security.x509.BasicConstraintsExtension.IS_CA;
 @SuppressWarnings({"RedundantSuppression", "deprecation", "removal"})
 public class X509GeneratorTest {
 
-    private Integer KEY_SIZE = 512;
-    private CertificateSigningRequest csr = new CertificateSigningRequest()
+    private final Integer KEY_SIZE = 512;
+    private final CertificateSigningRequest csr = new CertificateSigningRequest()
         .setCommonName(ROOT_COMMON_NAME)
         .setKeyPairSize(KEY_SIZE);
 

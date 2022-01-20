@@ -5,7 +5,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.ServerSocket;
 
-import static org.junit.Assert.assertTrue;
+import static junit.framework.TestCase.assertTrue;
 
 /**
  * @author jamesdbloom

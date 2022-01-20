@@ -18,8 +18,6 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsSame.sameInstance;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.HttpResponse.response;

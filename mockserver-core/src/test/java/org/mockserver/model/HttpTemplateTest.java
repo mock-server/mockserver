@@ -5,8 +5,8 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotSame;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpTemplate.TemplateType.JAVASCRIPT;
 import static org.mockserver.model.HttpTemplate.TemplateType.VELOCITY;

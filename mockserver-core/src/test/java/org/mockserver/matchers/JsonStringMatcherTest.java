@@ -3,7 +3,7 @@ package org.mockserver.matchers;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 
-import static org.junit.Assert.*;
+import static junit.framework.TestCase.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.NotMatcher.notMatcher;
 

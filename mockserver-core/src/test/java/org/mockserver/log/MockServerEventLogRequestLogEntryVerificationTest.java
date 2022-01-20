@@ -13,9 +13,9 @@ import org.mockserver.verify.VerificationSequence;
 import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.fail;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
 import static org.mockserver.model.HttpRequest.request;
@@ -115,19 +115,19 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
 
         // then
         assertThat(verify(
-            verification()
-                .withRequest(
-                    new HttpRequest()
-                        .withPath("some_path")
-                )
+                verification()
+                    .withRequest(
+                        new HttpRequest()
+                            .withPath("some_path")
+                    )
             ),
             is(""));
         assertThat(verify(
-            verification()
-                .withRequest(
-                    new HttpRequest()
-                        .withPath("some_other_path")
-                )
+                verification()
+                    .withRequest(
+                        new HttpRequest()
+                            .withPath("some_other_path")
+                    )
             ),
             is(""));
     }
@@ -157,11 +157,11 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
 
         // then
         assertThat(verify(
-            verification()
-                .withRequest(
-                    new HttpRequest().withPath("some_path")
-                )
-                .withTimes(atLeast(2))
+                verification()
+                    .withRequest(
+                        new HttpRequest().withPath("some_path")
+                    )
+                    .withTimes(atLeast(2))
             ),
             is(""));
     }
@@ -191,11 +191,11 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
 
         // then
         assertThat(verify(
-            verification()
-                .withRequest(
-                    new HttpRequest().withPath("some_non_matching_path")
-                )
-                .withTimes(atLeast(0))
+                verification()
+                    .withRequest(
+                        new HttpRequest().withPath("some_non_matching_path")
+                    )
+                    .withTimes(atLeast(0))
             ),
             is(""));
     }
@@ -225,12 +225,12 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
 
         // then
         assertThat(verify(
-            verification()
-                .withRequest(
-                    new HttpRequest()
-                        .withPath("some_path")
-                )
-                .withTimes(exactly(2))
+                verification()
+                    .withRequest(
+                        new HttpRequest()
+                            .withPath("some_path")
+                    )
+                    .withTimes(exactly(2))
             ),
             is(""));
     }
@@ -260,12 +260,12 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
 
         // then
         assertThat(verify(
-            verification()
-                .withRequest(
-                    new HttpRequest()
-                        .withPath("some_non_matching_path")
-                )
-                .withTimes(exactly(0))
+                verification()
+                    .withRequest(
+                        new HttpRequest()
+                            .withPath("some_non_matching_path")
+                    )
+                    .withTimes(exactly(0))
             ),
             is(""));
     }
@@ -303,10 +303,10 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
 
         // then
         assertThat(verify(
-            verification()
-                .withRequest(
-                    new HttpRequest().withPath("some_non_matching_path")
-                )
+                verification()
+                    .withRequest(
+                        new HttpRequest().withPath("some_non_matching_path")
+                    )
             ),
             is("Request not found at least once, expected:<{" + NEW_LINE +
                 "  \"path\" : \"some_non_matching_path\"" + NEW_LINE +
@@ -344,11 +344,11 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
 
         // then
         assertThat(verify(
-            verification()
-                .withRequest(
-                    new HttpRequest().withPath("some_other_path")
-                )
-                .withTimes(atLeast(2))
+                verification()
+                    .withRequest(
+                        new HttpRequest().withPath("some_other_path")
+                    )
+                    .withTimes(atLeast(2))
             ),
             is("Request not found at least 2 times, expected:<{" + NEW_LINE +
                 "  \"path\" : \"some_other_path\"" + NEW_LINE +
@@ -386,12 +386,12 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
 
         // then
         assertThat(verify(
-            verification()
-                .withRequest(
-                    new HttpRequest()
-                        .withPath("some_other_path")
-                )
-                .withTimes(exactly(2))
+                verification()
+                    .withRequest(
+                        new HttpRequest()
+                            .withPath("some_other_path")
+                    )
+                    .withTimes(exactly(2))
             ),
             is("Request not found exactly 2 times, expected:<{" + NEW_LINE +
                 "  \"path\" : \"some_other_path\"" + NEW_LINE +
@@ -410,12 +410,12 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
 
         // then
         assertThat(verify(
-            verification()
-                .withRequest(
-                    new HttpRequest()
-                        .withPath("some_other_path")
-                )
-                .withTimes(exactly(1))
+                verification()
+                    .withRequest(
+                        new HttpRequest()
+                            .withPath("some_other_path")
+                    )
+                    .withTimes(exactly(1))
             ),
             is("Request not found exactly once, expected:<{" + NEW_LINE +
                 "  \"path\" : \"some_other_path\"" + NEW_LINE +
@@ -447,12 +447,12 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
 
         // then
         assertThat(verify(
-            verification()
-                .withRequest(
-                    new HttpRequest()
-                        .withPath("some_other_path")
-                )
-                .withTimes(exactly(0))
+                verification()
+                    .withRequest(
+                        new HttpRequest()
+                            .withPath("some_other_path")
+                    )
+                    .withTimes(exactly(0))
             ),
             is("Request not found exactly 0 times, expected:<{" + NEW_LINE +
                 "  \"path\" : \"some_other_path\"" + NEW_LINE +
@@ -479,9 +479,9 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
 
         // then
         assertThat(verify(
-            verification()
-                .withRequest(request())
-                .withTimes(exactly(0))
+                verification()
+                    .withRequest(request())
+                    .withTimes(exactly(0))
             ),
             is("Request not found exactly 0 times, expected:<{ }> but was:<{ }>"));
     }

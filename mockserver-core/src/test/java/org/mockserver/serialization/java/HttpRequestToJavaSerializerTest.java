@@ -8,7 +8,7 @@ import org.mockserver.serialization.Base64Converter;
 import java.util.Arrays;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.assertEquals;
+import static junit.framework.TestCase.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 
 /**
@@ -69,7 +69,7 @@ public class HttpRequestToJavaSerializerTest {
                 "                        new SocketAddress()" + NEW_LINE +
                 "                                .withHost(\"someHost\")" + NEW_LINE +
                 "                                .withPort(1234)" + NEW_LINE +
-                "                                .withScheme(SocketAddress.Scheme.HTTPS)"  + NEW_LINE +
+                "                                .withScheme(SocketAddress.Scheme.HTTPS)" + NEW_LINE +
                 "                )" + NEW_LINE +
                 "                .withBody(new StringBody(\"responseBody\"))",
             new HttpRequestToJavaSerializer().serialize(1,

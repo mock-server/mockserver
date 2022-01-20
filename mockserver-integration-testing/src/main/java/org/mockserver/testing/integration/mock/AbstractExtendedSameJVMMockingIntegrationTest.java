@@ -1,14 +1,14 @@
 package org.mockserver.testing.integration.mock;
 
 import org.junit.Test;
-import org.mockserver.testing.integration.callback.StaticTestExpectationResponseCallback;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.HttpTemplate;
+import org.mockserver.testing.integration.callback.StaticTestExpectationResponseCallback;
 
 import javax.script.ScriptEngineManager;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.junit.Assert.assertEquals;
+import static junit.framework.TestCase.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpClassCallback.callback;

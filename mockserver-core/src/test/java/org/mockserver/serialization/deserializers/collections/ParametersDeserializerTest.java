@@ -11,10 +11,10 @@ import org.mockserver.serialization.ObjectMapperFactory;
 import java.io.IOException;
 import java.util.Arrays;
 
+import static junit.framework.TestCase.fail;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.fail;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.KeyMatchStyle.MATCHING_KEY;
 import static org.mockserver.model.KeyMatchStyle.SUB_SET;
@@ -27,8 +27,8 @@ import static org.mockserver.model.Parameter.param;
  */
 public class ParametersDeserializerTest {
 
-    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
-    private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+    private final ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
+    private final ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
     @Test
     public void shouldSerializeThenDeserializer() throws IOException {

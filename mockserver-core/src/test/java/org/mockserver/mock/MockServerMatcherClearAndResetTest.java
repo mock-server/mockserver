@@ -16,11 +16,11 @@ import org.mockserver.scheduler.Scheduler;
 
 import java.util.List;
 
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNull;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockserver.matchers.TimeToLive.unlimited;
 import static org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.API;

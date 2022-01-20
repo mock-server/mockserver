@@ -12,7 +12,7 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
 
-import static org.junit.Assert.assertEquals;
+import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.API;
 

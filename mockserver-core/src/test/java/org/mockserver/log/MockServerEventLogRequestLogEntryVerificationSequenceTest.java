@@ -12,9 +12,9 @@ import org.mockserver.verify.VerificationSequence;
 import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.fail;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
 import static org.mockserver.model.HttpRequest.request;
@@ -123,10 +123,10 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
 
         // then
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
+                new VerificationSequence()
+                    .withRequests(
 
-                )
+                    )
             ),
             is(""));
     }
@@ -162,31 +162,31 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
 
         // then
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("one")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("one")
+                    )
             ),
             is(""));
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("multi")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("multi")
+                    )
             ),
             is(""));
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("three")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("three")
+                    )
             ),
             is(""));
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("four")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("four")
+                    )
             ),
             is(""));
     }
@@ -222,68 +222,68 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
 
         // then - next to each other
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("one"),
-                    request("multi")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("one"),
+                        request("multi")
+                    )
             ),
             is(""));
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("multi"),
-                    request("three")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("multi"),
+                        request("three")
+                    )
             ),
             is(""));
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("three"),
-                    request("multi")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("three"),
+                        request("multi")
+                    )
             ),
             is(""));
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("multi"),
-                    request("four")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("multi"),
+                        request("four")
+                    )
             ),
             is(""));
         // then - not next to each other
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("one"),
-                    request("three")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("one"),
+                        request("three")
+                    )
             ),
             is(""));
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("one"),
-                    request("four")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("one"),
+                        request("four")
+                    )
             ),
             is(""));
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("multi"),
-                    request("multi")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("multi"),
+                        request("multi")
+                    )
             ),
             is(""));
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("three"),
-                    request("four")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("three"),
+                        request("four")
+                    )
             ),
             is(""));
     }
@@ -319,10 +319,10 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
 
         // then
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("five")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("five")
+                    )
             ),
             is("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"path\" : \"five\"" + NEW_LINE +
@@ -370,11 +370,11 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
 
         // then - next to each other
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("multi"),
-                    request("one")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("multi"),
+                        request("one")
+                    )
             ),
             is("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"path\" : \"multi\"" + NEW_LINE +
@@ -392,11 +392,11 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
                 "  \"path\" : \"four\"" + NEW_LINE +
                 "} ]>"));
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("four"),
-                    request("multi")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("four"),
+                        request("multi")
+                    )
             ),
             is("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"path\" : \"four\"" + NEW_LINE +
@@ -415,11 +415,11 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
                 "} ]>"));
         // then - not next to each other
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("three"),
-                    request("one")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("three"),
+                        request("one")
+                    )
             ),
             is("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"path\" : \"three\"" + NEW_LINE +
@@ -437,11 +437,11 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
                 "  \"path\" : \"four\"" + NEW_LINE +
                 "} ]>"));
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("four"),
-                    request("one")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("four"),
+                        request("one")
+                    )
             ),
             is("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"path\" : \"four\"" + NEW_LINE +
@@ -459,11 +459,11 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
                 "  \"path\" : \"four\"" + NEW_LINE +
                 "} ]>"));
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("four"),
-                    request("three")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("four"),
+                        request("three")
+                    )
             ),
             is("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"path\" : \"four\"" + NEW_LINE +
@@ -513,11 +513,11 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
 
         // then - next to each other
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("zero"),
-                    request("multi")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("zero"),
+                        request("multi")
+                    )
             ),
             is("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"path\" : \"zero\"" + NEW_LINE +
@@ -535,11 +535,11 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
                 "  \"path\" : \"four\"" + NEW_LINE +
                 "} ]>"));
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("zero"),
-                    request("three")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("zero"),
+                        request("three")
+                    )
             ),
             is("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"path\" : \"zero\"" + NEW_LINE +
@@ -557,11 +557,11 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
                 "  \"path\" : \"four\"" + NEW_LINE +
                 "} ]>"));
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("zero"),
-                    request("four")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("zero"),
+                        request("four")
+                    )
             ),
             is("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"path\" : \"zero\"" + NEW_LINE +
@@ -611,11 +611,11 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
 
         // then - next to each other
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("one"),
-                    request("five")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("one"),
+                        request("five")
+                    )
             ),
             is("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"path\" : \"one\"" + NEW_LINE +
@@ -633,11 +633,11 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
                 "  \"path\" : \"four\"" + NEW_LINE +
                 "} ]>"));
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("multi"),
-                    request("five")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("multi"),
+                        request("five")
+                    )
             ),
             is("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"path\" : \"multi\"" + NEW_LINE +
@@ -655,11 +655,11 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
                 "  \"path\" : \"four\"" + NEW_LINE +
                 "} ]>"));
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("three"),
-                    request("five")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("three"),
+                        request("five")
+                    )
             ),
             is("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"path\" : \"three\"" + NEW_LINE +
@@ -709,12 +709,12 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
 
         // then - next to each other
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("one"),
-                    request("four"),
-                    request("multi")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("one"),
+                        request("four"),
+                        request("multi")
+                    )
             ),
             is("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"path\" : \"one\"" + NEW_LINE +
@@ -734,12 +734,12 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
                 "  \"path\" : \"four\"" + NEW_LINE +
                 "} ]>"));
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("one"),
-                    request("multi"),
-                    request("one")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("one"),
+                        request("multi"),
+                        request("one")
+                    )
             ),
             is("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"path\" : \"one\"" + NEW_LINE +
@@ -760,12 +760,12 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
                 "} ]>"));
         // then - not next to each other
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("four"),
-                    request("one"),
-                    request("multi")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("four"),
+                        request("one"),
+                        request("multi")
+                    )
             ),
             is("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"path\" : \"four\"" + NEW_LINE +
@@ -785,12 +785,12 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
                 "  \"path\" : \"four\"" + NEW_LINE +
                 "} ]>"));
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("multi"),
-                    request("three"),
-                    request("one")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("multi"),
+                        request("three"),
+                        request("one")
+                    )
             ),
             is("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"path\" : \"multi\"" + NEW_LINE +
@@ -843,12 +843,12 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
 
         // then
         assertThat(verify(
-            new VerificationSequence()
-                .withRequests(
-                    request("multi"),
-                    request("multi"),
-                    request("multi")
-                )
+                new VerificationSequence()
+                    .withRequests(
+                        request("multi"),
+                        request("multi"),
+                        request("multi")
+                    )
             ),
             is("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"path\" : \"multi\"" + NEW_LINE +

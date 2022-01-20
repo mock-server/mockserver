@@ -1,8 +1,9 @@
 package org.mockserver.configuration;
 
-import io.netty.util.NettyRuntime;
-import io.netty.util.internal.SystemPropertyUtil;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.server.initialize.ExpectationInitializerExample;
 import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
@@ -16,10 +17,11 @@ import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
+import static junit.framework.TestCase.*;
 import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
-import static org.junit.Assert.*;
 import static org.mockserver.configuration.ConfigurationProperties.*;
 
 /**

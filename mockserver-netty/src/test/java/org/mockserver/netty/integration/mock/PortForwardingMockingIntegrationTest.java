@@ -13,10 +13,10 @@ import org.slf4j.event.Level;
 
 import java.util.Arrays;
 
+import static junit.framework.TestCase.assertEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
-import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.model.Cookie.cookie;

@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.junit.Assert.assertEquals;
+import static junit.framework.TestCase.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.file.FileReader.openStreamToFileFromClassPathOrPath;
 import static org.mockserver.model.BinaryBody.binary;

@@ -2,7 +2,6 @@ package org.mockserver.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.node.TextNode;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -18,17 +17,14 @@ import org.mockserver.serialization.model.*;
 import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertArrayEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
-import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpTemplate.template;

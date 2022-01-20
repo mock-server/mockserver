@@ -3,7 +3,7 @@ package org.mockserver.test;
 
 import java.util.Collection;
 
-import static org.junit.Assert.*;
+import static junit.framework.TestCase.*;
 
 /**
  * @author jamesdbloom

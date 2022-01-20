@@ -12,8 +12,8 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.*;
+import static junit.framework.TestCase.assertEquals;
+import static org.mockito.Mockito.spy;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 

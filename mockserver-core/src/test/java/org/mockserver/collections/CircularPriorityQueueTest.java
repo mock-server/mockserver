@@ -7,11 +7,11 @@ import org.mockserver.mock.SortableExpectationId;
 import java.util.List;
 import java.util.Optional;
 
+import static junit.framework.TestCase.assertEquals;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.mock.Expectation.when;
 import static org.mockserver.mock.SortableExpectationId.EXPECTATION_SORTABLE_PRIORITY_COMPARATOR;
 import static org.mockserver.model.HttpRequest.request;

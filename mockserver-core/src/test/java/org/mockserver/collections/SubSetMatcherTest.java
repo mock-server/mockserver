@@ -8,7 +8,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-import static org.junit.Assert.*;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
 import static org.mockserver.collections.SubSetMatcher.containsSubset;
 import static org.mockserver.model.NottableSchemaString.schemaString;
 import static org.mockserver.model.NottableString.string;
@@ -285,8 +286,8 @@ public class SubSetMatcherTest {
     public void shouldContainSubsetForSchemaKeyAndMultiValue() {
         assertTrue(containsSubset(regexStringMatcher,
             Arrays.asList(
-                new ImmutableEntry(regexStringMatcher, schemaString("{\"type\": \"string\", \"pattern\": \"o.*\"}"),  string("one_one")),
-                new ImmutableEntry(regexStringMatcher, schemaString("{\"type\": \"string\", \"pattern\": \"o.*\"}"),  string("one_two")),
+                new ImmutableEntry(regexStringMatcher, schemaString("{\"type\": \"string\", \"pattern\": \"o.*\"}"), string("one_one")),
+                new ImmutableEntry(regexStringMatcher, schemaString("{\"type\": \"string\", \"pattern\": \"o.*\"}"), string("one_two")),
                 new ImmutableEntry(regexStringMatcher, "two", "two"),
                 new ImmutableEntry(regexStringMatcher, "?four", "four")
             ),
@@ -299,8 +300,8 @@ public class SubSetMatcherTest {
         );
         assertFalse(containsSubset(regexStringMatcher,
             Arrays.asList(
-                new ImmutableEntry(regexStringMatcher, schemaString("{\"type\": \"string\", \"pattern\": \"o.*\"}"),  string("one_one")),
-                new ImmutableEntry(regexStringMatcher, schemaString("{\"type\": \"string\", \"pattern\": \"o.*\"}"),  string("one_two")),
+                new ImmutableEntry(regexStringMatcher, schemaString("{\"type\": \"string\", \"pattern\": \"o.*\"}"), string("one_one")),
+                new ImmutableEntry(regexStringMatcher, schemaString("{\"type\": \"string\", \"pattern\": \"o.*\"}"), string("one_two")),
                 new ImmutableEntry(regexStringMatcher, "two", "two"),
                 new ImmutableEntry(regexStringMatcher, "?four", "four")
             ),

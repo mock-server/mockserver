@@ -2,9 +2,10 @@ package org.mockserver.collections;
 
 import org.junit.Test;
 
+import static junit.framework.TestCase.*;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
 
 
 /**

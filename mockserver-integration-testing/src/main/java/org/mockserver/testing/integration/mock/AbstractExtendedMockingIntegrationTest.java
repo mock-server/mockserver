@@ -32,13 +32,13 @@ import java.util.concurrent.TimeUnit;
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.fail;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.hamcrest.number.OrderingComparison.greaterThan;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
@@ -63,7 +63,6 @@ import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.Parameter.schemaParam;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.RegexBody.regex;
-import static org.mockserver.model.SocketAddress.Scheme.HTTP;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.StringBody.subString;
 import static org.mockserver.model.XPathBody.xpath;
@@ -1772,29 +1771,29 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     public void shouldReturnResponseByMatchingBodyWithXmlSchema() {
         // when
         mockServerClient.when(request()
-            .withBody(
-                xmlSchema("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
-                    "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
-                    "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
-                    "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
-                    "    <xs:element name=\"notes\">" + NEW_LINE +
-                    "        <xs:complexType>" + NEW_LINE +
-                    "            <xs:sequence>" + NEW_LINE +
-                    "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
-                    "                    <xs:complexType>" + NEW_LINE +
-                    "                        <xs:sequence>" + NEW_LINE +
-                    "                            <xs:element name=\"to\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
-                    "                            <xs:element name=\"from\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
-                    "                            <xs:element name=\"heading\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
-                    "                            <xs:element name=\"body\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
-                    "                        </xs:sequence>" + NEW_LINE +
-                    "                    </xs:complexType>" + NEW_LINE +
-                    "                </xs:element>" + NEW_LINE +
-                    "            </xs:sequence>" + NEW_LINE +
-                    "        </xs:complexType>" + NEW_LINE +
-                    "    </xs:element>" + NEW_LINE +
-                    "</xs:schema>")), exactly(2)
-        )
+                .withBody(
+                    xmlSchema("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                        "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+                        "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+                        "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+                        "    <xs:element name=\"notes\">" + NEW_LINE +
+                        "        <xs:complexType>" + NEW_LINE +
+                        "            <xs:sequence>" + NEW_LINE +
+                        "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+                        "                    <xs:complexType>" + NEW_LINE +
+                        "                        <xs:sequence>" + NEW_LINE +
+                        "                            <xs:element name=\"to\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                        "                            <xs:element name=\"from\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                        "                            <xs:element name=\"heading\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                        "                            <xs:element name=\"body\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                        "                        </xs:sequence>" + NEW_LINE +
+                        "                    </xs:complexType>" + NEW_LINE +
+                        "                </xs:element>" + NEW_LINE +
+                        "            </xs:sequence>" + NEW_LINE +
+                        "        </xs:complexType>" + NEW_LINE +
+                        "    </xs:element>" + NEW_LINE +
+                        "</xs:schema>")), exactly(2)
+            )
             .respond(
                 response()
                     .withBody("some_body")
@@ -1856,9 +1855,9 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     public void shouldReturnResponseByMatchingBodyWithXmlSchemaByClasspath() {
         // when
         mockServerClient.when(request()
-            .withBody(
-                xmlSchemaFromResource("org/mockserver/model/testXmlSchema.xsd")), exactly(2)
-        )
+                .withBody(
+                    xmlSchemaFromResource("org/mockserver/model/testXmlSchema.xsd")), exactly(2)
+            )
             .respond(
                 response()
                     .withBody("some_body")

@@ -8,9 +8,9 @@ import org.mockserver.mock.Expectation;
 
 import java.util.List;
 
+import static junit.framework.TestCase.fail;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.fail;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.mock.Expectation.when;
 import static org.mockserver.model.HttpResponse.response;
@@ -529,7 +529,7 @@ public class OpenAPIConverterTest {
                     response()
                         .withStatusCode(500)
                         .withHeader("content-type", "application/json")
-                        .withHeader("x-code","90")
+                        .withHeader("x-code", "90")
                         .withBody(json("{" + NEW_LINE +
                             "  \"code\" : 0," + NEW_LINE +
                             "  \"message\" : \"some_string_value\"" + NEW_LINE +

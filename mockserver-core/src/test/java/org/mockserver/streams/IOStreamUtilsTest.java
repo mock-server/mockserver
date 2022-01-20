@@ -11,7 +11,7 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.assertEquals;
+import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.mockserver.character.Character.NEW_LINE;
 

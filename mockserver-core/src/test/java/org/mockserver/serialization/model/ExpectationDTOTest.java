@@ -7,10 +7,10 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static junit.framework.TestCase.assertNull;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertNull;
 import static org.mockserver.model.HttpRequest.request;
 
 /**

@@ -21,7 +21,7 @@ import org.mockserver.validator.jsonschema.JsonSchemaHttpResponseValidator;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
+import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.model.Cookie.cookie;

@@ -8,10 +8,10 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
 import org.springframework.mock.web.MockHttpServletResponse;
 
+import static junit.framework.TestCase.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.Assert.assertEquals;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author jamesdbloom

@@ -8,7 +8,7 @@ import org.mockserver.examples.proxy.model.Book;
 import org.mockserver.examples.proxy.service.BookService;
 import org.springframework.ui.Model;
 
-import static org.junit.Assert.assertEquals;
+import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 

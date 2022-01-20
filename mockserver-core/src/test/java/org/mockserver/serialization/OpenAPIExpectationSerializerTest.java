@@ -16,7 +16,7 @@ import org.mockserver.validator.jsonschema.JsonSchemaOpenAPIExpectationValidator
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
+import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 

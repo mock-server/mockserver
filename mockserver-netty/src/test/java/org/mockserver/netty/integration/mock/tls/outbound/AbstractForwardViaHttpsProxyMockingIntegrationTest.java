@@ -4,13 +4,11 @@ import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.SslContextBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.HttpTemplate;
-import org.mockserver.socket.tls.jdk.X509Generator;
 import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequest;
 import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
 
@@ -18,9 +16,9 @@ import javax.net.ssl.SSLException;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static junit.framework.TestCase.assertEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.Header.header;

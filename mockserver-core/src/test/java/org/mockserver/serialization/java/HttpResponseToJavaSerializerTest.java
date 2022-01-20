@@ -2,15 +2,15 @@ package org.mockserver.serialization.java;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
-import org.mockserver.serialization.Base64Converter;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.serialization.Base64Converter;
 
 import java.util.concurrent.TimeUnit;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.assertEquals;
+import static junit.framework.TestCase.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.BinaryBody.binary;
 

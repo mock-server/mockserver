@@ -6,12 +6,12 @@ import org.junit.Test;
 import java.util.Collection;
 import java.util.Collections;
 
+import static junit.framework.TestCase.*;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsSame.sameInstance;
-import static org.junit.Assert.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.NottableSchemaString.schemaString;
@@ -40,14 +40,14 @@ public class HttpRequestTest {
 
     @Test
     public void returnsKeepAlive() {
-        assertEquals(true, new HttpRequest().withKeepAlive(true).isKeepAlive());
-        assertEquals(false, new HttpRequest().withKeepAlive(false).isKeepAlive());
+        assertEquals(Boolean.TRUE, new HttpRequest().withKeepAlive(true).isKeepAlive());
+        assertEquals(Boolean.FALSE, new HttpRequest().withKeepAlive(false).isKeepAlive());
     }
 
     @Test
     public void returnsSsl() {
-        assertEquals(true, new HttpRequest().withSecure(true).isSecure());
-        assertEquals(false, new HttpRequest().withSecure(false).isSecure());
+        assertEquals(Boolean.TRUE, new HttpRequest().withSecure(true).isSecure());
+        assertEquals(Boolean.FALSE, new HttpRequest().withSecure(false).isSecure());
     }
 
     @Test

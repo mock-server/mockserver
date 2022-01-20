@@ -12,12 +12,11 @@ import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.netty.MockServer;
 import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
-import org.mockserver.socket.tls.jdk.X509Generator;
 import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
 
 import javax.net.ssl.SSLException;
 
-import static org.junit.Assert.assertEquals;
+import static junit.framework.TestCase.assertEquals;
 import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpForward.forward;

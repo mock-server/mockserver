@@ -13,9 +13,9 @@ import java.util.Base64;
 
 import static com.jayway.jsonpath.internal.path.PathCompiler.fail;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static junit.framework.TestCase.assertEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.file.FileReader.openStreamToFileFromClassPathOrPath;
 import static org.mockserver.model.BinaryBody.binary;
@@ -643,8 +643,8 @@ public class HttpRequestSerializerIntegrationTest {
         // then
         assertEquals(new HttpRequestDTO()
             .setBody(BodyDTO.createDTO(jsonSchema("{" + NEW_LINE +
-            "  \"key\" : \"value\"" + NEW_LINE +
-            "}")))
+                "  \"key\" : \"value\"" + NEW_LINE +
+                "}")))
             .buildObject(), httpRequest);
     }
 

@@ -5,11 +5,11 @@ import org.junit.Test;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotSame;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.StringBody.subString;
 
@@ -40,7 +40,7 @@ public class StringBodyTest {
     @Test
     public void shouldReturnValuesSetInConstructorWithSubString() {
         // when
-        StringBody stringBody = new StringBody("some_body", null, true, (MediaType) null);
+        StringBody stringBody = new StringBody("some_body", null, true, null);
 
         // then
         assertThat(stringBody.getValue(), is("some_body"));
@@ -93,7 +93,7 @@ public class StringBodyTest {
     @Test
     public void shouldReturnValueSetInStaticExactConstructorWithNullCharset() {
         // when
-        StringBody stringBody = exact("some_body", (Charset)null);
+        StringBody stringBody = exact("some_body", (Charset) null);
 
         // then
         assertThat(stringBody.getValue(), is("some_body"));
@@ -163,7 +163,7 @@ public class StringBodyTest {
     @Test
     public void shouldReturnValueSetInStaticSubStringConstructorWithNullCharset() {
         // when
-        StringBody stringBody = subString("some_body", (Charset)null);
+        StringBody stringBody = subString("some_body", (Charset) null);
 
         // then
         assertThat(stringBody.getValue(), is("some_body"));
