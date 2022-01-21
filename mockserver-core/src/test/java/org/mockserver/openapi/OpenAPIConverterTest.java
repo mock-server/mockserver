@@ -293,6 +293,30 @@ public class OpenAPIConverterTest {
     }
 
     @Test
+    public void shouldHandleAddOpenAPIYamlWithJsonStringExample() {
+        // given
+        String specUrlOrPayload = "org/mockserver/mock/openapi_with_json_string_example.yaml";
+
+        // when
+        List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
+            specUrlOrPayload,
+            null
+        );
+
+        // then
+        assertThat(actualExpectations.size(), is(1));
+        assertThat(actualExpectations.get(0), is(
+            when(specUrlOrPayload, "GET /test")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("\"06be83b3-5fb5-4103-a9b3-3fcd097a0634\""))
+                )
+        ));
+    }
+
+    @Test
     public void shouldHandleInvalidOpenAPIJson() {
         try {
             // when

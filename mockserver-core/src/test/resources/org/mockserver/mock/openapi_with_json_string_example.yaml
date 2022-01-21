@@ -1,0 +1,19 @@
+openapi: 3.0.0
+info:
+  title: test
+  description: foo
+  version: 1.0.0
+servers:
+  - url: /
+paths:
+  /test:
+    get:
+      summary: foo
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: uuid
+                example: 06be83b3-5fb5-4103-a9b3-3fcd097a0634

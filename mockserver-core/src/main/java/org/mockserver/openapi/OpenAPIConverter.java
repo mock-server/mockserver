@@ -110,7 +110,11 @@ public class OpenAPIConverter {
                                 } else if (mediaType.getSchema() != null) {
                                     org.mockserver.openapi.examples.models.Example generatedExample = ExampleBuilder.fromSchema(mediaType.getSchema(), openAPI.getComponents().getSchemas());
                                     if (generatedExample instanceof StringExample) {
-                                        response.withBody(((StringExample) generatedExample).getValue());
+                                        if (isJsonContentType(contentType.getKey())) {
+                                            response.withBody(json(serialise(((StringExample) generatedExample).getValue())));
+                                        } else {
+                                            response.withBody(((StringExample) generatedExample).getValue());
+                                        }
                                     } else {
                                         String serialise = serialise(ExampleBuilder.fromSchema(mediaType.getSchema(), openAPI.getComponents().getSchemas()));
                                         if (isJsonContentType(contentType.getKey())) {
