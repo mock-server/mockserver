@@ -1,13 +1,19 @@
 package org.mockserver.proxyconfiguration;
 
+import org.mockserver.model.ObjectWithJsonToString;
+
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.mockserver.configuration.ConfigurationProperties.*;
 
 /**
  * @author jamesdbloom
  */
-public class ProxyConfiguration {
+public class ProxyConfiguration extends ObjectWithJsonToString {
 
     private final Type type;
     private final InetSocketAddress proxyAddress;
@@ -22,7 +28,8 @@ public class ProxyConfiguration {
     }
 
     @SuppressWarnings("deprecation")
-    public static ProxyConfiguration proxyConfiguration() {
+    public static List<ProxyConfiguration> proxyConfiguration() {
+        List<ProxyConfiguration> proxyConfigurations = new ArrayList<>();
         String username = forwardProxyAuthenticationUsername();
         String password = forwardProxyAuthenticationPassword();
 
@@ -31,7 +38,7 @@ public class ProxyConfiguration {
             httpProxySocketAddress = httpProxy();
         }
         if (httpProxySocketAddress != null) {
-            return proxyConfiguration(Type.HTTP, httpProxySocketAddress, username, password);
+            proxyConfigurations.add(proxyConfiguration(Type.HTTP, httpProxySocketAddress, username, password));
         }
 
         InetSocketAddress httpsProxySocketAddress = forwardHttpsProxy();
@@ -39,7 +46,7 @@ public class ProxyConfiguration {
             httpsProxySocketAddress = httpsProxy();
         }
         if (httpsProxySocketAddress != null) {
-            return proxyConfiguration(Type.HTTPS, httpsProxySocketAddress, username, password);
+            proxyConfigurations.add(proxyConfiguration(Type.HTTPS, httpsProxySocketAddress, username, password));
         }
 
         InetSocketAddress socksProxySocketAddress = forwardSocksProxy();
@@ -47,10 +54,14 @@ public class ProxyConfiguration {
             socksProxySocketAddress = socksProxy();
         }
         if (socksProxySocketAddress != null) {
-            return proxyConfiguration(Type.SOCKS5, socksProxySocketAddress, username, password);
+            if (proxyConfigurations.isEmpty()) {
+                proxyConfigurations.add(proxyConfiguration(Type.SOCKS5, socksProxySocketAddress, username, password));
+            } else {
+                throw new IllegalArgumentException("Invalid proxy configuration it is not possible to configure HTTP or HTTPS proxy at the same time as a SOCKS proxy, please choose either HTTP(S) proxy OR a SOCKS proxy");
+            }
         }
 
-        return null;
+        return proxyConfigurations;
     }
 
     public static ProxyConfiguration proxyConfiguration(Type type, String address) {

@@ -1,5 +1,6 @@
 package org.mockserver.netty.integration.proxy.http;
 
+import com.google.common.collect.ImmutableList;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.junit.AfterClass;
@@ -90,10 +91,10 @@ public class HttpProxyContentLengthIntegrationTest {
         HttpResponse httpResponse = new NettyHttpClient(
             new MockServerLogger(),
             clientEventLoopGroup,
-            proxyConfiguration(
+            ImmutableList.of(proxyConfiguration(
                 ProxyConfiguration.Type.HTTPS,
                 "localhost:" + proxyClientAndServer.getPort()
-            ), false)
+            )), false)
             .sendRequest(
                 request()
                     .withPath("/noContentLengthHeader")

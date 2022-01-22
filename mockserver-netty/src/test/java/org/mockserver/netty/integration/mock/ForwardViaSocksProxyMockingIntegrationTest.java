@@ -1,10 +1,12 @@
 package org.mockserver.netty.integration.mock;
 
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.model.HttpForward;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.HttpTemplate;
 import org.mockserver.netty.MockServer;
@@ -34,6 +36,7 @@ public class ForwardViaSocksProxyMockingIntegrationTest extends AbstractMockingI
 
     private static MockServer mockServer;
     private static MockServer proxy;
+    private static MockServerClient proxyClient;
 
     @BeforeClass
     public static void startServer() {
@@ -41,6 +44,12 @@ public class ForwardViaSocksProxyMockingIntegrationTest extends AbstractMockingI
         mockServer = new MockServer(proxyConfiguration(ProxyConfiguration.Type.SOCKS5, "127.0.0.1:" + proxy.getLocalPort()));
 
         mockServerClient = new MockServerClient("localhost", mockServer.getLocalPort(), servletContext);
+        proxyClient = new MockServerClient("localhost", proxy.getLocalPort(), "");
+    }
+
+    @Before
+    public void clearProxy() {
+        proxyClient.reset();
     }
 
     @AfterClass
@@ -71,6 +80,15 @@ public class ForwardViaSocksProxyMockingIntegrationTest extends AbstractMockingI
             );
 
         // then
+        HttpRequest httpRequest = request()
+            .withSecure(true)
+            .withPath(calculatePath("echo"))
+            .withMethod("POST")
+            .withHeaders(
+                header("Host", "127.0.0.1:" + secureEchoServer.getPort()),
+                header("x-test", "test_headers_and_body")
+            )
+            .withBody("an_example_body_http");
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -80,17 +98,10 @@ public class ForwardViaSocksProxyMockingIntegrationTest extends AbstractMockingI
                 )
                 .withBody("an_example_body_http"),
             makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("echo"))
-                    .withMethod("POST")
-                    .withHeaders(
-                        header("Host", "127.0.0.1:" + secureEchoServer.getPort()),
-                        header("x-test", "test_headers_and_body")
-                    )
-                    .withBody("an_example_body_http"),
+                httpRequest,
                 headersToIgnore)
         );
+        proxyClient.verify(httpRequest.withSecure(true));
     }
 
     @Test

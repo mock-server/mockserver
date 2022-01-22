@@ -1,5 +1,6 @@
 package org.mockserver.netty;
 
+import com.google.common.collect.ImmutableList;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelOption;
@@ -48,7 +49,17 @@ public class MockServer extends LifeCycle {
      * @param localPorts         the local port(s) to use, use 0 or no vararg values to specify any free port
      */
     public MockServer(final ProxyConfiguration proxyConfiguration, final Integer... localPorts) {
-        createServerBootstrap(proxyConfiguration, localPorts);
+        this(ImmutableList.of(proxyConfiguration), localPorts);
+    }
+
+    /**
+     * Start the instance using the ports provided configuring forwarded or proxied requests to go via an additional proxy
+     *
+     * @param proxyConfigurations the proxy configuration to send requests forwarded or proxied by MockServer via another proxy
+     * @param localPorts         the local port(s) to use, use 0 or no vararg values to specify any free port
+     */
+    public MockServer(final List<ProxyConfiguration> proxyConfigurations, final Integer... localPorts) {
+        createServerBootstrap(proxyConfigurations, localPorts);
 
         // wait to start
         getLocalPort();
@@ -73,6 +84,17 @@ public class MockServer extends LifeCycle {
      * @param remotePort the port of the remote server to connect to
      */
     public MockServer(final ProxyConfiguration proxyConfiguration, @Nullable String remoteHost, final Integer remotePort, final Integer... localPorts) {
+        this(ImmutableList.of(proxyConfiguration), remoteHost, remotePort, localPorts);
+    }
+
+    /**
+     * Start the instance using the ports provided configuring forwarded or proxied requests to go via an additional proxy
+     *
+     * @param localPorts the local port(s) to use
+     * @param remoteHost the hostname of the remote server to connect to (if null defaults to "localhost")
+     * @param remotePort the port of the remote server to connect to
+     */
+    public MockServer(final List<ProxyConfiguration> proxyConfigurations, @Nullable String remoteHost, final Integer remotePort, final Integer... localPorts) {
         if (remotePort == null) {
             throw new IllegalArgumentException("You must specify a remote hostname");
         }
@@ -81,22 +103,22 @@ public class MockServer extends LifeCycle {
         }
 
         remoteSocket = new InetSocketAddress(remoteHost, remotePort);
-        if (proxyConfiguration != null && MockServerLogger.isEnabled(Level.INFO)) {
+        if (proxyConfigurations != null && MockServerLogger.isEnabled(Level.INFO)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(SERVER_CONFIGURATION)
                     .setLogLevel(Level.INFO)
                     .setMessageFormat("using proxy configuration for forwarded requests:{}")
-                    .setArguments(proxyConfiguration)
+                    .setArguments(proxyConfigurations)
             );
         }
-        createServerBootstrap(proxyConfiguration, localPorts);
+        createServerBootstrap(proxyConfigurations, localPorts);
 
         // wait to start
         getLocalPort();
     }
 
-    private void createServerBootstrap(final ProxyConfiguration proxyConfiguration, final Integer... localPorts) {
+    private void createServerBootstrap(final List<ProxyConfiguration> proxyConfigurations, final Integer... localPorts) {
         List<Integer> portBindings = singletonList(0);
         if (localPorts != null && localPorts.length > 0) {
             portBindings = Arrays.asList(localPorts);
@@ -110,7 +132,7 @@ public class MockServer extends LifeCycle {
             .childOption(ChannelOption.AUTO_READ, true)
             .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
             .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
-            .childHandler(new MockServerUnificationInitializer(MockServer.this, httpState, new HttpActionHandler(getEventLoopGroup(), httpState, proxyConfiguration, nettySslContextFactory), nettySslContextFactory))
+            .childHandler(new MockServerUnificationInitializer(MockServer.this, httpState, new HttpActionHandler(getEventLoopGroup(), httpState, proxyConfigurations, nettySslContextFactory), nettySslContextFactory))
             .childAttr(REMOTE_SOCKET, remoteSocket)
             .childAttr(PROXYING, remoteSocket != null);
 

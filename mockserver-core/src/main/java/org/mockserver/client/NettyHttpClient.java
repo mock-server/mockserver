@@ -1,5 +1,6 @@
 package org.mockserver.client;
 
+import com.google.common.collect.ImmutableMap;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -26,10 +27,13 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 public class NettyHttpClient {
 
@@ -38,18 +42,18 @@ public class NettyHttpClient {
     static final AttributeKey<CompletableFuture<Message>> RESPONSE_FUTURE = AttributeKey.valueOf("RESPONSE_FUTURE");
     private final MockServerLogger mockServerLogger;
     private final EventLoopGroup eventLoopGroup;
-    private final ProxyConfiguration proxyConfiguration;
+    private final Map<ProxyConfiguration.Type, ProxyConfiguration> proxyConfigurations;
     private final boolean forwardProxyClient;
     private final NettySslContextFactory nettySslContextFactory;
 
-    public NettyHttpClient(MockServerLogger mockServerLogger, EventLoopGroup eventLoopGroup, ProxyConfiguration proxyConfiguration, boolean forwardProxyClient) {
-        this(mockServerLogger, eventLoopGroup, proxyConfiguration, forwardProxyClient, new NettySslContextFactory(mockServerLogger));
+    public NettyHttpClient(MockServerLogger mockServerLogger, EventLoopGroup eventLoopGroup, List<ProxyConfiguration> proxyConfigurations, boolean forwardProxyClient) {
+        this(mockServerLogger, eventLoopGroup, proxyConfigurations, forwardProxyClient, new NettySslContextFactory(mockServerLogger));
     }
 
-    public NettyHttpClient(MockServerLogger mockServerLogger, EventLoopGroup eventLoopGroup, ProxyConfiguration proxyConfiguration, boolean forwardProxyClient, NettySslContextFactory nettySslContextFactory) {
+    public NettyHttpClient(MockServerLogger mockServerLogger, EventLoopGroup eventLoopGroup, List<ProxyConfiguration> proxyConfigurations, boolean forwardProxyClient, NettySslContextFactory nettySslContextFactory) {
         this.mockServerLogger = mockServerLogger;
         this.eventLoopGroup = eventLoopGroup;
-        this.proxyConfiguration = proxyConfiguration;
+        this.proxyConfigurations = proxyConfigurations != null ? proxyConfigurations.stream().collect(Collectors.toMap(ProxyConfiguration::getType, proxyConfiguration -> proxyConfiguration)) : ImmutableMap.of();
         this.forwardProxyClient = forwardProxyClient;
         this.nettySslContextFactory = nettySslContextFactory;
     }
@@ -64,8 +68,8 @@ public class NettyHttpClient {
 
     public CompletableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress, Integer connectionTimeoutMillis) throws SocketConnectionException {
         if (!eventLoopGroup.isShuttingDown()) {
-            if (proxyConfiguration != null && proxyConfiguration.getType() == ProxyConfiguration.Type.HTTP) {
-                remoteAddress = proxyConfiguration.getProxyAddress();
+            if (proxyConfigurations != null && !Boolean.TRUE.equals(httpRequest.isSecure()) && proxyConfigurations.containsKey(ProxyConfiguration.Type.HTTP)) {
+                remoteAddress = proxyConfigurations.get(ProxyConfiguration.Type.HTTP).getProxyAddress();
             } else if (remoteAddress == null) {
                 remoteAddress = httpRequest.socketAddressFromHostHeader();
             }
@@ -82,7 +86,7 @@ public class NettyHttpClient {
                 .attr(SECURE, httpRequest.isSecure() != null && httpRequest.isSecure())
                 .attr(REMOTE_SOCKET, remoteAddress)
                 .attr(RESPONSE_FUTURE, responseFuture)
-                .handler(new HttpClientInitializer(proxyConfiguration, mockServerLogger, forwardProxyClient, nettySslContextFactory, true))
+                .handler(new HttpClientInitializer(proxyConfigurations, mockServerLogger, forwardProxyClient, nettySslContextFactory, true))
                 .connect(remoteAddress)
                 .addListener((ChannelFutureListener) future -> {
                     if (future.isSuccess()) {
@@ -110,8 +114,8 @@ public class NettyHttpClient {
 
     public CompletableFuture<BinaryMessage> sendRequest(final BinaryMessage binaryRequest, final boolean isSecure, InetSocketAddress remoteAddress, Integer connectionTimeoutMillis) throws SocketConnectionException {
         if (!eventLoopGroup.isShuttingDown()) {
-            if (proxyConfiguration != null && proxyConfiguration.getType() == ProxyConfiguration.Type.HTTP) {
-                remoteAddress = proxyConfiguration.getProxyAddress();
+            if (proxyConfigurations != null && !isSecure && proxyConfigurations.containsKey(ProxyConfiguration.Type.HTTP)) {
+                remoteAddress = proxyConfigurations.get(ProxyConfiguration.Type.HTTP).getProxyAddress();
             } else if (remoteAddress == null) {
                 throw new IllegalArgumentException("Remote address cannot be null");
             }
@@ -128,7 +132,7 @@ public class NettyHttpClient {
                 .attr(SECURE, isSecure)
                 .attr(REMOTE_SOCKET, remoteAddress)
                 .attr(RESPONSE_FUTURE, responseFuture)
-                .handler(new HttpClientInitializer(proxyConfiguration, mockServerLogger, forwardProxyClient, nettySslContextFactory, false))
+                .handler(new HttpClientInitializer(proxyConfigurations, mockServerLogger, forwardProxyClient, nettySslContextFactory, false))
                 .connect(remoteAddress)
                 .addListener((ChannelFutureListener) future -> {
                     if (future.isSuccess()) {

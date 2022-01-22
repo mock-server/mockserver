@@ -20,6 +20,7 @@ import org.mockserver.socket.tls.NettySslContextFactory;
 import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
@@ -40,7 +41,7 @@ import static org.slf4j.event.Level.TRACE;
 /**
  * @author jamesdbloom
  */
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({"rawtypes", "FieldMayBeFinal"})
 public class HttpActionHandler {
 
     public static final AttributeKey<InetSocketAddress> REMOTE_SOCKET = AttributeKey.valueOf("REMOTE_SOCKET");
@@ -64,12 +65,12 @@ public class HttpActionHandler {
     private HopByHopHeaderFilter hopByHopHeaderFilter = new HopByHopHeaderFilter();
     private HttpRequestToCurlSerializer httpRequestToCurlSerializer;
 
-    public HttpActionHandler(EventLoopGroup eventLoopGroup, HttpState httpStateHandler, ProxyConfiguration proxyConfiguration, NettySslContextFactory nettySslContextFactory) {
+    public HttpActionHandler(EventLoopGroup eventLoopGroup, HttpState httpStateHandler, List<ProxyConfiguration> proxyConfigurations, NettySslContextFactory nettySslContextFactory) {
         this.httpStateHandler = httpStateHandler;
         this.scheduler = httpStateHandler.getScheduler();
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.httpRequestToCurlSerializer = new HttpRequestToCurlSerializer(mockServerLogger);
-        this.httpClient = new NettyHttpClient(mockServerLogger, eventLoopGroup, proxyConfiguration, true, nettySslContextFactory);
+        this.httpClient = new NettyHttpClient(mockServerLogger, eventLoopGroup, proxyConfigurations, true, nettySslContextFactory);
     }
 
     public void processAction(final HttpRequest request, final ResponseWriter responseWriter, final ChannelHandlerContext ctx, Set<String> localAddresses, boolean proxyingRequest, final boolean synchronous) {

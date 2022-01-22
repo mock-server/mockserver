@@ -1014,14 +1014,15 @@ public class ConfigurationPropertiesTest {
     public void shouldSetAndReadForwardHttpProxy() {
         // given
         System.clearProperty("mockserver.forwardHttpProxy");
+        String httpProxyAddress = "127.0.0.1:1090";
 
         // when
         assertNull(forwardHttpProxy());
-        forwardHttpProxy("127.0.0.1:1090");
+        forwardHttpProxy(httpProxyAddress);
 
         // then
-        assertEquals("/127.0.0.1:1090", forwardHttpProxy().toString());
-        assertEquals("127.0.0.1:1090", System.getProperty("mockserver.forwardHttpProxy"));
+        assertEquals("/" + httpProxyAddress, forwardHttpProxy().toString());
+        assertEquals(httpProxyAddress, System.getProperty("mockserver.forwardHttpProxy"));
     }
 
     @Test
@@ -1036,14 +1037,15 @@ public class ConfigurationPropertiesTest {
     public void shouldSetAndReadForwardHttpsProxy() {
         // given
         System.clearProperty("mockserver.forwardHttpsProxy");
+        String httpProxyAddress = "127.0.0.1:1090";
 
         // when
         assertNull(forwardHttpsProxy());
-        forwardHttpsProxy("127.0.0.1:1090");
+        forwardHttpsProxy(httpProxyAddress);
 
         // then
-        assertEquals("/127.0.0.1:1090", forwardHttpsProxy().toString());
-        assertEquals("127.0.0.1:1090", System.getProperty("mockserver.forwardHttpsProxy"));
+        assertEquals("/" + httpProxyAddress, forwardHttpsProxy().toString());
+        assertEquals(httpProxyAddress, System.getProperty("mockserver.forwardHttpsProxy"));
     }
 
     @Test
@@ -1058,14 +1060,15 @@ public class ConfigurationPropertiesTest {
     public void shouldSetAndReadForwardSocksProxy() {
         // given
         System.clearProperty("mockserver.forwardSocksProxy");
+        String httpProxyAddress = "127.0.0.1:1090";
 
         // when
         assertNull(forwardSocksProxy());
-        forwardSocksProxy("127.0.0.1:1090");
+        forwardSocksProxy(httpProxyAddress);
 
         // then
-        assertEquals("/127.0.0.1:1090", forwardSocksProxy().toString());
-        assertEquals("127.0.0.1:1090", System.getProperty("mockserver.forwardSocksProxy"));
+        assertEquals("/" + httpProxyAddress, forwardSocksProxy().toString());
+        assertEquals(httpProxyAddress, System.getProperty("mockserver.forwardSocksProxy"));
     }
 
     @Test

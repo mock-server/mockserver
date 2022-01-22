@@ -1,5 +1,6 @@
 package org.mockserver.netty.integration.proxy.http;
 
+import com.google.common.collect.ImmutableList;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.http.HttpHost;
@@ -489,10 +490,10 @@ public class NettyHttpSecureProxyIntegrationTest {
                 new NettyHttpClient(
                     new MockServerLogger(),
                     clientEventLoopGroup,
-                    proxyConfiguration(
+                    ImmutableList.of(proxyConfiguration(
                         ProxyConfiguration.Type.HTTPS,
                         "127.0.0.1:" + mockServerPort
-                    ), false)
+                    )), false)
                     .sendRequest(
                         request()
                             .withPath("/target")
@@ -525,12 +526,12 @@ public class NettyHttpSecureProxyIntegrationTest {
             org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(
                 new MockServerLogger(),
                 clientEventLoopGroup,
-                proxyConfiguration(
+                ImmutableList.of(proxyConfiguration(
                     ProxyConfiguration.Type.HTTPS,
                     "127.0.0.1:" + mockServerPort,
                     username,
                     password
-                ), false)
+                )), false)
                 .sendRequest(
                     request()
                         .withPath("/target")

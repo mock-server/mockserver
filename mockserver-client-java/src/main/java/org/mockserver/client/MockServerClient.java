@@ -1,5 +1,6 @@
 package org.mockserver.client;
 
+import com.google.common.collect.ImmutableList;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.mockserver.Version;
@@ -12,6 +13,7 @@ import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.OpenAPIExpectation;
 import org.mockserver.model.*;
+import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.*;
 import org.mockserver.socket.tls.NettySslContextFactory;
@@ -48,6 +50,7 @@ import static org.slf4j.event.Level.*;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("UnusedReturnValue")
 public class MockServerClient implements Stoppable {
 
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(MockServerClient.class);
@@ -127,6 +130,14 @@ public class MockServerClient implements Stoppable {
         this.host = host;
         this.port = port;
         this.contextPath = contextPath;
+    }
+
+    /**
+     * Configure communication to MockServer to go via a proxy
+     */
+    public MockServerClient setProxyConfiguration(ProxyConfiguration proxyConfiguration) {
+        this.nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, ImmutableList.of(proxyConfiguration), false, new NettySslContextFactory(MOCK_SERVER_LOGGER));
+        return this;
     }
 
     public MockServerClient setRequestOverride(HttpRequest requestOverride) {
