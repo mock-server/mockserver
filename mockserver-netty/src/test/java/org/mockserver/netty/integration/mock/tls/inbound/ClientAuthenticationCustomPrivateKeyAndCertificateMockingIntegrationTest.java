@@ -80,7 +80,6 @@ public class ClientAuthenticationCustomPrivateKeyAndCertificateMockingIntegratio
         return severHttpPort;
     }
 
-
     @Test
     public void shouldReturnExpectedX509Certificate() throws Exception {
         // given
