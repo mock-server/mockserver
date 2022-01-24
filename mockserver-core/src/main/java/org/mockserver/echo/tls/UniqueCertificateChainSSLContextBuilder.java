@@ -38,6 +38,8 @@ public class UniqueCertificateChainSSLContextBuilder {
             MockServerLogger mockServerLogger = new MockServerLogger();
             boolean originalDynamicallyCreateCertificateAuthorityCertificate = ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate();
             String originalDirectoryToSaveDynamicSSLCertificate = ConfigurationProperties.directoryToSaveDynamicSSLCertificate();
+            String originalPrivateKeyPath = ConfigurationProperties.privateKeyPath();
+            String originalX509CertificatePath = ConfigurationProperties.x509CertificatePath();
             try {
                 File tempDirectory = new File(File.createTempFile("prefix", "suffix").getParentFile().getAbsolutePath() + "/" + UUID.randomUUID());
                 if (!tempDirectory.mkdir()) {
@@ -45,6 +47,8 @@ public class UniqueCertificateChainSSLContextBuilder {
                 }
                 ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate(true);
                 ConfigurationProperties.directoryToSaveDynamicSSLCertificate(tempDirectory.getAbsolutePath());
+                ConfigurationProperties.privateKeyPath("");
+                ConfigurationProperties.x509CertificatePath("");
                 KeyAndCertificateFactory keyAndCertificateFactory = KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory(mockServerLogger);
                 keyAndCertificateFactory.buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
                 keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
@@ -63,6 +67,8 @@ public class UniqueCertificateChainSSLContextBuilder {
             } finally {
                 ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate(originalDynamicallyCreateCertificateAuthorityCertificate);
                 ConfigurationProperties.directoryToSaveDynamicSSLCertificate(originalDirectoryToSaveDynamicSSLCertificate);
+                ConfigurationProperties.privateKeyPath(originalPrivateKeyPath);
+                ConfigurationProperties.x509CertificatePath(originalX509CertificatePath);
             }
         }
 

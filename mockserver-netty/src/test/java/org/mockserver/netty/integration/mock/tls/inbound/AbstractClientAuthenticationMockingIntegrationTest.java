@@ -6,7 +6,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.KeyStoreFactory;
@@ -120,7 +119,6 @@ public abstract class AbstractClientAuthenticationMockingIntegrationTest extends
     }
 
     @Test
-    @Ignore("need to investigate why this is failing after changes to uniqueCertificateChainSSLContext() that work correctly for numerous other tests")
     public void shouldFailToAuthenticateInHttpsApacheClient() {
         // given
         mockServerClient
