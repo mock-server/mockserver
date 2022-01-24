@@ -1,26 +1,22 @@
 package org.mockserver.echo.tls;
 
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.socket.tls.jdk.CertificateSigningRequest;
-import org.mockserver.socket.tls.jdk.X509AndPrivateKey;
-import org.mockserver.socket.tls.jdk.X509Generator;
+import org.mockserver.socket.tls.KeyAndCertificateFactory;
+import org.mockserver.socket.tls.KeyAndCertificateFactoryFactory;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509KeyManager;
+import java.io.File;
 import java.net.Socket;
 import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.UUID;
 
-import static org.mockserver.configuration.ConfigurationProperties.*;
-import static org.mockserver.socket.tls.KeyAndCertificateFactory.KEY_GENERATION_ALGORITHM;
-import static org.mockserver.socket.tls.KeyAndCertificateFactory.SIGNING_ALGORITHM;
-import static org.mockserver.socket.tls.PEMToFile.privateKeyFromPEM;
-import static org.mockserver.socket.tls.PEMToFile.x509FromPEM;
-import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.*;
 import static org.slf4j.event.Level.ERROR;
 
 public class UniqueCertificateChainSSLContextBuilder {
@@ -35,33 +31,28 @@ public class UniqueCertificateChainSSLContextBuilder {
     private static class UniqueCertificateChainX509KeyManager implements X509KeyManager {
         private static final String CLIENT_ALIAS = "client_alias";
         private static final String SERVER_ALIAS = "server_alias";
-        private X509AndPrivateKey certificateAuthorityX509AndPrivateKey;
-        private X509AndPrivateKey x509AndPrivateKey;
+        X509Certificate[] x509Certificates;
+        PrivateKey privateKey;
 
         private UniqueCertificateChainX509KeyManager() {
             MockServerLogger mockServerLogger = new MockServerLogger();
+            boolean originalDynamicallyCreateCertificateAuthorityCertificate = ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate();
+            String originalDirectoryToSaveDynamicSSLCertificate = ConfigurationProperties.directoryToSaveDynamicSSLCertificate();
             try {
-                X509Generator x509Generator = new X509Generator(mockServerLogger);
-                certificateAuthorityX509AndPrivateKey = x509Generator.generateRootX509AndPrivateKey(
-                    new CertificateSigningRequest()
-                        .setKeyPairAlgorithm(KEY_GENERATION_ALGORITHM)
-                        .setSigningAlgorithm(SIGNING_ALGORITHM)
-                        .setCommonName(ROOT_COMMON_NAME)
-                        .setKeyPairSize(ROOT_KEY_SIZE)
-                );
-                x509AndPrivateKey = x509Generator.generateLeafX509AndPrivateKey(
-                    new CertificateSigningRequest()
-                        .setKeyPairAlgorithm(KEY_GENERATION_ALGORITHM)
-                        .setSigningAlgorithm(SIGNING_ALGORITHM)
-                        .setCommonName(ROOT_COMMON_NAME)
-                        .setCommonName(sslCertificateDomainName())
-                        .addSubjectAlternativeNames(sslSubjectAlternativeNameDomains())
-                        .addSubjectAlternativeNames(sslSubjectAlternativeNameIps())
-                        .setKeyPairSize(MOCK_KEY_SIZE),
-                    buildDistinguishedName(ROOT_COMMON_NAME),
-                    certificateAuthorityX509AndPrivateKey.getPrivateKey(),
-                    x509FromPEM(certificateAuthorityX509AndPrivateKey.getCert())
-                );
+                File tempDirectory = new File(File.createTempFile("prefix", "suffix").getParentFile().getAbsolutePath() + "/" + UUID.randomUUID());
+                if (!tempDirectory.mkdir()) {
+                    throw new RuntimeException("Exception creating temporary directory for test certificates " + tempDirectory);
+                }
+                ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate(true);
+                ConfigurationProperties.directoryToSaveDynamicSSLCertificate(tempDirectory.getAbsolutePath());
+                KeyAndCertificateFactory keyAndCertificateFactory = KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory(mockServerLogger);
+                keyAndCertificateFactory.buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
+                keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
+                x509Certificates = new X509Certificate[]{
+                    keyAndCertificateFactory.x509Certificate(),
+                    keyAndCertificateFactory.certificateAuthorityX509Certificate()
+                };
+                privateKey = keyAndCertificateFactory.privateKey();
             } catch (Throwable throwable) {
                 mockServerLogger.logEvent(
                     new LogEntry()
@@ -69,6 +60,9 @@ public class UniqueCertificateChainSSLContextBuilder {
                         .setMessageFormat("exception create fake certificates and private keys")
                         .setThrowable(throwable)
                 );
+            } finally {
+                ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate(originalDynamicallyCreateCertificateAuthorityCertificate);
+                ConfigurationProperties.directoryToSaveDynamicSSLCertificate(originalDirectoryToSaveDynamicSSLCertificate);
             }
         }
 
@@ -94,15 +88,12 @@ public class UniqueCertificateChainSSLContextBuilder {
 
         @Override
         public X509Certificate[] getCertificateChain(String alias) {
-            return new X509Certificate[]{
-                x509FromPEM(x509AndPrivateKey.getCert()),
-                x509FromPEM(certificateAuthorityX509AndPrivateKey.getCert())
-            };
+            return x509Certificates;
         }
 
         @Override
         public PrivateKey getPrivateKey(String alias) {
-            return privateKeyFromPEM(x509AndPrivateKey.getPrivateKey());
+            return privateKey;
         }
     }
 

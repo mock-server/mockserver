@@ -55,7 +55,6 @@ public class KeyStoreFactory {
         this.keyAndCertificateFactory = createKeyAndCertificateFactory(mockServerLogger);
     }
 
-    @SuppressWarnings("InfiniteRecursion")
     public synchronized SSLContext sslContext() {
         if (keyAndCertificateFactory.certificateNotYetCreated()) {
             keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();

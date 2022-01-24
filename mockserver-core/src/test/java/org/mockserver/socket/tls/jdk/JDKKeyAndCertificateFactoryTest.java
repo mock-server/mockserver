@@ -19,15 +19,13 @@ public class JDKKeyAndCertificateFactoryTest {
     public void shouldCreateCACertWithPositiveSerialNumber() {
         keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
 
-        assertTrue("The ca cert serial number is non-negative",
-            keyAndCertificateFactory.certificateAuthorityX509Certificate().getSerialNumber().compareTo(BigInteger.ZERO) > 0);
+        assertTrue("The ca cert serial number is non-negative", keyAndCertificateFactory.certificateAuthorityX509Certificate().getSerialNumber().compareTo(BigInteger.ZERO) > 0);
     }
 
     @Test
     public void shouldCreateClientCertWithPositiveSerialNumber() {
         keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
 
-        assertTrue("The client cert serial number is non-negative",
-            keyAndCertificateFactory.x509Certificate().getSerialNumber().compareTo(BigInteger.ZERO) > 0);
+        assertTrue("The client cert serial number is non-negative", keyAndCertificateFactory.x509Certificate().getSerialNumber().compareTo(BigInteger.ZERO) > 0);
     }
 }

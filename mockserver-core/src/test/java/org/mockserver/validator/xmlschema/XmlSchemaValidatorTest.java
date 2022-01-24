@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import java.text.MessageFormat;
 
 import static junit.framework.TestCase.fail;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -182,7 +183,7 @@ public class XmlSchemaValidatorTest {
     @Test
     public void shouldHandleNullTest() {
         // given
-        assertThat(new XmlSchemaValidator(new MockServerLogger(), XML_SCHEMA).isValid(null), is("NullPointerException - null"));
+        assertThat(new XmlSchemaValidator(new MockServerLogger(), XML_SCHEMA).isValid(null), containsString("NullPointerException - "));
     }
 
     @Test

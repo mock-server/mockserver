@@ -104,6 +104,12 @@
             </exclusions>
         </dependency>
 
+        <!-- javascript (only java 11+) -->
+        <!-- <dependency>
+            <groupId>org.openjdk.nashorn</groupId>
+            <artifactId>nashorn-core</artifactId>
+        </dependency> -->
+
         <!-- json (object serialisation) -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

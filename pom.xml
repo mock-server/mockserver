@@ -275,6 +275,13 @@
                 <version>${velocity.version}</version>
             </dependency>
 
+            <!-- javascript (only Java 11+) -->
+            <dependency>
+                <groupId>org.openjdk.nashorn</groupId>
+                <artifactId>nashorn-core</artifactId>
+                <version>15.3</version>
+            </dependency>
+
             <!-- json (object serialisation) -->
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
@@ -582,8 +589,8 @@
                         <arg>-XDignore.symbol.file</arg>
                         <arg>-Xlint:all</arg>
                         <!-- lines below should be uncommented if switching to java 9+ -->
-                        <!--<arg>&#45;&#45;add-exports</arg>-->
-                        <!--<arg>java.base/sun.security.x509=ALL-UNNAMED</arg>-->
+<!--                        <arg>&#45;&#45;add-exports=java.base/sun.security.x509=ALL-UNNAMED</arg>-->
+<!--                        <arg>&#45;&#45;add-exports=java.base/sun.security.util=ALL-UNNAMED</arg>-->
                     </compilerArgs>
                 </configuration>
                 <executions>

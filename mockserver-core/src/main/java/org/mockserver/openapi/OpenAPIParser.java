@@ -66,13 +66,13 @@ public class OpenAPIParser {
                     }
                 }
             } catch (Throwable throwable) {
-                throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + (isNotBlank(throwable.getMessage()) ? ", " + throwable.getMessage() : ", " + Joiner.on(", ").skipNulls().join(errorMessage)), throwable);
+                throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + (errorMessage.isEmpty() ? ", " + throwable.getMessage() : ", " + Joiner.on(", ").skipNulls().join(errorMessage)), throwable);
             }
             if (openAPI != null) {
                 try {
                     openAPI = resolve(openAPI, auths, specUrlOrPayload);
                 } catch (Throwable throwable) {
-                    throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + (isNotBlank(throwable.getMessage()) ? ", " + throwable.getMessage() : ", " + Joiner.on(", ").skipNulls().join(errorMessage)), throwable);
+                    throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + (errorMessage.isEmpty() ? ", " + throwable.getMessage() : ", " + Joiner.on(", ").skipNulls().join(errorMessage)), throwable);
                 }
             } else {
                 if (swaggerParseResult != null) {

@@ -71,6 +71,18 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- test bouncycastle integration -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- tomcat - integration test -->
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>

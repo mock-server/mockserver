@@ -20,4 +20,5 @@ public class PortFactoryTest {
         // then
         assertTrue(new ServerSocket(freePort).isBound());
     }
+
 }

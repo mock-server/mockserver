@@ -13,6 +13,8 @@ import org.mockserver.cli.Main;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.PortFactory;
+import org.mockserver.socket.tls.KeyAndCertificateFactory;
+import org.mockserver.socket.tls.KeyAndCertificateFactoryFactory;
 import org.mockserver.socket.tls.KeyStoreFactory;
 import org.mockserver.socket.tls.jdk.JDKKeyAndCertificateFactory;
 import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
@@ -25,6 +27,7 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.configuration.ConfigurationProperties.*;
@@ -135,7 +138,8 @@ public class ClientAuthenticationAdditionalCertificateChainMockingIntegrationTes
     }
 
     private SSLContext getSslContext() {
-        JDKKeyAndCertificateFactory keyAndCertificateFactory = new JDKKeyAndCertificateFactory(new MockServerLogger());
+        KeyAndCertificateFactory keyAndCertificateFactory = KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory(new MockServerLogger());
+        assertThat(keyAndCertificateFactory, notNullValue());
         keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
         return new KeyStoreFactory(new MockServerLogger())
             .sslContext(

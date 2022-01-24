@@ -23,7 +23,7 @@ import static org.mockserver.log.model.LogEntryMessages.TEMPLATE_GENERATED_MESSA
 /**
  * @author jamesdbloom
  */
-@SuppressWarnings({"RedundantSuppression", "deprecation", "removal"})
+@SuppressWarnings({"RedundantSuppression", "deprecation", "removal", "FieldMayBeFinal"})
 public class JavaScriptTemplateEngine implements TemplateEngine {
 
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
