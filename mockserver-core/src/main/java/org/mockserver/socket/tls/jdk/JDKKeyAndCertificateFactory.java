@@ -40,7 +40,7 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
 
     @Override
     public void buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate() {
-        if (dynamicCertificateAuthorityUpdate() && certificateAuthorityCertificateNotYetCreated()) {
+        if (dynamicallyUpdateCertificateAuthority() && certificateAuthorityCertificateNotYetCreated()) {
             try {
                 X509AndPrivateKey certificateAuthorityX509AndPrivateKey = x509Generator.generateRootX509AndPrivateKey(
                     new CertificateSigningRequest()
@@ -123,7 +123,7 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
         }
     }
 
-    private boolean dynamicCertificateAuthorityUpdate() {
+    private boolean dynamicallyUpdateCertificateAuthority() {
         return ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate() && isNotBlank(ConfigurationProperties.directoryToSaveDynamicSSLCertificate());
     }
 
@@ -132,7 +132,7 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
     }
 
     private String certificateAuthorityPrivateKeyPath() {
-        if (dynamicCertificateAuthorityUpdate()) {
+        if (dynamicallyUpdateCertificateAuthority()) {
             return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "PKCS8CertificateAuthorityPrivateKey.pem").getAbsolutePath();
         } else {
             return ConfigurationProperties.certificateAuthorityPrivateKey();
@@ -140,7 +140,7 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
     }
 
     private String certificateAuthorityX509CertificatePath() {
-        if (dynamicCertificateAuthorityUpdate()) {
+        if (dynamicallyUpdateCertificateAuthority()) {
             return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "CertificateAuthorityCertificate.pem").getAbsolutePath();
         } else {
             return ConfigurationProperties.certificateAuthorityCertificate();
@@ -149,7 +149,7 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
 
     private String certificateAuthorityPrivateKey() {
         if (certificateAuthorityPrivateKey == null) {
-            if (dynamicCertificateAuthorityUpdate()) {
+            if (dynamicallyUpdateCertificateAuthority()) {
                 buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
             }
             certificateAuthorityPrivateKey = FileReader.readFileFromClassPathOrPath(certificateAuthorityPrivateKeyPath());
@@ -167,7 +167,7 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
 
     public X509Certificate certificateAuthorityX509Certificate() {
         if (certificateAuthorityX509Certificate == null) {
-            if (dynamicCertificateAuthorityUpdate()) {
+            if (dynamicallyUpdateCertificateAuthority()) {
                 buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
             }
             certificateAuthorityX509Certificate = x509FromPEMFile(certificateAuthorityX509CertificatePath());
@@ -183,11 +183,15 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
         return certificateAuthorityX509Certificate;
     }
 
+    private boolean customPrivateKeyAndCertificateProvided() {
+        return isBlank(ConfigurationProperties.privateKeyPath()) || isBlank(ConfigurationProperties.x509CertificatePath());
+    }
+
     @Override
     public void buildAndSavePrivateKeyAndX509Certificate() {
-        if (isBlank(ConfigurationProperties.privateKeyPath()) || isBlank(ConfigurationProperties.x509CertificatePath())) {
+        if (customPrivateKeyAndCertificateProvided()) {
             try {
-                if (dynamicCertificateAuthorityUpdate()) {
+                if (dynamicallyUpdateCertificateAuthority()) {
                     buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
                 }
                 String caPrivateKey = certificateAuthorityPrivateKey();
@@ -229,38 +233,30 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
     }
 
     public boolean certificateNotYetCreated() {
-        return x509AndPrivateKey == null;
+        return customPrivateKeyAndCertificateProvided() && x509AndPrivateKey == null;
     }
 
     private String privateKeyPath() {
-        if (dynamicCertificateAuthorityUpdate()) {
-            return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "PKCS8PrivateKey.pem").getAbsolutePath();
-        } else {
-            return ConfigurationProperties.certificateAuthorityPrivateKey();
-        }
+        return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "PKCS8PrivateKey.pem").getAbsolutePath();
     }
 
     private String x509CertificatePath() {
-        if (dynamicCertificateAuthorityUpdate()) {
-            return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "Certificate.pem").getAbsolutePath();
-        } else {
-            return ConfigurationProperties.certificateAuthorityCertificate();
-        }
+        return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "Certificate.pem").getAbsolutePath();
     }
 
     public PrivateKey privateKey() {
-        if (isNotBlank(ConfigurationProperties.privateKeyPath()) && isNotBlank(ConfigurationProperties.x509CertificatePath())) {
-            return privateKeyFromPEMFile(ConfigurationProperties.privateKeyPath());
-        } else {
+        if (customPrivateKeyAndCertificateProvided()) {
             return privateKeyFromPEM(x509AndPrivateKey.getPrivateKey());
+        } else {
+            return privateKeyFromPEMFile(ConfigurationProperties.privateKeyPath());
         }
     }
 
     public X509Certificate x509Certificate() {
-        if (isNotBlank(ConfigurationProperties.privateKeyPath()) && isNotBlank(ConfigurationProperties.x509CertificatePath())) {
-            return x509FromPEMFile(ConfigurationProperties.x509CertificatePath());
-        } else {
+        if (customPrivateKeyAndCertificateProvided()) {
             return x509FromPEM(x509AndPrivateKey.getCert());
+        } else {
+            return x509FromPEMFile(ConfigurationProperties.x509CertificatePath());
         }
     }
 

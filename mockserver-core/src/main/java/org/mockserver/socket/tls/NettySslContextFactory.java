@@ -142,6 +142,19 @@ public class NettySslContextFactory {
             || ConfigurationProperties.rebuildServerTLSContext() && !ConfigurationProperties.preventCertificateDynamicUpdate()) {
             try {
                 keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(Level.DEBUG)
+                        .setMessageFormat("using certificate authority serial:{}issuer:{}subject:{}and certificate serial:{}issuer:{}subject:{}")
+                        .setArguments(
+                            keyAndCertificateFactory.certificateAuthorityX509Certificate().getSerialNumber(),
+                            keyAndCertificateFactory.certificateAuthorityX509Certificate().getIssuerDN(),
+                            keyAndCertificateFactory.certificateAuthorityX509Certificate().getSubjectDN(),
+                            keyAndCertificateFactory.x509Certificate().getSerialNumber(),
+                            keyAndCertificateFactory.x509Certificate().getIssuerDN(),
+                            keyAndCertificateFactory.x509Certificate().getSubjectDN()
+                        )
+                );
                 serverSslContext = SslContextBuilder
                     .forServer(
                         keyAndCertificateFactory.privateKey(),

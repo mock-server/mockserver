@@ -235,9 +235,13 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
         return certificateAuthorityX509Certificate;
     }
 
+    private boolean customPrivateKeyAndCertificateProvided() {
+        return isBlank(ConfigurationProperties.privateKeyPath()) || isBlank(ConfigurationProperties.x509CertificatePath());
+    }
+
     @Override
     public void buildAndSavePrivateKeyAndX509Certificate() {
-        if (isBlank(ConfigurationProperties.privateKeyPath()) || isBlank(ConfigurationProperties.x509CertificatePath())) {
+        if (customPrivateKeyAndCertificateProvided()) {
             try {
                 if (dynamicCertificateAuthorityUpdate()) {
                     buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
@@ -349,38 +353,30 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
     }
 
     public boolean certificateNotYetCreated() {
-        return x509Certificate == null;
+        return customPrivateKeyAndCertificateProvided() && x509Certificate == null;
     }
 
     private String privateKeyPath() {
-        if (dynamicCertificateAuthorityUpdate()) {
-            return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "PKCS8PrivateKey.pem").getAbsolutePath();
-        } else {
-            return ConfigurationProperties.certificateAuthorityPrivateKey();
-        }
+        return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "PKCS8PrivateKey.pem").getAbsolutePath();
     }
 
     private String x509CertificatePath() {
-        if (dynamicCertificateAuthorityUpdate()) {
-            return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "Certificate.pem").getAbsolutePath();
-        } else {
-            return ConfigurationProperties.certificateAuthorityCertificate();
-        }
+        return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "Certificate.pem").getAbsolutePath();
     }
 
     public PrivateKey privateKey() {
-        if (isNotBlank(ConfigurationProperties.privateKeyPath()) && isNotBlank(ConfigurationProperties.x509CertificatePath())) {
-            return privateKeyFromPEMFile(ConfigurationProperties.privateKeyPath());
-        } else {
+        if (customPrivateKeyAndCertificateProvided()) {
             return privateKey;
+        } else {
+            return privateKeyFromPEMFile(ConfigurationProperties.privateKeyPath());
         }
     }
 
     public X509Certificate x509Certificate() {
-        if (isNotBlank(ConfigurationProperties.privateKeyPath()) && isNotBlank(ConfigurationProperties.x509CertificatePath())) {
-            return x509FromPEMFile(ConfigurationProperties.x509CertificatePath());
-        } else {
+        if (customPrivateKeyAndCertificateProvided()) {
             return x509Certificate;
+        } else {
+            return x509FromPEMFile(ConfigurationProperties.x509CertificatePath());
         }
     }
 }
