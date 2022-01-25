@@ -1952,7 +1952,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "     failed because:" + NEW_LINE +
                     "  " + NEW_LINE +
                     "      1 error:" + NEW_LINE +
-                    "       - field: \"/tags\" for schema: \"/properties/tags\" has error: \"array is too short: must have at least 1 elements but instance has 0 elements\"" + NEW_LINE +
+                    "       - $.tags: there must be a minimum of 1 items in the array" + NEW_LINE +
                     NEW_LINE +
                     NEW_LINE
             ));

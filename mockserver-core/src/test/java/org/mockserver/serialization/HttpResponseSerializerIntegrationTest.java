@@ -59,9 +59,9 @@ public class HttpResponseSerializerIntegrationTest {
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
             "  1 error:" + NEW_LINE +
-            "   - object instance has properties which are not allowed by the schema: [\"extra_field\"]" + NEW_LINE +
+            "   - $.extra_field: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
             "  " + NEW_LINE +
-            "  " + OPEN_API_SPECIFICATION_URL);
+            "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  " ));
 
         // when
         new HttpResponseSerializer(new MockServerLogger()).deserialize(requestBytes);

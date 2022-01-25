@@ -71,76 +71,221 @@ public class JsonSchemaHttpRequestAndHttpResponseValidatorIntegrationTest {
                 "  }" + NEW_LINE +
                 "}"),
             is(
-                "14 errors:" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body\" has error: \" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"BINARY\"," + NEW_LINE +
-                    "     \"base64Bytes\": \"\"," + NEW_LINE +
-                    "     \"contentType\": \"\"" + NEW_LINE +
-                    "   }, " + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"JSON\"," + NEW_LINE +
-                    "     \"json\": \"\"," + NEW_LINE +
-                    "     \"contentType\": \"\"," + NEW_LINE +
-                    "     \"matchType\": \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"JSON_SCHEMA\"," + NEW_LINE +
-                    "     \"jsonSchema\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"JSON_PATH\"," + NEW_LINE +
-                    "     \"jsonPath\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"PARAMETERS\"," + NEW_LINE +
-                    "     \"parameters\": {\"name\": \"value\"}" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"REGEX\"," + NEW_LINE +
-                    "     \"regex\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"STRING\"," + NEW_LINE +
-                    "     \"string\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"XML\"," + NEW_LINE +
-                    "     \"xml\": \"\"," + NEW_LINE +
-                    "     \"contentType\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"XML_SCHEMA\"," + NEW_LINE +
-                    "     \"xmlSchema\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"XPATH\"," + NEW_LINE +
-                    "     \"xpath\": \"\"" + NEW_LINE +
+                "1 error:" + NEW_LINE +
+                    " - $.httpRequest.body: should match one of its valid types: {" + NEW_LINE +
+                    "     \"title\": \"request body matcher\"," + NEW_LINE +
+                    "     \"anyOf\": [" + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"BINARY\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"base64Bytes\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"contentType\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"JSON\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"json\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"contentType\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"matchType\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"STRICT\"," + NEW_LINE +
+                    "               \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": true" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"array\"," + NEW_LINE +
+                    "         \"additionalProperties\": true" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"JSON_SCHEMA\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"jsonSchema\": {" + NEW_LINE +
+                    "             \"oneOf\": [" + NEW_LINE +
+                    "               {" + NEW_LINE +
+                    "                 \"type\": \"string\"" + NEW_LINE +
+                    "               }," + NEW_LINE +
+                    "               {" + NEW_LINE +
+                    "                 \"$ref\": \"http://json-schema.org/draft-07/schema\"" + NEW_LINE +
+                    "               }" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"JSON_PATH\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"jsonPath\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"PARAMETERS\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"parameters\": {" + NEW_LINE +
+                    "             \"$ref\": \"#/definitions/keyToMultiValue\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"REGEX\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"regex\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"STRING\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"string\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"subString\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"contentType\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"string\"" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"XML\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"xml\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"contentType\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"XML_SCHEMA\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"xmlSchema\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"XPATH\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"xpath\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }" + NEW_LINE +
+                    "       }" + NEW_LINE +
+                    "     ]" + NEW_LINE +
                     "   }" + NEW_LINE +
-                    NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/0\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/1\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/10\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/11\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/12\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/2\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/3\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/4\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/5\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/6\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/7\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/8\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/9\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));
@@ -157,7 +302,7 @@ public class JsonSchemaHttpRequestAndHttpResponseValidatorIntegrationTest {
                 "  }"),
             is(
                 "1 error:" + NEW_LINE +
-                    " - object instance has properties which are not allowed by the schema: [\"invalidField\"]" + NEW_LINE +
+                    " - $.invalidField: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));
@@ -174,77 +319,223 @@ public class JsonSchemaHttpRequestAndHttpResponseValidatorIntegrationTest {
                 "  \"path\" : false" + NEW_LINE +
                 "  }"),
             is(
-                "15 errors:" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body\" has error: \" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"BINARY\"," + NEW_LINE +
-                    "     \"base64Bytes\": \"\"," + NEW_LINE +
-                    "     \"contentType\": \"\"" + NEW_LINE +
-                    "   }, " + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"JSON\"," + NEW_LINE +
-                    "     \"json\": \"\"," + NEW_LINE +
-                    "     \"contentType\": \"\"," + NEW_LINE +
-                    "     \"matchType\": \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"JSON_SCHEMA\"," + NEW_LINE +
-                    "     \"jsonSchema\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"JSON_PATH\"," + NEW_LINE +
-                    "     \"jsonPath\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"PARAMETERS\"," + NEW_LINE +
-                    "     \"parameters\": {\"name\": \"value\"}" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"REGEX\"," + NEW_LINE +
-                    "     \"regex\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"STRING\"," + NEW_LINE +
-                    "     \"string\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"XML\"," + NEW_LINE +
-                    "     \"xml\": \"\"," + NEW_LINE +
-                    "     \"contentType\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"XML_SCHEMA\"," + NEW_LINE +
-                    "     \"xmlSchema\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"XPATH\"," + NEW_LINE +
-                    "     \"xpath\": \"\"" + NEW_LINE +
+                "3 errors:" + NEW_LINE +
+                    " - $.httpRequest.body: should match one of its valid types: {" + NEW_LINE +
+                    "     \"title\": \"request body matcher\"," + NEW_LINE +
+                    "     \"anyOf\": [" + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"BINARY\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"base64Bytes\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"contentType\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"JSON\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"json\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"contentType\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"matchType\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"STRICT\"," + NEW_LINE +
+                    "               \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": true" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"array\"," + NEW_LINE +
+                    "         \"additionalProperties\": true" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"JSON_SCHEMA\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"jsonSchema\": {" + NEW_LINE +
+                    "             \"oneOf\": [" + NEW_LINE +
+                    "               {" + NEW_LINE +
+                    "                 \"type\": \"string\"" + NEW_LINE +
+                    "               }," + NEW_LINE +
+                    "               {" + NEW_LINE +
+                    "                 \"$ref\": \"http://json-schema.org/draft-07/schema\"" + NEW_LINE +
+                    "               }" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"JSON_PATH\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"jsonPath\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"PARAMETERS\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"parameters\": {" + NEW_LINE +
+                    "             \"$ref\": \"#/definitions/keyToMultiValue\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"REGEX\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"regex\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"STRING\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"string\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"subString\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"contentType\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"string\"" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"XML\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"xml\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"contentType\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"XML_SCHEMA\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"xmlSchema\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }" + NEW_LINE +
+                    "       }," + NEW_LINE +
+                    "       {" + NEW_LINE +
+                    "         \"type\": \"object\"," + NEW_LINE +
+                    "         \"additionalProperties\": false," + NEW_LINE +
+                    "         \"properties\": {" + NEW_LINE +
+                    "           \"not\": {" + NEW_LINE +
+                    "             \"type\": \"boolean\"" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"type\": {" + NEW_LINE +
+                    "             \"enum\": [" + NEW_LINE +
+                    "               \"XPATH\"" + NEW_LINE +
+                    "             ]" + NEW_LINE +
+                    "           }," + NEW_LINE +
+                    "           \"xpath\": {" + NEW_LINE +
+                    "             \"type\": \"string\"" + NEW_LINE +
+                    "           }" + NEW_LINE +
+                    "         }" + NEW_LINE +
+                    "       }" + NEW_LINE +
+                    "     ]" + NEW_LINE +
                     "   }" + NEW_LINE +
-                    NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/0\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/1\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/10\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/11\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/12\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/2\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/3\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"array\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/4\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/5\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/6\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/7\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/8\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-                    " - field: \"/httpRequest/body\" for schema: \"body/anyOf/9\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
-                    " - object instance has properties which are not allowed by the schema: [\"method\",\"path\"]" + NEW_LINE +
+                    " - $.method: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
+                    " - $.path: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
                     NEW_LINE +
                     OPEN_API_SPECIFICATION_URL
             ));

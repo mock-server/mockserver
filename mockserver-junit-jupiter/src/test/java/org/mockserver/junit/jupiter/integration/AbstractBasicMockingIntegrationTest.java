@@ -1785,21 +1785,21 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  12 errors:" + NEW_LINE +
-            "   - object instance has properties which are not allowed by the schema: [\"incorrectField\"]" + NEW_LINE +
-            "   - oneOf of the following must be specified [\"httpResponse\", \"httpResponseTemplate\", \"httpResponseObjectCallback\", \"httpResponseClassCallback\", \"httpForward\", \"httpForwardTemplate\", \"httpForwardObjectCallback\", \"httpForwardClassCallback\", \"httpOverrideForwardedRequest\", \"httpError\"] but found 0 without errors" + NEW_LINE +
-            "   - schema: \"/oneOf/0\" has error: \"object has missing required properties ([\"httpResponse\"])\"" + NEW_LINE +
-            "   - schema: \"/oneOf/1\" has error: \"object has missing required properties ([\"httpResponseTemplate\"])\"" + NEW_LINE +
-            "   - schema: \"/oneOf/2\" has error: \"object has missing required properties ([\"httpResponseObjectCallback\"])\"" + NEW_LINE +
-            "   - schema: \"/oneOf/3\" has error: \"object has missing required properties ([\"httpResponseClassCallback\"])\"" + NEW_LINE +
-            "   - schema: \"/oneOf/4\" has error: \"object has missing required properties ([\"httpForward\"])\"" + NEW_LINE +
-            "   - schema: \"/oneOf/5\" has error: \"object has missing required properties ([\"httpForwardTemplate\"])\"" + NEW_LINE +
-            "   - schema: \"/oneOf/6\" has error: \"object has missing required properties ([\"httpForwardObjectCallback\"])\"" + NEW_LINE +
-            "   - schema: \"/oneOf/7\" has error: \"object has missing required properties ([\"httpForwardClassCallback\"])\"" + NEW_LINE +
-            "   - schema: \"/oneOf/8\" has error: \"object has missing required properties ([\"httpOverrideForwardedRequest\"])\"" + NEW_LINE +
-            "   - schema: \"/oneOf/9\" has error: \"object has missing required properties ([\"httpError\"])\"" + NEW_LINE +
+            "  12 errors:\n" +
+            "   - $.httpError: is missing, but is required, if specifying action of type Error\n" +
+            "   - $.httpForward: is missing, but is required, if specifying action of type Forward\n" +
+            "   - $.httpForwardClassCallback: is missing, but is required, if specifying action of type ForwardClassCallback\n" +
+            "   - $.httpForwardObjectCallback: is missing, but is required, if specifying action of type ForwardObjectCallback\n" +
+            "   - $.httpForwardTemplate: is missing, but is required, if specifying action of type ForwardTemplate\n" +
+            "   - $.httpOverrideForwardedRequest: is missing, but is required, if specifying action of type OverrideForwardedRequest\n" +
+            "   - $.httpResponse: is missing, but is required, if specifying action of type Response\n" +
+            "   - $.httpResponseClassCallback: is missing, but is required, if specifying action of type ResponseClassCallback\n" +
+            "   - $.httpResponseObjectCallback: is missing, but is required, if specifying action of type ResponseObjectCallback\n" +
+            "   - $.httpResponseTemplate: is missing, but is required, if specifying action of type ResponseTemplate\n" +
+            "   - $.incorrectField: is not defined in the schema and the schema does not allow additional properties\n" +
+            "   - oneOf of the following must be specified [httpError, httpForward, httpForwardClassCallback, httpForwardObjectCallback, httpForwardTemplate, httpOverrideForwardedRequest, httpResponse, httpResponseClassCallback, httpResponseObjectCallback, httpResponseTemplate]" + NEW_LINE +
             "  " + NEW_LINE +
-            "  " + OPEN_API_SPECIFICATION_URL));
+            "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  ")));
     }
 
     @Test
@@ -1829,19 +1829,13 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  10 errors:" + NEW_LINE +
-            "   - field: \"/keepAlive\" for schema: \"httpRequest/properties/keepAlive\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"boolean\"])\"" + NEW_LINE +
-            "   - field: \"/method\" for schema: \"stringOrJsonSchema\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
-            "   - field: \"/method\" for schema: \"stringOrJsonSchema/oneOf/0\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
-            "   - field: \"/method\" for schema: \"stringOrJsonSchema/oneOf/1\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-            "   - field: \"/path\" for schema: \"stringOrJsonSchema\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
-            "   - field: \"/path\" for schema: \"stringOrJsonSchema/oneOf/0\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
-            "   - field: \"/path\" for schema: \"stringOrJsonSchema/oneOf/1\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-            "   - oneOf of the following must be specified [\"httpRequest\", \"openAPIDefinition\"] but found 0 without errors" + NEW_LINE +
-            "   - schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
-            "   - schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"keepAlive\",\"method\",\"path\"]\"" + NEW_LINE +
+            "  4 errors:\n" +
+            "   - $.keepAlive: string found, boolean expected\n" +
+            "   - $.method: boolean found, string expected\n" +
+            "   - $.path: integer found, string expected\n" +
+            "   - $.specUrlOrPayload: is missing but it is required" + NEW_LINE +
             "  " + NEW_LINE +
-            "  " + OPEN_API_SPECIFICATION_URL));
+            "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  ")));
     }
 
     @Test

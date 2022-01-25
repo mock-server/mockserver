@@ -71,8 +71,9 @@ public class JsonSchemaValidatorTest {
     @Test
     public void shouldHandleJsonMissingRequiredFields() {
         // then
-        assertThat(new JsonSchemaValidator(mockServerLogger, JSON_SCHEMA).isValid("{}"), is("1 error:" + NEW_LINE +
-            " - object has missing required properties ([\"arrayField\",\"enumField\"])" + NEW_LINE +
+        assertThat(new JsonSchemaValidator(mockServerLogger, JSON_SCHEMA).isValid("{}"), is("2 errors:" + NEW_LINE +
+            " - $.arrayField: is missing but it is required" + NEW_LINE +
+            " - $.enumField: is missing but it is required" + NEW_LINE +
             NEW_LINE +
             OPEN_API_SPECIFICATION_URL));
     }
@@ -125,6 +126,463 @@ public class JsonSchemaValidatorTest {
         assertThat(new JsonSchemaValidator(mockServerLogger, JSON_SCHEMA).isValid("{arrayField: [ ],  stringField: \\\"1234\\\"}"),
             is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')" + NEW_LINE +
                 " at [Source: (String)\"{arrayField: [ ],  stringField: \\\"1234\\\"}\"; line: 1, column: 34]"));
+    }
+
+    @Test
+    public void shouldHandleDraft04JsonExampleWithItems() {
+        // given
+        String schema = "{" + NEW_LINE +
+            "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+            "    \"type\": \"object\", " + NEW_LINE +
+            "    \"properties\": {" + NEW_LINE +
+            "        \"sessions\": {" + NEW_LINE +
+            "            \"type\": \"array\", " + NEW_LINE +
+            "            \"items\": {" + NEW_LINE +
+            "                \"type\": \"object\", " + NEW_LINE +
+            "                \"properties\": {" + NEW_LINE +
+            "                    \"sessionId\": {" + NEW_LINE +
+            "                        \"type\": \"string\", " + NEW_LINE +
+            "                        \"enum\": [" + NEW_LINE +
+            "                            \"SESSION_1\"" + NEW_LINE +
+            "                        ]" + NEW_LINE +
+            "                    }, " + NEW_LINE +
+            "                    \"logs\": {" + NEW_LINE +
+            "                        \"type\": \"array\", " + NEW_LINE +
+            "                        \"items\": {" + NEW_LINE +
+            "                            \"type\": \"object\", " + NEW_LINE +
+            "                            \"properties\": {" + NEW_LINE +
+            "                                \"logType\": {" + NEW_LINE +
+            "                                    \"type\": \"number\", " + NEW_LINE +
+            "                                    \"enum\": [" + NEW_LINE +
+            "                                        0" + NEW_LINE +
+            "                                    ]" + NEW_LINE +
+            "                                }, " + NEW_LINE +
+            "                                \"logName\": {" + NEW_LINE +
+            "                                    \"type\": \"string\", " + NEW_LINE +
+            "                                    \"enum\": [" + NEW_LINE +
+            "                                        \"FALogNameStartSession\"" + NEW_LINE +
+            "                                    ]" + NEW_LINE +
+            "                                }, " + NEW_LINE +
+            "                                \"logUserId\": {" + NEW_LINE +
+            "                                    \"type\": \"string\", " + NEW_LINE +
+            "                                    \"enum\": [" + NEW_LINE +
+            "                                        null" + NEW_LINE +
+            "                                    ]" + NEW_LINE +
+            "                                }, " + NEW_LINE +
+            "                                \"logDetails\": {" + NEW_LINE +
+            "                                    \"type\": [" + NEW_LINE +
+            "                                        \"string\", " + NEW_LINE +
+            "                                        \"object\"" + NEW_LINE +
+            "                                    ], " + NEW_LINE +
+            "                                    \"enum\": [" + NEW_LINE +
+            "                                        null" + NEW_LINE +
+            "                                    ]" + NEW_LINE +
+            "                                }, " + NEW_LINE +
+            "                                \"logDate\": {" + NEW_LINE +
+            "                                    \"type\": [" + NEW_LINE +
+            "                                        \"string\"" + NEW_LINE +
+            "                                    ]" + NEW_LINE +
+            "                                }" + NEW_LINE +
+            "                            }, " + NEW_LINE +
+            "                            \"required\": [" + NEW_LINE +
+            "                                \"logType\", " + NEW_LINE +
+            "                                \"logName\", " + NEW_LINE +
+            "                                \"logDate\"" + NEW_LINE +
+            "                            ]" + NEW_LINE +
+            "                        }" + NEW_LINE +
+            "                    }" + NEW_LINE +
+            "                }, " + NEW_LINE +
+            "                \"required\": [" + NEW_LINE +
+            "                    \"sessionId\", " + NEW_LINE +
+            "                    \"logs\"" + NEW_LINE +
+            "                ]" + NEW_LINE +
+            "            }" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }, " + NEW_LINE +
+            "    \"required\": [" + NEW_LINE +
+            "        \"sessions\"" + NEW_LINE +
+            "    ]" + NEW_LINE +
+            "}";
+        String json = "{" + NEW_LINE +
+            "    \"deviceId\": \"21f5ce37ef664944\", " + NEW_LINE +
+            "    \"sdkPlatform\": \"Android\", " + NEW_LINE +
+            "    \"sdkVersion\": \"6.7.0\", " + NEW_LINE +
+            "    \"requestDate\": \"2020-12-01T11:38:46.404+0100\", " + NEW_LINE +
+            "    \"packageName\": \"com.reactnativetestapp\", " + NEW_LINE +
+            "    \"sessions\": [" + NEW_LINE +
+            "        {" + NEW_LINE +
+            "            \"sessionId\": \"SESSION_1\", " + NEW_LINE +
+            "            \"logs\": [" + NEW_LINE +
+            "                {" + NEW_LINE +
+            "                    \"logDate\": \"2020-12-01T11:38:46.350+0100\", " + NEW_LINE +
+            "                    \"logType\": 0, " + NEW_LINE +
+            "                    \"logName\": \"FALogNameStartSession\"" + NEW_LINE +
+            "                }" + NEW_LINE +
+            "            ]" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    ]" + NEW_LINE +
+            "}";
+
+        // then
+        assertThat(new JsonSchemaValidator(mockServerLogger, schema).isValid(json), is(""));
+    }
+
+    @Test
+    public void shouldHandleNestedDraft04JsonExampleWithItems() {
+        // given
+        String schema = "{" + NEW_LINE +
+            "    \"type\": \"object\", " + NEW_LINE +
+            "    \"properties\": {" + NEW_LINE +
+            "        \"sessions\": {" + NEW_LINE +
+            "            \"type\": \"array\", " + NEW_LINE +
+            "            \"items\": {" + NEW_LINE +
+            "                \"type\": \"object\", " + NEW_LINE +
+            "                \"properties\": {" + NEW_LINE +
+            "                    \"schema\": {" + NEW_LINE +
+            "                        \"$ref\": \"http://json-schema.org/draft-04/schema\"" + NEW_LINE +
+            "                    }," + NEW_LINE +
+            "                    \"sessionId\": {" + NEW_LINE +
+            "                        \"type\": \"string\", " + NEW_LINE +
+            "                        \"enum\": [" + NEW_LINE +
+            "                            \"SESSION_1\"" + NEW_LINE +
+            "                        ]" + NEW_LINE +
+            "                    }, " + NEW_LINE +
+            "                    \"logs\": {" + NEW_LINE +
+            "                        \"type\": \"array\", " + NEW_LINE +
+            "                        \"items\": {" + NEW_LINE +
+            "                            \"type\": \"object\", " + NEW_LINE +
+            "                            \"properties\": {" + NEW_LINE +
+            "                                \"logType\": {" + NEW_LINE +
+            "                                    \"type\": \"number\", " + NEW_LINE +
+            "                                    \"enum\": [" + NEW_LINE +
+            "                                        0" + NEW_LINE +
+            "                                    ]" + NEW_LINE +
+            "                                }, " + NEW_LINE +
+            "                                \"logName\": {" + NEW_LINE +
+            "                                    \"type\": \"string\", " + NEW_LINE +
+            "                                    \"enum\": [" + NEW_LINE +
+            "                                        \"FALogNameStartSession\"" + NEW_LINE +
+            "                                    ]" + NEW_LINE +
+            "                                }, " + NEW_LINE +
+            "                                \"logUserId\": {" + NEW_LINE +
+            "                                    \"type\": \"string\", " + NEW_LINE +
+            "                                    \"enum\": [" + NEW_LINE +
+            "                                        null" + NEW_LINE +
+            "                                    ]" + NEW_LINE +
+            "                                }, " + NEW_LINE +
+            "                                \"logDetails\": {" + NEW_LINE +
+            "                                    \"type\": [" + NEW_LINE +
+            "                                        \"string\", " + NEW_LINE +
+            "                                        \"object\"" + NEW_LINE +
+            "                                    ], " + NEW_LINE +
+            "                                    \"enum\": [" + NEW_LINE +
+            "                                        null" + NEW_LINE +
+            "                                    ]" + NEW_LINE +
+            "                                }, " + NEW_LINE +
+            "                                \"logDate\": {" + NEW_LINE +
+            "                                    \"type\": [" + NEW_LINE +
+            "                                        \"string\"" + NEW_LINE +
+            "                                    ]" + NEW_LINE +
+            "                                }" + NEW_LINE +
+            "                            }, " + NEW_LINE +
+            "                            \"required\": [" + NEW_LINE +
+            "                                \"logType\", " + NEW_LINE +
+            "                                \"logName\", " + NEW_LINE +
+            "                                \"logDate\"" + NEW_LINE +
+            "                            ]" + NEW_LINE +
+            "                        }" + NEW_LINE +
+            "                    }" + NEW_LINE +
+            "                }, " + NEW_LINE +
+            "                \"required\": [" + NEW_LINE +
+            "                    \"sessionId\", " + NEW_LINE +
+            "                    \"logs\"" + NEW_LINE +
+            "                ]" + NEW_LINE +
+            "            }" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }, " + NEW_LINE +
+            "    \"required\": [" + NEW_LINE +
+            "        \"sessions\"" + NEW_LINE +
+            "    ]" + NEW_LINE +
+            "}";
+        String json = "{" + NEW_LINE +
+            "    \"deviceId\": \"21f5ce37ef664944\", " + NEW_LINE +
+            "    \"sdkPlatform\": \"Android\", " + NEW_LINE +
+            "    \"sdkVersion\": \"6.7.0\", " + NEW_LINE +
+            "    \"requestDate\": \"2020-12-01T11:38:46.404+0100\", " + NEW_LINE +
+            "    \"packageName\": \"com.reactnativetestapp\", " + NEW_LINE +
+            "    \"sessions\": [" + NEW_LINE +
+            "        {" + NEW_LINE +
+            "            \"sessionId\": \"SESSION_1\", " + NEW_LINE +
+            "            \"logs\": [" + NEW_LINE +
+            "                {" + NEW_LINE +
+            "                    \"logDate\": \"2020-12-01T11:38:46.350+0100\", " + NEW_LINE +
+            "                    \"logType\": 0, " + NEW_LINE +
+            "                    \"logName\": \"FALogNameStartSession\"" + NEW_LINE +
+            "                }" + NEW_LINE +
+            "            ]" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    ]" + NEW_LINE +
+            "}";
+
+        // then
+        assertThat(new JsonSchemaValidator(mockServerLogger, schema).isValid(json), is(""));
+    }
+
+    @Test
+    public void shouldHandleDraft06JsonExampleWithContains() {
+        // given
+        String schema = "{" + NEW_LINE +
+            "    \"$schema\": \"http://json-schema.org/draft-06/schema\"," + NEW_LINE +
+            "    \"type\": \"object\", " + NEW_LINE +
+            "    \"properties\": {" + NEW_LINE +
+            "        \"sessions\": {" + NEW_LINE +
+            "            \"type\": \"array\", " + NEW_LINE +
+            "            \"contains\": {" + NEW_LINE +
+            "                \"type\": \"object\", " + NEW_LINE +
+            "                \"properties\": {" + NEW_LINE +
+            "                    \"sessionId\": {" + NEW_LINE +
+            "                        \"type\": \"string\", " + NEW_LINE +
+            "                        \"enum\": [" + NEW_LINE +
+            "                            \"SESSION_1\"" + NEW_LINE +
+            "                        ]" + NEW_LINE +
+            "                    }, " + NEW_LINE +
+            "                    \"logs\": {" + NEW_LINE +
+            "                        \"type\": \"array\", " + NEW_LINE +
+            "                        \"contains\": {" + NEW_LINE +
+            "                            \"type\": \"object\", " + NEW_LINE +
+            "                            \"properties\": {" + NEW_LINE +
+            "                                \"logType\": {" + NEW_LINE +
+            "                                    \"type\": \"number\", " + NEW_LINE +
+            "                                    \"enum\": [" + NEW_LINE +
+            "                                        0" + NEW_LINE +
+            "                                    ]" + NEW_LINE +
+            "                                }, " + NEW_LINE +
+            "                                \"logName\": {" + NEW_LINE +
+            "                                    \"type\": \"string\", " + NEW_LINE +
+            "                                    \"enum\": [" + NEW_LINE +
+            "                                        \"FALogNameStartSession\"" + NEW_LINE +
+            "                                    ]" + NEW_LINE +
+            "                                }, " + NEW_LINE +
+            "                                \"logUserId\": {" + NEW_LINE +
+            "                                    \"type\": \"string\", " + NEW_LINE +
+            "                                    \"enum\": [" + NEW_LINE +
+            "                                        null" + NEW_LINE +
+            "                                    ]" + NEW_LINE +
+            "                                }, " + NEW_LINE +
+            "                                \"logDetails\": {" + NEW_LINE +
+            "                                    \"type\": [" + NEW_LINE +
+            "                                        \"string\", " + NEW_LINE +
+            "                                        \"object\"" + NEW_LINE +
+            "                                    ], " + NEW_LINE +
+            "                                    \"enum\": [" + NEW_LINE +
+            "                                        null" + NEW_LINE +
+            "                                    ]" + NEW_LINE +
+            "                                }, " + NEW_LINE +
+            "                                \"logDate\": {" + NEW_LINE +
+            "                                    \"type\": [" + NEW_LINE +
+            "                                        \"string\"" + NEW_LINE +
+            "                                    ]" + NEW_LINE +
+            "                                }" + NEW_LINE +
+            "                            }, " + NEW_LINE +
+            "                            \"required\": [" + NEW_LINE +
+            "                                \"logType\", " + NEW_LINE +
+            "                                \"logName\", " + NEW_LINE +
+            "                                \"logDate\"" + NEW_LINE +
+            "                            ]" + NEW_LINE +
+            "                        }" + NEW_LINE +
+            "                    }" + NEW_LINE +
+            "                }, " + NEW_LINE +
+            "                \"required\": [" + NEW_LINE +
+            "                    \"sessionId\", " + NEW_LINE +
+            "                    \"logs\"" + NEW_LINE +
+            "                ]" + NEW_LINE +
+            "            }" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }, " + NEW_LINE +
+            "    \"required\": [" + NEW_LINE +
+            "        \"sessions\"" + NEW_LINE +
+            "    ]" + NEW_LINE +
+            "}";
+        String json = "{" + NEW_LINE +
+            "    \"deviceId\": \"21f5ce37ef664944\", " + NEW_LINE +
+            "    \"sdkPlatform\": \"Android\", " + NEW_LINE +
+            "    \"sdkVersion\": \"6.7.0\", " + NEW_LINE +
+            "    \"requestDate\": \"2020-12-01T11:38:46.404+0100\", " + NEW_LINE +
+            "    \"packageName\": \"com.reactnativetestapp\", " + NEW_LINE +
+            "    \"sessions\": [" + NEW_LINE +
+            "        {" + NEW_LINE +
+            "            \"sessionId\": \"SESSION_1\", " + NEW_LINE +
+            "            \"logs\": [" + NEW_LINE +
+            "                {" + NEW_LINE +
+            "                    \"logDate\": \"2020-12-01T11:38:46.350+0100\", " + NEW_LINE +
+            "                    \"logType\": 0, " + NEW_LINE +
+            "                    \"logName\": \"FALogNameStartSession\"" + NEW_LINE +
+            "                }" + NEW_LINE +
+            "            ]" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    ]" + NEW_LINE +
+            "}";
+
+        // then
+        assertThat(new JsonSchemaValidator(mockServerLogger, schema).isValid(json), is(""));
+    }
+
+    @Test
+    public void shouldHandleDraft201909JsonExampleWithContains() {
+        // given
+        String schema = "{" + NEW_LINE +
+            "    \"$schema\": \"http://json-schema.org/draft/2019-09/schema\"," + NEW_LINE +
+            "    \"type\": \"object\", " + NEW_LINE +
+            "    \"properties\": {" + NEW_LINE +
+            "        \"sessions\": {" + NEW_LINE +
+            "            \"type\": \"array\", " + NEW_LINE +
+            "            \"contains\": {" + NEW_LINE +
+            "                \"type\": \"object\", " + NEW_LINE +
+            "                \"properties\": {" + NEW_LINE +
+            "                    \"sessionId\": {" + NEW_LINE +
+            "                        \"type\": \"string\", " + NEW_LINE +
+            "                        \"enum\": [" + NEW_LINE +
+            "                            \"SESSION_1\"" + NEW_LINE +
+            "                        ]" + NEW_LINE +
+            "                    }, " + NEW_LINE +
+            "                    \"logs\": {" + NEW_LINE +
+            "                        \"type\": \"array\", " + NEW_LINE +
+            "                        \"contains\": {" + NEW_LINE +
+            "                            \"type\": \"object\", " + NEW_LINE +
+            "                            \"properties\": {" + NEW_LINE +
+            "                                \"logType\": {" + NEW_LINE +
+            "                                    \"type\": \"number\", " + NEW_LINE +
+            "                                    \"enum\": [" + NEW_LINE +
+            "                                        0" + NEW_LINE +
+            "                                    ]" + NEW_LINE +
+            "                                }, " + NEW_LINE +
+            "                                \"logName\": {" + NEW_LINE +
+            "                                    \"type\": \"string\", " + NEW_LINE +
+            "                                    \"enum\": [" + NEW_LINE +
+            "                                        \"FALogNameStartSession\"" + NEW_LINE +
+            "                                    ]" + NEW_LINE +
+            "                                }, " + NEW_LINE +
+            "                                \"logUserId\": {" + NEW_LINE +
+            "                                    \"type\": \"string\", " + NEW_LINE +
+            "                                    \"enum\": [" + NEW_LINE +
+            "                                        null" + NEW_LINE +
+            "                                    ]" + NEW_LINE +
+            "                                }, " + NEW_LINE +
+            "                                \"logDetails\": {" + NEW_LINE +
+            "                                    \"type\": [" + NEW_LINE +
+            "                                        \"string\", " + NEW_LINE +
+            "                                        \"object\"" + NEW_LINE +
+            "                                    ], " + NEW_LINE +
+            "                                    \"enum\": [" + NEW_LINE +
+            "                                        null" + NEW_LINE +
+            "                                    ]" + NEW_LINE +
+            "                                }, " + NEW_LINE +
+            "                                \"logDate\": {" + NEW_LINE +
+            "                                    \"type\": [" + NEW_LINE +
+            "                                        \"string\"" + NEW_LINE +
+            "                                    ]" + NEW_LINE +
+            "                                }" + NEW_LINE +
+            "                            }, " + NEW_LINE +
+            "                            \"required\": [" + NEW_LINE +
+            "                                \"logType\", " + NEW_LINE +
+            "                                \"logName\", " + NEW_LINE +
+            "                                \"logDate\"" + NEW_LINE +
+            "                            ]" + NEW_LINE +
+            "                        }" + NEW_LINE +
+            "                    }" + NEW_LINE +
+            "                }, " + NEW_LINE +
+            "                \"required\": [" + NEW_LINE +
+            "                    \"sessionId\", " + NEW_LINE +
+            "                    \"logs\"" + NEW_LINE +
+            "                ]" + NEW_LINE +
+            "            }," + NEW_LINE +
+            "            \"minContains\": 1," + NEW_LINE +
+            "            \"maxContains\": 3" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }, " + NEW_LINE +
+            "    \"required\": [" + NEW_LINE +
+            "        \"sessions\"" + NEW_LINE +
+            "    ]" + NEW_LINE +
+            "}";
+        String json = "{" + NEW_LINE +
+            "    \"deviceId\": \"21f5ce37ef664944\", " + NEW_LINE +
+            "    \"sdkPlatform\": \"Android\", " + NEW_LINE +
+            "    \"sdkVersion\": \"6.7.0\", " + NEW_LINE +
+            "    \"requestDate\": \"2020-12-01T11:38:46.404+0100\", " + NEW_LINE +
+            "    \"packageName\": \"com.reactnativetestapp\", " + NEW_LINE +
+            "    \"sessions\": [" + NEW_LINE +
+            "        {" + NEW_LINE +
+            "            \"sessionId\": \"SESSION_1\", " + NEW_LINE +
+            "            \"logs\": [" + NEW_LINE +
+            "                {" + NEW_LINE +
+            "                    \"logDate\": \"2020-12-01T11:38:46.350+0100\", " + NEW_LINE +
+            "                    \"logType\": 0, " + NEW_LINE +
+            "                    \"logName\": \"FALogNameStartSession\"" + NEW_LINE +
+            "                }" + NEW_LINE +
+            "            ]" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    ]" + NEW_LINE +
+            "}";
+
+        // then
+        assertThat(new JsonSchemaValidator(mockServerLogger, schema).isValid(json), is(""));
+    }
+
+    @Test
+    public void shouldHandleNestedDraft201909JsonExampleWithContains() {
+        // given
+        String schema = "{" + NEW_LINE +
+            "  \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+            "  \"title\": \"string value that can be support nottable, optional or a json schema\"," + NEW_LINE +
+            "  \"oneOf\": [" + NEW_LINE +
+            "    {" + NEW_LINE +
+            "      \"type\": \"string\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    {" + NEW_LINE +
+            "      \"type\": \"object\"," + NEW_LINE +
+            "      \"additionalProperties\": false," + NEW_LINE +
+            "      \"properties\": {" + NEW_LINE +
+            "        \"not\": {" + NEW_LINE +
+            "          \"type\": \"boolean\"" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        \"optional\": {" + NEW_LINE +
+            "          \"type\": \"boolean\"" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        \"value\": {" + NEW_LINE +
+            "          \"type\": \"string\"" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        \"schema\": {" + NEW_LINE +
+            "          \"$ref\": \"http://json-schema.org/draft/2019-09/schema\"" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        \"parameterStyle\": {" + NEW_LINE +
+            "          \"type\": \"string\"," + NEW_LINE +
+            "          \"enum\": [" + NEW_LINE +
+            "            \"SIMPLE\"," + NEW_LINE +
+            "            \"SIMPLE_EXPLODED\"," + NEW_LINE +
+            "            \"LABEL\"," + NEW_LINE +
+            "            \"LABEL_EXPLODED\"," + NEW_LINE +
+            "            \"MATRIX\"," + NEW_LINE +
+            "            \"MATRIX_EXPLODED\"," + NEW_LINE +
+            "            \"FORM_EXPLODED\"," + NEW_LINE +
+            "            \"FORM\"," + NEW_LINE +
+            "            \"SPACE_DELIMITED_EXPLODED\"," + NEW_LINE +
+            "            \"SPACE_DELIMITED\"," + NEW_LINE +
+            "            \"PIPE_DELIMITED_EXPLODED\"," + NEW_LINE +
+            "            \"PIPE_DELIMITED\"," + NEW_LINE +
+            "            \"DEEP_OBJECT\"" + NEW_LINE +
+            "          ]," + NEW_LINE +
+            "          \"default\": \"\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  ]," + NEW_LINE +
+            "  \"definitions\": {" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}" + NEW_LINE;
+        String json = "\"some_string\"";
+
+        // then
+        assertThat(new JsonSchemaValidator(mockServerLogger, schema).isValid(json), is(""));
     }
 
     @Test

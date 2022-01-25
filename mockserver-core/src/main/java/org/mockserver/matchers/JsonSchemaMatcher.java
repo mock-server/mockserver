@@ -13,6 +13,7 @@ import java.util.Map;
  *
  * @author jamesdbloom
  */
+@SuppressWarnings("FieldMayBeFinal")
 public class JsonSchemaMatcher extends BodyMatcher<String> {
     private static final String[] EXCLUDED_FIELDS = {"mockServerLogger", "jsonSchemaValidator"};
     private final MockServerLogger mockServerLogger;

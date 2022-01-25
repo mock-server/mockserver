@@ -136,18 +136,8 @@
 
         <!-- json validation -->
         <dependency>
-            <groupId>com.github.java-json-tools</groupId>
+            <groupId>com.networknt</groupId>
             <artifactId>json-schema-validator</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-databind</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.google.guava</groupId>
-                    <artifactId>guava</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>

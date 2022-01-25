@@ -129,9 +129,9 @@ public class VerificationSequenceSerializationErrorsTest {
                 " schema validation errors:" + NEW_LINE +
                 "" + NEW_LINE +
                 "  1 error:" + NEW_LINE +
-                "   - instance failed to match exactly one schema (matched 2 out of 2)" + NEW_LINE +
+                "   - $: should be valid to one and only one of the schemas but more than one schemas {{\"required\":[\"expectationIds\"]}{\"required\":[\"httpRequests\"]}} are valid " + NEW_LINE +
                 "  " + NEW_LINE +
-                "  " + OPEN_API_SPECIFICATION_URL));
+                "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  " )));
         }
     }
 

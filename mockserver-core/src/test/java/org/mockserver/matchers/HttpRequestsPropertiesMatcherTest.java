@@ -13,6 +13,7 @@ import java.util.UUID;
 import static junit.framework.TestCase.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.hamcrest.core.StringContains.containsString;
@@ -6559,9 +6560,9 @@ public class HttpRequestsPropertiesMatcherTest {
             NEW_LINE +
             "   failed because:" + NEW_LINE +
             NEW_LINE +
-            "    2 errors:" + NEW_LINE +
-            "     - field: \"/id\" for schema: \"/properties/id\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])\"" + NEW_LINE +
-            "     - schema: \"/properties/id\" has error: \"format attribute \"int64\" not supported\"" + NEW_LINE;
+            "    1 error:" + NEW_LINE +
+            "     - $.id: string found, integer expected" + NEW_LINE;
+        assertThat(context.getDifferences(BODY).get(0), equalTo(bodyError));
         assertThat(context.getDifferences(BODY), containsInAnyOrder(bodyError, bodyError));
         assertThat(context.getDifferences(SSL_MATCHES), nullValue());
         assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
@@ -6634,9 +6635,9 @@ public class HttpRequestsPropertiesMatcherTest {
             NEW_LINE +
             "   failed because:" + NEW_LINE +
             NEW_LINE +
-            "    2 errors:" + NEW_LINE +
-            "     - field: \"/id\" for schema: \"/properties/id\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])\"" + NEW_LINE +
-            "     - schema: \"/properties/id\" has error: \"format attribute \"int64\" not supported\"" + NEW_LINE;
+            "    1 error:" + NEW_LINE +
+            "     - $.id: string found, integer expected" + NEW_LINE;
+        assertThat(context.getDifferences(BODY).get(0), equalTo(bodyError));
         assertThat(context.getDifferences(BODY), containsInAnyOrder(bodyError, bodyError));
         assertThat(context.getDifferences(SSL_MATCHES), nullValue());
         assertThat(context.getDifferences(KEEP_ALIVE), nullValue());
@@ -6702,9 +6703,9 @@ public class HttpRequestsPropertiesMatcherTest {
             NEW_LINE +
             "   failed because:" + NEW_LINE +
             NEW_LINE +
-            "    2 errors:" + NEW_LINE +
-            "     - field: \"/id\" for schema: \"/properties/id\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])\"" + NEW_LINE +
-            "     - schema: \"/properties/id\" has error: \"format attribute \"int64\" not supported\"" + NEW_LINE;
+            "    1 error:" + NEW_LINE +
+            "     - $.id: string found, integer expected" + NEW_LINE;
+        assertThat(context.getDifferences(BODY).get(0), equalTo(schemaValidationError));
         assertThat(context.getDifferences(BODY), containsInAnyOrder(schemaValidationError, schemaValidationError));
         assertThat(context.getDifferences(SSL_MATCHES), nullValue());
         assertThat(context.getDifferences(KEEP_ALIVE), nullValue());

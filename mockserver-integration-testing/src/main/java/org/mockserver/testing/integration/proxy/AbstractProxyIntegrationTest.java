@@ -898,19 +898,13 @@ public abstract class AbstractProxyIntegrationTest {
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  10 errors:" + NEW_LINE +
-            "   - field: \"/keepAlive\" for schema: \"httpRequest/properties/keepAlive\" has error: \"instance type (string) does not match any allowed primitive type (allowed: [\"boolean\"])\"" + NEW_LINE +
-            "   - field: \"/method\" for schema: \"stringOrJsonSchema\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
-            "   - field: \"/method\" for schema: \"stringOrJsonSchema/oneOf/0\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
-            "   - field: \"/method\" for schema: \"stringOrJsonSchema/oneOf/1\" has error: \"instance type (boolean) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-            "   - field: \"/path\" for schema: \"stringOrJsonSchema\" has error: \"instance failed to match exactly one schema (matched 0 out of 2)\"" + NEW_LINE +
-            "   - field: \"/path\" for schema: \"stringOrJsonSchema/oneOf/0\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"string\"])\"" + NEW_LINE +
-            "   - field: \"/path\" for schema: \"stringOrJsonSchema/oneOf/1\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
-            "   - oneOf of the following must be specified [\"httpRequest\", \"openAPIDefinition\"] but found 0 without errors" + NEW_LINE +
-            "   - schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
-            "   - schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"keepAlive\",\"method\",\"path\"]\"" + NEW_LINE +
+            "  4 errors:\n" +
+            "   - $.keepAlive: string found, boolean expected\n" +
+            "   - $.method: boolean found, string expected\n" +
+            "   - $.path: integer found, string expected\n" +
+            "   - $.specUrlOrPayload: is missing but it is required" + NEW_LINE +
             "  " + NEW_LINE +
-            "  " + OPEN_API_SPECIFICATION_URL));
+            "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  ")));
     }
 
     @Test
@@ -942,10 +936,10 @@ public abstract class AbstractProxyIntegrationTest {
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  1 error:" + NEW_LINE +
-            "   - field: \"/times\" for schema: \"verificationTimes\" has error: \"instance type (integer) does not match any allowed primitive type (allowed: [\"object\"])\"" + NEW_LINE +
+            "  1 error:\n" +
+            "   - $.times: integer found, object expected" + NEW_LINE +
             "  " + NEW_LINE +
-            "  " + OPEN_API_SPECIFICATION_URL));
+            "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  ")));
     }
 
     @Test
@@ -981,11 +975,12 @@ public abstract class AbstractProxyIntegrationTest {
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  3 errors:" + NEW_LINE +
-            "   - object instance has properties which are not allowed by the schema: [\"httpRequest\"]" + NEW_LINE +
-            "   - schema: \"/oneOf/0\" has error: \"object has missing required properties ([\"expectationIds\"])\"" + NEW_LINE +
-            "   - schema: \"/oneOf/1\" has error: \"object has missing required properties ([\"httpRequests\"])\"" + NEW_LINE +
+            "  4 errors:\n" +
+            "   - $.expectationIds: is missing but it is required\n" +
+            "   - $.httpRequest: is not defined in the schema and the schema does not allow additional properties\n" +
+            "   - $.httpRequests: is missing, but is required, if specifying action of type Requests\n" +
+            "   - oneOf of the following must be specified [httpError, httpForward, httpForwardClassCallback, httpForwardObjectCallback, httpForwardTemplate, httpOverrideForwardedRequest, httpResponse, httpResponseClassCallback, httpResponseObjectCallback, httpResponseTemplate]" + NEW_LINE +
             "  " + NEW_LINE +
-            "  " + OPEN_API_SPECIFICATION_URL));
+            "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  ")));
     }
 }

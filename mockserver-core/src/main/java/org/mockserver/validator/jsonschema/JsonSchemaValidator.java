@@ -3,11 +3,11 @@ package org.mockserver.validator.jsonschema;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.fge.jsonschema.core.report.ProcessingMessage;
-import com.github.fge.jsonschema.core.report.ProcessingReport;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
-import com.github.fge.jsonschema.main.JsonValidator;
 import com.google.common.base.Joiner;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SpecVersion;
+import com.networknt.schema.ValidationMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
@@ -17,10 +17,12 @@ import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.validator.Validator;
 import org.slf4j.event.Level;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -30,13 +32,15 @@ import static org.mockserver.character.Character.NEW_LINE;
  */
 public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToString implements Validator<String> {
 
-    public static final String OPEN_API_SPECIFICATION_URL = "See: https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x for OpenAPI Specification";
+    public static final String OPEN_API_SPECIFICATION_URL = "OpenAPI Specification: https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x" + NEW_LINE +
+        "Documentation: https://mock-server.com/mock_server/creating_expectations.html";
     private static final Map<String, String> schemaCache = new ConcurrentHashMap<>();
+    // using draft 07 as default due to TLS issues downloading draft 2019-09 which causes errors
+    private static final SpecVersion.VersionFlag DEFAULT_JSON_SCHEMA_VERSION = SpecVersion.VersionFlag.V7;
     private final MockServerLogger mockServerLogger;
     private final String schema;
     private final JsonNode schemaJsonNode;
-    private final String mainSchemeFile;
-    private final JsonValidator validator = JsonSchemaFactory.byDefault().getValidator();
+    private JsonSchema validator;
     private final static ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
 
     public JsonSchemaValidator(MockServerLogger mockServerLogger, String schema) {
@@ -48,8 +52,34 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
         } else {
             throw new IllegalArgumentException("Schema must either be a path reference to a *.json file or a json string");
         }
-        this.mainSchemeFile = null;
         this.schemaJsonNode = getSchemaJsonNode();
+        this.validator = getJsonSchemaFactory(this.schemaJsonNode).getSchema(this.schemaJsonNode);
+    }
+
+    private JsonSchemaFactory getJsonSchemaFactory(JsonNode schema) {
+        if (schema != null) {
+            JsonNode metaSchema = schema.get("$schema");
+            if (metaSchema != null) {
+                String metaSchemaValue = metaSchema.textValue();
+                if (isNotBlank(metaSchemaValue)) {
+                    return getJsonSchemaFactory(metaSchemaValue);
+                }
+            }
+        }
+        return JsonSchemaFactory.getInstance(DEFAULT_JSON_SCHEMA_VERSION);
+    }
+
+    private JsonSchemaFactory getJsonSchemaFactory(String metaSchemaValue) {
+        if (metaSchemaValue.contains("draft-03") || metaSchemaValue.contains("draft-04")) {
+            return JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4);
+        } else if (metaSchemaValue.contains("draft-05") || metaSchemaValue.contains("draft-06")) {
+            return JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V6);
+        } else if (metaSchemaValue.contains("draft-07")) {
+            return JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
+        } else if (metaSchemaValue.contains("draft/2019-09")) {
+            return JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V201909);
+        }
+        return JsonSchemaFactory.getInstance(DEFAULT_JSON_SCHEMA_VERSION);
     }
 
     public JsonSchemaValidator(MockServerLogger mockServerLogger, String routePath, String mainSchemeFile, String... referenceFiles) {
@@ -58,8 +88,8 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
             schemaCache.put(mainSchemeFile, addReferencesIntoSchema(routePath, mainSchemeFile, referenceFiles));
         }
         this.schema = schemaCache.get(mainSchemeFile);
-        this.mainSchemeFile = mainSchemeFile;
         this.schemaJsonNode = getSchemaJsonNode();
+        this.validator = getJsonSchemaFactory(this.schemaJsonNode).getSchema(this.schemaJsonNode);
     }
 
     private JsonNode getSchemaJsonNode() {
@@ -72,7 +102,7 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                     .setMessageFormat("exception loading JSON Schema " + throwable.getMessage())
                     .setThrowable(throwable)
             );
-            return null;
+            throw new RuntimeException("Unable to parse JSON schema", throwable);
         }
     }
 
@@ -117,18 +147,12 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
         String validationResult = "";
         if (isNotBlank(json)) {
             try {
-
-                ProcessingReport processingReport = validator
-                    .validate(
-                        schemaJsonNode,
-                        OBJECT_MAPPER.readTree(json),
-                        true
-                    );
-
-                if (!processingReport.isSuccess()) {
-                    validationResult = formatProcessingReport(processingReport, addOpenAPISpecificationMessage);
-                }
+                validationResult = formatProcessingReport(validator.validate(OBJECT_MAPPER.readTree(json)), addOpenAPISpecificationMessage);
             } catch (Throwable throwable) {
+                if (throwable.getMessage().contains("Unknown MetaSchema")) {
+                    validator = getJsonSchemaFactory(throwable.getMessage()).getSchema(this.schemaJsonNode);
+                    return isValid(json, addOpenAPISpecificationMessage);
+                }
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(Level.ERROR)
@@ -141,319 +165,142 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
         return validationResult;
     }
 
-    private String formatProcessingReport(ProcessingReport processingMessages, boolean addOpenAPISpecificationMessage) {
-        List<String> validationErrors = new ArrayList<>();
-        for (ProcessingMessage processingMessage : processingMessages) {
-            JsonNode processingMessageJson = processingMessage.asJson();
-            JsonNode instanceJson = processingMessageJson.get("instance");
-            JsonNode schemaJson = processingMessageJson.get("schema");
-            JsonNode reports = processingMessageJson.get("reports");
-            String fieldPointer = pointerValue(instanceJson).replaceAll("\"", "");
-            String schemaPointer = removeDefinitionPrefix(pointerValue(schemaJson));
-            if (reports != null) {
-                if (isErrorForField(reports, fieldPointer, "/headers")) {
-                    validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/headers") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "       \"exampleRegexHeader\": [" + NEW_LINE +
-                        "           \"^some +regex$\"" + NEW_LINE +
-                        "       ], " + NEW_LINE +
-                        "       \"exampleNottedAndSimpleStringHeader\": [" + NEW_LINE +
-                        "           \"!notThisValue\", " + NEW_LINE +
-                        "           \"simpleStringMatch\"" + NEW_LINE +
-                        "       ]" + NEW_LINE +
-                        "   }" + NEW_LINE + NEW_LINE +
-                        "or:" + NEW_LINE + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "       \"exampleSchemaHeader\": [" + NEW_LINE +
-                        "           {" + NEW_LINE +
-                        "               \"type\": \"number\"" + NEW_LINE +
-                        "           }" + NEW_LINE +
-                        "       ], " + NEW_LINE +
-                        "       \"exampleMultiSchemaHeader\": [" + NEW_LINE +
-                        "           {" + NEW_LINE +
-                        "               \"type\": \"string\", " + NEW_LINE +
-                        "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
-                        "           }, " + NEW_LINE +
-                        "           {" + NEW_LINE +
-                        "               \"type\": \"string\", " + NEW_LINE +
-                        "               \"format\": \"ipv4\"" + NEW_LINE +
-                        "           }" + NEW_LINE +
-                        "       ]" + NEW_LINE +
-                        "   }" + NEW_LINE);
-                }
-                if (isErrorForField(reports, fieldPointer, "/pathParameters")) {
-                    validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/pathParameters") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "       \"exampleRegexParameter\": [" + NEW_LINE +
-                        "           \"^some +regex$\"" + NEW_LINE +
-                        "       ], " + NEW_LINE +
-                        "       \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
-                        "           \"!notThisValue\", " + NEW_LINE +
-                        "           \"simpleStringMatch\"" + NEW_LINE +
-                        "       ]" + NEW_LINE +
-                        "   }" + NEW_LINE + NEW_LINE +
-                        "or:" + NEW_LINE + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "       \"exampleSchemaParameter\": [" + NEW_LINE +
-                        "           {" + NEW_LINE +
-                        "               \"type\": \"number\"" + NEW_LINE +
-                        "           }" + NEW_LINE +
-                        "       ], " + NEW_LINE +
-                        "       \"exampleMultiSchemaParameter\": [" + NEW_LINE +
-                        "           {" + NEW_LINE +
-                        "               \"type\": \"string\", " + NEW_LINE +
-                        "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
-                        "           }, " + NEW_LINE +
-                        "           {" + NEW_LINE +
-                        "               \"type\": \"string\", " + NEW_LINE +
-                        "               \"format\": \"ipv4\"" + NEW_LINE +
-                        "           }" + NEW_LINE +
-                        "       ]" + NEW_LINE +
-                        "   }" + NEW_LINE);
-                }
-                if (isErrorForField(reports, fieldPointer, "/queryStringParameters")) {
-                    validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/queryStringParameters") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "       \"exampleRegexParameter\": [" + NEW_LINE +
-                        "           \"^some +regex$\"" + NEW_LINE +
-                        "       ], " + NEW_LINE +
-                        "       \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
-                        "           \"!notThisValue\", " + NEW_LINE +
-                        "           \"simpleStringMatch\"" + NEW_LINE +
-                        "       ]" + NEW_LINE +
-                        "   }" + NEW_LINE + NEW_LINE +
-                        "or:" + NEW_LINE + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "       \"exampleSchemaParameter\": [" + NEW_LINE +
-                        "           {" + NEW_LINE +
-                        "               \"type\": \"number\"" + NEW_LINE +
-                        "           }" + NEW_LINE +
-                        "       ], " + NEW_LINE +
-                        "       \"exampleMultiSchemaParameter\": [" + NEW_LINE +
-                        "           {" + NEW_LINE +
-                        "               \"type\": \"string\", " + NEW_LINE +
-                        "               \"pattern\": \"^some +regex$\"" + NEW_LINE +
-                        "           }, " + NEW_LINE +
-                        "           {" + NEW_LINE +
-                        "               \"type\": \"string\", " + NEW_LINE +
-                        "               \"format\": \"ipv4\"" + NEW_LINE +
-                        "           }" + NEW_LINE +
-                        "       ]" + NEW_LINE +
-                        "   }" + NEW_LINE);
-                }
-                if (isErrorForField(reports, fieldPointer, "/cookies")) {
-                    validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/cookies") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "       \"exampleRegexCookie\": \"^some +regex$\", " + NEW_LINE +
-                        "       \"exampleNottedRegexCookie\": \"!notThisValue\", " + NEW_LINE +
-                        "       \"exampleSimpleStringCookie\": \"simpleStringMatch\"" + NEW_LINE +
-                        "   }" + NEW_LINE + NEW_LINE +
-                        "or:" + NEW_LINE + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "       \"exampleNumberSchemaCookie\": {" + NEW_LINE +
-                        "           \"type\": \"number\"" + NEW_LINE +
-                        "       }, " + NEW_LINE +
-                        "       \"examplePatternSchemaCookie\": {" + NEW_LINE +
-                        "           \"type\": \"string\", " + NEW_LINE +
-                        "           \"pattern\": \"^some +regex$\"" + NEW_LINE +
-                        "       }, " + NEW_LINE +
-                        "       \"exampleFormatSchemaCookie\": {" + NEW_LINE +
-                        "           \"type\": \"string\", " + NEW_LINE +
-                        "           \"format\": \"ipv4\"" + NEW_LINE +
-                        "       }" + NEW_LINE +
-                        "   }" + NEW_LINE);
-                }
-                if (isErrorForField(reports, fieldPointer, "/body") && !schemaPointer.contains("bodyWithContentType")) {
-                    validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/body") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "     \"not\": false," + NEW_LINE +
-                        "     \"type\": \"BINARY\"," + NEW_LINE +
-                        "     \"base64Bytes\": \"\"," + NEW_LINE +
-                        "     \"contentType\": \"\"" + NEW_LINE +
-                        "   }, " + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "     \"not\": false," + NEW_LINE +
-                        "     \"type\": \"JSON\"," + NEW_LINE +
-                        "     \"json\": \"\"," + NEW_LINE +
-                        "     \"contentType\": \"\"," + NEW_LINE +
-                        "     \"matchType\": \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
-                        "   }," + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "     \"not\": false," + NEW_LINE +
-                        "     \"type\": \"JSON_SCHEMA\"," + NEW_LINE +
-                        "     \"jsonSchema\": \"\"" + NEW_LINE +
-                        "   }," + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "     \"not\": false," + NEW_LINE +
-                        "     \"type\": \"JSON_PATH\"," + NEW_LINE +
-                        "     \"jsonPath\": \"\"" + NEW_LINE +
-                        "   }," + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "     \"not\": false," + NEW_LINE +
-                        "     \"type\": \"PARAMETERS\"," + NEW_LINE +
-                        "     \"parameters\": {\"name\": \"value\"}" + NEW_LINE +
-                        "   }," + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "     \"not\": false," + NEW_LINE +
-                        "     \"type\": \"REGEX\"," + NEW_LINE +
-                        "     \"regex\": \"\"" + NEW_LINE +
-                        "   }," + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "     \"not\": false," + NEW_LINE +
-                        "     \"type\": \"STRING\"," + NEW_LINE +
-                        "     \"string\": \"\"" + NEW_LINE +
-                        "   }," + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "     \"not\": false," + NEW_LINE +
-                        "     \"type\": \"XML\"," + NEW_LINE +
-                        "     \"xml\": \"\"," + NEW_LINE +
-                        "     \"contentType\": \"\"" + NEW_LINE +
-                        "   }," + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "     \"not\": false," + NEW_LINE +
-                        "     \"type\": \"XML_SCHEMA\"," + NEW_LINE +
-                        "     \"xmlSchema\": \"\"" + NEW_LINE +
-                        "   }," + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "     \"not\": false," + NEW_LINE +
-                        "     \"type\": \"XPATH\"," + NEW_LINE +
-                        "     \"xpath\": \"\"" + NEW_LINE +
-                        "   }" + NEW_LINE);
-                }
-                if (isErrorForField(reports, fieldPointer, "/body") && schemaPointer.contains("bodyWithContentType")) {
-                    validationErrors.add("field: \"" + deepFieldName(reports, fieldPointer, "/body") + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "     \"type\": \"BINARY\"," + NEW_LINE +
-                        "     \"base64Bytes\": \"\"," + NEW_LINE +
-                        "     \"contentType\": \"\"" + NEW_LINE +
-                        "   }, " + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "     \"type\": \"JSON\"," + NEW_LINE +
-                        "     \"json\": \"\"," + NEW_LINE +
-                        "     \"contentType\": \"\"" + NEW_LINE +
-                        "   }," + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "     \"type\": \"PARAMETERS\"," + NEW_LINE +
-                        "     \"parameters\": {\"name\": \"value\"}" + NEW_LINE +
-                        "   }," + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "     \"type\": \"STRING\"," + NEW_LINE +
-                        "     \"string\": \"\"" + NEW_LINE +
-                        "   }," + NEW_LINE +
-                        "   {" + NEW_LINE +
-                        "     \"type\": \"XML\"," + NEW_LINE +
-                        "     \"xml\": \"\"," + NEW_LINE +
-                        "     \"contentType\": \"\"" + NEW_LINE +
-                        "   }" + NEW_LINE);
-                }
-            }
-            if (String.valueOf(processingMessageJson.get("keyword")).contains("oneOf")) {
-                StringBuilder oneOfErrorMessage = new StringBuilder("oneOf of the following must be specified ");
-                if (fieldPointer.isEmpty() && isNotBlank(mainSchemeFile)) {
-                    if (mainSchemeFile.contains("expectation")) {
-                        validationErrors.add(
-                            oneOfErrorMessage
-                                .append(Arrays.asList(
-                                    "\"httpResponse\"",
-                                    "\"httpResponseTemplate\"",
-                                    "\"httpResponseObjectCallback\"",
-                                    "\"httpResponseClassCallback\"",
-                                    "\"httpForward\"",
-                                    "\"httpForwardTemplate\"",
-                                    "\"httpForwardObjectCallback\"",
-                                    "\"httpForwardClassCallback\"",
-                                    "\"httpOverrideForwardedRequest\"",
-                                    "\"httpError\""
-                                ))
-                                .append(" but found ")
-                                .append(processingMessageJson.get("matched"))
-                                .append(" without errors")
-                                .toString()
-                        );
-                    } else if (mainSchemeFile.contains("requestDefinition")) {
-                        validationErrors.add(
-                            oneOfErrorMessage
-                                .append(Arrays.asList(
-                                    "\"httpRequest\"",
-                                    "\"openAPIDefinition\""
-                                ))
-                                .append(" but found ")
-                                .append(processingMessageJson.get("matched"))
-                                .append(" without errors")
-                                .toString()
-                        );
-                    }
-                }
-            }
-            if (fieldPointer.endsWith("/times") && processingMessage.toString().contains("has properties which are not allowed by the schema") && String.valueOf(schemaJson).contains("verificationTimes")) {
-                validationErrors.add("field: \"" + fieldPointer + (isNotBlank(schemaPointer) ? "\" for schema: \"" + schemaPointer : "") + "\" has error: \"" + processingMessage.getMessage() + ", allowed fields are [\"atLeast\", \"atMost\"]\"");
-            }
-            if (reports != null) {
-                validationErrors.addAll(extractMessage(reports));
-            } else {
-                validationErrors.addAll(extractMessage(processingMessageJson));
-            }
-            if (validationErrors.isEmpty() && processingMessageJson.get("message") != null && isNotBlank(processingMessageJson.get("message").asText())) {
-                validationErrors.add(processingMessageJson.get("message").asText());
-            }
-        }
-        validationErrors.sort(String::compareToIgnoreCase);
-        return validationErrors.size() + " error" + (validationErrors.size() > 1 ? "s" : "") + ":" + NEW_LINE
-            + " - " + Joiner.on(NEW_LINE + " - ").join(validationErrors) +
-            (addOpenAPISpecificationMessage ? NEW_LINE + NEW_LINE + OPEN_API_SPECIFICATION_URL : "");
-    }
-
-    private boolean isErrorForField(JsonNode reports, String fieldPointer, String fieldName) {
-        return fieldPointer.endsWith(fieldName) // http response
-            || (fieldPointer.contains("/httpRequest") && reports.has("/definitions/requestDefinition/oneOf/0") && stream(reports.get("/definitions/requestDefinition/oneOf/0").iterator()).anyMatch(jsonNode -> pointerValue(jsonNode.get("instance")).endsWith(fieldName))); // http request(s)
-    }
-
-    private String deepFieldName(JsonNode reports, String fieldPointer, String fieldName) {
-        if (fieldPointer.endsWith(fieldName)) {
-            // http response
-            return fieldPointer;
-        } else if (fieldPointer.contains("/httpRequest") && reports.has("/definitions/requestDefinition/oneOf/0") && stream(reports.get("/definitions/requestDefinition/oneOf/0").iterator()).anyMatch(jsonNode -> pointerValue(jsonNode.get("instance")).endsWith(fieldName))) {
-            // http request
-            return stream(reports.get("/definitions/requestDefinition/oneOf/0").iterator()).filter(jsonNode -> pointerValue(jsonNode.get("instance")).endsWith(fieldName)).findFirst().map(instanceNode -> pointerValue(instanceNode.get("instance"))).orElse("");
-        } else {
+    private String formatProcessingReport(Set<ValidationMessage> validationMessages, boolean addOpenAPISpecificationMessage) {
+        if (validationMessages.isEmpty()) {
             return "";
-        }
-    }
-
-    private String removeDefinitionPrefix(String text) {
-        return StringUtils.remove(text, "/definitions/");
-    }
-
-    private String pointerValue(JsonNode jsonNode) {
-        return jsonNode != null && jsonNode.get("pointer") != null && isNotBlank(jsonNode.get("pointer").asText()) ? jsonNode.get("pointer").asText() : "";
-    }
-
-    public static <T> Stream<T> stream(Iterator<T> iterator) {
-        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, Spliterator.ORDERED), false);
-    }
-
-    public Set<String> extractMessage(JsonNode reports) {
-        Set<String> messages = new HashSet<>();
-        if (reports != null) {
-            // if object
-            stream(reports.fields())
-                .forEach(field -> {
-                    if ("message".equals(field.getKey())) {
-                        String fieldName = pointerValue(reports.get("instance"));
-                        String schemaName = pointerValue(reports.get("schema"));
-                        if (field.getValue() != null) {
-                            boolean fieldNotBlank = isNotBlank(fieldName);
-                            boolean schemaNotBlank = isNotBlank(schemaName);
-                            messages.add((fieldNotBlank ? "field: \"" + fieldName + "\"" : "") + (schemaNotBlank ? (fieldNotBlank ? " for " : "") + "schema: \"" + removeDefinitionPrefix(schemaName) + "\"" : "") + (fieldNotBlank || schemaNotBlank ? " has error: \"" : "") + field.getValue().asText() + (fieldNotBlank || schemaNotBlank ? "\"" : ""));
-                        }
-                    } else if (field.getValue() != null && (field.getValue().isArray() || field.getValue().isObject())) {
-                        messages.addAll(extractMessage(field.getValue()));
+        } else {
+            Set<String> extraMessages = new HashSet<>();
+            Set<String> formattedMessages = validationMessages
+                .stream()
+                .map(validationMessage -> {
+                    String validationMessageText = String.valueOf(validationMessage);
+                    if ((validationMessageText.startsWith("$.httpRequest") && validationMessageText.contains(".body: should be valid to any of the schemas")) || validationMessageText.contains("$.body: should be valid to any of the schemas")) {
+                        return StringUtils.substringBefore(validationMessageText, ":") + ": should match one of its valid types: " + FileReader.readFileFromClassPathOrPath("org/mockserver/model/schema/body.json").replaceAll(NEW_LINE, NEW_LINE + "   ");
                     }
-                });
-            // if array
-            stream(reports.iterator())
-                .forEach(node -> messages.addAll(extractMessage(node)));
+                    if (validationMessageText.startsWith("$.httpRequest") && validationMessageText.contains(".specUrlOrPayload: is missing but it is required")) {
+                        return StringUtils.substringBefore(validationMessageText, ":") + ": is missing, but is required, if specifying OpenAPI request matcher";
+                    }
+                    if (validationMessageText.startsWith("$.httpResponse.body: should be valid to any of the schemas")) {
+                        return "$.httpResponse.body: should match one of its valid types: " + FileReader.readFileFromClassPathOrPath("org/mockserver/model/schema/bodyWithContentType.json").replaceAll(NEW_LINE, NEW_LINE + "   ");
+                    }
+                    if (validationMessageText.endsWith("cookies: object found, array expected")) {
+                        return StringUtils.substringBefore(validationMessageText, ":") + ": invalid cookie format, the following are valid examples: " + NEW_LINE +
+                            "  " + NEW_LINE +
+                            "     {" + NEW_LINE +
+                            "         \"exampleRegexCookie\": \"^some +regex$\", " + NEW_LINE +
+                            "         \"exampleNottedRegexCookie\": \"!notThisValue\", " + NEW_LINE +
+                            "         \"exampleSimpleStringCookie\": \"simpleStringMatch\"" + NEW_LINE +
+                            "     }" + NEW_LINE +
+                            "  " + NEW_LINE +
+                            "  or:" + NEW_LINE +
+                            "  " + NEW_LINE +
+                            "     {" + NEW_LINE +
+                            "         \"exampleNumberSchemaCookie\": {" + NEW_LINE +
+                            "             \"type\": \"number\"" + NEW_LINE +
+                            "         }, " + NEW_LINE +
+                            "         \"examplePatternSchemaCookie\": {" + NEW_LINE +
+                            "             \"type\": \"string\", " + NEW_LINE +
+                            "             \"pattern\": \"^some regex$\"" + NEW_LINE +
+                            "         }, " + NEW_LINE +
+                            "         \"exampleFormatSchemaCookie\": {" + NEW_LINE +
+                            "             \"type\": \"string\", " + NEW_LINE +
+                            "             \"format\": \"ipv4\"" + NEW_LINE +
+                            "         }" + NEW_LINE +
+                            "     }";
+                    }
+                    if (validationMessageText.endsWith("headers: object found, array expected")) {
+                        return StringUtils.substringBefore(validationMessageText, ":") + ": invalid header format, the following are valid examples: " + NEW_LINE +
+                            "  " + NEW_LINE +
+                            "     {" + NEW_LINE +
+                            "         \"exampleRegexHeader\": [" + NEW_LINE +
+                            "             \"^some +regex$\"" + NEW_LINE +
+                            "         ], " + NEW_LINE +
+                            "         \"exampleNottedAndSimpleStringHeader\": [" + NEW_LINE +
+                            "             \"!notThisValue\", " + NEW_LINE +
+                            "             \"simpleStringMatch\"" + NEW_LINE +
+                            "         ]" + NEW_LINE +
+                            "     }" + NEW_LINE +
+                            "  " + NEW_LINE +
+                            "  or:" + NEW_LINE +
+                            "  " + NEW_LINE +
+                            "     {" + NEW_LINE +
+                            "         \"exampleSchemaHeader\": [" + NEW_LINE +
+                            "             {" + NEW_LINE +
+                            "                 \"type\": \"number\"" + NEW_LINE +
+                            "             }" + NEW_LINE +
+                            "         ], " + NEW_LINE +
+                            "         \"exampleMultiSchemaHeader\": [" + NEW_LINE +
+                            "             {" + NEW_LINE +
+                            "                 \"type\": \"string\", " + NEW_LINE +
+                            "                 \"pattern\": \"^some +regex$\"" + NEW_LINE +
+                            "             }, " + NEW_LINE +
+                            "             {" + NEW_LINE +
+                            "                 \"type\": \"string\", " + NEW_LINE +
+                            "                 \"format\": \"ipv4\"" + NEW_LINE +
+                            "             }" + NEW_LINE +
+                            "         ]" + NEW_LINE +
+                            "     }";
+                    }
+                    if (validationMessageText.endsWith("pathParameters: object found, array expected") || validationMessageText.endsWith("queryStringParameters: object found, array expected")) {
+                        return StringUtils.substringBefore(validationMessageText, ":") + ": invalid parameter format, the following are valid examples: " + NEW_LINE +
+                            "  " + NEW_LINE +
+                            "     {" + NEW_LINE +
+                            "         \"exampleRegexParameter\": [" + NEW_LINE +
+                            "             \"^some +regex$\"" + NEW_LINE +
+                            "         ], " + NEW_LINE +
+                            "         \"exampleNottedAndSimpleStringParameter\": [" + NEW_LINE +
+                            "             \"!notThisValue\", " + NEW_LINE +
+                            "             \"simpleStringMatch\"" + NEW_LINE +
+                            "         ]" + NEW_LINE +
+                            "     }" + NEW_LINE +
+                            "  " + NEW_LINE +
+                            "  or:" + NEW_LINE +
+                            "  " + NEW_LINE +
+                            "     {" + NEW_LINE +
+                            "         \"exampleSchemaParameter\": [" + NEW_LINE +
+                            "             {" + NEW_LINE +
+                            "                 \"type\": \"number\"" + NEW_LINE +
+                            "             }" + NEW_LINE +
+                            "         ], " + NEW_LINE +
+                            "         \"exampleMultiSchemaParameter\": [" + NEW_LINE +
+                            "             {" + NEW_LINE +
+                            "                 \"type\": \"string\", " + NEW_LINE +
+                            "                 \"pattern\": \"^some +regex$\"" + NEW_LINE +
+                            "             }, " + NEW_LINE +
+                            "             {" + NEW_LINE +
+                            "                 \"type\": \"string\", " + NEW_LINE +
+                            "                 \"format\": \"ipv4\"" + NEW_LINE +
+                            "             }" + NEW_LINE +
+                            "         ]" + NEW_LINE +
+                            "     }";
+                    }
+                    if (validationMessageText.startsWith("$.http") && validationMessageText.endsWith(": is missing but it is required")) {
+                        extraMessages.add("oneOf of the following must be specified [" +
+                            "httpError, " +
+                            "httpForward, " +
+                            "httpForwardClassCallback, " +
+                            "httpForwardObjectCallback, " +
+                            "httpForwardTemplate, " +
+                            "httpOverrideForwardedRequest, " +
+                            "httpResponse, " +
+                            "httpResponseClassCallback, " +
+                            "httpResponseObjectCallback, " +
+                            "httpResponseTemplate" +
+                            "]");
+                        return StringUtils.substringBefore(validationMessageText, ":") + ": is missing, but is required, if specifying action of type " + StringUtils.substringBefore(StringUtils.substringAfter(validationMessageText, "$.http"), ":");
+                    }
+                    return validationMessageText;
+                })
+                .collect(Collectors.toSet());
+            formattedMessages.addAll(extraMessages);
+            List<String> validationMessageTexts = formattedMessages
+                .stream()
+                .filter(formattedMessage -> !formattedMessage.endsWith("object expected") || !formattedMessages.contains(formattedMessage.replace("object expected", "string expected")))
+                .sorted().collect(Collectors.toList());
+            return validationMessageTexts.size() + " error" + (validationMessageTexts.size() > 1 ? "s" : "") + ":" + NEW_LINE
+                + " - " + Joiner.on(NEW_LINE + " - ").join(validationMessageTexts) +
+                (addOpenAPISpecificationMessage ? NEW_LINE + NEW_LINE + OPEN_API_SPECIFICATION_URL : "");
         }
-        return messages;
     }
+
 }

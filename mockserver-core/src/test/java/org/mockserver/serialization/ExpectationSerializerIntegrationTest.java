@@ -243,13 +243,11 @@ public class ExpectationSerializerIntegrationTest {
                 "" + NEW_LINE +
                 " schema validation errors:" + NEW_LINE +
                 "" + NEW_LINE +
-                "  4 errors:" + NEW_LINE +
-                "   - field: \"/httpRequest\" for schema: \"httpRequest\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
-                "   - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
-                "   - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"]\"" + NEW_LINE +
-                "   - field: \"/httpResponse\" for schema: \"httpResponse\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
+                "  2 errors:\n" +
+                "   - $.httpRequest.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher\n" +
+                "   - $.httpResponse.extra_field: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
                 "  " + NEW_LINE +
-                "  " + OPEN_API_SPECIFICATION_URL));
+                "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  " )));
         }
     }
 
@@ -371,13 +369,11 @@ public class ExpectationSerializerIntegrationTest {
                 "  " + NEW_LINE +
                 "   schema validation errors:" + NEW_LINE +
                 "  " + NEW_LINE +
-                "    4 errors:" + NEW_LINE +
-                "     - field: \"/httpRequest\" for schema: \"httpRequest\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
-                "     - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
-                "     - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"]\"" + NEW_LINE +
-                "     - field: \"/httpResponse\" for schema: \"httpResponse\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
+                "    2 errors:\n" +
+                "     - $.httpRequest.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher\n" +
+                "     - $.httpResponse.extra_field: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
                 "    " + NEW_LINE +
-                "    " + OPEN_API_SPECIFICATION_URL + "," + NEW_LINE +
+                "    " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "    " ) + "," + NEW_LINE +
                 "  " + NEW_LINE +
                 "  incorrect expectation json format for:" + NEW_LINE +
                 "  " + NEW_LINE +
@@ -394,13 +390,11 @@ public class ExpectationSerializerIntegrationTest {
                 "  " + NEW_LINE +
                 "   schema validation errors:" + NEW_LINE +
                 "  " + NEW_LINE +
-                "    4 errors:" + NEW_LINE +
-                "     - field: \"/httpRequest\" for schema: \"httpRequest\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
-                "     - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
-                "     - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"]\"" + NEW_LINE +
-                "     - field: \"/httpResponse\" for schema: \"httpResponse\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
+                "    2 errors:\n" +
+                "     - $.httpRequest.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher\n" +
+                "     - $.httpResponse.extra_field: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
                 "    " + NEW_LINE +
-                "    " + OPEN_API_SPECIFICATION_URL + "," + NEW_LINE +
+                "    " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "    " ) + "," + NEW_LINE +
                 "  " + NEW_LINE +
                 "  incorrect expectation json format for:" + NEW_LINE +
                 "  " + NEW_LINE +
@@ -417,13 +411,11 @@ public class ExpectationSerializerIntegrationTest {
                 "  " + NEW_LINE +
                 "   schema validation errors:" + NEW_LINE +
                 "  " + NEW_LINE +
-                "    4 errors:" + NEW_LINE +
-                "     - field: \"/httpRequest\" for schema: \"httpRequest\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
-                "     - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object has missing required properties ([\"specUrlOrPayload\"])\"" + NEW_LINE +
-                "     - field: \"/httpRequest\" for schema: \"openAPIDefinition\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\",\"path\"]\"" + NEW_LINE +
-                "     - field: \"/httpResponse\" for schema: \"httpResponse\" has error: \"object instance has properties which are not allowed by the schema: [\"extra_field\"]\"" + NEW_LINE +
+                "    2 errors:\n" +
+                "     - $.httpRequest.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher\n" +
+                "     - $.httpResponse.extra_field: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
                 "    " + NEW_LINE +
-                "    " + OPEN_API_SPECIFICATION_URL + NEW_LINE +
+                "    " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "    " ) + NEW_LINE +
                 "]"));
         }
     }
