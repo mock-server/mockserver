@@ -1,5 +1,6 @@
 package org.mockserver.junit;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.Description;
@@ -51,6 +52,11 @@ public class MockServerClassRuleTestWithMocks {
         when(mockClientAndServer.getPort()).thenReturn(httpPort);
         when(mockClientAndServer.getLocalPorts()).thenReturn(Arrays.asList(httpPort + 1, httpPort + 2));
         when(clientAndServerFactory.newClientAndServer()).thenReturn(mockClientAndServer);
+    }
+
+    @After
+    public void cleanupFixture() {
+        MockServerRule.perTestSuiteClientAndServer = null;
     }
 
     @Test

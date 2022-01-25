@@ -11,6 +11,7 @@ import org.mockserver.socket.PortFactory;
 import java.lang.reflect.Field;
 import java.util.List;
 
+@SuppressWarnings("FieldMayBeFinal")
 public class MockServerRule implements TestRule {
 
     @VisibleForTesting
