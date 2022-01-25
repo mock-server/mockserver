@@ -106,4 +106,4 @@ mockserver_keystore_*_jks
 persistedExpectations.json
 mockserverInitialization.json
 /*.pem
-/mockserver-examples/src/main/java/org/mockserver/examples/mockserver/_test*.java
+_test*.java
