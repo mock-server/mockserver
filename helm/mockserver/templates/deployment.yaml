@@ -36,7 +36,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
 {{- end }}
           securityContext:
-            runAsUser: 65534 # nonroot
+            runAsUser: {{ .Values.app.runAsUser }}
             readOnlyRootFilesystem: {{ .Values.app.readOnlyRootFilesystem }}
           ports:
             - name: serviceport
