@@ -1,13 +1,19 @@
 package org.mockserver.proxyconfiguration;
 
+import io.netty.buffer.Unpooled;
+import io.netty.handler.codec.base64.Base64;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.ObjectWithJsonToString;
 
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.PROXY_AUTHORIZATION;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.*;
 
 /**
@@ -103,6 +109,17 @@ public class ProxyConfiguration extends ObjectWithJsonToString {
 
     public String getPassword() {
         return password;
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
+    public ProxyConfiguration addProxyAuthenticationHeader(HttpRequest httpRequest) {
+        if (isNotBlank(username) && isNotBlank(password)) {
+            httpRequest.withHeader(
+                    PROXY_AUTHORIZATION.toString(),
+                    "Basic " + Base64.encode(Unpooled.copiedBuffer(username + ':' + password, StandardCharsets.UTF_8), false).toString(StandardCharsets.US_ASCII)
+            );
+        }
+        return this;
     }
 
     public enum Type {

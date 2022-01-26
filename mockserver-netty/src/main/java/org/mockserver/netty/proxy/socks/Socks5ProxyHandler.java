@@ -7,8 +7,12 @@ import io.netty.handler.codec.socksx.v5.*;
 import io.netty.handler.ssl.SslHandler;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.lifecycle.LifeCycle;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.slf4j.event.Level;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mockserver.log.model.LogEntry.LogMessageType.AUTHENTICATION_FAILED;
 import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabledUpstream;
 
 @ChannelHandler.Sharable
@@ -40,7 +44,7 @@ public class Socks5ProxyHandler extends SocksProxyHandler<Socks5Message> {
             requiredAuthMethod = Socks5AuthMethod.NO_AUTH;
             nextRequestDecoder = new Socks5CommandRequestDecoder();
         } else if (initialRequest.authMethods().contains(Socks5AuthMethod.PASSWORD)) {
-            if (!username.isEmpty() && !password.isEmpty()) {
+            if (isNotBlank(username) && isNotBlank(password)) {
                 requiredAuthMethod = Socks5AuthMethod.PASSWORD;
                 nextRequestDecoder = new Socks5PasswordAuthRequestDecoder();
             } else {
@@ -83,6 +87,12 @@ public class Socks5ProxyHandler extends SocksProxyHandler<Socks5Message> {
             ctx.writeAndFlush(new DefaultSocks5PasswordAuthResponse(Socks5PasswordAuthStatus.SUCCESS)).awaitUninterruptibly();
         } else {
             ctx.writeAndFlush(new DefaultSocks5PasswordAuthResponse(Socks5PasswordAuthStatus.FAILURE)).addListener(ChannelFutureListener.CLOSE);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(AUTHENTICATION_FAILED)
+                    .setLogLevel(Level.INFO)
+                    .setMessageFormat("proxy authentication failed so returning SOCKS FAILURE response")
+            );
         }
     }
 

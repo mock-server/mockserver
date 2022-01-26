@@ -13,12 +13,21 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.netty.MockServer;
 import org.mockserver.testing.integration.proxy.AbstractProxyIntegrationTest;
+import org.mockserver.uuid.UUIDService;
 
+import java.net.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static io.netty.handler.codec.http.HttpHeaderNames.PROXY_AUTHENTICATE;
 import static junit.framework.TestCase.assertEquals;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
@@ -31,14 +40,23 @@ import static org.mockserver.verify.VerificationTimes.exactly;
  */
 public class NettyHttpProxyIntegrationTest extends AbstractProxyIntegrationTest {
 
+    private static final String AUTH_TUNNELING_DISABLED_SCHEMES_SYSTEM_PROPERTY = "jdk.http.auth.tunneling.disabledSchemes";
+    private static final String AUTH_PROXYING_DISABLED_SCHEMES_SYSTEM_PROPERTY = "jdk.http.auth.proxying.disabledSchemes";
     private static int mockServerPort;
     private static EchoServer echoServer;
     private static MockServerClient mockServerClient;
+    private static String originalTunnelingAuthDisabledSchemes;
+    private static String originalProxyAuthDisabledSchemes;
 
     @BeforeClass
     public static void setupFixture() {
         servletContext = "";
 
+        // see: https://www.oracle.com/java/technologies/javase/8u111-relnotes.html
+        originalTunnelingAuthDisabledSchemes = System.getProperty(AUTH_TUNNELING_DISABLED_SCHEMES_SYSTEM_PROPERTY);
+        originalProxyAuthDisabledSchemes = System.getProperty(AUTH_PROXYING_DISABLED_SCHEMES_SYSTEM_PROPERTY);
+        System.setProperty(AUTH_TUNNELING_DISABLED_SCHEMES_SYSTEM_PROPERTY, "");
+        System.setProperty(AUTH_PROXYING_DISABLED_SCHEMES_SYSTEM_PROPERTY, "");
         mockServerPort = new MockServer().getLocalPort();
         mockServerClient = new MockServerClient("localhost", mockServerPort);
 
@@ -49,6 +67,17 @@ public class NettyHttpProxyIntegrationTest extends AbstractProxyIntegrationTest 
     public static void stopServer() {
         stopQuietly(echoServer);
         stopQuietly(mockServerClient);
+
+        if (isBlank(originalTunnelingAuthDisabledSchemes)) {
+            System.clearProperty(AUTH_TUNNELING_DISABLED_SCHEMES_SYSTEM_PROPERTY);
+        } else {
+            System.setProperty(AUTH_TUNNELING_DISABLED_SCHEMES_SYSTEM_PROPERTY, originalTunnelingAuthDisabledSchemes);
+        }
+        if (isBlank(originalProxyAuthDisabledSchemes)) {
+            System.clearProperty(AUTH_PROXYING_DISABLED_SCHEMES_SYSTEM_PROPERTY);
+        } else {
+            System.setProperty(AUTH_PROXYING_DISABLED_SCHEMES_SYSTEM_PROPERTY, originalProxyAuthDisabledSchemes);
+        }
     }
 
     @Before
@@ -170,6 +199,164 @@ public class NettyHttpProxyIntegrationTest extends AbstractProxyIntegrationTest 
                 .withBody(hexBytes),
             exactly(1)
         );
+    }
+
+    @Test
+    public void shouldNotCallAuthenticatorWhenNoProxyCredentialsConfigured() throws Exception {
+        String existingUsername = ConfigurationProperties.proxyAuthenticationUsername();
+        String existingPassword = ConfigurationProperties.proxyAuthenticationPassword();
+        try {
+            // given
+            ConfigurationProperties.proxyAuthenticationUsername("");
+            ConfigurationProperties.proxyAuthenticationPassword("");
+            AtomicInteger proaxyAuthenticatorCounter = new AtomicInteger(0);
+
+            // when
+            Authenticator.setDefault(new Authenticator() {
+                @Override
+                protected PasswordAuthentication getPasswordAuthentication() {
+                    proaxyAuthenticatorCounter.incrementAndGet();
+                    if (getRequestorType() == RequestorType.PROXY) {
+                        return new PasswordAuthentication(UUIDService.getUUID(), UUIDService.getUUID().toCharArray());
+                    }
+                    return null;
+                }
+            });
+            URL url = new URL("http://localhost:" + echoServer.getPort() + "/somePath");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", mockServerPort)));
+
+            // then
+            assertThat(con.getResponseCode(), equalTo(200));
+            assertThat(proaxyAuthenticatorCounter.get(), equalTo(0));
+        } finally {
+            ConfigurationProperties.proxyAuthenticationUsername(existingUsername);
+            ConfigurationProperties.proxyAuthenticationPassword(existingPassword);
+        }
+    }
+
+    @Test
+    public void shouldAllowAuthenticatedProxiedRequestWithValidCredentialsForValidTarget() throws Exception {
+        String existingUsername = ConfigurationProperties.proxyAuthenticationUsername();
+        String existingPassword = ConfigurationProperties.proxyAuthenticationPassword();
+        try {
+            // given
+            String username = UUIDService.getUUID();
+            String password = UUIDService.getUUID();
+            ConfigurationProperties.proxyAuthenticationUsername(username);
+            ConfigurationProperties.proxyAuthenticationPassword(password);
+            AtomicInteger proaxyAuthenticatorCounter = new AtomicInteger(0);
+
+            // when
+            Authenticator.setDefault(new Authenticator() {
+                @Override
+                protected PasswordAuthentication getPasswordAuthentication() {
+                    if (getRequestorType() == RequestorType.PROXY) {
+                        proaxyAuthenticatorCounter.incrementAndGet();
+                        return new PasswordAuthentication(username, password.toCharArray());
+                    }
+                    return null;
+                }
+            });
+            URL url = new URL("http://localhost:" + echoServer.getPort() + "/somePath");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", mockServerPort)));
+
+            // then
+            assertThat(con.getResponseCode(), equalTo(200));
+            assertThat(proaxyAuthenticatorCounter.get(), equalTo(1));
+        } finally {
+            ConfigurationProperties.proxyAuthenticationUsername(existingUsername);
+            ConfigurationProperties.proxyAuthenticationPassword(existingPassword);
+        }
+    }
+
+    @Test
+    public void shouldAllowAuthenticatedProxiedRequestWithValidCredentialsForRecursiveMockServer() throws Exception {
+        String existingUsername = ConfigurationProperties.proxyAuthenticationUsername();
+        String existingPassword = ConfigurationProperties.proxyAuthenticationPassword();
+        try {
+            // given
+            String username = UUIDService.getUUID();
+            String password = UUIDService.getUUID();
+            ConfigurationProperties.proxyAuthenticationUsername(username);
+            ConfigurationProperties.proxyAuthenticationPassword(password);
+
+            // when
+            Authenticator.setDefault(new Authenticator() {
+                @Override
+                protected PasswordAuthentication getPasswordAuthentication() {
+                    if (getRequestorType() == RequestorType.PROXY) {
+                        return new PasswordAuthentication(username, password.toCharArray());
+                    }
+                    return null;
+                }
+            });
+            URL url = new URL("http://localhost:" + mockServerPort + "/somePath");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", mockServerPort)));
+
+            // then
+            assertThat(con.getResponseCode(), equalTo(404));
+        } finally {
+            ConfigurationProperties.proxyAuthenticationUsername(existingUsername);
+            ConfigurationProperties.proxyAuthenticationPassword(existingPassword);
+        }
+    }
+
+    @Test
+    public void shouldPreventUnauthenticatedProxiedRequestDueToInvalidPassword() throws Exception {
+        String existingUsername = ConfigurationProperties.proxyAuthenticationUsername();
+        String existingPassword = ConfigurationProperties.proxyAuthenticationPassword();
+        try {
+            // given
+            String username = UUIDService.getUUID();
+            String password = UUIDService.getUUID();
+            ConfigurationProperties.proxyAuthenticationUsername(username);
+            ConfigurationProperties.proxyAuthenticationPassword(password);
+
+            // when
+            Authenticator.setDefault(new Authenticator() {
+                @Override
+                protected PasswordAuthentication getPasswordAuthentication() {
+                    if (getRequestorType() == RequestorType.PROXY) {
+                        String wrongPassword = UUIDService.getUUID();
+                        return new PasswordAuthentication(username, wrongPassword.toCharArray());
+                    }
+                    return null;
+                }
+            });
+            URL url = new URL("http://localhost:" + echoServer.getPort() + "/somePath");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", mockServerPort)));
+
+            // then
+            assertThat(con.getHeaderField(PROXY_AUTHENTICATE.toString()), equalTo("Basic realm=\"MockServer HTTP Proxy\", charset=\"UTF-8\""));
+            assertThat(con.getResponseCode(), equalTo(407));
+        } finally {
+            ConfigurationProperties.proxyAuthenticationUsername(existingUsername);
+            ConfigurationProperties.proxyAuthenticationPassword(existingPassword);
+        }
+    }
+
+    @Test
+    public void shouldPreventUnauthenticatedProxiedRequestDueToNoAuthenticator() throws Exception {
+        String existingUsername = ConfigurationProperties.proxyAuthenticationUsername();
+        String existingPassword = ConfigurationProperties.proxyAuthenticationPassword();
+        try {
+            // given
+            String username = UUIDService.getUUID();
+            String password = UUIDService.getUUID();
+            ConfigurationProperties.proxyAuthenticationUsername(username);
+            ConfigurationProperties.proxyAuthenticationPassword(password);
+
+            // when
+            URL url = new URL("http://localhost:" + echoServer.getPort() + "/somePath");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", mockServerPort)));
+
+            // then
+            assertThat(con.getHeaderField(PROXY_AUTHENTICATE.toString()), equalTo("Basic realm=\"MockServer HTTP Proxy\", charset=\"UTF-8\""));
+            assertThat(con.getResponseCode(), equalTo(407));
+        } finally {
+            ConfigurationProperties.proxyAuthenticationUsername(existingUsername);
+            ConfigurationProperties.proxyAuthenticationPassword(existingPassword);
+        }
     }
 
 }

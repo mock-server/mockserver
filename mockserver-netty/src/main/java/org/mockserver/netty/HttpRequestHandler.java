@@ -15,6 +15,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpState;
 import org.mockserver.mock.action.http.HttpActionHandler;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 import org.mockserver.model.MediaType;
 import org.mockserver.model.PortBinding;
 import org.mockserver.netty.proxy.connect.HttpConnectHandler;
@@ -36,6 +37,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.addSubjectAlternativeName;
 import static org.mockserver.exception.ExceptionHandling.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
+import static org.mockserver.log.model.LogEntry.LogMessageType.AUTHENTICATION_FAILED;
 import static org.mockserver.mock.HttpState.PATH_PREFIX;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
@@ -46,6 +48,7 @@ import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabl
  * @author jamesdbloom
  */
 @ChannelHandler.Sharable
+@SuppressWarnings("FieldMayBeFinal")
 public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
     public static final AttributeKey<Boolean> PROXYING = AttributeKey.valueOf("PROXYING");
@@ -127,9 +130,21 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
                     String password = ConfigurationProperties.proxyAuthenticationPassword();
                     if (isNotBlank(username) && isNotBlank(password) &&
                         !request.containsHeader(PROXY_AUTHORIZATION.toString(), "Basic " + Base64.encode(Unpooled.copiedBuffer(username + ':' + password, StandardCharsets.UTF_8), false).toString(StandardCharsets.US_ASCII))) {
-                        ctx.writeAndFlush(response()
+                        HttpResponse response = response()
                             .withStatusCode(PROXY_AUTHENTICATION_REQUIRED.code())
-                            .withHeader(PROXY_AUTHENTICATE.toString(), "Basic realm=\"" + StringEscapeUtils.escapeJava(ConfigurationProperties.proxyAuthenticationRealm()) + "\", charset=\"UTF-8\""));
+                            .withHeader(PROXY_AUTHENTICATE.toString(), "Basic realm=\"" + StringEscapeUtils.escapeJava(ConfigurationProperties.proxyAuthenticationRealm()) + "\", charset=\"UTF-8\"");
+                        ctx.writeAndFlush(response);
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setType(AUTHENTICATION_FAILED)
+                                .setLogLevel(Level.INFO)
+                                .setCorrelationId(request.getLogCorrelationId())
+                                .setHttpRequest(request)
+                                .setHttpResponse(response)
+                                .setExpectation(request, response)
+                                .setMessageFormat("proxy authentication failed so returning response:{}for forwarded request:{}")
+                                .setArguments(response, request)
+                        );
                     } else {
                         ctx.channel().attr(PROXYING).set(Boolean.TRUE);
                         // assume SSL for CONNECT request

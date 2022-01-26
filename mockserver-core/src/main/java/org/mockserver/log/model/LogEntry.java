@@ -531,5 +531,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
         FORWARDED_REQUEST,
         TEMPLATE_GENERATED,
         SERVER_CONFIGURATION,
+        AUTHENTICATION_FAILED,
     }
+
 }

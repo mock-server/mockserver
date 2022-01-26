@@ -1,7 +1,9 @@
 package org.mockserver.netty.integration.proxy.http;
 
+import io.netty.buffer.Unpooled;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.handler.codec.base64.Base64;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -15,8 +17,10 @@ import org.mockserver.scheduler.Scheduler;
 import org.mockserver.uuid.UUIDService;
 
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static io.netty.handler.codec.http.HttpHeaderNames.PROXY_AUTHORIZATION;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
@@ -79,7 +83,8 @@ public class HttpProxyChainedIntegrationTest {
                     request()
                         .withPath("/target")
                         .withSecure(true)
-                        .withHeader(HOST.toString(), "www.mock-server.com"),
+                        .withHeader(HOST.toString(), "www.mock-server.com")
+                        .withHeader(PROXY_AUTHORIZATION.toString(), "Basic " + Base64.encode(Unpooled.copiedBuffer(username + ':' + password, StandardCharsets.UTF_8), false).toString(StandardCharsets.US_ASCII)),
                     new InetSocketAddress(proxyClientAndServer.getLocalPort())
                 )
                 .get(10, SECONDS);

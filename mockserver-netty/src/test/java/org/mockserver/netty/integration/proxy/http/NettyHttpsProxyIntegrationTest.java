@@ -57,7 +57,7 @@ import static org.slf4j.event.Level.ERROR;
 /**
  * @author jamesdbloom
  */
-public class NettyHttpSecureProxyIntegrationTest {
+public class NettyHttpsProxyIntegrationTest {
 
     private static int mockServerPort;
     private static EchoServer secureEchoServer;
@@ -90,7 +90,7 @@ public class NettyHttpSecureProxyIntegrationTest {
         secureEchoServer.mockServerEventLog().reset();
     }
 
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(NettyHttpSecureProxyIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(NettyHttpsProxyIntegrationTest.class.getSimpleName() + "-eventLoop"));
 
     @AfterClass
     public static void stopEventLoopGroup() {
@@ -517,11 +517,17 @@ public class NettyHttpSecureProxyIntegrationTest {
     public void shouldAuthenticateConnectRequestWhenClientConfiguredWithProxyConfiguration() throws Exception {
         String existingUsername = ConfigurationProperties.proxyAuthenticationUsername();
         String existingPassword = ConfigurationProperties.proxyAuthenticationPassword();
+        String existingForwardUsername = ConfigurationProperties.forwardProxyAuthenticationUsername();
+        String existingForwardPassword = ConfigurationProperties.forwardProxyAuthenticationPassword();
+
         try {
             String username = UUIDService.getUUID();
             String password = UUIDService.getUUID();
             ConfigurationProperties.proxyAuthenticationUsername(username);
             ConfigurationProperties.proxyAuthenticationPassword(password);
+            ConfigurationProperties.logLevel("DEBUG");
+//            ConfigurationProperties.forwardProxyAuthenticationUsername(username);
+//            ConfigurationProperties.forwardProxyAuthenticationPassword(password);
 
             org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(
                 new MockServerLogger(),
@@ -545,6 +551,8 @@ public class NettyHttpSecureProxyIntegrationTest {
         } finally {
             ConfigurationProperties.proxyAuthenticationUsername(existingUsername);
             ConfigurationProperties.proxyAuthenticationPassword(existingPassword);
+            ConfigurationProperties.forwardProxyAuthenticationUsername(existingForwardUsername);
+            ConfigurationProperties.forwardProxyAuthenticationPassword(existingForwardPassword);
         }
     }
 }

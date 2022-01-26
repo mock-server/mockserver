@@ -69,7 +69,9 @@ public class NettyHttpClient {
     public CompletableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress, Integer connectionTimeoutMillis) throws SocketConnectionException {
         if (!eventLoopGroup.isShuttingDown()) {
             if (proxyConfigurations != null && !Boolean.TRUE.equals(httpRequest.isSecure()) && proxyConfigurations.containsKey(ProxyConfiguration.Type.HTTP)) {
-                remoteAddress = proxyConfigurations.get(ProxyConfiguration.Type.HTTP).getProxyAddress();
+                ProxyConfiguration proxyConfiguration = proxyConfigurations.get(ProxyConfiguration.Type.HTTP);
+                remoteAddress = proxyConfiguration.getProxyAddress();
+                proxyConfiguration.addProxyAuthenticationHeader(httpRequest);
             } else if (remoteAddress == null) {
                 remoteAddress = httpRequest.socketAddressFromHostHeader();
             }

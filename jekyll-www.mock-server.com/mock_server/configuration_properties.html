@@ -388,6 +388,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 <button id="button_configuration_forward_proxy_authentication_username" class="accordion title"><strong>Proxy Authentication Username For Forwarded Requests</strong></button>
 <div class="panel title">
     <p>Username for proxy authentication when using HTTPS proxy (i.e. HTTP CONNECT) for all outbound / forwarded requests</p>
+    <p><strong>Note:</strong> <a target="_blank" href="https://www.oracle.com/java/technologies/javase/8u111-relnotes.html">8u111 Update Release Notes</a> state that the Basic authentication scheme has been deactivated when setting up an HTTPS tunnel.  To resolve this clear or set to an empty string the following system properties: <code class="inline code">jdk.http.auth.tunneling.disabledSchemes</code> and <code class="inline code">jdk.http.auth.proxying.disabledSchemes</code>.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.forwardProxyAuthenticationUsername(String forwardProxyAuthenticationUsername)</code></pre>
@@ -404,6 +405,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 <button id="button_configuration_forward_proxy_authentication_password" class="accordion title"><strong>Proxy Authentication Password For Forwarded Requests</strong></button>
 <div class="panel title">
     <p>Password for proxy authentication when using HTTPS proxy (i.e. HTTP CONNECT) for all outbound / forwarded requests</p>
+    <p><strong>Note:</strong> <a target="_blank" href="https://www.oracle.com/java/technologies/javase/8u111-relnotes.html">8u111 Update Release Notes</a> state that the Basic authentication scheme has been deactivated when setting up an HTTPS tunnel.  To resolve this clear or set to an empty string the following system properties: <code class="inline code">jdk.http.auth.tunneling.disabledSchemes</code> and <code class="inline code">jdk.http.auth.proxying.disabledSchemes</code>.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.forwardProxyAuthenticationPassword(String forwardProxyAuthenticationPassword)</code></pre>
@@ -436,6 +438,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 <button id="button_configuration_proxy_authentication_username" class="accordion title"><strong>Required Username For Proxy Authentication to MockServer</strong></button>
 <div class="panel title">
     <p>The required username for proxy authentication to MockServer</p>
+    <p><strong>Note:</strong> <a target="_blank" href="https://www.oracle.com/java/technologies/javase/8u111-relnotes.html">8u111 Update Release Notes</a> state that the Basic authentication scheme has been deactivated when setting up an HTTPS tunnel.  To resolve this clear or set to an empty string the following system properties: <code class="inline code">jdk.http.auth.tunneling.disabledSchemes</code> and <code class="inline code">jdk.http.auth.proxying.disabledSchemes</code>.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">john.doe</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.proxyAuthenticationUsername(String proxyAuthenticationUsername)</code></pre>
@@ -452,6 +455,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 <button id="button_configuration_proxy_authentication_password" class="accordion title"><strong>Required Password For Proxy Authentication to MockServer</strong></button>
 <div class="panel title">
     <p>The required password for proxy authentication to MockServer</p>
+    <p><strong>Note:</strong> <a target="_blank" href="https://www.oracle.com/java/technologies/javase/8u111-relnotes.html">8u111 Update Release Notes</a> state that the Basic authentication scheme has been deactivated when setting up an HTTPS tunnel.  To resolve this clear or set to an empty string the following system properties: <code class="inline code">jdk.http.auth.tunneling.disabledSchemes</code> and <code class="inline code">jdk.http.auth.proxying.disabledSchemes</code>.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">p@ssw0rd</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.proxyAuthenticationPassword(String proxyAuthenticationPassword)</code></pre>
