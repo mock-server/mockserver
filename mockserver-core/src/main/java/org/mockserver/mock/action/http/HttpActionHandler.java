@@ -430,7 +430,7 @@ public class HttpActionHandler {
 
     private void returnNotFound(ResponseWriter responseWriter, HttpRequest request, String error) {
         HttpResponse response = notFoundResponse();
-        if (request.getHeaders().containsEntry(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue())) {
+        if (request.getHeaders() != null && request.getHeaders().containsEntry(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue())) {
             response.withHeader(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue());
             if (MockServerLogger.isEnabled(TRACE)) {
                 mockServerLogger.logEvent(
