@@ -43,6 +43,14 @@ public class FullHttpRequestToMockServerHttpRequest {
         HttpRequest httpRequest = new HttpRequest();
         try {
             if (fullHttpRequest != null) {
+                if (fullHttpRequest.decoderResult().isFailure()) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(Level.ERROR)
+                            .setMessageFormat("exception decoding request " + fullHttpRequest.decoderResult().cause().getMessage())
+                            .setThrowable(fullHttpRequest.decoderResult().cause())
+                    );
+                }
                 setMethod(httpRequest, fullHttpRequest);
 
                 setPath(httpRequest, fullHttpRequest);

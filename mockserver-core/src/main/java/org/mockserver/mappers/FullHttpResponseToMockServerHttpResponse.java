@@ -29,6 +29,14 @@ public class FullHttpResponseToMockServerHttpResponse {
         HttpResponse httpResponse = new HttpResponse();
         try {
             if (fullHttpResponse != null) {
+                if (fullHttpResponse.decoderResult().isFailure()) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(Level.ERROR)
+                            .setMessageFormat("exception decoding response " + fullHttpResponse.decoderResult().cause().getMessage())
+                            .setThrowable(fullHttpResponse.decoderResult().cause())
+                    );
+                }
                 setStatusCode(httpResponse, fullHttpResponse);
                 setHeaders(httpResponse, fullHttpResponse);
                 setCookies(httpResponse);
@@ -38,7 +46,7 @@ public class FullHttpResponseToMockServerHttpResponse {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("exception decoding request{}")
+                    .setMessageFormat("exception decoding response{}")
                     .setArguments(fullHttpResponse)
                     .setThrowable(throwable)
             );
