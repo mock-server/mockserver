@@ -8,6 +8,7 @@ app:
   propertiesFileName: "mockserver.properties"
   readOnlyRootFilesystem: false
   serviceAccountName: default
+  runAsUser: 65534
 
 
 image:
