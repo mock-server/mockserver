@@ -107,3 +107,4 @@ persistedExpectations.json
 mockserverInitialization.json
 /*.pem
 _test*.java
+dependency-reduced-pom.xml
