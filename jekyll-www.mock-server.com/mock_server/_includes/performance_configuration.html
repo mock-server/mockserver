@@ -14,7 +14,7 @@
         <li>retrieving logs</li>
     </ul>
     <p>Expectation actions are handled in a separate thread pool to ensure slow object or class callbacks and response / forward delays do not impact the main event loop.</p>
-    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">maximum of 35 or available processors count</span></p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">5</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.nioEventLoopThreadCount(int count)</code></pre>
     <p>System Property:</p>
@@ -24,7 +24,7 @@
     <p>Property File:</p>
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.nioEventLoopThreadCount=...</code></pre>
     <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.nioEventLoopThreadCount="20"</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.nioEventLoopThreadCount="5"</code></pre>
 </div>
 
 <button id="button_configuration_action_handler_thread_count" class="accordion title"><strong>Number of Action Handler Threads</strong></button>
@@ -37,7 +37,7 @@
         <li>executing class callbacks</li>
         <li>handling method / closure callbacks (using web sockets)</li>
     </ul>
-    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">maximum of 20 or available processors count</span></p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">maximum of 5 or available processors count</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.actionHandlerThreadCount(int count)</code></pre>
     <p>System Property:</p>
@@ -47,7 +47,7 @@
     <p>Property File:</p>
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.actionHandlerThreadCount=...</code></pre>
     <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.actionHandlerThreadCount="20"</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.actionHandlerThreadCount="5"</code></pre>
 </div>
 
 <button id="button_configuration_web_socket_event_loop_thread_count" class="accordion title"><strong>Number of Web Socket Client Event Loop Threads</strong></button>
@@ -64,7 +64,24 @@
     <p>Property File:</p>
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.webSocketClientEventLoopThreadCount=...</code></pre>
     <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.webSocketClientEventLoopThreadCount="20"</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.webSocketClientEventLoopThreadCount="5"</code></pre>
+</div>
+
+<button id="button_configuration_client_nio_event_loop_thread_count" class="accordion title"><strong>Number of Client Event Loop Threads</strong></button>
+<div class="panel title">
+    <p>Number of threads for client event loop when calling downstream</p>
+    <p>These threads are used for fast non-blocking activities such as, reading and de-serialise all requests and responses</p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">5</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.clientNioEventLoopThreadCount(int count)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.clientNioEventLoopThreadCount=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CLIENT_NIO_EVENT_LOOP_THREAD_COUNT=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.clientNioEventLoopThreadCount=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.clientNioEventLoopThreadCount="5"</code></pre>
 </div>
 
 <button id="button_configuration_performance_log_level" class="accordion title"><strong>Log Level</strong></button>

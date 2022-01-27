@@ -81,7 +81,7 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldSetAndReadNIOEventLoopThreadCount() {
+    public void shouldSetAndReadNioEventLoopThreadCount() {
         // given
         System.clearProperty("mockserver.nioEventLoopThreadCount");
 
@@ -92,6 +92,20 @@ public class ConfigurationPropertiesTest {
         // then
         assertEquals("2", System.getProperty("mockserver.nioEventLoopThreadCount"));
         assertEquals(2, nioEventLoopThreadCount());
+    }
+
+    @Test
+    public void shouldSetAndReadClientNioEventLoopThreadCount() {
+        // given
+        System.clearProperty("mockserver.clientNioEventLoopThreadCount");
+
+        // when
+        assertEquals(5, clientNioEventLoopThreadCount());
+        clientNioEventLoopThreadCount(2);
+
+        // then
+        assertEquals("2", System.getProperty("mockserver.clientNioEventLoopThreadCount"));
+        assertEquals(2, clientNioEventLoopThreadCount());
     }
 
     @Test
@@ -124,12 +138,21 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldHandleInvalidNIOEventLoopThreadCount() {
+    public void shouldHandleInvalidNioEventLoopThreadCount() {
         // given
         System.setProperty("mockserver.nioEventLoopThreadCount", "invalid");
 
         // then
         assertEquals(5, nioEventLoopThreadCount());
+    }
+
+    @Test
+    public void shouldHandleInvalidClientNioEventLoopThreadCount() {
+        // given
+        System.setProperty("mockserver.clientNioEventLoopThreadCount", "invalid");
+
+        // then
+        assertEquals(5, clientNioEventLoopThreadCount());
     }
 
     @Test

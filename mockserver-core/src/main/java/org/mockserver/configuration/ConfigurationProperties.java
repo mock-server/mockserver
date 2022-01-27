@@ -50,6 +50,7 @@ public class ConfigurationProperties {
     private static final String DEFAULT_ENABLE_CORS_FOR_ALL_RESPONSES = "false";
     private static final String DEFAULT_PREVENT_CERTIFICATE_DYNAMIC_UPDATE = "false";
     private static final int DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT = 5;
+    private static final int DEFAULT_CLIENT_NIO_EVENT_LOOP_THREAD_COUNT = 5;
     private static final int DEFAULT_ACTION_HANDLER_THREAD_COUNT = Math.max(5, Runtime.getRuntime().availableProcessors());
     private static final int DEFAULT_WEB_SOCKET_CLIENT_EVENT_LOOP_THREAD_COUNT = 5;
     private static final String DEFAULT_CERTIFICATE_AUTHORITY_PRIVATE_KEY = "org/mockserver/socket/PKCS8CertificateAuthorityPrivateKey.pem";
@@ -79,6 +80,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_MAX_HEADER_SIZE = "mockserver.maxHeaderSize";
     private static final String MOCKSERVER_MAX_CHUNK_SIZE = "mockserver.maxChunkSize";
     private static final String MOCKSERVER_NIO_EVENT_LOOP_THREAD_COUNT = "mockserver.nioEventLoopThreadCount";
+    private static final String MOCKSERVER_CLIENT_NIO_EVENT_LOOP_THREAD_COUNT = "mockserver.clientNioEventLoopThreadCount";
     private static final String MOCKSERVER_ACTION_HANDLER_THREAD_COUNT = "mockserver.actionHandlerThreadCount";
     private static final String MOCKSERVER_WEB_SOCKET_CLIENT_EVENT_LOOP_THREAD_COUNT = "mockserver.webSocketClientEventLoopThreadCount";
     private static final String MOCKSERVER_MAX_SOCKET_TIMEOUT = "mockserver.maxSocketTimeout";
@@ -364,6 +366,14 @@ public class ConfigurationProperties {
 
     public static void nioEventLoopThreadCount(int count) {
         System.setProperty(MOCKSERVER_NIO_EVENT_LOOP_THREAD_COUNT, "" + count);
+    }
+
+    public static int clientNioEventLoopThreadCount() {
+        return readIntegerProperty(MOCKSERVER_CLIENT_NIO_EVENT_LOOP_THREAD_COUNT, "MOCKSERVER_CLIENT_NIO_EVENT_LOOP_THREAD_COUNT", DEFAULT_CLIENT_NIO_EVENT_LOOP_THREAD_COUNT);
+    }
+
+    public static void clientNioEventLoopThreadCount(int count) {
+        System.setProperty(MOCKSERVER_CLIENT_NIO_EVENT_LOOP_THREAD_COUNT, "" + count);
     }
 
     public static int actionHandlerThreadCount() {
