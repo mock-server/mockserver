@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @author jamesdbloom
  */
-@SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
+@SuppressWarnings({"SynchronizationOnLocalVariableOrMethodParameter", "FieldMayBeFinal"})
 public class Metrics {
 
     private static Map<Name, Integer> metrics = new ConcurrentHashMap<>();
