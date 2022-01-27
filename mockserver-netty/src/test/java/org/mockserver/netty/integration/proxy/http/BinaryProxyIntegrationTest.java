@@ -6,7 +6,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.AfterClass;
 import org.junit.Test;
-import org.mockserver.client.NettyHttpClient;
+import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;

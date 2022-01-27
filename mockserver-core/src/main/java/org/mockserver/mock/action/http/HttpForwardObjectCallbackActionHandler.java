@@ -1,6 +1,6 @@
 package org.mockserver.mock.action.http;
 
-import org.mockserver.client.NettyHttpClient;
+import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.closurecallback.websocketregistry.LocalCallbackRegistry;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.closurecallback.websocketregistry.WebSocketRequestCallback;

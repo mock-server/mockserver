@@ -1,4 +1,4 @@
-package org.mockserver.client;
+package org.mockserver.httpclient;
 
 /**
  * This exception indicates there was an error while trying to communicate over a socket

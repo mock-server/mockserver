@@ -42,7 +42,7 @@ public class WebSocketClientRegistry {
         this.webSocketMessageSerializer = new WebSocketMessageSerializer(mockServerLogger);
     }
 
-    void receivedTextWebSocketFrame(TextWebSocketFrame textWebSocketFrame) {
+    public void receivedTextWebSocketFrame(TextWebSocketFrame textWebSocketFrame) {
         try {
             Object deserializedMessage = webSocketMessageSerializer.deserialize(textWebSocketFrame.text());
             if (MockServerLogger.isEnabled(TRACE)) {
@@ -98,7 +98,7 @@ public class WebSocketClientRegistry {
         return clientRegistry.size();
     }
 
-    void registerClient(String clientId, ChannelHandlerContext ctx) {
+    public void registerClient(String clientId, ChannelHandlerContext ctx) {
         try {
             ctx.channel().writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(new WebSocketClientIdDTO().setClientId(clientId))));
         } catch (Exception e) {

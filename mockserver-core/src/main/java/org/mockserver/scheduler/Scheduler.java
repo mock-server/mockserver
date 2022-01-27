@@ -1,7 +1,7 @@
 package org.mockserver.scheduler;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.mockserver.client.SocketCommunicationException;
+import org.mockserver.httpclient.SocketCommunicationException;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;

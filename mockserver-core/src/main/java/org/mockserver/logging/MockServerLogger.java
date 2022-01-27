@@ -1,7 +1,7 @@
 package org.mockserver.logging;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.mockserver.Version;
+import org.mockserver.version.Version;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.mock.HttpState;

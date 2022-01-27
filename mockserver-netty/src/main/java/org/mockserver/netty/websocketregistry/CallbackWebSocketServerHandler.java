@@ -1,4 +1,4 @@
-package org.mockserver.closurecallback.websocketregistry;
+package org.mockserver.netty.websocketregistry;
 
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
@@ -8,6 +8,8 @@ import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
+import org.mockserver.closurecallback.websocketregistry.LocalCallbackRegistry;
+import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.codec.MockServerHttpServerCodec;
 import org.mockserver.dashboard.DashboardWebSocketHandler;
 import org.mockserver.log.model.LogEntry;

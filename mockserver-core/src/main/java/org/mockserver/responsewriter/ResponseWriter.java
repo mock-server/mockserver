@@ -6,6 +6,7 @@ import org.mockserver.cors.CORSHeaders;
 import org.mockserver.model.ConnectionOptions;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.version.Version;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
@@ -50,7 +51,7 @@ public abstract class ResponseWriter {
             CORS_HEADERS.addCORSHeaders(request, response);
         }
         if (apiResponse) {
-            response.withHeader("version", org.mockserver.Version.getVersion());
+            response.withHeader("version", Version.getVersion());
             final String path = request.getPath().getValue();
             if (!path.startsWith(PATH_PREFIX) && !path.equals(ConfigurationProperties.livenessHttpGetPath())) {
                 response.withHeader("deprecated",

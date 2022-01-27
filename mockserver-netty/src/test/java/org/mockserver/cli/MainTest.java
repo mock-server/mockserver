@@ -6,7 +6,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.client.NettyHttpClient;
+import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.logging.MockServerLogger;

@@ -1,4 +1,4 @@
-package org.mockserver.client;
+package org.mockserver.httpclient;
 
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.client.NettyHttpClient.RESPONSE_FUTURE;
+import static org.mockserver.httpclient.NettyHttpClient.RESPONSE_FUTURE;
 
 @ChannelHandler.Sharable
 public class HttpClientHandler extends SimpleChannelInboundHandler<Message> {

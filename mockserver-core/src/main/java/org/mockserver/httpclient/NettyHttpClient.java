@@ -1,4 +1,4 @@
-package org.mockserver.client;
+package org.mockserver.httpclient;
 
 import com.google.common.collect.ImmutableMap;
 import io.netty.bootstrap.Bootstrap;

@@ -1,14 +1,13 @@
-package org.mockserver.client;
+package org.mockserver.httpclient;
 
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
-import org.mockserver.model.HttpResponse;
 import org.mockserver.model.Message;
 
 import java.util.concurrent.CompletableFuture;
 
-import static org.mockserver.client.NettyHttpClient.RESPONSE_FUTURE;
+import static org.mockserver.httpclient.NettyHttpClient.RESPONSE_FUTURE;
 
 @ChannelHandler.Sharable
 public class HttpClientConnectionErrorHandler extends ChannelDuplexHandler {

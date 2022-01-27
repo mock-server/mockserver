@@ -1,6 +1,6 @@
 package org.mockserver.mock.action.http;
 
-import org.mockserver.client.NettyHttpClient;
+import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.action.ExpectationCallback;

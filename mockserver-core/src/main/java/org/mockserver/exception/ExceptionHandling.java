@@ -6,7 +6,7 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.ssl.NotSslRecordException;
 import io.netty.util.internal.PlatformDependent;
-import org.mockserver.client.SocketConnectionException;
+import org.mockserver.httpclient.SocketConnectionException;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 

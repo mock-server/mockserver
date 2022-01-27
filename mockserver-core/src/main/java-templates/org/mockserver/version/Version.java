@@ -1,4 +1,4 @@
-package org.mockserver;
+package org.mockserver.version;
 
 import org.apache.commons.lang3.StringUtils;
 

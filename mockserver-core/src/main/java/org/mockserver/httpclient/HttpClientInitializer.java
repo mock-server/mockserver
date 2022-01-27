@@ -1,4 +1,4 @@
-package org.mockserver.client;
+package org.mockserver.httpclient;
 
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInitializer;
@@ -19,8 +19,8 @@ import org.mockserver.socket.tls.NettySslContextFactory;
 import java.net.InetSocketAddress;
 import java.util.Map;
 
-import static org.mockserver.client.NettyHttpClient.REMOTE_SOCKET;
-import static org.mockserver.client.NettyHttpClient.SECURE;
+import static org.mockserver.httpclient.NettyHttpClient.REMOTE_SOCKET;
+import static org.mockserver.httpclient.NettyHttpClient.SECURE;
 import static org.slf4j.event.Level.TRACE;
 
 @ChannelHandler.Sharable
