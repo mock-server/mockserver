@@ -342,10 +342,10 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
-     * The path parameter to match on as a Map<String, List<String>> where the values or keys of each parameter can be either a string or a regex
+     * The path parameter to match on as a Map&lt;String, List&lt;String&gt;&gt; where the values or keys of each parameter can be either a string or a regex
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
-     * @param parameters the Map<String, List<String>> object where the values or keys of each parameter can be either a string or a regex
+     * @param parameters the Map&lt;String, List&lt;String&gt;&gt; object where the values or keys of each parameter can be either a string or a regex
      */
     public HttpRequest withPathParameters(Map<String, List<String>> parameters) {
         getOrCreatePathParameters().withEntries(parameters);
@@ -487,10 +487,10 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     /**
-     * The query string parameters to match on as a Map<String, List<String>> where the values or keys of each parameter can be either a string or a regex
+     * The query string parameters to match on as a Map&lt;String, List&lt;String&gt;&gt; where the values or keys of each parameter can be either a string or a regex
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
-     * @param parameters the Map<String, List<String>> object where the values or keys of each parameter can be either a string or a regex
+     * @param parameters the Map&lt;String, List&lt;String&gt;&gt; object where the values or keys of each parameter can be either a string or a regex
      */
     public HttpRequest withQueryStringParameters(Map<String, List<String>> parameters) {
         getOrCreateQueryStringParameters().withEntries(parameters);

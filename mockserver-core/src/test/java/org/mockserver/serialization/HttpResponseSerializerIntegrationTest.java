@@ -33,6 +33,7 @@ import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_S
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("deprecation")
 public class HttpResponseSerializerIntegrationTest {
 
     private static final ObjectWriter OBJECT_WRITER = ObjectMapperFactory.createObjectMapper(true);
