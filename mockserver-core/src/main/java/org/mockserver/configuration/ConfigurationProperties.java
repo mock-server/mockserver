@@ -40,6 +40,7 @@ public class ConfigurationProperties {
     private static final long DEFAULT_MAX_TIMEOUT = 20;
     private static final int DEFAULT_CONNECT_TIMEOUT = 20000;
     private static final String DEFAULT_MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS = "false";
+    private static final String DEFAULT_MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR = "true";
     private static final int DEFAULT_MAX_FUTURE_TIMEOUT = 60;
     private static final String DEFAULT_OUTPUT_MEMORY_USAGE_CSV = "false";
     private static final int DEFAULT_MAX_WEB_SOCKET_EXPECTATIONS = 1500;
@@ -87,6 +88,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_MAX_FUTURE_TIMEOUT = "mockserver.maxFutureTimeout";
     private static final String MOCKSERVER_SOCKET_CONNECTION_TIMEOUT = "mockserver.socketConnectionTimeout";
     private static final String MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS = "mockserver.alwaysCloseSocketConnections";
+    private static final String MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR = "mockserver.useSemicolonAsQueryParameterSeparator";
     private static final String MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME = "mockserver.sslCertificateDomainName";
     private static final String MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS = "mockserver.sslSubjectAlternativeNameDomains";
     private static final String MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS = "mockserver.sslSubjectAlternativeNameIps";
@@ -202,7 +204,7 @@ public class ConfigurationProperties {
         }
     }
 
-    private static MemoryMonitoring memoryMonitoring = new MemoryMonitoring();
+    private static final MemoryMonitoring memoryMonitoring = new MemoryMonitoring();
     private static int defaultMaxExpectations = memoryMonitoring.startingMaxExpectations();
     private static int defaultMaxLogEntries = memoryMonitoring.startingMaxLogEntries();
     private static Level logLevel = Level.valueOf(getSLF4JOrJavaLoggerToSLF4JLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, "MOCKSERVER_LOG_LEVEL", DEFAULT_LOG_LEVEL).toUpperCase()));
@@ -226,6 +228,7 @@ public class ConfigurationProperties {
     private static int maxChunkSize = readIntegerProperty(MOCKSERVER_MAX_CHUNK_SIZE, "MOCKSERVER_MAX_CHUNK_SIZE", DEFAULT_MAX_CHUNK_SIZE);
     private static boolean preventCertificateDynamicUpdate = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_PREVENT_CERTIFICATE_DYNAMIC_UPDATE, "MOCKSERVER_PREVENT_CERTIFICATE_DYNAMIC_UPDATE", DEFAULT_PREVENT_CERTIFICATE_DYNAMIC_UPDATE));
     private static boolean alwaysCloseConnections = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS, "MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS", DEFAULT_MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS));
+    private static boolean useSemicolonAsQueryParameterSeparator = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR, "MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR", DEFAULT_MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR));
     private static String livenessHttpGetPath = readPropertyHierarchically(MOCKSERVER_LIVENESS_HTTP_GET_PATH, "MOCKSERVER_LIVENESS_HTTP_GET_PATH", DEFAULT_LIVENESS_HTTP_GET_PATH);
 
     @VisibleForTesting
@@ -255,6 +258,7 @@ public class ConfigurationProperties {
         maxChunkSize = readIntegerProperty(MOCKSERVER_MAX_CHUNK_SIZE, "MOCKSERVER_MAX_CHUNK_SIZE", DEFAULT_MAX_CHUNK_SIZE);
         preventCertificateDynamicUpdate = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_PREVENT_CERTIFICATE_DYNAMIC_UPDATE, "MOCKSERVER_PREVENT_CERTIFICATE_DYNAMIC_UPDATE", DEFAULT_PREVENT_CERTIFICATE_DYNAMIC_UPDATE));
         alwaysCloseConnections = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS, "MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS", DEFAULT_MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS));
+        useSemicolonAsQueryParameterSeparator = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR, "MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR", DEFAULT_MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR));
         livenessHttpGetPath = readPropertyHierarchically(MOCKSERVER_LIVENESS_HTTP_GET_PATH, "MOCKSERVER_LIVENESS_HTTP_GET_PATH", DEFAULT_LIVENESS_HTTP_GET_PATH);
     }
 
@@ -423,6 +427,15 @@ public class ConfigurationProperties {
 
     public static boolean alwaysCloseSocketConnections() {
         return alwaysCloseConnections;
+    }
+
+    public static void useSemicolonAsQueryParameterSeparator(boolean useAsQueryParameterSeparator) {
+        System.setProperty(MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR, "" + useAsQueryParameterSeparator);
+        useSemicolonAsQueryParameterSeparator = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR, "MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR", DEFAULT_MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR));
+    }
+
+    public static boolean useSemicolonAsQueryParameterSeparator() {
+        return useSemicolonAsQueryParameterSeparator;
     }
 
     public static String sslCertificateDomainName() {

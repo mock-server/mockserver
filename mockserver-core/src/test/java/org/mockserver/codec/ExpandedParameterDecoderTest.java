@@ -1,6 +1,7 @@
 package org.mockserver.codec;
 
 import org.junit.Test;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Parameter;
 import org.mockserver.model.ParameterStyle;
@@ -27,18 +28,67 @@ public class ExpandedParameterDecoderTest {
     public void shouldParseQueryParameters() {
         shouldParseParameters(
             "/users?one=5",
-            param("one", "5"));
+            param("one", "5")
+        );
         shouldParseParameters(
             "/users?one=3&one=4&one=5",
-            param("one", "3", "4", "5"));
+            param("one", "3", "4", "5")
+        );
         shouldParseParameters(
             "/users?one=3&one=4&one=5&two=1&two=2&three=1",
             param("one", "3", "4", "5"),
             param("two", "1", "2"),
-            param("three", "1"));
+            param("three", "1")
+        );
         shouldParseParameters(
             "/users"
         );
+    }
+
+    @Test
+    public void shouldParseQueryParametersSeparatedBySemicolon() {
+        shouldParseParameters(
+            "/users?one=5",
+            param("one", "5")
+        );
+        shouldParseParameters(
+            "/users?one=3;one=4;one=5",
+            param("one", "3", "4", "5")
+        );
+        shouldParseParameters(
+            "/users?one=3;one=4;one=5;two=1;two=2;three=1",
+            param("one", "3", "4", "5"),
+            param("two", "1", "2"),
+            param("three", "1")
+        );
+        shouldParseParameters(
+            "/users"
+        );
+    }
+
+    @Test
+    public void shouldNotParseQueryParametersSeparatedBySemicolon() {
+        boolean originalUseSemicolonAsQueryParameterSeparator = ConfigurationProperties.useSemicolonAsQueryParameterSeparator();
+        try {
+            ConfigurationProperties.useSemicolonAsQueryParameterSeparator(false);
+            shouldParseParameters(
+                "/users?one=5",
+                param("one", "5")
+            );
+            shouldParseParameters(
+                "/users?one=3;one=4;one=5",
+                param("one", "3;one=4;one=5")
+            );
+            shouldParseParameters(
+                "/users?one=3;one=4;one=5;two=1;two=2;three=1",
+                param("one", "3;one=4;one=5;two=1;two=2;three=1")
+            );
+            shouldParseParameters(
+                "/users"
+            );
+        } finally {
+            ConfigurationProperties.useSemicolonAsQueryParameterSeparator(originalUseSemicolonAsQueryParameterSeparator);
+        }
     }
 
     @Test

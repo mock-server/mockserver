@@ -406,6 +406,20 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldSetAndReadUseSemicolonAsQueryParameterSeparator() {
+        // given
+        System.clearProperty("mockserver.useSemicolonAsQueryParameterSeparator");
+
+        // when
+        assertTrue(useSemicolonAsQueryParameterSeparator());
+        useSemicolonAsQueryParameterSeparator(false);
+
+        // then
+        assertFalse(useSemicolonAsQueryParameterSeparator());
+        assertEquals("false", System.getProperty("mockserver.useSemicolonAsQueryParameterSeparator"));
+    }
+
+    @Test
     public void shouldSetAndReadSslCertificateDomainName() {
         // given
         System.clearProperty("mockserver.sslCertificateDomainName");
