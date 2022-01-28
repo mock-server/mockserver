@@ -16,7 +16,7 @@
     <url>https://www.mock-server.com</url>
 
     <properties>
-        <jersey.version>2.32</jersey.version>
+        <jersey.version>3.0.3</jersey.version>
         <google-http-client.version>1.41.2</google-http-client.version>
     </properties>
 
