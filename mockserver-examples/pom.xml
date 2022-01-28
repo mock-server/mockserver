@@ -52,7 +52,7 @@
                 <!-- Conflicting versions in swagger-parser and spring-boot-starter-webflux -->
                 <groupId>org.yaml</groupId>
                 <artifactId>snakeyaml</artifactId>
-                <version>1.29</version>
+                <version>1.30</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
