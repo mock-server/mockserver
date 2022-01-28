@@ -17,6 +17,7 @@
 
     <properties>
         <jersey.version>3.0.3</jersey.version>
+        <!-- highest 1.8 jetty version is 9.4 -->
         <jetty.version>9.4.44.v20210927</jetty.version>
         <google-http-client.version>1.41.2</google-http-client.version>
     </properties>
