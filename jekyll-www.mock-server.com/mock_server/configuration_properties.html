@@ -247,6 +247,22 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.socketConnectionTimeout="10000"</code></pre>
 </div>
 
+<button id="button_configuration_aways_close_socket_connection" class="accordion title"><strong>Always Close Socket Connection After Response</strong></button>
+<div class="panel title">
+    <p>If true socket connections will always be closed after a response is returned, if false connection is only closed if request header indicate connection should be closed.</p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.alwaysCloseSocketConnections(boolean alwaysClose)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.alwaysCloseSocketConnections=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.alwaysCloseSocketConnections=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.alwaysCloseSocketConnections="true"</code></pre>
+</div>
+
 <button id="button_configuration_matchers_fail_fast" class="accordion title"><strong>Request Matchers Fail Fast</strong></button>
 <div class="panel title">
     <p>If true (the default) request matchers will fail on the first non-matching field, if false request matchers will compare all fields.</p>
@@ -310,6 +326,22 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.localBoundIP=...</code></pre>
     <p>Example:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.localBoundIP="0.0.0.0"</code></pre>
+</div>
+
+<button id="button_configuration_treat_semicolon_as_query_parameter_separator" class="accordion title"><strong>Treat Semicolon As Query Parameter Separator</strong></button>
+<div class="panel title">
+    <p>If true semicolons are treated as a separator for a query parameter string, it false the semicolon is treated as a normal character that is part of a query parameter value.</p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">true</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.useSemicolonAsQueryParameterSeparator(boolean useAsQueryParameterSeparator)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.useSemicolonAsQueryParameterSeparator=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.useSemicolonAsQueryParameterSeparator=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.useSemicolonAsQueryParameterSeparator="true"</code></pre>
 </div>
 
 {% include_subpage _includes/tls_configuration.html %}
