@@ -1,12 +1,22 @@
 package org.mockserver.serialization.model;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.codec.binary.Base64;
+import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
+import org.mockserver.serialization.ObjectMapperFactory;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.slf4j.event.Level.ERROR;
 
 /**
  * @author jamesdbloom
  */
 public abstract class BodyDTO extends NotDTO implements DTO<Body<?>> {
 
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(BodyDTO.class);
+    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
     private final Body.Type type;
     private Boolean optional;
 
@@ -55,6 +65,43 @@ public abstract class BodyDTO extends NotDTO implements DTO<Body<?>> {
         }
 
         return result;
+    }
+
+    public static String toString(BodyDTO body) {
+        if (body instanceof BinaryBodyDTO) {
+            return Base64.encodeBase64String(((BinaryBodyDTO) body).getBase64Bytes());
+        } else if (body instanceof JsonBodyDTO) {
+            return ((JsonBodyDTO) body).getJson();
+        } else if (body instanceof JsonSchemaBodyDTO) {
+            return ((JsonSchemaBodyDTO) body).getJson();
+        } else if (body instanceof JsonPathBodyDTO) {
+            return ((JsonPathBodyDTO) body).getJsonPath();
+        } else if (body instanceof ParameterBodyDTO) {
+            try {
+                return OBJECT_MAPPER.writeValueAsString(((ParameterBodyDTO) body).getParameters().getMultimap().asMap());
+            } catch (Throwable throwable) {
+                MOCK_SERVER_LOGGER
+                    .logEvent(
+                        new LogEntry()
+                            .setLogLevel(ERROR)
+                            .setMessageFormat("serialising parameter body into json string for javascript template " + (isNotBlank(throwable.getMessage()) ? " " + throwable.getMessage() : ""))
+                            .setThrowable(throwable)
+                    );
+                return "";
+            }
+        } else if (body instanceof RegexBodyDTO) {
+            return ((RegexBodyDTO) body).getRegex();
+        } else if (body instanceof StringBodyDTO) {
+            return ((StringBodyDTO) body).getString();
+        } else if (body instanceof XmlBodyDTO) {
+            return ((XmlBodyDTO) body).getXml();
+        } else if (body instanceof XmlSchemaBodyDTO) {
+            return ((XmlSchemaBodyDTO) body).getXml();
+        } else if (body instanceof XPathBodyDTO) {
+            return ((XPathBodyDTO) body).getXPath();
+        }
+
+        return "";
     }
 
     public Body.Type getType() {

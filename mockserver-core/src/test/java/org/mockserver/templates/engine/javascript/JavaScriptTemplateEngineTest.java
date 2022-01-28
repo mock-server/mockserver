@@ -6,8 +6,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
+import org.mockserver.model.*;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.serialization.model.HttpResponseDTO;
@@ -30,6 +29,10 @@ import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.JsonBody.json;
+import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.ParameterBody.params;
+import static org.mockserver.model.XmlBody.xml;
 
 /**
  * @author jamesdbloom
@@ -283,6 +286,114 @@ public class JavaScriptTemplateEngineTest {
                     .withPath("/somePath")
                     .withQueryStringParameter("queryParameter", "someValue")
                     .withBody("{'name': 'value'}")
+            ));
+        } else {
+            assertThat(actualHttpRequest, nullValue());
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithJavaScriptUsingBodyAsStringForRequestWithStringBody() {
+        // given
+        String template = "" +
+            "return { statusCode: 200, headers: { Date: [ \"Fri Jan 28 2022 22:02:46 GMT+0000 (GMT)\" ] }, body: JSON.stringify({is_active: JSON.parse(request.bodyAsString).is_active, id: \"1234\", name: \"taras\"}) };";
+
+
+        // when
+        HttpResponse actualHttpRequest = new JavaScriptTemplateEngine(logFormatter).executeTemplate(template, request()
+                .withPath("/someOtherPath")
+                .withBody("{\"is_active\":\"active_value\",\"id\":\"1234\",\"name\":\"taras\"}"),
+            HttpResponseDTO.class
+        );
+
+        // then
+        if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
+            assertThat(actualHttpRequest, is(
+                response()
+                    .withStatusCode(200)
+                    .withHeader("Date", "Fri Jan 28 2022 22:02:46 GMT+0000 (GMT)")
+                    .withBody("{\"is_active\":\"active_value\",\"id\":\"1234\",\"name\":\"taras\"}")
+            ));
+        } else {
+            assertThat(actualHttpRequest, nullValue());
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithJavaScriptUsingBodyAsStringForRequestWithJsonBody() {
+        // given
+        String template = "" +
+            "return { statusCode: 200, headers: { Date: [ \"Fri Jan 28 2022 22:02:46 GMT+0000 (GMT)\" ] }, body: JSON.stringify({is_active: JSON.parse(request.bodyAsString).is_active, id: \"1234\", name: \"taras\"}) };";
+
+
+        // when
+        HttpResponse actualHttpRequest = new JavaScriptTemplateEngine(logFormatter).executeTemplate(template, request()
+                .withPath("/someOtherPath")
+                .withBody(json("{\"is_active\":\"active_value\",\"id\":\"1234\",\"name\":\"taras\"}")),
+            HttpResponseDTO.class
+        );
+
+        // then
+        if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
+            assertThat(actualHttpRequest, is(
+                response()
+                    .withStatusCode(200)
+                    .withHeader("Date", "Fri Jan 28 2022 22:02:46 GMT+0000 (GMT)")
+                    .withBody("{\"is_active\":\"active_value\",\"id\":\"1234\",\"name\":\"taras\"}")
+            ));
+        } else {
+            assertThat(actualHttpRequest, nullValue());
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithJavaScriptUsingBodyAsStringForRequestWithXmlBody() {
+        // given
+        String template = "" +
+            "return { statusCode: 200, headers: { Date: [ \"Fri Jan 28 2022 22:02:46 GMT+0000 (GMT)\" ] }, body: JSON.stringify({is_active: request.bodyAsString, id: \"1234\", name: \"taras\"}) };";
+
+
+        // when
+        HttpResponse actualHttpRequest = new JavaScriptTemplateEngine(logFormatter).executeTemplate(template, request()
+                .withPath("/someOtherPath")
+                .withBody(xml("<root><is_active>active_value</is_active></root>")),
+            HttpResponseDTO.class
+        );
+
+        // then
+        if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
+            assertThat(actualHttpRequest, is(
+                response()
+                    .withStatusCode(200)
+                    .withHeader("Date", "Fri Jan 28 2022 22:02:46 GMT+0000 (GMT)")
+                    .withBody("{\"is_active\":\"<root><is_active>active_value</is_active></root>\",\"id\":\"1234\",\"name\":\"taras\"}")
+            ));
+        } else {
+            assertThat(actualHttpRequest, nullValue());
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithJavaScriptUsingBodyAsStringForRequestWithParameterBody() {
+        // given
+        String template = "" +
+            "return { statusCode: 200, headers: { Date: [ \"Fri Jan 28 2022 22:02:46 GMT+0000 (GMT)\" ] }, body: JSON.stringify({is_active: JSON.parse(request.bodyAsString), id: \"1234\", name: \"taras\"}) };";
+
+
+        // when
+        HttpResponse actualHttpRequest = new JavaScriptTemplateEngine(logFormatter).executeTemplate(template, request()
+                .withPath("/someOtherPath")
+                .withBody(params(param("one", "valueOne"), param("two", "valueTwoOne", "valueTwoTwo"))),
+            HttpResponseDTO.class
+        );
+
+        // then
+        if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
+            assertThat(actualHttpRequest, is(
+                response()
+                    .withStatusCode(200)
+                    .withHeader("Date", "Fri Jan 28 2022 22:02:46 GMT+0000 (GMT)")
+                    .withBody("{\"is_active\":{\"one\":[\"valueOne\"],\"two\":[\"valueTwoOne\",\"valueTwoTwo\"]},\"id\":\"1234\",\"name\":\"taras\"}")
             ));
         } else {
             assertThat(actualHttpRequest, nullValue());

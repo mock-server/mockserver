@@ -869,6 +869,58 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
+<button id="button_javascript_templated_response_with_body_as_string" class="accordion">javascript templated response reading request body</button>
+<div class="panel">
+    <p>To simplify handling different types of bodies, JavaScript and Velocity templates, have access to both an object <code class="inline code">request.body</code> field and a string <code class="inline code">request.bodyAsString</code> field which can be used as shown in the examples below.</p>
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .respond(
+        template(
+            HttpTemplate.TemplateType.JAVASCRIPT,
+            "return { statusCode: 200, headers: { Date: [ Date() ] }, body: JSON.stringify({is_active: JSON.parse(request.bodyAsString).is_active, id: \"1234\", name: \"taras\"}) };"
+        )
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpResponseTemplate": {
+        "template": "return { statusCode: 200, headers: { Date: [ Date() ] }, body: JSON.stringify({is_active: JSON.parse(request.bodyAsString).is_active, id: \"1234\", name: \"taras\"}) };",
+        "templateType": "JAVASCRIPT"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpResponseTemplate": {
+        "template": "return { statusCode: 200, headers: { Date: [ Date() ] }, body: JSON.stringify({is_active: JSON.parse(request.bodyAsString).is_active, id: \"1234\", name: \"taras\"}) };",
+        "templateType": "JAVASCRIPT"
+    }
+}'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.9.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 <button id="button_javascript_templated_response_with_delay" class="accordion">javascript templated response with delay</button>
 <div class="panel">
     <button class="accordion inner">Java</button>

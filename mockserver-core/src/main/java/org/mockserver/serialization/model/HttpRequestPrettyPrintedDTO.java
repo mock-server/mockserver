@@ -1,7 +1,6 @@
-package org.mockserver.templates.engine.model;
+package org.mockserver.serialization.model;
 
 import org.mockserver.model.*;
-import org.mockserver.serialization.model.BodyDTO;
 
 import java.util.HashMap;
 import java.util.List;
@@ -12,7 +11,7 @@ import java.util.stream.Collectors;
 /**
  * @author jamesdbloom
  */
-public class HttpRequestTemplateObject extends RequestDefinition {
+public class HttpRequestPrettyPrintedDTO extends RequestDefinition {
     private int hashCode;
     private String method = "";
     private String path = "";
@@ -23,7 +22,7 @@ public class HttpRequestTemplateObject extends RequestDefinition {
     private Boolean keepAlive = null;
     private Boolean secure = null;
 
-    public HttpRequestTemplateObject(HttpRequest httpRequest) {
+    public HttpRequestPrettyPrintedDTO(HttpRequest httpRequest) {
         if (httpRequest != null) {
             method = httpRequest.getMethod().getValue();
             path = httpRequest.getPath().getValue();
@@ -59,10 +58,6 @@ public class HttpRequestTemplateObject extends RequestDefinition {
         return body;
     }
 
-    public String getBodyAsString() {
-        return BodyDTO.toString(body);
-    }
-
     public Map<String, List<String>> getHeaders() {
         return headers;
     }
@@ -79,7 +74,7 @@ public class HttpRequestTemplateObject extends RequestDefinition {
         return secure;
     }
 
-    public HttpRequestTemplateObject shallowClone() {
+    public HttpRequestPrettyPrintedDTO shallowClone() {
         return this;
     }
 
@@ -97,7 +92,7 @@ public class HttpRequestTemplateObject extends RequestDefinition {
         if (!super.equals(o)) {
             return false;
         }
-        HttpRequestTemplateObject that = (HttpRequestTemplateObject) o;
+        HttpRequestPrettyPrintedDTO that = (HttpRequestPrettyPrintedDTO) o;
         return Objects.equals(method, that.method) &&
             Objects.equals(path, that.path) &&
             Objects.equals(queryStringParameters, that.queryStringParameters) &&
