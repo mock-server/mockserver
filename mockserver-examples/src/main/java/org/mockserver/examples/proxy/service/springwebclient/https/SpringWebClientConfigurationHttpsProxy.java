@@ -1,4 +1,4 @@
-package org.mockserver.examples.proxy.service.springclient;
+package org.mockserver.examples.proxy.service.springwebclient.https;
 
 import org.mockserver.examples.proxy.service.BookService;
 import org.springframework.context.annotation.Bean;
@@ -12,12 +12,13 @@ import org.springframework.context.annotation.PropertySource;
  * @author jamesdbloom
  */
 @Configuration
-@Profile("springClient")
+@Profile("springWebClientHttpsProxy")
 @PropertySource({"classpath:application.properties"})
-public class SpringRestTemplateConfiguration {
+public class SpringWebClientConfigurationHttpsProxy {
 
     @Bean
     BookService bookService() {
-        return new BookServiceSpringRestTemplateClient();
+        return new BookServiceSpringWebClient();
     }
+
 }

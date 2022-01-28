@@ -52,6 +52,7 @@ public abstract class BooksPageEndToEndIntegrationTest {
         System.clearProperty("http.proxyPort");
     }
 
+    @SuppressWarnings("JUnit3StyleTestMethodInJUnit4Class")
     public void testProxyTypeEnabled() {
 
     }

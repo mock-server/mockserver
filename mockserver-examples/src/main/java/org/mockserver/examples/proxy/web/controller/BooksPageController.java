@@ -29,4 +29,5 @@ public class BooksPageController {
         model.addAttribute("book", bookService.getBook(id));
         return "book";
     }
+
 }

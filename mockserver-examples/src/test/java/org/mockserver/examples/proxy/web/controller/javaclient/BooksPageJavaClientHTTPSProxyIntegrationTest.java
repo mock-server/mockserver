@@ -1,4 +1,4 @@
-package org.mockserver.examples.proxy.web.controller.springclient;
+package org.mockserver.examples.proxy.web.controller.javaclient;
 
 import org.junit.runner.RunWith;
 import org.mockserver.examples.proxy.configuration.RootConfiguration;
@@ -27,7 +27,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
         }
     )
 })
-@ActiveProfiles(profiles = {"springClient"})
-public class BooksPageSpringClientIntegrationTest extends BooksPageIntegrationTest {
+@ActiveProfiles(profiles = {"javaClientHttpsProxy"})
+public class BooksPageJavaClientHTTPSProxyIntegrationTest extends BooksPageIntegrationTest {
 
 }

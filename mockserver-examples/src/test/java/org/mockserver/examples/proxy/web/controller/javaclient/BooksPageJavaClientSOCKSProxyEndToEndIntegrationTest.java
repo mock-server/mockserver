@@ -17,7 +17,6 @@ import static org.junit.Assume.assumeThat;
 /**
  * @author jamesdbloom
  */
-@SuppressWarnings("unchecked")
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
 @ContextHierarchy({
@@ -36,7 +35,6 @@ import static org.junit.Assume.assumeThat;
 public class BooksPageJavaClientSOCKSProxyEndToEndIntegrationTest extends BooksPageEndToEndIntegrationTest {
 
     @Override
-    @SuppressWarnings("unchecked")
     public void testProxyTypeEnabled() {
         assumeThat("SOCKS5 is broken in JRE <9", System.getProperty("java.version"), not(anyOf(
             startsWith("1.7."), equalTo("1.7"),

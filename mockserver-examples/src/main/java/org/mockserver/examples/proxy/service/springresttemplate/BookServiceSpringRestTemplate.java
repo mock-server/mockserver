@@ -1,4 +1,4 @@
-package org.mockserver.examples.proxy.service.springclient;
+package org.mockserver.examples.proxy.service.springresttemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpHost;
@@ -25,7 +25,7 @@ import static org.mockserver.examples.proxy.json.ObjectMapperFactory.createObjec
  * @author jamesdbloom
  */
 @Component
-public class BookServiceSpringRestTemplateClient implements BookService {
+public class BookServiceSpringRestTemplate implements BookService {
 
     @Resource
     private Environment environment;

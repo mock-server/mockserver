@@ -1,4 +1,4 @@
-package org.mockserver.examples.proxy.web.controller.springclient;
+package org.mockserver.examples.proxy.web.controller.springresttemplate;
 
 import org.junit.runner.RunWith;
 import org.mockserver.examples.proxy.configuration.RootConfiguration;
@@ -27,7 +27,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
         }
     )
 })
-@ActiveProfiles(profiles = {"backend", "springClient"})
-public class BooksPageSpringClientEndToEndIntegrationTest extends BooksPageEndToEndIntegrationTest {
+@ActiveProfiles(profiles = {"backend", "springRestTemplate"})
+public class BooksPageSpringRestTemplateEndToEndIntegrationTest extends BooksPageEndToEndIntegrationTest {
 
 }
