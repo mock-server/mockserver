@@ -83,8 +83,7 @@ public class NettySslContextFactory {
                 } else {
                     sslContextBuilder.trustManager(trustCertificateChain());
                 }
-                clientSslContext = clientSslContextBuilderFunction
-                    .apply(sslContextBuilder);
+                clientSslContext = clientSslContextBuilderFunction.apply(sslContextBuilder);
                 ConfigurationProperties.rebuildTLSContext(false);
             } catch (Throwable throwable) {
                 throw new RuntimeException("Exception creating SSL context for client", throwable);
