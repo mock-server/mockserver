@@ -3,7 +3,7 @@ package org.mockserver.model;
 import org.junit.Test;
 import org.mockserver.serialization.Base64Converter;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 import java.nio.charset.StandardCharsets;
 
 import static java.nio.charset.StandardCharsets.UTF_8;

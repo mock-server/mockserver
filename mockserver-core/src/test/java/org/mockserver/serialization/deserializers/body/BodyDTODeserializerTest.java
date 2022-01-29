@@ -8,7 +8,7 @@ import org.mockserver.model.*;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.*;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
