@@ -376,6 +376,13 @@
                 <version>31.0.1-android</version>
             </dependency>
 
+            <!-- classpath scanning -->
+            <dependency>
+                <groupId>io.github.classgraph</groupId>
+                <artifactId>classgraph</artifactId>
+                <version>4.8.138</version>
+            </dependency>
+
             <!-- logging -->
             <dependency> <!-- will map to any underlying logging framework -->
                 <groupId>org.slf4j</groupId>

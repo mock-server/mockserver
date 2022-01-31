@@ -2,6 +2,7 @@ package org.mockserver.persistence;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
@@ -49,11 +50,11 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(Level.ERROR)
-                        .setMessageFormat("exception creating persisted expectations file " + filePath.toString())
+                        .setMessageFormat("exception creating persisted expectations file " + filePath)
                         .setThrowable(throwable)
                 );
             }
-            this.initializationPathMatchesPersistencePath = ConfigurationProperties.initializationJsonPath().equals(ConfigurationProperties.persistedExpectationsPath());
+            this.initializationPathMatchesPersistencePath = FileReader.expandFilePathGlobs(ConfigurationProperties.initializationJsonPath()).contains(ConfigurationProperties.persistedExpectationsPath());
             requestMatchers.registerListener(this);
             if (MockServerLogger.isEnabled(INFO)) {
                 mockServerLogger.logEvent(
@@ -91,14 +92,14 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
                                     new LogEntry()
                                         .setLogLevel(TRACE)
                                         .setMessageFormat("persisting expectations{}to{}")
-                                        .setArguments(expectations, ConfigurationProperties.initializationJsonPath())
+                                        .setArguments(expectations, ConfigurationProperties.persistedExpectationsPath())
                                 );
                             } else if (MockServerLogger.isEnabled(DEBUG)) {
                                 mockServerLogger.logEvent(
                                     new LogEntry()
                                         .setLogLevel(DEBUG)
                                         .setMessageFormat("persisting expectations to{}")
-                                        .setArguments(ConfigurationProperties.initializationJsonPath())
+                                        .setArguments(ConfigurationProperties.persistedExpectationsPath())
                                 );
                             }
                             byte[] data = serialize(expectations).getBytes(UTF_8);

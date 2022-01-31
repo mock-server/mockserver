@@ -197,6 +197,12 @@
             <artifactId>guava</artifactId>
         </dependency>
 
+        <!-- classpath scanning -->
+        <dependency>
+            <groupId>io.github.classgraph</groupId>
+            <artifactId>classgraph</artifactId>
+        </dependency>
+
         <!-- logging -->
         <dependency> <!-- will map to any underlying logging framework -->
             <groupId>org.slf4j</groupId>

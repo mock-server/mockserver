@@ -1,0 +1,18 @@
+[
+  {
+    "httpRequest": {
+      "path": "/pathTwoFirst"
+    },
+    "httpResponse": {
+      "body": "two first response"
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/pathTwoSecond"
+    },
+    "httpResponse": {
+      "body": "two second response"
+    }
+  }
+]
