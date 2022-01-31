@@ -15,7 +15,7 @@ import java.io.IOException;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
 
-public class RunServlet {
+public class RunServletEmbeddedExample {
 
     private static final int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private static final int SERVER_HTTPS_PORT = PortFactory.findFreePort();
@@ -44,12 +44,12 @@ public class RunServlet {
         Connector httpsConnector = new Connector();
         httpsConnector.setPort(SERVER_HTTPS_PORT);
         httpsConnector.setSecure(true);
-        httpsConnector.setAttribute("keyAlias", KeyStoreFactory.KEY_STORE_CERT_ALIAS);
-        httpsConnector.setAttribute("keystorePass", KeyStoreFactory.KEY_STORE_PASSWORD);
-        httpsConnector.setAttribute("keystoreFile", new File(keyStoreFactory.keyStoreFileName).getAbsoluteFile());
-        httpsConnector.setAttribute("sslProtocol", "TLS");
-        httpsConnector.setAttribute("clientAuth", false);
-        httpsConnector.setAttribute("SSLEnabled", true);
+        httpsConnector.setProperty("keyAlias", KeyStoreFactory.KEY_STORE_CERT_ALIAS);
+        httpsConnector.setProperty("keystorePass", KeyStoreFactory.KEY_STORE_PASSWORD);
+        httpsConnector.setProperty("keystoreFile", new File(keyStoreFactory.keyStoreFileName).getAbsoluteFile().toString());
+        httpsConnector.setProperty("sslProtocol", "TLS");
+        httpsConnector.setProperty("clientAuth", "false");
+        httpsConnector.setProperty("SSLEnabled", "true");
 
         Service service = tomcat.getService();
         service.addConnector(httpsConnector);
