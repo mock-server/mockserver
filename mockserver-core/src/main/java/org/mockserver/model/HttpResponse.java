@@ -449,7 +449,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      * Adds one cookie to match on or to not match on using the NottableString, each NottableString can either be a positive matching value,
      * such as string("match"), or a value to not match on, such as not("do not match"), the string values passed to the NottableString
      * can be a plain string or a regex (for more details of the supported regex syntax see
-     * http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param name  the cookies name
      * @param value the cookies value

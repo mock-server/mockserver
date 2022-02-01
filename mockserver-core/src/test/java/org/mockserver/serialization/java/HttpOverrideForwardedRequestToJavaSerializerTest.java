@@ -17,13 +17,13 @@ public class HttpOverrideForwardedRequestToJavaSerializerTest {
     public void shouldSerializeFullObjectWithForwardAsJava() {
         assertEquals(NEW_LINE +
                 "        forwardOverriddenRequest()" + NEW_LINE +
-                "                .withRequest(" + NEW_LINE +
+                "                .withRequestOverride(" + NEW_LINE +
                 "                        request()" + NEW_LINE +
                 "                                .withMethod(\"GET\")" + NEW_LINE +
                 "                                .withPath(\"somePathOne\")" + NEW_LINE +
                 "                                .withBody(new StringBody(\"responseBodyOne\"))" + NEW_LINE +
                 "                )" + NEW_LINE +
-                "                .withResponse(" + NEW_LINE +
+                "                .withResponseOverride(" + NEW_LINE +
                 "                        response()" + NEW_LINE +
                 "                                .withStatusCode(304)" + NEW_LINE +
                 "                                .withReasonPhrase(\"someReason\")" + NEW_LINE +
@@ -41,12 +41,12 @@ public class HttpOverrideForwardedRequestToJavaSerializerTest {
                 "                .withDelay(new Delay(TimeUnit.MILLISECONDS, 100))",
             new HttpOverrideForwardedRequestToJavaSerializer().serialize(1,
                 new HttpOverrideForwardedRequest()
-                    .withHttpRequest(new HttpRequest()
+                    .withRequestOverride(new HttpRequest()
                         .withMethod("GET")
                         .withPath("somePathOne")
                         .withBody(new StringBody("responseBodyOne"))
                     )
-                    .withHttpResponse(new HttpResponse()
+                    .withResponseOverride(new HttpResponse()
                         .withStatusCode(304)
                         .withReasonPhrase("someReason")
                         .withHeaders(

@@ -870,7 +870,7 @@ public class MockServerClientIntegrationTest {
                     "    \"body\" : \"some_request_body\"" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"httpOverrideForwardedRequest\" : {" + NEW_LINE +
-                    "    \"httpRequest\" : {" + NEW_LINE +
+                    "    \"requestOverride\" : {" + NEW_LINE +
                     "      \"headers\" : {" + NEW_LINE +
                     "        \"host\" : [ \"localhost:" + echoServerOne.getPort() + "\" ]" + NEW_LINE +
                     "      }," + NEW_LINE +

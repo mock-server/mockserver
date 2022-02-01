@@ -6,7 +6,6 @@ import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
@@ -219,7 +218,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * The path to match on such as "/some_mocked_path" any servlet context path is ignored for matching and should not be specified here
-     * regex values are also supported such as ".*_path", see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html
+     * regex values are also supported such as ".*_path", see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html
      * for full details of the supported regex syntax
      *
      * @param path the path such as "/some_mocked_path" or a regex
@@ -232,7 +231,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     /**
      * The path to not match on for example not("/some_mocked_path") with match any path not equal to "/some_mocked_path",
      * the servlet context path is ignored for matching and should not be specified hereregex values are also supported
-     * such as not(".*_path"), see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html for full details
+     * such as not(".*_path"), see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html for full details
      * of the supported regex syntax
      *
      * @param path the path to not match on such as not("/some_mocked_path") or not(".*_path")
@@ -319,7 +318,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * The path parameter to match on as a list of Parameter objects where the values or keys of each parameter can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameters the list of Parameter objects where the values or keys of each parameter can be either a string or a regex
      */
@@ -331,7 +330,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * The path parameter to match on as a varags Parameter objects where the values or keys of each parameter can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameters the varags Parameter objects where the values or keys of each parameter can be either a string or a regex
      */
@@ -343,7 +342,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * The path parameter to match on as a Map&lt;String, List&lt;String&gt;&gt; where the values or keys of each parameter can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameters the Map&lt;String, List&lt;String&gt;&gt; object where the values or keys of each parameter can be either a string or a regex
      */
@@ -355,7 +354,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * Adds one path parameter to match on as a Parameter object where the parameter values list can be a list of strings or regular expressions
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameter the Parameter object which can have a values list of strings or regular expressions
      */
@@ -367,7 +366,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * Adds one path parameter to match which can specified using plain strings or regular expressions
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param name   the parameter name
      * @param values the parameter values which can be a varags of strings or regular expressions
@@ -395,7 +394,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      * Adds one path parameter to match on or to not match on using the NottableString, each NottableString can either be a positive matching
      * value, such as string("match"), or a value to not match on, such as not("do not match"), the string values passed to the NottableString
      * can also be a plain string or a regex (for more details of the supported regex syntax
-     * see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param name   the parameter name as a NottableString
      * @param values the parameter values which can be a varags of NottableStrings
@@ -464,7 +463,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * The query string parameters to match on as a list of Parameter objects where the values or keys of each parameter can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameters the list of Parameter objects where the values or keys of each parameter can be either a string or a regex
      */
@@ -476,7 +475,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * The query string parameters to match on as a varags Parameter objects where the values or keys of each parameter can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameters the varags Parameter objects where the values or keys of each parameter can be either a string or a regex
      */
@@ -488,7 +487,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * The query string parameters to match on as a Map&lt;String, List&lt;String&gt;&gt; where the values or keys of each parameter can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameters the Map&lt;String, List&lt;String&gt;&gt; object where the values or keys of each parameter can be either a string or a regex
      */
@@ -500,7 +499,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * Adds one query string parameter to match on as a Parameter object where the parameter values list can be a list of strings or regular expressions
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param parameter the Parameter object which can have a values list of strings or regular expressions
      */
@@ -512,7 +511,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * Adds one query string parameter to match which the values are plain strings or regular expressions
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param name   the parameter name
      * @param values the parameter values which can be a varags of strings or regular expressions
@@ -540,7 +539,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      * Adds one query string parameter to match on or to not match on using the NottableString, each NottableString can either be a positive matching
      * value, such as string("match"), or a value to not match on, such as not("do not match"), the string values passed to the NottableString
      * can also be a plain string or a regex (for more details of the supported regex syntax
-     * see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param name   the parameter name as a NottableString
      * @param values the parameter values which can be a varags of NottableStrings
@@ -687,7 +686,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      * <p>
      * - new BinaryBody(IOUtils.readFully(getClass().getClassLoader().getResourceAsStream("example.pdf"), 1024));
      * <p>
-     * for more details of the supported regular expression syntax see <a href="http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html</a>
+     * for more details of the supported regular expression syntax see <a href="http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html</a>
      * for more details of the supported json syntax see <a href="http://jsonassert.skyscreamer.org">http://jsonassert.skyscreamer.org</a>
      * for more details of the supported json schema syntax see <a href="http://json-schema.org/">http://json-schema.org/</a>
      * for more detail of XPath syntax see <a href="http://saxon.sourceforge.net/saxon6.5.3/expressions.html">http://saxon.sourceforge.net/saxon6.5.3/expressions.html</a>
@@ -757,7 +756,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * The headers to match on as a list of Header objects where the values or keys of each header can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param headers the list of Header objects where the values or keys of each header can be either a string or a regex
      */
@@ -769,7 +768,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * The headers to match on as a varags of Header objects where the values or keys of each header can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param headers the varags of Header objects where the values or keys of each header can be either a string or a regex
      */
@@ -781,7 +780,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * Adds one header to match on as a Header object where the header values list can be a list of strings or regular expressions
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param header the Header object which can have a values list of strings or regular expressions
      */
@@ -793,7 +792,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * Adds one header to match which can specified using plain strings or regular expressions
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param name   the header name
      * @param values the header values which can be a varags of strings or regular expressions
@@ -821,7 +820,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      * Adds one header to match on or to not match on using the NottableString, each NottableString can either be a positive matching value,
      * such as string("match"), or a value to not match on, such as not("do not match"), the string values passed to the NottableString
      * can also be a plain string or a regex (for more details of the supported regex syntax
-     * see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param name   the header name as a NottableString
      * @param values the header values which can be a varags of NottableStrings
@@ -840,7 +839,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * Adds one header to match on as a Header object where the header values list can be a list of strings or regular expressions
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param header the Header object which can have a values list of strings or regular expressions
      */
@@ -943,7 +942,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * The cookies to match on as a list of Cookie objects where the values or keys of each cookie can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param cookies a list of Cookie objects
      */
@@ -955,7 +954,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * The cookies to match on as a varags Cookie objects where the values or keys of each cookie can be either a string or a regex
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param cookies a varargs of Cookie objects
      */
@@ -967,7 +966,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * Adds one cookie to match on as a Cookie object where the cookie values list can be a list of strings or regular expressions
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param cookie a Cookie object
      */
@@ -979,7 +978,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     /**
      * Adds one cookie to match on, which the value is plain strings or regular expressions
-     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * (for more details of the supported regex syntax see http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param name  the cookies name
      * @param value the cookies value
@@ -1007,7 +1006,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      * Adds one cookie to match on or to not match on using the NottableString, each NottableString can either be a positive matching value,
      * such as string("match"), or a value to not match on, such as not("do not match"), the string values passed to the NottableString
      * can be a plain string or a regex (for more details of the supported regex syntax see
-     * http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     * http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
      *
      * @param name  the cookies name
      * @param value the cookies value

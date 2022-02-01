@@ -40,6 +40,18 @@ public class ParameterBody extends Body<Parameters> {
         return new ParameterBody(parameters);
     }
 
+    public static ParameterBody parameterBody(Parameters parameters) {
+        return new ParameterBody(parameters);
+    }
+
+    public static ParameterBody parameterBody(Parameter... parameters) {
+        return new ParameterBody(parameters);
+    }
+
+    public static ParameterBody parameterBody(List<Parameter> parameters) {
+        return new ParameterBody(parameters);
+    }
+
     public Parameters getValue() {
         return this.parameters;
     }

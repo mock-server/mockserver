@@ -17,11 +17,7 @@ public class HttpForwardActionHandler extends HttpForwardAction {
     }
 
     public HttpForwardActionResult handle(HttpForward httpForward, HttpRequest httpRequest) {
-        if (httpForward.getScheme().equals(HttpForward.Scheme.HTTPS)) {
-            httpRequest.withSecure(true);
-        } else {
-            httpRequest.withSecure(false);
-        }
+        httpRequest.withSecure(HttpForward.Scheme.HTTPS.equals(httpForward.getScheme()));
         return sendRequest(httpRequest, new InetSocketAddress(httpForward.getHost(), httpForward.getPort()), null);
     }
 

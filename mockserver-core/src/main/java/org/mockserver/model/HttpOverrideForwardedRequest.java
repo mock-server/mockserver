@@ -1,5 +1,6 @@
 package org.mockserver.model;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.Objects;
@@ -9,8 +10,12 @@ import java.util.Objects;
  */
 public class HttpOverrideForwardedRequest extends Action<HttpOverrideForwardedRequest> {
     private int hashCode;
-    private HttpRequest httpRequest;
-    private HttpResponse httpResponse;
+    @JsonAlias("httpRequest")
+    private HttpRequest requestOverride;
+    private HttpRequestModifier requestModifier;
+    @JsonAlias("httpResponse")
+    private HttpResponse responseOverride;
+    private HttpResponseModifier responseModifier;
 
     /**
      * Static builder which will allow overriding proxied request with the specified request.
@@ -25,7 +30,7 @@ public class HttpOverrideForwardedRequest extends Action<HttpOverrideForwardedRe
      * @param httpRequest the HttpRequest specifying what to override
      */
     public static HttpOverrideForwardedRequest forwardOverriddenRequest(HttpRequest httpRequest) {
-        return new HttpOverrideForwardedRequest().withHttpRequest(httpRequest);
+        return new HttpOverrideForwardedRequest().withRequestOverride(httpRequest);
     }
 
     /**
@@ -36,12 +41,12 @@ public class HttpOverrideForwardedRequest extends Action<HttpOverrideForwardedRe
      */
     public static HttpOverrideForwardedRequest forwardOverriddenRequest(HttpRequest httpRequest, HttpResponse httpResponse) {
         return new HttpOverrideForwardedRequest()
-            .withHttpRequest(httpRequest)
-            .withHttpResponse(httpResponse);
+            .withRequestOverride(httpRequest)
+            .withResponseOverride(httpResponse);
     }
 
-    public HttpRequest getHttpRequest() {
-        return httpRequest;
+    public HttpRequest getRequestOverride() {
+        return requestOverride;
     }
 
     /**
@@ -49,14 +54,29 @@ public class HttpOverrideForwardedRequest extends Action<HttpOverrideForwardedRe
      *
      * @param httpRequest the HttpRequest specifying what to override
      */
-    public HttpOverrideForwardedRequest withHttpRequest(HttpRequest httpRequest) {
-        this.httpRequest = httpRequest;
+    public HttpOverrideForwardedRequest withRequestOverride(HttpRequest httpRequest) {
+        this.requestOverride = httpRequest;
         this.hashCode = 0;
         return this;
     }
 
-    public HttpResponse getHttpResponse() {
-        return httpResponse;
+    public HttpRequestModifier getRequestModifier() {
+        return requestModifier;
+    }
+
+    /**
+     * Allow path, query parameters, headers and cookies to be modified
+     *
+     * @param modifyHttpRequest what to modify
+     */
+    public HttpOverrideForwardedRequest withRequestModifier(HttpRequestModifier modifyHttpRequest) {
+        this.requestModifier = modifyHttpRequest;
+        this.hashCode = 0;
+        return this;
+    }
+
+    public HttpResponse getResponseOverride() {
+        return responseOverride;
     }
 
     /**
@@ -64,8 +84,23 @@ public class HttpOverrideForwardedRequest extends Action<HttpOverrideForwardedRe
      *
      * @param httpResponse the HttpResponse specifying what to override
      */
-    public HttpOverrideForwardedRequest withHttpResponse(HttpResponse httpResponse) {
-        this.httpResponse = httpResponse;
+    public HttpOverrideForwardedRequest withResponseOverride(HttpResponse httpResponse) {
+        this.responseOverride = httpResponse;
+        this.hashCode = 0;
+        return this;
+    }
+
+    public HttpResponseModifier getResponseModifier() {
+        return responseModifier;
+    }
+
+    /**
+     * Allow headers and cookies to be modified
+     *
+     * @param modifyHttpResponse what to modify
+     */
+    public HttpOverrideForwardedRequest withResponseModifier(HttpResponseModifier modifyHttpResponse) {
+        this.responseModifier = modifyHttpResponse;
         this.hashCode = 0;
         return this;
     }
@@ -91,14 +126,16 @@ public class HttpOverrideForwardedRequest extends Action<HttpOverrideForwardedRe
             return false;
         }
         HttpOverrideForwardedRequest that = (HttpOverrideForwardedRequest) o;
-        return Objects.equals(httpRequest, that.httpRequest) &&
-            Objects.equals(httpResponse, that.httpResponse);
+        return Objects.equals(requestOverride, that.requestOverride) &&
+            Objects.equals(requestModifier, that.requestModifier) &&
+            Objects.equals(responseOverride, that.responseOverride) &&
+            Objects.equals(responseModifier, that.responseModifier);
     }
 
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(super.hashCode(), httpRequest, httpResponse);
+            hashCode = Objects.hash(super.hashCode(), requestOverride, requestModifier, responseOverride, responseModifier);
         }
         return hashCode;
     }

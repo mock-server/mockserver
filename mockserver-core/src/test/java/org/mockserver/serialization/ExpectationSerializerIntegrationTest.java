@@ -1,5 +1,6 @@
 package org.mockserver.serialization;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
@@ -243,11 +244,11 @@ public class ExpectationSerializerIntegrationTest {
                 "" + NEW_LINE +
                 " schema validation errors:" + NEW_LINE +
                 "" + NEW_LINE +
-                "  2 errors:\n" +
-                "   - $.httpRequest.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher\n" +
+                "  2 errors:" + NEW_LINE +
+                "   - $.httpRequest.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher" + NEW_LINE +
                 "   - $.httpResponse.extra_field: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
                 "  " + NEW_LINE +
-                "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  " )));
+                "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  ")));
         }
     }
 
@@ -369,11 +370,11 @@ public class ExpectationSerializerIntegrationTest {
                 "  " + NEW_LINE +
                 "   schema validation errors:" + NEW_LINE +
                 "  " + NEW_LINE +
-                "    2 errors:\n" +
-                "     - $.httpRequest.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher\n" +
+                "    2 errors:" + NEW_LINE +
+                "     - $.httpRequest.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher" + NEW_LINE +
                 "     - $.httpResponse.extra_field: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
                 "    " + NEW_LINE +
-                "    " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "    " ) + "," + NEW_LINE +
+                "    " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "    ") + "," + NEW_LINE +
                 "  " + NEW_LINE +
                 "  incorrect expectation json format for:" + NEW_LINE +
                 "  " + NEW_LINE +
@@ -390,11 +391,11 @@ public class ExpectationSerializerIntegrationTest {
                 "  " + NEW_LINE +
                 "   schema validation errors:" + NEW_LINE +
                 "  " + NEW_LINE +
-                "    2 errors:\n" +
-                "     - $.httpRequest.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher\n" +
+                "    2 errors:" + NEW_LINE +
+                "     - $.httpRequest.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher" + NEW_LINE +
                 "     - $.httpResponse.extra_field: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
                 "    " + NEW_LINE +
-                "    " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "    " ) + "," + NEW_LINE +
+                "    " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "    ") + "," + NEW_LINE +
                 "  " + NEW_LINE +
                 "  incorrect expectation json format for:" + NEW_LINE +
                 "  " + NEW_LINE +
@@ -411,11 +412,11 @@ public class ExpectationSerializerIntegrationTest {
                 "  " + NEW_LINE +
                 "   schema validation errors:" + NEW_LINE +
                 "  " + NEW_LINE +
-                "    2 errors:\n" +
-                "     - $.httpRequest.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher\n" +
+                "    2 errors:" + NEW_LINE +
+                "     - $.httpRequest.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher" + NEW_LINE +
                 "     - $.httpResponse.extra_field: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
                 "    " + NEW_LINE +
-                "    " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "    " ) + NEW_LINE +
+                "    " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "    ") + NEW_LINE +
                 "]"));
         }
     }
@@ -1413,7 +1414,7 @@ public class ExpectationSerializerIntegrationTest {
             )
             .setHttpOverrideForwardedRequest(
                 new HttpOverrideForwardedRequestDTO()
-                    .setHttpRequest(
+                    .setRequestOverride(
                         new HttpRequestDTO()
                             .setMethod(string("some_overridden_method"))
                             .setPath(string("some_overridden_path"))
@@ -2286,7 +2287,7 @@ public class ExpectationSerializerIntegrationTest {
             )
             .setHttpOverrideForwardedRequest(
                 new HttpOverrideForwardedRequestDTO()
-                    .setHttpRequest(
+                    .setRequestOverride(
                         new HttpRequestDTO()
                             .setMethod(string("some_overridden_method"))
                             .setPath(string("some_overridden_path"))
@@ -2307,9 +2308,299 @@ public class ExpectationSerializerIntegrationTest {
             "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
             "      \"value\" : 1" + NEW_LINE +
             "    }," + NEW_LINE +
-            "    \"httpRequest\" : {" + NEW_LINE +
+            "    \"requestOverride\" : {" + NEW_LINE +
             "      \"method\" : \"some_overridden_method\"," + NEW_LINE +
             "      \"path\" : \"some_overridden_path\"," + NEW_LINE +
+            "      \"body\" : \"some_overridden_body\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : {" + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"queryStringParameters\" : {" + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"headers\" : {" + NEW_LINE +
+            "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : {" + NEW_LINE +
+            "      \"someCookieName\" : \"someCookieValue\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
+    }
+
+    @Test
+    public void shouldSerializeCompleteObjectWithOverrideForwardedRequestWithOverriddenResponse() {
+        // when
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setId("some_key")
+            .setPriority(10)
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpOverrideForwardedRequest(
+                new HttpOverrideForwardedRequestDTO()
+                    .setRequestOverride(
+                        new HttpRequestDTO()
+                            .setMethod(string("some_overridden_method"))
+                            .setPath(string("some_overridden_path"))
+                            .setBody(new StringBodyDTO(exact("some_overridden_body")))
+                    )
+                    .setResponseOverride(
+                        new HttpResponseDTO()
+                            .setHeaders(new Headers().withEntries(
+                                header("someHeaderName", "someHeaderValue")
+                            ))
+                            .setBody(new StringBodyDTO(exact("some_overridden_body")))
+                    )
+                    .setDelay(new DelayDTO()
+                        .setTimeUnit(MICROSECONDS)
+                        .setValue(1)
+                    )
+            )
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject()
+        );
+
+        // then
+        assertEquals("{" + NEW_LINE +
+            "  \"httpOverrideForwardedRequest\" : {" + NEW_LINE +
+            "    \"delay\" : {" + NEW_LINE +
+            "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+            "      \"value\" : 1" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"requestOverride\" : {" + NEW_LINE +
+            "      \"method\" : \"some_overridden_method\"," + NEW_LINE +
+            "      \"path\" : \"some_overridden_path\"," + NEW_LINE +
+            "      \"body\" : \"some_overridden_body\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"responseOverride\" : {" + NEW_LINE +
+            "      \"headers\" : {" + NEW_LINE +
+            "        \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "      }," + NEW_LINE +
+            "      \"body\" : \"some_overridden_body\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"pathParameters\" : {" + NEW_LINE +
+            "      \"pathParameterNameTwo\" : [ \"pathParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"pathParameterNameOne\" : [ \"pathParameterValueOne_One\", \"pathParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"queryStringParameters\" : {" + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"headers\" : {" + NEW_LINE +
+            "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : {" + NEW_LINE +
+            "      \"someCookieName\" : \"someCookieValue\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
+            "  \"priority\" : 10," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
+    }
+
+    @Test
+    public void shouldSerializeCompleteObjectWithOverrideForwardedRequestWithOverriddenAndModifiedRequestAndResponse() {
+        // when
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setId("some_key")
+            .setPriority(10)
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setPathParameters(new Parameters().withEntries(
+                        param("pathParameterNameOne", "pathParameterValueOne_One", "pathParameterValueOne_Two"),
+                        param("pathParameterNameTwo", "pathParameterValueTwo_One")
+                    ))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpOverrideForwardedRequest(
+                new HttpOverrideForwardedRequestDTO()
+                    .setRequestOverride(
+                        new HttpRequestDTO()
+                            .setMethod(string("some_overridden_method"))
+                            .setPath(string("some_overridden_path"))
+                            .setBody(new StringBodyDTO(exact("some_overridden_body")))
+                    )
+                    .setRequestModifier(
+                        new HttpRequestModifierDTO()
+                            .setPath(
+                                new PathModifier()
+                                    .withRegex("someRegex")
+                                    .withSubstitution("someSubstitution")
+                            )
+                            .setQueryStringParameters(
+                                new QueryParametersModifierDTO()
+                                    .setAdd(new Parameters().withEntries(param("queryStringParameterToAdd", "queryStringParameterToAddValue")))
+                                    .setRemove(ImmutableList.of("queryStringParameterToRemove"))
+                                    .setReplace(new Parameters().withEntries(param("queryStringParameterToReplace", "queryStringParameterToReplaceValue")))
+                            )
+                            .setHeaders(
+                                new HeadersModifierDTO()
+                                    .setAdd(new Headers().withEntries(header("headerToAdd", "headerToAddValue")))
+                                    .setRemove(ImmutableList.of("headerToRemove"))
+                                    .setReplace(new Headers().withEntries(header("headerToReplace", "headerToReplaceValue")))
+                            )
+                            .setCookies(
+                                new CookiesModifierDTO()
+                                    .setAdd(new Cookies().withEntries(cookie("cookieToAdd", "cookieToAddValue")))
+                                    .setRemove(ImmutableList.of("cookieToRemove"))
+                                    .setReplace(new Cookies().withEntries(cookie("cookieToReplace", "cookieToReplaceValue")))
+                            )
+                    )
+                    .setResponseOverride(
+                        new HttpResponseDTO()
+                            .setHeaders(new Headers().withEntries(
+                                header("someHeaderName", "someHeaderValue")
+                            ))
+                            .setBody(new StringBodyDTO(exact("some_overridden_body")))
+                    )
+                    .setResponseModifier(
+                        new HttpResponseModifierDTO()
+                            .setHeaders(
+                                new HeadersModifierDTO()
+                                    .setAdd(new Headers().withEntries(header("headerToAdd", "headerToAddValue")))
+                                    .setRemove(ImmutableList.of("headerToRemove"))
+                                    .setReplace(new Headers().withEntries(header("headerToReplace", "headerToReplaceValue")))
+                            )
+                            .setCookies(
+                                new CookiesModifierDTO()
+                                    .setAdd(new Cookies().withEntries(cookie("cookieToAdd", "cookieToAddValue")))
+                                    .setRemove(ImmutableList.of("cookieToRemove"))
+                                    .setReplace(new Cookies().withEntries(cookie("cookieToReplace", "cookieToReplaceValue")))
+                            )
+                    )
+                    .setDelay(new DelayDTO()
+                        .setTimeUnit(MICROSECONDS)
+                        .setValue(1)
+                    )
+            )
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject()
+        );
+
+        // then
+        assertEquals("{" + NEW_LINE +
+            "  \"httpOverrideForwardedRequest\" : {" + NEW_LINE +
+            "    \"delay\" : {" + NEW_LINE +
+            "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+            "      \"value\" : 1" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"requestModifier\" : {" + NEW_LINE +
+            "      \"cookies\" : {" + NEW_LINE +
+            "        \"add\" : {" + NEW_LINE +
+            "          \"cookieToAdd\" : \"cookieToAddValue\"" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        \"remove\" : [ \"cookieToRemove\" ]," + NEW_LINE +
+            "        \"replace\" : {" + NEW_LINE +
+            "          \"cookieToReplace\" : \"cookieToReplaceValue\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "      }," + NEW_LINE +
+            "      \"headers\" : {" + NEW_LINE +
+            "        \"add\" : {" + NEW_LINE +
+            "          \"headerToAdd\" : [ \"headerToAddValue\" ]" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        \"remove\" : [ \"headerToRemove\" ]," + NEW_LINE +
+            "        \"replace\" : {" + NEW_LINE +
+            "          \"headerToReplace\" : [ \"headerToReplaceValue\" ]" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "      }," + NEW_LINE +
+            "      \"path\" : {" + NEW_LINE +
+            "        \"regex\" : \"someRegex\"," + NEW_LINE +
+            "        \"substitution\" : \"someSubstitution\"" + NEW_LINE +
+            "      }," + NEW_LINE +
+            "      \"queryStringParameters\" : {" + NEW_LINE +
+            "        \"add\" : {" + NEW_LINE +
+            "          \"queryStringParameterToAdd\" : [ \"queryStringParameterToAddValue\" ]" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        \"remove\" : [ \"queryStringParameterToRemove\" ]," + NEW_LINE +
+            "        \"replace\" : {" + NEW_LINE +
+            "          \"queryStringParameterToReplace\" : [ \"queryStringParameterToReplaceValue\" ]" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"requestOverride\" : {" + NEW_LINE +
+            "      \"method\" : \"some_overridden_method\"," + NEW_LINE +
+            "      \"path\" : \"some_overridden_path\"," + NEW_LINE +
+            "      \"body\" : \"some_overridden_body\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"responseModifier\" : {" + NEW_LINE +
+            "      \"cookies\" : {" + NEW_LINE +
+            "        \"add\" : {" + NEW_LINE +
+            "          \"cookieToAdd\" : \"cookieToAddValue\"" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        \"remove\" : [ \"cookieToRemove\" ]," + NEW_LINE +
+            "        \"replace\" : {" + NEW_LINE +
+            "          \"cookieToReplace\" : \"cookieToReplaceValue\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "      }," + NEW_LINE +
+            "      \"headers\" : {" + NEW_LINE +
+            "        \"add\" : {" + NEW_LINE +
+            "          \"headerToAdd\" : [ \"headerToAddValue\" ]" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        \"remove\" : [ \"headerToRemove\" ]," + NEW_LINE +
+            "        \"replace\" : {" + NEW_LINE +
+            "          \"headerToReplace\" : [ \"headerToReplaceValue\" ]" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"responseOverride\" : {" + NEW_LINE +
+            "      \"headers\" : {" + NEW_LINE +
+            "        \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "      }," + NEW_LINE +
             "      \"body\" : \"some_overridden_body\"" + NEW_LINE +
             "    }" + NEW_LINE +
             "  }," + NEW_LINE +

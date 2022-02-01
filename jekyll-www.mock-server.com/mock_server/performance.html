@@ -18,7 +18,8 @@ lastmod: 2019-11-10T08:00:00+01:00
 
 <p>MockServer is build to support massive scale from a single instance:</p>
 <ul>
-    <li><a href="#apache_bench">Apache Benchmark</a> tested up to <strong>6,000 parallel clients</strong> and shows MockServer has an <strong>average of 1.58ms and p99 of 4ms for 150 parallel clients sending 95,228 requests per second</strong></li>
+    <li><a href="#apache_bench">Apache Benchmark</a> tested up to <strong>6,000 parallel clients</strong> and shows MockServer has an <strong>average of 1.58ms and p99 of 4ms for 150 parallel clients sending 95,228 requests per
+        second</strong></li>
     <li><a href="#locust">Locust</a> tested up to <strong>3,000 parallel clients</strong> and shows MockServer has a <strong>p99 of 4ms for 150 parallel clients</strong></li>
 </ul>
 
@@ -28,7 +29,9 @@ lastmod: 2019-11-10T08:00:00+01:00
 <ul>
     <li><a href="https://netty.io">Netty</a> an asynchronous event-driven network application framework to maximise the scalability of HTTP and TLS</li>
     <li><a href="https://lmax-exchange.github.io/disruptor">LMAX Disruptor</a> a high performance inter-thread messaging library to maximise the scalability of recording events (i.e. state) and logging</li>
-    <li><a href="https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ScheduledThreadPoolExecutor.html">ScheduledThreadPoolExecutor</a> a thread pool that can scheduled delayed tasks is used to execute delay response to avoid blocking threads</li>
+    <li><a href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ScheduledThreadPoolExecutor.html">ScheduledThreadPoolExecutor</a> a thread pool that can scheduled delayed tasks is used to execute delay response to avoid
+        blocking threads
+    </li>
 </ul>
 
 <h2>Performance Tests</h2>

@@ -7,8 +7,8 @@ import org.junit.*;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.log.TimeService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -473,7 +473,7 @@ public class ActionHandlerTest {
     @Test
     public void shouldProcessOverrideForwardedRequest() {
         // given
-        HttpOverrideForwardedRequest httpOverrideForwardedRequest = new HttpOverrideForwardedRequest().withHttpRequest(request("some_overridden_path"));
+        HttpOverrideForwardedRequest httpOverrideForwardedRequest = new HttpOverrideForwardedRequest().withRequestOverride(request("some_overridden_path"));
         expectation = new Expectation(request).thenForward(httpOverrideForwardedRequest);
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
         ResponseWriter mockResponseWriter = mock(ResponseWriter.class);

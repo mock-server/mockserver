@@ -10,7 +10,6 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.internal.verification.AtLeast;
-import org.mockserver.version.Version;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.httpclient.SocketConnectionException;
 import org.mockserver.matchers.TimeToLive;
@@ -22,6 +21,7 @@ import org.mockserver.serialization.model.*;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
+import org.mockserver.version.Version;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -399,7 +399,7 @@ public class MockServerClientTest {
         assertTrue(expectation.isActive());
         assertThat(expectation.getHttpForwardTemplate(), nullValue());
         assertThat(expectation.getHttpOverrideForwardedRequest(), is(new HttpOverrideForwardedRequest()
-            .withHttpRequest(request().withBody("some_overridden_body"))
+            .withRequestOverride(request().withBody("some_overridden_body"))
         ));
         assertEquals(Times.unlimited(), expectation.getTimes());
     }
@@ -644,7 +644,7 @@ public class MockServerClientTest {
                 .setHttpOverrideForwardedRequest(
                     new HttpOverrideForwardedRequestDTO(
                         new HttpOverrideForwardedRequest()
-                            .withHttpRequest(
+                            .withRequestOverride(
                                 request()
                                     .withBody("some_replaced_body")
                             )

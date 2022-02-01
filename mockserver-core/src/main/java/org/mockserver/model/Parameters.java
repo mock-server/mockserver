@@ -22,6 +22,10 @@ public class Parameters extends KeysToMultiValues<Parameter, Parameters> {
         super(headers);
     }
 
+    public static Parameters parameters(Parameter... parameters) {
+        return new Parameters(parameters);
+    }
+
     @Override
     public Parameter build(NottableString name, Collection<NottableString> values) {
         return new Parameter(name, values);

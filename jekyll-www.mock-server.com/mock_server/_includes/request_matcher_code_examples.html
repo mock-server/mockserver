@@ -312,7 +312,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 </div>
 <button id="button_match_request_by_regex_path" class="accordion">match request by regex path</button>
 <div class="panel">
-    <p>For details of the full regex syntax supported please see <a href="https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">the JDK documentation</a>.</p>
+    <p>For details of the full regex syntax supported please see <a href="https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">the JDK documentation</a>.</p>
     <button class="accordion inner">Java</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
@@ -609,7 +609,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 </div>
 <button id="button_match_request_by_method_regex" class="accordion">match request by method regex</button>
 <div class="panel">
-    <p>For details of the full regex syntax supported please see <a href="https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">the JDK documentation</a>.</p>
+    <p>For details of the full regex syntax supported please see <a href="https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">the JDK documentation</a>.</p>
     <button class="accordion inner">Java</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
@@ -707,7 +707,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 </div>
 <button id="button_match_request_by_query_parameter_name_regex" class="accordion">match request by query parameter with name regex</button>
 <div class="panel">
-    <p>For details of the full regex syntax supported please see <a href="https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">the JDK documentation</a>.</p>
+    <p>For details of the full regex syntax supported please see <a href="https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">the JDK documentation</a>.</p>
     <button class="accordion inner">Java</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
@@ -764,7 +764,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 </div>
 <button id="button_match_request_by_query_parameter_value_regex" class="accordion">match request by query parameter with regex value</button>
 <div class="panel">
-    <p>For details of the full regex syntax supported please see <a href="https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">the JDK documentation</a>.</p>
+    <p>For details of the full regex syntax supported please see <a href="https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">the JDK documentation</a>.</p>
     <button class="accordion inner">Java</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
@@ -823,7 +823,8 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
-        <p>This example shows the two ways a JSON Schema can be specified to match a query parameter value, either using the <strong>schemaParam</strong> static builder for parameters or the <strong>schemaString</strong> for static builder strings.</p>
+        <p>This example shows the two ways a JSON Schema can be specified to match a query parameter value, either using the <strong>schemaParam</strong> static builder for parameters or the <strong>schemaString</strong> for static builder
+            strings.</p>
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
     .when(
         request()
@@ -980,7 +981,8 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 </div>
 <button id="button_match_request_by_query_parameter_by_sub_set" class="accordion">match request by query parameter as sub set</button>
 <div class="panel">
-    <p>Matching by keys to multiple-values by <strong>SUB_SET</strong> is the default mode this ensures at least one value with the same key matches, but <strong>MATCHING_KEY</strong> is also supported which ensures all values with the same key match.</p>
+    <p>Matching by keys to multiple-values by <strong>SUB_SET</strong> is the default mode this ensures at least one value with the same key matches, but <strong>MATCHING_KEY</strong> is also supported which ensures all values with the same
+        key match.</p>
     <button class="accordion inner">Java</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
@@ -1060,7 +1062,8 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 </div>
 <button id="button_match_request_by_query_parameter_by_matching_key" class="accordion">match request by query parameter as matching key</button>
 <div class="panel">
-    <p>Matching by keys to multiple-values by <strong>SUB_SET</strong> is the default mode this ensures at least one value with the same key matches, but <strong>MATCHING_KEY</strong> is also supported which ensures all values with the same key match.</p>
+    <p>Matching by keys to multiple-values by <strong>SUB_SET</strong> is the default mode this ensures at least one value with the same key matches, but <strong>MATCHING_KEY</strong> is also supported which ensures all values with the same
+        key match.</p>
     <button class="accordion inner">Java</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
@@ -1202,7 +1205,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 </div>
 <button id="button_match_request_by_header_name_regex" class="accordion">match request by header name regex</button>
 <div class="panel">
-    <p>For details of the full regex syntax supported please see <a href="https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">the JDK documentation</a>.</p>
+    <p>For details of the full regex syntax supported please see <a href="https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">the JDK documentation</a>.</p>
     <button class="accordion inner">Java</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
@@ -1261,7 +1264,7 @@ curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
 </div>
 <button id="button_match_request_by_header_value_regex" class="accordion">match request by header name and regex value</button>
 <div class="panel">
-    <p>For details of the full regex syntax supported please see <a href="https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">the JDK documentation</a>.</p>
+    <p>For details of the full regex syntax supported please see <a href="https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">the JDK documentation</a>.</p>
     <button class="accordion inner">Java</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
@@ -1573,7 +1576,8 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 </div>
 <button id="button_match_request_by_header_by_matching_key" class="accordion">match request by header as matching key</button>
 <div class="panel">
-    <p>Matching by keys to multiple-values by <strong>SUB_SET</strong> is the default mode this ensures at least one value with the same key matches, but <strong>MATCHING_KEY</strong> is also supported which ensures all values with the same key match.</p>
+    <p>Matching by keys to multiple-values by <strong>SUB_SET</strong> is the default mode this ensures at least one value with the same key matches, but <strong>MATCHING_KEY</strong> is also supported which ensures all values with the same
+        key match.</p>
     <button class="accordion inner">Java</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
@@ -1976,7 +1980,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 </div>
 <button id="button_match_request_by_regex_body" class="accordion">match request by regex body</button>
 <div class="panel">
-    <p>For details of the full regex syntax supported please see <a href="https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">the JDK documentation</a>.</p>
+    <p>For details of the full regex syntax supported please see <a href="https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">the JDK documentation</a>.</p>
     <button class="accordion inner">Java</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
@@ -2522,8 +2526,10 @@ mockServerClient(&quot;localhost&quot;, 1080).mockAnyResponse({
 </div>
 <button id="button_match_request_by_body_with_json_exactly" class="accordion">match request by body with json exactly</button>
 <div class="panel">
-    <p>JSON body matcher supports two mode <strong>STRICT</strong> which matches all fields, order of arrays and no additional fields allowed, and <strong>ONLY_MATCHING_FIELDS</strong> which only matches fields provided in the request matcher.</p>
-    <p>When matching JSON arrays the number of elements in the array must always match, however if <strong>ONLY_MATCHING_FIELDS</strong> mode is specified only the fields in the each array element in the matcher will be matched against each corresponding object in the array.</p>
+    <p>JSON body matcher supports two mode <strong>STRICT</strong> which matches all fields, order of arrays and no additional fields allowed, and <strong>ONLY_MATCHING_FIELDS</strong> which only matches fields provided in the request
+        matcher.</p>
+    <p>When matching JSON arrays the number of elements in the array must always match, however if <strong>ONLY_MATCHING_FIELDS</strong> mode is specified only the fields in the each array element in the matcher will be matched against each
+        corresponding object in the array.</p>
     <button class="accordion inner">Java</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
@@ -2601,8 +2607,10 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 </div>
 <button id="button_match_request_by_body_with_json_ignoring_extra_fields" class="accordion">match request by body with json ignoring extra fields</button>
 <div class="panel">
-    <p>JSON body matcher supports two mode <strong>STRICT</strong> which matches all fields, order of arrays and no additional fields allowed, and <strong>ONLY_MATCHING_FIELDS</strong> which only matches fields provided in the request matcher.</p>
-    <p>When matching JSON arrays the number of elements in the array must always match, however if <strong>ONLY_MATCHING_FIELDS</strong> mode is specified only the fields in the each array element in the matcher will be matched against each corresponding object in the array.</p>
+    <p>JSON body matcher supports two mode <strong>STRICT</strong> which matches all fields, order of arrays and no additional fields allowed, and <strong>ONLY_MATCHING_FIELDS</strong> which only matches fields provided in the request
+        matcher.</p>
+    <p>When matching JSON arrays the number of elements in the array must always match, however if <strong>ONLY_MATCHING_FIELDS</strong> mode is specified only the fields in the each array element in the matcher will be matched against each
+        corresponding object in the array.</p>
     <button class="accordion inner">Java</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
@@ -2672,8 +2680,10 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 </div>
 <button id="button_match_request_by_body_with_json_ignoring_extra_fields_in_array" class="accordion">match request by body with json ignoring extra fields in array objects</button>
 <div class="panel">
-    <p>JSON body matcher supports two mode <strong>STRICT</strong> which matches all fields, order of arrays and no additional fields allowed, and <strong>ONLY_MATCHING_FIELDS</strong> which only matches fields provided in the request matcher.</p>
-    <p>When matching JSON arrays the number of elements in the array must always match, however if <strong>ONLY_MATCHING_FIELDS</strong> mode is specified only the fields in the each array element in the matcher will be matched against each corresponding object in the array.</p>
+    <p>JSON body matcher supports two mode <strong>STRICT</strong> which matches all fields, order of arrays and no additional fields allowed, and <strong>ONLY_MATCHING_FIELDS</strong> which only matches fields provided in the request
+        matcher.</p>
+    <p>When matching JSON arrays the number of elements in the array must always match, however if <strong>ONLY_MATCHING_FIELDS</strong> mode is specified only the fields in the each array element in the matcher will be matched against each
+        corresponding object in the array.</p>
     <button class="accordion inner">Java</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)

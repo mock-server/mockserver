@@ -2338,7 +2338,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             )
             .forward(
                 forwardOverriddenRequest()
-                    .withHttpRequest(
+                    .withRequestOverride(
                         request()
                             .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
                             .withBody("some_overridden_body")

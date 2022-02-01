@@ -20,6 +20,10 @@ public class Cookies extends KeysAndValues<Cookie, Cookies> {
         super(cookies);
     }
 
+    public static Cookies cookies(Cookie... cookies) {
+        return new Cookies(cookies);
+    }
+
     @Override
     public Cookie build(NottableString name, NottableString value) {
         return new Cookie(name, value);
