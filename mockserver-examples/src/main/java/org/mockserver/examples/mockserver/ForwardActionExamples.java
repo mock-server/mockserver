@@ -135,6 +135,26 @@ public class ForwardActionExamples {
             );
     }
 
+    public void javascriptTemplatedForwardStripPathPrefix() {
+        String template = "return {" + System.getProperty("line.separator") +
+            "    'path' : request.path.substring(request.path.indexOf('/foo')+'/foo'.length,request.path.length) ," + System.getProperty("line.separator") +
+            "    'headers' : {" + System.getProperty("line.separator") +
+            "        'Host' : [ \"localhost:1081\" ]" + System.getProperty("line.separator") +
+            "    }," + System.getProperty("line.separator") +
+            "};";
+
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+            )
+            .forward(
+                template(
+                    HttpTemplate.TemplateType.JAVASCRIPT,
+                    template
+                )
+            );
+    }
+
     public void javascriptTemplatedForwardWithDelay() {
         String template = "return {" + System.getProperty("line.separator") +
             "    'path' : \"/somePath\"," + System.getProperty("line.separator") +

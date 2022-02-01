@@ -455,6 +455,75 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
+<button id="button_javascript_templated_forward_strip_path_prefix" class="accordion">javascript templated forward stripping path prefix</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">String template = "return {" + System.getProperty("line.separator") +
+    "    'path' : request.path.substring(request.path.indexOf('/somePrefix')+'/somePrefix'.length,request.path.length)," + System.getProperty("line.separator") +
+    "    'headers' : {" + System.getProperty("line.separator") +
+    "        'Host' : [ \"localhost:1081\" ]" + System.getProperty("line.separator") +
+    "    }," + System.getProperty("line.separator") +
+    "};";
+
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/somePrefix*")
+    )
+    .forward(
+        template(
+            HttpTemplate.TemplateType.JAVASCRIPT,
+            template
+        )
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+// request.queryStringParameters['userId'] returns an array of values because headers and queryStringParameters have multiple values
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/somePrefix*"
+    },
+    "httpForwardTemplate": {
+        "template": "return {\n" +
+        "    'path' : request.path.substring(request.path.indexOf('/somePrefix')+'/somePrefix'.length,request.path.length),\n" +
+        "    'headers' : {\n" +
+        "        'Host' : [ \"localhost:1081\" ]\n" +
+        "    }
+        "};",
+        "templateType": "JAVASCRIPT"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/somePrefix*"
+    },
+    "httpForwardTemplate": {
+        "template": "return {\n" +
+        "    'path' : request.path.substring(request.path.indexOf('/somePrefix')+'/somePrefix'.length,request.path.length),\n" +
+        "    'headers' : {\n" +
+        "        'Host' : [ \"localhost:1081\" ]\n" +
+        "    }\n" +
+        "};",
+        "templateType": "JAVASCRIPT"
+    }
+}'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 <button id="button_javascript_templated_forward_with_delay" class="accordion">javascript templated forward with delay</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
