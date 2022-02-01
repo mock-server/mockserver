@@ -122,7 +122,7 @@ public class Main {
                     .setThrowable(throwable)
             );
             if (ConfigurationProperties.disableSystemOut()) {
-                System.out.println("exception while starting: " + throwable);
+                new RuntimeException("exception while starting: " + throwable.getMessage()).printStackTrace();
             }
             showUsage();
         }
