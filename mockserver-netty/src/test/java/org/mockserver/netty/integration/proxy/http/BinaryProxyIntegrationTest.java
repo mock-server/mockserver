@@ -143,7 +143,7 @@ public class BinaryProxyIntegrationTest {
                     );
 
                 // then
-                Socket socket = socketFuture.get(5, MINUTES);
+                Socket socket = socketFuture.get(5, MINUTES); // TODO why does this timeout sometimes fail the build?
                 byte[] receivedBytes = new byte[randomRequestBytes.length];
                 int bytesRead = socket.getInputStream().read(receivedBytes);
                 assertThat(bytesRead, is(randomRequestBytes.length));
