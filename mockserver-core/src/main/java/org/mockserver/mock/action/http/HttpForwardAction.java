@@ -18,6 +18,7 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("FieldMayBeFinal")
 public abstract class HttpForwardAction {
 
     protected final MockServerLogger mockServerLogger;
