@@ -62,7 +62,7 @@ public class HttpResponseModifierToJavaSerializer implements ToJavaSerializer<Ht
             appendObject((numberOfSpacesToIndent + 2), output, new HeaderToJavaSerializer(), headers.getEntries());
             appendNewLineAndIndent((numberOfSpacesToIndent + 2) * INDENT_SIZE, output).append("),");
         } else {
-            appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append("null,");
+            appendNewLineAndIndent((numberOfSpacesToIndent + 2) * INDENT_SIZE, output).append("null,");
         }
     }
 
@@ -72,7 +72,7 @@ public class HttpResponseModifierToJavaSerializer implements ToJavaSerializer<Ht
             appendObject((numberOfSpacesToIndent + 2), output, new CookieToJavaSerializer(), cookies.getEntries());
             appendNewLineAndIndent((numberOfSpacesToIndent + 2) * INDENT_SIZE, output).append("),");
         } else {
-            appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append("null,");
+            appendNewLineAndIndent((numberOfSpacesToIndent + 2) * INDENT_SIZE, output).append("null,");
         }
     }
 
@@ -80,7 +80,7 @@ public class HttpResponseModifierToJavaSerializer implements ToJavaSerializer<Ht
         if (add != null && !add.isEmpty()) {
             appendNewLineAndIndent((numberOfSpacesToIndent + 2) * INDENT_SIZE, output).append("ImmutableList.of(").append(Joiner.on(",").join(add.stream().map(s -> "\"" + s + "\"").collect(Collectors.toList()))).append(")");
         } else {
-            appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append("null");
+            appendNewLineAndIndent((numberOfSpacesToIndent + 2) * INDENT_SIZE, output).append("null");
         }
     }
 

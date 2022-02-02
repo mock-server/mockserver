@@ -70,7 +70,7 @@ public class HttpRequestModifierToJavaSerializer implements ToJavaSerializer<Htt
             appendObject((numberOfSpacesToIndent + 2), output, new ParameterToJavaSerializer(), parameters.getEntries());
             appendNewLineAndIndent((numberOfSpacesToIndent + 2) * INDENT_SIZE, output).append("),");
         } else {
-            appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append("null,");
+            appendNewLineAndIndent((numberOfSpacesToIndent + 2) * INDENT_SIZE, output).append("null,");
         }
     }
 
@@ -80,7 +80,7 @@ public class HttpRequestModifierToJavaSerializer implements ToJavaSerializer<Htt
             appendObject((numberOfSpacesToIndent + 2), output, new HeaderToJavaSerializer(), headers.getEntries());
             appendNewLineAndIndent((numberOfSpacesToIndent + 2) * INDENT_SIZE, output).append("),");
         } else {
-            appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append("null,");
+            appendNewLineAndIndent((numberOfSpacesToIndent + 2) * INDENT_SIZE, output).append("null,");
         }
     }
 
@@ -90,7 +90,7 @@ public class HttpRequestModifierToJavaSerializer implements ToJavaSerializer<Htt
             appendObject((numberOfSpacesToIndent + 2), output, new CookieToJavaSerializer(), cookies.getEntries());
             appendNewLineAndIndent((numberOfSpacesToIndent + 2) * INDENT_SIZE, output).append("),");
         } else {
-            appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append("null,");
+            appendNewLineAndIndent((numberOfSpacesToIndent + 2) * INDENT_SIZE, output).append("null,");
         }
     }
 
@@ -98,7 +98,7 @@ public class HttpRequestModifierToJavaSerializer implements ToJavaSerializer<Htt
         if (add != null && !add.isEmpty()) {
             appendNewLineAndIndent((numberOfSpacesToIndent + 2) * INDENT_SIZE, output).append("ImmutableList.of(").append(Joiner.on(",").join(add.stream().map(s -> "\"" + s + "\"").collect(Collectors.toList()))).append(")");
         } else {
-            appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append("null");
+            appendNewLineAndIndent((numberOfSpacesToIndent + 2) * INDENT_SIZE, output).append("null");
         }
     }
 
