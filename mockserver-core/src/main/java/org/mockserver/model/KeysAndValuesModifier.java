@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Objects;
 
 @SuppressWarnings("unchecked")
-public class KeysAndValuesModifier<T extends KeysAndValues<?, ?>, K extends KeysAndValuesModifier<T, K>> {
+public class KeysAndValuesModifier<T extends KeysAndValues<I, T>, K extends KeysAndValuesModifier<T, K, I>, I extends KeyAndValue> {
 
     private int hashCode;
     private T add;
@@ -53,7 +53,7 @@ public class KeysAndValuesModifier<T extends KeysAndValues<?, ?>, K extends Keys
         if (hashCode() != o.hashCode()) {
             return false;
         }
-        KeysAndValuesModifier<T, K> that = (KeysAndValuesModifier<T, K>) o;
+        KeysAndValuesModifier<T, K, I> that = (KeysAndValuesModifier<T, K, I>) o;
         return Objects.equals(add, that.add) &&
             Objects.equals(replace, that.replace) &&
             Objects.equals(remove, that.remove);
@@ -65,6 +65,23 @@ public class KeysAndValuesModifier<T extends KeysAndValues<?, ?>, K extends Keys
             hashCode = Objects.hash(add, replace, remove);
         }
         return hashCode;
+    }
+
+    public T update(T keysAndValues) {
+        if (keysAndValues != null && replace.getEntries() != null) {
+            replace.getEntries().forEach(keysAndValues::replaceEntryIfExists);
+        }
+        if (add.getEntries() != null) {
+            if (keysAndValues != null) {
+                add.getEntries().forEach(keysAndValues::withEntry);
+            } else {
+                return add.clone();
+            }
+        }
+        if (keysAndValues != null && remove != null) {
+            remove.forEach(keysAndValues::remove);
+        }
+        return keysAndValues;
     }
 
 }

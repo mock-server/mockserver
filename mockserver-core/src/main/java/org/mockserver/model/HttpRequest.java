@@ -1067,38 +1067,54 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
             .withSocketAddress(socketAddress);
     }
 
-    public HttpRequest update(HttpRequest replaceRequest) {
-        if (replaceRequest.getMethod() != null && isNotBlank(replaceRequest.getMethod().getValue())) {
-            withMethod(replaceRequest.getMethod());
+    public HttpRequest update(HttpRequest requestOverride, HttpRequestModifier requestModifier) {
+        if (requestOverride != null) {
+            if (requestOverride.getMethod() != null && isNotBlank(requestOverride.getMethod().getValue())) {
+                withMethod(requestOverride.getMethod());
+            }
+            if (requestOverride.getPath() != null && isNotBlank(requestOverride.getPath().getValue())) {
+                withPath(requestOverride.getPath());
+            }
+            for (Parameter parameter : requestOverride.getPathParameterList()) {
+                getOrCreatePathParameters().replaceEntry(parameter);
+            }
+            for (Parameter parameter : requestOverride.getQueryStringParameterList()) {
+                getOrCreateQueryStringParameters().replaceEntry(parameter);
+            }
+            if (requestOverride.getBody() != null) {
+                withBody(requestOverride.getBody());
+            }
+            for (Header header : requestOverride.getHeaderList()) {
+                getOrCreateHeaders().replaceEntry(header);
+            }
+            for (Cookie cookie : requestOverride.getCookieList()) {
+                withCookie(cookie);
+            }
+            if (requestOverride.isSecure() != null) {
+                withSecure(requestOverride.isSecure());
+            }
+            if (requestOverride.isKeepAlive() != null) {
+                withKeepAlive(requestOverride.isKeepAlive());
+            }
+            if (requestOverride.getSocketAddress() != null) {
+                withSocketAddress(requestOverride.getSocketAddress());
+            }
+            this.hashCode = 0;
         }
-        if (replaceRequest.getPath() != null && isNotBlank(replaceRequest.getPath().getValue())) {
-            withPath(replaceRequest.getPath());
+        if (requestModifier != null) {
+            if (requestModifier.getPath() != null) {
+                withPath(requestModifier.getPath().update(getPath()));
+            }
+            if (requestModifier.getQueryStringParameters() != null) {
+                withQueryStringParameters(requestModifier.getQueryStringParameters().update(getQueryStringParameters()));
+            }
+            if (requestModifier.getHeaders() != null) {
+                withHeaders(requestModifier.getHeaders().update(getHeaders()));
+            }
+            if (requestModifier.getCookies() != null) {
+                withCookies(requestModifier.getCookies().update(getCookies()));
+            }
         }
-        for (Parameter parameter : replaceRequest.getPathParameterList()) {
-            getOrCreatePathParameters().replaceEntry(parameter);
-        }
-        for (Parameter parameter : replaceRequest.getQueryStringParameterList()) {
-            getOrCreateQueryStringParameters().replaceEntry(parameter);
-        }
-        if (replaceRequest.getBody() != null) {
-            withBody(replaceRequest.getBody());
-        }
-        for (Header header : replaceRequest.getHeaderList()) {
-            getOrCreateHeaders().replaceEntry(header);
-        }
-        for (Cookie cookie : replaceRequest.getCookieList()) {
-            withCookie(cookie);
-        }
-        if (replaceRequest.isSecure() != null) {
-            withSecure(replaceRequest.isSecure());
-        }
-        if (replaceRequest.isKeepAlive() != null) {
-            withKeepAlive(replaceRequest.isKeepAlive());
-        }
-        if (replaceRequest.getSocketAddress() != null) {
-            withSocketAddress(replaceRequest.getSocketAddress());
-        }
-        this.hashCode = 0;
         return this;
     }
 

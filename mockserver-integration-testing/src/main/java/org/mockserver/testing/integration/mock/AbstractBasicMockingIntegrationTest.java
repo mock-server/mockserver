@@ -1,6 +1,7 @@
 package org.mockserver.testing.integration.mock;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -42,8 +43,10 @@ import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpRequestModifier.requestModifier;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpResponseModifier.responseModifier;
 import static org.mockserver.model.HttpStatusCode.*;
 import static org.mockserver.model.HttpTemplate.template;
 import static org.mockserver.model.JsonBody.json;
@@ -2373,6 +2376,240 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         );
         assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(MILLISECONDS.toMillis(1900)));
         assertThat(timeAfterRequest - timeBeforeRequest, lessThanOrEqualTo(SECONDS.toMillis(4)));
+    }
+
+    @Test
+    public void shouldForwardOverriddenRequestWithRequestModifier() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("/some/path"))
+                    .withSecure(false)
+            )
+            .forward(
+                forwardOverriddenRequest()
+                    .withRequestOverride(
+                        request()
+                            .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
+                            .withHeader("overrideHeaderToReplace", "originalValue")
+                            .withHeader("overrideHeaderToRemove", "originalValue")
+                            .withCookie("overrideCookieToReplace", "originalValue")
+                            .withBody("some_overridden_body")
+                    )
+                    .withRequestModifier(
+                        requestModifier()
+                            .withPath("^/(.+)/(.+)$", "/prefix/$1/infix/$2/postfix")
+                            .withHeaders(
+                                ImmutableList.of(
+                                    header("headerToAddOne", "addedValue"),
+                                    header("headerToAddTwo", "addedValue")
+                                ),
+                                ImmutableList.of(
+                                    header("overrideHeaderToReplace", "replacedValue"),
+                                    header("requestHeaderToReplace", "replacedValue"),
+                                    header("extraHeaderToReplace", "shouldBeIgnore")
+                                ),
+                                ImmutableList.of("overrideHeaderToRemove", "requestHeaderToRemove")
+                            )
+                            .withCookies(
+                                ImmutableList.of(
+                                    cookie("cookieToAddOne", "addedValue"),
+                                    cookie("cookieToAddTwo", "addedValue")
+                                ),
+                                ImmutableList.of(
+                                    cookie("overrideCookieToReplace", "replacedValue"),
+                                    cookie("requestCookieToReplace", "replacedValue"),
+                                    cookie("extraCookieToReplace", "shouldBeIgnore")
+                                ),
+                                ImmutableList.of("overrideCookieToRemove", "requestCookieToRemove")
+                            )
+                    )
+            );
+
+        // then
+        HttpResponse httpResponse = makeRequest(
+            request()
+                .withPath(calculatePath("/some/path"))
+                .withMethod("POST")
+                .withHeader("x-test", "test_headers_and_body")
+                .withHeader("requestHeaderToReplace", "originalValue")
+                .withHeader("requestHeaderToRemove", "originalValue")
+                .withCookie("requestCookieToReplace", "replacedValue")
+                .withBody("an_example_body_http"),
+            headersToIgnore
+        );
+
+        // and
+        HttpRequest echoServerRequest = insecureEchoServer.getLastRequest();
+        assertEquals(
+            echoServerRequest.withHeaders(filterHeaders(headersToIgnore, echoServerRequest.getHeaderList())),
+            request()
+                .withMethod("POST")
+                .withPath(calculatePath("/prefix/some/infix/path/postfix"))
+                .withHeader("x-test", "test_headers_and_body")
+                .withHeader("requestHeaderToReplace", "replacedValue")
+                .withHeader("overrideHeaderToReplace", "replacedValue")
+                .withHeader("headerToAddOne", "addedValue")
+                .withHeader("headerToAddTwo", "addedValue")
+                .withHeader("cookie", "overrideCookieToReplace=replacedValue; requestCookieToReplace=replacedValue; cookieToAddOne=addedValue; cookieToAddTwo=addedValue")
+                .withCookie("cookieToAddOne", "addedValue")
+                .withCookie("cookieToAddTwo", "addedValue")
+                .withCookie("overrideCookieToReplace", "replacedValue")
+                .withCookie("requestCookieToReplace", "replacedValue")
+                .withKeepAlive(true)
+                .withSecure(false)
+                .withSocketAddress("localhost", insecureEchoServer.getPort(), SocketAddress.Scheme.HTTP)
+                .withBody("some_overridden_body")
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader("x-test", "test_headers_and_body")
+                .withHeader("requestHeaderToReplace", "replacedValue")
+                .withHeader("overrideHeaderToReplace", "replacedValue")
+                .withHeader("headerToAddOne", "addedValue")
+                .withHeader("headerToAddTwo", "addedValue")
+                .withHeader("set-cookie", "cookieToAddOne=addedValue", "cookieToAddTwo=addedValue", "overrideCookieToReplace=replacedValue", "requestCookieToReplace=replacedValue")
+                .withHeader("cookie", "overrideCookieToReplace=replacedValue; requestCookieToReplace=replacedValue; cookieToAddOne=addedValue; cookieToAddTwo=addedValue")
+                .withCookie("cookieToAddOne", "addedValue")
+                .withCookie("cookieToAddTwo", "addedValue")
+                .withCookie("overrideCookieToReplace", "replacedValue")
+                .withCookie("requestCookieToReplace", "replacedValue")
+                .withBody("some_overridden_body"),
+            httpResponse
+        );
+    }
+
+    @Test
+    public void shouldForwardOverriddenRequestWithRequestAndResponseModifiers() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("/some/path"))
+                    .withSecure(false)
+            )
+            .forward(
+                forwardOverriddenRequest()
+                    .withRequestOverride(
+                        request()
+                            .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
+                            .withHeader("overrideHeaderToReplace", "originalValue")
+                            .withHeader("overrideHeaderToRemove", "originalValue")
+                            .withCookie("overrideCookieToReplace", "replacedValue")
+                            .withCookie("requestCookieToReplace", "replacedValue")
+                            .withBody("some_overridden_body")
+                    )
+                    .withRequestModifier(
+                        requestModifier()
+                            .withPath("^/(.+)/(.+)$", "/prefix/$1/infix/$2/postfix")
+                            .withHeaders(
+                                ImmutableList.of(
+                                    header("headerToAddOne", "addedValue"),
+                                    header("headerToAddTwo", "addedValue")
+                                ),
+                                ImmutableList.of(
+                                    header("overrideHeaderToReplace", "replacedValue"),
+                                    header("requestHeaderToReplace", "replacedValue")
+                                ),
+                                ImmutableList.of("overrideHeaderToRemove", "requestHeaderToRemove")
+                            )
+                            .withCookies(
+                                ImmutableList.of(
+                                    cookie("cookieToAddOne", "addedValue"),
+                                    cookie("cookieToAddTwo", "addedValue")
+                                ),
+                                ImmutableList.of(
+                                    cookie("overrideCookieToReplace", "replacedValue"),
+                                    cookie("requestCookieToReplace", "replacedValue")
+                                ),
+                                ImmutableList.of("overrideCookieToRemove", "requestCookieToRemove")
+                            )
+                    )
+                    .withResponseModifier(
+                        responseModifier()
+                            .withHeaders(
+                                ImmutableList.of(
+                                    header("responseHeaderToAddOne", "addedValue"),
+                                    header("responseHeaderToAddTwo", "addedValue")
+                                ),
+                                ImmutableList.of(
+                                    header("overrideHeaderToReplace", "responseReplacedValue"),
+                                    header("requestHeaderToReplace", "responseReplacedValue")
+                                ),
+                                ImmutableList.of("headerToAddOne")
+                            )
+                            .withCookies(
+                                ImmutableList.of(
+                                    cookie("responseCookieToAddOne", "addedValue"),
+                                    cookie("responseCookieToAddTwo", "addedValue")
+                                ),
+                                ImmutableList.of(
+                                    cookie("overrideCookieToReplace", "responseReplacedValue"),
+                                    cookie("requestCookieToReplace", "responseReplacedValue")
+                                ),
+                                ImmutableList.of("cookieToAddOne")
+                            )
+                    )
+            );
+
+        // then
+        HttpResponse httpResponse = makeRequest(
+            request()
+                .withPath(calculatePath("/some/path"))
+                .withMethod("POST")
+                .withHeader("x-test", "test_headers_and_body")
+                .withHeader("requestHeaderToReplace", "originalValue")
+                .withHeader("requestHeaderToRemove", "originalValue")
+                .withBody("an_example_body_http"),
+            headersToIgnore
+        );
+
+        // and
+        HttpRequest echoServerRequest = insecureEchoServer.getLastRequest();
+        assertEquals(
+            echoServerRequest.withHeaders(filterHeaders(headersToIgnore, echoServerRequest.getHeaderList())),
+            request()
+                .withMethod("POST")
+                .withPath(calculatePath("/prefix/some/infix/path/postfix"))
+                .withHeader("x-test", "test_headers_and_body")
+                .withHeader("requestHeaderToReplace", "replacedValue")
+                .withHeader("overrideHeaderToReplace", "replacedValue")
+                .withHeader("headerToAddOne", "addedValue")
+                .withHeader("headerToAddTwo", "addedValue")
+                .withHeader("cookie", "overrideCookieToReplace=replacedValue; requestCookieToReplace=replacedValue; cookieToAddOne=addedValue; cookieToAddTwo=addedValue")
+                .withCookie("cookieToAddOne", "addedValue")
+                .withCookie("cookieToAddTwo", "addedValue")
+                .withCookie("overrideCookieToReplace", "replacedValue")
+                .withCookie("requestCookieToReplace", "replacedValue")
+                .withKeepAlive(true)
+                .withSecure(false)
+                .withSocketAddress("localhost", insecureEchoServer.getPort(), SocketAddress.Scheme.HTTP)
+                .withBody("some_overridden_body")
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader("x-test", "test_headers_and_body")
+                .withHeader("responseHeaderToAddOne", "addedValue")
+                .withHeader("responseHeaderToAddTwo", "addedValue")
+                .withHeader("requestHeaderToReplace", "responseReplacedValue")
+                .withHeader("overrideHeaderToReplace", "responseReplacedValue")
+                .withHeader("headerToAddTwo", "addedValue")
+                .withHeader("set-cookie", "cookieToAddTwo=addedValue", "overrideCookieToReplace=responseReplacedValue", "requestCookieToReplace=responseReplacedValue", "responseCookieToAddOne=addedValue", "responseCookieToAddTwo=addedValue")
+                .withHeader("cookie", "overrideCookieToReplace=replacedValue; requestCookieToReplace=replacedValue; cookieToAddOne=addedValue; cookieToAddTwo=addedValue")
+                .withCookie("cookieToAddOne", "addedValue")
+                .withCookie("cookieToAddTwo", "addedValue")
+                .withCookie("overrideCookieToReplace", "responseReplacedValue")
+                .withCookie("requestCookieToReplace", "responseReplacedValue")
+                .withCookie("responseCookieToAddOne", "addedValue")
+                .withCookie("responseCookieToAddTwo", "addedValue")
+                .withBody("some_overridden_body"),
+            httpResponse
+        );
     }
 
     @Test

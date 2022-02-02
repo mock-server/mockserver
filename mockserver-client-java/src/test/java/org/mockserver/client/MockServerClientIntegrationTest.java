@@ -1133,7 +1133,7 @@ public class MockServerClientIntegrationTest {
                 throw new AssertionError(result);
             }
         } finally {
-            echoServerOne.clearNextResponse();
+            echoServerOne.clear();
         }
     }
 

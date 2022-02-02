@@ -2,10 +2,14 @@ package org.mockserver.springtest.integration;
 
 import org.junit.Before;
 import org.junit.runner.RunWith;
+import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.springtest.MockServerPort;
 import org.mockserver.springtest.MockServerTest;
 import org.mockserver.testing.integration.mock.AbstractBasicMockingIntegrationTest;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import static org.slf4j.event.Level.WARN;
 
 /**
  * @author jamesdbloom
@@ -21,6 +25,23 @@ public class MockServerTestExecutionListenerIntegrationTest extends AbstractBasi
     @Override
     public void resetServer() {
         // do not reset as @MockServerTest should handle that
+        try {
+            if (insecureEchoServer != null) {
+                insecureEchoServer.clear();
+            }
+            if (secureEchoServer != null) {
+                secureEchoServer.clear();
+            }
+        } catch (Throwable throwable) {
+            if (MockServerLogger.isEnabled(WARN)) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setLogLevel(WARN)
+                        .setMessageFormat("exception while resetting - " + throwable.getMessage())
+                        .setThrowable(throwable)
+                );
+            }
+        }
     }
 
     @Override

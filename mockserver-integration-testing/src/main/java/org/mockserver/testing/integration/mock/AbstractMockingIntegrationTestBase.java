@@ -9,8 +9,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.echo.http.EchoServer;
+import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatcherBuilder;
@@ -37,7 +37,7 @@ import static org.slf4j.event.Level.WARN;
  */
 public abstract class AbstractMockingIntegrationTestBase {
 
-    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(AbstractMockingIntegrationTestBase.class);
+    protected static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(AbstractMockingIntegrationTestBase.class);
     protected static MockServerClient mockServerClient;
     protected static String servletContext = "";
     @SuppressWarnings("deprecation")
@@ -90,7 +90,15 @@ public abstract class AbstractMockingIntegrationTestBase {
     @Before
     public void resetServer() {
         try {
-            mockServerClient.reset();
+            if (mockServerClient != null) {
+                mockServerClient.reset();
+            }
+            if (insecureEchoServer != null) {
+                insecureEchoServer.clear();
+            }
+            if (secureEchoServer != null) {
+                secureEchoServer.clear();
+            }
         } catch (Throwable throwable) {
             if (MockServerLogger.isEnabled(WARN)) {
                 MOCK_SERVER_LOGGER.logEvent(
@@ -157,22 +165,7 @@ public abstract class AbstractMockingIntegrationTestBase {
             boolean isDebug = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
             HttpResponse httpResponse = httpClient.sendRequest(httpRequest, new InetSocketAddress("localhost", port))
                 .get(30, (isDebug ? TimeUnit.MINUTES : TimeUnit.SECONDS));
-            Headers headers = new Headers();
-            for (Header header : httpResponse.getHeaderList()) {
-                if (!headersToIgnore.contains(header.getName().getValue().toLowerCase())) {
-                    if (header.getName().getValue().equalsIgnoreCase(CONTENT_TYPE.toString())) {
-                        // this fixes Tomcat which removes the space between
-                        // media type and charset in the Content-Type header
-                        for (NottableString value : new ArrayList<>(header.getValues())) {
-                            header.getValues().clear();
-                            header.addValues(value.getValue().replace(";charset", "; charset"));
-                        }
-                        header = header(header.getName().lowercase(), header.getValues());
-                    }
-                    headers.withEntry(header);
-                }
-            }
-            httpResponse.withHeaders(headers);
+            httpResponse.withHeaders(filterHeaders(headersToIgnore, httpResponse.getHeaderList()));
             httpResponse.withReasonPhrase(
                 isBlank(httpResponse.getReasonPhrase()) ?
                     HttpResponseStatus.valueOf(httpResponse.getStatusCode()).reasonPhrase() :
@@ -182,5 +175,24 @@ public abstract class AbstractMockingIntegrationTestBase {
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    protected Headers filterHeaders(Collection<String> headersToIgnore, List<Header> headerList) {
+        Headers headers = new Headers();
+        for (Header header : headerList) {
+            if (!headersToIgnore.contains(header.getName().getValue().toLowerCase())) {
+                if (header.getName().getValue().equalsIgnoreCase(CONTENT_TYPE.toString())) {
+                    // this fixes Tomcat which removes the space between
+                    // media type and charset in the Content-Type header
+                    for (NottableString value : new ArrayList<>(header.getValues())) {
+                        header.getValues().clear();
+                        header.addValues(value.getValue().replace(";charset", "; charset"));
+                    }
+                    header = header(header.getName().lowercase(), header.getValues());
+                }
+                headers.withEntry(header);
+            }
+        }
+        return headers;
     }
 }

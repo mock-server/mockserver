@@ -219,7 +219,7 @@ public class HttpRequestTest {
             .withKeepAlive(false);
 
         // when
-        requestOne.update(requestTwo);
+        requestOne.update(requestTwo, null);
 
         // then
         assertThat(requestOne, is(
@@ -256,7 +256,7 @@ public class HttpRequestTest {
             .withKeepAlive(false);
 
         // when
-        requestOne.update(requestTwo);
+        requestOne.update(requestTwo, null);
 
         // then
         assertThat(requestOne, is(

@@ -128,12 +128,13 @@ public class EchoServer implements Stoppable {
         nextResponse.httpResponse.addAll(Arrays.asList(httpResponses));
     }
 
-    public void clearNextResponse() {
+    public void clear() {
         // WARNING: this logic is only for unit tests that run in series and is NOT thread safe!!!
         nextResponse.httpResponse.clear();
+        lastRequest.httpRequest.set(new CompletableFuture<>());
     }
 
-    public HttpRequest getLastRequest()  {
+    public HttpRequest getLastRequest() {
         try {
             HttpRequest httpRequest = lastRequest.httpRequest.get().get();
             lastRequest.httpRequest.set(new CompletableFuture<>());

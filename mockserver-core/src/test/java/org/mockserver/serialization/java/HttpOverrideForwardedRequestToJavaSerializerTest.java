@@ -9,13 +9,10 @@ import java.util.concurrent.TimeUnit;
 import static junit.framework.TestCase.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.Cookie.cookie;
-import static org.mockserver.model.Cookies.cookies;
 import static org.mockserver.model.Header.header;
-import static org.mockserver.model.Headers.headers;
 import static org.mockserver.model.HttpRequestModifier.requestModifier;
 import static org.mockserver.model.HttpResponseModifier.responseModifier;
 import static org.mockserver.model.Parameter.param;
-import static org.mockserver.model.Parameters.parameters;
 
 /**
  * @author jamesdbloom
@@ -156,7 +153,7 @@ public class HttpOverrideForwardedRequestToJavaSerializerTest {
                             .withPath("adsdasd", null)
                             .withHeaders(null, null, ImmutableList.of())
                             .withCookies(
-                                cookies(
+                                ImmutableList.of(
                                     cookie("replaceNameOne", "replaceValueOne"),
                                     cookie("replaceNameTwo", "replaceValueTwo")
                                 ),
@@ -165,7 +162,7 @@ public class HttpOverrideForwardedRequestToJavaSerializerTest {
                             )
                             .withQueryStringParameters(
                                 null,
-                                parameters(
+                                ImmutableList.of(
                                     param("replaceNameOne", "replaceValueOne"),
                                     param("replaceNameTwo", "replaceValueTwo")
                                 ),
@@ -190,14 +187,14 @@ public class HttpOverrideForwardedRequestToJavaSerializerTest {
                         responseModifier()
                             .withHeaders(
                                 null,
-                                headers(
+                                ImmutableList.of(
                                     header("addNameOne", "addValueOne"),
                                     header("addNameTwo", "addValueTwo")
                                 ),
                                 ImmutableList.of()
                             )
                             .withCookies(
-                                cookies(
+                                ImmutableList.of(
                                     cookie("replaceNameOne", "replaceValueOne"),
                                     cookie("replaceNameTwo", "replaceValueTwo")
                                 ),

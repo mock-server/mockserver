@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Objects;
 
 @SuppressWarnings("unchecked")
-public class KeysToMultiValuesModifier<T extends KeysToMultiValues<?, ?>, K extends KeysToMultiValuesModifier<T, K>> {
+public class KeysToMultiValuesModifier<T extends KeysToMultiValues<I, T>, K extends KeysToMultiValuesModifier<T, K, I>, I extends KeyToMultiValue> {
 
     private int hashCode;
     private T add;
@@ -53,7 +53,7 @@ public class KeysToMultiValuesModifier<T extends KeysToMultiValues<?, ?>, K exte
         if (hashCode() != o.hashCode()) {
             return false;
         }
-        KeysToMultiValuesModifier<T, K> that = (KeysToMultiValuesModifier<T, K>) o;
+        KeysToMultiValuesModifier<T, K, I> that = (KeysToMultiValuesModifier<T, K, I>) o;
         return Objects.equals(add, that.add) &&
             Objects.equals(replace, that.replace) &&
             Objects.equals(remove, that.remove);
@@ -67,4 +67,20 @@ public class KeysToMultiValuesModifier<T extends KeysToMultiValues<?, ?>, K exte
         return hashCode;
     }
 
+    public T update(T keysToMultiValues) {
+        if (keysToMultiValues != null && replace.getEntries() != null) {
+            replace.getEntries().forEach(keysToMultiValues::replaceEntryIfExists);
+        }
+        if (add.getEntries() != null) {
+            if (keysToMultiValues != null) {
+                add.getEntries().forEach(keysToMultiValues::withEntry);
+            } else {
+                return add.clone();
+            }
+        }
+        if (keysToMultiValues != null && remove != null) {
+            remove.forEach(keysToMultiValues::remove);
+        }
+        return keysToMultiValues;
+    }
 }

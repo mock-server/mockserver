@@ -393,11 +393,11 @@ public class NettyHttpProxySOCKSIntegrationTest {
             });
 
             if (useTLS) {
-                secureEchoServer.clearNextResponse();
+                secureEchoServer.clear();
                 Socket localhost = new Socket("localhost", secureEchoServer.getPort());
                 socket = sslSocketFactory().wrapSocket(localhost);
             } else {
-                insecureEchoServer.clearNextResponse();
+                insecureEchoServer.clear();
                 socket = new Socket("localhost", insecureEchoServer.getPort());
             }
 
@@ -456,7 +456,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
     private void proxyRequestsUsingSocketViaSOCKS5(EchoServer echoServer, Socket socket) throws Exception {
         // given
         int echoServerPort = echoServer.getPort();
-        echoServer.clearNextResponse();
+        echoServer.clear();
         OutputStream outputStream = socket.getOutputStream();
         InputStream inputStream = socket.getInputStream();
 

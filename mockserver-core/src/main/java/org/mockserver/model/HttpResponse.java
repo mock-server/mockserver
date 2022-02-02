@@ -546,26 +546,36 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
             .withConnectionOptions(connectionOptions);
     }
 
-    public HttpResponse update(HttpResponse replaceResponse) {
-        if (replaceResponse.getStatusCode() != null) {
-            withStatusCode(replaceResponse.getStatusCode());
+    public HttpResponse update(HttpResponse responseOverride, HttpResponseModifier responseModifier) {
+        if (responseOverride != null) {
+            if (responseOverride.getStatusCode() != null) {
+                withStatusCode(responseOverride.getStatusCode());
+            }
+            if (responseOverride.getReasonPhrase() != null) {
+                withReasonPhrase(responseOverride.getReasonPhrase());
+            }
+            for (Header header : responseOverride.getHeaderList()) {
+                getOrCreateHeaders().replaceEntry(header);
+            }
+            for (Cookie cookie : responseOverride.getCookieList()) {
+                withCookie(cookie);
+            }
+            if (responseOverride.getBody() != null) {
+                withBody(responseOverride.getBody());
+            }
+            if (responseOverride.getConnectionOptions() != null) {
+                withConnectionOptions(responseOverride.getConnectionOptions());
+            }
+            this.hashCode = 0;
         }
-        if (replaceResponse.getReasonPhrase() != null) {
-            withReasonPhrase(replaceResponse.getReasonPhrase());
+        if (responseModifier != null) {
+            if (responseModifier.getHeaders() != null) {
+                withHeaders(responseModifier.getHeaders().update(getHeaders()));
+            }
+            if (responseModifier.getCookies() != null) {
+                withCookies(responseModifier.getCookies().update(getCookies()));
+            }
         }
-        for (Header header : replaceResponse.getHeaderList()) {
-            getOrCreateHeaders().replaceEntry(header);
-        }
-        for (Cookie cookie : replaceResponse.getCookieList()) {
-            withCookie(cookie);
-        }
-        if (replaceResponse.getBody() != null) {
-            withBody(replaceResponse.getBody());
-        }
-        if (replaceResponse.getConnectionOptions() != null) {
-            withConnectionOptions(replaceResponse.getConnectionOptions());
-        }
-        this.hashCode = 0;
         return this;
     }
 

@@ -23,10 +23,10 @@ public class HttpResponseModifier extends ObjectWithJsonToString {
         return this;
     }
 
-    public HttpResponseModifier withHeaders(Headers add, Headers replace, List<String> remove) {
+    public HttpResponseModifier withHeaders(List<Header> add, List<Header> replace, List<String> remove) {
         this.headers = new HeadersModifier()
-            .withAdd(add)
-            .withReplace(replace)
+            .withAdd(new Headers(add))
+            .withReplace(new Headers(replace))
             .withRemove(remove);
         this.hashCode = 0;
         return this;
@@ -42,14 +42,15 @@ public class HttpResponseModifier extends ObjectWithJsonToString {
         return this;
     }
 
-    public HttpResponseModifier withCookies(Cookies add, Cookies replace, List<String> remove) {
+    public HttpResponseModifier withCookies(List<Cookie> add, List<Cookie> replace, List<String> remove) {
         this.cookies = new CookiesModifier()
-            .withAdd(add)
-            .withReplace(replace)
+            .withAdd(new Cookies(add))
+            .withReplace(new Cookies(replace))
             .withRemove(remove);
         this.hashCode = 0;
         return this;
     }
+
 
     @Override
     public boolean equals(Object o) {

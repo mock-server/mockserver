@@ -76,6 +76,15 @@ public class HttpRequestModifier extends ObjectWithJsonToString {
         return this;
     }
 
+    public HttpRequestModifier withQueryStringParameters(List<Parameter> add, List<Parameter> replace, List<String> remove) {
+        this.queryStringParameters = new QueryParametersModifier()
+            .withAdd(new Parameters(add))
+            .withReplace(new Parameters(replace))
+            .withRemove(remove);
+        this.hashCode = 0;
+        return this;
+    }
+
     public HeadersModifier getHeaders() {
         return headers;
     }
@@ -86,10 +95,10 @@ public class HttpRequestModifier extends ObjectWithJsonToString {
         return this;
     }
 
-    public HttpRequestModifier withHeaders(Headers add, Headers replace, List<String> remove) {
+    public HttpRequestModifier withHeaders(List<Header> add, List<Header> replace, List<String> remove) {
         this.headers = new HeadersModifier()
-            .withAdd(add)
-            .withReplace(replace)
+            .withAdd(new Headers(add))
+            .withReplace(new Headers(replace))
             .withRemove(remove);
         this.hashCode = 0;
         return this;
@@ -105,10 +114,10 @@ public class HttpRequestModifier extends ObjectWithJsonToString {
         return this;
     }
 
-    public HttpRequestModifier withCookies(Cookies add, Cookies replace, List<String> remove) {
+    public HttpRequestModifier withCookies(List<Cookie> add, List<Cookie> replace, List<String> remove) {
         this.cookies = new CookiesModifier()
-            .withAdd(add)
-            .withReplace(replace)
+            .withAdd(new Cookies(add))
+            .withReplace(new Cookies(replace))
             .withRemove(remove);
         this.hashCode = 0;
         return this;

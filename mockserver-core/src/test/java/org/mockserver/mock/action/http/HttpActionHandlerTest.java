@@ -44,7 +44,7 @@ import static org.slf4j.event.Level.INFO;
 /**
  * @author jamesdbloom
  */
-public class ActionHandlerTest {
+public class HttpActionHandlerTest {
 
     private static Scheduler scheduler;
     @Mock

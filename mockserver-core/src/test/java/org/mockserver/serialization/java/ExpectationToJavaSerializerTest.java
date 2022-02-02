@@ -19,9 +19,7 @@ import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.Cookie.cookie;
-import static org.mockserver.model.Cookies.cookies;
 import static org.mockserver.model.Header.header;
-import static org.mockserver.model.Headers.headers;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpForward.forward;
@@ -32,7 +30,6 @@ import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpResponseModifier.responseModifier;
 import static org.mockserver.model.HttpTemplate.template;
 import static org.mockserver.model.Parameter.param;
-import static org.mockserver.model.Parameters.parameters;
 
 /**
  * @author jamesdbloom
@@ -698,27 +695,27 @@ public class ExpectationToJavaSerializerTest {
                                 requestModifier()
                                     .withPath("someRegex", "someSubstitution")
                                     .withHeaders(
-                                        headers(
+                                        ImmutableList.of(
                                             header("addNameOne", "addValueOne"),
                                             header("addNameTwo", "addValueTwo")
                                         ),
-                                        headers(header("replaceName", "replaceValue")),
+                                        ImmutableList.of(header("replaceName", "replaceValue")),
                                         ImmutableList.of("removeNameOne", "removeNameOne")
                                     )
                                     .withCookies(
-                                        cookies(cookie("addName", "addValue")),
-                                        cookies(
+                                        ImmutableList.of(cookie("addName", "addValue")),
+                                        ImmutableList.of(
                                             cookie("replaceNameOne", "replaceValueOne"),
                                             cookie("replaceNameTwo", "replaceValueTwo")
                                         ),
                                         ImmutableList.of("removeName")
                                     )
                                     .withQueryStringParameters(
-                                        parameters(
+                                        ImmutableList.of(
                                             param("addNameOne", "addValueOne"),
                                             param("addNameTwo", "addValueTwo")
                                         ),
-                                        parameters(
+                                        ImmutableList.of(
                                             param("replaceNameOne", "replaceValueOne"),
                                             param("replaceNameTwo", "replaceValueTwo")
                                         ),
@@ -740,13 +737,13 @@ public class ExpectationToJavaSerializerTest {
                             .withResponseModifier(
                                 responseModifier()
                                     .withHeaders(
-                                        headers(header("addName", "addValue")),
-                                        headers(header("replaceName", "replaceValue")),
+                                        ImmutableList.of(header("addName", "addValue")),
+                                        ImmutableList.of(header("replaceName", "replaceValue")),
                                         ImmutableList.of("removeName")
                                     )
                                     .withCookies(
-                                        cookies(cookie("addName", "addValue")),
-                                        cookies(cookie("replaceName", "replaceValue")),
+                                        ImmutableList.of(cookie("addName", "addValue")),
+                                        ImmutableList.of(cookie("replaceName", "replaceValue")),
                                         ImmutableList.of("removeName")
                                     )
                             )

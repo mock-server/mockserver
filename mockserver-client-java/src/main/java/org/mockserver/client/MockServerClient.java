@@ -3,7 +3,6 @@ package org.mockserver.client;
 import com.google.common.collect.ImmutableList;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import org.mockserver.version.Version;
 import org.mockserver.client.MockServerEventBus.EventType;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.httpclient.NettyHttpClient;
@@ -23,6 +22,7 @@ import org.mockserver.stop.Stoppable;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
+import org.mockserver.version.Version;
 
 import java.awt.*;
 import java.net.InetSocketAddress;
@@ -219,7 +219,7 @@ public class MockServerClient implements Stoppable {
                     request.withSecure(secure);
                 }
                 if (requestOverride != null) {
-                    request = request.update(requestOverride);
+                    request = request.update(requestOverride, null);
                 }
                 HttpResponse response = nettyHttpClient.sendRequest(
                     request.withHeader(HOST.toString(), this.host + ":" + port()),
@@ -596,7 +596,7 @@ public class MockServerClient implements Stoppable {
      * Clear expectations, logs or both that match the http
      *
      * @param expectationId the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
-     * @param type              the type to clear, EXPECTATION, LOG or BOTH
+     * @param type          the type to clear, EXPECTATION, LOG or BOTH
      */
     public MockServerClient clear(ExpectationId expectationId, ClearType type) {
         sendRequest(
@@ -747,7 +747,7 @@ public class MockServerClient implements Stoppable {
      * atLeast(n)  - verify the request was only received at least n times
      *
      * @param expectationId the http request that must be matched for this verification to pass
-     * @param times             the number of times this request must be matched
+     * @param times         the number of times this request must be matched
      * @throws AssertionError if the request has not been found
      */
     @SuppressWarnings("DuplicatedCode")

@@ -1,9 +1,10 @@
 package org.mockserver.serialization.model;
 
+import org.mockserver.model.Parameter;
 import org.mockserver.model.Parameters;
 import org.mockserver.model.QueryParametersModifier;
 
-public class QueryParametersModifierDTO extends KeysToMultiValuesModifierDTO<Parameters, QueryParametersModifier, QueryParametersModifierDTO> {
+public class QueryParametersModifierDTO extends KeysToMultiValuesModifierDTO<Parameters, QueryParametersModifier, Parameter, QueryParametersModifierDTO> {
 
     public QueryParametersModifierDTO() {
     }

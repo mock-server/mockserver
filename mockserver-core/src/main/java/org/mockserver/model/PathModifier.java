@@ -1,11 +1,18 @@
 package org.mockserver.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.Objects;
+import java.util.regex.Pattern;
+
+import static org.mockserver.model.NottableString.string;
 
 public class PathModifier extends ObjectWithJsonToString {
 
     private int hashCode;
     private String regex;
+    @JsonIgnore
+    private Pattern pattern;
     private String substitution;
 
     public String getRegex() {
@@ -83,6 +90,30 @@ public class PathModifier extends ObjectWithJsonToString {
             hashCode = Objects.hash(super.hashCode(), regex, substitution);
         }
         return hashCode;
+    }
+
+    @JsonIgnore
+    private Pattern getPattern() {
+        if (pattern == null && regex != null) {
+            pattern = Pattern.compile(regex);
+        }
+        return pattern;
+    }
+
+    public NottableString update(NottableString path) {
+        return string(update(path.getValue()), path.isNot());
+    }
+
+    public String update(String path) {
+        Pattern pattern = getPattern();
+        if (pattern != null) {
+            if (substitution != null) {
+                return pattern.matcher(path).replaceAll(substitution);
+            } else {
+                return pattern.matcher(path).replaceAll("");
+            }
+        }
+        return path;
     }
 
 }

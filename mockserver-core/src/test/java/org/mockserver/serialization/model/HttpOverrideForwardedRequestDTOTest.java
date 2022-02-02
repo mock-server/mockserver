@@ -1,12 +1,12 @@
 package org.mockserver.serialization.model;
 
+import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 import org.mockserver.model.*;
 
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.mockserver.model.Headers.headers;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpRequestModifier.requestModifier;
 import static org.mockserver.model.HttpResponse.response;
@@ -23,7 +23,7 @@ public class HttpOverrideForwardedRequestDTOTest {
         HttpRequest httpRequest = request("some_request");
         HttpRequestModifier httpRequestModifier = requestModifier().withPath("someRegex", "someSubstitution");
         HttpResponse httpResponse = response("some_response");
-        HttpResponseModifier httpResponseModifier = responseModifier().withHeaders(headers(), headers(), null);
+        HttpResponseModifier httpResponseModifier = responseModifier().withHeaders(ImmutableList.of(), ImmutableList.of(), null);
 
         HttpOverrideForwardedRequest httpOverrideForwardedRequest = new HttpOverrideForwardedRequest()
             .withRequestOverride(httpRequest)
@@ -47,7 +47,7 @@ public class HttpOverrideForwardedRequestDTOTest {
         HttpRequest httpRequest = request("some_request");
         HttpRequestModifier httpRequestModifier = requestModifier().withPath("someRegex", "someSubstitution");
         HttpResponse httpResponse = response("some_response");
-        HttpResponseModifier httpResponseModifier = responseModifier().withHeaders(headers(), headers(), null);
+        HttpResponseModifier httpResponseModifier = responseModifier().withHeaders(ImmutableList.of(), ImmutableList.of(), null);
 
         HttpOverrideForwardedRequest httpOverrideForwardedRequest = new HttpOverrideForwardedRequest()
             .withRequestOverride(httpRequest)
@@ -71,7 +71,7 @@ public class HttpOverrideForwardedRequestDTOTest {
         HttpRequestDTO httpRequest = new HttpRequestDTO(request("some_request"));
         HttpRequestModifierDTO httpRequestModifier = new HttpRequestModifierDTO(requestModifier().withPath("someRegex", "someSubstitution"));
         HttpResponseDTO httpResponse = new HttpResponseDTO(response("some_response"));
-        HttpResponseModifierDTO httpResponseModifier = new HttpResponseModifierDTO(responseModifier().withHeaders(headers(), headers(), null));
+        HttpResponseModifierDTO httpResponseModifier = new HttpResponseModifierDTO(responseModifier().withHeaders(ImmutableList.of(), ImmutableList.of(), null));
 
         HttpOverrideForwardedRequest httpOverrideForwardedRequest = new HttpOverrideForwardedRequest();
 

@@ -1,5 +1,6 @@
 package org.mockserver.serialization.model;
 
+import org.mockserver.model.KeyToMultiValue;
 import org.mockserver.model.KeysToMultiValues;
 import org.mockserver.model.KeysToMultiValuesModifier;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
@@ -7,7 +8,7 @@ import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import java.util.List;
 
 @SuppressWarnings("unchecked")
-public abstract class KeysToMultiValuesModifierDTO<T extends KeysToMultiValues<?, ?>, K extends KeysToMultiValuesModifier<T, K>, D extends DTO<K>> extends ObjectWithReflectiveEqualsHashCodeToString implements DTO<K> {
+public abstract class KeysToMultiValuesModifierDTO<T extends KeysToMultiValues<I, T>, K extends KeysToMultiValuesModifier<T, K, I>, I extends KeyToMultiValue, D extends DTO<K>> extends ObjectWithReflectiveEqualsHashCodeToString implements DTO<K> {
 
     private T add;
     private T replace;
