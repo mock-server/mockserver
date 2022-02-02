@@ -4,7 +4,7 @@ servers:
   - url: 'https://localhost:1080/'
 info:
   title: MockServer API
-  version: "5.11.x"
+  version: 5.12.x
   description: >-
     MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS with clients written in Java, JavaScript and Ruby and a simple REST API (as shown below).
 
@@ -460,15 +460,106 @@ components:
           type: boolean
     HttpOverrideForwardedRequest:
       title: override forwarded request
-      type: object
-      additionalProperties: false
-      properties:
-        delay:
-          $ref: "#/components/schemas/Delay"
-        httpRequest:
-          $ref: "#/components/schemas/HttpRequest"
-        httpResponse:
-          $ref: "#/components/schemas/HttpResponse"
+      oneOf:
+        - type: object
+          additionalProperties: false
+          properties:
+            delay:
+              "$ref": "#/components/schemas/Delay"
+            requestOverride:
+              "$ref": "#/components/schemas/HttpRequest"
+            requestModifier:
+              type: object
+              additionalProperties: false
+              properties:
+                path:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    regex:
+                      type: string
+                    substitution:
+                      type: string
+                queryStringParameters:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    add:
+                      "$ref": "#/components/schemas/KeyToMultiValue"
+                    replace:
+                      "$ref": "#/components/schemas/KeyToMultiValue"
+                    remove:
+                      type: array
+                      additionalProperties: false
+                      items:
+                        type: string
+                headers:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    add:
+                      "$ref": "#/components/schemas/KeyToMultiValue"
+                    replace:
+                      "$ref": "#/components/schemas/KeyToMultiValue"
+                    remove:
+                      type: array
+                      additionalProperties: false
+                      items:
+                        type: string
+                cookies:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    add:
+                      "$ref": "#/components/schemas/KeyToValue"
+                    replace:
+                      "$ref": "#/components/schemas/KeyToValue"
+                    remove:
+                      type: array
+                      additionalProperties: false
+                      items:
+                        type: string
+            responseOverride:
+              "$ref": "#/components/schemas/HttpResponse"
+            responseModifier:
+              type: object
+              additionalProperties: false
+              properties:
+                headers:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    add:
+                      "$ref": "#/components/schemas/KeyToMultiValue"
+                    replace:
+                      "$ref": "#/components/schemas/KeyToMultiValue"
+                    remove:
+                      type: array
+                      additionalProperties: false
+                      items:
+                        type: string
+                cookies:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    add:
+                      "$ref": "#/components/schemas/KeyToValue"
+                    replace:
+                      "$ref": "#/components/schemas/KeyToValue"
+                    remove:
+                      type: array
+                      additionalProperties: false
+                      items:
+                        type: string
+        - type: object
+          additionalProperties: false
+          properties:
+            delay:
+              "$ref": "#/components/schemas/Delay"
+            httpRequest:
+              "$ref": "#/components/schemas/HttpRequest"
+            httpResponse:
+              "$ref": "#/components/schemas/HttpResponse"
     HttpError:
       title: error behaviour
       type: object
