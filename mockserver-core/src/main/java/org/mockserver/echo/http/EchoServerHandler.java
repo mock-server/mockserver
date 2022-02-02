@@ -30,12 +30,14 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     private final MockServerLogger mockServerLogger;
     private final MockServerEventLog mockServerEventLog;
     private final EchoServer.NextResponse nextResponse;
+    private final EchoServer.LastRequest lastRequest;
 
-    EchoServerHandler(EchoServer.Error error, MockServerLogger mockServerLogger, MockServerEventLog mockServerEventLog, EchoServer.NextResponse nextResponse) {
+    EchoServerHandler(EchoServer.Error error, MockServerLogger mockServerLogger, MockServerEventLog mockServerEventLog, EchoServer.NextResponse nextResponse, EchoServer.LastRequest lastRequest) {
         this.error = error;
         this.mockServerLogger = mockServerLogger;
         this.mockServerEventLog = mockServerEventLog;
         this.nextResponse = nextResponse;
+        this.lastRequest = lastRequest;
     }
 
     protected void channelRead0(ChannelHandlerContext ctx, HttpRequest request) {
@@ -48,6 +50,10 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 .setMessageFormat("EchoServer received request{}")
                 .setArguments(request)
         );
+
+        if (!lastRequest.httpRequest.get().isDone()) {
+            lastRequest.httpRequest.get().complete(request);
+        }
 
         if (!nextResponse.httpResponse.isEmpty()) {
             // WARNING: this logic is only for unit tests that run in series and is NOT thread safe!!!
@@ -103,6 +109,9 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 .setMessageFormat("echo server server caught exception")
                 .setThrowable(cause)
         );
+        if (!lastRequest.httpRequest.get().isDone()) {
+            lastRequest.httpRequest.get().completeExceptionally(cause);
+        }
         ctx.close();
     }
 }

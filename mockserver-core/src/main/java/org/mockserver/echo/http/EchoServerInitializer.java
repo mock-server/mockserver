@@ -19,8 +19,7 @@ import org.slf4j.event.Level;
 
 import java.util.List;
 
-import static org.mockserver.echo.http.EchoServer.LOG_FILTER;
-import static org.mockserver.echo.http.EchoServer.NEXT_RESPONSE;
+import static org.mockserver.echo.http.EchoServer.*;
 import static org.slf4j.event.Level.TRACE;
 
 /**
@@ -82,7 +81,8 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
             error,
             mockServerLogger,
             channel.attr(LOG_FILTER).get(),
-            channel.attr(NEXT_RESPONSE).get()
+            channel.attr(NEXT_RESPONSE).get(),
+            channel.attr(LAST_REQUEST).get()
         ));
     }
 

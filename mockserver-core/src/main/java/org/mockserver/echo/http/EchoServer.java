@@ -14,6 +14,7 @@ import io.netty.util.AttributeKey;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.stop.Stoppable;
@@ -22,7 +23,9 @@ import org.slf4j.event.Level;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
@@ -32,11 +35,13 @@ public class EchoServer implements Stoppable {
 
     static final AttributeKey<MockServerEventLog> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
     static final AttributeKey<NextResponse> NEXT_RESPONSE = AttributeKey.valueOf("NEXT_RESPONSE");
+    static final AttributeKey<LastRequest> LAST_REQUEST = AttributeKey.valueOf("LAST_REQUEST");
     private static final MockServerLogger mockServerLogger = new MockServerLogger(EchoServer.class);
 
     private final Scheduler scheduler = new Scheduler(mockServerLogger);
     private final MockServerEventLog mockServerEventLog = new MockServerEventLog(mockServerLogger, scheduler, true);
     private final NextResponse nextResponse = new NextResponse();
+    private final LastRequest lastRequest = new LastRequest();
     private final CompletableFuture<Integer> boundPort = new CompletableFuture<>();
     private final List<String> registeredClients;
     private final List<Channel> websocketChannels;
@@ -70,6 +75,7 @@ public class EchoServer implements Stoppable {
                 .childHandler(new EchoServerInitializer(mockServerLogger, secure, sslContext, error, registeredClients, websocketChannels, textWebSocketFrames))
                 .childAttr(LOG_FILTER, mockServerEventLog)
                 .childAttr(NEXT_RESPONSE, nextResponse)
+                .childAttr(LAST_REQUEST, lastRequest)
                 .bind(0)
                 .addListener((ChannelFutureListener) future -> {
                     if (future.isSuccess()) {
@@ -127,6 +133,22 @@ public class EchoServer implements Stoppable {
         nextResponse.httpResponse.clear();
     }
 
+    public HttpRequest getLastRequest()  {
+        try {
+            HttpRequest httpRequest = lastRequest.httpRequest.get().get();
+            lastRequest.httpRequest.set(new CompletableFuture<>());
+            return httpRequest;
+        } catch (InterruptedException | ExecutionException e) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("exception while waiting to receive request - " + e.getMessage())
+                    .setThrowable(e)
+            );
+            return null;
+        }
+    }
+
     public List<String> getRegisteredClients() {
         return registeredClients;
     }
@@ -148,5 +170,9 @@ public class EchoServer implements Stoppable {
 
     public static class NextResponse {
         public final Queue<HttpResponse> httpResponse = new LinkedList<HttpResponse>();
+    }
+
+    public static class LastRequest {
+        public final AtomicReference<CompletableFuture<org.mockserver.model.HttpRequest>> httpRequest = new AtomicReference<>(new CompletableFuture<>());
     }
 }
