@@ -46,6 +46,7 @@ import static org.mockserver.model.HttpRequest.request;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("FieldMayBeFinal")
 public class MockServerEventLog extends MockServerEventLogNotifier {
 
     private static final Logger logger = LoggerFactory.getLogger(MockServerEventLog.class);
