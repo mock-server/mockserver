@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.model.HttpRequest.request;
@@ -265,6 +266,9 @@ public class LogEntry implements EventTranslator<LogEntry> {
 
     public LogEntry setThrowable(Throwable throwable) {
         this.throwable = throwable;
+        if (isBlank(messageFormat) && throwable != null) {
+            messageFormat = throwable.getClass().getSimpleName();
+        }
         return this;
     }
 
@@ -291,7 +295,11 @@ public class LogEntry implements EventTranslator<LogEntry> {
     }
 
     public LogEntry setMessageFormat(String messageFormat) {
-        this.messageFormat = messageFormat;
+        if (isBlank(messageFormat) && throwable != null) {
+            this.messageFormat = throwable.getClass().getSimpleName();
+        } else {
+            this.messageFormat = messageFormat;
+        }
         return this;
     }
 
