@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.FileTime;
+import java.util.Arrays;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -42,18 +42,18 @@ public class FileWatcher {
 
     public FileWatcher(Path filePath, Runnable updatedHandler, Consumer<Throwable> errorHandler, MockServerLogger mockServerLogger) throws Exception {
         final Path path = filePath.getParent() != null ? filePath : Paths.get(new File(".").getAbsolutePath(), filePath.toString());
-        final AtomicReference<FileTime> lastModifiedTime = new AtomicReference<>(getLastModifiedTime(path));
+        final AtomicReference<Integer> fileHash = new AtomicReference<>(getFileHash(path));
         mockServerLogger.logEvent(
             new LogEntry()
                 .setLogLevel(INFO)
-                .setMessageFormat("watching file:{}with last modified time:{}")
-                .setArguments(path, lastModifiedTime)
+                .setMessageFormat("watching file:{}with file fingerprint:{}")
+                .setArguments(path, fileHash)
         );
         scheduledFuture = getScheduler().scheduleAtFixedRate(() -> {
             try {
-                if (getLastModifiedTime(path).compareTo(lastModifiedTime.get()) > 0) {
+                if (!getFileHash(path).equals(fileHash.get())) {
                     updatedHandler.run();
-                    lastModifiedTime.set(getLastModifiedTime(path));
+                    fileHash.set(getFileHash(path));
                 }
                 MILLISECONDS.sleep(100);
             } catch (Throwable throwable) {
@@ -64,11 +64,11 @@ public class FileWatcher {
         }, pollPeriod, pollPeriod, pollPeriodUnits);
     }
 
-    private FileTime getLastModifiedTime(Path path) {
+    private Integer getFileHash(Path path) {
         try {
-            return Files.getLastModifiedTime(path);
+            return Arrays.hashCode(Files.readAllBytes(path));
         } catch (IOException ioe) {
-            return FileTime.fromMillis(0);
+            return 0;
         }
     }
 

@@ -1,6 +1,9 @@
 package org.mockserver.persistence;
 
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
@@ -32,7 +35,9 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
-@Ignore
+/**
+ * @author jamesdbloom
+ */
 public class ExpectationFileWatcherTest {
 
     private final ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
@@ -532,117 +537,6 @@ public class ExpectationFileWatcherTest {
             assertThat(
                 expectations,
                 emptyCollectionOf(Expectation.class)
-            );
-        } finally {
-            ConfigurationProperties.initializationJsonPath(initializationJsonPath);
-            ConfigurationProperties.watchInitializationJson(false);
-            if (expectationFileWatcher != null) {
-                expectationFileWatcher.stop();
-            }
-        }
-    }
-
-    @Test
-    public void shouldDetectModifiedInitialiserJsonOnUpdateNoChange() throws Exception {
-        String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
-        ConfigurationProperties.watchInitializationJson(true);
-        ExpectationFileWatcher expectationFileWatcher = null;
-        try {
-            // given - configuration
-            File mockserverInitialization = File.createTempFile("mockserverInitialization", ".json");
-            ConfigurationProperties.initializationJsonPath(mockserverInitialization.getAbsolutePath());
-            // and - existing file contents
-            String watchedFileContents = "[ {" + NEW_LINE +
-                "  \"id\" : \"one\"," + NEW_LINE +
-                "  \"httpRequest\" : {" + NEW_LINE +
-                "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"timeToLive\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some first response\"" + NEW_LINE +
-                "  }" + NEW_LINE +
-                "}, {" + NEW_LINE +
-                "  \"id\" : \"two\"," + NEW_LINE +
-                "  \"httpRequest\" : {" + NEW_LINE +
-                "    \"path\" : \"/simpleSecond\"" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"timeToLive\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some second response\"" + NEW_LINE +
-                "  }" + NEW_LINE +
-                "}, {" + NEW_LINE +
-                "  \"id\" : \"three\"," + NEW_LINE +
-                "  \"httpRequest\" : {" + NEW_LINE +
-                "    \"path\" : \"/simpleThird\"" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"timeToLive\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"httpResponse\" : {" + NEW_LINE +
-                "    \"body\" : \"some third response\"" + NEW_LINE +
-                "  }" + NEW_LINE +
-                "} ]";
-            Files.write(mockserverInitialization.toPath(), watchedFileContents.getBytes(StandardCharsets.UTF_8));
-            // and - expectation update notification
-            CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
-            requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
-            // and - file watcher
-            expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
-
-            // when
-            Files.write(mockserverInitialization.toPath(), watchedFileContents.getBytes(StandardCharsets.UTF_8));
-            long updatedFileTime = System.currentTimeMillis();
-
-            expectationsUpdated.get(30, SECONDS);
-            System.out.println("update processed in: " + (System.currentTimeMillis() - updatedFileTime) + "ms");
-
-            // then
-            List<Expectation> expectations = requestMatchers.retrieveActiveExpectations(null);
-            assertThat(
-                expectations,
-                contains(
-                    new Expectation(
-                        request()
-                            .withPath("/simpleFirst")
-                    )
-                        .withId("one")
-                        .thenRespond(
-                            response()
-                                .withBody("some first response")
-                        )
-                    ,
-                    new Expectation(
-                        request()
-                            .withPath("/simpleSecond")
-                    )
-                        .withId("two")
-                        .thenRespond(
-                            response()
-                                .withBody("some second response")
-                        ),
-                    new Expectation(
-                        request()
-                            .withPath("/simpleThird")
-                    )
-                        .withId("three")
-                        .thenRespond(
-                            response()
-                                .withBody("some third response")
-                        )
-                )
             );
         } finally {
             ConfigurationProperties.initializationJsonPath(initializationJsonPath);

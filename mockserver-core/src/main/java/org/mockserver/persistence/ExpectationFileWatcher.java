@@ -21,6 +21,9 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.slf4j.event.Level.*;
 
+/**
+ * @author jamesdbloom
+ */
 public class ExpectationFileWatcher {
 
     private final ExpectationSerializer expectationSerializer;
