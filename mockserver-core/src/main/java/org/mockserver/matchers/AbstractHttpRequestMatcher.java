@@ -2,6 +2,7 @@ package org.mockserver.matchers;
 
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
+import org.mockserver.mock.listeners.MockServerMatcherNotifier;
 import org.mockserver.model.RequestDefinition;
 
 import java.util.Objects;
@@ -24,6 +25,7 @@ public abstract class AbstractHttpRequestMatcher extends NotMatcher<RequestDefin
     private int hashCode;
     private boolean isBlank = false;
     private boolean responseInProgress = false;
+    private MockServerMatcherNotifier.Cause source;
     protected boolean controlPlaneMatcher;
     protected Expectation expectation;
     protected String didNotMatchRequestBecause = REQUEST_DID_NOT_MATCH + REQUEST_MATCHER + BECAUSE;
@@ -89,6 +91,15 @@ public abstract class AbstractHttpRequestMatcher extends NotMatcher<RequestDefin
 
     public HttpRequestMatcher setResponseInProgress(boolean responseInProgress) {
         this.responseInProgress = responseInProgress;
+        return this;
+    }
+
+    public MockServerMatcherNotifier.Cause getSource() {
+        return source;
+    }
+
+    public AbstractHttpRequestMatcher withSource(MockServerMatcherNotifier.Cause source) {
+        this.source = source;
         return this;
     }
 

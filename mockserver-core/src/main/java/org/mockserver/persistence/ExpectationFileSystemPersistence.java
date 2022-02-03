@@ -76,7 +76,7 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
     @Override
     public void updated(RequestMatchers requestMatchers, MockServerMatcherNotifier.Cause cause) {
         // ignore non-API changes from the same file
-        if (cause == MockServerMatcherNotifier.Cause.API || !initializationPathMatchesPersistencePath) {
+        if (cause == MockServerMatcherNotifier.Cause.API || cause.getType() == MockServerMatcherNotifier.Cause.Type.CLASS_INITIALISER || !initializationPathMatchesPersistencePath) {
             fileWriteLock.lock();
             try {
                 try {

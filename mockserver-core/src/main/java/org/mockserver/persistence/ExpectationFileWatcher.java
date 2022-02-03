@@ -1,6 +1,5 @@
 package org.mockserver.persistence;
 
-import org.mockserver.cache.LRUCache;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
@@ -12,12 +11,11 @@ import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.server.initialize.ExpectationInitializerLoader;
 import org.slf4j.event.Level;
 
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
@@ -41,7 +39,7 @@ public class ExpectationFileWatcher {
                     .stream()
                     .map(initializationJsonPath -> {
                         try {
-                            return new FileWatcher(initializationJsonPath, () -> {
+                            return new FileWatcher(Paths.get(initializationJsonPath), () -> {
                                 if (MockServerLogger.isEnabled(DEBUG)) {
                                     mockServerLogger.logEvent(
                                         new LogEntry()
@@ -60,7 +58,7 @@ public class ExpectationFileWatcher {
                                             .setThrowable(throwable)
                                     );
                                 }
-                            });
+                            }, mockServerLogger);
                         } catch (Throwable throwable) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
@@ -99,29 +97,15 @@ public class ExpectationFileWatcher {
     }
 
     private synchronized void addExpectationsFromInitializer() {
-        Expectation[] expectations = retrieveExpectationsFromJson();
-        if (MockServerLogger.isEnabled(TRACE)) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(TRACE)
-                    .setMessageFormat("updating expectations{}from{}")
-                    .setArguments(Arrays.asList(expectations), ExpectationInitializerLoader.expandedInitializationJsonPaths())
-            );
-        }
-        requestMatchers.update(expectations, MockServerMatcherNotifier.Cause.FILE_WATCHER);
-    }
-
-    @SuppressWarnings("FuseStreamOperations")
-    private Expectation[] retrieveExpectationsFromJson() {
-        List<String> initializationJsonPaths = ExpectationInitializerLoader.expandedInitializationJsonPaths();
-        List<Expectation> collect = initializationJsonPaths
-            .stream()
-            .flatMap(initializationJsonPath -> {
+        ExpectationInitializerLoader
+            .expandedInitializationJsonPaths()
+            .forEach(initializationJsonPath -> {
+                Expectation[] expectations = new Expectation[0];
                 if (isNotBlank(initializationJsonPath)) {
                     try {
                         String jsonExpectations = FileReader.readFileFromClassPathOrPath(initializationJsonPath);
                         if (isNotBlank(jsonExpectations)) {
-                            return Arrays.stream(expectationSerializer.deserializeArray(jsonExpectations, true));
+                            expectations = expectationSerializer.deserializeArray(jsonExpectations, true);
                         }
                     } catch (Throwable throwable) {
                         if (MockServerLogger.isEnabled(WARN)) {
@@ -129,16 +113,23 @@ public class ExpectationFileWatcher {
                                 new LogEntry()
                                     .setType(SERVER_CONFIGURATION)
                                     .setLogLevel(WARN)
-                                    .setMessageFormat("exception while loading JSON initialization file with file watcher, ignoring file")
+                                    .setMessageFormat("exception while loading JSON initialization file with file watcher, ignoring file:{}")
+                                    .setArguments(initializationJsonPath)
                                     .setThrowable(throwable)
                             );
                         }
                     }
                 }
-                return Arrays.stream(new Expectation[0]);
-            })
-            .collect(Collectors.toList());
-        return collect.toArray(new Expectation[0]);
+                if (MockServerLogger.isEnabled(TRACE)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(TRACE)
+                            .setMessageFormat("updating expectations:{}from file:{}")
+                            .setArguments(Arrays.asList(expectations), initializationJsonPath)
+                    );
+                }
+                requestMatchers.update(expectations, new MockServerMatcherNotifier.Cause(initializationJsonPath, MockServerMatcherNotifier.Cause.Type.FILE_WATCHER));
+            });
     }
 
     public void stop() {

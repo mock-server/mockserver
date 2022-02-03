@@ -7,6 +7,7 @@ import org.mockserver.scheduler.Scheduler;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author jamesdbloom
@@ -38,9 +39,47 @@ public class MockServerMatcherNotifier extends ObjectWithReflectiveEqualsHashCod
         listeners.remove(listener);
     }
 
-    public enum Cause {
-        FILE_WATCHER,
-        INITIALISER,
-        API
+    public static class Cause {
+        public Cause(String source, Type type) {
+            this.source = source;
+            this.type = type;
+        }
+
+        public static final Cause API = new Cause("", Type.API);
+
+        public enum Type {
+            FILE_WATCHER,
+            FILE_INITIALISER,
+            CLASS_INITIALISER,
+            API
+        }
+
+        private final String source;
+        private final Type type;
+
+        public String getSource() {
+            return source;
+        }
+
+        public Type getType() {
+            return type;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            Cause cause = (Cause) o;
+            return Objects.equals(source, cause.source) && type == cause.type;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(source, type);
+        }
     }
 }

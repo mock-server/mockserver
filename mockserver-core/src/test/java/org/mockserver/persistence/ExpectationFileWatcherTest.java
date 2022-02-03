@@ -1,7 +1,8 @@
 package org.mockserver.persistence;
 
+import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -11,7 +12,7 @@ import org.mockserver.mock.RequestMatchers;
 import org.mockserver.mock.listeners.MockServerMatcherNotifier;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.ExpectationSerializer;
-import org.mockserver.server.initialize.ExpectationInitializerLoader;
+import org.mockserver.test.Retries;
 import org.mockserver.uuid.UUIDService;
 
 import java.io.File;
@@ -20,16 +21,16 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.collection.IsEmptyCollection.emptyCollectionOf;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
-import static org.mockito.Mockito.mock;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -39,6 +40,22 @@ public class ExpectationFileWatcherTest {
     private final ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
     private MockServerLogger mockServerLogger;
     private RequestMatchers requestMatchers;
+    private static long originalPollPeriod;
+    private static TimeUnit originalPollPeriodUnits;
+
+    @BeforeClass
+    public static void increasePollPeriod() {
+        originalPollPeriod = FileWatcher.getPollPeriod();
+        originalPollPeriodUnits = FileWatcher.getPollPeriodUnits();
+        FileWatcher.setPollPeriod(500);
+        FileWatcher.setPollPeriodUnits(MILLISECONDS);
+    }
+
+    @AfterClass
+    public static void restorePollPeriod() {
+        FileWatcher.setPollPeriod(originalPollPeriod);
+        FileWatcher.setPollPeriodUnits(originalPollPeriodUnits);
+    }
 
     @Before
     public void createMockServerMatcher() {
@@ -47,7 +64,7 @@ public class ExpectationFileWatcherTest {
     }
 
     @Test
-    public void shouldDetectModifiedInitialiserJsonInWorkingDirectory() throws Exception {
+    public void shouldDetectModifiedInitialiserJsonInWorkingDirectoryThatDoesNotInitiallyExist() throws Exception {
         String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
         ConfigurationProperties.watchInitializationJson(true);
         ExpectationFileWatcher expectationFileWatcher = null;
@@ -61,7 +78,7 @@ public class ExpectationFileWatcherTest {
             requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
             // and - file watcher
             expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
-            MILLISECONDS.sleep(1500);
+            assertThat(mockserverInitialization.exists(), equalTo(false));
 
             // when
             String watchedFileContents = "[ {" + NEW_LINE +
@@ -171,7 +188,6 @@ public class ExpectationFileWatcherTest {
             requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
             // and - file watcher
             expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
-            MILLISECONDS.sleep(1500);
 
             // when
             String watchedFileContents = "[ {" + NEW_LINE +
@@ -281,11 +297,10 @@ public class ExpectationFileWatcherTest {
             File mockserverInitializerThree = File.createTempFile(uniquePrefix + "_mockserverInitializationThree", ".json");
             ConfigurationProperties.initializationJsonPath(mockserverInitializer.getParentFile().getAbsolutePath() + "/" + uniquePrefix + "_mockserverInitialization{One,Two}*.json");
             // and - expectation update notification
-            CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
-            requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
+            AtomicInteger expectationsUpdatedCount = new AtomicInteger();
+            requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdatedCount.incrementAndGet());
             // and - file watcher
             expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
-            MILLISECONDS.sleep(1500);
 
             // when
             Expectation[] expections = {
@@ -366,7 +381,7 @@ public class ExpectationFileWatcherTest {
             Files.write(mockserverInitializerThree.toPath(), expectationSerializer.serialize(expectionsThree).getBytes(StandardCharsets.UTF_8));
             long updatedFileTime = System.currentTimeMillis();
 
-            expectationsUpdated.get(30, SECONDS);
+            Retries.tryWaitForSuccess(() -> assertThat(expectationsUpdatedCount.get(), equalTo(2)), 150, 100, MILLISECONDS);
             System.out.println("update processed in: " + (System.currentTimeMillis() - updatedFileTime) + "ms");
 
             // then
@@ -378,33 +393,33 @@ public class ExpectationFileWatcherTest {
                         .withPath("/pathOneFirst")
                 )
                     .thenRespond(
-                    response()
-                        .withBody("one first response")
-                ),
+                        response()
+                            .withBody("one first response")
+                    ),
                 new Expectation(
                     request()
                         .withPath("/pathOneSecond")
                 )
                     .thenRespond(
-                    response()
-                        .withBody("one second response")
-                ),
+                        response()
+                            .withBody("one second response")
+                    ),
                 new Expectation(
                     request()
                         .withPath("/pathTwoFirst")
                 )
                     .thenRespond(
-                    response()
-                        .withBody("two first response")
-                ),
+                        response()
+                            .withBody("two first response")
+                    ),
                 new Expectation(
                     request()
                         .withPath("/pathTwoSecond")
                 )
                     .thenRespond(
-                    response()
-                        .withBody("two second response")
-                )
+                        response()
+                            .withBody("two second response")
+                    )
             ));
         } finally {
             ConfigurationProperties.initializationJsonPath(initializationJsonPath);
@@ -499,13 +514,12 @@ public class ExpectationFileWatcherTest {
                     response()
                         .withBody("some third response")
                 )
-            }, MockServerMatcherNotifier.Cause.FILE_WATCHER);
+            }, new MockServerMatcherNotifier.Cause(mockserverInitialization.getAbsolutePath(), MockServerMatcherNotifier.Cause.Type.FILE_WATCHER));
             // and - expectation update notification
             CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
             requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
             // and - file watcher
             expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
-            MILLISECONDS.sleep(1500);
 
             // when
             watchedFileContents = "[ ]";
@@ -589,7 +603,6 @@ public class ExpectationFileWatcherTest {
             requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
             // and - file watcher
             expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
-            MILLISECONDS.sleep(1500);
 
             // when
             Files.write(mockserverInitialization.toPath(), watchedFileContents.getBytes(StandardCharsets.UTF_8));
@@ -701,7 +714,6 @@ public class ExpectationFileWatcherTest {
             requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
             // and - file watcher
             expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
-            MILLISECONDS.sleep(1500);
 
             // when
             watchedFileContents = "[ {" + NEW_LINE +

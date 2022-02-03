@@ -1,6 +1,8 @@
 package org.mockserver.persistence;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -13,6 +15,7 @@ import org.mockserver.scheduler.Scheduler;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.CoreMatchers.is;
@@ -523,7 +526,7 @@ public class ExpectationFileSystemPersistenceTest {
                     response()
                         .withBody("some fourth response")
                 )
-            }, MockServerMatcherNotifier.Cause.FILE_WATCHER);
+            }, new MockServerMatcherNotifier.Cause(persistedExpectations.getAbsolutePath(), MockServerMatcherNotifier.Cause.Type.FILE_WATCHER));
             MILLISECONDS.sleep(1500);
 
             // then

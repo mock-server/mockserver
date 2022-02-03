@@ -87,7 +87,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                     }
                     return httpRequestMatcher;
                 })
-                .orElseGet(() -> addPrioritisedExpectation(expectation))
+                .orElseGet(() -> addPrioritisedExpectation(expectation, cause))
                 .getExpectation();
             notifyListeners(this, cause);
         }
@@ -98,13 +98,20 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         AtomicInteger numberOfChanges = new AtomicInteger(0);
         if (expectations != null) {
             Map<String, HttpRequestMatcher> httpRequestMatchersByKey = httpRequestMatchers.keyMap();
-            Set<String> existingKeys = new HashSet<>(httpRequestMatchersByKey.keySet());
+            Set<String> existingKeysForCause = httpRequestMatchersByKey
+                .entrySet()
+                .stream()
+                .filter(entry -> entry.getValue().getSource().equals(cause))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
             Arrays
                 .stream(expectations)
                 .forEach(expectation -> {
-                    existingKeys.remove(expectation.getId());
+                    existingKeysForCause.remove(expectation.getId());
                     if (httpRequestMatchersByKey.containsKey(expectation.getId())) {
                         HttpRequestMatcher httpRequestMatcher = httpRequestMatchersByKey.get(expectation.getId());
+                        // update source to new cause
+                        httpRequestMatcher.withSource(cause);
                         if (httpRequestMatcher.getExpectation() != null && httpRequestMatcher.getExpectation().getAction() != null) {
                             Metrics.decrement(httpRequestMatcher.getExpectation().getAction().getType());
                         }
@@ -133,11 +140,11 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                             httpRequestMatchers.addPriorityKey(httpRequestMatcher);
                         }
                     } else {
-                        addPrioritisedExpectation(expectation);
+                        addPrioritisedExpectation(expectation, cause);
                         numberOfChanges.getAndIncrement();
                     }
                 });
-            existingKeys
+            existingKeysForCause
                 .forEach(key -> {
                     numberOfChanges.getAndIncrement();
                     HttpRequestMatcher httpRequestMatcher = httpRequestMatchersByKey.get(key);
@@ -152,9 +159,10 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         }
     }
 
-    private HttpRequestMatcher addPrioritisedExpectation(Expectation expectation) {
+    private HttpRequestMatcher addPrioritisedExpectation(Expectation expectation, Cause cause) {
         HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(expectation);
         httpRequestMatchers.add(httpRequestMatcher);
+        httpRequestMatcher.withSource(cause);
         if (expectation.getAction() != null) {
             Metrics.increment(expectation.getAction().getType());
         }

@@ -460,7 +460,7 @@ public class HttpState {
                                     .setLogLevel(Level.INFO)
                                     .setCorrelationId(logCorrelationId)
                                     .setHttpRequest(requestDefinition)
-                                    .setMessageFormat("retrieved active expectations in " + format.name().toLowerCase() + " that match:{}")
+                                    .setMessageFormat("retrieved " + expectations.size() + " active expectations in " + format.name().toLowerCase() + " that match:{}")
                                     .setArguments(requestDefinition)
                             );
                         }

@@ -1,60 +1,102 @@
 package org.mockserver.persistence;
 
+import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.scheduler.Scheduler;
 
 import java.io.File;
-import java.nio.file.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.slf4j.event.Level.INFO;
 
 public class FileWatcher {
 
-    private boolean running = true;
+    private static ScheduledExecutorService scheduler;
 
-    public FileWatcher(String filePath, Runnable updatedHandler, Consumer<Throwable> errorHandler) throws Exception {
-        WatchService watchService;
-        Path directoryPath = Paths.get(filePath);
-        Path fileName = directoryPath.getFileName();
-        watchService = FileSystems.getDefault().newWatchService();
-        Path parent = directoryPath.getParent() != null ? directoryPath.getParent() : new File(".").toPath();
-        parent
-            .register(
-                watchService,
-                StandardWatchEventKinds.OVERFLOW,
-                StandardWatchEventKinds.ENTRY_CREATE,
-                StandardWatchEventKinds.ENTRY_MODIFY
+    public synchronized static ScheduledExecutorService getScheduler() {
+        if (scheduler == null) {
+            scheduler = new ScheduledThreadPoolExecutor(
+                2,
+                new Scheduler.SchedulerThreadFactory("FileWatcher"),
+                new ThreadPoolExecutor.CallerRunsPolicy()
             );
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                scheduler.shutdown();
+            }));
+        }
+        return scheduler;
+    }
 
-        new Scheduler.SchedulerThreadFactory(FileWatcher.class.getSimpleName()).newThread(() -> {
-            while (isRunning()) {
-                try {
-                    WatchKey key = watchService.take();
+    private boolean running = true;
+    private final ScheduledFuture<?> scheduledFuture;
+    private static long pollPeriod = 5;
+    private static TimeUnit pollPeriodUnits = TimeUnit.SECONDS;
 
-                    if (isRunning()) {
-                        for (WatchEvent<?> event : key.pollEvents()) {
-                            if (event.context() instanceof Path && ((Path) event.context()).getFileName().equals(fileName)) {
-                                // ensure file has been committed to file system
-                                MILLISECONDS.sleep(100);
-                                updatedHandler.run();
-                                break;
-                            }
-                        }
-
-                        key.reset();
-                    }
-                } catch (Throwable throwable) {
+    public FileWatcher(Path filePath, Runnable updatedHandler, Consumer<Throwable> errorHandler, MockServerLogger mockServerLogger) throws Exception {
+        final Path path = filePath.getParent() != null ? filePath : Paths.get(new File(".").getAbsolutePath(), filePath.toString());
+        final AtomicReference<FileTime> lastModifiedTime = new AtomicReference<>(getLastModifiedTime(path));
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setMessageFormat("watching file:{}with last modified time:{}")
+                .setArguments(path, lastModifiedTime)
+        );
+        scheduledFuture = getScheduler().scheduleAtFixedRate(() -> {
+            try {
+                if (getLastModifiedTime(path).compareTo(lastModifiedTime.get()) > 0) {
+                    updatedHandler.run();
+                    lastModifiedTime.set(getLastModifiedTime(path));
+                }
+                MILLISECONDS.sleep(100);
+            } catch (Throwable throwable) {
+                if (!(throwable instanceof InterruptedException)) {
                     errorHandler.accept(throwable);
                 }
             }
-        }).start();
+        }, pollPeriod, pollPeriod, pollPeriodUnits);
+    }
+
+    private FileTime getLastModifiedTime(Path path) {
+        try {
+            return Files.getLastModifiedTime(path);
+        } catch (IOException ioe) {
+            return FileTime.fromMillis(0);
+        }
     }
 
     public boolean isRunning() {
         return running;
     }
 
-    public void setRunning(boolean running) {
+    public FileWatcher setRunning(boolean running) {
         this.running = running;
+        if (!running && this.scheduledFuture != null) {
+            this.scheduledFuture.cancel(true);
+        }
+        return this;
+    }
+
+    public static long getPollPeriod() {
+        return FileWatcher.pollPeriod;
+    }
+
+    public static void setPollPeriod(long pollPeriod) {
+        FileWatcher.pollPeriod = pollPeriod;
+    }
+
+    public static TimeUnit getPollPeriodUnits() {
+        return FileWatcher.pollPeriodUnits;
+    }
+
+    public static void setPollPeriodUnits(TimeUnit pollPeriodUnits) {
+        FileWatcher.pollPeriodUnits = pollPeriodUnits;
     }
 }
