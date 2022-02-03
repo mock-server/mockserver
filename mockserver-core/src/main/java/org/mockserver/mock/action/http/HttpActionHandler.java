@@ -425,10 +425,10 @@ public class HttpActionHandler {
                     .setLogLevel(Level.ERROR)
                     .setCorrelationId(request.getLogCorrelationId())
                     .setHttpRequest(request)
-                    .setMessageFormat(exception.getMessage())
+                    .setMessageFormat(exception != null ? isNotBlank(exception.getMessage()) ? exception.getMessage() : exception.getClass().getSimpleName() : null)
                     .setThrowable(exception)
             );
-            returnNotFound(responseWriter, request, null);
+            returnNotFound(responseWriter, request, exception != null ? exception.getMessage() : null);
         }
     }
 
@@ -469,7 +469,7 @@ public class HttpActionHandler {
                         .setLogLevel(TRACE)
                         .setCorrelationId(request.getLogCorrelationId())
                         .setHttpRequest(request)
-                        .setMessageFormat("no expectation for:{}returning response:{}")
+                        .setMessageFormat(NO_MATCH_RESPONSE_NO_EXPECTATION_MESSAGE_FORMAT)
                         .setArguments(request, notFoundResponse())
                 );
             }

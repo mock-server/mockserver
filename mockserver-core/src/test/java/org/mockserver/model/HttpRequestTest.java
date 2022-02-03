@@ -16,6 +16,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.NottableSchemaString.schemaString;
 import static org.mockserver.model.NottableString.string;
+import static org.mockserver.model.SocketAddress.socketAddress;
 
 /**
  * @author jamesdbloom
@@ -46,8 +47,61 @@ public class HttpRequestTest {
 
     @Test
     public void returnsSsl() {
+        // true secure socket address null
         assertEquals(Boolean.TRUE, new HttpRequest().withSecure(true).isSecure());
+        // false secure socket address null
         assertEquals(Boolean.FALSE, new HttpRequest().withSecure(false).isSecure());
+        // false secure scheme HTTP
+        assertEquals(Boolean.FALSE, new HttpRequest()
+            .withSecure(false)
+            .withSocketAddress(
+                socketAddress()
+                    .withHost("sdafgh")
+                    .withPort(1234)
+                    .withScheme(SocketAddress.Scheme.HTTP)
+            ).isSecure());
+        // false secure scheme default
+        assertEquals(Boolean.FALSE, new HttpRequest()
+            .withSecure(false)
+            .withSocketAddress(
+                socketAddress()
+                    .withHost("sdafgh")
+                    .withPort(1234)
+            ).isSecure());
+        // false secure scheme HTTPS
+        assertEquals(Boolean.TRUE, new HttpRequest()
+            .withSecure(false)
+            .withSocketAddress(
+                socketAddress()
+                    .withHost("sdafgh")
+                    .withPort(1234)
+                    .withScheme(SocketAddress.Scheme.HTTPS)
+            ).isSecure());
+        // true secure scheme HTTPS
+        assertEquals(Boolean.TRUE, new HttpRequest()
+            .withSecure(true)
+            .withSocketAddress(
+                socketAddress()
+                    .withHost("sdafgh")
+                    .withPort(1234)
+                    .withScheme(SocketAddress.Scheme.HTTPS)
+            ).isSecure());
+        // null secure scheme HTTPS
+        assertEquals(Boolean.TRUE, new HttpRequest()
+            .withSocketAddress(
+                socketAddress()
+                    .withHost("sdafgh")
+                    .withPort(1234)
+                    .withScheme(SocketAddress.Scheme.HTTPS)
+            ).isSecure());
+        // true secure scheme HTTP
+        assertEquals(Boolean.TRUE, new HttpRequest()
+            .withSecure(true)
+            .withSocketAddress(
+                socketAddress()
+                    .withHost("sdafgh")
+                    .withPort(1234)
+            ).isSecure());
     }
 
     @Test

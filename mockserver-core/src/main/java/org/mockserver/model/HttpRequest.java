@@ -59,6 +59,12 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     }
 
     public Boolean isSecure() {
+        if (socketAddress != null && socketAddress.getScheme() != null) {
+            if (socketAddress.getScheme() == SocketAddress.Scheme.HTTPS) {
+                secure = true;
+                this.hashCode = 0;
+            }
+        }
         return secure;
     }
 
@@ -69,6 +75,11 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      */
     public HttpRequest withSecure(Boolean isSecure) {
         this.secure = isSecure;
+        if (socketAddress != null && socketAddress.getScheme() != null) {
+            if (socketAddress.getScheme() == SocketAddress.Scheme.HTTPS) {
+                secure = true;
+            }
+        }
         this.hashCode = 0;
         return this;
     }
@@ -85,6 +96,11 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      */
     public HttpRequest withSocketAddress(SocketAddress socketAddress) {
         this.socketAddress = socketAddress;
+        if (socketAddress != null && socketAddress.getScheme() != null) {
+            if (socketAddress.getScheme() == SocketAddress.Scheme.HTTPS) {
+                secure = true;
+            }
+        }
         this.hashCode = 0;
         return this;
     }
@@ -1147,6 +1163,8 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     @Override
     public int hashCode() {
+        // need to call isSecure because getter can change the hashcode
+        isSecure();
         if (hashCode == 0) {
             hashCode = Objects.hash(super.hashCode(), method, path, pathParameters, queryStringParameters, body, headers, cookies, keepAlive, secure, socketAddress);
         }
