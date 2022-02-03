@@ -1,9 +1,6 @@
 package org.mockserver.persistence;
 
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
@@ -35,6 +32,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
+@Ignore
 public class ExpectationFileWatcherTest {
 
     private final ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
