@@ -128,9 +128,9 @@ public class HttpState {
     public void clear(HttpRequest request) {
         final String logCorrelationId = UUIDService.getUUID();
         RequestDefinition requestDefinition = null;
+        ExpectationId expectationId = null;
         if (isNotBlank(request.getBodyAsString())) {
             String body = request.getBodyAsJsonOrXmlString();
-            ExpectationId expectationId = null;
             try {
                 expectationId = getExpectationIdSerializer().deserialize(body);
             } catch (Throwable throwable) {
@@ -151,11 +151,19 @@ public class HttpState {
                     mockServerLog.clear(requestDefinition);
                     break;
                 case EXPECTATIONS:
-                    requestMatchers.clear(requestDefinition);
+                    if (expectationId != null) {
+                        requestMatchers.clear(expectationId, logCorrelationId);
+                    } else {
+                        requestMatchers.clear(requestDefinition);
+                    }
                     break;
                 case ALL:
                     mockServerLog.clear(requestDefinition);
-                    requestMatchers.clear(requestDefinition);
+                    if (expectationId != null) {
+                        requestMatchers.clear(expectationId, logCorrelationId);
+                    } else {
+                        requestMatchers.clear(requestDefinition);
+                    }
                     break;
             }
         } catch (IllegalArgumentException iae) {

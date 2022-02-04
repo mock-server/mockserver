@@ -13,6 +13,7 @@ import org.mockserver.metrics.Metrics;
 import org.mockserver.mock.listeners.MockServerMatcherNotifier;
 import org.mockserver.model.*;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.uuid.UUIDService;
 import org.slf4j.event.Level;
 
 import java.util.*;
@@ -153,7 +154,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                 .forEach(key -> {
                     numberOfChanges.getAndIncrement();
                     HttpRequestMatcher httpRequestMatcher = httpRequestMatchersByKey.get(key);
-                    removeHttpRequestMatcher(httpRequestMatcher, cause, false);
+                    removeHttpRequestMatcher(httpRequestMatcher, cause, false, UUIDService.getUUID());
                     if (httpRequestMatcher.getExpectation() != null && httpRequestMatcher.getExpectation().getAction() != null) {
                         Metrics.decrement(httpRequestMatcher.getExpectation().getAction().getType());
                     }
@@ -193,7 +194,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
     }
 
     public void reset(Cause cause) {
-        httpRequestMatchers.stream().forEach(httpRequestMatcher -> removeHttpRequestMatcher(httpRequestMatcher, cause, false));
+        httpRequestMatchers.stream().forEach(httpRequestMatcher -> removeHttpRequestMatcher(httpRequestMatcher, cause, false, UUIDService.getUUID()));
         Metrics.clearActionMetrics();
         notifyListeners(this, cause);
     }
@@ -214,7 +215,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                         remainingMatchesDecremented = true;
                     }
                 } else if (!httpRequestMatcher.isResponseInProgress() && !httpRequestMatcher.isActive()) {
-                    scheduler.submit(() -> removeHttpRequestMatcher(httpRequestMatcher));
+                    scheduler.submit(() -> removeHttpRequestMatcher(httpRequestMatcher, UUIDService.getUUID()));
                 }
                 if (remainingMatchesDecremented) {
                     notifyListeners(this, Cause.API);
@@ -248,7 +249,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                         .withLogCorrelationId(requestDefinition.getLogCorrelationId());
                 }
                 if (clearHttpRequestMatcher.matches(request)) {
-                    removeHttpRequestMatcher(httpRequestMatcher);
+                    removeHttpRequestMatcher(httpRequestMatcher, requestDefinition.getLogCorrelationId());
                 }
             });
             if (MockServerLogger.isEnabled(Level.INFO)) {
@@ -267,6 +268,26 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         }
     }
 
+    public void clear(ExpectationId expectationId, String logCorrelationId) {
+        if (expectationId != null) {
+            httpRequestMatchers
+                .getByKey(expectationId.getId())
+                .ifPresent(httpRequestMatcher -> removeHttpRequestMatcher(httpRequestMatcher, logCorrelationId));
+            if (MockServerLogger.isEnabled(Level.INFO)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(CLEARED)
+                        .setLogLevel(Level.INFO)
+                        .setCorrelationId(logCorrelationId)
+                        .setMessageFormat("cleared expectations that have id:{}")
+                        .setArguments(expectationId.getId())
+                );
+            }
+        } else {
+            reset();
+        }
+    }
+
     Expectation postProcess(Expectation expectation) {
         if (expectation != null) {
             getHttpRequestMatchersCopy()
@@ -274,7 +295,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                 .findFirst()
                 .ifPresent(httpRequestMatcher -> {
                     if (!expectation.isActive()) {
-                        removeHttpRequestMatcher(httpRequestMatcher);
+                        removeHttpRequestMatcher(httpRequestMatcher, UUIDService.getUUID());
                     }
                     httpRequestMatcher.setResponseInProgress(false);
                 });
@@ -282,12 +303,12 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         return expectation;
     }
 
-    private void removeHttpRequestMatcher(HttpRequestMatcher httpRequestMatcher) {
-        removeHttpRequestMatcher(httpRequestMatcher, Cause.API, true);
+    private void removeHttpRequestMatcher(HttpRequestMatcher httpRequestMatcher, String logCorrelationId) {
+        removeHttpRequestMatcher(httpRequestMatcher, Cause.API, true, logCorrelationId);
     }
 
     @SuppressWarnings("rawtypes")
-    private void removeHttpRequestMatcher(HttpRequestMatcher httpRequestMatcher, Cause cause, boolean notifyAndUpdateMetrics) {
+    private void removeHttpRequestMatcher(HttpRequestMatcher httpRequestMatcher, Cause cause, boolean notifyAndUpdateMetrics, String logCorrelationId) {
         if (httpRequestMatchers.remove(httpRequestMatcher)) {
             if (httpRequestMatcher.getExpectation() != null && MockServerLogger.isEnabled(Level.INFO)) {
                 Expectation expectation = httpRequestMatcher.getExpectation().clone();
@@ -295,6 +316,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                     new LogEntry()
                         .setType(REMOVED_EXPECTATION)
                         .setLogLevel(Level.INFO)
+                        .setCorrelationId(logCorrelationId)
                         .setHttpRequest(httpRequestMatcher.getExpectation().getHttpRequest())
                         .setMessageFormat(REMOVED_EXPECTATION_MESSAGE_FORMAT)
                         .setArguments(expectation, expectation.getId())

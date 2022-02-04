@@ -5786,6 +5786,113 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
+    public void shouldClearExpectationsWithIdenticalRequestMatchersByExpectationId() {
+        // given - some expectations
+        Expectation firstExpectation = mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path"))
+            )
+            .respond(
+                response()
+                    .withBody("some_body1")
+            )[0];
+        Expectation secondExpectation = mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path"))
+            )
+            .respond(
+                response()
+                    .withBody("some_body2")
+            )[0];
+
+        // and - some matching requests
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body1"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body1"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+
+        // when - wrong id
+        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, () -> mockServerClient.clear(UUIDService.neverFixedUUID(), ClearType.EXPECTATIONS));
+        assertThat(illegalArgumentException.getMessage(), startsWith("No expectation found with id "));
+
+        // then - expectations not cleared
+        assertThat(
+            mockServerClient.retrieveActiveExpectations(null),
+            arrayContaining(
+                firstExpectation,
+                secondExpectation
+            )
+        );
+
+        // and then - request log not cleared
+        verifyRequestsMatches(
+            mockServerClient.retrieveRecordedRequests(null),
+            request(calculatePath("some_path")),
+            request(calculatePath("some_path"))
+        );
+
+        // when
+        mockServerClient
+            .clear(
+                firstExpectation.getId(),
+                ClearType.EXPECTATIONS
+            );
+
+        // then - expectations cleared
+        assertThat(
+            mockServerClient.retrieveActiveExpectations(null),
+            arrayContaining(
+                secondExpectation
+            )
+        );
+
+        // and then - request log not cleared
+        verifyRequestsMatches(
+            mockServerClient.retrieveRecordedRequests(null),
+            request(calculatePath("some_path")),
+            request(calculatePath("some_path"))
+        );
+
+        // when
+        mockServerClient
+            .clear(
+                secondExpectation.getId(),
+                ClearType.EXPECTATIONS
+            );
+
+        // then - expectations cleared
+        assertThat(
+            mockServerClient.retrieveActiveExpectations(null),
+            emptyArray()
+        );
+
+        // and then - request log not cleared
+        verifyRequestsMatches(
+            mockServerClient.retrieveRecordedRequests(null),
+            request(calculatePath("some_path")),
+            request(calculatePath("some_path"))
+        );
+    }
+
+    @Test
     public void shouldClearLogsOnly() {
         // given - some expectations
         mockServerClient
