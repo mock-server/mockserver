@@ -10,7 +10,7 @@ import static org.mockserver.model.HttpRequest.request;
  * @author jamesdbloom
  */
 public class Verification extends ObjectWithJsonToString {
-    private RequestDefinition httpRequest = request();
+    private RequestDefinition httpRequest;
     private ExpectationId expectationId;
     private VerificationTimes times = VerificationTimes.atLeast(1);
 

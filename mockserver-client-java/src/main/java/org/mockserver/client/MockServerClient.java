@@ -28,6 +28,7 @@ import java.awt.*;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -42,6 +43,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.mock.HttpState.LOG_SEPARATOR;
+import static org.mockserver.model.ExpectationId.expectationId;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.MediaType.APPLICATION_JSON_UTF_8;
 import static org.mockserver.model.PortBinding.portBinding;
@@ -563,6 +565,15 @@ public class MockServerClient implements Stoppable {
      *
      * @param expectationId the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
      */
+    public MockServerClient clear(String expectationId) {
+        return clear(expectationId(expectationId));
+    }
+
+    /**
+     * Clear all expectations and logs that match the http
+     *
+     * @param expectationId the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
+     */
     public MockServerClient clear(ExpectationId expectationId) {
         sendRequest(
             request()
@@ -590,6 +601,16 @@ public class MockServerClient implements Stoppable {
                 .withBody(requestDefinition != null ? requestDefinitionSerializer.serialize(requestDefinition) : "", StandardCharsets.UTF_8)
         );
         return clientClass.cast(this);
+    }
+
+    /**
+     * Clear expectations, logs or both that match the http
+     *
+     * @param expectationId the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
+     * @param type          the type to clear, EXPECTATION, LOG or BOTH
+     */
+    public MockServerClient clear(String expectationId, ClearType type) {
+        return clear(expectationId(expectationId), type);
     }
 
     /**
@@ -632,19 +653,44 @@ public class MockServerClient implements Stoppable {
             throw new IllegalArgumentException("verify(RequestDefinition...) requires a non-null non-empty array of RequestDefinition objects");
         }
 
-        VerificationSequence verificationSequence = new VerificationSequence().withRequests(requestDefinitions);
-        String result = sendRequest(
-            request()
-                .withMethod("PUT")
-                .withContentType(APPLICATION_JSON_UTF_8)
-                .withPath(calculatePath("verifySequence"))
-                .withBody(verificationSequenceSerializer.serialize(verificationSequence), StandardCharsets.UTF_8)
-        ).getBodyAsString();
+        try {
+            VerificationSequence verificationSequence = new VerificationSequence().withRequests(requestDefinitions);
+            String result = sendRequest(
+                request()
+                    .withMethod("PUT")
+                    .withContentType(APPLICATION_JSON_UTF_8)
+                    .withPath(calculatePath("verifySequence"))
+                    .withBody(verificationSequenceSerializer.serialize(verificationSequence), StandardCharsets.UTF_8)
+            ).getBodyAsString();
 
-        if (result != null && !result.isEmpty()) {
-            throw new AssertionError(result);
+            if (result != null && !result.isEmpty()) {
+                throw new AssertionError(result);
+            }
+        } catch (Throwable throwable) {
+            throw new AssertionError(throwable.getMessage());
         }
         return clientClass.cast(this);
+    }
+
+    /**
+     * Verify a list of requests have been sent in the order specified for example:
+     * <pre>
+     * mockServerClient
+     *  .verify(
+     *      request()
+     *          .withPath("/first_request")
+     *          .withBody("some_request_body"),
+     *      request()
+     *          .withPath("/second_request")
+     *          .withBody("some_request_body")
+     *  );
+     * </pre>
+     *
+     * @param expectationIds the http requests that must be matched for this verification to pass
+     * @throws AssertionError if the request has not been found
+     */
+    public MockServerClient verify(String... expectationIds) throws AssertionError {
+        return verify(Arrays.stream(expectationIds).map(ExpectationId::expectationId).toArray(ExpectationId[]::new));
     }
 
     /**
@@ -669,17 +715,21 @@ public class MockServerClient implements Stoppable {
             throw new IllegalArgumentException("verify(RequestDefinition...) requires a non-null non-empty array of RequestDefinition objects");
         }
 
-        VerificationSequence verificationSequence = new VerificationSequence().withExpectationIds(expectationIds);
-        String result = sendRequest(
-            request()
-                .withMethod("PUT")
-                .withContentType(APPLICATION_JSON_UTF_8)
-                .withPath(calculatePath("verifySequence"))
-                .withBody(verificationSequenceSerializer.serialize(verificationSequence), StandardCharsets.UTF_8)
-        ).getBodyAsString();
+        try {
+            VerificationSequence verificationSequence = new VerificationSequence().withExpectationIds(expectationIds);
+            String result = sendRequest(
+                request()
+                    .withMethod("PUT")
+                    .withContentType(APPLICATION_JSON_UTF_8)
+                    .withPath(calculatePath("verifySequence"))
+                    .withBody(verificationSequenceSerializer.serialize(verificationSequence), StandardCharsets.UTF_8)
+            ).getBodyAsString();
 
-        if (result != null && !result.isEmpty()) {
-            throw new AssertionError(result);
+            if (result != null && !result.isEmpty()) {
+                throw new AssertionError(result);
+            }
+        } catch (Throwable throwable) {
+            throw new AssertionError(throwable.getMessage());
         }
         return clientClass.cast(this);
     }
@@ -714,19 +764,49 @@ public class MockServerClient implements Stoppable {
             throw new IllegalArgumentException("verify(RequestDefinition, VerificationTimes) requires a non null VerificationTimes object");
         }
 
-        Verification verification = verification().withRequest(requestDefinition).withTimes(times);
-        String result = sendRequest(
-            request()
-                .withMethod("PUT")
-                .withContentType(APPLICATION_JSON_UTF_8)
-                .withPath(calculatePath("verify"))
-                .withBody(verificationSerializer.serialize(verification), StandardCharsets.UTF_8)
-        ).getBodyAsString();
+        try {
+            Verification verification = verification().withRequest(requestDefinition).withTimes(times);
+            String result = sendRequest(
+                request()
+                    .withMethod("PUT")
+                    .withContentType(APPLICATION_JSON_UTF_8)
+                    .withPath(calculatePath("verify"))
+                    .withBody(verificationSerializer.serialize(verification), StandardCharsets.UTF_8)
+            ).getBodyAsString();
 
-        if (result != null && !result.isEmpty()) {
-            throw new AssertionError(result);
+            if (result != null && !result.isEmpty()) {
+                throw new AssertionError(result);
+            }
+        } catch (Throwable throwable) {
+            throw new AssertionError(throwable.getMessage());
         }
         return clientClass.cast(this);
+    }
+
+    /**
+     * Verify a request has been sent for example:
+     * <pre>
+     * mockServerClient
+     *  .verify(
+     *      request()
+     *          .withPath("/some_path")
+     *          .withBody("some_request_body"),
+     *      VerificationTimes.exactly(3)
+     *  );
+     * </pre>
+     * VerificationTimes supports multiple static factory methods:
+     * <p>
+     * once()      - verify the request was only received once
+     * exactly(n)  - verify the request was only received exactly n times
+     * atLeast(n)  - verify the request was only received at least n times
+     *
+     * @param expectationId the http request that must be matched for this verification to pass
+     * @param times         the number of times this request must be matched
+     * @throws AssertionError if the request has not been found
+     */
+    @SuppressWarnings("DuplicatedCode")
+    public MockServerClient verify(String expectationId, VerificationTimes times) throws AssertionError {
+        return verify(expectationId(expectationId), times);
     }
 
     /**
@@ -759,17 +839,21 @@ public class MockServerClient implements Stoppable {
             throw new IllegalArgumentException("verify(RequestDefinition, VerificationTimes) requires a non null VerificationTimes object");
         }
 
-        Verification verification = verification().withExpectationId(expectationId).withTimes(times);
-        String result = sendRequest(
-            request()
-                .withMethod("PUT")
-                .withContentType(APPLICATION_JSON_UTF_8)
-                .withPath(calculatePath("verify"))
-                .withBody(verificationSerializer.serialize(verification), StandardCharsets.UTF_8)
-        ).getBodyAsString();
+        try {
+            Verification verification = verification().withExpectationId(expectationId).withTimes(times);
+            String result = sendRequest(
+                request()
+                    .withMethod("PUT")
+                    .withContentType(APPLICATION_JSON_UTF_8)
+                    .withPath(calculatePath("verify"))
+                    .withBody(verificationSerializer.serialize(verification), StandardCharsets.UTF_8)
+            ).getBodyAsString();
 
-        if (result != null && !result.isEmpty()) {
-            throw new AssertionError(result);
+            if (result != null && !result.isEmpty()) {
+                throw new AssertionError(result);
+            }
+        } catch (Throwable throwable) {
+            throw new AssertionError(throwable.getMessage());
         }
         return clientClass.cast(this);
     }
@@ -781,17 +865,21 @@ public class MockServerClient implements Stoppable {
      */
     @SuppressWarnings({"DuplicatedCode", "UnusedReturnValue"})
     public MockServerClient verifyZeroInteractions() throws AssertionError {
-        Verification verification = verification().withRequest(request()).withTimes(exactly(0));
-        String result = sendRequest(
-            request()
-                .withMethod("PUT")
-                .withContentType(APPLICATION_JSON_UTF_8)
-                .withPath(calculatePath("verify"))
-                .withBody(verificationSerializer.serialize(verification), StandardCharsets.UTF_8)
-        ).getBodyAsString();
+        try {
+            Verification verification = verification().withRequest(request()).withTimes(exactly(0));
+            String result = sendRequest(
+                request()
+                    .withMethod("PUT")
+                    .withContentType(APPLICATION_JSON_UTF_8)
+                    .withPath(calculatePath("verify"))
+                    .withBody(verificationSerializer.serialize(verification), StandardCharsets.UTF_8)
+            ).getBodyAsString();
 
-        if (result != null && !result.isEmpty()) {
-            throw new AssertionError(result);
+            if (result != null && !result.isEmpty()) {
+                throw new AssertionError(result);
+            }
+        } catch (Throwable throwable) {
+            throw new AssertionError(throwable.getMessage());
         }
         return clientClass.cast(this);
     }

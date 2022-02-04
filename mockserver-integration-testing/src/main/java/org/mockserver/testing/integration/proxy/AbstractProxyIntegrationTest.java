@@ -902,7 +902,7 @@ public abstract class AbstractProxyIntegrationTest {
             "   - $.keepAlive: string found, boolean expected\n" +
             "   - $.method: boolean found, string expected\n" +
             "   - $.path: integer found, string expected\n" +
-            "   - $.specUrlOrPayload: is missing but it is required" + NEW_LINE +
+            "   - $.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher" + NEW_LINE +
             "  " + NEW_LINE +
             "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  ")));
     }

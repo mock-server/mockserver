@@ -244,7 +244,8 @@ public class ExpectationSerializerIntegrationTest {
                 "" + NEW_LINE +
                 " schema validation errors:" + NEW_LINE +
                 "" + NEW_LINE +
-                "  2 errors:" + NEW_LINE +
+                "  3 errors:" + NEW_LINE +
+                "   - $.httpRequest.extra_field: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
                 "   - $.httpRequest.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher" + NEW_LINE +
                 "   - $.httpResponse.extra_field: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
                 "  " + NEW_LINE +
@@ -370,7 +371,8 @@ public class ExpectationSerializerIntegrationTest {
                 "  " + NEW_LINE +
                 "   schema validation errors:" + NEW_LINE +
                 "  " + NEW_LINE +
-                "    2 errors:" + NEW_LINE +
+                "    3 errors:" + NEW_LINE +
+                "     - $.httpRequest.extra_field: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
                 "     - $.httpRequest.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher" + NEW_LINE +
                 "     - $.httpResponse.extra_field: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
                 "    " + NEW_LINE +
@@ -391,7 +393,8 @@ public class ExpectationSerializerIntegrationTest {
                 "  " + NEW_LINE +
                 "   schema validation errors:" + NEW_LINE +
                 "  " + NEW_LINE +
-                "    2 errors:" + NEW_LINE +
+                "    3 errors:" + NEW_LINE +
+                "     - $.httpRequest.extra_field: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
                 "     - $.httpRequest.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher" + NEW_LINE +
                 "     - $.httpResponse.extra_field: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
                 "    " + NEW_LINE +
@@ -412,7 +415,8 @@ public class ExpectationSerializerIntegrationTest {
                 "  " + NEW_LINE +
                 "   schema validation errors:" + NEW_LINE +
                 "  " + NEW_LINE +
-                "    2 errors:" + NEW_LINE +
+                "    3 errors:" + NEW_LINE +
+                "     - $.httpRequest.extra_field: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
                 "     - $.httpRequest.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher" + NEW_LINE +
                 "     - $.httpResponse.extra_field: is not defined in the schema and the schema does not allow additional properties" + NEW_LINE +
                 "    " + NEW_LINE +

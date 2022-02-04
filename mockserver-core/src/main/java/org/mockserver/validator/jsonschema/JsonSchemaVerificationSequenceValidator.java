@@ -1,6 +1,7 @@
 package org.mockserver.validator.jsonschema;
 
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.verify.VerificationSequence;
 
 /**
  * @author jamesdbloom
@@ -10,6 +11,7 @@ public class JsonSchemaVerificationSequenceValidator extends JsonSchemaValidator
     private JsonSchemaVerificationSequenceValidator(MockServerLogger mockServerLogger) {
         super(
             mockServerLogger,
+            VerificationSequence.class,
             "org/mockserver/model/schema/",
             "verificationSequence",
             "expectationId",

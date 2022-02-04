@@ -1,6 +1,7 @@
 package org.mockserver.validator.jsonschema;
 
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.RequestDefinition;
 
 /**
  * @author jamesdbloom
@@ -10,6 +11,7 @@ public class JsonSchemaRequestDefinitionValidator extends JsonSchemaValidator {
     private JsonSchemaRequestDefinitionValidator(MockServerLogger mockServerLogger) {
         super(
             mockServerLogger,
+            RequestDefinition.class,
             "org/mockserver/model/schema/",
             "requestDefinition",
             "httpRequest",

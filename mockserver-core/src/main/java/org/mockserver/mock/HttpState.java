@@ -23,6 +23,7 @@ import org.slf4j.event.Level;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -129,13 +130,19 @@ public class HttpState {
         RequestDefinition requestDefinition = null;
         if (isNotBlank(request.getBodyAsString())) {
             String body = request.getBodyAsJsonOrXmlString();
+            ExpectationId expectationId = null;
             try {
-                requestDefinition = resolveExpectationId(getExpectationIdSerializer().deserialize(body));
-            } catch (IllegalArgumentException ignore) {
+                expectationId = getExpectationIdSerializer().deserialize(body);
+            } catch (Throwable throwable) {
                 // assume not expectationId
                 requestDefinition = getRequestDefinitionSerializer().deserialize(body);
-                requestDefinition.withLogCorrelationId(logCorrelationId);
             }
+            if (expectationId != null) {
+                requestDefinition = resolveExpectationId(expectationId);
+            }
+        }
+        if (requestDefinition != null) {
+            requestDefinition.withLogCorrelationId(logCorrelationId);
         }
         try {
             ClearType type = ClearType.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "ALL"));
@@ -166,17 +173,15 @@ public class HttpState {
 
     private RequestDefinition resolveExpectationId(ExpectationId expectationId) {
         return requestMatchers
-            .retrieveExpectations(expectationId)
+            .retrieveRequestDefinitions(Collections.singletonList(expectationId))
             .findFirst()
-            .map(Expectation::getHttpRequest)
             .orElse(null);
     }
 
-    private RequestDefinition[] resolveExpectationIds(ExpectationId... expectationId) {
+    private List<RequestDefinition> resolveExpectationIds(List<ExpectationId> expectationIds) {
         return requestMatchers
-            .retrieveExpectations(expectationId)
-            .map(Expectation::getHttpRequest)
-            .toArray(RequestDefinition[]::new);
+            .retrieveRequestDefinitions(expectationIds)
+            .collect(Collectors.toList());
     }
 
     public void reset() {
@@ -493,9 +498,11 @@ public class HttpState {
                 );
                 if (iae.getMessage().contains(RetrieveType.class.getSimpleName())) {
                     throw new IllegalArgumentException("\"" + request.getFirstQueryStringParameter("type") + "\" is not a valid value for \"type\" parameter, only the following values are supported " + Arrays.stream(RetrieveType.values()).map(input -> input.name().toLowerCase()).collect(Collectors.toList()));
-                } else {
+                }
+                if (iae.getMessage().contains(Format.class.getSimpleName())) {
                     throw new IllegalArgumentException("\"" + request.getFirstQueryStringParameter("format") + "\" is not a valid value for \"format\" parameter, only the following values are supported " + Arrays.stream(Format.values()).map(input -> input.name().toLowerCase()).collect(Collectors.toList()));
                 }
+                throw iae;
             }
         } else {
             return response().withStatusCode(200);
@@ -509,7 +516,7 @@ public class HttpState {
     }
 
     public void verify(Verification verification, Consumer<String> resultConsumer) {
-        if (verification.getHttpRequest() == null) {
+        if (verification.getExpectationId() != null) {
             verification.withRequest(resolveExpectationId(verification.getExpectationId()));
         }
         mockServerLog.verify(verification, resultConsumer);
@@ -521,11 +528,11 @@ public class HttpState {
         return result;
     }
 
-    public void verify(VerificationSequence verification, Consumer<String> resultConsumer) {
-        if (verification.getHttpRequests() == null) {
-            verification.withRequests(resolveExpectationIds(verification.getExpectationIds().toArray(new ExpectationId[0])));
+    public void verify(VerificationSequence verificationSequence, Consumer<String> resultConsumer) {
+        if (verificationSequence.getExpectationIds() != null && !verificationSequence.getExpectationIds().isEmpty()) {
+            verificationSequence.withRequests(resolveExpectationIds(verificationSequence.getExpectationIds()));
         }
-        mockServerLog.verify(verification, resultConsumer);
+        mockServerLog.verify(verificationSequence, resultConsumer);
     }
 
     public boolean handle(HttpRequest request, ResponseWriter responseWriter, boolean warDeployment) {

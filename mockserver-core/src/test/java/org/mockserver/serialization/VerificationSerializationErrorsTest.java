@@ -51,7 +51,6 @@ public class VerificationSerializationErrorsTest {
         // given
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("Exception while serializing verification to JSON with value {" + NEW_LINE +
-            "  \"httpRequest\" : { }," + NEW_LINE +
             "  \"times\" : {" + NEW_LINE +
             "    \"atLeast\" : 1" + NEW_LINE +
             "  }" + NEW_LINE +

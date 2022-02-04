@@ -329,6 +329,8 @@ components:
       properties:
         id:
           type: string
+      required:
+        - id
     OpenAPIExpectations:
       title: "list of open api expectations"
       oneOf:

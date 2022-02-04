@@ -1,5 +1,6 @@
 package org.mockserver.serialization.model;
 
+import org.mockserver.model.ExpectationId;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.ObjectWithJsonToString;
 import org.mockserver.model.OpenAPIDefinition;
@@ -14,6 +15,7 @@ import static org.mockserver.verify.VerificationTimes.once;
  */
 public class VerificationDTO extends ObjectWithJsonToString implements DTO<Verification> {
     private RequestDefinitionDTO httpRequest;
+    private ExpectationId expectationId;
     private VerificationTimesDTO times;
 
     public VerificationDTO(Verification verification) {
@@ -23,6 +25,7 @@ public class VerificationDTO extends ObjectWithJsonToString implements DTO<Verif
             } else if (verification.getHttpRequest() instanceof OpenAPIDefinition) {
                 httpRequest = new OpenAPIDefinitionDTO((OpenAPIDefinition) verification.getHttpRequest());
             }
+            expectationId = verification.getExpectationId();
             times = new VerificationTimesDTO(verification.getTimes());
         }
     }
@@ -32,7 +35,8 @@ public class VerificationDTO extends ObjectWithJsonToString implements DTO<Verif
 
     public Verification buildObject() {
         return verification()
-            .withRequest((httpRequest != null ? httpRequest.buildObject() : request()))
+            .withRequest((httpRequest != null ? httpRequest.buildObject() : null))
+            .withExpectationId(expectationId)
             .withTimes((times != null ? times.buildObject() : once()));
     }
 
@@ -42,6 +46,15 @@ public class VerificationDTO extends ObjectWithJsonToString implements DTO<Verif
 
     public VerificationDTO setHttpRequest(HttpRequestDTO httpRequest) {
         this.httpRequest = httpRequest;
+        return this;
+    }
+
+    public ExpectationId getExpectationId() {
+        return expectationId;
+    }
+
+    public VerificationDTO setExpectationId(ExpectationId expectationId) {
+        this.expectationId = expectationId;
         return this;
     }
 

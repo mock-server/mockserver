@@ -1,6 +1,7 @@
 package org.mockserver.mock;
 
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
+import org.mockserver.collections.CircularHashMap;
 import org.mockserver.collections.CircularPriorityQueue;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
@@ -19,6 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.maxExpectations;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
@@ -40,6 +42,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         httpRequestMatcher -> httpRequestMatcher.getExpectation() != null ? httpRequestMatcher.getExpectation().getSortableId() : NULL,
         httpRequestMatcher -> httpRequestMatcher.getExpectation() != null ? httpRequestMatcher.getExpectation().getId() : ""
     );
+    final CircularHashMap<String, RequestDefinition> expectationRequestDefinitions = new CircularHashMap<>(maxExpectations());
     private final MockServerLogger mockServerLogger;
     private final Scheduler scheduler;
     private WebSocketClientRegistry webSocketClientRegistry;
@@ -56,6 +59,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
     public Expectation add(Expectation expectation, Cause cause) {
         Expectation upsertedExpectation = null;
         if (expectation != null) {
+            expectationRequestDefinitions.put(expectation.getId(), expectation.getHttpRequest());
             upsertedExpectation = httpRequestMatchers
                 .getByKey(expectation.getId())
                 .map(httpRequestMatcher -> {
@@ -107,6 +111,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
             Arrays
                 .stream(expectations)
                 .forEach(expectation -> {
+                    expectationRequestDefinitions.put(expectation.getId(), expectation.getHttpRequest());
                     existingKeysForCause.remove(expectation.getId());
                     if (httpRequestMatchersByKey.containsKey(expectation.getId())) {
                         HttpRequestMatcher httpRequestMatcher = httpRequestMatchersByKey.get(expectation.getId());
@@ -310,13 +315,20 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         }
     }
 
-    public Stream<Expectation> retrieveExpectations(ExpectationId... expectationIds) {
-        return Arrays
-            .stream(expectationIds)
-            .map(expectationId -> httpRequestMatchers.getByKey(expectationId.getId()).map(HttpRequestMatcher::getExpectation))
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .filter(Expectation::isActive);
+    public Stream<RequestDefinition> retrieveRequestDefinitions(List<ExpectationId> expectationIds) {
+        return expectationIds
+            .stream()
+            .map(expectationId -> {
+                if (isBlank(expectationId.getId())) {
+                    throw new IllegalArgumentException("No expectation id specified found \"" + expectationId.getId() + "\"");
+                }
+                if (expectationRequestDefinitions.containsKey(expectationId.getId())) {
+                    return expectationRequestDefinitions.get(expectationId.getId());
+                } else {
+                    throw new IllegalArgumentException("No expectation found with id " + expectationId.getId());
+                }
+            })
+            .filter(Objects::nonNull);
     }
 
     public List<Expectation> retrieveActiveExpectations(RequestDefinition requestDefinition) {

@@ -30,6 +30,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
+import static org.junit.Assert.assertThrows;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.once;
@@ -1220,6 +1221,61 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
+    public void shouldVerifyReceivedRequestsByExpectationId() {
+        // when
+        Expectation firstExpectation = mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path")), exactly(2)
+            )
+            .respond(
+                response()
+                    .withBody("some_body")
+            )[0];
+        Expectation secondExpectation = mockServerClient
+            .when(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("some_other_path")), exactly(2)
+            )
+            .respond(
+                response()
+                    .withBody("some_body")
+            )[0];
+
+        // when
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+
+        // then
+        mockServerClient.verify(firstExpectation.getId(), VerificationTimes.atLeast(1));
+        mockServerClient.verify(firstExpectation.getId(), VerificationTimes.exactly(2));
+        mockServerClient.verify(secondExpectation.getId(), VerificationTimes.never());
+        AssertionError firstAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(secondExpectation.getId(), VerificationTimes.atLeast(1)));
+        assertThat(firstAssertionError.getMessage(), startsWith("Request not found at least once"));
+        AssertionError secondAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(UUIDService.neverFixedUUID(), VerificationTimes.atLeast(1)));
+        assertThat(secondAssertionError.getMessage(), startsWith("No expectation found with id "));
+    }
+
+    @Test
     public void shouldVerifyNotReceivedRequestWithEmptyBody() {
         // when
         mockServerClient
@@ -1383,6 +1439,45 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
         mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")));
         mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_two")), request(calculatePath("some_path_three")));
+    }
+
+    @Test
+    public void shouldVerifySequenceOfRequestsReceivedByExceptionId() {
+        // when
+        Expectation firstExpectation = mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(6)).respond(response().withBody("some_body"))[0];
+        Expectation secondExpectation = mockServerClient.when(request().withPath(calculatePath("some_other_path.*")), exactly(6)).respond(response().withBody("some_body"))[0];
+
+        // then
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request().withPath(calculatePath("some_path_one")),
+                headersToIgnore
+            )
+        );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request().withPath(calculatePath("some_path_two")),
+                headersToIgnore
+            )
+        );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request().withPath(calculatePath("some_path_three")),
+                headersToIgnore
+            )
+        );
+        mockServerClient.verify(firstExpectation.getId());
+        mockServerClient.verify(firstExpectation.getId(), firstExpectation.getId());
+        mockServerClient.verify(firstExpectation.getId(), firstExpectation.getId(), firstExpectation.getId());
+        AssertionError firstAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(firstExpectation.getId(), firstExpectation.getId(), firstExpectation.getId(), firstExpectation.getId(), firstExpectation.getId(), firstExpectation.getId()));
+        assertThat(firstAssertionError.getMessage(), startsWith("Request sequence not found"));
+        AssertionError secondAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(secondExpectation.getId()));
+        assertThat(secondAssertionError.getMessage(), startsWith("Request sequence not found"));
+        AssertionError thirdAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(UUIDService.neverFixedUUID(), UUIDService.neverFixedUUID()));
+        assertThat(thirdAssertionError.getMessage(), startsWith("No expectation found with id "));
     }
 
     @Test
@@ -2282,7 +2377,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             "   - $.keepAlive: string found, boolean expected\n" +
             "   - $.method: boolean found, string expected\n" +
             "   - $.path: integer found, string expected\n" +
-            "   - $.specUrlOrPayload: is missing but it is required" + NEW_LINE +
+            "   - $.specUrlOrPayload: is missing, but is required, if specifying OpenAPI request matcher" + NEW_LINE +
             "  " + NEW_LINE +
             "  " + OPEN_API_SPECIFICATION_URL.replaceAll(NEW_LINE, NEW_LINE + "  ")));
     }
