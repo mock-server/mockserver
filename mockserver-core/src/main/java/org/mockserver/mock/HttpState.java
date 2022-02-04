@@ -1,5 +1,6 @@
 package org.mockserver.mock;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.MockServerEventLog;
@@ -246,6 +247,15 @@ public class HttpState {
             return null;
         } else {
             return requestMatchers.firstMatchingExpectation(request);
+        }
+    }
+
+    @VisibleForTesting
+    public List<Expectation> allMatchingExpectation(HttpRequest request) {
+        if (requestMatchers.isEmpty()) {
+            return Collections.emptyList();
+        } else {
+            return requestMatchers.retrieveActiveExpectations(request);
         }
     }
 

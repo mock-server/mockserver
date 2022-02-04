@@ -25,7 +25,6 @@ import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.*;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
-import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.event.Level;
@@ -42,8 +41,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.mockito.Mockito.mock;
@@ -54,6 +52,7 @@ import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE_FORMAT;
 import static org.mockserver.mock.Expectation.when;
 import static org.mockserver.mock.OpenAPIExpectation.openAPIExpectation;
+import static org.mockserver.model.ExpectationId.expectationId;
 import static org.mockserver.model.Format.LOG_ENTRIES;
 import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpRequest.request;
@@ -71,8 +70,8 @@ public class HttpStateTest {
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();
-    private final HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
-    private final HttpRequestToJavaSerializer httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
+    private final RequestDefinitionSerializer requestDefinitionSerializer = new RequestDefinitionSerializer(new MockServerLogger());
+    private final ExpectationIdSerializer expectationIdSerializer = new ExpectationIdSerializer(new MockServerLogger());
     private final ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
     private final OpenAPIExpectationSerializer openAPIExpectationSerializer = new OpenAPIExpectationSerializer(new MockServerLogger());
     private final ExpectationToJavaSerializer expectationToJavaSerializer = new ExpectationToJavaSerializer();
@@ -118,14 +117,14 @@ public class HttpStateTest {
         HttpRequest expectationRetrieveRequestsRequest = request("/mockserver/retrieve")
             .withMethod("PUT")
             .withBody(
-                httpRequestSerializer.serialize(request("request_one"))
+                requestDefinitionSerializer.serialize(request("request_one"))
             );
         boolean handle = httpState.handle(expectationRetrieveRequestsRequest, responseWriter, false);
 
         // then
         assertThat(handle, is(true));
         assertThat(responseWriter.response.getStatusCode(), is(200));
-        assertThat(responseWriter.response.getBodyAsString(), is(httpRequestSerializer.serialize(true, Collections.singletonList(
+        assertThat(responseWriter.response.getBodyAsString(), is(requestDefinitionSerializer.serialize(true, Collections.singletonList(
             request("request_one")
         ))));
     }
@@ -142,7 +141,7 @@ public class HttpStateTest {
         HttpRequest clearRequest = request("/mockserver/clear")
             .withMethod("PUT")
             .withBody(
-                httpRequestSerializer.serialize(request("request_one"))
+                requestDefinitionSerializer.serialize(request("request_one"))
             );
         FakeResponseWriter responseWriter = new FakeResponseWriter();
 
@@ -157,7 +156,7 @@ public class HttpStateTest {
         assertThat(httpState.retrieve(request("/mockserver/retrieve")
             .withMethod("PUT")
             .withBody(
-                httpRequestSerializer.serialize(request("request_one"))
+                requestDefinitionSerializer.serialize(request("request_one"))
             )), is(response().withBody("[]", MediaType.JSON_UTF_8).withStatusCode(200)));
     }
 
@@ -225,7 +224,7 @@ public class HttpStateTest {
             .withMethod("PUT")
             .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
             .withBody(
-                httpRequestSerializer.serialize(request("request_one"))
+                requestDefinitionSerializer.serialize(request("request_one"))
             );
         boolean handle = httpState.handle(expectationRetrieveExpectationsRequest, responseWriter, false);
 
@@ -251,7 +250,7 @@ public class HttpStateTest {
                 .withMethod("PUT")
                 .withQueryStringParameter("type", RetrieveType.LOGS.name())
                 .withBody(
-                    httpRequestSerializer.serialize(request("request_one"))
+                    requestDefinitionSerializer.serialize(request("request_one"))
                 );
             boolean handle = httpState.handle(retrieveLogRequest, responseWriter, false);
 
@@ -480,7 +479,7 @@ public class HttpStateTest {
             .withMethod("PUT")
             .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
             .withBody(
-                httpRequestSerializer.serialize(request("request_one"))
+                requestDefinitionSerializer.serialize(request("request_one"))
             );
         FakeResponseWriter responseWriter = new FakeResponseWriter();
 
@@ -966,7 +965,7 @@ public class HttpStateTest {
                 .clear(
                     request()
                         .withQueryStringParameter("type", "all")
-                        .withBody(httpRequestSerializer.serialize(request("request_four")))
+                        .withBody(requestDefinitionSerializer.serialize(request("request_four")))
                 );
 
             // then - retrieves correct state
@@ -1197,16 +1196,16 @@ public class HttpStateTest {
             .clear(
                 request()
                     .withQueryStringParameter("type", "expectations")
-                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+                    .withBody(requestDefinitionSerializer.serialize(request("request_one")))
             );
 
-        // then - correct log entries removed
+        // then - correct log entries not removed
         HttpResponse retrieve = httpState
             .retrieve(
                 request()
                     .withQueryStringParameter("type", REQUEST_RESPONSES.name())
                     .withQueryStringParameter("format", LOG_ENTRIES.name())
-                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+                    .withBody(requestDefinitionSerializer.serialize(request("request_one")))
             );
         assertThat(
             retrieve.getBodyAsString(),
@@ -1220,6 +1219,114 @@ public class HttpStateTest {
         // then - correct expectations removed
         assertThat(httpState.firstMatchingExpectation(request("request_one")), nullValue());
         assertThat(httpState.firstMatchingExpectation(request("request_two")), is(new Expectation(request("request_two")).thenRespond(response("response_two"))));
+    }
+
+    @Test
+    public void shouldClearExpectationsById() {
+        // given
+        httpState.add(new Expectation(request("request.*")).withId("one").thenRespond(response("response_one")));
+        httpState.add(new Expectation(request("request.*")).withId("two").thenRespond(response("response_two")));
+        httpState.log(
+            new LogEntry()
+                .setHttpRequest(request("request_one"))
+                .setHttpResponse(response("response_one"))
+                .setType(EXPECTATION_RESPONSE)
+        );
+        httpState.log(
+            new LogEntry()
+                .setHttpRequest(request("request_two"))
+                .setHttpError(error().withResponseBytes("response_two".getBytes(UTF_8)))
+                .setType(EXPECTATION_RESPONSE)
+        );
+
+        // then
+        assertThat(httpState.allMatchingExpectation(request()), containsInAnyOrder(
+            new Expectation(request("request.*")).thenRespond(response("response_one")),
+            new Expectation(request("request.*")).withId("two").thenRespond(response("response_two"))
+        ));
+
+        // when
+        httpState
+            .clear(
+                request()
+                    .withQueryStringParameter("type", "expectations")
+                    .withBody(expectationIdSerializer.serialize(expectationId("one")))
+            );
+
+        // then - correct log entries not removed
+        HttpResponse retrieve = httpState
+            .retrieve(
+                request()
+                    .withQueryStringParameter("type", REQUEST_RESPONSES.name())
+                    .withQueryStringParameter("format", LOG_ENTRIES.name())
+                    .withBody(requestDefinitionSerializer.serialize(request("request_one")))
+            );
+        assertThat(
+            retrieve.getBodyAsString(),
+            is(new LogEntrySerializer(new MockServerLogger()).serialize(Collections.singletonList(
+                new LogEntry()
+                    .setHttpRequest(request("request_one"))
+                    .setHttpResponse(response("response_one"))
+                    .setType(EXPECTATION_RESPONSE)
+            )))
+        );
+        // then - correct expectations removed
+        assertThat(httpState.allMatchingExpectation(request()), containsInAnyOrder(
+            new Expectation(request("request.*")).withId("two").thenRespond(response("response_two"))
+        ));
+    }
+
+    @Test
+    public void shouldClearAllExpectationsByRequestMatcher() {
+        // given
+        httpState.add(new Expectation(request("request.*")).withId("one").thenRespond(response("response_one")));
+        httpState.add(new Expectation(request("request.*")).withId("two").thenRespond(response("response_two")));
+        httpState.log(
+            new LogEntry()
+                .setHttpRequest(request("request_one"))
+                .setHttpResponse(response("response_one"))
+                .setType(EXPECTATION_RESPONSE)
+        );
+        httpState.log(
+            new LogEntry()
+                .setHttpRequest(request("request_two"))
+                .setHttpError(error().withResponseBytes("response_two".getBytes(UTF_8)))
+                .setType(EXPECTATION_RESPONSE)
+        );
+
+        // then
+        assertThat(httpState.allMatchingExpectation(request()), containsInAnyOrder(
+            new Expectation(request("request.*")).thenRespond(response("response_one")),
+            new Expectation(request("request.*")).withId("two").thenRespond(response("response_two"))
+        ));
+
+        // when
+        httpState
+            .clear(
+                request()
+                    .withQueryStringParameter("type", "expectations")
+                    .withBody(requestDefinitionSerializer.serialize(request("request.*")))
+            );
+
+        // then - correct log entries not removed
+        HttpResponse retrieve = httpState
+            .retrieve(
+                request()
+                    .withQueryStringParameter("type", REQUEST_RESPONSES.name())
+                    .withQueryStringParameter("format", LOG_ENTRIES.name())
+                    .withBody(requestDefinitionSerializer.serialize(request("request_one")))
+            );
+        assertThat(
+            retrieve.getBodyAsString(),
+            is(new LogEntrySerializer(new MockServerLogger()).serialize(Collections.singletonList(
+                new LogEntry()
+                    .setHttpRequest(request("request_one"))
+                    .setHttpResponse(response("response_one"))
+                    .setType(EXPECTATION_RESPONSE)
+            )))
+        );
+        // then - correct expectations removed
+        assertThat(httpState.allMatchingExpectation(request()), emptyIterable());
     }
 
     @Test
@@ -1255,12 +1362,12 @@ public class HttpStateTest {
         HttpResponse response = httpState
             .retrieve(
                 request()
-                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+                    .withBody(requestDefinitionSerializer.serialize(request("request_one")))
             );
 
         // then
         assertThat(response,
-            is(response().withBody(httpRequestSerializer.serialize(Arrays.asList(
+            is(response().withBody(requestDefinitionSerializer.serialize(Arrays.asList(
                 request("request_one"),
                 request("request_one")
             )), MediaType.JSON_UTF_8).withStatusCode(200))
@@ -1303,7 +1410,7 @@ public class HttpStateTest {
             .retrieve(
                 request()
                     .withQueryStringParameter("format", "log_entries")
-                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+                    .withBody(requestDefinitionSerializer.serialize(request("request_one")))
             );
 
         // then
@@ -1349,12 +1456,12 @@ public class HttpStateTest {
             .retrieve(
                 request()
                     .withQueryStringParameter("format", "java")
-                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+                    .withBody(requestDefinitionSerializer.serialize(request("request_one")))
             );
 
         // then
         assertThat(response,
-            is(response().withBody(httpRequestSerializer.serialize(Arrays.asList(
+            is(response().withBody(requestDefinitionSerializer.serialize(Arrays.asList(
                 request("request_one"),
                 request("request_one")
             )), MediaType.create("application", "java").withCharset(UTF_8)).withStatusCode(200))
@@ -1388,7 +1495,7 @@ public class HttpStateTest {
             .retrieve(
                 request()
                     .withQueryStringParameter("type", "request_responses")
-                    .withBody(httpRequestSerializer.serialize(request("request_.*")))
+                    .withBody(requestDefinitionSerializer.serialize(request("request_.*")))
             );
 
         // then
@@ -1440,7 +1547,7 @@ public class HttpStateTest {
                 request()
                     .withQueryStringParameter("type", "request_responses")
                     .withQueryStringParameter("format", "log_entries")
-                    .withBody(httpRequestSerializer.serialize(request("request_.*")))
+                    .withBody(requestDefinitionSerializer.serialize(request("request_.*")))
             );
 
         // then
@@ -1534,7 +1641,7 @@ public class HttpStateTest {
                 request()
                     .withQueryStringParameter("format", "java")
                     .withQueryStringParameter("type", "request_responses")
-                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+                    .withBody(requestDefinitionSerializer.serialize(request("request_one")))
             );
 
         // then
@@ -1641,7 +1748,7 @@ public class HttpStateTest {
                 request()
                     .withQueryStringParameter("type", "recorded_expectations")
                     .withQueryStringParameter("format", "java")
-                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+                    .withBody(requestDefinitionSerializer.serialize(request("request_one")))
             );
 
         // then
@@ -1667,7 +1774,7 @@ public class HttpStateTest {
             .retrieve(
                 request()
                     .withQueryStringParameter("type", "active_expectations")
-                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+                    .withBody(requestDefinitionSerializer.serialize(request("request_one")))
             );
 
         // then
@@ -1695,7 +1802,7 @@ public class HttpStateTest {
                 request()
                     .withQueryStringParameter("type", "active_expectations")
                     .withQueryStringParameter("format", "java")
-                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+                    .withBody(requestDefinitionSerializer.serialize(request("request_one")))
             );
 
         // then
@@ -1930,7 +2037,7 @@ public class HttpStateTest {
                 .retrieve(
                     request()
                         .withQueryStringParameter("type", "logs")
-                        .withBody(httpRequestSerializer.serialize(request("request_one")))
+                        .withBody(requestDefinitionSerializer.serialize(request("request_one")))
                 );
 
             // then
