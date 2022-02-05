@@ -109,45 +109,50 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                 .filter(entry -> entry.getValue().getSource().equals(cause))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
+            Set<String> addedIds = new HashSet<>();
             Arrays
                 .stream(expectations)
                 .forEach(expectation -> {
-                    expectationRequestDefinitions.put(expectation.getId(), expectation.getHttpRequest());
-                    existingKeysForCause.remove(expectation.getId());
-                    if (httpRequestMatchersByKey.containsKey(expectation.getId())) {
-                        HttpRequestMatcher httpRequestMatcher = httpRequestMatchersByKey.get(expectation.getId());
-                        // update source to new cause
-                        httpRequestMatcher.withSource(cause);
-                        if (httpRequestMatcher.getExpectation() != null && httpRequestMatcher.getExpectation().getAction() != null) {
-                            Metrics.decrement(httpRequestMatcher.getExpectation().getAction().getType());
-                        }
-                        if (httpRequestMatcher.getExpectation() != null) {
-                            // propagate created time from previous entry to avoid re-ordering on update
-                            expectation.withCreated(httpRequestMatcher.getExpectation().getCreated());
-                        }
-                        httpRequestMatchers.removePriorityKey(httpRequestMatcher);
-                        if (httpRequestMatcher.update(expectation)) {
-                            httpRequestMatchers.addPriorityKey(httpRequestMatcher);
-                            numberOfChanges.getAndIncrement();
-                            if (MockServerLogger.isEnabled(Level.INFO)) {
-                                mockServerLogger.logEvent(
-                                    new LogEntry()
-                                        .setType(UPDATED_EXPECTATION)
-                                        .setLogLevel(Level.INFO)
-                                        .setHttpRequest(expectation.getHttpRequest())
-                                        .setMessageFormat(UPDATED_EXPECTATION_MESSAGE_FORMAT)
-                                        .setArguments(expectation.clone(), expectation.getId())
-                                );
+                    // ensure duplicate ids are skipped in input array
+                    if (!addedIds.contains(expectation.getId())) {
+                        addedIds.add(expectation.getId());
+                        expectationRequestDefinitions.put(expectation.getId(), expectation.getHttpRequest());
+                        existingKeysForCause.remove(expectation.getId());
+                        if (httpRequestMatchersByKey.containsKey(expectation.getId())) {
+                            HttpRequestMatcher httpRequestMatcher = httpRequestMatchersByKey.get(expectation.getId());
+                            // update source to new cause
+                            httpRequestMatcher.withSource(cause);
+                            if (httpRequestMatcher.getExpectation() != null && httpRequestMatcher.getExpectation().getAction() != null) {
+                                Metrics.decrement(httpRequestMatcher.getExpectation().getAction().getType());
                             }
-                            if (expectation.getAction() != null) {
-                                Metrics.increment(expectation.getAction().getType());
+                            if (httpRequestMatcher.getExpectation() != null) {
+                                // propagate created time from previous entry to avoid re-ordering on update
+                                expectation.withCreated(httpRequestMatcher.getExpectation().getCreated());
+                            }
+                            httpRequestMatchers.removePriorityKey(httpRequestMatcher);
+                            if (httpRequestMatcher.update(expectation)) {
+                                httpRequestMatchers.addPriorityKey(httpRequestMatcher);
+                                numberOfChanges.getAndIncrement();
+                                if (MockServerLogger.isEnabled(Level.INFO)) {
+                                    mockServerLogger.logEvent(
+                                        new LogEntry()
+                                            .setType(UPDATED_EXPECTATION)
+                                            .setLogLevel(Level.INFO)
+                                            .setHttpRequest(expectation.getHttpRequest())
+                                            .setMessageFormat(UPDATED_EXPECTATION_MESSAGE_FORMAT)
+                                            .setArguments(expectation.clone(), expectation.getId())
+                                    );
+                                }
+                                if (expectation.getAction() != null) {
+                                    Metrics.increment(expectation.getAction().getType());
+                                }
+                            } else {
+                                httpRequestMatchers.addPriorityKey(httpRequestMatcher);
                             }
                         } else {
-                            httpRequestMatchers.addPriorityKey(httpRequestMatcher);
+                            addPrioritisedExpectation(expectation, cause);
+                            numberOfChanges.getAndIncrement();
                         }
-                    } else {
-                        addPrioritisedExpectation(expectation, cause);
-                        numberOfChanges.getAndIncrement();
                     }
                 });
             existingKeysForCause
