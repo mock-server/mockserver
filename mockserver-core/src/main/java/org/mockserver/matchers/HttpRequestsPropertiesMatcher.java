@@ -70,7 +70,7 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                 httpRequests = new ArrayList<>();
                 OpenAPISerialiser openAPISerialiser = new OpenAPISerialiser(mockServerLogger);
                 try {
-                    OpenAPI openAPI = buildOpenAPI(openAPIDefinition.getSpecUrlOrPayload());
+                    OpenAPI openAPI = buildOpenAPI(openAPIDefinition.getSpecUrlOrPayload(), mockServerLogger);
                     final Map<String, List<Pair<String, Operation>>> stringListMap = openAPISerialiser.retrieveOperations(openAPI, openAPIDefinition.getOperationId());
                     stringListMap
                         .forEach((path, operations) -> operations

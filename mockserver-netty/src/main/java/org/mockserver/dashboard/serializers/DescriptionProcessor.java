@@ -3,6 +3,7 @@ package org.mockserver.dashboard.serializers;
 import io.swagger.v3.oas.models.OpenAPI;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.dashboard.model.DashboardLogEntryDTO;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.OpenAPIDefinition;
 
@@ -10,6 +11,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.openapi.OpenAPIParser.buildOpenAPI;
 
 public class DescriptionProcessor {
+
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger();
     private int maxHttpRequestLength;
     private int maxOpenAPILength;
     private int maxOpenAPIObjectLength;
@@ -54,7 +57,7 @@ public class DescriptionProcessor {
                     maxOpenAPILength = description.length();
                 }
             } else {
-                OpenAPI openAPI = buildOpenAPI(specUrlOrPayload);
+                OpenAPI openAPI = buildOpenAPI(specUrlOrPayload, MOCK_SERVER_LOGGER);
                 description = new RequestDefinitionObjectDescription(idMessage + "spec ", openAPI, operationId, this);
                 if (description.length() >= maxOpenAPIObjectLength) {
                     maxOpenAPIObjectLength = description.length();

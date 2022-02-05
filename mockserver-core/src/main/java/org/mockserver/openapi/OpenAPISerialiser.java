@@ -3,8 +3,6 @@ package org.mockserver.openapi;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
-import io.swagger.v3.oas.models.PathItem;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -32,7 +30,7 @@ public class OpenAPISerialiser {
     public String asString(OpenAPIDefinition openAPIDefinition) {
         try {
             if (isBlank(openAPIDefinition.getOperationId())) {
-                return OBJECT_WRITER.writeValueAsString(buildOpenAPI(openAPIDefinition.getSpecUrlOrPayload()));
+                return OBJECT_WRITER.writeValueAsString(buildOpenAPI(openAPIDefinition.getSpecUrlOrPayload(), mockServerLogger));
             } else {
                 Optional<Pair<String, Operation>> operation = retrieveOperation(openAPIDefinition.getSpecUrlOrPayload(), openAPIDefinition.getOperationId());
                 if (operation.isPresent()) {
@@ -52,7 +50,7 @@ public class OpenAPISerialiser {
     }
 
     public Optional<Pair<String, Operation>> retrieveOperation(String specUrlOrPayload, String operationId) {
-        return buildOpenAPI(specUrlOrPayload)
+        return buildOpenAPI(specUrlOrPayload, mockServerLogger)
             .getPaths()
             .values()
             .stream()

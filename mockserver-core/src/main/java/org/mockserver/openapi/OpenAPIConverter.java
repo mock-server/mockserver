@@ -38,7 +38,7 @@ public class OpenAPIConverter {
     }
 
     public List<Expectation> buildExpectations(String specUrlOrPayload, Map<String, String> operationsAndResponses) {
-        OpenAPI openAPI = buildOpenAPI(specUrlOrPayload);
+        OpenAPI openAPI = buildOpenAPI(specUrlOrPayload, mockServerLogger);
         return openAPI
             .getPaths()
             .values()
