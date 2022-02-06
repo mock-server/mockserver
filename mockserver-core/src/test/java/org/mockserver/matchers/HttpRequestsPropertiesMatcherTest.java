@@ -2,12 +2,14 @@ package org.mockserver.matchers;
 
 import org.junit.Test;
 import org.mockserver.file.FileReader;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.OpenAPIDefinition;
 import org.mockserver.uuid.UUIDService;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 import static junit.framework.TestCase.*;
@@ -23,6 +25,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.XmlBody.xml;
+import static org.slf4j.event.Level.ERROR;
 
 /**
  * @author jamesdbloom
@@ -200,31 +203,36 @@ public class HttpRequestsPropertiesMatcherTest {
         // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
 
-        try {
-            // when
-            httpRequestsPropertiesMatcher.update(new Expectation(
-                new OpenAPIDefinition()
-                    .withSpecUrlOrPayload("---" + NEW_LINE +
-                        "openapi: 3.0.0" + NEW_LINE +
-                        "paths:" + NEW_LINE +
-                        "  \"/somePath/{someParam}\":" + NEW_LINE +
-                        "    get:" + NEW_LINE +
-                        "      operationId: someOperation" + NEW_LINE +
-                        "      parameters:" + NEW_LINE +
-                        "        - in: path" + NEW_LINE +
-                        "          name: someParam" + NEW_LINE +
-                        "          required: true" + NEW_LINE +
-                        "          allowReserved: true" + NEW_LINE +
-                        "          schema:" + NEW_LINE +
-                        "            type: integer" + NEW_LINE +
-                        "            minimum: 1")
-            ));
 
-            // then
-            fail("expected exception");
-        } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec, allowReserved field is not supported on parameters, found on operation: \"someOperation\" method: \"GET\" parameter: \"someParam\" in: \"path\""));
-        }
+        // when
+        ArrayList<LogEntry> logEntries = new ArrayList<>();
+        OpenAPIDefinition requestDefinition = new OpenAPIDefinition()
+            .withSpecUrlOrPayload("---" + NEW_LINE +
+                "openapi: 3.0.0" + NEW_LINE +
+                "paths:" + NEW_LINE +
+                "  \"/somePath/{someParam}\":" + NEW_LINE +
+                "    get:" + NEW_LINE +
+                "      operationId: someOperation" + NEW_LINE +
+                "      parameters:" + NEW_LINE +
+                "        - in: path" + NEW_LINE +
+                "          name: someParam" + NEW_LINE +
+                "          required: true" + NEW_LINE +
+                "          allowReserved: true" + NEW_LINE +
+                "          schema:" + NEW_LINE +
+                "            type: integer" + NEW_LINE +
+                "            minimum: 1");
+        httpRequestsPropertiesMatcher.apply(requestDefinition, logEntries);
+
+        // then
+        assertThat(httpRequestsPropertiesMatcher.getHttpRequestPropertiesMatchers().size(), equalTo(0));
+        assertThat(logEntries.size(), equalTo(1));
+        assertThat(logEntries.get(0), equalTo(
+            new LogEntry()
+                .setEpochTime(logEntries.get(0).getEpochTime())
+                .setLogLevel(ERROR)
+                .setMessageFormat("Unable to load API spec, allowReserved field is not supported on parameters, found on operation: \"someOperation\" method: \"GET\" parameter: \"someParam\" in: \"path\" for open api:{}")
+                .setArguments(requestDefinition)
+        ));
     }
 
     // PATH PARAMETERS
@@ -2807,50 +2815,54 @@ public class HttpRequestsPropertiesMatcherTest {
         // given
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
 
-        try {
-            // when
-            httpRequestsPropertiesMatcher.update(new Expectation(
-                new OpenAPIDefinition()
-                    .withSpecUrlOrPayload("---" + NEW_LINE +
-                        "openapi: 3.0.0" + NEW_LINE +
-                        "paths:" + NEW_LINE +
-                        "  \"/somePath\":" + NEW_LINE +
-                        "    post:" + NEW_LINE +
-                        "      operationId: someOperation" + NEW_LINE +
-                        "      requestBody:" + NEW_LINE +
-                        "        required: true" + NEW_LINE +
-                        "        content:" + NEW_LINE +
-                        "          multipart/form-data:" + NEW_LINE +
-                        "            schema:" + NEW_LINE +
-                        "              type: object" + NEW_LINE +
-                        "              required:" + NEW_LINE +
-                        "                - id" + NEW_LINE +
-                        "                - name" + NEW_LINE +
-                        "              properties:" + NEW_LINE +
-                        "                id:" + NEW_LINE +
-                        "                  type: integer" + NEW_LINE +
-                        "                  format: int64" + NEW_LINE +
-                        "                name:" + NEW_LINE +
-                        "                  type: string" + NEW_LINE +
-                        "          application/xml:" + NEW_LINE +
-                        "            schema:" + NEW_LINE +
-                        "              type: object" + NEW_LINE +
-                        "              required:" + NEW_LINE +
-                        "                - id" + NEW_LINE +
-                        "                - name" + NEW_LINE +
-                        "              properties:" + NEW_LINE +
-                        "                id:" + NEW_LINE +
-                        "                  type: integer" + NEW_LINE +
-                        "                  format: int64" + NEW_LINE +
-                        "                name:" + NEW_LINE +
-                        "                  type: string" + NEW_LINE)
-            ));
+        // when
+        ArrayList<LogEntry> logEntries = new ArrayList<>();
+        OpenAPIDefinition requestDefinition = new OpenAPIDefinition()
+            .withSpecUrlOrPayload("---" + NEW_LINE +
+                "openapi: 3.0.0" + NEW_LINE +
+                "paths:" + NEW_LINE +
+                "  \"/somePath\":" + NEW_LINE +
+                "    post:" + NEW_LINE +
+                "      operationId: someOperation" + NEW_LINE +
+                "      requestBody:" + NEW_LINE +
+                "        required: true" + NEW_LINE +
+                "        content:" + NEW_LINE +
+                "          multipart/form-data:" + NEW_LINE +
+                "            schema:" + NEW_LINE +
+                "              type: object" + NEW_LINE +
+                "              required:" + NEW_LINE +
+                "                - id" + NEW_LINE +
+                "                - name" + NEW_LINE +
+                "              properties:" + NEW_LINE +
+                "                id:" + NEW_LINE +
+                "                  type: integer" + NEW_LINE +
+                "                  format: int64" + NEW_LINE +
+                "                name:" + NEW_LINE +
+                "                  type: string" + NEW_LINE +
+                "          application/xml:" + NEW_LINE +
+                "            schema:" + NEW_LINE +
+                "              type: object" + NEW_LINE +
+                "              required:" + NEW_LINE +
+                "                - id" + NEW_LINE +
+                "                - name" + NEW_LINE +
+                "              properties:" + NEW_LINE +
+                "                id:" + NEW_LINE +
+                "                  type: integer" + NEW_LINE +
+                "                  format: int64" + NEW_LINE +
+                "                name:" + NEW_LINE +
+                "                  type: string" + NEW_LINE);
+        httpRequestsPropertiesMatcher.apply(requestDefinition, logEntries);
 
-            // then
-            fail("expected exception");
-        } catch (IllegalArgumentException iae) {
-            assertThat(iae.getMessage(), is("Unable to load API spec, multipart form data is not supported on requestBody, found on operation: \"someOperation\" method: \"POST\""));
-        }
+        // then
+        assertThat(httpRequestsPropertiesMatcher.getHttpRequestPropertiesMatchers().size(), equalTo(1));
+        assertThat(logEntries.size(), equalTo(1));
+        assertThat(logEntries.get(0), equalTo(
+            new LogEntry()
+                .setEpochTime(logEntries.get(0).getEpochTime())
+                .setLogLevel(ERROR)
+                .setMessageFormat("multipart form data is not supported on requestBody, skipping operation:{}method:{}in open api:{}")
+                .setArguments("someOperation", "POST", requestDefinition)
+        ));
     }
 
     // - JSON BODY (via JsonSchema)

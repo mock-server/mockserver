@@ -1,6 +1,7 @@
 package org.mockserver.matchers;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
@@ -62,6 +63,11 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
 
     @Override
     public boolean apply(RequestDefinition requestDefinition) {
+        return apply(requestDefinition, new ArrayList<>());
+    }
+
+    @VisibleForTesting
+    public boolean apply(RequestDefinition requestDefinition, List<LogEntry> logEntries) {
         OpenAPIDefinition openAPIDefinition = requestDefinition instanceof OpenAPIDefinition ? (OpenAPIDefinition) requestDefinition : null;
         if (this.openAPIDefinition == null || !this.openAPIDefinition.equals(openAPIDefinition)) {
             this.openAPIDefinition = openAPIDefinition;
@@ -71,22 +77,41 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                 OpenAPISerialiser openAPISerialiser = new OpenAPISerialiser(mockServerLogger);
                 try {
                     OpenAPI openAPI = buildOpenAPI(openAPIDefinition.getSpecUrlOrPayload(), mockServerLogger);
-                    final Map<String, List<Pair<String, Operation>>> stringListMap = openAPISerialiser.retrieveOperations(openAPI, openAPIDefinition.getOperationId());
-                    stringListMap
-                        .forEach((path, operations) -> operations
-                            .forEach(methodOperationPair -> {
-                                Operation operation = methodOperationPair.getValue();
-                                if (operation.getRequestBody() != null && operation.getRequestBody().getContent() != null) {
-                                    operation.getRequestBody().getContent().forEach(handleRequestBody(openAPIDefinition, openAPI, path, methodOperationPair, Boolean.TRUE.equals(operation.getRequestBody().getRequired())));
-                                } else {
-                                    HttpRequest httpRequest = createHttpRequest(openAPIDefinition, openAPI, path, methodOperationPair);
-                                    addRequestMatcher(openAPIDefinition, methodOperationPair, httpRequest, "");
-                                }
-                            }));
+                    try {
+                        final Map<String, List<Pair<String, Operation>>> stringListMap = openAPISerialiser.retrieveOperations(openAPI, openAPIDefinition.getOperationId());
+                        stringListMap
+                            .forEach((path, operations) -> operations
+                                .forEach(methodOperationPair -> {
+                                    Operation operation = methodOperationPair.getValue();
+                                    if (operation.getRequestBody() != null && operation.getRequestBody().getContent() != null) {
+                                        operation.getRequestBody().getContent().forEach(handleRequestBody(openAPIDefinition, openAPI, path, methodOperationPair, Boolean.TRUE.equals(operation.getRequestBody().getRequired()), logEntries));
+                                    } else {
+                                        HttpRequest httpRequest = createHttpRequest(openAPIDefinition, openAPI, path, methodOperationPair);
+                                        try {
+                                            addRequestMatcher(openAPIDefinition, methodOperationPair, httpRequest, "");
+                                        } catch (Throwable throwable) {
+                                            logEntries.add(
+                                                new LogEntry()
+                                                    .setLogLevel(ERROR)
+                                                    .setMessageFormat("exception while creating adding request matcher for operation:{}method:{}in open api:{}")
+                                                    .setArguments(methodOperationPair.getRight().getOperationId(), methodOperationPair.getLeft(), openAPIDefinition)
+                                            );
+                                        }
+                                    }
+                                }));
+                    } catch (Throwable throwable) {
+                        logEntries.add(
+                            new LogEntry()
+                                .setLogLevel(ERROR)
+                                .setMessageFormat((StringUtils.isBlank(throwable.getMessage()) || !throwable.getMessage().contains(OPEN_API_LOAD_ERROR) ? OPEN_API_LOAD_ERROR + (isNotBlank(throwable.getMessage()) ? ", " : "") : "") + throwable.getMessage() + " for open api:{}")
+                                .setArguments(openAPIDefinition)
+                        );
+                    }
                 } catch (Throwable throwable) {
                     String message = (StringUtils.isBlank(throwable.getMessage()) || !throwable.getMessage().contains(OPEN_API_LOAD_ERROR) ? OPEN_API_LOAD_ERROR + (isNotBlank(throwable.getMessage()) ? ", " : "") : "") + throwable.getMessage();
                     throw new IllegalArgumentException(message, throwable);
                 }
+                logEntries.forEach(mockServerLogger::logEvent);
             }
             this.hashCode = 0;
             if (MockServerLogger.isEnabled(TRACE)) {
@@ -403,11 +428,17 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
         }
     }
 
-    private BiConsumer<String, MediaType> handleRequestBody(OpenAPIDefinition openAPIDefinition, OpenAPI openAPI, String path, Pair<String, Operation> methodOperationPair, Boolean required) {
+    private BiConsumer<String, MediaType> handleRequestBody(OpenAPIDefinition openAPIDefinition, OpenAPI openAPI, String path, Pair<String, Operation> methodOperationPair, Boolean required, List<LogEntry> logEntries) {
         return (contentType, mediaType) -> {
             HttpRequest httpRequest = createHttpRequest(openAPIDefinition, openAPI, path, methodOperationPair);
             if (contentType.equals("multipart/form-data")) {
-                throw new IllegalArgumentException("multipart form data is not supported on requestBody, found on operation: \"" + methodOperationPair.getRight().getOperationId() + "\" method: \"" + methodOperationPair.getLeft() + "\"");
+                logEntries.add(
+                    new LogEntry()
+                        .setLogLevel(ERROR)
+                        .setMessageFormat("multipart form data is not supported on requestBody, skipping operation:{}method:{}in open api:{}")
+                        .setArguments(methodOperationPair.getRight().getOperationId(), methodOperationPair.getLeft(), openAPIDefinition)
+                );
+                return;
             }
             if (!contentType.equals("*/*") && required) {
                 // ensure that parameters added to the content type such as charset don't break the matching
@@ -424,16 +455,24 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
                 try {
                     httpRequest.withBody(jsonSchema(OBJECT_WRITER.writeValueAsString(mediaType.getSchema())).withParameterStyles(parameterStyle).withOptional(!required));
                 } catch (Throwable throwable) {
-                    mockServerLogger.logEvent(
+                    logEntries.add(
                         new LogEntry()
                             .setLogLevel(ERROR)
-                            .setMessageFormat("exception while creating adding request body{}from the schema{}")
-                            .setArguments(mediaType.getSchema(), openAPIDefinition)
-                            .setThrowable(throwable)
+                            .setMessageFormat("exception while creating adding request body{} for operation:{}method:{}in open api:{}")
+                            .setArguments(mediaType.getSchema(), methodOperationPair.getRight().getOperationId(), methodOperationPair.getLeft(), openAPIDefinition)
                     );
                 }
             }
-            addRequestMatcher(openAPIDefinition, methodOperationPair, httpRequest, contentType);
+            try {
+                addRequestMatcher(openAPIDefinition, methodOperationPair, httpRequest, contentType);
+            } catch (Throwable throwable) {
+                logEntries.add(
+                    new LogEntry()
+                        .setLogLevel(ERROR)
+                        .setMessageFormat("exception while creating adding request matcher for operation:{}method:{}in open api:{}")
+                        .setArguments(methodOperationPair.getRight().getOperationId(), methodOperationPair.getLeft(), openAPIDefinition)
+                );
+            }
         };
     }
 
