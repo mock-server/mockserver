@@ -101,7 +101,7 @@
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.logLevel="DEBUG"</code></pre>
 </div>
 
-<button id="button_configuration_performance_disable_system_out" class="accordion title"><strong>Disable System Out Log Output</strong></button>
+<button id="button_configuration_performance_disable_system_out" class="accordion title"><strong>Disable Logging To System Out</strong></button>
 <div class="panel title">
     <p>Disable logging to the system output</p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
@@ -115,4 +115,20 @@
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.disableSystemOut=...</code></pre>
     <p>Example:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.disableSystemOut="true"</code></pre>
+</div>
+
+<button id="button_configuration_performance_disable_logging" class="accordion title"><strong>Disable All Logging</strong></button>
+<div class="panel title">
+    <p>Disable all logging and processing of log events</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.disableLogging(boolean disableLogging)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.disableLogging=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_DISABLE_LOGGING=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.disableLogging=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.disableLogging="true"</code></pre>
 </div>

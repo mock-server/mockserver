@@ -1,10 +1,10 @@
 package org.mockserver.logging;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.mockserver.version.Version;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.mock.HttpState;
+import org.mockserver.version.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
@@ -33,9 +33,9 @@ public class MockServerLogger {
         try {
             if (isNotBlank(javaLoggerLogLevel()) && System.getProperty("java.util.logging.config.file") == null && System.getProperty("java.util.logging.config.class") == null) {
                 String loggingConfiguration = "" +
-                    (!disableSystemOut() ? "handlers=org.mockserver.logging.StandardOutConsoleHandler" + NEW_LINE : "") +
+                    (!disableSystemOut() ? "handlers=org.mockserver.logging.StandardOutConsoleHandler" + NEW_LINE +
                     "org.mockserver.logging.StandardOutConsoleHandler.level=ALL" + NEW_LINE +
-                    "org.mockserver.logging.StandardOutConsoleHandler.formatter=java.util.logging.SimpleFormatter" + NEW_LINE +
+                    "org.mockserver.logging.StandardOutConsoleHandler.formatter=java.util.logging.SimpleFormatter" + NEW_LINE : "") +
                     "java.util.logging.SimpleFormatter.format=%1$tF %1$tT " + Version.getVersion() + " %4$s %5$s %6$s%n" + NEW_LINE +
                     "org.mockserver.level=" + javaLoggerLogLevel() + NEW_LINE +
                     "io.netty.handler.ssl.SslHandler.level=WARNING";
@@ -94,7 +94,7 @@ public class MockServerLogger {
     }
 
     public static void writeToSystemOut(Logger logger, LogEntry logEntry) {
-        if (!ConfigurationProperties.disableSystemOut()) {
+        if (!ConfigurationProperties.disableLogging()) {
             if (isEnabled(logEntry.getLogLevel()) &&
                 isNotBlank(logEntry.getMessage())) {
                 switch (logEntry.getLogLevel()) {

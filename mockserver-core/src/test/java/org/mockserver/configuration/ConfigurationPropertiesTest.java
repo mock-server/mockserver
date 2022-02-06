@@ -874,6 +874,28 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldSetAndReadDisableLogging() {
+        boolean originalSetting = disableLogging();
+        try {
+            // when
+            disableLogging(true);
+
+            // then
+            assertTrue(disableLogging());
+            assertEquals("true", System.getProperty("mockserver.disableLogging"));
+
+            // when
+            disableLogging(false);
+
+            // then
+            assertFalse(disableLogging());
+            assertEquals("false", System.getProperty("mockserver.disableLogging"));
+        } finally {
+            disableLogging(originalSetting);
+        }
+    }
+
+    @Test
     public void shouldSetAndReadDetailedMatchFailures() {
         boolean originalSetting = detailedMatchFailures();
         try {

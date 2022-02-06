@@ -109,6 +109,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_LOG_LEVEL = "mockserver.logLevel";
     private static final String MOCKSERVER_METRICS_ENABLED = "mockserver.metricsEnabled";
     private static final String MOCKSERVER_DISABLE_SYSTEM_OUT = "mockserver.disableSystemOut";
+    private static final String MOCKSERVER_DISABLE_LOGGING = "mockserver.disableLogging";
     private static final String MOCKSERVER_DETAILED_MATCH_FAILURES = "mockserver.detailedMatchFailures";
     private static final String MOCKSERVER_LAUNCH_UI_FOR_LOG_LEVEL_DEBUG = "mockserver.launchUIForLogLevelDebug";
     private static final String MOCKSERVER_MATCHERS_FAIL_FAST = "mockserver.matchersFailFast";
@@ -211,6 +212,7 @@ public class ConfigurationProperties {
     private static String javaLoggerLogLevel = getSLF4JOrJavaLoggerToJavaLoggerLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, "MOCKSERVER_LOG_LEVEL", DEFAULT_LOG_LEVEL).toUpperCase());
     private static boolean metricsEnabled = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_METRICS_ENABLED, "MOCKSERVER_METRICS_ENABLED", "" + false));
     private static boolean disableSystemOut = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DISABLE_SYSTEM_OUT, "MOCKSERVER_DISABLE_SYSTEM_OUT", "" + false));
+    private static boolean disableLogging = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DISABLE_LOGGING, "MOCKSERVER_DISABLE_LOGGING", "" + false));
     private static boolean detailedMatchFailures = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_LAUNCH_UI_FOR_LOG_LEVEL_DEBUG, "MOCKSERVER_DETAILED_MATCH_FAILURES", "" + true));
     private static boolean matchersFailFast = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DETAILED_MATCH_FAILURES, "MOCKSERVER_DETAILED_MATCH_FAILURES", "" + true));
     private static boolean attemptToProxyIfNoMatchingExpectation = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION, "MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION", "" + true));
@@ -241,6 +243,7 @@ public class ConfigurationProperties {
         javaLoggerLogLevel = getSLF4JOrJavaLoggerToJavaLoggerLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, "MOCKSERVER_LOG_LEVEL", DEFAULT_LOG_LEVEL).toUpperCase());
         metricsEnabled = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_METRICS_ENABLED, "MOCKSERVER_METRICS_ENABLED", "" + false));
         disableSystemOut = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DISABLE_SYSTEM_OUT, "MOCKSERVER_DISABLE_SYSTEM_OUT", "" + false));
+        disableLogging = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DISABLE_LOGGING, "MOCKSERVER_DISABLE_LOGGING", "" + false));
         detailedMatchFailures = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DETAILED_MATCH_FAILURES, "MOCKSERVER_DETAILED_MATCH_FAILURES", "" + true));
         matchersFailFast = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DETAILED_MATCH_FAILURES, "MOCKSERVER_DETAILED_MATCH_FAILURES", "" + true));
         attemptToProxyIfNoMatchingExpectation = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION, "MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION", "" + true));
@@ -808,6 +811,16 @@ public class ConfigurationProperties {
     public static void disableSystemOut(boolean disable) {
         System.setProperty(MOCKSERVER_DISABLE_SYSTEM_OUT, "" + disable);
         disableSystemOut = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DISABLE_SYSTEM_OUT, "MOCKSERVER_DISABLE_SYSTEM_OUT", "" + false));
+        configureLogger();
+    }
+
+    public static boolean disableLogging() {
+        return disableLogging;
+    }
+
+    public static void disableLogging(boolean disable) {
+        System.setProperty(MOCKSERVER_DISABLE_LOGGING, "" + disable);
+        disableLogging = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DISABLE_LOGGING, "MOCKSERVER_DISABLE_LOGGING", "" + false));
         configureLogger();
     }
 
