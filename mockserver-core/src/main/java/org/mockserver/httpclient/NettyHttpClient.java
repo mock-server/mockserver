@@ -35,6 +35,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import static org.mockserver.model.HttpResponse.response;
+
 public class NettyHttpClient {
 
     static final AttributeKey<Boolean> SECURE = AttributeKey.valueOf("SECURE");
@@ -102,7 +104,11 @@ public class NettyHttpClient {
             responseFuture
                 .whenComplete((message, throwable) -> {
                     if (throwable == null) {
-                        httpResponseFuture.complete((HttpResponse) message);
+                        if (message != null) {
+                            httpResponseFuture.complete((HttpResponse) message);
+                        } else {
+                            httpResponseFuture.complete(response());
+                        }
                     } else {
                         httpResponseFuture.completeExceptionally(throwable);
                     }

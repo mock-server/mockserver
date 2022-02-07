@@ -68,17 +68,17 @@ public class KeysToMultiValuesModifier<T extends KeysToMultiValues<I, T>, K exte
     }
 
     public T update(T keysToMultiValues) {
-        if (keysToMultiValues != null && replace.getEntries() != null) {
+        if (replace != null && replace.getEntries() != null && keysToMultiValues != null) {
             replace.getEntries().forEach(keysToMultiValues::replaceEntryIfExists);
         }
-        if (add.getEntries() != null) {
+        if (add != null && add.getEntries() != null) {
             if (keysToMultiValues != null) {
                 add.getEntries().forEach(keysToMultiValues::withEntry);
             } else {
                 return add.clone();
             }
         }
-        if (keysToMultiValues != null && remove != null) {
+        if (remove != null && keysToMultiValues != null) {
             remove.forEach(keysToMultiValues::remove);
         }
         return keysToMultiValues;

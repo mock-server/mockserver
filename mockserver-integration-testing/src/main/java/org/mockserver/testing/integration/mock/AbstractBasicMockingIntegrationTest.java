@@ -2708,6 +2708,84 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
+    public void shouldForwardOverriddenRequestWithEmptyRequestAndResponseModifiers() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("/some/path"))
+                    .withSecure(false)
+            )
+            .forward(
+                forwardOverriddenRequest()
+                    .withRequestOverride(
+                        request()
+                            .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
+                            .withHeader("overrideHeaderToReplace", "originalValue")
+                            .withHeader("overrideHeaderToRemove", "originalValue")
+                            .withCookie("overrideCookieToReplace", "replacedValue")
+                            .withCookie("requestCookieToReplace", "replacedValue")
+                            .withBody("some_overridden_body")
+                    )
+                    .withRequestModifier(
+                        requestModifier()
+                    )
+                    .withResponseModifier(
+                        responseModifier()
+                    )
+            );
+
+        // then
+        HttpResponse httpResponse = makeRequest(
+            request()
+                .withPath(calculatePath("/some/path"))
+                .withMethod("POST")
+                .withHeader("x-test", "test_headers_and_body")
+                .withHeader("requestHeaderToReplace", "originalValue")
+                .withHeader("requestHeaderToRemove", "originalValue")
+                .withBody("an_example_body_http"),
+            headersToIgnore
+        );
+
+        // and
+        HttpRequest echoServerRequest = insecureEchoServer.getLastRequest();
+        assertEquals(
+            echoServerRequest.withHeaders(filterHeaders(headersToIgnore, echoServerRequest.getHeaderList())),
+            request()
+                .withMethod("POST")
+                .withPath(calculatePath("/some/path"))
+                .withHeader("x-test", "test_headers_and_body")
+                .withHeader("requestHeaderToReplace", "originalValue")
+                .withHeader("requestHeaderToRemove", "originalValue")
+                .withHeader("overrideHeaderToReplace", "originalValue")
+                .withHeader("overrideHeaderToRemove", "originalValue")
+                .withHeader("cookie", "overrideCookieToReplace=replacedValue; requestCookieToReplace=replacedValue")
+                .withCookie("overrideCookieToReplace", "replacedValue")
+                .withCookie("requestCookieToReplace", "replacedValue")
+                .withKeepAlive(true)
+                .withSecure(false)
+                .withSocketAddress("localhost", insecureEchoServer.getPort(), SocketAddress.Scheme.HTTP)
+                .withBody("some_overridden_body")
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader("x-test", "test_headers_and_body")
+                .withHeader("requestHeaderToReplace", "originalValue")
+                .withHeader("requestHeaderToRemove", "originalValue")
+                .withHeader("overrideHeaderToReplace", "originalValue")
+                .withHeader("overrideHeaderToRemove", "originalValue")
+                .withHeader("set-cookie", "overrideCookieToReplace=replacedValue", "requestCookieToReplace=replacedValue")
+                .withHeader("cookie", "overrideCookieToReplace=replacedValue; requestCookieToReplace=replacedValue")
+                .withCookie("overrideCookieToReplace", "replacedValue")
+                .withCookie("requestCookieToReplace", "replacedValue")
+                .withBody("some_overridden_body"),
+            httpResponse
+        );
+    }
+
+    @Test
     public void shouldForwardRequestInHTTP() {
         // when
         Expectation[] upsertedExpectations = mockServerClient

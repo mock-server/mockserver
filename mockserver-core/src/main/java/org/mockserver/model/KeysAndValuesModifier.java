@@ -68,17 +68,17 @@ public class KeysAndValuesModifier<T extends KeysAndValues<I, T>, K extends Keys
     }
 
     public T update(T keysAndValues) {
-        if (keysAndValues != null && replace.getEntries() != null) {
+        if (replace != null && replace.getEntries() != null && keysAndValues != null) {
             replace.getEntries().forEach(keysAndValues::replaceEntryIfExists);
         }
-        if (add.getEntries() != null) {
+        if (add != null && add.getEntries() != null) {
             if (keysAndValues != null) {
                 add.getEntries().forEach(keysAndValues::withEntry);
             } else {
                 return add.clone();
             }
         }
-        if (keysAndValues != null && remove != null) {
+        if (remove != null && keysAndValues != null) {
             remove.forEach(keysAndValues::remove);
         }
         return keysAndValues;
