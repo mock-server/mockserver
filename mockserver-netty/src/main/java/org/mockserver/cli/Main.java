@@ -11,8 +11,7 @@ import org.mockserver.netty.MockServer;
 import java.io.PrintStream;
 import java.util.*;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.substringAfter;
+import static org.apache.commons.lang3.StringUtils.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.cli.Main.Arguments.*;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
@@ -74,14 +73,63 @@ public class Main {
     public static void main(String... arguments) {
         try {
             Map<String, String> parsedArguments = parseArguments(arguments);
+            Map<String, String> commandLineArguments = new HashMap<>(parsedArguments);
+            Map<String, String> environmentVariableArguments = new HashMap<>(parsedArguments);
+
+            System.getenv().forEach((key, value) -> {
+                if (key.startsWith("MOCKSERVER_") && isNotBlank(value)) {
+                    environmentVariableArguments.put(key, value);
+                }
+            });
+            if (!parsedArguments.containsKey(serverPort.name())) {
+                if (isNotBlank(System.getenv("SERVER_PORT"))) {
+                    parsedArguments.put(serverPort.name(), System.getenv("SERVER_PORT"));
+                }
+                if (isNotBlank(System.getenv("MOCKSERVER_SERVER_PORT"))) {
+                    parsedArguments.put(serverPort.name(), System.getenv("MOCKSERVER_SERVER_PORT"));
+                }
+            } else {
+                environmentVariableArguments.remove("SERVER_PORT");
+                environmentVariableArguments.remove("MOCKSERVER_SERVER_PORT");
+            }
+            if (!parsedArguments.containsKey(proxyRemoteHost.name())) {
+                if (isNotBlank(System.getenv("PROXY_REMOTE_HOST"))) {
+                    parsedArguments.put(proxyRemoteHost.name(), System.getenv("PROXY_REMOTE_HOST"));
+                }
+                if (isNotBlank(System.getenv("MOCKSERVER_PROXY_REMOTE_HOST"))) {
+                    parsedArguments.put(proxyRemoteHost.name(), System.getenv("MOCKSERVER_PROXY_REMOTE_HOST"));
+                }
+            } else {
+                environmentVariableArguments.remove("PROXY_REMOTE_HOST");
+                environmentVariableArguments.remove("MOCKSERVER_PROXY_REMOTE_HOST");
+            }
+            if (!parsedArguments.containsKey(proxyRemotePort.name())) {
+                if (isNotBlank(System.getenv("PROXY_REMOTE_PORT"))) {
+                    parsedArguments.put(proxyRemotePort.name(), System.getenv("PROXY_REMOTE_PORT"));
+                }
+                if (isNotBlank(System.getenv("MOCKSERVER_PROXY_REMOTE_PORT"))) {
+                    parsedArguments.put(proxyRemotePort.name(), System.getenv("MOCKSERVER_PROXY_REMOTE_PORT"));
+                }
+            } else {
+                environmentVariableArguments.remove("PROXY_REMOTE_PORT");
+                environmentVariableArguments.remove("MOCKSERVER_PROXY_REMOTE_PORT");
+            }
+            System.getenv().forEach((key, value) -> {
+                if (key.startsWith("MOCKSERVER_") && isNotBlank(value)) {
+                    environmentVariableArguments.put(key, value);
+                }
+            });
 
             if (MockServerLogger.isEnabled(DEBUG)) {
                 MOCK_SERVER_LOGGER.logEvent(
                     new LogEntry()
                         .setType(SERVER_CONFIGURATION)
                         .setLogLevel(DEBUG)
-                        .setMessageFormat("using command line options:{}")
-                        .setArguments(Joiner.on(", ").withKeyValueSeparator("=").join(parsedArguments))
+                        .setMessageFormat("using environment variables:{}and command line options:{}")
+                        .setArguments(
+                            "[\n\t" + Joiner.on(",\n\t").withKeyValueSeparator("=").join(environmentVariableArguments) + "\n]",
+                            "[\n\t" + Joiner.on(",\n\t").withKeyValueSeparator("=").join(commandLineArguments) + "\n]"
+                        )
                 );
             }
 
