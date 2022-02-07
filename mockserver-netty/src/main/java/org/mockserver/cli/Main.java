@@ -74,7 +74,7 @@ public class Main {
         try {
             Map<String, String> parsedArguments = parseArguments(arguments);
             Map<String, String> commandLineArguments = new HashMap<>(parsedArguments);
-            Map<String, String> environmentVariableArguments = new HashMap<>(parsedArguments);
+            Map<String, String> environmentVariableArguments = new HashMap<>();
 
             System.getenv().forEach((key, value) -> {
                 if (key.startsWith("MOCKSERVER_") && isNotBlank(value)) {
