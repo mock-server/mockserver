@@ -2,11 +2,13 @@
 # MockServer Dockerfile
 #
 # https://github.com/mock-server/mockserver
-# http://www.mock-server.com
+# https://www.mock-server.com
 #
 
+ARG source=download
+
 # build image
-FROM alpine as build
+FROM alpine as download
 
 # download jar
 RUN apk add --update openssl ca-certificates bash wget
@@ -18,6 +20,14 @@ ARG VERSION=RELEASE
 ARG REPOSITORY_URL=https://oss.sonatype.org/service/local/artifact/maven/redirect?r=${REPOSITORY}&g=org.mock-server&a=mockserver-netty&c=jar-with-dependencies&e=jar&v=${VERSION}
 RUN wget --max-redirect=10 -O mockserver-netty-jar-with-dependencies.jar "$REPOSITORY_URL"
 
+# build image
+FROM alpine as copy
+
+# copy jar
+COPY mockserver-netty-jar-with-dependencies.jar .
+
+FROM ${source} as intermediate
+
 # runtime image
 FROM gcr.io/distroless/java:11
 
@@ -28,7 +38,7 @@ MAINTAINER James Bloom "jamesdbloom@gmail.com"
 EXPOSE 1080
 
 # copy in jar
-COPY --from=build mockserver-netty-jar-with-dependencies.jar /
+COPY --from=intermediate mockserver-netty-jar-with-dependencies.jar /
 
 # don't run MockServer as root
 USER nonroot

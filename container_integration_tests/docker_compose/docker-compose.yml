@@ -1,0 +1,19 @@
+version: "2.4"
+services:
+  client:
+    image: ubuntu
+    networks:
+      - test-network
+  mockServer:
+    image: mockserver/mockserver:integration_testing
+    networks:
+      - test-network
+    environment:
+      MOCKSERVER_LOG_LEVEL: TRACE
+      MOCKSERVER_SERVER_PORT: 1234
+      MOCKSERVER_MAX_EXPECTATIONS: 100
+      MOCKSERVER_MAX_HEADER_SIZE: 8192
+
+networks:
+  test-network:
+    driver: bridge
