@@ -2741,8 +2741,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withPath(calculatePath("/some/path"))
                 .withMethod("POST")
                 .withHeader("x-test", "test_headers_and_body")
-                .withHeader("requestHeaderToReplace", "originalValue")
-                .withHeader("requestHeaderToRemove", "originalValue")
                 .withBody("an_example_body_http"),
             headersToIgnore
         );
@@ -2755,8 +2753,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withMethod("POST")
                 .withPath(calculatePath("/some/path"))
                 .withHeader("x-test", "test_headers_and_body")
-                .withHeader("requestHeaderToReplace", "originalValue")
-                .withHeader("requestHeaderToRemove", "originalValue")
                 .withHeader("overrideHeaderToReplace", "originalValue")
                 .withHeader("overrideHeaderToRemove", "originalValue")
                 .withHeader("cookie", "overrideCookieToReplace=replacedValue; requestCookieToReplace=replacedValue")
@@ -2772,8 +2768,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader("x-test", "test_headers_and_body")
-                .withHeader("requestHeaderToReplace", "originalValue")
-                .withHeader("requestHeaderToRemove", "originalValue")
                 .withHeader("overrideHeaderToReplace", "originalValue")
                 .withHeader("overrideHeaderToRemove", "originalValue")
                 .withHeader("set-cookie", "overrideCookieToReplace=replacedValue", "requestCookieToReplace=replacedValue")
