@@ -30,7 +30,12 @@ public class MediaType extends ObjectWithJsonToString {
      *     "ISO-8859-1" or its subsets MUST be labeled with an appropriate charset value.
      * </pre>
      */
-    public static final Charset DEFAULT_HTTP_CHARACTER_SET = StandardCharsets.ISO_8859_1;
+    public static final Charset DEFAULT_TEXT_HTTP_CHARACTER_SET = StandardCharsets.ISO_8859_1;
+    /**
+     * JSON text exchanged between systems that are not part of a closed ecosystem MUST be encoded using UTF-8 [RFC3629].
+     * (https://datatracker.ietf.org/doc/html/rfc8259#section-8.1)
+     */
+    public static final Charset DEFAULT_JSON_HTTP_CHARACTER_SET = StandardCharsets.UTF_8;
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(ObjectMapperFactory.class);
     private static final char TYPE_SEPARATOR = '/';
     private static final char PARAMETER_START = ';';
@@ -233,8 +238,12 @@ public class MediaType extends ObjectWithJsonToString {
     public Charset getCharsetOrDefault() {
         if (charset != null) {
             return charset;
+        } else if (isBlank || isJson() || isXml()) {
+            return DEFAULT_JSON_HTTP_CHARACTER_SET;
+        } else if (isString()) {
+            return DEFAULT_TEXT_HTTP_CHARACTER_SET;
         } else {
-            return DEFAULT_HTTP_CHARACTER_SET;
+            return null;
         }
     }
 

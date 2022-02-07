@@ -21,7 +21,8 @@ import static org.hamcrest.core.Is.is;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.JsonBody.json;
-import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
+import static org.mockserver.model.MediaType.DEFAULT_JSON_HTTP_CHARACTER_SET;
+import static org.mockserver.model.MediaType.DEFAULT_TEXT_HTTP_CHARACTER_SET;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.StringBody.exact;
@@ -53,7 +54,7 @@ public class MockServerHttpToNettyHttpResponseEncoderContentTypeTest {
 
         // then
         FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
-        assertThat(fullHttpResponse.content().array(), is("avro işarəsi: \u20AC".getBytes(DEFAULT_HTTP_CHARACTER_SET)));
+        assertThat(fullHttpResponse.content().array(), is("avro işarəsi: \u20AC".getBytes(DEFAULT_TEXT_HTTP_CHARACTER_SET)));
     }
 
     @Test
@@ -66,13 +67,13 @@ public class MockServerHttpToNettyHttpResponseEncoderContentTypeTest {
 
         // then
         FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
-        assertThat(fullHttpResponse.content().array(), is("avro işarəsi: \u20AC".getBytes(DEFAULT_HTTP_CHARACTER_SET)));
+        assertThat(fullHttpResponse.content().array(), is("avro işarəsi: \u20AC".getBytes(DEFAULT_JSON_HTTP_CHARACTER_SET)));
     }
 
     @Test
     public void shouldTransmitUnencodableCharacters() {
         // given
-        httpResponse.withBody("avro işarəsi: \u20AC", DEFAULT_HTTP_CHARACTER_SET);
+        httpResponse.withBody("avro işarəsi: \u20AC", DEFAULT_JSON_HTTP_CHARACTER_SET);
         httpResponse.withHeader(new Header(CONTENT_TYPE.toString(), MediaType.create("text", "plain").toString()));
 
         // when
@@ -80,7 +81,7 @@ public class MockServerHttpToNettyHttpResponseEncoderContentTypeTest {
 
         // then
         FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
-        assertThat(fullHttpResponse.content().array(), is("avro işarəsi: \u20AC".getBytes(DEFAULT_HTTP_CHARACTER_SET)));
+        assertThat(fullHttpResponse.content().array(), is("avro işarəsi: \u20AC".getBytes(DEFAULT_JSON_HTTP_CHARACTER_SET)));
     }
 
     @Test
@@ -94,7 +95,7 @@ public class MockServerHttpToNettyHttpResponseEncoderContentTypeTest {
 
         // then
         FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
-        assertThat(fullHttpResponse.content().array(), is("avro işarəsi: \u20AC".getBytes(DEFAULT_HTTP_CHARACTER_SET)));
+        assertThat(fullHttpResponse.content().array(), is("avro işarəsi: \u20AC".getBytes(DEFAULT_TEXT_HTTP_CHARACTER_SET)));
     }
 
     @Test

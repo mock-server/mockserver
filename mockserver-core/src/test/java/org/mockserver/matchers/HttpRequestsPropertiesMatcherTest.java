@@ -226,7 +226,7 @@ public class HttpRequestsPropertiesMatcherTest {
         // then
         assertThat(httpRequestsPropertiesMatcher.getHttpRequestPropertiesMatchers().size(), equalTo(0));
         assertThat(logEntries.size(), equalTo(1));
-        assertThat(logEntries.get(0), equalTo(
+            assertThat(logEntries.get(0), equalTo(
             new LogEntry()
                 .setEpochTime(logEntries.get(0).getEpochTime())
                 .setLogLevel(ERROR)

@@ -23,7 +23,7 @@ import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
-import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
+import static org.mockserver.model.MediaType.DEFAULT_TEXT_HTTP_CHARACTER_SET;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.RegexBody.regex;
@@ -56,7 +56,7 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
 
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
-        assertThat(fullHttpRequest.content().toString(DEFAULT_HTTP_CHARACTER_SET), is("A normal string with ASCII characters"));
+        assertThat(fullHttpRequest.content().toString(DEFAULT_TEXT_HTTP_CHARACTER_SET), is("A normal string with ASCII characters"));
     }
 
     @Test
@@ -69,13 +69,13 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
 
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
-        assertThat(fullHttpRequest.content().toString(DEFAULT_HTTP_CHARACTER_SET), is("A normal string with ASCII characters"));
+        assertThat(fullHttpRequest.content().toString(DEFAULT_TEXT_HTTP_CHARACTER_SET), is("A normal string with ASCII characters"));
     }
 
     @Test
     public void shouldTransmitUnencodableCharacters() {
         // given
-        httpRequest.withBody("Euro sign: \u20AC", DEFAULT_HTTP_CHARACTER_SET);
+        httpRequest.withBody("Euro sign: \u20AC", DEFAULT_TEXT_HTTP_CHARACTER_SET);
         httpRequest.withHeader(new Header(CONTENT_TYPE.toString(), MediaType.create("text", "plain").toString()));
 
         // when
@@ -83,7 +83,7 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
 
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
-        assertThat(fullHttpRequest.content().toString(DEFAULT_HTTP_CHARACTER_SET), is(new String("Euro sign: \u20AC".getBytes(DEFAULT_HTTP_CHARACTER_SET), DEFAULT_HTTP_CHARACTER_SET)));
+        assertThat(fullHttpRequest.content().toString(DEFAULT_TEXT_HTTP_CHARACTER_SET), is(new String("Euro sign: \u20AC".getBytes(DEFAULT_TEXT_HTTP_CHARACTER_SET), DEFAULT_TEXT_HTTP_CHARACTER_SET)));
     }
 
     @Test
@@ -97,7 +97,7 @@ public class MockServerHttpToNettyHttpRequestEncoderContentTypeTest {
 
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
-        assertThat(fullHttpRequest.content().toString(DEFAULT_HTTP_CHARACTER_SET), is("A normal string with ASCII characters"));
+        assertThat(fullHttpRequest.content().toString(DEFAULT_TEXT_HTTP_CHARACTER_SET), is("A normal string with ASCII characters"));
     }
 
     @Test

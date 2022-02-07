@@ -18,8 +18,7 @@ import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
-import static org.mockserver.model.MediaType.PLAIN_TEXT_UTF_8;
+import static org.mockserver.model.MediaType.*;
 
 /**
  * @author jamesdbloom
@@ -59,8 +58,8 @@ public class MatcherBuilderTest {
             HTTP_1_1,
             GET,
             "/uri",
-            wrappedBuffer(bodyTestString.getBytes(DEFAULT_HTTP_CHARACTER_SET)));
-        fullHttpRequest.headers().add(CONTENT_TYPE, PLAIN_TEXT_UTF_8.withCharset(DEFAULT_HTTP_CHARACTER_SET).toString());
+            wrappedBuffer(bodyTestString.getBytes(DEFAULT_TEXT_HTTP_CHARACTER_SET)));
+        fullHttpRequest.headers().add(CONTENT_TYPE, PLAIN_TEXT_UTF_8.withCharset(DEFAULT_TEXT_HTTP_CHARACTER_SET).toString());
 
         // when
         HttpRequest httpRequest = fullHttpRequestToMockServerRequest.mapFullHttpRequestToMockServerRequest(fullHttpRequest);
@@ -74,7 +73,7 @@ public class MatcherBuilderTest {
         ));
 
         // then
-        assertThat(httpRequest.getBody().getCharset(null), is(DEFAULT_HTTP_CHARACTER_SET));
+        assertThat(httpRequest.getBody().getCharset(null), is(DEFAULT_TEXT_HTTP_CHARACTER_SET));
         assertTrue(httpRequestMapper.matches(null, httpRequest));
     }
 
@@ -88,7 +87,7 @@ public class MatcherBuilderTest {
             HTTP_1_1,
             GET,
             "/uri",
-            wrappedBuffer(bodyTestString.getBytes(DEFAULT_HTTP_CHARACTER_SET))
+            wrappedBuffer(bodyTestString.getBytes(DEFAULT_JSON_HTTP_CHARACTER_SET))
         );
 
         // when

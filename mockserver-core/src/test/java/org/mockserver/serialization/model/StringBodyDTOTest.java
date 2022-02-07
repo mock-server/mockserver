@@ -5,14 +5,13 @@ import org.junit.Test;
 import org.mockserver.model.Body;
 import org.mockserver.model.MediaType;
 import org.mockserver.model.StringBody;
-import org.mockserver.model.XmlSchemaBody;
 
 import java.nio.charset.StandardCharsets;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
-import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
+import static org.mockserver.model.MediaType.DEFAULT_TEXT_HTTP_CHARACTER_SET;
 import static org.mockserver.model.MediaType.PLAIN_TEXT_UTF_8;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.StringBody.subString;
@@ -170,13 +169,13 @@ public class StringBodyDTOTest {
     @Test
     public void shouldNotSetDefaultCharset() {
         // when
-        StringBody stringBody = new StringBodyDTO(new StringBody("some_body", null, true, MediaType.create("text", "plain").withCharset(DEFAULT_HTTP_CHARACTER_SET))).buildObject();
+        StringBody stringBody = new StringBodyDTO(new StringBody("some_body", null, true, MediaType.create("text", "plain").withCharset(DEFAULT_TEXT_HTTP_CHARACTER_SET))).buildObject();
 
         // then
         assertThat(stringBody.getValue(), is("some_body"));
         assertThat(stringBody.isSubString(), is(true));
         assertThat(stringBody.getType(), is(Body.Type.STRING));
-        assertThat(stringBody.getContentType(), is(MediaType.PLAIN_TEXT_UTF_8.withCharset(DEFAULT_HTTP_CHARACTER_SET).toString()));
+        assertThat(stringBody.getContentType(), is(MediaType.PLAIN_TEXT_UTF_8.withCharset(DEFAULT_TEXT_HTTP_CHARACTER_SET).toString()));
     }
 
     @Test

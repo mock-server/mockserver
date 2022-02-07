@@ -5,8 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.nio.charset.Charset;
 import java.util.Objects;
 
-import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
-
 /**
  * @author jamesdbloom
  */

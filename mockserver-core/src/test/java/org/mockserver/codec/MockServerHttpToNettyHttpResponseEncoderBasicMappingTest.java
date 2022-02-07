@@ -20,7 +20,7 @@ import static org.hamcrest.core.Is.is;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
+import static org.mockserver.model.MediaType.DEFAULT_TEXT_HTTP_CHARACTER_SET;
 
 /**
  * @author jamesdbloom
@@ -175,7 +175,7 @@ public class MockServerHttpToNettyHttpResponseEncoderBasicMappingTest {
 
         // then
         FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
-        assertThat(fullHttpResponse.content().toString(DEFAULT_HTTP_CHARACTER_SET), is("somebody"));
+        assertThat(fullHttpResponse.content().toString(DEFAULT_TEXT_HTTP_CHARACTER_SET), is("somebody"));
     }
 
     @Test
@@ -224,7 +224,7 @@ public class MockServerHttpToNettyHttpResponseEncoderBasicMappingTest {
 
         // then
         FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
-        assertThat(fullHttpResponse.content().toString(DEFAULT_HTTP_CHARACTER_SET), is(""));
+        assertThat(fullHttpResponse.content().toString(DEFAULT_TEXT_HTTP_CHARACTER_SET), is(""));
     }
 
 }

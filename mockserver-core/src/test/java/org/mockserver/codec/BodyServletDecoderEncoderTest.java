@@ -27,7 +27,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.JsonBody.json;
-import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
+import static org.mockserver.model.MediaType.DEFAULT_TEXT_HTTP_CHARACTER_SET;
 import static org.mockserver.model.StringBody.exact;
 
 @SuppressWarnings("rawtypes")
@@ -49,7 +49,7 @@ public class BodyServletDecoderEncoderTest {
         new BodyServletDecoderEncoder(mockServerLogger).bodyToServletResponse(servletResponse, body, null);
 
         // then
-        assertThat(outputStream.toByteArray(), is("bytes".getBytes(DEFAULT_HTTP_CHARACTER_SET)));
+        assertThat(outputStream.toByteArray(), is("bytes".getBytes(DEFAULT_TEXT_HTTP_CHARACTER_SET)));
     }
 
     @Test
@@ -74,7 +74,7 @@ public class BodyServletDecoderEncoderTest {
         // given
         HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         when(servletRequest.getInputStream()).thenReturn(
-            new DelegatingServletInputStream(IOUtils.toInputStream("bytes", DEFAULT_HTTP_CHARACTER_SET))
+            new DelegatingServletInputStream(IOUtils.toInputStream("bytes", DEFAULT_TEXT_HTTP_CHARACTER_SET))
         );
 
         // when
@@ -90,7 +90,7 @@ public class BodyServletDecoderEncoderTest {
         HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         when(servletRequest.getHeader(CONTENT_TYPE.toString())).thenReturn(MediaType.TEXT_PLAIN.toString());
         when(servletRequest.getInputStream()).thenReturn(
-            new DelegatingServletInputStream(IOUtils.toInputStream("bytes", DEFAULT_HTTP_CHARACTER_SET))
+            new DelegatingServletInputStream(IOUtils.toInputStream("bytes", DEFAULT_TEXT_HTTP_CHARACTER_SET))
         );
 
         // when
@@ -138,7 +138,7 @@ public class BodyServletDecoderEncoderTest {
         HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         when(servletRequest.getHeader(CONTENT_TYPE.toString())).thenReturn(MediaType.APPLICATION_JSON.toString());
         when(servletRequest.getInputStream()).thenReturn(
-            new DelegatingServletInputStream(IOUtils.toInputStream("şarəs", DEFAULT_HTTP_CHARACTER_SET))
+            new DelegatingServletInputStream(IOUtils.toInputStream("şarəs", DEFAULT_TEXT_HTTP_CHARACTER_SET))
         );
 
         // when
@@ -154,14 +154,14 @@ public class BodyServletDecoderEncoderTest {
         HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         when(servletRequest.getHeader(CONTENT_TYPE.toString())).thenReturn(MediaType.ANY_VIDEO_TYPE.toString());
         when(servletRequest.getInputStream()).thenReturn(
-            new DelegatingServletInputStream(IOUtils.toInputStream("bytes", DEFAULT_HTTP_CHARACTER_SET))
+            new DelegatingServletInputStream(IOUtils.toInputStream("bytes", DEFAULT_TEXT_HTTP_CHARACTER_SET))
         );
 
         // when
         BodyWithContentType result = new BodyServletDecoderEncoder(mockServerLogger).servletRequestToBody(servletRequest);
 
         // then
-        assertThat(result, is(binary("bytes".getBytes(DEFAULT_HTTP_CHARACTER_SET), MediaType.ANY_VIDEO_TYPE)));
+        assertThat(result, is(binary("bytes".getBytes(DEFAULT_TEXT_HTTP_CHARACTER_SET), MediaType.ANY_VIDEO_TYPE)));
     }
 
     @Test

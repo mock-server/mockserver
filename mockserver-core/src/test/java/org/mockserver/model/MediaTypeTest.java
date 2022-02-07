@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 
 public class MediaTypeTest {
@@ -194,8 +195,28 @@ public class MediaTypeTest {
 
     @Test
     public void shouldReturnDefaultCharset() {
-        List<String> binaryContentTypes = Arrays.asList(
+        List<String> textContentTypes = Arrays.asList(
+            "text/plain",
+            "text/html"
+        );
+        for (String contentType : textContentTypes) {
+            MediaType parse = MediaType.parse(contentType);
+            assertThat("\"" + contentType + "\" should be default charset CharsetUtil.ISO_8859_1", parse.getCharsetOrDefault(), is(StandardCharsets.ISO_8859_1));
+        }
+        List<String> jsonAndXmlContentTypes = Arrays.asList(
             "",
+            "application/json",
+            "application/xml",
+            "text/xml",
+            "text/json",
+            "application/atom+xml",
+            "application/atom+json"
+        );
+        for (String contentType : jsonAndXmlContentTypes) {
+            MediaType parse = MediaType.parse(contentType);
+            assertThat("\"" + contentType + "\" should be default charset CharsetUtil.ISO_8859_1", parse.getCharsetOrDefault(), is(StandardCharsets.UTF_8));
+        }
+        List<String> binaryContentTypes = Arrays.asList(
             "application/applixware",
             "application/font-tdpfr",
             "application/java-archive",
@@ -249,7 +270,7 @@ public class MediaTypeTest {
         );
         for (String contentType : binaryContentTypes) {
             MediaType parse = MediaType.parse(contentType);
-            assertThat("\"" + contentType + "\" should be default charset CharsetUtil.ISO_8859_1", parse.getCharsetOrDefault(), is(StandardCharsets.ISO_8859_1));
+            assertThat("\"" + contentType + "\" should be no default charset", parse.getCharsetOrDefault(), nullValue());
         }
     }
 
