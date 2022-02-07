@@ -1,18 +1,21 @@
 version: "2.4"
 services:
   client:
-    image: ubuntu
+    build:
+      context: .
+      dockerfile: ../ClientDockerfile
     networks:
       - test-network
-  mockServer:
+    command:
+      - "sleep"
+      - "86400"
+  mockserver:
     image: mockserver/mockserver:integration_testing
     networks:
       - test-network
     environment:
-      MOCKSERVER_LOG_LEVEL: TRACE
+      MOCKSERVER_LOG_LEVEL: DEBUG
       MOCKSERVER_SERVER_PORT: 1234
-      MOCKSERVER_MAX_EXPECTATIONS: 100
-      MOCKSERVER_MAX_HEADER_SIZE: 8192
 
 networks:
   test-network:

@@ -4,9 +4,9 @@ set -euo pipefail
 
 function docker-exec() {
     if [[ -z "${TEST_CASE:-}" ]]; then
-        runCommand "docker-compose exec -T ${1} /bin/bash -c '${2}'"
+        runCommand "docker-compose exec -T ${1} /bin/bash -c \"${2}\""
     else
-        runCommand "docker-compose -p ${TEST_CASE} exec -T ${1} /bin/bash -c '${2}'"
+        runCommand "docker-compose -p ${TEST_CASE} exec -T ${1} /bin/bash -c \"${2}\""
     fi
 }
 

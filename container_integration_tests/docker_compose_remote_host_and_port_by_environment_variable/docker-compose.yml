@@ -1,0 +1,31 @@
+version: "2.4"
+services:
+  client:
+    build:
+      context: .
+      dockerfile: ../ClientDockerfile
+    networks:
+      - test-network
+    command:
+      - "sleep"
+      - "86400"
+  mockserver-target:
+    image: mockserver/mockserver:integration_testing
+    networks:
+      - test-network
+    environment:
+      MOCKSERVER_LOG_LEVEL: DEBUG
+      MOCKSERVER_SERVER_PORT: 4567
+  mockserver:
+    image: mockserver/mockserver:integration_testing
+    networks:
+      - test-network
+    environment:
+      MOCKSERVER_LOG_LEVEL: DEBUG
+      MOCKSERVER_SERVER_PORT: 1234
+      PROXY_REMOTE_HOST: mockserver-target
+      PROXY_REMOTE_PORT: 4567
+
+networks:
+  test-network:
+    driver: bridge
