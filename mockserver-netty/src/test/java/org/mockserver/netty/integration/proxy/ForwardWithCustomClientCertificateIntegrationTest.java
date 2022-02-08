@@ -160,7 +160,7 @@ public class ForwardWithCustomClientCertificateIntegrationTest extends AbstractM
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                headersToIgnore)
+                    HEADERS_TO_IGNORE)
         );
 
         // then - trusted certificate returns response
@@ -182,7 +182,7 @@ public class ForwardWithCustomClientCertificateIntegrationTest extends AbstractM
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                headersToIgnore)
+                    HEADERS_TO_IGNORE)
         );
 
         // then - valid certificate returns response
@@ -204,7 +204,7 @@ public class ForwardWithCustomClientCertificateIntegrationTest extends AbstractM
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                headersToIgnore)
+                    HEADERS_TO_IGNORE)
         );
     }
 

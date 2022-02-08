@@ -41,7 +41,7 @@ public abstract class AbstractMockingIntegrationTestBase {
     protected static MockServerClient mockServerClient;
     protected static String servletContext = "";
     @SuppressWarnings("deprecation")
-    protected static final List<String> headersToIgnore = ImmutableList.of(
+    public static final List<String> HEADERS_TO_IGNORE = ImmutableList.of(
         HttpHeaderNames.SERVER.toString(),
         HttpHeaderNames.EXPIRES.toString(),
         HttpHeaderNames.DATE.toString(),
@@ -177,7 +177,7 @@ public abstract class AbstractMockingIntegrationTestBase {
         }
     }
 
-    protected Headers filterHeaders(Collection<String> headersToIgnore, List<Header> headerList) {
+    public static Headers filterHeaders(Collection<String> headersToIgnore, List<Header> headerList) {
         Headers headers = new Headers();
         for (Header header : headerList) {
             if (!headersToIgnore.contains(header.getName().getValue().toLowerCase())) {

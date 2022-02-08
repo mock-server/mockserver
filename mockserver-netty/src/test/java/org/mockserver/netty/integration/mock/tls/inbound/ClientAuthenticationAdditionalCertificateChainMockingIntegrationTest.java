@@ -16,7 +16,6 @@ import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.tls.KeyAndCertificateFactory;
 import org.mockserver.socket.tls.KeyAndCertificateFactoryFactory;
 import org.mockserver.socket.tls.KeyStoreFactory;
-import org.mockserver.socket.tls.jdk.JDKKeyAndCertificateFactory;
 import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
 
 import javax.net.ssl.SSLContext;
@@ -103,7 +102,7 @@ public class ClientAuthenticationAdditionalCertificateChainMockingIntegrationTes
                 request()
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST"),
-                headersToIgnore)
+                    HEADERS_TO_IGNORE)
         );
     }
 
