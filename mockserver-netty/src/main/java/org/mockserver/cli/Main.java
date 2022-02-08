@@ -82,37 +82,37 @@ public class Main {
                 }
             });
             if (!parsedArguments.containsKey(serverPort.name())) {
-                if (isNotBlank(System.getenv("SERVER_PORT"))) {
-                    parsedArguments.put(serverPort.name(), System.getenv("SERVER_PORT"));
-                }
                 if (isNotBlank(System.getenv("MOCKSERVER_SERVER_PORT"))) {
                     parsedArguments.put(serverPort.name(), System.getenv("MOCKSERVER_SERVER_PORT"));
+                    environmentVariableArguments.remove("SERVER_PORT");
+                } else if (isNotBlank(System.getenv("SERVER_PORT"))) {
+                    parsedArguments.put(serverPort.name(), System.getenv("SERVER_PORT"));
                 }
             } else {
-                environmentVariableArguments.remove("SERVER_PORT");
                 environmentVariableArguments.remove("MOCKSERVER_SERVER_PORT");
+                environmentVariableArguments.remove("SERVER_PORT");
             }
             if (!parsedArguments.containsKey(proxyRemoteHost.name())) {
-                if (isNotBlank(System.getenv("PROXY_REMOTE_HOST"))) {
-                    parsedArguments.put(proxyRemoteHost.name(), System.getenv("PROXY_REMOTE_HOST"));
-                }
                 if (isNotBlank(System.getenv("MOCKSERVER_PROXY_REMOTE_HOST"))) {
                     parsedArguments.put(proxyRemoteHost.name(), System.getenv("MOCKSERVER_PROXY_REMOTE_HOST"));
+                    environmentVariableArguments.remove("PROXY_REMOTE_HOST");
+                } else if (isNotBlank(System.getenv("PROXY_REMOTE_HOST"))) {
+                    parsedArguments.put(proxyRemoteHost.name(), System.getenv("PROXY_REMOTE_HOST"));
                 }
             } else {
-                environmentVariableArguments.remove("PROXY_REMOTE_HOST");
                 environmentVariableArguments.remove("MOCKSERVER_PROXY_REMOTE_HOST");
+                environmentVariableArguments.remove("PROXY_REMOTE_HOST");
             }
             if (!parsedArguments.containsKey(proxyRemotePort.name())) {
-                if (isNotBlank(System.getenv("PROXY_REMOTE_PORT"))) {
-                    parsedArguments.put(proxyRemotePort.name(), System.getenv("PROXY_REMOTE_PORT"));
-                }
                 if (isNotBlank(System.getenv("MOCKSERVER_PROXY_REMOTE_PORT"))) {
                     parsedArguments.put(proxyRemotePort.name(), System.getenv("MOCKSERVER_PROXY_REMOTE_PORT"));
+                    environmentVariableArguments.remove("PROXY_REMOTE_PORT");
+                } else if (isNotBlank(System.getenv("PROXY_REMOTE_PORT"))) {
+                    parsedArguments.put(proxyRemotePort.name(), System.getenv("PROXY_REMOTE_PORT"));
                 }
             } else {
-                environmentVariableArguments.remove("PROXY_REMOTE_PORT");
                 environmentVariableArguments.remove("MOCKSERVER_PROXY_REMOTE_PORT");
+                environmentVariableArguments.remove("PROXY_REMOTE_PORT");
             }
             System.getenv().forEach((key, value) -> {
                 if (key.startsWith("MOCKSERVER_") && isNotBlank(value)) {

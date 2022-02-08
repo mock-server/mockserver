@@ -12,15 +12,16 @@ function integration_test() {
   start-up
   TEST_EXIT_CODE=0
   sleep 3
-  docker-exec-client "curl -v -X PUT 'http://mockserver_target:4567/mockserver/expectation' -d \\\"{
+  docker-exec-client "curl -v -s -X PUT 'http://mockserver_target:4567/mockserver/expectation' -d \\\"{
                         'httpRequest' : {
                           'path' : '/some/path'
                         },
                         'httpResponse' : {
                           'body' : 'some_response_body'
                         }
-                      }\\\" 1> >(grep '.*' 1>&2) 2> >(grep '^[<>]' 1>&2)" || TEST_EXIT_CODE=1
-  docker-exec-client "curl -v -X PUT 'http://mockserver:1234/mockserver/expectation' -d \\\"{
+                      }\\\"" || TEST_EXIT_CODE=1
+  if [[ "${TEST_EXIT_CODE}" == "0" ]]; then
+    docker-exec-client "curl -v -s -X PUT 'http://mockserver:1234/mockserver/expectation' -d \\\"{
                         'httpRequest' : {
                         },
                         'httpOverrideForwardedRequest' : {
@@ -39,15 +40,22 @@ function integration_test() {
                             }
                           }
                         }
-                      }\\\" 1> >(grep '.*' 1>&2) 2> >(grep '^[<>]' 1>&2)" || TEST_EXIT_CODE=1
-  RESPONSE_BODY=$(docker-exec-client "curl -v -X PUT 'http://mockserver:1234/some/path' 2> >(grep '^[<>]' 1>&2)")
+                      }\\\"" || TEST_EXIT_CODE=1
+    if [[ "${TEST_EXIT_CODE}" == "0" ]]; then
+      RESPONSE_BODY=$(docker-exec-client "curl -v -s -X PUT 'http://mockserver:1234/some/path'")
 
-  if [[ "${RESPONSE_BODY}" != "some_response_body" ]]; then
-    printErrorMessage "Failed to retrieve response body for expectation matched by path, found: \"${RESPONSE_BODY}\""
-    TEST_EXIT_CODE=1
+      if [[ "${RESPONSE_BODY}" != "some_response_body" ]]; then
+        printErrorMessage "Failed to retrieve response body for expectation matched by path, found: \"${RESPONSE_BODY}\""
+        TEST_EXIT_CODE=1
+      fi
+    fi
   fi
   if [[ "${TEST_EXIT_CODE}" != "0" ]]; then
+    printErrorMessage "Failed: ${TEST_CASE}"
     docker-compose logs
+    printErrorMessage "Failed: ${TEST_CASE}"
+  else
+    printPassMessage "Passed: ${TEST_CASE}"
   fi
   tear-down
   return ${TEST_EXIT_CODE}

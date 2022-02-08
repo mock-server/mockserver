@@ -30,6 +30,7 @@ function run_all_tests() {
   test "docker_compose_server_port_by_command"
   test "docker_compose_server_port_by_environment_variable_short_name"
   test "docker_compose_server_port_by_environment_variable_long_name"
+  test "docker_compose_without_server_port"
 }
 
 build_docker

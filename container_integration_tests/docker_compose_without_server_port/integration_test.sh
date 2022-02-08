@@ -12,7 +12,7 @@ function integration_test() {
   start-up
   TEST_EXIT_CODE=0
   sleep 3
-  docker-exec-client "curl -v -s -X PUT 'http://mockserver:1234/mockserver/expectation' -d \\\"{
+  docker-exec-client "curl -v -s -X PUT 'http://mockserver:1080/mockserver/expectation' -d \\\"{
                         'httpRequest' : {
                           'path' : '/some/path'
                         },
@@ -21,7 +21,7 @@ function integration_test() {
                         }
                       }\\\"" || TEST_EXIT_CODE=1
   if [[ "${TEST_EXIT_CODE}" == "0" ]]; then
-    RESPONSE_BODY=$(docker-exec-client "curl -v -s -X PUT 'http://mockserver:1234/some/path'")
+    RESPONSE_BODY=$(docker-exec-client "curl -v -s -X PUT 'http://mockserver:1080/some/path'")
 
     if [[ "${RESPONSE_BODY}" != "some_response_body" ]]; then
       printErrorMessage "Failed to retrieve response body for expectation matched by path, found: \"${RESPONSE_BODY}\""

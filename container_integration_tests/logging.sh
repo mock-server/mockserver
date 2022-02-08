@@ -17,6 +17,10 @@ function printMessageWithColour() {
 }
 
 function printMessage() {
+  printMessageWithColour "${1}" "\e[0;33m"
+}
+
+function printPassMessage() {
   printMessageWithColour "${1}" "\e[0;32m"
 }
 

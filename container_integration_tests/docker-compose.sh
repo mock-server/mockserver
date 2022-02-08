@@ -15,7 +15,7 @@ function docker-exec-client() {
 }
 
 function tear-down() {
-    runCommand "docker-compose -p ${TEST_CASE} down || true"
+    runCommand "docker-compose -p ${TEST_CASE} down --remove-orphans || true"
 }
 
 function start-up() {
