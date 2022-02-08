@@ -1,9 +1,7 @@
 package org.mockserver.lifecycle;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -22,6 +20,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -52,7 +52,7 @@ public abstract class LifeCycle implements Stoppable {
         this.httpState = new HttpState(this.mockServerLogger, this.scheduler);
     }
 
-    public Future<String> stopAsync() {
+    public CompletableFuture<String> stopAsync() {
         if (!stopFuture.isDone() && stopping.compareAndSet(false, true)) {
             final String message = "stopped for port" + (getLocalPorts().size() == 1 ? ": " + getLocalPorts().get(0) : "s: " + getLocalPorts());
             if (MockServerLogger.isEnabled(INFO)) {
@@ -64,6 +64,28 @@ public abstract class LifeCycle implements Stoppable {
                 );
             }
             new Scheduler.SchedulerThreadFactory("Stop").newThread(() -> {
+                List<ChannelFuture> collect = serverChannelFutures
+                    .stream()
+                    .flatMap(channelFuture -> {
+                        try {
+                            return Stream.of(channelFuture.get());
+                        } catch (Throwable throwable) {
+                            // ignore
+                            throwable.printStackTrace();
+                            return Stream.empty();
+                        }
+                    })
+                    .map(ChannelOutboundInvoker::disconnect)
+                    .collect(Collectors.toList());
+                try {
+                    for (ChannelFuture channelFuture : collect) {
+                        channelFuture.get();
+                    }
+                } catch (Throwable throwable) {
+                    // ignore
+                    throwable.printStackTrace();
+                }
+
                 httpState.stop();
                 scheduler.shutdown();
 
@@ -75,14 +97,7 @@ public abstract class LifeCycle implements Stoppable {
                 bossGroup.terminationFuture().syncUninterruptibly();
                 workerGroup.terminationFuture().syncUninterruptibly();
 
-                stopFuture.complete("done");
-
-                // then commented out code below would wait for all tasks to stop however it is static and so performs badly with multiple parallel (or rapidly created serial) instances of MockServer
-                // try {
-                //     GlobalEventExecutor.INSTANCE.awaitInactivity(2, SECONDS);
-                // } catch (InterruptedException ignore) {
-                //     // ignore interruption
-                // }
+                stopFuture.complete(message);
             }).start();
         }
         return stopFuture;

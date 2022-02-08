@@ -487,7 +487,7 @@ public class MockServerClient implements Stoppable {
     /**
      * Stop MockServer gracefully (only support for Netty version, not supported for WAR version)
      */
-    public Future<MockServerClient> stop(boolean ignoreFailure) {
+    public CompletableFuture<MockServerClient> stop(boolean ignoreFailure) {
         if (!stopFuture.isDone()) {
             getMockServerEventBus().publish(EventType.STOP);
             removeMockServerEventBus();

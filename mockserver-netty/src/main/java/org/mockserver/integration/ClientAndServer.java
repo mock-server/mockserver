@@ -9,7 +9,6 @@ import org.mockserver.netty.MockServer;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.configuration.ConfigurationProperties.launchUIForLogLevelDebug;
@@ -98,15 +97,8 @@ public class ClientAndServer extends MockServerClient {
 
     @Override
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public Future stopAsync() {
-        Future<String> stopAsync = mockServer.stopAsync();
-        if (stopAsync instanceof CompletableFuture) {
-            ((CompletableFuture<String>) stopAsync).thenAccept(ignore -> super.stop(true));
-        } else {
-            // no need to wait for client to clean up event loop
-            super.stopAsync();
-        }
-        return stopAsync;
+    public CompletableFuture stopAsync() {
+        return mockServer.stopAsync().thenComposeAsync(s -> stop(true));
     }
 
     @Override
