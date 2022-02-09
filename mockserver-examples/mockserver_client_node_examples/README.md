@@ -1,0 +1,1 @@
+This folder contains some simple examples but for a fuller set of examples see: [mockserver-client-node](https://github.com/mock-server/mockserver-client-node/tree/master/examples)

@@ -72,4 +72,38 @@ curl -X PUT 'localhost:1080/continueCase' \
     }
 }'
 ```
+#### expectation with large number
+
+###### expectation
+
+```bash
+curl -X PUT 'localhost:1080/mockserver/expectation' \
+-d '{
+    "httpRequest": {
+        "method": "GET", 
+        "path": "/test"
+    }, 
+    "httpResponse": {
+        "statusCode": 200, 
+        "reasonPhrase": "OK", 
+        "headers": [
+            {
+                "name": "Content-Type", 
+                "values": [
+                    "application/json"
+                ]
+            }
+        ], 
+        "body": {
+            "value": 1000000000000100000001
+        }
+    }
+}'
+```
+
+###### matching request
+
+```bash
+curl 'localhost:1080/test'
+```
 
