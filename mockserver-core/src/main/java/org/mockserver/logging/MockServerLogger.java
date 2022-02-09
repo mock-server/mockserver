@@ -11,6 +11,7 @@ import org.slf4j.event.Level;
 
 import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
+import java.util.Arrays;
 import java.util.logging.LogManager;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -34,11 +35,11 @@ public class MockServerLogger {
             if (isNotBlank(javaLoggerLogLevel()) && System.getProperty("java.util.logging.config.file") == null && System.getProperty("java.util.logging.config.class") == null) {
                 String loggingConfiguration = "" +
                     (!disableSystemOut() ? "handlers=org.mockserver.logging.StandardOutConsoleHandler" + NEW_LINE +
-                    "org.mockserver.logging.StandardOutConsoleHandler.level=ALL" + NEW_LINE +
-                    "org.mockserver.logging.StandardOutConsoleHandler.formatter=java.util.logging.SimpleFormatter" + NEW_LINE : "") +
+                        "org.mockserver.logging.StandardOutConsoleHandler.level=ALL" + NEW_LINE +
+                        "org.mockserver.logging.StandardOutConsoleHandler.formatter=java.util.logging.SimpleFormatter" + NEW_LINE : "") +
                     "java.util.logging.SimpleFormatter.format=%1$tF %1$tT " + Version.getVersion() + " %4$s %5$s %6$s%n" + NEW_LINE +
                     "org.mockserver.level=" + javaLoggerLogLevel() + NEW_LINE +
-                    "io.netty.handler.ssl.SslHandler.level=WARNING";
+                    "io.netty.level=" + (Arrays.asList("TRACE", "FINEST").contains(javaLoggerLogLevel()) ? "FINE" : "WARNING");
                 LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(loggingConfiguration.getBytes(UTF_8)));
             }
         } catch (Throwable throwable) {
