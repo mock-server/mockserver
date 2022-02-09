@@ -13,6 +13,7 @@ import org.slf4j.event.Level;
 
 import java.util.concurrent.*;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.log.model.LogEntry.LogMessageType.WARN;
@@ -145,7 +146,7 @@ public class Scheduler {
         }
     }
 
-    public void submit(HttpForwardActionResult future, Runnable command, boolean synchronous) {
+    public void submit(HttpForwardActionResult future, Runnable command, boolean synchronous, Predicate<Throwable> logException) {
         Integer port = getPort();
         if (future != null) {
             if (this.synchronous || synchronous) {
@@ -159,7 +160,7 @@ public class Scheduler {
                 run(command, port);
             } else {
                 future.getHttpResponse().whenCompleteAsync((httpResponse, throwable) -> {
-                    if (throwable != null && MockServerLogger.isEnabled(Level.INFO)) {
+                    if (throwable != null && MockServerLogger.isEnabled(Level.INFO) && logException.test(throwable)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setType(WARN)
