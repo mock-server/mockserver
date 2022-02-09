@@ -222,7 +222,6 @@ public class Main {
                     }
                 }
             } else {
-                showUsage();
                 break;
             }
         }
