@@ -26,11 +26,13 @@ function test() {
 }
 
 function run_all_tests() {
-  test "docker_compose_remote_host_and_port_by_environment_variable"
-  test "docker_compose_server_port_by_command"
-  test "docker_compose_server_port_by_environment_variable_short_name"
-  test "docker_compose_server_port_by_environment_variable_long_name"
-  test "docker_compose_without_server_port"
+  if [[ "${SKIP_ALL_TESTS:-}" != "true" ]]; then
+    test "docker_compose_remote_host_and_port_by_environment_variable"
+    test "docker_compose_server_port_by_command"
+    test "docker_compose_server_port_by_environment_variable_short_name"
+    test "docker_compose_server_port_by_environment_variable_long_name"
+    test "docker_compose_without_server_port"
+  fi
 }
 
 build_docker
