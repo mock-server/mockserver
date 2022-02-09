@@ -24,5 +24,3 @@ rm -rf leaf-cert-and-key.json
 
 # download certificates from domain
 openssl s_client -host stackoverflow.com -port 443 -prexit -showcerts > stackoverflow-chain.pem
-
-# finally update the chains
