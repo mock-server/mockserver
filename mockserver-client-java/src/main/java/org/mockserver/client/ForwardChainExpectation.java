@@ -41,8 +41,8 @@ public class ForwardChainExpectation {
 
     /**
      * <p>
-     * Set id of expectation which can be used to update this expectation later
-     * or for clearing or verifying by expectation id.
+     * Set id of this expectation which can be used to update this expectation
+     * later or for clearing or verifying by expectation id.
      * </p>
      * <p>
      * Note: Each unique expectation must have a unique id otherwise this
@@ -52,6 +52,21 @@ public class ForwardChainExpectation {
      */
     public ForwardChainExpectation withId(String id) {
         expectation.withId(id);
+        return this;
+    }
+
+    /**
+     * <p>
+     * Set priority of this expectation which is used to determin the matching
+     * order of expectations when a request is received.
+     * </p>
+     * <p>
+     * Matching is ordered by priority (highest first) then creation (earliest first).
+     * </p>
+     * @param priority expectation's priority
+     */
+    public ForwardChainExpectation withPriority(int priority) {
+        expectation.withPriority(priority);
         return this;
     }
 
