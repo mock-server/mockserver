@@ -252,8 +252,19 @@ public class Expectation extends ObjectWithJsonToString {
         this.priority = priority;
     }
 
-    public Expectation withId(String key) {
-        this.id = key;
+    /**
+     * <p>
+     * Set id of expectation which can be used to update this expectation later
+     * or for clearing or verifying by expectation id.
+     * </p>
+     * <p>
+     * Note: Each unique expectation must have a unique id otherwise this
+     * expectation will update a existing expectation with the same id.
+     * </p>
+     * @param id unique string for expectation's id
+     */
+    public Expectation withId(String id) {
+        this.id = id;
         this.sortableExpectationId = null;
         return this;
     }

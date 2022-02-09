@@ -40,6 +40,22 @@ public class ForwardChainExpectation {
     }
 
     /**
+     * <p>
+     * Set id of expectation which can be used to update this expectation later
+     * or for clearing or verifying by expectation id.
+     * </p>
+     * <p>
+     * Note: Each unique expectation must have a unique id otherwise this
+     * expectation will update a existing expectation with the same id.
+     * </p>
+     * @param id unique string for expectation's id
+     */
+    public ForwardChainExpectation withId(String id) {
+        expectation.withId(id);
+        return this;
+    }
+
+    /**
      * Return response when expectation is matched
      *
      * @param httpResponse response to return
