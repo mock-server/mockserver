@@ -10,6 +10,8 @@ import java.util.List;
  */
 public class Parameters extends KeysToMultiValues<Parameter, Parameters> {
 
+    private String rawParameterString;
+
     public Parameters(List<Parameter> parameters) {
         withEntries(parameters);
     }
@@ -36,9 +38,19 @@ public class Parameters extends KeysToMultiValues<Parameter, Parameters> {
         return this;
     }
 
+    public String getRawParameterString() {
+        return rawParameterString;
+    }
+
+    public Parameters withRawParameterString(String rawParameterString) {
+        this.rawParameterString = rawParameterString;
+        return this;
+    }
+
     @SuppressWarnings("MethodDoesntCallSuperMethod")
     public Parameters clone() {
-        return new Parameters(getMultimap());
+        return new Parameters(getMultimap())
+            .withRawParameterString(rawParameterString);
     }
 
 }

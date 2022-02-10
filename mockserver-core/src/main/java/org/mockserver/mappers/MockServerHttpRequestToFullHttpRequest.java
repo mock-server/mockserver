@@ -61,13 +61,17 @@ public class MockServerHttpRequestToFullHttpRequest {
 
     public String getURI(HttpRequest httpRequest) {
         if (httpRequest.getPath() != null) {
-            QueryStringEncoder queryStringEncoder = new QueryStringEncoder(httpRequest.getPath().getValue());
-            for (Parameter parameter : httpRequest.getQueryStringParameterList()) {
-                for (NottableString value : parameter.getValues()) {
-                    queryStringEncoder.addParam(parameter.getName().getValue(), value.getValue());
+            if (httpRequest.getQueryStringParameters() != null && isNotBlank(httpRequest.getQueryStringParameters().getRawParameterString())) {
+                return httpRequest.getPath().getValue() + "?" + httpRequest.getQueryStringParameters().getRawParameterString();
+            } else {
+                QueryStringEncoder queryStringEncoder = new QueryStringEncoder(httpRequest.getPath().getValue());
+                for (Parameter parameter : httpRequest.getQueryStringParameterList()) {
+                    for (NottableString value : parameter.getValues()) {
+                        queryStringEncoder.addParam(parameter.getName().getValue(), value.getValue());
+                    }
                 }
+                return queryStringEncoder.toString();
             }
-            return queryStringEncoder.toString();
         } else {
             return "";
         }

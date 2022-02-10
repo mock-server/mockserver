@@ -2,6 +2,7 @@ package org.mockserver.codec;
 
 import io.netty.handler.codec.http.HttpConstants;
 import io.netty.handler.codec.http.QueryStringDecoder;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -53,7 +54,8 @@ public class ExpandedParameterDecoder {
     }
 
     public Parameters retrieveQueryParameters(String parameterString, boolean hasPath) {
-        Parameters parameters = new Parameters();
+        Parameters parameters = new Parameters()
+            .withRawParameterString(parameterString.contains("?") ? StringUtils.substringAfter(parameterString, "?") : parameterString);
         Map<String, List<String>> parameterMap = new HashMap<>();
         if (isNotBlank(parameterString)) {
             try {

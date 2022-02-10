@@ -108,11 +108,6 @@ public class ServletProxyWithContextPathIntegrationTest extends AbstractProxyInt
     }
 
     @Override
-    public int getSecureProxyPort() {
-        return PROXY_PORT;
-    }
-
-    @Override
     public MockServerClient getMockServerClient() {
         return mockServerClient;
     }
@@ -120,5 +115,10 @@ public class ServletProxyWithContextPathIntegrationTest extends AbstractProxyInt
     @Override
     public int getServerPort() {
         return echoServer.getPort();
+    }
+
+    @Override
+    public EchoServer getEchoServer() {
+        return echoServer;
     }
 }

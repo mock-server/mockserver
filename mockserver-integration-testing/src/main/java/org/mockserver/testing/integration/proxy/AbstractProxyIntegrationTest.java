@@ -22,9 +22,11 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.echo.http.EchoServer;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.Times;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.socket.tls.KeyStoreFactory;
@@ -90,11 +92,11 @@ public abstract class AbstractProxyIntegrationTest {
 
     public abstract int getProxyPort();
 
-    public abstract int getSecureProxyPort();
-
     public abstract MockServerClient getMockServerClient();
 
     public abstract int getServerPort();
+
+    public abstract EchoServer getEchoServer();
 
     protected String calculatePath(String path) {
         return (!path.startsWith("/") ? "/" : "") + path;
@@ -314,6 +316,70 @@ public abstract class AbstractProxyIntegrationTest {
             exactly(1)
         );
 
+    }
+
+    @Test
+    public void shouldForwardRequestsWithBlankQueryParameter() throws Exception {
+        try (Socket socket = new Socket("127.0.0.1", getProxyPort())) {
+            // given
+            getEchoServer().clear();
+            OutputStream output = socket.getOutputStream();
+
+            // when
+            // - send GET request
+            output.write(("" +
+                "GET " + addContextToPath("/some/path?parameter") + " HTTP/1.1\r" + NEW_LINE +
+                "Host: 127.0.0.1:" + getServerPort() + "\r" + NEW_LINE +
+                "Connection: close\r" + NEW_LINE +
+                "\r" + NEW_LINE
+            ).getBytes(StandardCharsets.UTF_8));
+            output.flush();
+
+            // then
+            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200");
+            HttpRequest proxiedRequest = getEchoServer().getLastRequest();
+            assertThat(proxiedRequest.getQueryStringParameters().getRawParameterString(), is("parameter"));
+        }
+
+        // and
+        getMockServerClient().verify(
+            request()
+                .withMethod("GET")
+                .withPath("/some/path"),
+            exactly(1)
+        );
+    }
+
+    @Test
+    public void shouldForwardRequestsWithQueryParameterStartingWithExclamationMark() throws Exception {
+        try (Socket socket = new Socket("127.0.0.1", getProxyPort())) {
+            // given
+            getEchoServer().clear();
+            OutputStream output = socket.getOutputStream();
+
+            // when
+            // - send GET request
+            output.write(("" +
+                "GET " + addContextToPath("/some/path?q=!in:chats%20is:unread") + " HTTP/1.1\r" + NEW_LINE +
+                "Host: 127.0.0.1:" + getServerPort() + "\r" + NEW_LINE +
+                "Connection: close\r" + NEW_LINE +
+                "\r" + NEW_LINE
+            ).getBytes(StandardCharsets.UTF_8));
+            output.flush();
+
+            // then
+            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200");
+            HttpRequest proxiedRequest = getEchoServer().getLastRequest();
+            assertThat(proxiedRequest.getQueryStringParameters().getRawParameterString(), is("q=!in:chats%20is:unread"));
+        }
+
+        // and
+        getMockServerClient().verify(
+            request()
+                .withMethod("GET")
+                .withPath("/some/path"),
+            exactly(1)
+        );
     }
 
     @Test
