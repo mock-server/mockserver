@@ -1,3 +1,19 @@
+function runMockServer() {
+    var mockserver = require('mockserver-node');
+
+    mockserver
+        .start_mockserver({serverPort: 1080, verbose: true})
+        .then(
+            function () {
+                console.log("started MockServer");
+            },
+            function (error) {
+                console.log(JSON.stringify(error, null, "  "));
+            }
+        );
+}
+
+
 function createExpectation() {
     var mockServerClient = require('mockserver-client').mockServerClient;
     mockServerClient("localhost", 1080)
@@ -25,60 +41,6 @@ function createExpectation() {
             }
         );
 }
-
-function largeNumber() {
-Number.prototype.toFixedSpecial = function(n) {
-    var str = this.toFixed(n);
-    if (str.indexOf('e+') === -1)
-        return str;
-
-    // if number is in scientific notation, pick (b)ase and (p)ower
-    str = str.replace('.', '').split('e+').reduce(function(b, p) {
-        return b + Array(p - b.length + 2).join(0);
-    });
-
-    if (n > 0)
-        str += '.' + Array(n + 1).join(0);
-
-    return str;
-};
-
-var mockServerClient = require('mockserver-client').mockServerClient;
-let largeNumber = 1000000000000100000001;
-let expectation = {
-    "httpRequest": {
-        "method": "GET",
-        "path": "/test"
-    },
-    "httpResponse": {
-        "statusCode": 200,
-        "reasonPhrase": "OK",
-        "headers": [
-            {
-                "name": "Content-Type",
-                "values": [
-                    "application/json"
-                ]
-            }
-        ],
-        "body": {
-            "value": largeNumber.toFixedSpecial(0)
-        }
-    }
-};
-mockServerClient("localhost", 1080)
-    .mockAnyResponse(expectation)
-    .then(
-        function () {
-            console.log("expectation created");
-        },
-        function (error) {
-            console.log(error);
-        }
-    );
-}
-
-largeNumber();
 
 function createExpectationOverTLS() {
     var mockServerClient = require('mockserver-client').mockServerClient;
