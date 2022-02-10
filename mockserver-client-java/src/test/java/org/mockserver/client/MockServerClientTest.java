@@ -35,8 +35,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static junit.framework.TestCase.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.collection.IsArrayWithSize.arrayWithSize;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.matchers.Times.unlimited;
@@ -903,7 +905,9 @@ public class MockServerClientTest {
         when(mockRequestDefinitionSerializer.deserializeArray("body")).thenReturn(httpRequests);
 
         // when
-        assertSame(httpRequests, mockServerClient.retrieveRecordedRequests(someRequestMatcher));
+        HttpRequest[] recordedRequests = mockServerClient.retrieveRecordedRequests(someRequestMatcher);
+        assertThat(recordedRequests, instanceOf(HttpRequest[].class));
+        assertThat(recordedRequests, arrayWithSize(0));
 
         // then
         verify(mockHttpClient).sendRequest(
@@ -929,7 +933,9 @@ public class MockServerClientTest {
         when(mockRequestDefinitionSerializer.deserializeArray("body")).thenReturn(httpRequests);
 
         // when
-        assertSame(httpRequests, mockServerClient.retrieveRecordedRequests(null));
+        HttpRequest[] recordedRequests = mockServerClient.retrieveRecordedRequests(null);
+        assertThat(recordedRequests, instanceOf(HttpRequest[].class));
+        assertThat(recordedRequests, arrayWithSize(0));
 
         // then
         verify(mockHttpClient).sendRequest(

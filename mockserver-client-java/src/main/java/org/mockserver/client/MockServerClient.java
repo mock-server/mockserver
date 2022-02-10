@@ -890,13 +890,13 @@ public class MockServerClient implements Stoppable {
      * @param requestDefinition the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
      * @return an array of all requests that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
      */
-    public RequestDefinition[] retrieveRecordedRequests(RequestDefinition requestDefinition) {
+    public HttpRequest[] retrieveRecordedRequests(RequestDefinition requestDefinition) {
+        RequestDefinition[] requestDefinitions = new RequestDefinition[0];
         String recordedRequests = retrieveRecordedRequests(requestDefinition, Format.JSON);
         if (isNotBlank(recordedRequests) && !recordedRequests.equals("[]")) {
-            return requestDefinitionSerializer.deserializeArray(recordedRequests);
-        } else {
-            return new RequestDefinition[0];
+            requestDefinitions = requestDefinitionSerializer.deserializeArray(recordedRequests);
         }
+        return Arrays.stream(requestDefinitions).map(HttpRequest.class::cast).toArray(HttpRequest[]::new);
     }
 
     /**
