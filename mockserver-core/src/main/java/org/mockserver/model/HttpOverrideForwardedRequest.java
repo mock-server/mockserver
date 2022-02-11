@@ -34,12 +34,39 @@ public class HttpOverrideForwardedRequest extends Action<HttpOverrideForwardedRe
     }
 
     /**
+     * Static builder which will allow overriding or modifying proxied request with the specified request.
+     *
+     * @param httpRequest     the HttpRequest specifying what to override
+     * @param requestModifier what to modify in the request
+     */
+    public static HttpOverrideForwardedRequest forwardOverriddenRequest(HttpRequest httpRequest, HttpRequestModifier requestModifier) {
+        return new HttpOverrideForwardedRequest()
+            .withRequestOverride(httpRequest)
+            .withRequestModifier(requestModifier);
+    }
+
+    /**
      * Static builder which will allow overriding proxied request with the specified request.
      *
      * @param httpRequest  the HttpRequest specifying what to override
      * @param httpResponse the HttpRequest specifying what to override
      */
     public static HttpOverrideForwardedRequest forwardOverriddenRequest(HttpRequest httpRequest, HttpResponse httpResponse) {
+        return new HttpOverrideForwardedRequest()
+            .withRequestOverride(httpRequest)
+            .withResponseOverride(httpResponse);
+    }
+
+
+    /**
+     * Static builder which will allow overriding proxied request with the specified request.
+     *
+     * @param httpRequest      the HttpRequest specifying what to override
+     * @param requestModifier  what to modify in the request
+     * @param httpResponse     the HttpRequest specifying what to override
+     * @param responseModifier what to modify in the response
+     */
+    public static HttpOverrideForwardedRequest forwardOverriddenRequest(HttpRequest httpRequest, HttpRequestModifier requestModifier, HttpResponse httpResponse, HttpResponseModifier responseModifier) {
         return new HttpOverrideForwardedRequest()
             .withRequestOverride(httpRequest)
             .withResponseOverride(httpResponse);
@@ -67,10 +94,10 @@ public class HttpOverrideForwardedRequest extends Action<HttpOverrideForwardedRe
     /**
      * Allow path, query parameters, headers and cookies to be modified
      *
-     * @param modifyHttpRequest what to modify
+     * @param requestModifier what to modify
      */
-    public HttpOverrideForwardedRequest withRequestModifier(HttpRequestModifier modifyHttpRequest) {
-        this.requestModifier = modifyHttpRequest;
+    public HttpOverrideForwardedRequest withRequestModifier(HttpRequestModifier requestModifier) {
+        this.requestModifier = requestModifier;
         this.hashCode = 0;
         return this;
     }
@@ -97,10 +124,10 @@ public class HttpOverrideForwardedRequest extends Action<HttpOverrideForwardedRe
     /**
      * Allow headers and cookies to be modified
      *
-     * @param modifyHttpResponse what to modify
+     * @param responseModifier what to modify
      */
-    public HttpOverrideForwardedRequest withResponseModifier(HttpResponseModifier modifyHttpResponse) {
-        this.responseModifier = modifyHttpResponse;
+    public HttpOverrideForwardedRequest withResponseModifier(HttpResponseModifier responseModifier) {
+        this.responseModifier = responseModifier;
         this.hashCode = 0;
         return this;
     }

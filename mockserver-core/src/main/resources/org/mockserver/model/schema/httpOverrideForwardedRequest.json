@@ -25,7 +25,10 @@
                 "substitution": {
                   "type": "string"
                 }
-              }
+              },
+              "required": [
+                "regex"
+              ]
             },
             "queryStringParameters": {
               "type": "object",

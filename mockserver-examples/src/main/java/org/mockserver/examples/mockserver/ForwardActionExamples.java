@@ -8,11 +8,19 @@ import org.mockserver.model.SocketAddress;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.mockserver.model.Cookie.cookie;
+import static org.mockserver.model.CookiesModifier.cookiesModifier;
+import static org.mockserver.model.Header.header;
+import static org.mockserver.model.HeadersModifier.headersModifier;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpRequestModifier.requestModifier;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpResponseModifier.responseModifier;
 import static org.mockserver.model.HttpTemplate.template;
+import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.QueryParametersModifier.queryParametersModifier;
 
 /**
  * @author jamesdbloom
@@ -106,6 +114,197 @@ public class ForwardActionExamples {
                         .withHeader("Host", "target.host.com")
                         .withBody("some_overridden_body")
                 ).withDelay(MILLISECONDS, 10)
+            );
+    }
+
+    public void forwardOverriddenResponseWithModifier() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+            )
+            .forward(
+                forwardOverriddenRequest(
+                    request()
+                        // this replaces the entire set of headers
+                        .withHeader("Host", "target.host.com")
+                        .withBody("some_overridden_body"),
+                    requestModifier()
+                        .withPath("^/(.+)/(.+)$", "/prefix/$1/infix/$2/postfix")
+                        .withQueryStringParameters(
+                            queryParametersModifier()
+                                .add(
+                                    param("parameterToAddOne", "addedValue"),
+                                    param("parameterToAddTwo", "addedValue")
+                                )
+                                .replace(
+                                    param("overrideParameterToReplace", "replacedValue"),
+                                    param("requestParameterToReplace", "replacedValue"),
+                                    param("extraParameterToReplace", "shouldBeIgnore")
+                                )
+                                .remove(
+                                    "overrideParameterToRemove",
+                                    "requestParameterToRemove"
+                                )
+
+                        )
+                        // this modifies the set of headers
+                        .withHeaders(
+                            headersModifier()
+                                .add(
+                                    header("headerToAddOne", "addedValue"),
+                                    header("headerToAddTwo", "addedValue")
+                                )
+                                .replace(
+                                    header("overrideHeaderToReplace", "replacedValue"),
+                                    header("requestHeaderToReplace", "replacedValue"),
+                                    header("extraHeaderToReplace", "shouldBeIgnore")
+                                )
+                                .remove(
+                                    "overrideHeaderToRemove",
+                                    "requestHeaderToRemove"
+                                )
+
+                        )
+                        .withCookies(
+                            cookiesModifier()
+                                .add(
+                                    cookie("cookieToAddOne", "addedValue"),
+                                    cookie("cookieToAddTwo", "addedValue")
+                                )
+                                .replace(
+                                    cookie("overrideCookieToReplace", "replacedValue"),
+                                    cookie("requestCookieToReplace", "replacedValue"),
+                                    cookie("extraCookieToReplace", "shouldBeIgnore")
+                                )
+                                .remove(
+                                    "overrideCookieToRemove",
+                                    "requestCookieToRemove"
+                                )
+
+                        )
+                ).withDelay(MILLISECONDS, 10)
+            );
+    }
+
+    public static void main(String[] args) {
+        new MockServerClient("localhost", 1080).reset();
+        new ForwardActionExamples().forwardOverriddenResponseWithModifier();
+        new ForwardActionExamples().forwardOverriddenRequestAndResponseWithModifiers();
+    }
+
+    public void forwardOverriddenRequestAndResponseWithModifiers() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+            )
+            .forward(
+                forwardOverriddenRequest()
+                    .withRequestOverride(
+                        request()
+                            // this replaces the entire set of headers
+                            .withHeader("Host", "target.host.com")
+                            .withBody("some_overridden_body")
+                    )
+                    .withRequestModifier(
+                        requestModifier()
+                            .withPath("^/(.+)/(.+)$", "/prefix/$1/infix/$2/postfix")
+                            .withQueryStringParameters(
+                                queryParametersModifier()
+                                    .add(
+                                        param("parameterToAddOne", "addedValue"),
+                                        param("parameterToAddTwo", "addedValue")
+                                    )
+                                    .replace(
+                                        param("overrideParameterToReplace", "replacedValue"),
+                                        param("requestParameterToReplace", "replacedValue"),
+                                        param("extraParameterToReplace", "shouldBeIgnore")
+                                    )
+                                    .remove(
+                                        "overrideParameterToRemove",
+                                        "requestParameterToRemove"
+                                    )
+
+                            )
+                            // this modifies the set of headers
+                            .withHeaders(
+                                headersModifier()
+                                    .add(
+                                        header("headerToAddOne", "addedValue"),
+                                        header("headerToAddTwo", "addedValue")
+                                    )
+                                    .replace(
+                                        header("overrideHeaderToReplace", "replacedValue"),
+                                        header("requestHeaderToReplace", "replacedValue"),
+                                        header("extraHeaderToReplace", "shouldBeIgnore")
+                                    )
+                                    .remove(
+                                        "overrideHeaderToRemove",
+                                        "requestHeaderToRemove"
+                                    )
+
+                            )
+                            .withCookies(
+                                cookiesModifier()
+                                    .add(
+                                        cookie("cookieToAddOne", "addedValue"),
+                                        cookie("cookieToAddTwo", "addedValue")
+                                    )
+                                    .replace(
+                                        cookie("overrideCookieToReplace", "replacedValue"),
+                                        cookie("requestCookieToReplace", "replacedValue"),
+                                        cookie("extraCookieToReplace", "shouldBeIgnore")
+                                    )
+                                    .remove(
+                                        "overrideCookieToRemove",
+                                        "requestCookieToRemove"
+                                    )
+
+                            )
+                    )
+                    .withResponseOverride(
+                        response()
+                            .withBody("some_overridden_body")
+                    )
+                    .withResponseModifier(
+                        responseModifier()
+                            .withHeaders(
+                                headersModifier()
+                                    .add(
+                                        header("headerToAddOne", "addedValue"),
+                                        header("headerToAddTwo", "addedValue")
+                                    )
+                                    .replace(
+                                        header("overrideHeaderToReplace", "replacedValue"),
+                                        header("requestHeaderToReplace", "replacedValue"),
+                                        header("extraHeaderToReplace", "shouldBeIgnore")
+                                    )
+                                    .remove(
+                                        "overrideHeaderToRemove",
+                                        "requestHeaderToRemove"
+                                    )
+
+                            )
+                            .withCookies(
+                                cookiesModifier()
+                                    .add(
+                                        cookie("cookieToAddOne", "addedValue"),
+                                        cookie("cookieToAddTwo", "addedValue")
+                                    )
+                                    .replace(
+                                        cookie("overrideCookieToReplace", "replacedValue"),
+                                        cookie("requestCookieToReplace", "replacedValue"),
+                                        cookie("extraCookieToReplace", "shouldBeIgnore")
+                                    )
+                                    .remove(
+                                        "overrideCookieToRemove",
+                                        "requestCookieToRemove"
+                                    )
+
+                            )
+                    )
+                    .withDelay(MILLISECONDS, 10)
             );
     }
 

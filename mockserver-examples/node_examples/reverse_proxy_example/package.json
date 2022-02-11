@@ -1,0 +1,12 @@
+{
+  "name": "reverse_proxy_example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "author": "James D Bloom",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "mockserver-client": "5.11.2",
+    "mockserver-node": "5.11.2"
+  }
+}

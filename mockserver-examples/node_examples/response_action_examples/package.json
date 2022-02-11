@@ -1,0 +1,11 @@
+{
+  "name": "response_action_examples",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "author": "James D Bloom",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "mockserver-client": "5.11.2"
+  }
+}

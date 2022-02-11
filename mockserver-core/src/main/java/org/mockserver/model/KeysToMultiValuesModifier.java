@@ -1,15 +1,20 @@
 package org.mockserver.model;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
 @SuppressWarnings("unchecked")
-public class KeysToMultiValuesModifier<T extends KeysToMultiValues<I, T>, K extends KeysToMultiValuesModifier<T, K, I>, I extends KeyToMultiValue> {
+public abstract class KeysToMultiValuesModifier<T extends KeysToMultiValues<I, T>, K extends KeysToMultiValuesModifier<T, K, I>, I extends KeyToMultiValue> {
 
     private int hashCode;
     private T add;
     private T replace;
     private List<String> remove;
+
+    abstract T construct(List<I> list);
+
+    abstract T construct(I... array);
 
     public T getAdd() {
         return add;
@@ -19,6 +24,14 @@ public class KeysToMultiValuesModifier<T extends KeysToMultiValues<I, T>, K exte
         this.add = add;
         this.hashCode = 0;
         return (K) this;
+    }
+
+    public K add(List<I> add) {
+        return withAdd(construct(add));
+    }
+
+    public K add(I... add) {
+        return withAdd(construct(add));
     }
 
     public T getReplace() {
@@ -31,6 +44,14 @@ public class KeysToMultiValuesModifier<T extends KeysToMultiValues<I, T>, K exte
         return (K) this;
     }
 
+    public K replace(List<I> replace) {
+        return withReplace(construct(replace));
+    }
+
+    public K replace(I... replace) {
+        return withReplace(construct(replace));
+    }
+
     public List<String> getRemove() {
         return remove;
     }
@@ -39,6 +60,14 @@ public class KeysToMultiValuesModifier<T extends KeysToMultiValues<I, T>, K exte
         this.remove = remove;
         this.hashCode = 0;
         return (K) this;
+    }
+
+    public K remove(List<String> remove) {
+        return withRemove(remove);
+    }
+
+    public K remove(String... remove) {
+        return withRemove(Arrays.asList(remove));
     }
 
     @Override
