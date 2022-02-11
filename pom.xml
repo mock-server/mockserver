@@ -729,7 +729,6 @@
                         <mockserver.nioEventLoopThreadCount>1</mockserver.nioEventLoopThreadCount>
                     </systemProperties>
                     <argLine>-Duser.language=en -Duser.country=GB</argLine>
-                    <disableXmlReport>true</disableXmlReport>
                     <properties>
                         <property>
                             <name>listener</name>
@@ -756,7 +755,6 @@
                         </mockserver.webSocketClientEventLoopThreadCount>
                     </systemProperties>
                     <argLine>-Duser.language=en -Duser.country=GB</argLine>
-                    <disableXmlReport>true</disableXmlReport>
                     <properties>
                         <property>
                             <name>listener</name>
