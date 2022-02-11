@@ -172,6 +172,23 @@ function verifyRequestsReceiveExactlyOnceByOpenAPIWithOperation() {
         );
 }
 
+function verifyRequestsReceiveExactlyOnceByExpectationIds() {
+    var mockServerClient = require('mockserver-client').mockServerClient;
+    mockServerClient("localhost", 1080)
+        .verifyById(
+            {
+                'id': '31e4ca35-66c6-4645-afeb-6e66c4ca0559'
+            }, 1, 1)
+        .then(
+            function () {
+                console.log("request found exactly 2 times");
+            },
+            function (error) {
+                console.log(error);
+            }
+        );
+}
+
 function verifyRequestSequence() {
     var mockServerClient = require('mockserver-client').mockServerClient;
     mockServerClient("localhost", 1080)
@@ -210,6 +227,30 @@ function verifyRequestSequenceUsingOpenAPI() {
             {
                 'specUrlOrPayload': 'org/mockserver/mock/openapi_petstore_example.json',
                 'operationId': 'showPetById'
+            }
+        )
+        .then(
+            function () {
+                console.log("request sequence found in the order specified");
+            },
+            function (error) {
+                console.log(error);
+            }
+        );
+}
+
+function verifyRequestSequenceUsingExpectationIds() {
+    var mockServerClient = require('mockserver-client').mockServerClient;
+    mockServerClient("localhost", 1080)
+        .verifySequenceById(
+            {
+                'id': '31e4ca35-66c6-4645-afeb-6e66c4ca0559'
+            },
+            {
+                'id': '66c6ca35-ca35-66f5-8feb-5e6ac7ca0559'
+            },
+            {
+                'id': 'ca3531e4-23c8-ff45-88f5-4ca0c7ca0559'
             }
         )
         .then(

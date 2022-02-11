@@ -200,6 +200,22 @@ curl -X PUT 'localhost:1080/mockserver/verifySequence'
   }
 ]
 ```
+#### Verify Request Sequence Using Open API
+
+```bash
+curl -X PUT 'localhost:1080/mockserver/verifySequence' 
+-d '[
+  {
+    "id": "31e4ca35-66c6-4645-afeb-6e66c4ca0559"
+  },
+  {
+    "id": "66c6ca35-ca35-66f5-8feb-5e6ac7ca0559"
+  },
+  {
+    "id": "ca3531e4-23c8-ff45-88f5-4ca0c7ca0559"
+  }
+]
+```
 
 #### Retrieve Recorded Requests Filtered By Request Matcher
 
