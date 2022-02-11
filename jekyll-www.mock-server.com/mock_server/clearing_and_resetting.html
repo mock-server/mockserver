@@ -23,6 +23,7 @@ sitemap:
 <ul>
     <li>use <strong>type</strong> to select with type of state to clear</li>
     <li>use a <a href="/mock_server/getting_started.html#request_matchers"><strong>request matcher</strong></a> to clear matching items</li>
+    <li>use an <strong>expectation id</strong> to clear matching items</li>
 </ul>
 
 <p>When <a href="/mock_server/debugging_issues.html#logging-levels">logLevel</a> is set to <span class="string_literal">DEBUG</span> using <strong>clear</strong> does not delete logs from the event log, instead they are marked as deleted to ensure <a href="/mock_server/verification.html">verification</a> continues to work correctly.  This allows the <a href="/mock_server/mockserver_ui.html">UI</a> to continue to display logs that would have otherwise been deleted to improve the ability to debug issues.</p>
@@ -96,6 +97,36 @@ mockServerClient("localhost", 1080)
         "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
         "operationId": "showPetById"
     }'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+<button id="button_client_expectation_id_clear" class="accordion">clear everything that matches expectation id</button>
+<div class="panel">
+    <button class="accordion inner">Java: MockServerClient</button>
+    <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .clear("31e4ca35-66c6-4645-afeb-6e66c4ca0559");</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript: mockserver-client</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+    .clearById("31e4ca35-66c6-4645-afeb-6e66c4ca0559")
+    .then(
+        function () {
+            console.log("cleared state that matches expectation id");
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -X PUT "http://localhost:1080/mockserver/clear" -d '{
+    "id": "31e4ca35-66c6-4645-afeb-6e66c4ca0559"
+}'</code></pre>
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/control/put_clear" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>

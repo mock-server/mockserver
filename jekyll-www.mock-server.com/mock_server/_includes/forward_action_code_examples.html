@@ -164,7 +164,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
-<button id=" button_forward_overridden_with_resp" class="accordion">forward overridden request and change response</button>
+<button id="button_forward_overridden_with_response" class="accordion">forward overridden request and response</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
@@ -226,6 +226,662 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         },
         "httpResponse": {
             "body": "some_overridden_body"
+        }
+    }
+}'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+<button id="button_forward_overridden_and_modified_request" class="accordion">forward overridden and modified request</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .forward(
+        forwardOverriddenRequest(
+            request()
+                // this replaces the entire set of headers
+                .withHeader("Host", "target.host.com")
+                .withBody("some_overridden_body"),
+            requestModifier()
+                .withPath("^/(.+)/(.+)$", "/prefix/$1/infix/$2/postfix")
+                .withQueryStringParameters(
+                    queryParametersModifier()
+                        .add(
+                            param("parameterToAddOne", "addedValue"),
+                            param("parameterToAddTwo", "addedValue")
+                        )
+                        .replace(
+                            param("overrideParameterToReplace", "replacedValue"),
+                            param("requestParameterToReplace", "replacedValue"),
+                            param("extraParameterToReplace", "shouldBeIgnore")
+                        )
+                        .remove(
+                            "overrideParameterToRemove",
+                            "requestParameterToRemove"
+                        )
+
+                )
+                // this modifies the set of headers
+                .withHeaders(
+                    headersModifier()
+                        .add(
+                            header("headerToAddOne", "addedValue"),
+                            header("headerToAddTwo", "addedValue")
+                        )
+                        .replace(
+                            header("overrideHeaderToReplace", "replacedValue"),
+                            header("requestHeaderToReplace", "replacedValue"),
+                            header("extraHeaderToReplace", "shouldBeIgnore")
+                        )
+                        .remove(
+                            "overrideHeaderToRemove",
+                            "requestHeaderToRemove"
+                        )
+
+                )
+                .withCookies(
+                    cookiesModifier()
+                        .add(
+                            cookie("cookieToAddOne", "addedValue"),
+                            cookie("cookieToAddTwo", "addedValue")
+                        )
+                        .replace(
+                            cookie("overrideCookieToReplace", "replacedValue"),
+                            cookie("requestCookieToReplace", "replacedValue"),
+                            cookie("extraCookieToReplace", "shouldBeIgnore")
+                        )
+                        .remove(
+                            "overrideCookieToRemove",
+                            "requestCookieToRemove"
+                        )
+
+                )
+        )
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpOverrideForwardedRequest": {
+        "requestOverride": {
+            "headers": {
+                "Host": [
+                    "target.host.com"
+                ]
+            },
+            "body": "some_overridden_body"
+        },
+        "requestModifier": {
+            "cookies": {
+                "add": {
+                    "cookieToAddOne": "addedValue",
+                    "cookieToAddTwo": "addedValue"
+                },
+                "remove": [
+                    "overrideCookieToRemove",
+                    "requestCookieToRemove"
+                ],
+                "replace": {
+                    "overrideCookieToReplace": "replacedValue",
+                    "requestCookieToReplace": "replacedValue",
+                    "extraCookieToReplace": "shouldBeIgnore"
+                }
+            },
+            "headers": {
+                "add": {
+                    "headerToAddTwo": [
+                        "addedValue"
+                    ],
+                    "headerToAddOne": [
+                        "addedValue"
+                    ]
+                },
+                "remove": [
+                    "overrideHeaderToRemove",
+                    "requestHeaderToRemove"
+                ],
+                "replace": {
+                    "requestHeaderToReplace": [
+                        "replacedValue"
+                    ],
+                    "overrideHeaderToReplace": [
+                        "replacedValue"
+                    ],
+                    "extraHeaderToReplace": [
+                        "shouldBeIgnore"
+                    ]
+                }
+            },
+            "path": {
+                "regex": "^/(.+)/(.+)$",
+                "substitution": "/prefix/$1/infix/$2/postfix"
+            },
+            "queryStringParameters": {
+                "add": {
+                    "parameterToAddTwo": [
+                        "addedValue"
+                    ],
+                    "parameterToAddOne": [
+                        "addedValue"
+                    ]
+                },
+                "remove": [
+                    "overrideParameterToRemove",
+                    "requestParameterToRemove"
+                ],
+                "replace": {
+                    "requestParameterToReplace": [
+                        "replacedValue"
+                    ],
+                    "overrideParameterToReplace": [
+                        "replacedValue"
+                    ],
+                    "extraParameterToReplace": [
+                        "shouldBeIgnore"
+                    ]
+                }
+            }
+        }
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpOverrideForwardedRequest": {
+        "requestOverride": {
+            "headers": {
+                "Host": [
+                    "target.host.com"
+                ]
+            },
+            "body": "some_overridden_body"
+        },
+        "requestModifier": {
+            "cookies": {
+                "add": {
+                    "cookieToAddOne": "addedValue",
+                    "cookieToAddTwo": "addedValue"
+                },
+                "remove": [
+                    "overrideCookieToRemove",
+                    "requestCookieToRemove"
+                ],
+                "replace": {
+                    "overrideCookieToReplace": "replacedValue",
+                    "requestCookieToReplace": "replacedValue",
+                    "extraCookieToReplace": "shouldBeIgnore"
+                }
+            },
+            "headers": {
+                "add": {
+                    "headerToAddTwo": [
+                        "addedValue"
+                    ],
+                    "headerToAddOne": [
+                        "addedValue"
+                    ]
+                },
+                "remove": [
+                    "overrideHeaderToRemove",
+                    "requestHeaderToRemove"
+                ],
+                "replace": {
+                    "requestHeaderToReplace": [
+                        "replacedValue"
+                    ],
+                    "overrideHeaderToReplace": [
+                        "replacedValue"
+                    ],
+                    "extraHeaderToReplace": [
+                        "shouldBeIgnore"
+                    ]
+                }
+            },
+            "path": {
+                "regex": "^/(.+)/(.+)$",
+                "substitution": "/prefix/$1/infix/$2/postfix"
+            },
+            "queryStringParameters": {
+                "add": {
+                    "parameterToAddTwo": [
+                        "addedValue"
+                    ],
+                    "parameterToAddOne": [
+                        "addedValue"
+                    ]
+                },
+                "remove": [
+                    "overrideParameterToRemove",
+                    "requestParameterToRemove"
+                ],
+                "replace": {
+                    "requestParameterToReplace": [
+                        "replacedValue"
+                    ],
+                    "overrideParameterToReplace": [
+                        "replacedValue"
+                    ],
+                    "extraParameterToReplace": [
+                        "shouldBeIgnore"
+                    ]
+                }
+            }
+        }
+    }
+}'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+<button id="button_forward_overridden_and_modified_request_and_response" class="accordion">forward overridden and modified request and response</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .forward(
+        forwardOverriddenRequest()
+            .withRequestOverride(
+                request()
+                    // this replaces the entire set of headers
+                    .withHeader("Host", "target.host.com")
+                    .withBody("some_overridden_body")
+            )
+            .withRequestModifier(
+                requestModifier()
+                    .withPath("^/(.+)/(.+)$", "/prefix/$1/infix/$2/postfix")
+                    .withQueryStringParameters(
+                        queryParametersModifier()
+                            .add(
+                                param("parameterToAddOne", "addedValue"),
+                                param("parameterToAddTwo", "addedValue")
+                            )
+                            .replace(
+                                param("overrideParameterToReplace", "replacedValue"),
+                                param("requestParameterToReplace", "replacedValue"),
+                                param("extraParameterToReplace", "shouldBeIgnore")
+                            )
+                            .remove(
+                                "overrideParameterToRemove",
+                                "requestParameterToRemove"
+                            )
+
+                    )
+                    // this modifies the set of headers
+                    .withHeaders(
+                        headersModifier()
+                            .add(
+                                header("headerToAddOne", "addedValue"),
+                                header("headerToAddTwo", "addedValue")
+                            )
+                            .replace(
+                                header("overrideHeaderToReplace", "replacedValue"),
+                                header("requestHeaderToReplace", "replacedValue"),
+                                header("extraHeaderToReplace", "shouldBeIgnore")
+                            )
+                            .remove(
+                                "overrideHeaderToRemove",
+                                "requestHeaderToRemove"
+                            )
+
+                    )
+                    .withCookies(
+                        cookiesModifier()
+                            .add(
+                                cookie("cookieToAddOne", "addedValue"),
+                                cookie("cookieToAddTwo", "addedValue")
+                            )
+                            .replace(
+                                cookie("overrideCookieToReplace", "replacedValue"),
+                                cookie("requestCookieToReplace", "replacedValue"),
+                                cookie("extraCookieToReplace", "shouldBeIgnore")
+                            )
+                            .remove(
+                                "overrideCookieToRemove",
+                                "requestCookieToRemove"
+                            )
+
+                    )
+            )
+            .withResponseOverride(
+                response()
+                    .withBody("some_overridden_body")
+            )
+            .withResponseModifier(
+                responseModifier()
+                    .withHeaders(
+                        headersModifier()
+                            .add(
+                                header("headerToAddOne", "addedValue"),
+                                header("headerToAddTwo", "addedValue")
+                            )
+                            .replace(
+                                header("overrideHeaderToReplace", "replacedValue"),
+                                header("requestHeaderToReplace", "replacedValue"),
+                                header("extraHeaderToReplace", "shouldBeIgnore")
+                            )
+                            .remove(
+                                "overrideHeaderToRemove",
+                                "requestHeaderToRemove"
+                            )
+
+                    )
+                    .withCookies(
+                        cookiesModifier()
+                            .add(
+                                cookie("cookieToAddOne", "addedValue"),
+                                cookie("cookieToAddTwo", "addedValue")
+                            )
+                            .replace(
+                                cookie("overrideCookieToReplace", "replacedValue"),
+                                cookie("requestCookieToReplace", "replacedValue"),
+                                cookie("extraCookieToReplace", "shouldBeIgnore")
+                            )
+                            .remove(
+                                "overrideCookieToRemove",
+                                "requestCookieToRemove"
+                            )
+
+                    )
+            )
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpOverrideForwardedRequest": {
+        "requestOverride": {
+            "headers": {
+                "Host": [
+                    "target.host.com"
+                ]
+            },
+            "body": "some_overridden_body"
+        },
+        "requestModifier": {
+            "cookies": {
+                "add": {
+                    "cookieToAddOne": "addedValue",
+                    "cookieToAddTwo": "addedValue"
+                },
+                "remove": [
+                    "overrideCookieToRemove",
+                    "requestCookieToRemove"
+                ],
+                "replace": {
+                    "overrideCookieToReplace": "replacedValue",
+                    "requestCookieToReplace": "replacedValue",
+                    "extraCookieToReplace": "shouldBeIgnore"
+                }
+            },
+            "headers": {
+                "add": {
+                    "headerToAddTwo": [
+                        "addedValue"
+                    ],
+                    "headerToAddOne": [
+                        "addedValue"
+                    ]
+                },
+                "remove": [
+                    "overrideHeaderToRemove",
+                    "requestHeaderToRemove"
+                ],
+                "replace": {
+                    "requestHeaderToReplace": [
+                        "replacedValue"
+                    ],
+                    "overrideHeaderToReplace": [
+                        "replacedValue"
+                    ],
+                    "extraHeaderToReplace": [
+                        "shouldBeIgnore"
+                    ]
+                }
+            },
+            "path": {
+                "regex": "^/(.+)/(.+)$",
+                "substitution": "/prefix/$1/infix/$2/postfix"
+            },
+            "queryStringParameters": {
+                "add": {
+                    "parameterToAddTwo": [
+                        "addedValue"
+                    ],
+                    "parameterToAddOne": [
+                        "addedValue"
+                    ]
+                },
+                "remove": [
+                    "overrideParameterToRemove",
+                    "requestParameterToRemove"
+                ],
+                "replace": {
+                    "requestParameterToReplace": [
+                        "replacedValue"
+                    ],
+                    "overrideParameterToReplace": [
+                        "replacedValue"
+                    ],
+                    "extraParameterToReplace": [
+                        "shouldBeIgnore"
+                    ]
+                }
+            }
+        },
+        "responseOverride": {
+            "body": "some_overridden_body"
+        },
+        "responseModifier": {
+            "cookies": {
+                "add": {
+                    "cookieToAddOne": "addedValue",
+                    "cookieToAddTwo": "addedValue"
+                },
+                "remove": [
+                    "overrideCookieToRemove",
+                    "requestCookieToRemove"
+                ],
+                "replace": {
+                    "overrideCookieToReplace": "replacedValue",
+                    "requestCookieToReplace": "replacedValue",
+                    "extraCookieToReplace": "shouldBeIgnore"
+                }
+            },
+            "headers": {
+                "add": {
+                    "headerToAddTwo": [
+                        "addedValue"
+                    ],
+                    "headerToAddOne": [
+                        "addedValue"
+                    ]
+                },
+                "remove": [
+                    "overrideHeaderToRemove",
+                    "requestHeaderToRemove"
+                ],
+                "replace": {
+                    "requestHeaderToReplace": [
+                        "replacedValue"
+                    ],
+                    "overrideHeaderToReplace": [
+                        "replacedValue"
+                    ],
+                    "extraHeaderToReplace": [
+                        "shouldBeIgnore"
+                    ]
+                }
+            }
+        }
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpOverrideForwardedRequest": {
+        "requestOverride": {
+            "headers": {
+                "Host": [
+                    "target.host.com"
+                ]
+            },
+            "body": "some_overridden_body"
+        },
+        "requestModifier": {
+            "cookies": {
+                "add": {
+                    "cookieToAddOne": "addedValue",
+                    "cookieToAddTwo": "addedValue"
+                },
+                "remove": [
+                    "overrideCookieToRemove",
+                    "requestCookieToRemove"
+                ],
+                "replace": {
+                    "overrideCookieToReplace": "replacedValue",
+                    "requestCookieToReplace": "replacedValue",
+                    "extraCookieToReplace": "shouldBeIgnore"
+                }
+            },
+            "headers": {
+                "add": {
+                    "headerToAddTwo": [
+                        "addedValue"
+                    ],
+                    "headerToAddOne": [
+                        "addedValue"
+                    ]
+                },
+                "remove": [
+                    "overrideHeaderToRemove",
+                    "requestHeaderToRemove"
+                ],
+                "replace": {
+                    "requestHeaderToReplace": [
+                        "replacedValue"
+                    ],
+                    "overrideHeaderToReplace": [
+                        "replacedValue"
+                    ],
+                    "extraHeaderToReplace": [
+                        "shouldBeIgnore"
+                    ]
+                }
+            },
+            "path": {
+                "regex": "^/(.+)/(.+)$",
+                "substitution": "/prefix/$1/infix/$2/postfix"
+            },
+            "queryStringParameters": {
+                "add": {
+                    "parameterToAddTwo": [
+                        "addedValue"
+                    ],
+                    "parameterToAddOne": [
+                        "addedValue"
+                    ]
+                },
+                "remove": [
+                    "overrideParameterToRemove",
+                    "requestParameterToRemove"
+                ],
+                "replace": {
+                    "requestParameterToReplace": [
+                        "replacedValue"
+                    ],
+                    "overrideParameterToReplace": [
+                        "replacedValue"
+                    ],
+                    "extraParameterToReplace": [
+                        "shouldBeIgnore"
+                    ]
+                }
+            }
+        },
+        "responseOverride": {
+            "body": "some_overridden_body"
+        },
+        "responseModifier": {
+            "cookies": {
+                "add": {
+                    "cookieToAddOne": "addedValue",
+                    "cookieToAddTwo": "addedValue"
+                },
+                "remove": [
+                    "overrideCookieToRemove",
+                    "requestCookieToRemove"
+                ],
+                "replace": {
+                    "overrideCookieToReplace": "replacedValue",
+                    "requestCookieToReplace": "replacedValue",
+                    "extraCookieToReplace": "shouldBeIgnore"
+                }
+            },
+            "headers": {
+                "add": {
+                    "headerToAddTwo": [
+                        "addedValue"
+                    ],
+                    "headerToAddOne": [
+                        "addedValue"
+                    ]
+                },
+                "remove": [
+                    "overrideHeaderToRemove",
+                    "requestHeaderToRemove"
+                ],
+                "replace": {
+                    "requestHeaderToReplace": [
+                        "replacedValue"
+                    ],
+                    "overrideHeaderToReplace": [
+                        "replacedValue"
+                    ],
+                    "extraHeaderToReplace": [
+                        "shouldBeIgnore"
+                    ]
+                }
+            }
         }
     }
 }'</code></pre>

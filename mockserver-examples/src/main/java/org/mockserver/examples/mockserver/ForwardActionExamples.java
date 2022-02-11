@@ -86,38 +86,7 @@ public class ForwardActionExamples {
             );
     }
 
-    public void forwardOverriddenWithSocketAddress() {
-        new MockServerClient("localhost", 1080)
-            .when(
-                request()
-                    .withPath("/some/path")
-            )
-            .forward(
-                forwardOverriddenRequest(
-                    request()
-                        .withPath("/some/other/path")
-                        .withHeader("Host", "any.host.com")
-                        .withSocketAddress("target.host.com", 1234, SocketAddress.Scheme.HTTPS)
-                )
-            );
-    }
-
-    public void forwardOverriddenWithDelay() {
-        new MockServerClient("localhost", 1080)
-            .when(
-                request()
-                    .withPath("/some/path")
-            )
-            .forward(
-                forwardOverriddenRequest(
-                    request()
-                        .withHeader("Host", "target.host.com")
-                        .withBody("some_overridden_body")
-                ).withDelay(MILLISECONDS, 10)
-            );
-    }
-
-    public void forwardOverriddenResponseWithModifier() {
+    public void forwardOverriddenAndModifiedResponse() {
         new MockServerClient("localhost", 1080)
             .when(
                 request()
@@ -183,17 +152,11 @@ public class ForwardActionExamples {
                                 )
 
                         )
-                ).withDelay(MILLISECONDS, 10)
+                )
             );
     }
 
-    public static void main(String[] args) {
-        new MockServerClient("localhost", 1080).reset();
-        new ForwardActionExamples().forwardOverriddenResponseWithModifier();
-        new ForwardActionExamples().forwardOverriddenRequestAndResponseWithModifiers();
-    }
-
-    public void forwardOverriddenRequestAndResponseWithModifiers() {
+    public void forwardOverriddenAndModifiedRequestAndResponse() {
         new MockServerClient("localhost", 1080)
             .when(
                 request()
@@ -304,7 +267,37 @@ public class ForwardActionExamples {
 
                             )
                     )
-                    .withDelay(MILLISECONDS, 10)
+            );
+    }
+
+    public void forwardOverriddenWithSocketAddress() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+            )
+            .forward(
+                forwardOverriddenRequest(
+                    request()
+                        .withPath("/some/other/path")
+                        .withHeader("Host", "any.host.com")
+                        .withSocketAddress("target.host.com", 1234, SocketAddress.Scheme.HTTPS)
+                )
+            );
+    }
+
+    public void forwardOverriddenWithDelay() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+            )
+            .forward(
+                forwardOverriddenRequest(
+                    request()
+                        .withHeader("Host", "target.host.com")
+                        .withBody("some_overridden_body")
+                ).withDelay(MILLISECONDS, 10)
             );
     }
 

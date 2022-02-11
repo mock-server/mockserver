@@ -64,7 +64,7 @@ function forwardOverriddenRequest() {
     );
 }
 
-function forwardOverriddenRequestAndChangeReponse() {
+function forwardOverriddenRequestAndResponse() {
     var mockServerClient = require('mockserver-client').mockServerClient;
     mockServerClient("localhost", 1080).mockAnyResponse({
         "httpRequest": {
@@ -79,6 +79,245 @@ function forwardOverriddenRequestAndChangeReponse() {
             },
             "httpResponse": {
                 "body": "some_overridden_body"
+            }
+        }
+    }).then(
+        function () {
+            console.log("expectation created");
+        },
+        function (error) {
+            console.log(error);
+        }
+    );
+}
+
+function forwardOverriddenAndModifiedRequest() {
+    var mockServerClient = require('mockserver-client').mockServerClient;
+    mockServerClient("localhost", 1080).mockAnyResponse({
+        "httpRequest": {
+            "path": "/some/path"
+        },
+        "httpOverrideForwardedRequest": {
+            "requestOverride": {
+                "headers": {
+                    "Host": [
+                        "target.host.com"
+                    ]
+                },
+                "body": "some_overridden_body"
+            },
+            "requestModifier": {
+                "cookies": {
+                    "add": {
+                        "cookieToAddOne": "addedValue",
+                        "cookieToAddTwo": "addedValue"
+                    },
+                    "remove": [
+                        "overrideCookieToRemove",
+                        "requestCookieToRemove"
+                    ],
+                    "replace": {
+                        "overrideCookieToReplace": "replacedValue",
+                        "requestCookieToReplace": "replacedValue",
+                        "extraCookieToReplace": "shouldBeIgnore"
+                    }
+                },
+                "headers": {
+                    "add": {
+                        "headerToAddTwo": [
+                            "addedValue"
+                        ],
+                        "headerToAddOne": [
+                            "addedValue"
+                        ]
+                    },
+                    "remove": [
+                        "overrideHeaderToRemove",
+                        "requestHeaderToRemove"
+                    ],
+                    "replace": {
+                        "requestHeaderToReplace": [
+                            "replacedValue"
+                        ],
+                        "overrideHeaderToReplace": [
+                            "replacedValue"
+                        ],
+                        "extraHeaderToReplace": [
+                            "shouldBeIgnore"
+                        ]
+                    }
+                },
+                "path": {
+                    "regex": "^/(.+)/(.+)$",
+                    "substitution": "/prefix/$1/infix/$2/postfix"
+                },
+                "queryStringParameters": {
+                    "add": {
+                        "parameterToAddTwo": [
+                            "addedValue"
+                        ],
+                        "parameterToAddOne": [
+                            "addedValue"
+                        ]
+                    },
+                    "remove": [
+                        "overrideParameterToRemove",
+                        "requestParameterToRemove"
+                    ],
+                    "replace": {
+                        "requestParameterToReplace": [
+                            "replacedValue"
+                        ],
+                        "overrideParameterToReplace": [
+                            "replacedValue"
+                        ],
+                        "extraParameterToReplace": [
+                            "shouldBeIgnore"
+                        ]
+                    }
+                }
+            }
+        }
+    }).then(
+        function () {
+            console.log("expectation created");
+        },
+        function (error) {
+            console.log(error);
+        }
+    );
+}
+
+function forwardOverriddenAndModifiedRequestAndResponse() {
+    var mockServerClient = require('mockserver-client').mockServerClient;
+    mockServerClient("localhost", 1080).mockAnyResponse({
+        "httpRequest": {
+            "path": "/some/path"
+        },
+        "httpOverrideForwardedRequest": {
+            "requestOverride": {
+                "headers": {
+                    "Host": [
+                        "target.host.com"
+                    ]
+                },
+                "body": "some_overridden_body"
+            },
+            "requestModifier": {
+                "cookies": {
+                    "add": {
+                        "cookieToAddOne": "addedValue",
+                        "cookieToAddTwo": "addedValue"
+                    },
+                    "remove": [
+                        "overrideCookieToRemove",
+                        "requestCookieToRemove"
+                    ],
+                    "replace": {
+                        "overrideCookieToReplace": "replacedValue",
+                        "requestCookieToReplace": "replacedValue",
+                        "extraCookieToReplace": "shouldBeIgnore"
+                    }
+                },
+                "headers": {
+                    "add": {
+                        "headerToAddTwo": [
+                            "addedValue"
+                        ],
+                        "headerToAddOne": [
+                            "addedValue"
+                        ]
+                    },
+                    "remove": [
+                        "overrideHeaderToRemove",
+                        "requestHeaderToRemove"
+                    ],
+                    "replace": {
+                        "requestHeaderToReplace": [
+                            "replacedValue"
+                        ],
+                        "overrideHeaderToReplace": [
+                            "replacedValue"
+                        ],
+                        "extraHeaderToReplace": [
+                            "shouldBeIgnore"
+                        ]
+                    }
+                },
+                "path": {
+                    "regex": "^/(.+)/(.+)$",
+                    "substitution": "/prefix/$1/infix/$2/postfix"
+                },
+                "queryStringParameters": {
+                    "add": {
+                        "parameterToAddTwo": [
+                            "addedValue"
+                        ],
+                        "parameterToAddOne": [
+                            "addedValue"
+                        ]
+                    },
+                    "remove": [
+                        "overrideParameterToRemove",
+                        "requestParameterToRemove"
+                    ],
+                    "replace": {
+                        "requestParameterToReplace": [
+                            "replacedValue"
+                        ],
+                        "overrideParameterToReplace": [
+                            "replacedValue"
+                        ],
+                        "extraParameterToReplace": [
+                            "shouldBeIgnore"
+                        ]
+                    }
+                }
+            },
+            "responseOverride": {
+                "body": "some_overridden_body"
+            },
+            "responseModifier": {
+                "cookies": {
+                    "add": {
+                        "cookieToAddOne": "addedValue",
+                        "cookieToAddTwo": "addedValue"
+                    },
+                    "remove": [
+                        "overrideCookieToRemove",
+                        "requestCookieToRemove"
+                    ],
+                    "replace": {
+                        "overrideCookieToReplace": "replacedValue",
+                        "requestCookieToReplace": "replacedValue",
+                        "extraCookieToReplace": "shouldBeIgnore"
+                    }
+                },
+                "headers": {
+                    "add": {
+                        "headerToAddTwo": [
+                            "addedValue"
+                        ],
+                        "headerToAddOne": [
+                            "addedValue"
+                        ]
+                    },
+                    "remove": [
+                        "overrideHeaderToRemove",
+                        "requestHeaderToRemove"
+                    ],
+                    "replace": {
+                        "requestHeaderToReplace": [
+                            "replacedValue"
+                        ],
+                        "overrideHeaderToReplace": [
+                            "replacedValue"
+                        ],
+                        "extraHeaderToReplace": [
+                            "shouldBeIgnore"
+                        ]
+                    }
+                }
             }
         }
     }).then(

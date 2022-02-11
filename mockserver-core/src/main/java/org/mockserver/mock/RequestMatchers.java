@@ -200,6 +200,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
 
     public void reset(Cause cause) {
         httpRequestMatchers.stream().forEach(httpRequestMatcher -> removeHttpRequestMatcher(httpRequestMatcher, cause, false, UUIDService.getUUID()));
+        expectationRequestDefinitions.clear();
         Metrics.clearActionMetrics();
         notifyListeners(this, cause);
     }

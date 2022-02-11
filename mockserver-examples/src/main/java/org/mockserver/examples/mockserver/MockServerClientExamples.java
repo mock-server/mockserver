@@ -195,6 +195,11 @@ public class MockServerClientExamples {
         );
     }
 
+    public void clearWithExpectation() {
+        new MockServerClient("localhost", 1080)
+            .clear("31e4ca35-66c6-4645-afeb-6e66c4ca0559");
+    }
+
     public void clearRequestAndLogsWithRequestPropertiesMatcher() {
         new MockServerClient("localhost", 1080).clear(
             request()

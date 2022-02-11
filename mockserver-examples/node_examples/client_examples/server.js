@@ -290,6 +290,20 @@ function clearWithOpenAPIRequestMatcher() {
         );
 }
 
+function clearWithExpectationId() {
+    var mockServerClient = require('mockserver-client').mockServerClient;
+    mockServerClient("localhost", 1080)
+        .clearById("31e4ca35-66c6-4645-afeb-6e66c4ca0559")
+        .then(
+            function () {
+                console.log("cleared state that matches expectation id");
+            },
+            function (error) {
+                console.log(error);
+            }
+        );
+}
+
 function clearRequestsAndLogsWithRequestPropertiesMatcher() {
     var mockServerClient = require('mockserver-client').mockServerClient;
     mockServerClient("localhost", 1080)

@@ -100,7 +100,7 @@
 }
 ```
 
-#### verify Requests Receive At Most Twice
+#### Verify Requests Receive At Most Twice
 
 ```json
 {
@@ -113,7 +113,7 @@
 }
 ```
 
-#### verify Requests Receive Exactly Twice
+#### Verify Requests Receive Exactly Twice
 
 ```json
 {
@@ -127,7 +127,7 @@
 }
 ```
 
-#### verify Requests Receive At Least Twice By OpenAPI
+#### Verify Requests Receive At Least Twice By OpenAPI
 
 ```json
 {
@@ -141,7 +141,7 @@
 }
 ```
 
-#### verify Requests Receive At Least Twice By OpenAPI With Operation
+#### Verify Requests Receive At Least Twice By OpenAPI With Operation
 
 ```json
 {
@@ -156,7 +156,7 @@
 }
 ```
 
-#### verify Request Sequence
+#### Verify Request Sequence
 
 ```json
 [
@@ -172,7 +172,7 @@
 ]
 ```
 
-#### verify Request Sequence Using Open API
+#### Verify Request Sequence Using Open API
 
 ```json
 [
@@ -190,7 +190,7 @@
 ]
 ```
 
-#### random Bytes Error
+#### Random Bytes Error
 
 ```json
 {
@@ -204,7 +204,7 @@
 }
 ```
 
-#### drop Connection Error
+#### Drop Connection Error
 
 ```json
 {
@@ -267,7 +267,7 @@
 }
 ```
 
-#### Forward Overridden Request And Change Reponse
+#### Forward Overridden Request And Response
 
 ```json
 {
@@ -285,6 +285,233 @@
     },
     "httpResponse": {
       "body": "some_overridden_body"
+    }
+  }
+}
+```
+
+#### Forward Overridden And Modified Request
+
+```json
+{
+  "httpRequest": {
+    "path": "/some/path"
+  },
+  "httpOverrideForwardedRequest": {
+    "requestOverride": {
+      "headers": {
+        "Host": [
+          "target.host.com"
+        ]
+      },
+      "body": "some_overridden_body"
+    },
+    "requestModifier": {
+      "cookies": {
+        "add": {
+          "cookieToAddOne": "addedValue",
+          "cookieToAddTwo": "addedValue"
+        },
+        "remove": [
+          "overrideCookieToRemove",
+          "requestCookieToRemove"
+        ],
+        "replace": {
+          "overrideCookieToReplace": "replacedValue",
+          "requestCookieToReplace": "replacedValue",
+          "extraCookieToReplace": "shouldBeIgnore"
+        }
+      },
+      "headers": {
+        "add": {
+          "headerToAddTwo": [
+            "addedValue"
+          ],
+          "headerToAddOne": [
+            "addedValue"
+          ]
+        },
+        "remove": [
+          "overrideHeaderToRemove",
+          "requestHeaderToRemove"
+        ],
+        "replace": {
+          "requestHeaderToReplace": [
+            "replacedValue"
+          ],
+          "overrideHeaderToReplace": [
+            "replacedValue"
+          ],
+          "extraHeaderToReplace": [
+            "shouldBeIgnore"
+          ]
+        }
+      },
+      "path": {
+        "regex": "^/(.+)/(.+)$",
+        "substitution": "/prefix/$1/infix/$2/postfix"
+      },
+      "queryStringParameters": {
+        "add": {
+          "parameterToAddTwo": [
+            "addedValue"
+          ],
+          "parameterToAddOne": [
+            "addedValue"
+          ]
+        },
+        "remove": [
+          "overrideParameterToRemove",
+          "requestParameterToRemove"
+        ],
+        "replace": {
+          "requestParameterToReplace": [
+            "replacedValue"
+          ],
+          "overrideParameterToReplace": [
+            "replacedValue"
+          ],
+          "extraParameterToReplace": [
+            "shouldBeIgnore"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+#### Forward Overridden And Modified Request And Response
+
+```json
+{
+  "httpRequest": {
+    "path": "/some/path"
+  },
+  "httpOverrideForwardedRequest": {
+    "requestOverride": {
+      "headers": {
+        "Host": [
+          "target.host.com"
+        ]
+      },
+      "body": "some_overridden_body"
+    },
+    "requestModifier": {
+      "cookies": {
+        "add": {
+          "cookieToAddOne": "addedValue",
+          "cookieToAddTwo": "addedValue"
+        },
+        "remove": [
+          "overrideCookieToRemove",
+          "requestCookieToRemove"
+        ],
+        "replace": {
+          "overrideCookieToReplace": "replacedValue",
+          "requestCookieToReplace": "replacedValue",
+          "extraCookieToReplace": "shouldBeIgnore"
+        }
+      },
+      "headers": {
+        "add": {
+          "headerToAddTwo": [
+            "addedValue"
+          ],
+          "headerToAddOne": [
+            "addedValue"
+          ]
+        },
+        "remove": [
+          "overrideHeaderToRemove",
+          "requestHeaderToRemove"
+        ],
+        "replace": {
+          "requestHeaderToReplace": [
+            "replacedValue"
+          ],
+          "overrideHeaderToReplace": [
+            "replacedValue"
+          ],
+          "extraHeaderToReplace": [
+            "shouldBeIgnore"
+          ]
+        }
+      },
+      "path": {
+        "regex": "^/(.+)/(.+)$",
+        "substitution": "/prefix/$1/infix/$2/postfix"
+      },
+      "queryStringParameters": {
+        "add": {
+          "parameterToAddTwo": [
+            "addedValue"
+          ],
+          "parameterToAddOne": [
+            "addedValue"
+          ]
+        },
+        "remove": [
+          "overrideParameterToRemove",
+          "requestParameterToRemove"
+        ],
+        "replace": {
+          "requestParameterToReplace": [
+            "replacedValue"
+          ],
+          "overrideParameterToReplace": [
+            "replacedValue"
+          ],
+          "extraParameterToReplace": [
+            "shouldBeIgnore"
+          ]
+        }
+      }
+    },
+    "responseOverride": {
+      "body": "some_overridden_body"
+    },
+    "responseModifier": {
+      "cookies": {
+        "add": {
+          "cookieToAddOne": "addedValue",
+          "cookieToAddTwo": "addedValue"
+        },
+        "remove": [
+          "overrideCookieToRemove",
+          "requestCookieToRemove"
+        ],
+        "replace": {
+          "overrideCookieToReplace": "replacedValue",
+          "requestCookieToReplace": "replacedValue",
+          "extraCookieToReplace": "shouldBeIgnore"
+        }
+      },
+      "headers": {
+        "add": {
+          "headerToAddTwo": [
+            "addedValue"
+          ],
+          "headerToAddOne": [
+            "addedValue"
+          ]
+        },
+        "remove": [
+          "overrideHeaderToRemove",
+          "requestHeaderToRemove"
+        ],
+        "replace": {
+          "requestHeaderToReplace": [
+            "replacedValue"
+          ],
+          "overrideHeaderToReplace": [
+            "replacedValue"
+          ],
+          "extraHeaderToReplace": [
+            "shouldBeIgnore"
+          ]
+        }
+      }
     }
   }
 }
@@ -339,7 +566,7 @@
 }
 ```
 
-#### javascript Templated Forward
+#### Javascript Templated Forward
 
 ```json
 {
@@ -353,7 +580,7 @@
 }
 ```
 
-#### javascript Templated Forward With Delay
+#### Javascript Templated Forward With Delay
 
 ```json
 {
@@ -371,7 +598,7 @@
 }
 ```
 
-#### velocity Templated Forward
+#### Velocity Templated Forward
 
 ```json
 {
@@ -1676,7 +1903,7 @@ If no request matcher is specified then every request matched
 }
 ```
 
-#### javascript Templated Response
+#### Javascript Templated Response
 
 ```json
 {
@@ -1690,7 +1917,7 @@ If no request matcher is specified then every request matched
 }
 ```
 
-#### javascript Templated Response With Delay
+#### Javascript Templated Response With Delay
 
 ```json
 {
@@ -1708,7 +1935,7 @@ If no request matcher is specified then every request matched
 }
 ```
 
-#### velocity Templated Response
+#### Velocity Templated Response
 
 ```json
 {

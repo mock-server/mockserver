@@ -545,7 +545,7 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
-     * Clear all expectations and logs that match the http
+     * Clear all expectations and logs that match the request matcher
      *
      * @param requestDefinition the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
      */
@@ -561,18 +561,18 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
-     * Clear all expectations and logs that match the http
+     * Clear all expectations and logs that match the expectation id
      *
-     * @param expectationId the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
+     * @param expectationId the expectation id that is used to clear expectations and logs
      */
     public MockServerClient clear(String expectationId) {
         return clear(expectationId(expectationId));
     }
 
     /**
-     * Clear all expectations and logs that match the http
+     * Clear all expectations and logs that match the expectation id
      *
-     * @param expectationId the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
+     * @param expectationId the expectation id that is used to clear expectations and logs
      */
     public MockServerClient clear(ExpectationId expectationId) {
         sendRequest(
@@ -586,7 +586,7 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
-     * Clear expectations, logs or both that match the http
+     * Clear expectations, logs or both that match the request matcher
      *
      * @param requestDefinition the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
      * @param type              the type to clear, EXPECTATION, LOG or BOTH
@@ -604,9 +604,9 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
-     * Clear expectations, logs or both that match the http
+     * Clear expectations, logs or both that match the expectation id
      *
-     * @param expectationId the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
+     * @param expectationId the expectation id that is used to clear expectations and logs
      * @param type          the type to clear, EXPECTATION, LOG or BOTH
      */
     public MockServerClient clear(String expectationId, ClearType type) {
@@ -614,9 +614,9 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
-     * Clear expectations, logs or both that match the http
+     * Clear expectations, logs or both that match the expectation id
      *
-     * @param expectationId the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
+     * @param expectationId the expectation id that is used to clear expectations and logs
      * @param type          the type to clear, EXPECTATION, LOG or BOTH
      */
     public MockServerClient clear(ExpectationId expectationId, ClearType type) {

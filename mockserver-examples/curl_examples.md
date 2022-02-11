@@ -105,7 +105,7 @@ curl -X PUT 'localhost:1080/mockserver/verify'
 }'
 ```
 
-#### verify Requests Receive At Most Twice
+#### Verify Requests Receive At Most Twice
 
 ```bash
 curl -X PUT 'localhost:1080/mockserver/verify' 
@@ -119,7 +119,7 @@ curl -X PUT 'localhost:1080/mockserver/verify'
 }'
 ```
 
-#### verify Requests Receive Exactly Twice
+#### Verify Requests Receive Exactly Twice
 
 ```bash
 curl -X PUT 'localhost:1080/mockserver/verify' 
@@ -134,7 +134,7 @@ curl -X PUT 'localhost:1080/mockserver/verify'
 }'
 ```
 
-#### verify Requests Receive At Least Twice By OpenAPI
+#### Verify Requests Receive At Least Twice By OpenAPI
 
 ```bash
 curl -X PUT 'localhost:1080/mockserver/verify' 
@@ -149,7 +149,7 @@ curl -X PUT 'localhost:1080/mockserver/verify'
 }'
 ```
 
-#### verify Requests Receive At Least Twice By OpenAPI With Operation
+#### Verify Requests Receive At Least Twice By OpenAPI With Operation
 
 ```bash
 curl -X PUT 'localhost:1080/mockserver/verify' 
@@ -165,7 +165,7 @@ curl -X PUT 'localhost:1080/mockserver/verify'
 }'
 ```
 
-#### verify Request Sequence
+#### Verify Request Sequence
 
 ```bash
 curl -X PUT 'localhost:1080/mockserver/verifySequence' 
@@ -182,7 +182,7 @@ curl -X PUT 'localhost:1080/mockserver/verifySequence'
 ]
 ```
 
-#### verify Request Sequence Using Open API
+#### Verify Request Sequence Using Open API
 
 ```bash
 curl -X PUT 'localhost:1080/mockserver/verifySequence' 
@@ -201,7 +201,7 @@ curl -X PUT 'localhost:1080/mockserver/verifySequence'
 ]
 ```
 
-#### retrieve Recorded Requests Filtered By Request Matcher
+#### Retrieve Recorded Requests Filtered By Request Matcher
 
 ```bash
 curl -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS&format=JSON"
@@ -211,7 +211,7 @@ curl -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS&format=JSON
 }'
 ```
 
-#### retrieve Recorded Log Messages Filtered By Request Matcher
+#### Retrieve Recorded Log Messages Filtered By Request Matcher
 
 ```bash
 curl -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS"
@@ -221,7 +221,7 @@ curl -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS"
 }'
 ```
 
-#### clear With Request Properties Matcher
+#### Clear With Request Properties Matcher
 
 
 ```bash
@@ -230,7 +230,7 @@ curl -X PUT "http://localhost:1080/mockserver/clear" -d '{
 }'
 ```
 
-#### clear With Open API Request Matcher
+#### Clear With Open API Request Matcher
 
 ```bash
 curl -X PUT "http://localhost:1080/mockserver/clear" -d '{
@@ -239,7 +239,15 @@ curl -X PUT "http://localhost:1080/mockserver/clear" -d '{
 }'
 ```
 
-#### clear Requests And Logs With Request Properties Matcher
+#### Clear With Expectation Id
+
+```bash
+curl -X PUT "http://localhost:1080/mockserver/clear" -d '{
+    "id": "31e4ca35-66c6-4645-afeb-6e66c4ca0559"
+}'
+```
+
+#### Clear Requests And Logs With Request Properties Matcher
 
 ```bash
 curl -X PUT "http://localhost:1080/mockserver/clear?type=LOGS" -d '{
@@ -247,7 +255,7 @@ curl -X PUT "http://localhost:1080/mockserver/clear?type=LOGS" -d '{
 }'
 ```
 
-#### clear Requests And Logs With Open API Request Properties Matcher
+#### Clear Requests And Logs With Open API Request Properties Matcher
 
 ```bash
 curl -X PUT "http://localhost:1080/mockserver/clear?type=LOGS" -d '{
@@ -256,13 +264,13 @@ curl -X PUT "http://localhost:1080/mockserver/clear?type=LOGS" -d '{
 }'
 ```
 
-#### reset
+#### Reset
 
 ```bash
 curl -X PUT "http://localhost:1080/mockserver/reset
 ```
 
-#### random Bytes Error
+#### Random Bytes Error
 
 ```bash
 curl -X PUT 'localhost:1080/mockserver/expectation' 
@@ -277,7 +285,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 }'
 ```
 
-#### drop Connection Error
+#### Drop Connection Error
 
 ```bash
 curl -X PUT 'localhost:1080/mockserver/expectation' 
@@ -344,7 +352,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 }'
 ```
 
-#### Forward Overridden Request And Change Reponse
+#### Forward Overridden Request And Response
 
 ```bash
 curl -X PUT 'localhost:1080/mockserver/expectation' 
@@ -365,6 +373,233 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
       "body": "some_overridden_body"
     }
   }
+}'
+```
+
+#### Forward Overridden And Modified Request
+
+```bash
+curl -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpOverrideForwardedRequest": {
+        "requestOverride": {
+            "headers": {
+                "Host": [
+                    "target.host.com"
+                ]
+            }, 
+            "body": "some_overridden_body"
+        }, 
+        "requestModifier": {
+            "cookies": {
+                "add": {
+                    "cookieToAddOne": "addedValue", 
+                    "cookieToAddTwo": "addedValue"
+                }, 
+                "remove": [
+                    "overrideCookieToRemove", 
+                    "requestCookieToRemove"
+                ], 
+                "replace": {
+                    "overrideCookieToReplace": "replacedValue", 
+                    "requestCookieToReplace": "replacedValue", 
+                    "extraCookieToReplace": "shouldBeIgnore"
+                }
+            }, 
+            "headers": {
+                "add": {
+                    "headerToAddTwo": [
+                        "addedValue"
+                    ], 
+                    "headerToAddOne": [
+                        "addedValue"
+                    ]
+                }, 
+                "remove": [
+                    "overrideHeaderToRemove", 
+                    "requestHeaderToRemove"
+                ], 
+                "replace": {
+                    "requestHeaderToReplace": [
+                        "replacedValue"
+                    ], 
+                    "overrideHeaderToReplace": [
+                        "replacedValue"
+                    ], 
+                    "extraHeaderToReplace": [
+                        "shouldBeIgnore"
+                    ]
+                }
+            }, 
+            "path": {
+                "regex": "^/(.+)/(.+)$", 
+                "substitution": "/prefix/$1/infix/$2/postfix"
+            }, 
+            "queryStringParameters": {
+                "add": {
+                    "parameterToAddTwo": [
+                        "addedValue"
+                    ], 
+                    "parameterToAddOne": [
+                        "addedValue"
+                    ]
+                }, 
+                "remove": [
+                    "overrideParameterToRemove", 
+                    "requestParameterToRemove"
+                ], 
+                "replace": {
+                    "requestParameterToReplace": [
+                        "replacedValue"
+                    ], 
+                    "overrideParameterToReplace": [
+                        "replacedValue"
+                    ], 
+                    "extraParameterToReplace": [
+                        "shouldBeIgnore"
+                    ]
+                }
+            }
+        }
+    }
+}'
+```
+
+#### Forward Overridden And Modified Request And Response
+
+```bash
+curl -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpOverrideForwardedRequest": {
+        "requestOverride": {
+            "headers": {
+                "Host": [
+                    "target.host.com"
+                ]
+            }, 
+            "body": "some_overridden_body"
+        }, 
+        "requestModifier": {
+            "cookies": {
+                "add": {
+                    "cookieToAddOne": "addedValue", 
+                    "cookieToAddTwo": "addedValue"
+                }, 
+                "remove": [
+                    "overrideCookieToRemove", 
+                    "requestCookieToRemove"
+                ], 
+                "replace": {
+                    "overrideCookieToReplace": "replacedValue", 
+                    "requestCookieToReplace": "replacedValue", 
+                    "extraCookieToReplace": "shouldBeIgnore"
+                }
+            }, 
+            "headers": {
+                "add": {
+                    "headerToAddTwo": [
+                        "addedValue"
+                    ], 
+                    "headerToAddOne": [
+                        "addedValue"
+                    ]
+                }, 
+                "remove": [
+                    "overrideHeaderToRemove", 
+                    "requestHeaderToRemove"
+                ], 
+                "replace": {
+                    "requestHeaderToReplace": [
+                        "replacedValue"
+                    ], 
+                    "overrideHeaderToReplace": [
+                        "replacedValue"
+                    ], 
+                    "extraHeaderToReplace": [
+                        "shouldBeIgnore"
+                    ]
+                }
+            }, 
+            "path": {
+                "regex": "^/(.+)/(.+)$", 
+                "substitution": "/prefix/$1/infix/$2/postfix"
+            }, 
+            "queryStringParameters": {
+                "add": {
+                    "parameterToAddTwo": [
+                        "addedValue"
+                    ], 
+                    "parameterToAddOne": [
+                        "addedValue"
+                    ]
+                }, 
+                "remove": [
+                    "overrideParameterToRemove", 
+                    "requestParameterToRemove"
+                ], 
+                "replace": {
+                    "requestParameterToReplace": [
+                        "replacedValue"
+                    ], 
+                    "overrideParameterToReplace": [
+                        "replacedValue"
+                    ], 
+                    "extraParameterToReplace": [
+                        "shouldBeIgnore"
+                    ]
+                }
+            }
+        }, 
+        "responseOverride": {
+            "body": "some_overridden_body"
+        },
+        "responseModifier": {
+            "cookies": {
+                "add": {
+                    "cookieToAddOne": "addedValue", 
+                    "cookieToAddTwo": "addedValue"
+                }, 
+                "remove": [
+                    "overrideCookieToRemove", 
+                    "requestCookieToRemove"
+                ], 
+                "replace": {
+                    "overrideCookieToReplace": "replacedValue", 
+                    "requestCookieToReplace": "replacedValue", 
+                    "extraCookieToReplace": "shouldBeIgnore"
+                }
+            }, 
+            "headers": {
+                "add": {
+                    "headerToAddTwo": [
+                        "addedValue"
+                    ], 
+                    "headerToAddOne": [
+                        "addedValue"
+                    ]
+                }, 
+                "remove": [
+                    "overrideHeaderToRemove", 
+                    "requestHeaderToRemove"
+                ], 
+                "replace": {
+                    "requestHeaderToReplace": [
+                        "replacedValue"
+                    ], 
+                    "overrideHeaderToReplace": [
+                        "replacedValue"
+                    ], 
+                    "extraHeaderToReplace": [
+                        "shouldBeIgnore"
+                    ]
+                }
+            }
+        }
+    }
 }'
 ```
 
@@ -1820,7 +2055,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 }'
 ```
 
-#### javascript Templated Response
+#### Javascript Templated Response
 
 ```bash
 curl -X PUT 'localhost:1080/mockserver/expectation' 
@@ -1835,7 +2070,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 }'
 ```
 
-#### javascript Templated Response With Delay
+#### Javascript Templated Response With Delay
 
 ```bash
 curl -X PUT 'localhost:1080/mockserver/expectation' 
@@ -1854,7 +2089,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 }'
 ```
 
-#### velocity Templated Response
+#### Velocity Templated Response
 
 ```bash
 curl -X PUT 'localhost:1080/mockserver/expectation' 
@@ -1869,13 +2104,13 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 }'
 ```
 
-#### retrieve All Active Expectations
+#### Retrieve All Active Expectations
 
 ```bash
 curl -X PUT "http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS"
 ```
 
-#### retrieve Active Expectations In Json Filtered By Request Matcher
+#### Retrieve Active Expectations In Json Filtered By Request Matcher
 
 /mockserver/retrieve?type=ACTIVE_EXPECTATIONS&format=JSON
 
@@ -1887,13 +2122,13 @@ curl -X PUT "http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS&
 }'
 ```
 
-#### retrieve All Recorded Expectations
+#### Retrieve All Recorded Expectations
 
 ```bash
 curl -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS"
 ```
 
-#### retrieve Recorded Expectations In Json Filtered By Request Matcher
+#### Retrieve Recorded Expectations In Json Filtered By Request Matcher
 
 ```bash
 curl -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS&format=JSON"
@@ -1903,13 +2138,13 @@ curl -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATION
 }'
 ```
 
-#### retrieve All Recorded Requests
+#### Retrieve All Recorded Requests
 
 ```bash
 curl -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS"
 ```
 
-#### retrieve Recorded Requests In Json Filtered By Request Matcher
+#### Retrieve Recorded Requests In Json Filtered By Request Matcher
 
 ```bash
 curl -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS&format=JSON"
@@ -1919,13 +2154,13 @@ curl -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS&format=JSON
 }'
 ```
 
-#### retrieve All Recorded Requests And There Responses
+#### Retrieve All Recorded Requests And There Responses
 
 ```bash
 curl -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUEST_RESPONSES"
 ```
 
-#### retrieve Recorded Requests And There Responses In Json Filtered By Request Matcher
+#### Retrieve Recorded Requests And There Responses In Json Filtered By Request Matcher
 
 ```bash
 curl -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUEST_RESPONSES&format=JSON"
