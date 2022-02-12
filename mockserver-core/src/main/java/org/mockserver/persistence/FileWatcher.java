@@ -14,7 +14,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.slf4j.event.Level.INFO;
 
 public class FileWatcher {
@@ -28,9 +27,7 @@ public class FileWatcher {
                 new Scheduler.SchedulerThreadFactory("FileWatcher"),
                 new ThreadPoolExecutor.CallerRunsPolicy()
             );
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                scheduler.shutdown();
-            }));
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> scheduler.shutdown()));
         }
         return scheduler;
     }
@@ -40,7 +37,7 @@ public class FileWatcher {
     private static long pollPeriod = 5;
     private static TimeUnit pollPeriodUnits = TimeUnit.SECONDS;
 
-    public FileWatcher(Path filePath, Runnable updatedHandler, Consumer<Throwable> errorHandler, MockServerLogger mockServerLogger) throws Exception {
+    public FileWatcher(Path filePath, Runnable updatedHandler, Consumer<Throwable> errorHandler, MockServerLogger mockServerLogger) {
         final Path path = filePath.getParent() != null ? filePath : Paths.get(new File(".").getAbsolutePath(), filePath.toString());
         final AtomicReference<Integer> fileHash = new AtomicReference<>(getFileHash(path));
         mockServerLogger.logEvent(
@@ -55,11 +52,8 @@ public class FileWatcher {
                     updatedHandler.run();
                     fileHash.set(getFileHash(path));
                 }
-                MILLISECONDS.sleep(100);
             } catch (Throwable throwable) {
-                if (!(throwable instanceof InterruptedException)) {
-                    errorHandler.accept(throwable);
-                }
+                errorHandler.accept(throwable);
             }
         }, pollPeriod, pollPeriod, pollPeriodUnits);
     }
