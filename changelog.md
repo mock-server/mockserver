@@ -6,6 +6,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.12.0] - 2022-02-12
+
+### Added
+- index.yaml to www.mock-server.com so it can be used as a helm chart repository
+- command line flags can now be set as environment variables simplifying some container deployment scenarios
+- glob support for initialisation files to allow multiple files to be specified
+- request and response modifiers to dynamically update path, query parameters, headers, and cookies
+- custom factory for key and certificates to provider more flexibility
+- support for Open API expectations in json initialisation file
+- improved @MockServerTest to support inheritance
+- more flexibility over semicolon parsing for query parameters
+
+### Changed
+- ensured that TCP connections are closed immediately when shutting down to improved time before operating system frees the port
+- reduce noise from Netty INFO logs that were not correct or misleading
+- retrieveRecordedRequests now returns HttpRequest[]
+- made it easier to set priority and id both in Java and Node clients in multiple places
+- default charset for JSON and XML to UTF-8 from ISO 8859-1
+- error handling for Open API so only single operation is skipped on failure not the entire file
+- reduced over resolution of OpenAPI that triggered bugs in Swagger Parser V3 library
+- replaces JDK FileWatcher with custom solution for watch file changes to work around multiple JDK bugs
+- improved helm chart by supporting more configuration options
+- remove explicit calls to System.gc()
+
+### Fixed
+- multiple issues with clearing by expectation id
+- multiple issues with verifying by expectation id
+- multiple NullPointerExceptions in backend for UI
+- ensure exact query string is proxied allowing for empty values, leading `!` or or other special scenarios
+- expectation updates from FileWatcher so only expecation from matching source are updated resolving multiple bugs
+- ensured socket protocol of HTTPS resulting in forwarded requests using TLS
+- logging of exceptions such as port already bound at startup
+- retrieval of active exceptions where expectations were no longer active but not yet removed from expectations list
+- no longer treats ndjson as json
+
 ## [5.11.2] - 2020-10-08
 
 ### Added
