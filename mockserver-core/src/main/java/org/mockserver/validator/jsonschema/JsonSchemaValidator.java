@@ -30,7 +30,7 @@ import static org.mockserver.character.Character.NEW_LINE;
  */
 public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToString implements Validator<String> {
 
-    public static final String OPEN_API_SPECIFICATION_URL = "OpenAPI Specification: https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.11.x" + NEW_LINE +
+    public static final String OPEN_API_SPECIFICATION_URL = "OpenAPI Specification: https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.12.x" + NEW_LINE +
         "Documentation: https://mock-server.com/mock_server/creating_expectations.html";
     private static final Map<String, String> schemaCache = new ConcurrentHashMap<>();
     // using draft 07 as default due to TLS issues downloading draft 2019-09 which causes errors
