@@ -4,7 +4,7 @@
 
     <groupId>org.mock-server</groupId>
     <artifactId>mockserver</artifactId>
-    <version>5.11.3-SNAPSHOT</version>
+    <version>5.12.0</version>
     <packaging>pom</packaging>
 
     <name>MockServer</name>
@@ -26,7 +26,7 @@
         <url>https://github.com/jamesdbloom/mockservice.git</url>
         <connection>scm:git:https://github.com/jamesdbloom/mockservice.git</connection>
         <developerConnection>scm:git:git@github.com:jamesdbloom/mockservice.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>mockserver-5.12.0</tag>
     </scm>
 
     <distributionManagement>
@@ -66,8 +66,8 @@
         <xmlunit.version>2.9.0</xmlunit.version>
         <skipTests>false</skipTests>
         <skipAssembly>false</skipAssembly>
-        <release.arguments/>
-        <javadoc.additional.parameters/>
+        <release.arguments />
+        <javadoc.additional.parameters />
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
     </properties>
 
@@ -808,7 +808,7 @@
                 <version>3.0.0</version>
                 <configuration>
                     <rules>
-                        <dependencyConvergence/>
+                        <dependencyConvergence />
                     </rules>
                 </configuration>
                 <executions>
