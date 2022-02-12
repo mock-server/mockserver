@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support for Open API expectations in json initialisation file
 - improved @MockServerTest to support inheritance
 - more flexibility over semicolon parsing for query parameters
+- - shaded jar for mockserver-netty and mockserver-client-java to reduce impact of dependency version mismatches with projects including these dependencies
 
 ### Changed
 - ensured that TCP connections are closed immediately when shutting down to improved time before operating system frees the port
