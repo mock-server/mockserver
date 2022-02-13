@@ -1474,9 +1474,9 @@ mockServerClient("localhost", 1080).mockAnyResponse({
  &lt;/<span class="element">plugin</span>&gt;</code></pre>
 
     <p>If MockServer is started using the <a href="/mock_server/running_mock_server.html#running_from_command_line">command line</a> then the callback classes must be added to the JVM using the classpath command line switch (<strong>cp</strong> or <strong>classpath</strong>). The <strong>classpath</strong> switch is ignored by the JVM if the
-        <strong>jar</strong> switch is used. So to run the MockServer from the command line directly (with mockserver-netty-5.12.0-jar-with-dependencies.jar) you must specify the <strong>org.mockserver.cli.Main</strong> main class specifically and not use the <strong>jar</strong> switch as follows.</p>
+        <strong>jar</strong> switch is used. So to run the MockServer from the command line directly (with mockserver-netty-5.12.0-shaded.jar) you must specify the <strong>org.mockserver.cli.Main</strong> main class specifically and not use the <strong>jar</strong> switch as follows.</p>
 
-    <pre><code class="code">java -Dfile.encoding=UTF-8 -cp mockserver-netty-5.12.0-jar-with-dependencies.jar:my-callback-dependency.jar org.mockserver.cli.Main -serverPort 1080</code></pre>
+    <pre><code class="code">java -Dfile.encoding=UTF-8 -cp mockserver-netty-5.12.0-shaded.jar:my-callback-dependency.jar org.mockserver.cli.Main -serverPort 1080</code></pre>
 </div>
 <button id="button_forward_method_or_closure_callback" class="accordion">method / closure callback to override request</button>
 <div class="panel">

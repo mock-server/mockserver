@@ -23,7 +23,7 @@ sitemap:
 <pre class="prettyprint lang-javascript code"><code class="code">MOCKSERVER_PERSIST_EXPECTATIONS=true \
 MOCKSERVER_PERSISTED_EXPECTATIONS_PATH=mockserverInitialization.json \
 MOCKSERVER_INITIALIZATION_JSON_PATH=mockserverInitialization.json \
-java -jar ~/Downloads/mockserver-netty-5.12.0-jar-with-dependencies.jar -serverPort 1080,1081 -logLevel INFO</code></pre>
+java -jar ~/Downloads/mockserver-netty-5.12.0-shaded.jar -serverPort 1080,1081 -logLevel INFO</code></pre>
 
 <p>or</p>
 
@@ -31,7 +31,7 @@ java -jar ~/Downloads/mockserver-netty-5.12.0-jar-with-dependencies.jar -serverP
 -Dmockserver.persistExpectations=true \
 -Dmockserver.persistedExpectationsPath=mockserverInitialization.json \
 -Dmockserver.initializationJsonPath=mockserverInitialization.json \
--jar ~/Downloads/mockserver-netty-5.12.0-jar-with-dependencies.jar -serverPort 1080,1081 -logLevel INFO</code></pre>
+-jar ~/Downloads/mockserver-netty-5.12.0-shaded.jar -serverPort 1080,1081 -logLevel INFO</code></pre>
 
 {% include_subpage _includes/clustering.html %}
 

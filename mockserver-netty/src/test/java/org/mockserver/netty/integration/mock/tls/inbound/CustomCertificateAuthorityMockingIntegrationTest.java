@@ -2,8 +2,7 @@ package org.mockserver.netty.integration.mock.tls.inbound;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.mockserver.integration.ClientAndServer;
-import org.mockserver.testing.integration.mock.AbstractBasicMockingIntegrationTest;
+import org.mockserver.testing.integration.mock.AbstractBasicMockingSameJVMIntegrationTest;
 
 import static org.mockserver.configuration.ConfigurationProperties.certificateAuthorityCertificate;
 import static org.mockserver.configuration.ConfigurationProperties.certificateAuthorityPrivateKey;
@@ -13,7 +12,7 @@ import static org.mockserver.stop.Stop.stopQuietly;
 /**
  * @author jamesdbloom
  */
-public class CustomCertificateAuthorityMockingIntegrationTest extends AbstractBasicMockingIntegrationTest {
+public class CustomCertificateAuthorityMockingIntegrationTest extends AbstractBasicMockingSameJVMIntegrationTest {
 
     private static int mockServerPort;
     private static String originalCertificateAuthorityCertificate;

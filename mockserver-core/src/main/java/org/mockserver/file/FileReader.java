@@ -1,6 +1,5 @@
 package org.mockserver.file;
 
-import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.Resource;
@@ -12,6 +11,8 @@ import org.mockserver.logging.MockServerLogger;
 
 import java.io.*;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -46,6 +47,27 @@ public class FileReader {
             inputStream = new FileInputStream(filename);
         }
         return inputStream;
+    }
+
+    /**
+     * attempt to file fully qualified file if possible
+     * may fail if file is in classpath and inside a jar file
+     * in this case the original path is returned
+     */
+    public static String filePathFromClassPathOrPath(String filename) {
+        URL classpathResource = FileReader.class.getClassLoader().getResource(filename);
+        if (classpathResource != null) {
+            try {
+                return new File(classpathResource.toURI()).getAbsolutePath();
+            } catch (Throwable ignore) {
+                // skip to file system
+            }
+        }
+        File file = new File(filename);
+        if (file.exists()) {
+            return file.getAbsolutePath();
+        }
+        return filename;
     }
 
     public static Reader openReaderToFileFromClassPathOrPath(String filename) throws FileNotFoundException {

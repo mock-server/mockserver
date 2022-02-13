@@ -26,6 +26,7 @@ sitemap:
 	    &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
 	    &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-netty</span>&lt;/<span class="element">artifactId</span>&gt;
 	    &lt;<span class="element">version</span>&gt;<span class="element_value">RELEASE</span>&lt;/<span class="element">version</span>&gt;
+	    &lt;<span class="element">classifier</span>&gt;<span class="element_value">shaded</span>&lt;/<span class="element">classifier</span>&gt;
     &lt;/<span class="element">dependency</span>&gt;
     ...
 &lt;<span class="element">dependencies</span>&gt;</code></pre>
@@ -38,8 +39,8 @@ sitemap:
     ...
 }</code></pre></li>
 
-	<li><a href="https://search.maven.org/#search%7Cga%7C1%7Cmockserver-netty">mockserver-netty:jar-with-dependencies</a> - as above using Netty that includes all dependencies are bundled into the jar file, this artifact
-		<a href="https://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/5.12.0/mockserver-netty-5.12.0-jar-with-dependencies.jar">can be downloaded</a>.
+	<li><a href="https://search.maven.org/#search%7Cga%7C1%7Cmockserver-netty">mockserver-netty:shaded</a> - as above using Netty that includes all dependencies are bundled into the jar file, this artifact
+		<a href="https://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/5.12.0/mockserver-netty-5.12.0-shaded.jar">can be downloaded</a>.
 	</li>
 
 	<li><a href="https://search.maven.org/#search%7Cga%7C1%7Cmockserver-war">mockserver-war</a> - a deployable WAR for mocking that can be deployed to any JEE web server, this artifact
@@ -61,6 +62,7 @@ sitemap:
     &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
         &lt;<span class="element">pipeLogToConsole</span>&gt;<span class="element_value">true</span>&lt;/<span class="element">pipeLogToConsole</span>&gt;
+    &lt;/<span class="element">configuration</span>&gt;
 &lt;/<span class="element">plugin</span>&gt;</code></pre>
 
 	<li><a href="https://search.maven.org/#search%7Cga%7C1%7Cmockserver-client-java">mockserver-client-java</a> - a Java client to communicate with both the server and the proxy
@@ -71,13 +73,14 @@ sitemap:
 	&lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
 	&lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-client-java</span>&lt;/<span class="element">artifactId</span>&gt;
 	&lt;<span class="element">version</span>&gt;<span class="element_value">RELEASE</span>&lt;/<span class="element">version</span>&gt;
+	&lt;<span class="element">classifier</span>&gt;<span class="element_value">shaded</span>&lt;/<span class="element">classifier</span>&gt;
 &lt;/<span class="element">dependency</span>&gt;</code></pre>
 
     <p>Add to a gradle build build.gradle as follows:</p>
 
 <pre><code class="code"><span class="final">dependencies</span> {
     ...
-    <span class="final">testImplementation</span>(<span class="string_literal">"org.mock-server:mockserver-client-java:5.12.0"</span>)
+    <span class="final">testImplementation</span>(<span class="string_literal">"org.mock-server:mockserver-client-java:5.12.0:shaded"</span>)
     ...
 }</code></pre></li>
 
@@ -140,6 +143,7 @@ sitemap:
 	&lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
 	&lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-netty</span>&lt;/<span class="element">artifactId</span>&gt;
 	&lt;<span class="element">version</span>&gt;<span class="element_value">SNAPSHOT</span>&lt;/<span class="element">version</span>&gt;
+	&lt;<span class="element">classifier</span>&gt;<span class="element_value">shaded</span>&lt;/<span class="element">classifier</span>&gt;
 &lt;/<span class="element">dependency</span>&gt;</code></pre>
 
 <h3>Gradle</h3>

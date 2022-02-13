@@ -24,6 +24,8 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>mockserver-client-java</artifactId>
+            <classifier>shaded</classifier>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>

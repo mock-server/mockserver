@@ -7,7 +7,7 @@ import org.mockserver.client.MockServerClient;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.model.*;
 import org.mockserver.netty.MockServer;
-import org.mockserver.testing.integration.mock.AbstractBasicMockingIntegrationTest;
+import org.mockserver.testing.integration.mock.AbstractBasicMockingSameJVMIntegrationTest;
 import org.mockserver.uuid.UUIDService;
 import org.slf4j.event.Level;
 
@@ -37,7 +37,7 @@ import static org.mockserver.stop.Stop.stopQuietly;
 /**
  * @author jamesdbloom
  */
-public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIntegrationTest {
+public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingSameJVMIntegrationTest {
 
     private static int mockServerPort;
 
@@ -81,19 +81,19 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                 response("some_body"),
                 makeRequest(
                     request().withPath(calculatePath("some_path_one")),
-                        HEADERS_TO_IGNORE)
+                    HEADERS_TO_IGNORE)
             );
             assertEquals(
                 notFoundResponse(),
                 makeRequest(
                     request().withPath(calculatePath("not_found")),
-                        HEADERS_TO_IGNORE)
+                    HEADERS_TO_IGNORE)
             );
             assertEquals(
                 response("some_body"),
                 makeRequest(
                     request().withPath(calculatePath("some_path_three")),
-                        HEADERS_TO_IGNORE)
+                    HEADERS_TO_IGNORE)
             );
 
             // then
@@ -334,7 +334,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     .withHeader("headerName", "headerValue")
                     .withCookie("cookieName", "cookieValue")
                 ,
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // then
@@ -352,7 +352,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     .withHeader("headerName", "headerValue")
                     .withCookie("cookieName", "cookieValue")
                 ,
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // then
@@ -369,7 +369,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     .withPath(calculatePath("some_path?parameterName=parameterValue"))
                     .withHeader("headerName", "headerOtherValue")
                     .withCookie("cookieName", "cookieValue"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // then
@@ -387,7 +387,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     .withHeader("headerName", "headerValue")
                     .withCookie("cookieName", "cookieOtherValue")
                 ,
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -416,7 +416,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                 request()
                     .withMethod("POST")
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -428,7 +428,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     .withMethod("POST")
                     .withPath(calculatePath("some_path"))
                     .withBody("some_random_body"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -480,7 +480,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     .withBody(exact("some_other_body"))
                     .withHeaders(header("headerName", "headerValue"))
                     .withCookies(cookie("cookieName", "cookieValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -532,7 +532,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     .withBody(exact("some_body"))
                     .withHeaders(header("headerName", "headerValue"))
                     .withCookies(cookie("cookieName", "cookieValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -562,7 +562,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                 request()
                     .withMethod("GET")
                     .withHeaders(header("headerName", "headerValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // then
@@ -575,7 +575,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                 request()
                     .withMethod("GET")
                     .withHeaders(header("otherHeaderName", "headerValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 

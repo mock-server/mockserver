@@ -29,17 +29,17 @@ Release Steps
     9. npm publish --access=public --otp=****
 6. update mockserver-maven-plugin
     1. update parent pom SNAPSHOT version to RELEASE version
-    2. update jar-with-dependencies SNAPSHOT version to RELEASE version
+    2. update shaded SNAPSHOT version to RELEASE version
     3. ./scripts/local_deploy_snapshot.sh
     4. git push origin master
     5. ./scripts/local_release.sh
     6. update parent pom RELEASE version to new SNAPSHOT version
-    7. update jar-with-dependencies RELEASE version to new SNAPSHOT version
+    7. update shaded RELEASE version to new SNAPSHOT version
     8. /scripts/local_deploy_snapshot.sh
     9. release on Maven https://oss.sonatype.org/index.html#stagingRepositories
 7. update docker image
     1. ensure maven returns the latest release
-        1. curl -v https://oss.sonatype.org/service/local/artifact/maven/redirect\?r\=releases\&g\=org.mock-server\&a\=mockserver-netty\&c\=jar-with-dependencies\&e\=jar\&v\=RELEASE
+        1. curl -v https://oss.sonatype.org/service/local/artifact/maven/redirect\?r\=releases\&g\=org.mock-server\&a\=mockserver-netty\&c\=shaded\&e\=jar\&v\=RELEASE
     2. update Dockerfile (no longer required)
     3. docker build --no-cache -t mockserver/mockserver:mockserver-x.x.x ./docker
     4. docker build --no-cache -t jamesdbloom/mockserver:mockserver-x.x.x ./docker

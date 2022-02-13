@@ -75,7 +75,7 @@ import static org.mockserver.model.XmlSchemaBody.xmlSchemaFromResource;
 /**
  * @author jamesdbloom
  */
-public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBasicMockingIntegrationTest {
+public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBasicMockingSameJVMIntegrationTest {
 
     @BeforeClass
     public static void fixTime() {
@@ -96,7 +96,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // - in https
         assertEquals(
@@ -108,7 +108,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withSecure(true)
                     .withPath(calculatePath("")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -127,7 +127,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // - in https
         assertEquals(
@@ -138,7 +138,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withSecure(true)
                     .withPath(calculatePath("")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -173,7 +173,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path2")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -183,7 +183,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path1")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -210,7 +210,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -221,7 +221,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withSecure(true)
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -230,7 +230,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -265,7 +265,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path?variableOne=variableOneValue&variableTwo=variableTwoValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -274,7 +274,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path?variableOne=variableOneValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -283,7 +283,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path?variableTwo=variableTwoValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -292,7 +292,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path?otherVariable=otherVariableValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -301,7 +301,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // then
@@ -310,35 +310,35 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path?variableOne=otherVariableValue&variableTwo=otherVariableValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             localNotFoundResponse(),
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path?variableOne=otherVariableValue&variableTwo=variableTwoValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             localNotFoundResponse(),
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path?variableOne=variableOneValue&variableTwo=otherVariableValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             localNotFoundResponse(),
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path?variableOne=otherVariableValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             localNotFoundResponse(),
             makeRequest(
                 request()
                     .withPath(calculatePath("some/path?variableTwo=otherVariableValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -380,7 +380,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withHeader("headerNameOne", "headerValueOne"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -389,7 +389,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withHeader("headerNameTwo", "headerValueTwo"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -399,7 +399,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withHeader("headerNameOne", "headerValueOne")
                     .withHeader("headerNameTwo", "headerValueTwo"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // then
@@ -408,7 +408,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withHeader("headerNameOne", "headerOtherValue"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // then
@@ -417,7 +417,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withHeader("headerNameTwo", "headerOtherValue"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // then
@@ -425,7 +425,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             localNotFoundResponse(),
             makeRequest(
                 request(),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -448,7 +448,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withHeader("Authorization", "some_value"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             localNotFoundResponse(),
@@ -456,7 +456,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withHeader("Authorization", "some_value")
                     .withHeader("SomeHeader", "some_other_value"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -466,7 +466,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withHeader("NotAuthorization", "some_value")
                     .withHeader("SomeHeader", "some_other_value"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -475,7 +475,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withHeader("SomeHeader", "some_other_value"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -516,7 +516,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    \"price\": 12.50," + NEW_LINE +
                         "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                         "}")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -527,7 +527,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // then
@@ -542,7 +542,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    \"name\": \"A σπίτι door\"," + NEW_LINE +
                         "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                         "}")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -604,7 +604,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "&name=A+green+door" +
                         "&price=12.5" +
                         "&tags=home+green"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // then
@@ -620,7 +620,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "&name=A+green+door" +
                         "&price=12.5" +
                         "&tags=home+green+door+book+expensive"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -662,7 +662,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         param("queryStringParameterTwoName", "queryStringParameterTwoValue")
                     )
                     .withBody(params(param("bodyParameterName", "bodyParameterValue"))),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -677,7 +677,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         param("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
                         param("queryStringParameterTwoName", "queryStringParameterTwoValue")
                     ),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             localNotFoundResponse(),
@@ -690,7 +690,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         param("queryStringParameterTwoName", "queryStringParameterTwoValue")
                     )
                     .withBody(params(param("bodyOtherParameterName", "bodyOtherParameterValue"))),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -727,7 +727,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withHeader("headerNameOne", "headerValueOne")
                     .withHeader("headerNameTwo", "headerValueTwo"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -737,7 +737,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withHeader("headerNameOne", "headerValueOne", "headerOtherValueOne")
                     .withHeader("headerNameTwo", "headerValueTwo"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -747,7 +747,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withHeader("headerNameOne", "headerValueOne")
                     .withHeader("headerNameTwo", "headerValueTwo", "headerOtherValueTwo"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // then
@@ -756,20 +756,20 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withHeader("headerNameOne", "headerValueOne"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             localNotFoundResponse(),
             makeRequest(
                 request()
                     .withHeader("headerNameTwo", "headerValueTwo"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             localNotFoundResponse(),
             makeRequest(
                 request(),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -810,7 +810,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withHeader("headerNameOne", "headerValueOne")
                     .withHeader("headerNameTwo", "headerValueTwo"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // then - no match
@@ -820,7 +820,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withHeader("headerNameOne", "headerValueOne", "headerOtherValueOne")
                     .withHeader("headerNameTwo", "headerValueTwo"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             localNotFoundResponse(),
@@ -828,27 +828,27 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withHeader("headerNameOne", "headerValueOne")
                     .withHeader("headerNameTwo", "headerValueTwo", "headerOtherValueTwo"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             localNotFoundResponse(),
             makeRequest(
                 request()
                     .withHeader("headerNameOne", "headerValueOne"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             localNotFoundResponse(),
             makeRequest(
                 request()
                     .withHeader("headerNameTwo", "headerValueTwo"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             localNotFoundResponse(),
             makeRequest(
                 request(),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -885,7 +885,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -896,7 +896,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withSecure(true)
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -905,7 +905,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -944,7 +944,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         MILLISECONDS.sleep(2500);
         assertEquals(
@@ -956,7 +956,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withSecure(true)
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         MILLISECONDS.sleep(2250);
         assertEquals(
@@ -966,7 +966,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1007,7 +1007,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -1018,7 +1018,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withSecure(true)
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -1027,7 +1027,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1068,7 +1068,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -1079,7 +1079,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withSecure(true)
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -1088,7 +1088,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1125,7 +1125,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // when
@@ -1152,7 +1152,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withSecure(true)
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1187,7 +1187,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // when
@@ -1215,7 +1215,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withSecure(true)
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -1225,7 +1225,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -1234,7 +1234,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1269,7 +1269,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // when
@@ -1298,7 +1298,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withSecure(true)
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -1308,7 +1308,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -1317,7 +1317,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1349,7 +1349,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path_one")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -1359,7 +1359,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path_two")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // when
@@ -1381,7 +1381,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withSecure(true)
                     .withPath(calculatePath("some_path_updated")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -1391,7 +1391,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path_two")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1417,7 +1417,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -1426,7 +1426,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1455,7 +1455,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withPath(calculatePath(""))
                     .withBody(body, StandardCharsets.UTF_16),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1486,7 +1486,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withHeader(CONTENT_TYPE.toString(), MediaType.PLAIN_TEXT_UTF_8.toString())
                     .withPath(calculatePath(""))
                     .withBody(body, StandardCharsets.UTF_8),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1518,7 +1518,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16).toString())
                     .withPath(calculatePath(""))
                     .withBody(body),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1546,7 +1546,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1573,7 +1573,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1604,7 +1604,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("POST")
                     .withPath(calculatePath("some_path"))
                     .withBody("some_random_body"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1632,7 +1632,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withMethod("POST")
                     .withBody("10.2.3.123"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // should match (because body doesn't matches regex)
         assertEquals(
@@ -1644,7 +1644,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withMethod("POST")
                     .withBody("10.2.3.1234"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1672,7 +1672,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withMethod("POST")
                     .withBody("some_body_full_string"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // should match (because body doesn't matches regex)
         assertEquals(
@@ -1684,7 +1684,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withMethod("POST")
                     .withBody("some_other_body_full_string"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1712,7 +1712,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withMethod("POST")
                     .withBody("some_body"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // should match (because body doesn't matches regex)
         assertEquals(
@@ -1724,7 +1724,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withMethod("POST")
                     .withBody("some_other_body"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1765,7 +1765,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    <price>31.95</price>" + NEW_LINE +
                         "  </book>" + NEW_LINE +
                         "</bookstore>")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1823,7 +1823,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "        <body>Wash Shirts</body>" + NEW_LINE +
                         "    </note>" + NEW_LINE +
                         "</notes>"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -1849,7 +1849,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "        <body>Wash Shirts</body>" + NEW_LINE +
                         "    </note>" + NEW_LINE +
                         "</notes>"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1887,7 +1887,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "        <body>Wash Shirts</body>" + NEW_LINE +
                         "    </note>" + NEW_LINE +
                         "</notes>"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -1913,7 +1913,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "        <body>Wash Shirts</body>" + NEW_LINE +
                         "    </note>" + NEW_LINE +
                         "</notes>"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1945,7 +1945,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    <price>30.00</price>" + NEW_LINE +
                         "  </book>" + NEW_LINE +
                         "</bookstore>")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1991,7 +1991,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    <author>我说中国话</author>" + NEW_LINE +
                         "  </book>" + NEW_LINE +
                         "</bookstore>")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2037,7 +2037,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    <author>ÄÑçîüÏ</author>" + NEW_LINE +
                         "  </book>" + NEW_LINE +
                         "</bookstore>").getBytes(StandardCharsets.ISO_8859_1))),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2085,7 +2085,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST")
                     .withBody("some_body"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2127,7 +2127,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    \"price\": 12.50," + NEW_LINE +
                         "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                         "}")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2156,7 +2156,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     "    }" + NEW_LINE +
                     "  }" + NEW_LINE +
                     "}"),
-                HEADERS_TO_IGNORE);
+            HEADERS_TO_IGNORE);
 
         // then
         assertEquals(
@@ -2180,7 +2180,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "  \"price\" : 12.5," + NEW_LINE +
                         "  \"tags\" : [ \"home\", \"green\" ]" + NEW_LINE +
                         "}"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2211,7 +2211,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     "    }" + NEW_LINE +
                     "  }" + NEW_LINE +
                     "}"),
-                HEADERS_TO_IGNORE);
+            HEADERS_TO_IGNORE);
 
         // then
         assertEquals(
@@ -2237,7 +2237,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "  \"null\" : null," + NEW_LINE +
                         "  \"tags\" : [ ]" + NEW_LINE +
                         "}")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2279,7 +2279,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    \"τιμή\": 12.50," + NEW_LINE +
                         "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
                         "}", StandardCharsets.UTF_16, MatchType.ONLY_MATCHING_FIELDS)),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2322,7 +2322,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    \"τιμή\": 12.50," + NEW_LINE +
                         "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
                         "}", StandardCharsets.UTF_16)),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2364,7 +2364,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    \"τιμή\": 12.50," + NEW_LINE +
                         "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
                         "}", StandardCharsets.UTF_8)),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2406,7 +2406,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    \"τιμή\": 12.50," + NEW_LINE +
                         "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
                         "}")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2449,7 +2449,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST")
                     .withBody("some_body"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2486,7 +2486,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    \"price\": 12.50," + NEW_LINE +
                         "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                         "}"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2537,7 +2537,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    \"price\": 12.50," + NEW_LINE +
                         "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                         "}"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2581,7 +2581,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    }," + NEW_LINE +
                         "    \"expensive\": 10" + NEW_LINE +
                         "}")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2622,7 +2622,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withPath(calculatePath("ws/rest/user/1/document/2.pdf"))
                     .withMethod("GET"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2661,7 +2661,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withPath(calculatePath("ws/rest/user/1/icon/1.png"))
                     .withMethod("GET"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2703,7 +2703,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withPath(calculatePath("ws/rest/user/1/document/2.pdf"))
                     .withBody(binary(pdfBytes, MediaType.PDF))
                     .withMethod("POST"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2743,7 +2743,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withPath(calculatePath("ws/rest/user/1/icon/1.png"))
                     .withBody(binary(pngBytes, MediaType.ANY_IMAGE_TYPE))
                     .withMethod("POST"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2771,7 +2771,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_other_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2799,7 +2799,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withMethod("POST"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2841,7 +2841,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withBody("some_bodyRequest")
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2886,7 +2886,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     )
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2930,7 +2930,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         header("requestHeaderNameTwo", "requestHeaderValueTwo")
                     )
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -2984,7 +2984,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         cookie("requestCookieNameOne", "requestCookieValueOne"),
                         cookie("requestCookieNameTwo", "requestCookieValueTwo")
                     ),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // - cookie header
         assertEquals(
@@ -3007,7 +3007,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         header("headerNameRequest", "headerValueRequest"),
                         header("Cookie", "requestCookieNameOne=requestCookieValueOne; requestCookieNameTwo=requestCookieValueTwo")
                     ),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -3048,7 +3048,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         param("queryStringParameterTwoName", "queryStringParameterTwoValue")
                     )
                     .withBody(params(param("bodyParameterName", "bodyParameterValue"))),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // - in https - query string parameter objects
         assertEquals(
@@ -3066,7 +3066,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         param("queryStringParameterTwoName", "queryStringParameterTwoValue")
                     )
                     .withBody(params(param("bodyParameterName", "bodyParameterValue"))),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -3116,7 +3116,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withBody("some_bodyRequest")
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // - in http - query string parameter objects
         assertEquals(
@@ -3140,7 +3140,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withBody("some_bodyRequest")
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // - in https - url string and query string parameter objects
         assertEquals(
@@ -3164,7 +3164,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withBody("some_bodyRequest")
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -3211,7 +3211,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "&bodyParameterTwoName=Parameter+Two"))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // - in http - body string - different order
         assertEquals(
@@ -3233,7 +3233,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "&bodyParameterOneName=Parameter+One+Value+One"))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // - in http - body parameter objects
         assertEquals(
@@ -3256,7 +3256,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     ))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // - in http - body parameter objects - different order
         assertEquals(
@@ -3279,7 +3279,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     ))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -3329,7 +3329,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         header("headerNameRequest", "headerValueRequest"),
                         header("Cookie", "cookieNameRequest=cookieValueRequest")
                     ),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // - body parameter objects
         assertEquals(
@@ -3352,7 +3352,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     ))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -3393,7 +3393,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     ))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // wrong query string parameter name
         assertEquals(
@@ -3410,7 +3410,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "&bodyParameterTwoName=Parameter+Two"))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -3451,7 +3451,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     ))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // wrong query string parameter first value
         assertEquals(
@@ -3468,7 +3468,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "&bodyParameterTwoName=Parameter+Two"))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // wrong query string parameter second value
         assertEquals(
@@ -3486,7 +3486,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     ))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // wrong query string parameter second value
         assertEquals(
@@ -3503,7 +3503,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "&bodyParameterTwoName=Parameter+Two"))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // wrong body parameter values
         assertEquals(
@@ -3521,7 +3521,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     ))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // wrong body parameter values
         assertEquals(
@@ -3538,7 +3538,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "&bodyParameterTwoName=Parameter+Two"))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -3577,7 +3577,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         param("queryStringParameterOneName", "Other Parameter One Value One", "Parameter One Value Two"),
                         param("queryStringParameterTwoName", "Parameter Two")
                     ),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // wrong query string parameter value
         assertEquals(
@@ -3593,7 +3593,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         param("queryStringParameterOneName", "Parameter One Value One", "Other Parameter One Value Two"),
                         param("queryStringParameterTwoName", "Parameter Two")
                     ),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -3632,7 +3632,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         param("OTHERQueryStringParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
                         param("queryStringParameterTwoName", "Parameter Two")
                     ),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -3671,7 +3671,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         param("queryStringParameterOneName", "Other Parameter One Value One", "Other Parameter One Value Two"),
                         param("queryStringParameterTwoName", "Parameter Two")
                     ),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -3710,7 +3710,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         cookie("requestCookieNameOne", "OTHERrequestCookieValueOne"),
                         cookie("requestCookieNameTwo", "requestCookieValueTwo")
                     ),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -3749,7 +3749,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         cookie("OTHERrequestCookieNameOne", "requestCookieValueOne"),
                         cookie("requestCookieNameTwo", "requestCookieValueTwo")
                     ),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -3788,7 +3788,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         cookie("requestCookieNameOne", "OTHERrequestCookieValueOne"),
                         cookie("requestCookieNameTwo", "requestCookieValueTwo")
                     ),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -3827,7 +3827,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         header("OTHERrequestHeaderNameOne", "requestHeaderValueOne"),
                         header("requestHeaderNameTwo", "requestHeaderValueTwo")
                     ),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // wrong query string header value
         assertEquals(
@@ -3843,7 +3843,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         header("OTHERrequestHeaderNameOne", "OTHERrequestHeaderValueOne"),
                         header("requestHeaderNameTwo", "requestHeaderValueTwo")
                     ),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -3882,7 +3882,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         header("OTHERrequestHeaderNameOne", "requestHeaderValueOne"),
                         header("requestHeaderNameTwo", "requestHeaderValueTwo")
                     ),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -3921,7 +3921,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         header("requestHeaderNameOne", "OTHERrequestHeaderValueOne"),
                         header("requestHeaderNameTwo", "requestHeaderValueTwo")
                     ),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -3947,7 +3947,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -3956,7 +3956,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -3997,7 +3997,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    \"price\": 12.50," + NEW_LINE +
                         "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                         "}"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -4038,7 +4038,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    <price>31.95</price>" + NEW_LINE +
                         "  </book>" + NEW_LINE +
                         "</bookstore>")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -4076,7 +4076,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    <price>30.00</price>" + NEW_LINE +
                         "  </book>" + NEW_LINE +
                         "</bookstore>")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -4105,7 +4105,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    \"price\": 12.50," + NEW_LINE +
                         "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                         "}"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -4143,7 +4143,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    \"price\": 12.50," + NEW_LINE +
                         "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                         "}"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -4193,7 +4193,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    \"price\": 12.50," + NEW_LINE +
                         "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                         "}"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -4237,7 +4237,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    }," + NEW_LINE +
                         "    \"expensive\": 10" + NEW_LINE +
                         "}")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -4264,7 +4264,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -4291,7 +4291,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withMethod("GET"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -4333,7 +4333,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     ))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // wrong query string parameter name
         assertEquals(
@@ -4349,7 +4349,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "&bodyParameterTwoName=Parameter+Two"))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -4389,7 +4389,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     ))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // wrong query string parameter name
         assertEquals(
@@ -4405,7 +4405,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "&bodyParameterTwoName=Parameter+Two"))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -4447,7 +4447,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     ))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // wrong body parameter value
         assertEquals(
@@ -4463,7 +4463,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "&bodyParameterTwoName=Parameter+Two"))
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -4509,7 +4509,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         header("headerNameRequest", "headerValueRequest")
                     )
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -4553,7 +4553,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withBody("some_bodyRequest")
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -4591,7 +4591,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         param("queryStringParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
                         param("queryStringParameterTwoName", "Parameter Two")
                     ),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // wrong query string parameter name
         assertEquals(
@@ -4606,7 +4606,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         param("queryStringParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
                         param("queryStringParameterTwoName", "Parameter Two")
                     ),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -4651,7 +4651,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withBody(exact("some_body"))
                     .withHeaders(header("headerName", "headerValue"))
                     .withCookies(cookie("cookieOtherName", "cookieValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -4696,7 +4696,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withBody(exact("some_body"))
                     .withHeaders(header("headerName", "headerValue"))
                     .withCookies(cookie("cookieName", "cookieOtherValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -4734,7 +4734,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         cookie("requestCookieNameOne", "requestCookieValueOne"),
                         cookie("requestCookieNameTwo", "requestCookieValueTwo")
                     ),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // wrong query string parameter name
         assertEquals(
@@ -4749,7 +4749,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         cookie("requestCookieNameOne", "requestCookieValueOne"),
                         cookie("requestCookieNameTwo", "requestCookieValueTwo")
                     ),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -4794,7 +4794,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withBody(exact("some_body"))
                     .withHeaders(header("headerOtherName", "headerValue"))
                     .withCookies(cookie("cookieName", "cookieValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -4839,7 +4839,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withBody(exact("some_body"))
                     .withHeaders(header("headerName", "headerOtherValue"))
                     .withCookies(cookie("cookieName", "cookieValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -4877,7 +4877,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         header("requestHeaderNameOne", "requestHeaderValueOne"),
                         header("requestHeaderNameTwo", "requestHeaderValueTwo")
                     ),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // wrong query string parameter name
         assertEquals(
@@ -4892,7 +4892,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         header("requestHeaderNameOne", "requestHeaderValueOne"),
                         header("requestHeaderNameTwo", "requestHeaderValueTwo")
                     ),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -4919,7 +4919,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         mockServerClient.verify(request()
             .withPath(calculatePath("some_path"))
@@ -4938,7 +4938,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withPath(calculatePath("some_secure_path"))
                     .withSecure(true),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         mockServerClient.verify(request()
             .withPath(calculatePath("some_secure_path"))
@@ -4975,7 +4975,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withMethod("POST")
                     .withPath(calculatePath("some_path"))
                     .withBody("{type: 'some_random_type', value: 'some_random_value'}"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         mockServerClient.verify(
             request()
@@ -5001,7 +5001,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         mockServerClient.verify(request()
             .withPath(calculatePath("some_path")));
@@ -5015,7 +5015,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         makeRequest(
             request()
                 .withPath(calculatePath("some_path")),
-                HEADERS_TO_IGNORE);
+            HEADERS_TO_IGNORE);
 
         mockServerClient.verify(request()
             .withPath(calculatePath("some_path")));
@@ -5039,7 +5039,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         try {
             mockServerClient.verify(request()
@@ -5066,7 +5066,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         try {
             mockServerClient.verify(request()
@@ -5093,7 +5093,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         try {
             mockServerClient.verifyZeroInteractions();
@@ -5117,7 +5117,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         try {
             mockServerClient.verify(
@@ -5145,19 +5145,19 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_one")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             notFoundResponse(),
             makeRequest(
                 request().withPath(calculatePath("not_found")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_three")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("some_path_three")));
         mockServerClient.verify(request(calculatePath("some_path_one")), request(calculatePath("not_found")));
@@ -5175,19 +5175,19 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_one")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_two")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_three")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         try {
             mockServerClient.verify(request(calculatePath("some_path_two")), request(calculatePath("some_path_one")));
@@ -5227,19 +5227,19 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_one")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             notFoundResponse(),
             makeRequest(
                 request().withPath(calculatePath("not_found")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_three")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // then
@@ -5280,28 +5280,28 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withBody("{\"digests\": [ ]}"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response("some_body"),
             makeRequest(
                 request()
                     .withBody("{\"digests\": [\"sha256:one\"]}"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response("some_body"),
             makeRequest(
                 request()
                     .withBody("{\"digests\": [ ]}"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response("some_body"),
             makeRequest(
                 request()
                     .withBody("{\"digests\": [\"sha256:two\"]}"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // then
@@ -5364,19 +5364,19 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_one")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             notFoundResponse(),
             makeRequest(
                 request().withPath(calculatePath("not_found")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_three")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // when
@@ -5547,14 +5547,14 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             response("some_body_one"),
             makeRequest(
                 request().withPath(calculatePath("some_path_one")).withBody("some_body_one"),
-                    HEADERS_TO_IGNORE
+                HEADERS_TO_IGNORE
             )
         );
         assertEquals(
             response("some_body_three"),
             makeRequest(
                 request().withPath(calculatePath("some_path_three")).withBody("some_body_three"),
-                    HEADERS_TO_IGNORE
+                HEADERS_TO_IGNORE
             )
         );
 
@@ -5636,7 +5636,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path1")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -5646,7 +5646,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path2")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // when
@@ -5709,7 +5709,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path1")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -5719,7 +5719,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path2")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // when - wrong id
@@ -5816,7 +5816,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -5826,7 +5826,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // when - wrong id
@@ -5923,7 +5923,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path1")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -5933,7 +5933,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path2")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // when
@@ -6001,7 +6001,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path1")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -6011,7 +6011,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path2")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // when
@@ -6105,7 +6105,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path2")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // when
@@ -6145,7 +6145,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path2")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // when
@@ -6211,7 +6211,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withBody(xmlBody),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // when
@@ -6241,7 +6241,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withBody(xmlBody),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -6338,7 +6338,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    \"price\": 12.50," + NEW_LINE +
                         "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                         "}"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // when
@@ -6373,7 +6373,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    \"price\": 12.50," + NEW_LINE +
                         "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
                         "}"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -6408,7 +6408,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withBody(params(param("bodyParameterNameOne", "bodyParameterValueOne"))),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // when
@@ -6438,7 +6438,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withBody(params(param("bodyParameterNameTwo", "bodyParameterValueTwo"))),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 

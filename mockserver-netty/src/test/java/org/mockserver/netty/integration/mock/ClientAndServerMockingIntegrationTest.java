@@ -2,8 +2,7 @@ package org.mockserver.netty.integration.mock;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.mockserver.integration.ClientAndServer;
-import org.mockserver.testing.integration.mock.AbstractBasicMockingIntegrationTest;
+import org.mockserver.testing.integration.mock.AbstractBasicMockingSameJVMIntegrationTest;
 
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.stop.Stop.stopQuietly;
@@ -11,7 +10,7 @@ import static org.mockserver.stop.Stop.stopQuietly;
 /**
  * @author jamesdbloom
  */
-public class ClientAndServerMockingIntegrationTest extends AbstractBasicMockingIntegrationTest {
+public class ClientAndServerMockingIntegrationTest extends AbstractBasicMockingSameJVMIntegrationTest {
 
     private static int mockServerPort;
 

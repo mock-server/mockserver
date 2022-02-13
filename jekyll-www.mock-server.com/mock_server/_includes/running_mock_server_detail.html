@@ -158,13 +158,14 @@
 
 <p>Use the client API to run MockServer programmatically.</p>
 
-<p>First add the following maven dependency:</p>
+<p>First add the following maven dependencies:</p>
 
 <pre><code class="code xml">&lt;!-- mockserver --&gt;
 &lt;<span class="element">dependency</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;<span class="element">/groupId</span>&gt;
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-netty</span>&lt;<span class="element">/artifactId</span>&gt;
      &lt;<span class="element">version</span>&gt;<span class="element_value">5.12.0</span>&lt;<span class="element">/version</span>&gt;
+     &lt;<span class="element">classifier</span>&gt;<span class="element_value">shaded</span>&lt;/<span class="element">classifier</span>&gt;
 &lt;<span class="element">/dependency</span>&gt;</code></pre>
 
 <p>To start the server or proxy create a client, for example by using one of the start factory methods <span class="inline_code">ClientAndServer.startClientAndServer</span> as follows:</p>
@@ -423,7 +424,7 @@ public class ExampleSpringTestListenerTestWithPortInjection {
 
 <ul>
 	<li><a href="#running_from_command_line_using_homebrew">using homebrew</a> i.e. <strong>brew install mockserver && mockserver</strong></li>
-	<li><a href="#running_from_command_line_using_java">using java directly</a> i.e. <strong>java -jar mockserver-netty-5.12.0-jar-with-dependencies.jar</strong></li>
+	<li><a href="#running_from_command_line_using_java">using java directly</a> i.e. <strong>java -jar mockserver-netty-5.12.0-shaded.jar</strong></li>
 	<li><a href="#running_from_command_line_using_maven_plugin">using maven plugin</a> i.e. <strong>mvn org.mock-server:mockserver-maven-plugin:5.12.0:runForked</strong></li>
 	<li><a href="#docker_container">using docker</a> i.e. <strong>docker run -d --rm -p mockserver/mockserver</strong></li>
 </ul>
@@ -493,15 +494,15 @@ i.e. mockserver -logLevel INFO -serverPort <span class="numeric_literal">1080,10
 <p>MockServer can be run directly from the command line using java directly as follow:</p>
 
 <ol>
-	<li><p>download <a href="https://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/5.12.0/mockserver-netty-5.12.0-jar-with-dependencies.jar">mockserver-netty-5.12.0-jar-with-dependencies.jar</a> from Maven Central</p></li>
+	<li><p>download <a href="https://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/5.12.0/mockserver-netty-5.12.0-shaded.jar">mockserver-netty-5.12.0-shaded.jar</a> from Maven Central</p></li>
 	<li>
-		<code class="code inline">java -jar <span class="command_line_argument_placeholder">&lt;path to mockserver-netty-5.12.0-jar-with-dependencies.jar&gt;</span> -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span></code>
+		<code class="code inline">java -jar <span class="command_line_argument_placeholder">&lt;path to mockserver-netty-5.12.0-shaded.jar&gt;</span> -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span></code>
 	</li>
 </ol>
 
 <p>The command line supports the following options:</p>
 
-<pre><code class="code">java -jar <span class="command_line_argument_placeholder">&lt;path to mockserver-jetty-jar-with-dependencies.jar&gt;</span> -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span> [-proxyRemotePort <span class="command_line_argument_placeholder">&lt;port&gt;</span>] [-proxyRemoteHost <span class="command_line_argument_placeholder">&lt;hostname&gt;</span>] [-logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>]
+<pre><code class="code">java -jar <span class="command_line_argument_placeholder">&lt;path to mockserver-jetty-shaded.jar&gt;</span> -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span> [-proxyRemotePort <span class="command_line_argument_placeholder">&lt;port&gt;</span>] [-proxyRemoteHost <span class="command_line_argument_placeholder">&lt;hostname&gt;</span>] [-logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>]
 
  valid options are:
     -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>           The HTTP, HTTPS, SOCKS and HTTP CONNECT
@@ -531,11 +532,11 @@ i.e. mockserver -logLevel INFO -serverPort <span class="numeric_literal">1080,10
                                  Logger levels: FINEST, FINE, INFO, WARNING,
                                  SEVERE or OFF. If not specified default is INFO
 
-i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -proxyRemotePort <span class="numeric_literal">80</span> -proxyRemoteHost www.mock-server.com</code></pre>
+i.e. java -jar ./mockserver-jetty-shaded.jar -serverPort <span class="numeric_literal">1080</span> -proxyRemotePort <span class="numeric_literal">80</span> -proxyRemoteHost www.mock-server.com</code></pre>
 
 <p>For example:</p>
 
-<pre><code class="code">java -jar ~/Downloads/mockserver-netty-5.12.0-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080,1081</span> -logLevel INFO</code></pre>
+<pre><code class="code">java -jar ~/Downloads/mockserver-netty-5.12.0-shaded.jar -serverPort <span class="numeric_literal">1080,1081</span> -logLevel INFO</code></pre>
 
 <p>All interactions with the MockServer are logged including setting up expectations, matching expectations, clearing expectations and verifying requests.  This log information can be particularly helpful when trying to debug why a test is failing or expectations are not being matched.</p>
 
@@ -618,6 +619,6 @@ cd mockserver</code></pre>
 
 <p>This will produce a jar file under the target directory called, as follows:</p>
 
-<pre><code class="code">mockserver-netty/target/mockserver-netty-5.12.0-jar-with-dependencies.jar</code></pre>
+<pre><code class="code">mockserver-netty/target/mockserver-netty-5.12.0-shaded.jar</code></pre>
 
 <p>Run MockServer then using the executable jar as per the instruction above in <a href="#running_from_command_line">Running From The Command Line</a></p>

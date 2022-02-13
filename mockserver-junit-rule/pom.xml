@@ -19,6 +19,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>mockserver-netty</artifactId>
+            <classifier>shaded</classifier>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>

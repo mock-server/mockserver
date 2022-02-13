@@ -76,9 +76,9 @@
         <module>mockserver-client-java</module>
         <module>mockserver-core</module>
         <module>mockserver-integration-testing</module>
-        <module>mockserver-netty</module>
         <module>mockserver-war</module>
         <module>mockserver-proxy-war</module>
+        <module>mockserver-netty</module>
         <module>mockserver-examples</module>
         <module>mockserver-junit-rule</module>
         <module>mockserver-junit-jupiter</module>
@@ -108,17 +108,13 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>mockserver-netty</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>mockserver-netty</artifactId>
-                <classifier>jar-with-dependencies</classifier>
+                <classifier>shaded</classifier>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>mockserver-client-java</artifactId>
+                <classifier>shaded</classifier>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -729,6 +725,7 @@
                         <mockserver.nioEventLoopThreadCount>1</mockserver.nioEventLoopThreadCount>
                     </systemProperties>
                     <argLine>-Duser.language=en -Duser.country=GB</argLine>
+                    <disableXmlReport>true</disableXmlReport>
                     <properties>
                         <property>
                             <name>listener</name>
@@ -751,10 +748,12 @@
                         <mockserver.logLevel>ERROR</mockserver.logLevel>
                         <mockserver.disableSystemOut>true</mockserver.disableSystemOut>
                         <mockserver.nioEventLoopThreadCount>20</mockserver.nioEventLoopThreadCount>
-                        <mockserver.webSocketClientEventLoopThreadCount>5
-                        </mockserver.webSocketClientEventLoopThreadCount>
+                        <mockserver.webSocketClientEventLoopThreadCount>5</mockserver.webSocketClientEventLoopThreadCount>
+                        <project.version>${project.version}</project.version>
+                        <project.basedir>${project.basedir}</project.basedir>
                     </systemProperties>
                     <argLine>-Duser.language=en -Duser.country=GB</argLine>
+                    <disableXmlReport>true</disableXmlReport>
                     <properties>
                         <property>
                             <name>listener</name>

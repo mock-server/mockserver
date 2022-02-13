@@ -59,7 +59,7 @@ int mockServerPort = new ClientAndServer().getLocalPort();</code></pre>
 <h2>Expectation Initializer JSON</h2>
 
 <p>MockServer expectations can be initialized when the MockServer starts, using a JSON file, by specified the <strong>initializationJsonPath</strong> configuration property as described in the <a href="/mock_server/configuration_properties.html#button_configuration_initialization_json_path">Configuration Properties</a> page, for example:</p>
-<pre><code class="code">java -Dmockserver.initializationJsonPath=<span class="string_literal">"org/mockserver/server/initialize/initializerJson.json"</span> -jar ~/Downloads/mockserver-netty-5.12.0-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel INFO</code></pre>
+<pre><code class="code">java -Dmockserver.initializationJsonPath=<span class="string_literal">"org/mockserver/server/initialize/initializerJson.json"</span> -jar ~/Downloads/mockserver-netty-5.12.0-shaded.jar -serverPort <span class="numeric_literal">1080</span> -logLevel INFO</code></pre>
 
 <p><strong>initializationJsonPath</strong> supports:</p>
 
@@ -116,14 +116,14 @@ int mockServerPort = new ClientAndServer().getLocalPort();</code></pre>
 
 <pre class="prettyprint lang-javascript code"><code class="code">MOCKSERVER_WATCH_INITIALIZATION_JSON=true \
 MOCKSERVER_INITIALIZATION_JSON_PATH=mockserverInitialization.json \
-java -jar ~/Downloads/mockserver-netty-5.12.0-jar-with-dependencies.jar -serverPort 1080,1081 -logLevel INFO</code></pre>
+java -jar ~/Downloads/mockserver-netty-5.12.0-shaded.jar -serverPort 1080,1081 -logLevel INFO</code></pre>
 
 <p>or</p>
 
 <pre class="prettyprint lang-javascript code"><code class="code">java \
 -Dmockserver.watchInitializationJson=true \
 -Dmockserver.initializationJsonPath=mockserverInitialization.json \
--jar ~/Downloads/mockserver-netty-5.12.0-jar-with-dependencies.jar -serverPort 1080,1081 -logLevel INFO</code></pre>
+-jar ~/Downloads/mockserver-netty-5.12.0-shaded.jar -serverPort 1080,1081 -logLevel INFO</code></pre>
 
 {% include_subpage _includes/clustering.html %}
 

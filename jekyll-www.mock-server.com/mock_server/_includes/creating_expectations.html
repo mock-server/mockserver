@@ -56,6 +56,15 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 );</code></pre>
 </div>
 
+<p>To use the Java client add the <strong>org.mock-server:mockserver-netty:5.12.0</strong> dependency.  The <strong>shaded</strong> classifier can be used to reduce any conflicts with MockServer dependencies, for example in maven:</p>
+
+<pre><code class="code xml">&lt;<span class="element">dependency</span>&gt;
+	&lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
+	&lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-client-java</span>&lt;/<span class="element">artifactId</span>&gt;
+	&lt;<span class="element">version</span>&gt;<span class="element_value">RELEASE</span>&lt;/<span class="element">version</span>&gt;
+	&lt;<span class="element">classifier</span>&gt;<span class="element_value">shaded</span>&lt;/<span class="element">classifier</span>&gt;
+&lt;/<span class="element">dependency</span>&gt;</code></pre>
+
 <p>A <strong>request matcher expectation</strong> may contain:</p>
 <ul>
     <li><strong><a href="#request_matchers">request matcher</a></strong> - used to match which requests this expectation should be applied to</li>
