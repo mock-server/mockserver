@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - command line flags can now be set as environment variables simplifying some container deployment scenarios
 - glob support for initialisation files to allow multiple files to be specified
 - request and response modifiers to dynamically update path, query parameters, headers, and cookies
-- custom factory for key and certificates to provider more flexibility
+- custom factory for key and certificates to provide more flexibility
 - support for Open API expectations in json initialisation file
 - improved @MockServerTest to support inheritance
 - more flexibility over semicolon parsing for query parameters
@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - reduce noise from Netty INFO logs that were not correct or misleading
 - retrieveRecordedRequests now returns HttpRequest[]
 - made it easier to set priority and id both in Java and Node clients in multiple places
-- default charset for JSON and XML to UTF-8 from ISO 8859-1
+- changed default charset for JSON and XML to UTF-8 from ISO 8859-1
 - error handling for Open API so only single operation is skipped on failure not the entire file
 - reduced over resolution of OpenAPI that triggered bugs in Swagger Parser V3 library
 - replaces JDK FileWatcher with custom solution for watch file changes to work around multiple JDK bugs
@@ -40,15 +40,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - remove explicit calls to System.gc()
 
 ### Fixed
-- multiple issues with clearing by expectation id
-- multiple issues with verifying by expectation id
-- multiple NullPointerExceptions in backend for UI
-- ensure exact query string is proxied allowing for empty values, leading `!` or or other special scenarios
-- expectation updates from FileWatcher so only expecation from matching source are updated resolving multiple bugs
-- ensured socket protocol of HTTPS resulting in forwarded requests using TLS
-- logging of exceptions such as port already bound at startup
-- retrieval of active exceptions where expectations were no longer active but not yet removed from expectations list
-- no longer treats ndjson as json
+- resolved multiple issues with clearing by expectation id
+- resolved multiple issues with verifying by expectation id
+- resolved multiple NullPointerExceptions in backend for UI
+- ensure exact query parameter string is proxied allowing for empty values, leading `!` or or other special scenarios
+- improved expectation updates from FileWatcher so only expecation from matching source are updated resolving multiple bugs
+- ensured socket protocol of HTTPS is honoured resulting in forwarded requests using TLS
+- fixed logging of exceptions such as port already bound at startup
+- fixed retrieval of active exceptions where expectations were no longer active but not yet removed from expectations list
+- no longer treat ndjson as json
 - accessing UI via a reverse proxy or load balancer
 
 ## [5.11.2] - 2020-10-08
