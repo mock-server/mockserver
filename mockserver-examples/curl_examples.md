@@ -1,7 +1,7 @@
 #### Basic Expectation
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "method": "GET",
@@ -24,7 +24,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Add Array Of Expectations
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '[
   {
     "httpRequest": {
@@ -65,7 +65,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Class Callback
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some.*"
@@ -79,7 +79,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Verify Requests Exact
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/verify' 
+curl -X PUT 'localhost:1080/mockserver/verify' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -94,7 +94,7 @@ curl -X PUT 'localhost:1080/mockserver/verify'
 #### Verify Requests Receive At Least Twice
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/verify' 
+curl -X PUT 'localhost:1080/mockserver/verify' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -108,7 +108,7 @@ curl -X PUT 'localhost:1080/mockserver/verify'
 #### Verify Requests Receive At Most Twice
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/verify' 
+curl -X PUT 'localhost:1080/mockserver/verify' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -122,7 +122,7 @@ curl -X PUT 'localhost:1080/mockserver/verify'
 #### Verify Requests Receive Exactly Twice
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/verify' 
+curl -X PUT 'localhost:1080/mockserver/verify' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -137,7 +137,7 @@ curl -X PUT 'localhost:1080/mockserver/verify'
 #### Verify Requests Receive At Least Twice By OpenAPI
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/verify' 
+curl -X PUT 'localhost:1080/mockserver/verify' \
 -d '{
   "httpRequest": {
     "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json"
@@ -152,7 +152,7 @@ curl -X PUT 'localhost:1080/mockserver/verify'
 #### Verify Requests Receive At Least Twice By OpenAPI With Operation
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/verify' 
+curl -X PUT 'localhost:1080/mockserver/verify' \
 -d '{
   "httpRequest": {
     "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
@@ -168,7 +168,7 @@ curl -X PUT 'localhost:1080/mockserver/verify'
 #### Verify Request Sequence
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/verifySequence' 
+curl -X PUT 'localhost:1080/mockserver/verifySequence' \
 -d '[
   {
     "path": "/some/path/one"
@@ -185,7 +185,7 @@ curl -X PUT 'localhost:1080/mockserver/verifySequence'
 #### Verify Request Sequence Using Open API
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/verifySequence' 
+curl -X PUT 'localhost:1080/mockserver/verifySequence' \
 -d '[
   {
     "path": "/status"
@@ -203,7 +203,7 @@ curl -X PUT 'localhost:1080/mockserver/verifySequence'
 #### Verify Request Sequence Using Open API
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/verifySequence' 
+curl -X PUT 'localhost:1080/mockserver/verifySequence' \
 -d '[
   {
     "id": "31e4ca35-66c6-4645-afeb-6e66c4ca0559"
@@ -230,7 +230,7 @@ curl -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS&format=JSON
 #### Retrieve Recorded Log Messages Filtered By Request Matcher
 
 ```bash
-curl -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS"
+curl -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS" \
 -d '{
     "path": "/some/path",
     "method": "POST"
@@ -289,7 +289,7 @@ curl -X PUT "http://localhost:1080/mockserver/reset
 #### Random Bytes Error
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -304,7 +304,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Drop Connection Error
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -318,7 +318,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Forward Request In HTTP
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -334,7 +334,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Forward Request In HTTPS
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -350,7 +350,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Forward Overridden Request
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -371,7 +371,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Forward Overridden Request And Response
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -622,7 +622,7 @@ curl -X PUT "http://localhost:1080/mockserver/expectation" -d '{
 #### Forward Overridden Request And Change Host And Port
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -648,7 +648,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Forward Overridden Request With Delay
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -673,7 +673,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Forward Using Javascript Template
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -688,7 +688,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Forward Using Javascript Template With Delay
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -707,7 +707,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Forward Using Velocity Template
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -724,7 +724,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 NOT JSON
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json"
 }'
@@ -735,7 +735,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 NOT JSON
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
@@ -752,7 +752,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 NOT JSON
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "specUrlOrPayload": "org/mockserver/mock/openapi_petstore_example.json"
@@ -766,7 +766,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Request Matcher By Open API Loaded By HTTP URL
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json"
 }'
@@ -775,7 +775,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Request Matcher By Open API Operation
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
@@ -790,7 +790,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Request Matcher By Open API Loaded By Classpath Location
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "specUrlOrPayload": "org/mockserver/mock/openapi_petstore_example.json"
@@ -804,7 +804,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Update Expectation By Id
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "id": "630a6e5b-9d61-4668-a18f-a0d3df558583",
   "priority": 0,
@@ -828,7 +828,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Path
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -842,7 +842,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Path Exactly Twice
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -863,7 +863,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Path Exactly Once In The Next 60 Seconds
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -886,7 +886,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Regex Path
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some.*"
@@ -900,7 +900,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Not Matching Path
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "!/some.*"
@@ -914,7 +914,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Method Regex
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "method": "P.*{2,3}"
@@ -928,7 +928,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Not Matching Method
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "method": "!GET"
@@ -942,7 +942,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Path And Path Parameters And Query Parameters Name
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path/{cartId}",
@@ -966,7 +966,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Path Parameter Regex Value
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path/{cartId}",
@@ -985,7 +985,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Path Parameter Json Schema Value
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path/{cartId}/{maxItemCount}",
@@ -1016,7 +1016,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Query Parameter Regex Name
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path",
@@ -1035,7 +1035,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Query Parameter Regex Value
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path",
@@ -1054,7 +1054,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Optional Query Parameter Regex Value
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path",
@@ -1088,7 +1088,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Query Parameter Json Schema Value
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path",
@@ -1119,7 +1119,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Query Parameter Sub Set
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path",
@@ -1150,7 +1150,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Query Parameter Key Matching
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path",
@@ -1182,7 +1182,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Headers
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "method": "GET",
@@ -1207,7 +1207,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 Matches requests that have any header starting with the name Accept
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path",
@@ -1226,7 +1226,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 Matches requests that have a header with a name starting with Accept and a value containing gzip
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path",
@@ -1245,7 +1245,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Header Json Schema Value
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path",
@@ -1269,7 +1269,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Either Or Optional Header
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path",
@@ -1294,7 +1294,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Either Or Optional Header
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "id": "2c4f2747-bf8f-42dc-8c82-99f497884cfa",
   "priority": 0,
@@ -1327,7 +1327,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Header Key Matching
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path",
@@ -1352,7 +1352,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 Matches requests that have an Accept header without the value "application/json" and that have an Accept-Encoding without the substring "gzip"
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path",
@@ -1376,7 +1376,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 Matches requests that do not have either an Accept or an Accept-Encoding header
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path",
@@ -1398,7 +1398,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Cookies And Query Parameters
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "method": "GET",
@@ -1421,7 +1421,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Cookies And Query Parameter Json Schema Values
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "method": "GET",
@@ -1454,7 +1454,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Optional Cookies And Query Parameter Json Schema Values
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/view/cart",
@@ -1486,7 +1486,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Regex Body
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "body": "starts_with_.*"
@@ -1500,7 +1500,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Body In UTF 16
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "body": {
@@ -1518,7 +1518,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Body With Form Submission
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "method": "POST",
@@ -1574,7 +1574,7 @@ Matches any request with an XML body containing an element that matches the XPat
 ```
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "body": {
@@ -1593,7 +1593,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 Matches any request with an XML body that does NOT contain an element that matches the XPath expression
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "body": {
@@ -1611,7 +1611,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Body With Xml
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "body": {
@@ -1628,7 +1628,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Body With Xml With Placeholders
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "body": {
@@ -1645,7 +1645,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Body With Xml Schema
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "body": {
@@ -1662,7 +1662,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Body With Json Exactly
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "body": {
@@ -1689,7 +1689,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Body With Json Ignoring Extra Fields
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "body": {
@@ -1715,7 +1715,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Body With Json Ignoring Extra Fields In Array Objects
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "method": "POST",
@@ -1752,7 +1752,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Body With Json With Placeholders
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "body": {
@@ -1779,7 +1779,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Body With Json Schema
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "body": {
@@ -1829,7 +1829,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request By Body With Json Path
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "body": {
@@ -1848,7 +1848,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 Matches any request with an JSON body that does NOT contain one or more fields that match the JsonPath expression
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "body": {
@@ -1868,7 +1868,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 If no request matcher is specified then every request matched
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpResponse": {
     "body": "some_response_body"
@@ -1881,7 +1881,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 If no request matcher is specified then every request matched
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpResponse": {
     "headers": {
@@ -1900,7 +1900,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request And Return UTF-16
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "method": "GET",
@@ -1924,7 +1924,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 If no request matcher is specified then every request matched
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpResponse": {
     "headers": {
@@ -1942,7 +1942,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 If no request matcher is specified then every request matched
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpResponse": {
     "headers": {
@@ -1961,7 +1961,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request And Return Response With Status Code And Custom Reason Phrase
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "method": "POST",
@@ -1977,7 +1977,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request And Return Response With Binary PNG Body
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/ws/rest/user/[0-9]+/icon/[0-9]+\\.png"
@@ -2003,7 +2003,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request And Return Response After Ten Second Delay
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -2021,7 +2021,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request And Return Response With Connection Options To Suppress Headers
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -2039,7 +2039,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request And Return Response With Connection Options To Override Headers
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -2057,7 +2057,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Match Request And Return Response With Connection Options To Close Socket
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -2074,7 +2074,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Javascript Templated Response
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -2089,7 +2089,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Javascript Templated Response With Delay
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -2108,7 +2108,7 @@ curl -X PUT 'localhost:1080/mockserver/expectation'
 #### Velocity Templated Response
 
 ```bash
-curl -X PUT 'localhost:1080/mockserver/expectation' 
+curl -X PUT 'localhost:1080/mockserver/expectation' \
 -d '{
   "httpRequest": {
     "path": "/some/path"
@@ -2131,7 +2131,7 @@ curl -X PUT "http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS"
 /mockserver/retrieve?type=ACTIVE_EXPECTATIONS&format=JSON
 
 ```bash
-curl -X PUT "http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS&format=JSON"
+curl -X PUT "http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS&format=JSON" \
 -d '{
     "path": "/some/path",
     "method": "POST"
@@ -2147,7 +2147,7 @@ curl -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATION
 #### Retrieve Recorded Expectations In Json Filtered By Request Matcher
 
 ```bash
-curl -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS&format=JSON"
+curl -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS&format=JSON" \
 -d '{
     "path": "/some/path",
     "method": "POST"
@@ -2163,7 +2163,7 @@ curl -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS"
 #### Retrieve Recorded Requests In Json Filtered By Request Matcher
 
 ```bash
-curl -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS&format=JSON"
+curl -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS&format=JSON" \
 -d '{
     "path": "/some/path",
     "method": "POST"
@@ -2179,7 +2179,7 @@ curl -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUEST_RESPONSES"
 #### Retrieve Recorded Requests And There Responses In Json Filtered By Request Matcher
 
 ```bash
-curl -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUEST_RESPONSES&format=JSON"
+curl -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUEST_RESPONSES&format=JSON" \
 -d '{
     "path": "/some/path",
     "method": "POST"
