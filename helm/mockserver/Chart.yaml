@@ -21,5 +21,4 @@ sources:
 maintainers:
   - name: James D Bloom
     email: jamesdbloom+mockserver@gmail.com
-engine: gotpl
 icon: http://mock-server.com/apple-touch-icon.png
