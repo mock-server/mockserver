@@ -632,7 +632,7 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.directoryToSaveDynamicSSLCertificate");
 
         // when
-        assertThat(directoryToSaveDynamicSSLCertificate(), is(""));
+        assertThat(directoryToSaveDynamicSSLCertificate(), is("."));
         try {
             directoryToSaveDynamicSSLCertificate("some/random/path");
             fail("expected exception to be thrown");
