@@ -14,11 +14,20 @@
 
 <p>You can add the MockServer chart repository as follows:</p>
 
-<pre class="prettyprint code"><code class="code">helm repo add mockserver https://www.mock-server.com</code></pre>
+<pre class="prettyprint code"><code class="code">helm repo add mockserver https://www.mock-server.com
+helm repo update</code></pre>
 
 <p>Then the helm chart can be installed as follows:</p>
 
-<pre class="prettyprint code"><code class="code">helm  upgrade --install --namespace mockserver --create-namespace --version 5.12.0 mockserver mockserver/mockserver</code></pre>
+<pre class="prettyprint code"><code class="code">helm upgrade --install --kube-context &lt;your kube context&gt; --namespace mockserver --create-namespace --version 5.12.0 mockserver mockserver/mockserver</code></pre>
+
+<p>If using get the following error:</p>
+
+<pre class="prettyprint code"><code class="code">Error: failed to download "mockserver/mockserver" at version "5.12.0"</code></pre>
+
+<p>Then update local cache of helm charts:</p>
+
+<pre class="prettyprint code"><code class="code">helm repo update</code></pre>
 
 <a id="deploy_via_package" class="anchor" href="#helm_extend_classpath">&nbsp</a>
 
