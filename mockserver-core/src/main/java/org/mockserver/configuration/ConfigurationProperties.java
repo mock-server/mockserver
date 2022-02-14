@@ -529,11 +529,13 @@ public class ConfigurationProperties {
     }
 
     /**
-     * Use BouncyCastle instead of the Java JDK to generate Certificate and Keys, this is helpful if:
-     * - using the IBM JVM or
-     * - avoiding bugs in the X509 creation logic Java JDK (i.e. such as the format of SAN and CN)
-     * <p>
-     * When enabling this setting the following dependencies must be provided on the classpath (they are not included with MockServer)
+     * <p>Use BouncyCastle instead of the Java JDK to generate Certificate and Keys, this is helpful if:</p>
+     * <ul>
+     *     <li>using Java 16+ or</li>
+     *     <li>using the IBM JVM or</li>
+     *     <li>avoiding bugs in the X509 creation logic Java JDK (i.e. such as the format of SAN and CN)</li>
+     * </ul>
+     * <p>When enabling this setting the following dependencies must be provided on the classpath (they are not included with MockServer)</p>
      * <pre>&lt;dependency&gt;
      *   &lt;groupId&gt;org.bouncycastle&lt;/groupId&gt;
      *   &lt;artifactId&gt;bcprov-jdk15on&lt;/artifactId&gt;
@@ -552,7 +554,7 @@ public class ConfigurationProperties {
     }
 
     public static boolean useBouncyCastleForKeyAndCertificateGeneration() {
-        return Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_USE_BOUNCY_CASTLE_FOR_KEY_AND_CERTIFICATE_GENERATION, "MOCKSERVER_USE_BOUNCY_CASTLE_FOR_KEY_AND_CERTIFICATE_GENERATION", "false"));
+        return Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_USE_BOUNCY_CASTLE_FOR_KEY_AND_CERTIFICATE_GENERATION, "MOCKSERVER_USE_BOUNCY_CASTLE_FOR_KEY_AND_CERTIFICATE_GENERATION", "true"));
     }
 
     /**

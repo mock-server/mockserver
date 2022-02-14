@@ -24,7 +24,7 @@ public class KeyAndCertificateFactoryFactory {
         if (customKeyAndCertificateFactorySupplier != null) {
             return customKeyAndCertificateFactorySupplier.apply(mockServerLogger);
         } else {
-            if (canNotLoadSunSecurityPackages() || ConfigurationProperties.useBouncyCastleForKeyAndCertificateGeneration()) {
+            if (ConfigurationProperties.useBouncyCastleForKeyAndCertificateGeneration() || canNotLoadSunSecurityPackages()) {
                 if (canNotLoadBouncyCastleClasses()) {
                     if (ConfigurationProperties.useBouncyCastleForKeyAndCertificateGeneration()) {
                         mockServerLogger.logEvent(

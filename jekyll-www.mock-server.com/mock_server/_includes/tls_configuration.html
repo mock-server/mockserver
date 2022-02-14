@@ -347,18 +347,8 @@
         <li>using the IBM JVM or</li>
         <li>avoiding bugs in the X509 creation logic Java JDK (i.e. such as the format of SAN and CN)</li>
     </ul>
-    <p>When enabling this setting the following dependencies must be provided on the classpath (they are not included with MockServer)</p>
-    <pre class="prettyprint lang-java code"><code class="code">&lt;dependency&gt;
-  &lt;groupId&gt;org.bouncycastle&lt;/groupId&gt;
-  &lt;artifactId&gt;bcprov-jdk15on&lt;/artifactId&gt;
-  &lt;version&gt;1.70&lt;/version&gt;
-&lt;/dependency&gt;
-&lt;dependency&gt;
-  &lt;groupId&gt;org.bouncycastle&lt;/groupId&gt;
-  &lt;artifactId&gt;bcpkix-jdk15on&lt;/artifactId&gt;
-  &lt;version&gt;1.70&lt;/version&gt;
-&lt;/dependency&gt;</code></pre>
-    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>This is now enabled by default and the BouncyCastle dependencies are included with MockServer to resolve issues with modules in Java 16+ and backwards compatibility for Java 8.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">true</span></p>
     <p>Java Code:</p>
     <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.useBouncyCastleForKeyAndCertificateGeneration(boolean enable)</code></pre>
     <p>System Property:</p>

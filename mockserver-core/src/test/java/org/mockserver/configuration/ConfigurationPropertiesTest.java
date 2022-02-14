@@ -561,7 +561,7 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.useBouncyCastleForKeyAndCertificateGeneration");
 
         // when
-        assertFalse(useBouncyCastleForKeyAndCertificateGeneration());
+        assertTrue(useBouncyCastleForKeyAndCertificateGeneration());
         useBouncyCastleForKeyAndCertificateGeneration(false);
 
         // then

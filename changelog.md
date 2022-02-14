@@ -4,6 +4,13 @@ All notable and significant changes to this project will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### Added
+
+### Changed
+- included Bouncy Castle which is now used by default to resolve issues with modules in Java 16+ and backwards compatibility for Java 8
+
+### Fixed
+
 ## [5.12.0] - 2022-02-12
 
 ### Added
