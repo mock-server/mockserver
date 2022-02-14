@@ -166,7 +166,7 @@ public class IOStreamUtilsTest {
     public void shouldCreateBasicByteBuffer() {
         // when
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect("byte_buffer".length()).put("byte_buffer".getBytes(UTF_8));
-        byteBuffer.flip();
+        byteBuffer.rewind();
 
         // then
         byte[] content = new byte[byteBuffer.limit()];

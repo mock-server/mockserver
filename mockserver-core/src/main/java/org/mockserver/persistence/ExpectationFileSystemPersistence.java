@@ -105,7 +105,7 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
                             byte[] data = serialize(expectations).getBytes(UTF_8);
                             ByteBuffer buffer = ByteBuffer.wrap(data);
                             buffer.put(data);
-                            buffer.flip();
+                            buffer.rewind();
                             while (buffer.hasRemaining()) {
                                 fileChannel.write(buffer);
                             }
