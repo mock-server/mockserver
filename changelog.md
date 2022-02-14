@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - included Bouncy Castle which is now used by default to resolve issues with modules in Java 16+ and backwards compatibility for Java 8
 - improved configuration for dynamically creating CA so the directory is defaulted if not set and log output is clearer
+- improved UI handling of match failures with a because section and more complex log events 
 
 ### Fixed
 - worked around JDK error 'flip()Ljava/nio/ByteBuffer; does not exist in class java.nio.ByteBuffer'
