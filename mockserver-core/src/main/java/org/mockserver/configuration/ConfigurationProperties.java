@@ -26,8 +26,8 @@ import static org.apache.commons.lang3.StringUtils.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.mockserver.logging.MockServerLogger.configureLogger;
-import static org.mockserver.model.HttpRequest.request;
 import static org.slf4j.event.Level.DEBUG;
+import static org.slf4j.event.Level.WARN;
 
 /**
  * @author jamesdbloom
@@ -56,7 +56,8 @@ public class ConfigurationProperties {
     private static final int DEFAULT_WEB_SOCKET_CLIENT_EVENT_LOOP_THREAD_COUNT = 5;
     private static final String DEFAULT_CERTIFICATE_AUTHORITY_PRIVATE_KEY = "org/mockserver/socket/PKCS8CertificateAuthorityPrivateKey.pem";
     private static final String DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE = "org/mockserver/socket/CertificateAuthorityCertificate.pem";
-    private static final String DEFAULT_MOCKSERVER_DYNAMICALLY_CREATE_CERTIFICATE_AUTHORITY_CERTIFICATE = "false";
+    private static final String DEFAULT_CERTIFICATE_DIRECTORY_TO_SAVE_DYNAMIC_SSL_CERTIFICATE = ".";
+    private static final String DEFAULT_DYNAMICALLY_CREATE_CERTIFICATE_AUTHORITY_CERTIFICATE = "false";
     private static final String DEFAULT_TLS_MUTUAL_AUTHENTICATION_REQUIRED = "false";
     private static final String DEFAULT_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN = "";
     private static final String DEFAULT_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER_TYPE = "ANY";
@@ -216,6 +217,7 @@ public class ConfigurationProperties {
     private static boolean detailedMatchFailures = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_LAUNCH_UI_FOR_LOG_LEVEL_DEBUG, "MOCKSERVER_DETAILED_MATCH_FAILURES", "" + true));
     private static boolean matchersFailFast = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DETAILED_MATCH_FAILURES, "MOCKSERVER_DETAILED_MATCH_FAILURES", "" + true));
     private static boolean attemptToProxyIfNoMatchingExpectation = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION, "MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION", "" + true));
+    private static String directoryToSaveDynamicSslCertificate;
     private static boolean enableMTLS = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_REQUIRED, "MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_REQUIRED", DEFAULT_TLS_MUTUAL_AUTHENTICATION_REQUIRED));
     private static String tlsMutualAuthenticationCertificateChain = readPropertyHierarchically(MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN, "MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN", DEFAULT_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN);
     private static ForwardProxyTLSX509CertificatesTrustManager forwardProxyTLSX509CertificatesTrustManagerType = validateTrustManagerType(readPropertyHierarchically(MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER_TYPE, "MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER_TYPE", DEFAULT_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER_TYPE));
@@ -600,7 +602,7 @@ public class ConfigurationProperties {
     }
 
     public static boolean dynamicallyCreateCertificateAuthorityCertificate() {
-        return Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DYNAMICALLY_CREATE_CERTIFICATE_AUTHORITY_CERTIFICATE, "MOCKSERVER_DYNAMICALLY_CREATE_CERTIFICATE_AUTHORITY_CERTIFICATE", DEFAULT_MOCKSERVER_DYNAMICALLY_CREATE_CERTIFICATE_AUTHORITY_CERTIFICATE));
+        return Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DYNAMICALLY_CREATE_CERTIFICATE_AUTHORITY_CERTIFICATE, "MOCKSERVER_DYNAMICALLY_CREATE_CERTIFICATE_AUTHORITY_CERTIFICATE", DEFAULT_DYNAMICALLY_CREATE_CERTIFICATE_AUTHORITY_CERTIFICATE));
     }
 
     /**
@@ -617,7 +619,18 @@ public class ConfigurationProperties {
     }
 
     public static String directoryToSaveDynamicSSLCertificate() {
-        return readPropertyHierarchically(MOCKSERVER_CERTIFICATE_DIRECTORY_TO_SAVE_DYNAMIC_SSL_CERTIFICATE, "MOCKSERVER_CERTIFICATE_DIRECTORY_TO_SAVE_DYNAMIC_SSL_CERTIFICATE", "");
+        if (isBlank(directoryToSaveDynamicSslCertificate)) {
+            directoryToSaveDynamicSslCertificate = readPropertyHierarchically(MOCKSERVER_CERTIFICATE_DIRECTORY_TO_SAVE_DYNAMIC_SSL_CERTIFICATE, "MOCKSERVER_CERTIFICATE_DIRECTORY_TO_SAVE_DYNAMIC_SSL_CERTIFICATE", DEFAULT_CERTIFICATE_DIRECTORY_TO_SAVE_DYNAMIC_SSL_CERTIFICATE);
+            if (directoryToSaveDynamicSslCertificate.equals(DEFAULT_CERTIFICATE_DIRECTORY_TO_SAVE_DYNAMIC_SSL_CERTIFICATE)) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setLogLevel(WARN)
+                        .setMessageFormat("dynamicallyCreateCertificateAuthorityCertificate is true without setting directoryToSaveDynamicSSLCertificate, defaulting to:{}")
+                        .setArguments(new File(directoryToSaveDynamicSslCertificate).getAbsolutePath())
+                );
+            }
+        }
+        return directoryToSaveDynamicSslCertificate;
     }
 
     /**
@@ -628,6 +641,7 @@ public class ConfigurationProperties {
     public static void directoryToSaveDynamicSSLCertificate(String directoryToSaveDynamicSSLCertificate) {
         fileExists(directoryToSaveDynamicSSLCertificate);
         System.setProperty(MOCKSERVER_CERTIFICATE_DIRECTORY_TO_SAVE_DYNAMIC_SSL_CERTIFICATE, directoryToSaveDynamicSSLCertificate);
+        directoryToSaveDynamicSslCertificate = null;
     }
 
     public static String privateKeyPath() {

@@ -34,7 +34,6 @@ import java.security.interfaces.RSAPrivateKey;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.preventCertificateDynamicUpdate;
 import static org.mockserver.socket.tls.PEMToFile.*;
 import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.NOT_AFTER;
@@ -66,7 +65,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
 
     @Override
     public void buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate() {
-        if (dynamicCertificateAuthorityUpdate() && certificateAuthorityCertificateNotYetCreated()) {
+        if (dynamicallyUpdateCertificateAuthority() && certificateAuthorityCertificateNotYetCreated()) {
             try {
                 KeyPair caKeyPair = generateKeyPair(CertificateSigningRequest.ROOT_KEY_SIZE);
 
@@ -84,10 +83,10 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
     }
 
     private void saveAsPEMFile(Object object, String absolutePath, String type) throws IOException {
-        if (MockServerLogger.isEnabled(DEBUG)) {
+        if (MockServerLogger.isEnabled(INFO)) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setLogLevel(DEBUG)
+                    .setLogLevel(INFO)
                     .setMessageFormat("created dynamic " + type + " PEM file at{}")
                     .setArguments(absolutePath)
             );
@@ -146,8 +145,8 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
         }
     }
 
-    private boolean dynamicCertificateAuthorityUpdate() {
-        return ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate() && isNotBlank(ConfigurationProperties.directoryToSaveDynamicSSLCertificate());
+    private boolean dynamicallyUpdateCertificateAuthority() {
+        return ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate();
     }
 
     public boolean certificateAuthorityCertificateNotYetCreated() {
@@ -155,7 +154,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
     }
 
     private String certificateAuthorityPrivateKeyPath() {
-        if (dynamicCertificateAuthorityUpdate()) {
+        if (dynamicallyUpdateCertificateAuthority()) {
             return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "PKCS8CertificateAuthorityPrivateKey.pem").getAbsolutePath();
         } else {
             return ConfigurationProperties.certificateAuthorityPrivateKey();
@@ -163,7 +162,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
     }
 
     private String certificateAuthorityX509CertificatePath() {
-        if (dynamicCertificateAuthorityUpdate()) {
+        if (dynamicallyUpdateCertificateAuthority()) {
             return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "CertificateAuthorityCertificate.pem").getAbsolutePath();
         } else {
             return ConfigurationProperties.certificateAuthorityCertificate();
@@ -201,7 +200,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
 
     private RSAPrivateKey certificateAuthorityPrivateKey() {
         if (certificateAuthorityPrivateKey == null) {
-            if (dynamicCertificateAuthorityUpdate()) {
+            if (dynamicallyUpdateCertificateAuthority()) {
                 buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
             }
             certificateAuthorityPrivateKey = privateKeyFromPEMFile(certificateAuthorityPrivateKeyPath());
@@ -209,8 +208,15 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(TRACE)
-                        .setMessageFormat("loaded dynamic CA private key from path{}PEM{}")
+                        .setMessageFormat("loaded dynamic CA private key from path{}containing PEM{}")
                         .setArguments(certificateAuthorityPrivateKeyPath(), certificateAuthorityPrivateKey)
+                );
+            } else if (MockServerLogger.isEnabled(INFO)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(INFO)
+                        .setMessageFormat("loaded dynamic CA private key from path{}")
+                        .setArguments(certificateAuthorityPrivateKeyPath())
                 );
             }
         }
@@ -219,16 +225,23 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
 
     public X509Certificate certificateAuthorityX509Certificate() {
         if (certificateAuthorityX509Certificate == null) {
-            if (dynamicCertificateAuthorityUpdate()) {
+            if (dynamicallyUpdateCertificateAuthority()) {
                 buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
             }
             certificateAuthorityX509Certificate = x509FromPEMFile(certificateAuthorityX509CertificatePath());
-            if (MockServerLogger.isEnabled(TRACE)) {
+            if (MockServerLogger.isEnabled(DEBUG)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setLogLevel(TRACE)
-                        .setMessageFormat("loaded dynamic CA X509 from path{}from PEM{}as{}")
+                        .setLogLevel(DEBUG)
+                        .setMessageFormat("loaded dynamic CA X509 from path{}containing PEM{}as{}")
                         .setArguments(certificateAuthorityX509CertificatePath(), FileReader.readFileFromClassPathOrPath(certificateAuthorityX509CertificatePath()), certificateAuthorityX509Certificate)
+                );
+            } else if (MockServerLogger.isEnabled(INFO)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(INFO)
+                        .setMessageFormat("loaded dynamic CA X509 from path{}containing PEM{}")
+                        .setArguments(certificateAuthorityX509CertificatePath(), FileReader.readFileFromClassPathOrPath(certificateAuthorityX509CertificatePath()))
                 );
             }
         }
@@ -243,7 +256,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
     public void buildAndSavePrivateKeyAndX509Certificate() {
         if (customPrivateKeyAndCertificateProvided()) {
             try {
-                if (dynamicCertificateAuthorityUpdate()) {
+                if (dynamicallyUpdateCertificateAuthority()) {
                     buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
                 }
                 KeyPair keyPair = generateKeyPair(CertificateSigningRequest.MOCK_KEY_SIZE);

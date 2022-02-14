@@ -124,7 +124,7 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
     }
 
     private boolean dynamicallyUpdateCertificateAuthority() {
-        return ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate() && isNotBlank(ConfigurationProperties.directoryToSaveDynamicSSLCertificate());
+        return ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate();
     }
 
     public boolean certificateAuthorityCertificateNotYetCreated() {
@@ -157,8 +157,15 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(TRACE)
-                        .setMessageFormat("loaded dynamic CA private key from path{}PEM{}")
+                        .setMessageFormat("loaded dynamic CA private key from path{}containing PEM{}")
                         .setArguments(certificateAuthorityPrivateKeyPath(), certificateAuthorityPrivateKey)
+                );
+            } else if (MockServerLogger.isEnabled(INFO)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(INFO)
+                        .setMessageFormat("loaded dynamic CA private key from path{}")
+                        .setArguments(certificateAuthorityPrivateKeyPath())
                 );
             }
         }
@@ -171,12 +178,19 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
                 buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
             }
             certificateAuthorityX509Certificate = x509FromPEMFile(certificateAuthorityX509CertificatePath());
-            if (MockServerLogger.isEnabled(TRACE)) {
+            if (MockServerLogger.isEnabled(DEBUG)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setLogLevel(TRACE)
-                        .setMessageFormat("loaded dynamic CA X509 from path{}from PEM{}as{}")
+                        .setLogLevel(DEBUG)
+                        .setMessageFormat("loaded dynamic CA X509 from path{}containing PEM{}as{}")
                         .setArguments(certificateAuthorityX509CertificatePath(), FileReader.readFileFromClassPathOrPath(certificateAuthorityX509CertificatePath()), certificateAuthorityX509Certificate)
+                );
+            } else if (MockServerLogger.isEnabled(INFO)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setLogLevel(INFO)
+                        .setMessageFormat("loaded dynamic CA X509 from path{}containing PEM{}")
+                        .setArguments(certificateAuthorityX509CertificatePath(), FileReader.readFileFromClassPathOrPath(certificateAuthorityX509CertificatePath()))
                 );
             }
         }

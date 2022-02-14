@@ -62,7 +62,7 @@ public class PEMToFile {
     }
 
     public static byte[] privateKeyBytesFromPEM(final String pem) {
-        if ((pem.contains(BEGIN_RSA_PRIVATE_KEY) || pem.contains(END_RSA_PRIVATE_KEY))) {
+        if (!ConfigurationProperties.useBouncyCastleForKeyAndCertificateGeneration() && (pem.contains(BEGIN_RSA_PRIVATE_KEY) || pem.contains(END_RSA_PRIVATE_KEY))) {
             new MockServerLogger().logEvent(
                 new LogEntry()
                     .setLogLevel(Level.ERROR)
