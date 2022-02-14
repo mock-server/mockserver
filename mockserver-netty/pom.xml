@@ -160,6 +160,15 @@
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>shaded</shadedClassifierName>
                             <filters>
+                                <!-- exclude manifest signature files -->
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
                                 <filter>
                                     <artifact>com.fasterxml.jackson.dataformat:jackson-dataformat-yaml</artifact>
                                     <excludes>
