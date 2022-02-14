@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - improved configuration for dynamically creating CA so the directory is defaulted if not set and log output is clearer
 
 ### Fixed
+- worked around JDK error 'flip()Ljava/nio/ByteBuffer; does not exist in class java.nio.ByteBuffer'
 
 ## [5.12.0] - 2022-02-12
 
@@ -47,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - logging of exceptions such as port already bound at startup
 - retrieval of active exceptions where expectations were no longer active but not yet removed from expectations list
 - no longer treats ndjson as json
+- accessing UI via a reverse proxy or load balancer
 
 ## [5.11.2] - 2020-10-08
 
