@@ -1,28 +1,40 @@
 package org.mockserver.testing.integration.mock;
 
 import org.junit.Test;
+import org.mockserver.file.FileReader;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.Delay;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.MediaType;
 import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequest;
 import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequestAndResponse;
 import org.mockserver.testing.integration.callback.PrecannedTestExpectationResponseCallback;
+import org.mockserver.uuid.UUIDService;
+import org.mockserver.verify.VerificationTimes;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.fail;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.StringStartsWith.startsWith;
+import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.once;
+import static org.mockserver.mock.Expectation.when;
+import static org.mockserver.mock.OpenAPIExpectation.openAPIExpectation;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.model.HttpStatusCode.ACCEPTED_202;
-import static org.mockserver.model.HttpStatusCode.OK_200;
+import static org.mockserver.model.HttpStatusCode.*;
+import static org.mockserver.model.HttpStatusCode.CREATED_201;
+import static org.mockserver.model.JsonBody.json;
+import static org.mockserver.model.OpenAPIDefinition.openAPI;
 
 /**
  * @author jamesdbloom
@@ -431,4 +443,481 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                 HEADERS_TO_IGNORE)
         );
     }
+
+    @Test
+    public void shouldReturnResponseByMatchingOpenAPIExpectationWithUrl() {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .upsert(openAPIExpectation(
+                "org/mockserver/mock/openapi_petstore_example.json"
+            ));
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader("x-next", "some_string_value")
+                .withHeader("content-type", "application/json")
+                .withBody(json("[ {" + NEW_LINE +
+                    "  \"id\" : 0," + NEW_LINE +
+                    "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                    "  \"tag\" : \"some_string_value\"" + NEW_LINE +
+                    "} ]", MediaType.APPLICATION_JSON)),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath("/pets")
+                    .withQueryStringParameter("limit", "10"),
+                HEADERS_TO_IGNORE)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(CREATED_201.code())
+                .withReasonPhrase(CREATED_201.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath("/pets")
+                    .withBody(json("{" + NEW_LINE +
+                        "  \"id\" : 0," + NEW_LINE +
+                        "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                        "  \"tag\" : \"some_string_value\"" + NEW_LINE +
+                        "}", MediaType.APPLICATION_JSON)),
+                HEADERS_TO_IGNORE)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader("content-type", "application/json")
+                .withBody(json("{" + NEW_LINE +
+                    "  \"id\" : 0," + NEW_LINE +
+                    "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                    "  \"tag\" : \"some_string_value\"" + NEW_LINE +
+                    "}", MediaType.APPLICATION_JSON)),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath("/pets/12345")
+                    .withHeader("x-request-id", UUIDService.getUUID()),
+                HEADERS_TO_IGNORE)
+        );
+
+        // and
+        assertThat(upsertedExpectations.length, is(4));
+        assertThat(upsertedExpectations[0], is(
+            when("org/mockserver/mock/openapi_petstore_example.json", "listPets")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("x-next", "some_string_value")
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("[ {" + NEW_LINE +
+                            "  \"id\" : 0," + NEW_LINE +
+                            "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                            "  \"tag\" : \"some_string_value\"" + NEW_LINE +
+                            "} ]"))
+                )
+        ));
+        assertThat(upsertedExpectations[1], is(
+            when("org/mockserver/mock/openapi_petstore_example.json", "createPets")
+                .thenRespond(
+                    response()
+                        .withStatusCode(201)
+                )
+        ));
+        assertThat(upsertedExpectations[2], is(
+            when("org/mockserver/mock/openapi_petstore_example.json", "showPetById")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("{" + NEW_LINE +
+                            "  \"id\" : 0," + NEW_LINE +
+                            "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                            "  \"tag\" : \"some_string_value\"" + NEW_LINE +
+                            "}"))
+                )
+        ));
+        assertThat(upsertedExpectations[3], is(
+            when("org/mockserver/mock/openapi_petstore_example.json", "somePath")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("{" + NEW_LINE +
+                            "  \"id\" : 0," + NEW_LINE +
+                            "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                            "  \"tag\" : \"some_string_value\"" + NEW_LINE +
+                            "}"))
+                )
+        ));
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingOpenAPIUrlWithOperationId() {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .when(openAPI(
+                "org/mockserver/mock/openapi_petstore_example.json",
+                "listPets"
+            ))
+            .respond(response().withBody("some_body"));
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath("/pets")
+                    .withQueryStringParameter("limit", "10"),
+                HEADERS_TO_IGNORE)
+        );
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(new Expectation(openAPI(
+            "org/mockserver/mock/openapi_petstore_example.json",
+            "listPets"
+        )).thenRespond(response().withBody("some_body"))));
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingOpenAPIUrlWithoutOperationId() {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .when(openAPI().withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json"))
+            .respond(response().withBody("some_body"));
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath("/pets")
+                    .withQueryStringParameter("limit", "10"),
+                HEADERS_TO_IGNORE)
+        );
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(new Expectation(
+            openAPI()
+                .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+        ).thenRespond(response().withBody("some_body"))));
+    }
+
+    @Test
+    public void shouldNotReturnResponseForNonMatchingOpenAPIUrl() {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .when(openAPI(
+                "org/mockserver/mock/openapi_petstore_example.json",
+                "listPets"
+            ))
+            .respond(response().withBody("some_body"));
+
+        // then
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withMethod("PUT")
+                    .withPath("/pets")
+                    .withQueryStringParameter("limit", "10"),
+                HEADERS_TO_IGNORE)
+        );
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(new Expectation(openAPI(
+            "org/mockserver/mock/openapi_petstore_example.json",
+            "listPets"
+        )).thenRespond(response().withBody("some_body"))));
+    }
+
+    @Test
+    public void shouldVerifyNotEnoughRequestsReceivedWithOpenAPIUrl() {
+        // when
+        mockServerClient
+            .when(openAPI().withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json"), exactly(4))
+            .respond(response().withBody("some_body"));
+
+        // and
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath(calculatePath("/pets"))
+                    .withQueryStringParameter("limit", "10"),
+                HEADERS_TO_IGNORE
+            )
+        );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("/pets"))
+                    .withHeader("content-type", "application/json")
+                    .withBody(json("" +
+                        "{" + NEW_LINE +
+                        "    \"id\": 50, " + NEW_LINE +
+                        "    \"name\": \"scruffles\", " + NEW_LINE +
+                        "    \"tag\": \"dog\"" + NEW_LINE +
+                        "}"
+                    )),
+                HEADERS_TO_IGNORE
+            )
+        );
+
+        // then
+        mockServerClient
+            .verify(
+                openAPI()
+                    .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json"),
+                VerificationTimes.atLeast(2)
+            );
+    }
+
+    @Test
+    public void shouldVerifySequenceOfRequestsReceivedByOpenAPIUrl() {
+        // when
+        String specUrlOrPayload = "org/mockserver/mock/openapi_petstore_example.json";
+        mockServerClient
+            .when(openAPI().withSpecUrlOrPayload(specUrlOrPayload), exactly(4))
+            .respond(response().withBody("some_body"));
+
+        // and
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath(calculatePath("/pets"))
+                    .withQueryStringParameter("limit", "10"),
+                HEADERS_TO_IGNORE
+            )
+        );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("/pets"))
+                    .withHeader("content-type", "application/json")
+                    .withBody(json("" +
+                        "{" + NEW_LINE +
+                        "    \"id\": 50, " + NEW_LINE +
+                        "    \"name\": \"scruffles\", " + NEW_LINE +
+                        "    \"tag\": \"dog\"" + NEW_LINE +
+                        "}"
+                    )),
+                HEADERS_TO_IGNORE
+            )
+        );
+
+        // then
+        try {
+            mockServerClient
+                .verify(
+                    openAPI()
+                        .withSpecUrlOrPayload(specUrlOrPayload)
+                        .withOperationId("createPets"),
+                    openAPI()
+                        .withSpecUrlOrPayload(specUrlOrPayload)
+                        .withOperationId("listPets")
+                );
+            fail("expected exception to be thrown");
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + NEW_LINE +
+                "  \"operationId\" : \"createPets\"," + NEW_LINE +
+                "  \"specUrlOrPayload\" : \"" + specUrlOrPayload + "\"" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"operationId\" : \"listPets\"," + NEW_LINE +
+                "  \"specUrlOrPayload\" : \"" + specUrlOrPayload + "\"" + NEW_LINE +
+                "} ]> but was:<[ {"));
+        }
+        mockServerClient
+            .verify(
+                openAPI()
+                    .withSpecUrlOrPayload(specUrlOrPayload)
+                    .withOperationId("listPets"),
+                openAPI()
+                    .withSpecUrlOrPayload(specUrlOrPayload)
+                    .withOperationId("createPets")
+            );
+    }
+
+    @Test
+    public void shouldRetrieveRecordedRequestsByOpenAPIUrl() {
+        // when
+        mockServerClient
+            .when(openAPI().withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json"), exactly(4))
+            .respond(response().withBody("some_body"));
+
+        // and
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath(calculatePath("/pets"))
+                    .withQueryStringParameter("limit", "10"),
+                HEADERS_TO_IGNORE
+            )
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request().withPath(calculatePath("not_found")),
+                HEADERS_TO_IGNORE
+            )
+        );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("/pets"))
+                    .withHeader("content-type", "application/json")
+                    .withBody(json("" +
+                        "{" + NEW_LINE +
+                        "    \"id\": 50, " + NEW_LINE +
+                        "    \"name\": \"scruffles\", " + NEW_LINE +
+                        "    \"tag\": \"dog\"" + NEW_LINE +
+                        "}"
+                    )),
+                HEADERS_TO_IGNORE
+            )
+        );
+
+        // then
+        // TODO(jamesdbloom) why is this path not prefixed with context route?
+        verifyRequestsMatches(
+            mockServerClient.retrieveRecordedRequests(openAPI().withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")),
+            request()
+                .withMethod("GET")
+                .withPath("/pets")
+                .withQueryStringParameter("limit", "10"),
+            request()
+                .withMethod("POST")
+                .withPath("/pets")
+                .withHeader("content-type", "application/json")
+                .withBody(json("" +
+                    "{" + NEW_LINE +
+                    "    \"id\": 50, " + NEW_LINE +
+                    "    \"name\": \"scruffles\", " + NEW_LINE +
+                    "    \"tag\": \"dog\"" + NEW_LINE +
+                    "}"
+                ))
+        );
+    }
+
+    @Test
+    public void shouldClearExpectationsAndLogsByOpenAPIUrl() {
+        // when
+        mockServerClient
+            .when(openAPI().withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json"), exactly(4))
+            .respond(response().withBody("some_body"));
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path2"))
+            )
+            .respond(
+                response()
+                    .withBody("some_body2")
+            );
+
+        // and
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath(calculatePath("/pets"))
+                    .withQueryStringParameter("limit", "10"),
+                HEADERS_TO_IGNORE
+            )
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request().withPath(calculatePath("not_found")),
+                HEADERS_TO_IGNORE
+            )
+        );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("/pets"))
+                    .withHeader("content-type", "application/json")
+                    .withBody(json("" +
+                        "{" + NEW_LINE +
+                        "    \"id\": 50, " + NEW_LINE +
+                        "    \"name\": \"scruffles\", " + NEW_LINE +
+                        "    \"tag\": \"dog\"" + NEW_LINE +
+                        "}"
+                    )),
+                HEADERS_TO_IGNORE
+            )
+        );
+
+        // when
+        mockServerClient
+            .clear(
+                openAPI()
+                    .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+            );
+
+
+        // and then - request log cleared
+        verifyRequestsMatches(
+            mockServerClient.retrieveRecordedRequests(null),
+            request(calculatePath("not_found"))
+        );
+
+        // then - expectations cleared
+        assertThat(
+            mockServerClient.retrieveActiveExpectations(null),
+            arrayContaining(
+                new Expectation(request()
+                    .withPath(calculatePath("some_path2")))
+                    .thenRespond(
+                        response()
+                            .withBody("some_body2")
+                    )
+            )
+        );
+        assertEquals(
+            localNotFoundResponse(),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath(calculatePath("/pets"))
+                    .withQueryStringParameter("limit", "10"),
+                HEADERS_TO_IGNORE
+            )
+        );
+
+        // and then - remaining expectations not cleared
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body2"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path2")),
+                HEADERS_TO_IGNORE)
+        );
+    }
+
 }

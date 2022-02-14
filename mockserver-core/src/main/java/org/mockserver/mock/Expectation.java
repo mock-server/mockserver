@@ -299,6 +299,7 @@ public class Expectation extends ObjectWithJsonToString {
     public Expectation withCreated(long created) {
         this.created = created;
         this.sortableExpectationId = null;
+        this.hashCode = 0;
         return this;
     }
 

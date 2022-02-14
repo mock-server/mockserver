@@ -49,27 +49,6 @@ public class FileReader {
         return inputStream;
     }
 
-    /**
-     * attempt to file fully qualified file if possible
-     * may fail if file is in classpath and inside a jar file
-     * in this case the original path is returned
-     */
-    public static String filePathFromClassPathOrPath(String filename) {
-        URL classpathResource = FileReader.class.getClassLoader().getResource(filename);
-        if (classpathResource != null) {
-            try {
-                return new File(classpathResource.toURI()).getAbsolutePath();
-            } catch (Throwable ignore) {
-                // skip to file system
-            }
-        }
-        File file = new File(filename);
-        if (file.exists()) {
-            return file.getAbsolutePath();
-        }
-        return filename;
-    }
-
     public static Reader openReaderToFileFromClassPathOrPath(String filename) throws FileNotFoundException {
         return new InputStreamReader(openStreamToFileFromClassPathOrPath(filename));
     }
