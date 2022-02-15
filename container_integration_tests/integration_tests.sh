@@ -39,6 +39,8 @@ function run_all_tests() {
     start-up-k8s
     test "helm_default_config"
     test "helm_local_docker_container"
+    test "helm_custom_server_port"
+    test "helm_remote_host_and_port"
     tear-down-k8s
   fi
 }

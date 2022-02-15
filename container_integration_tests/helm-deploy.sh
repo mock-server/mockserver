@@ -18,14 +18,14 @@ function tear-down-k8s() {
 }
 
 function start-up() {
-  runCommand "helm --kube-context microk8s upgrade --install --namespace mockserver --create-namespace ${1:-} --wait --version 5.12.0 mockserver ${SCRIPT_DIR}/../../helm/mockserver"
-  export NODE_PORT=$(runCommand "kubectl --context microk8s get --namespace mockserver -o jsonpath='{.spec.ports[0].nodePort}' services mockserver")
-  export NODE_IP=$(runCommand "kubectl --context microk8s get nodes --namespace mockserver -o jsonpath='{.items[0].status.addresses[0].address}'")
-  export MOCKSERVER_HOST="${NODE_IP}:${NODE_PORT}"
+  runCommand "helm --kube-context microk8s upgrade --install --namespace ${2:-mockserver} --create-namespace ${1:-} --wait --version 5.12.0 ${2:-mockserver} ${SCRIPT_DIR}/../../helm/mockserver"
   # TODO add poll for startup
   sleep 3
+  export NODE_PORT=$(runCommand "kubectl --context microk8s --namespace ${2:-mockserver} -o jsonpath='{.spec.ports[0].nodePort}' get services ${2:-mockserver}")
+  export NODE_IP=$(runCommand "kubectl --context microk8s --namespace ${2:-mockserver} -o jsonpath='{.items[0].status.addresses[0].address}' get nodes")
+  export MOCKSERVER_HOST="${NODE_IP}:${NODE_PORT}"
 }
 
 function tear-down() {
-  runCommand "helm --kube-context microk8s --namespace mockserver delete mockserver"
+  runCommand "helm --kube-context microk8s --namespace ${1:-mockserver} delete ${1:-mockserver}"
 }
