@@ -60,7 +60,7 @@
         <netty.version>4.1.74.Final</netty.version>
         <httpcomponents.version>4.4.1</httpcomponents.version>
         <boucycastle.verion>1.70</boucycastle.verion>
-        <spring.version>5.3.15</spring.version>
+        <spring.version>5.3.16</spring.version>
         <mockito.version>4.3.1</mockito.version>
         <hamcrest.version>2.2</hamcrest.version>
         <xmlunit.version>2.9.0</xmlunit.version>
@@ -79,10 +79,10 @@
         <module>mockserver-war</module>
         <module>mockserver-proxy-war</module>
         <module>mockserver-netty</module>
-        <module>mockserver-examples</module>
         <module>mockserver-junit-rule</module>
         <module>mockserver-junit-jupiter</module>
         <module>mockserver-spring-test-listener</module>
+        <module>mockserver-examples</module>
     </modules>
 
     <dependencyManagement>

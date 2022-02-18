@@ -54,6 +54,12 @@
                 <artifactId>snakeyaml</artifactId>
                 <version>1.30</version>
             </dependency>
+            <dependency>
+                <!-- Conflicting versions in spring-boot-starter-webflux and spring-context / spring-web  / spring-test -->
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-core</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
