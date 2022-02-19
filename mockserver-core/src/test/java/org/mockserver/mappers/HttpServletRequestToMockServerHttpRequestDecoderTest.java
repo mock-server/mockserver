@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.HashSet;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static junit.framework.TestCase.assertEquals;
@@ -46,10 +47,10 @@ public class HttpServletRequestToMockServerHttpRequestDecoderTest {
             new Parameter("bodyParameterNameOne", "bodyParameterValueOne_Two"),
             new Parameter("bodyParameterNameTwo", "bodyParameterValueTwo_One")
         ).toString(), httpRequest.getBody().toString());
-        assertEquals(Arrays.asList(
+        assertEquals(new HashSet<>(Arrays.asList(
             new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
             new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
-        ), httpRequest.getQueryStringParameterList());
+        )), new HashSet<>(httpRequest.getQueryStringParameterList()));
         assertEquals(Lists.newArrayList(
             new Header("headerName1", "headerValue1_1", "headerValue1_2"),
             new Header("headerName2", "headerValue2"),
