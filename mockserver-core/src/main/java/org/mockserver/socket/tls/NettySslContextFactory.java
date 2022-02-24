@@ -52,6 +52,9 @@ public class NettySslContextFactory {
         this.mockServerLogger = mockServerLogger;
         keyAndCertificateFactory = createKeyAndCertificateFactory(mockServerLogger);
         System.setProperty("https.protocols", "SSLv3,TLSv1,TLSv1.1,TLSv1.2");
+        if (ConfigurationProperties.proactivelyInitialiseTLS()) {
+            createServerSslContext();
+        }
     }
 
     public synchronized SslContext createClientSslContext(boolean forwardProxyClient) {

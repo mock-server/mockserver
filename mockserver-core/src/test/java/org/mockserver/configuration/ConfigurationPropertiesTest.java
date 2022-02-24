@@ -570,17 +570,31 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldSetAndReadProactivelyInitialiseTLS() {
+        // given
+        System.clearProperty("mockserver.proactivelyInitialiseTLS");
+
+        // when
+        assertFalse(proactivelyInitialiseTLS());
+        proactivelyInitialiseTLS(true);
+
+        // then
+        assertTrue(proactivelyInitialiseTLS());
+        assertEquals("true", System.getProperty("mockserver.proactivelyInitialiseTLS"));
+    }
+
+    @Test
     public void shouldSetAndReadPreventCertificateDynamicUpdate() {
         // given
         System.clearProperty("mockserver.preventCertificateDynamicUpdate");
 
         // when
         assertFalse(preventCertificateDynamicUpdate());
-        preventCertificateDynamicUpdate(false);
+        preventCertificateDynamicUpdate(true);
 
         // then
-        assertFalse(preventCertificateDynamicUpdate());
-        assertEquals("false", System.getProperty("mockserver.preventCertificateDynamicUpdate"));
+        assertTrue(preventCertificateDynamicUpdate());
+        assertEquals("true", System.getProperty("mockserver.preventCertificateDynamicUpdate"));
     }
 
     @Test

@@ -34,7 +34,7 @@
 <button id="button_configuration_directory_to_save_dynamic_ssl_certificates" class="accordion title"><strong>Directory To Save Dynamic Inbound Certificate Authority X.509 and Private Key</strong></button>
 <div class="panel title">
     <p>Directory used to save the dynamically generated Certificate Authority X.509 Certificate and Private Key.</p>
-    <p>This directory will only be used if MockServer is configured to create a dynamic Certificate Authority X.509 certificate and private key using <a href="#button_configuration_dynamically_create_ca_certificate">dynamicallyCreateCertificateAuthorityCertificate.</a></p>
+    <p>This directory will only be used if MockServer is configured to create a dynamic Certificate Authority X.509 certificate and private key using <a href="#button_configuration_dynamically_create_ca_certificate">dynamicallyCreateCertificateAuthorityCertificate</a>.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
     <p>Java Code:</p>
     <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.directoryToSaveDynamicSSLCertificate(String directoryToSaveDynamicSSLCertificate)</code></pre>
@@ -46,6 +46,23 @@
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.directoryToSaveDynamicSSLCertificate=...</code></pre>
     <p>Example:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.directoryToSaveDynamicSSLCertificate="/some/existing/path"</code></pre>
+</div>
+
+<button id="button_configuration_proactively_initialise_tls" class="accordion title"><strong>Proactively Initialise TLS During Start Up</strong></button>
+<div class="panel title">
+    <p>Proactively initialise TLS during start to ensure that if <a href="#button_configuration_dynamically_create_ca_certificate">dynamicallyCreateCertificateAuthorityCertificate</a> is enabled the Certificate Authority X.509 Certificate and Private Key will be created during start up and not when the first TLS connection is received.</p>
+    <p>This setting will also ensure any configured private key and X.509 will be loaded during start up and not when the first TLS connection is received to give immediate feedback on any related TLS configuration errors.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.proactivelyInitialiseTLS(boolean enable)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proactivelyInitialiseTLS=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_PROACTIVELY_INITIALISE_TLS=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.proactivelyInitialiseTLS=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proactivelyInitialiseTLS="/some/existing/path"</code></pre>
 </div>
 
 <h4>Fixed (i.e. Custom) Inbound Certificate Authority X.509 & Private Key</h4>

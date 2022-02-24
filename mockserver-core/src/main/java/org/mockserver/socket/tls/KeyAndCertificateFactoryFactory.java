@@ -63,10 +63,10 @@ public class KeyAndCertificateFactoryFactory {
                 try {
                     Class<KeyAndCertificateFactory> keyAndCertificateFactorClass = (Class<KeyAndCertificateFactory>) CLASS_LOADER.loadClass("org.mockserver.socket.tls.bouncycastle.BCKeyAndCertificateFactory");
                     Constructor<KeyAndCertificateFactory> keyAndCertificateFactorConstructor = keyAndCertificateFactorClass.getDeclaredConstructor(MockServerLogger.class);
-                    if (MockServerLogger.isEnabled(Level.INFO)) {
+                    if (MockServerLogger.isEnabled(Level.DEBUG)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
-                                .setLogLevel(Level.INFO)
+                                .setLogLevel(Level.DEBUG)
                                 .setMessageFormat("using Bouncy Castle for X.509 Certificate and Private Key generation")
                         );
                     }

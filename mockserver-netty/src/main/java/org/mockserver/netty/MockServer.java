@@ -56,7 +56,7 @@ public class MockServer extends LifeCycle {
      * Start the instance using the ports provided configuring forwarded or proxied requests to go via an additional proxy
      *
      * @param proxyConfigurations the proxy configuration to send requests forwarded or proxied by MockServer via another proxy
-     * @param localPorts         the local port(s) to use, use 0 or no vararg values to specify any free port
+     * @param localPorts          the local port(s) to use, use 0 or no vararg values to specify any free port
      */
     public MockServer(final List<ProxyConfiguration> proxyConfigurations, final Integer... localPorts) {
         createServerBootstrap(proxyConfigurations, localPorts);
