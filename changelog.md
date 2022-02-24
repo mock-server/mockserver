@@ -4,15 +4,20 @@ All notable and significant changes to this project will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
 ### Added
+- added support for configuring log level via properties file
 
 ### Changed
 - included Bouncy Castle now used by default to resolve issues with modules in Java 16+ and backwards compatibility for Java 8
 - improved configuration for dynamically creating CA so the directory is defaulted if not set and log output is clearer
-- improved UI handling of match failures with a because section and more complex log events 
+- improved UI handling of match failures with a because section and more complex log events
+- improved log configuration during startup when loading of properties file
 
 ### Fixed
 - worked around JDK error 'flip()Ljava/nio/ByteBuffer; does not exist in class java.nio.ByteBuffer'
+- null pointer exception when serialising string bodies with non string content types (i.e. image/png)
 
 ## [5.12.0] - 2022-02-12
 
