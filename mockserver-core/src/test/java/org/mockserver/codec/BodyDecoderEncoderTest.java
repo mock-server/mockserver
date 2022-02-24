@@ -38,6 +38,21 @@ public class BodyDecoderEncoderTest {
     }
 
     @Test
+    public void shouldSerialiseBodyToByteBufWithIvalidContentType() {
+        // given
+        String bodyValue = new String(new byte[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9});
+        Body body = new StringBody(bodyValue);
+
+        // when
+        ByteBuf result = new BodyDecoderEncoder().bodyToByteBuf(body, "image/png");
+
+        // then
+        byte[] bodyBytes = new byte[result.readableBytes()];
+        result.readBytes(bodyBytes);
+        assertThat(bodyBytes, is(bodyValue.getBytes(DEFAULT_TEXT_HTTP_CHARACTER_SET)));
+    }
+
+    @Test
     public void shouldSerialiseBodyToChunkedByteBufWithNoContentType() {
         // given
         Body body = new StringBody("bytes");
