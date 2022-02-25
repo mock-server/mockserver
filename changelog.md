@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - improved regex matching by support Unicode (instead of US-ASCII) and native case-insensitive matching
 - improved performance of negative matches by reducing the number of regex matches when not matching
 - disabled privilege escalation in helm chart
+- added setting of command line flags (i.e. serverPort) via system properties and properties file in addition to environment variables
+- improved log output for command line flags, environment variables and system properties
 
 ### Fixed
 - worked around JDK error 'flip()Ljava/nio/ByteBuffer; does not exist in class java.nio.ByteBuffer'

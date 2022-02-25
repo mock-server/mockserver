@@ -40,6 +40,9 @@ function run_all_tests() {
     test "docker_compose_server_port_by_environment_variable_long_name"
     test "docker_compose_server_port_by_environment_variable_short_name"
     test "docker_compose_without_server_port"
+    test "docker_compose_with_persisted_expectations"
+    test "docker_compose_with_server_port_from_default_properties_file"
+    test "docker_compose_with_server_port_from_custom_properties_file"
     # helm test
     start-up-k8s
     test "helm_default_config"

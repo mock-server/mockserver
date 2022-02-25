@@ -16,8 +16,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.cli.Main.Arguments.*;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.mockserver.mock.HttpState.setPort;
-import static org.slf4j.event.Level.DEBUG;
-import static org.slf4j.event.Level.ERROR;
+import static org.slf4j.event.Level.*;
 
 /**
  * @author jamesdbloom
@@ -75,59 +74,57 @@ public class Main {
             Map<String, String> parsedArguments = parseArguments(arguments);
             Map<String, String> commandLineArguments = new HashMap<>(parsedArguments);
             Map<String, String> environmentVariableArguments = new HashMap<>();
+            Map<String, String> systemPropertyArguments = new HashMap<>();
 
             System.getenv().forEach((key, value) -> {
                 if (key.startsWith("MOCKSERVER_") && isNotBlank(value)) {
                     environmentVariableArguments.put(key, value);
                 }
             });
-            if (!parsedArguments.containsKey(serverPort.name())) {
-                if (isNotBlank(System.getenv("MOCKSERVER_SERVER_PORT"))) {
-                    parsedArguments.put(serverPort.name(), System.getenv("MOCKSERVER_SERVER_PORT"));
-                    environmentVariableArguments.remove("SERVER_PORT");
-                } else if (isNotBlank(System.getenv("SERVER_PORT"))) {
-                    parsedArguments.put(serverPort.name(), System.getenv("SERVER_PORT"));
-                }
-            } else {
-                environmentVariableArguments.remove("MOCKSERVER_SERVER_PORT");
-                environmentVariableArguments.remove("SERVER_PORT");
-            }
-            if (!parsedArguments.containsKey(proxyRemoteHost.name())) {
-                if (isNotBlank(System.getenv("MOCKSERVER_PROXY_REMOTE_HOST"))) {
-                    parsedArguments.put(proxyRemoteHost.name(), System.getenv("MOCKSERVER_PROXY_REMOTE_HOST"));
-                    environmentVariableArguments.remove("PROXY_REMOTE_HOST");
-                } else if (isNotBlank(System.getenv("PROXY_REMOTE_HOST"))) {
-                    parsedArguments.put(proxyRemoteHost.name(), System.getenv("PROXY_REMOTE_HOST"));
-                }
-            } else {
-                environmentVariableArguments.remove("MOCKSERVER_PROXY_REMOTE_HOST");
-                environmentVariableArguments.remove("PROXY_REMOTE_HOST");
-            }
-            if (!parsedArguments.containsKey(proxyRemotePort.name())) {
-                if (isNotBlank(System.getenv("MOCKSERVER_PROXY_REMOTE_PORT"))) {
-                    parsedArguments.put(proxyRemotePort.name(), System.getenv("MOCKSERVER_PROXY_REMOTE_PORT"));
-                    environmentVariableArguments.remove("PROXY_REMOTE_PORT");
-                } else if (isNotBlank(System.getenv("PROXY_REMOTE_PORT"))) {
-                    parsedArguments.put(proxyRemotePort.name(), System.getenv("PROXY_REMOTE_PORT"));
-                }
-            } else {
-                environmentVariableArguments.remove("MOCKSERVER_PROXY_REMOTE_PORT");
-                environmentVariableArguments.remove("PROXY_REMOTE_PORT");
-            }
-            System.getenv().forEach((key, value) -> {
-                if (key.startsWith("MOCKSERVER_") && isNotBlank(value)) {
-                    environmentVariableArguments.put(key, value);
+            System.getProperties().forEach((key, value) -> {
+                if (key instanceof String && value instanceof String) {
+                    if (((String) key).startsWith("mockserver") && isNotBlank((String) value)) {
+                        systemPropertyArguments.put((String) key, (String) value);
+                    }
                 }
             });
 
-            if (MockServerLogger.isEnabled(DEBUG)) {
+            for (Arguments parsedArgument : Arrays.asList(serverPort, proxyRemoteHost, proxyRemotePort)) {
+                if (!parsedArguments.containsKey(parsedArgument.name())) {
+                    if (systemPropertyArguments.containsKey(parsedArgument.systemPropertyName())) {
+                        parsedArguments.put(parsedArgument.name(), systemPropertyArguments.get(parsedArgument.systemPropertyName()));
+                        environmentVariableArguments.remove(parsedArgument.longEnvironmentVariableName());
+                        environmentVariableArguments.remove(parsedArgument.shortEnvironmentVariableName());
+                    } else {
+                        if (environmentVariableArguments.containsKey(parsedArgument.longEnvironmentVariableName())) {
+                            environmentVariableArguments.remove(parsedArgument.shortEnvironmentVariableName());
+                            parsedArguments.put(parsedArgument.name(), environmentVariableArguments.get(parsedArgument.longEnvironmentVariableName()));
+                        } else if (isNotBlank(System.getenv(parsedArgument.shortEnvironmentVariableName()))) {
+                            if (!(parsedArgument == serverPort && "1080".equals(System.getenv(serverPort.shortEnvironmentVariableName())) && ConfigurationProperties.PROPERTIES.containsKey(serverPort.systemPropertyName()))) {
+                                environmentVariableArguments.put(parsedArgument.shortEnvironmentVariableName(), System.getenv(parsedArgument.shortEnvironmentVariableName()));
+                                parsedArguments.put(parsedArgument.name(), environmentVariableArguments.get(parsedArgument.shortEnvironmentVariableName()));
+                            }
+                        }
+                    }
+                } else {
+                    systemPropertyArguments.remove(parsedArgument.systemPropertyName());
+                    environmentVariableArguments.remove(parsedArgument.longEnvironmentVariableName());
+                    environmentVariableArguments.remove(parsedArgument.shortEnvironmentVariableName());
+                }
+                if (!parsedArguments.containsKey(parsedArgument.name()) && ConfigurationProperties.PROPERTIES.containsKey(parsedArgument.systemPropertyName())) {
+                    parsedArguments.put(parsedArgument.name(), String.valueOf(ConfigurationProperties.PROPERTIES.get(parsedArgument.systemPropertyName())));
+                }
+            }
+
+            if (MockServerLogger.isEnabled(INFO)) {
                 MOCK_SERVER_LOGGER.logEvent(
                     new LogEntry()
                         .setType(SERVER_CONFIGURATION)
-                        .setLogLevel(DEBUG)
-                        .setMessageFormat("using environment variables:{}and command line options:{}")
+                        .setLogLevel(INFO)
+                        .setMessageFormat("using environment variables:{}and system properties:{}and command line options:{}")
                         .setArguments(
                             "[\n\t" + Joiner.on(",\n\t").withKeyValueSeparator("=").join(environmentVariableArguments) + "\n]",
+                            "[\n\t" + Joiner.on(",\n\t").withKeyValueSeparator("=").join(systemPropertyArguments) + "\n]",
                             "[\n\t" + Joiner.on(",\n\t").withKeyValueSeparator("=").join(commandLineArguments) + "\n]"
                         )
                 );
@@ -255,10 +252,10 @@ public class Main {
     }
 
     public enum Arguments {
-        serverPort,
-        proxyRemotePort,
-        proxyRemoteHost,
-        logLevel;
+        serverPort("SERVER_PORT"),
+        proxyRemoteHost("PROXY_REMOTE_HOST"),
+        proxyRemotePort("PROXY_REMOTE_PORT"),
+        logLevel("LOG_LEVEL");
 
         final static CaseInsensitiveList names = new CaseInsensitiveList();
 
@@ -268,8 +265,26 @@ public class Main {
             }
         }
 
+        private final String shortEnvironmentVariableName;
+
+        Arguments(String shortEnvironmentVariableName) {
+            this.shortEnvironmentVariableName = shortEnvironmentVariableName;
+        }
+
         public static CaseInsensitiveList names() {
             return names;
+        }
+
+        public String shortEnvironmentVariableName() {
+            return shortEnvironmentVariableName;
+        }
+
+        public String longEnvironmentVariableName() {
+            return "MOCKSERVER_" + shortEnvironmentVariableName;
+        }
+
+        public String systemPropertyName() {
+            return "mockserver." + name();
         }
     }
 

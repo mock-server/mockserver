@@ -1,0 +1,25 @@
+version: "2.4"
+services:
+  client:
+    build:
+      context: .
+      dockerfile: ../ClientDockerfile
+    networks:
+      - test-network
+    command:
+      - "sleep"
+      - "86400"
+  mockserver:
+    image: mockserver/mockserver:integration_testing
+    networks:
+      - test-network
+    environment:
+      MOCKSERVER_LOG_LEVEL: DEBUG
+      MOCKSERVER_PERSIST_EXPECTATIONS: "true"
+      MOCKSERVER_PERSISTED_EXPECTATIONS_PATH: /config/persistedExpectations.json
+    volumes:
+      - ./config:/config
+
+networks:
+  test-network:
+    driver: bridge
