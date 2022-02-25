@@ -38,6 +38,7 @@ spec:
           securityContext:
             runAsUser: {{ .Values.app.runAsUser }}
             readOnlyRootFilesystem: {{ .Values.app.readOnlyRootFilesystem }}
+            allowPrivilegeEscalation: false
           ports:
             - name: serviceport
               containerPort: {{ .Values.app.serverPort }}

@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - simplified support for multiline regex by allow . to match newlines
 - improved regex matching by support Unicode (instead of US-ASCII) and native case-insensitive matching
 - improved performance of negative matches by reducing the number of regex matches when not matching
+- disabled privilege escalation in helm chart
 
 ### Fixed
 - worked around JDK error 'flip()Ljava/nio/ByteBuffer; does not exist in class java.nio.ByteBuffer'
