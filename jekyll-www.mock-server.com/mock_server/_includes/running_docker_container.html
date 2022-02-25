@@ -12,7 +12,7 @@ In addition it is possible to <a href="#docker_container_customization">customis
 
 <h3>Install Docker</h3>
 
-<p>To install Docker see the <a href="https://docs.docker.com/installation/">installation instructions</a>.</p>
+<p>To install Docker see the <a target="_blank" href="https://docs.docker.com/installation/">installation instructions</a>.</p>
 
 <a id="pull_docker_image" class="anchor" href="#pull_docker_image">&nbsp;</a>
 
@@ -66,7 +66,7 @@ In addition it is possible to <a href="#docker_container_customization">customis
 
 <h3>Interactive Shell</h3>
 
-<p>MockServer uses <a href="https://github.com/GoogleContainerTools/distroless">distroless</a> as its based container for both size and security and so does not contain an interactive shell.  This minimises the likelihood of vulnerabilities and to reduces the attack surface by ensuring only the JVM and MockServer code is inside the container.</p>
+<p>MockServer uses <a target="_blank"href="https://github.com/GoogleContainerTools/distroless">distroless</a> as its based container for both size and security and so does not contain an interactive shell.  This minimises the likelihood of vulnerabilities and to reduces the attack surface by ensuring only the JVM and MockServer code is inside the container.</p>
 
 <a id="docker_detailed_configuration" class="anchor" href="#docker_detailed_configuration">&nbsp;</a>
 
@@ -81,7 +81,7 @@ For example to add configuration files in the current directory, such as <strong
 
 <p>See <a href="/mock_server/configuration_properties.html">MockServer Configuration</a> for details of all configuration options.</p>
 
-As the <a href="https://github.com/mock-server/mockserver/blob/master/docker/Dockerfile">Docker image is based from <strong>gcr.io/distroless/java:11</strong></a> and the user <strong>nonroot</strong> is used, we need to configure permissions in order to allow the user in the container read/write files in mounted volumes:
+As the <a target="_blank"href="https://github.com/mock-server/mockserver/blob/master/docker/Dockerfile">Docker image is based from <strong>gcr.io/distroless/java:11</strong></a> and the user <strong>nonroot</strong> is used, we need to configure permissions in order to allow the user in the container read/write files in mounted volumes:
 
 <pre><code class="code">chmod o+r $(pwd)/mockserver.properties</code></pre>
 
@@ -100,7 +100,7 @@ For example to add all jar files in the current directory, map <strong>$(pwd)</s
 
 <h2>Docker Compose</h2>
 
-<p>MockServer can be run using <a href="https://docs.docker.com/compose/">docker compose</a> by adding the container as a service.</p>
+<p>MockServer can be run using <a target="_blank" href="https://docs.docker.com/compose/">docker compose</a> by adding the container as a service.</p>
 
 <p>The MockServer container uses an <span class="keyword">entrypoint</span>, so it is possible to configure the MockServer by specifying the command line flags using by specifying the <span class="keyword">command</span>, as follows:</p>
 

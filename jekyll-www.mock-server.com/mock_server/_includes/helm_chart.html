@@ -33,7 +33,7 @@ helm repo update</code></pre>
 
 <h3>Deploy Via Package</h3>
 
-<p>To run MockServer in Kubernetes the easiest way is to use the existing <a href="https://www.mock-server.com/mockserver-5.12.0.tgz">MockServer helm chart</a>.</p>
+<p>To run MockServer in Kubernetes the easiest way is to use the existing <a target="_blank" href="https://www.mock-server.com/mockserver-5.12.0.tgz">MockServer helm chart</a>.</p>
 
 <p>This is available by using <strong>www.mock-server.com</strong> as a chart repo, with the following command:</p>
 
@@ -47,7 +47,7 @@ helm repo update</code></pre>
 
 <pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver mockserver helm/mockserver</code></pre>
 
-<p>The commands above will install MockServer into a <strong>namespace</strong> called <span class="keyword">mockserver</span> with default configuration (as per the embedded <a href="https://github.com/mock-server/mockserver/blob/master/helm/mockserver/values.yaml">values.yaml</a>).</p>
+<p>The commands above will install MockServer into a <strong>namespace</strong> called <span class="keyword">mockserver</span> with default configuration (as per the embedded <a target="_blank"href="https://github.com/mock-server/mockserver/blob/master/helm/mockserver/values.yaml">values.yaml</a>).</p>
 <p>MockServer will then be available on domain name <span class="keyword">mockserver.mockserver.svc.cluster.local</span>, as long as the namespace you are calling from isn't prevented (by network policy) to call the <span class="keyword">mockserver</span> namespace.</p>
 
 <a id="logs" class="anchor" href="#logs">&nbsp</a>
@@ -121,7 +121,7 @@ For example:
 
 <pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.mountedConfigMapName=other-mockserver-config --set app.propertiesFileNamem=other-mockserver.properties mockserver helm/mockserver</code></pre>
 
-An example of a helm chart to configure MockServer is <a href="https://github.com/mock-server/mockserver/tree/master/helm/mockserver-config">helm/mockserver-config</a>
+An example of a helm chart to configure MockServer is <a target="_blank"href="https://github.com/mock-server/mockserver/tree/master/helm/mockserver-config">helm/mockserver-config</a>
 
 <a id="helm_extend_classpath" class="anchor" href="#helm_extend_classpath">&nbsp</a>
 
@@ -143,7 +143,7 @@ For example:
 
 <h2>MockServer URL</h2>
 
-<h3>Local Kubernetes Cluster (i.e. <a href="https://github.com/kubernetes/minikube">minikube</a>, <a href="https://microk8s.io">microk8s</a>)</h3>
+<h3>Local Kubernetes Cluster (i.e. <a target="_blank"href="https://github.com/kubernetes/minikube">minikube</a>, <a target="_blank" href="https://microk8s.io">microk8s</a>)</h3>
 
 <p>If the <span class="keyword">service</span> type hasn't been modified the following will provide the MockServer URL from outside the cluster.</p>
 
@@ -158,9 +158,9 @@ echo http://$MOCKSERVER_HOST</code></pre>
 
 <h3>Docker for Desktop</h3>
 
-<p><a href="https://www.docker.com/products/docker-desktop">Docker for Desktop</a> automatically exposes <strong>LoadBalancer</strong> services.</p>
+<p><a target="_blank" href="https://www.docker.com/products/docker-desktop">Docker for Desktop</a> automatically exposes <strong>LoadBalancer</strong> services.</p>
 
-<p>On MacOS Docker for Desktop runs inside <a href="https://github.com/moby/hyperkit">Hyperkit</a> so the node IP address is not reachable, therefore the only way to call services is via the exposed <strong>LoadBalancer</strong> service added by Docker for Desktop.</p>
+<p>On MacOS Docker for Desktop runs inside <a target="_blank"href="https://github.com/moby/hyperkit">Hyperkit</a> so the node IP address is not reachable, therefore the only way to call services is via the exposed <strong>LoadBalancer</strong> service added by Docker for Desktop.</p>
 
 <p>To ensure that Docker for Desktop exposes MockServer update the service type to <strong>LoadBalancer</strong> using <strong>--set service.type=LoadBalancer</strong> and set the exposed port using <strong>--set service.port=1080</strong>, as follows:</p>
 
@@ -182,7 +182,7 @@ echo http://$MOCKSERVER_HOST</code></pre>
 
 <h3>Inside Kubernetes Cluster</h3>
 
-<p>If a <a href="https://kubernetes.io/docs/concepts/services-networking/service/#dns">DNS server</a> has been installed in the Kubernetes cluster the following DNS name should be available <span class="keyword">mockserver.&lt;namespace&gt;.svc.cluster.local</span>, i.e. <span class="keyword">mockserver.mockserver.svc.cluster.local</span></p>
+<p>If a <a target="_blank" href="https://kubernetes.io/docs/concepts/services-networking/service/#dns">DNS server</a> has been installed in the Kubernetes cluster the following DNS name should be available <span class="keyword">mockserver.&lt;namespace&gt;.svc.cluster.local</span>, i.e. <span class="keyword">mockserver.mockserver.svc.cluster.local</span></p>
 
 <a id="helm_delete" class="anchor" href="#helm_delete">&nbsp</a>
 

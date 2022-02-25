@@ -27,9 +27,9 @@ lastmod: 2019-11-10T08:00:00+01:00
 
 <p>The following frameworks & techniques are used to maximise scalability:</p>
 <ul>
-    <li><a href="https://netty.io">Netty</a> an asynchronous event-driven network application framework to maximise the scalability of HTTP and TLS</li>
-    <li><a href="https://lmax-exchange.github.io/disruptor">LMAX Disruptor</a> a high performance inter-thread messaging library to maximise the scalability of recording events (i.e. state) and logging</li>
-    <li><a href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ScheduledThreadPoolExecutor.html">ScheduledThreadPoolExecutor</a> a thread pool that can scheduled delayed tasks is used to execute delay response to avoid
+    <li><a target="_blank" href="https://netty.io">Netty</a> an asynchronous event-driven network application framework to maximise the scalability of HTTP and TLS</li>
+    <li><a target="_blank" href="https://lmax-exchange.github.io/disruptor">LMAX Disruptor</a> a high performance inter-thread messaging library to maximise the scalability of recording events (i.e. state) and logging</li>
+    <li><a target="_blank" href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ScheduledThreadPoolExecutor.html">ScheduledThreadPoolExecutor</a> a thread pool that can scheduled delayed tasks is used to execute delay response to avoid
         blocking threads
     </li>
 </ul>
@@ -54,7 +54,7 @@ lastmod: 2019-11-10T08:00:00+01:00
 
 <h3>Apache Bench Performance Test Results</h3>
 
-<p><a href="https://httpd.apache.org/docs/2.4/programs/ab.html">Apache Benchmark</a> was executed as follows:</p>
+<p><a target="_blank" href="https://httpd.apache.org/docs/2.4/programs/ab.html">Apache Benchmark</a> was executed as follows:</p>
 
 <pre class="prettyprint lang-bash code"><code class="code">ab -k -n 10000000 -c &lt;parallel clients&gt; http://127.0.0.1:1080/simple</code></pre>
 
@@ -254,7 +254,7 @@ lastmod: 2019-11-10T08:00:00+01:00
 
 <h3>Locust Performance Test Results</h3>
 
-<p><a href="https://httpd.apache.org/docs/2.4/programs/ab.html">Apache Benchmark</a> was executed as follows:</p>
+<p><a target="_blank" href="https://httpd.apache.org/docs/2.4/programs/ab.html">Apache Benchmark</a> was executed as follows:</p>
 
 <pre class="prettyprint lang-bash code"><code class="code">locust --loglevel=WARNING --headless --only-summary -u &lt;parallel clients&gt; -r 100 -t 180 --host=http://127.0.0.1:1080</code></pre>
 

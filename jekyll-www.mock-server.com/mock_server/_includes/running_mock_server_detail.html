@@ -32,7 +32,7 @@
 &lt;/<span class="element">plugin</span>&gt;</code></pre>
 
 <p>This will start MockServer during the <strong>process-test-classes</strong> phase and will stop MockServer during the <strong>verify</strong> phase. For more details about Maven build phases see:
-	<a href="https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html">Introduction to the Build Lifecycle</a>.</p>
+	<a target="_blank" href="https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html">Introduction to the Build Lifecycle</a>.</p>
 
 <p>This ensures that any integration tests you run during the <strong>test</strong> or <strong>integration-test</strong> phases can use MockServer on the port specified.</p>
 
@@ -192,8 +192,8 @@
     <span class="this_value">mockServer</span>.stop();
 }</code></pre>
 
-<p>The <a href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example test called
-	<a href="https://github.com/mock-server/mockserver/blob/master/mockserver-examples/src/test/java/org/mockserver/examples/proxy/web/controller/BooksPageIntegrationTest.java">BookPageIntegrationTest</a> that demonstrates a fully working example.</p>
+<p>The <a target="_blank"href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example test called
+	<a target="_blank"href="https://github.com/mock-server/mockserver/blob/master/mockserver-examples/src/test/java/org/mockserver/examples/proxy/web/controller/BooksPageIntegrationTest.java">BookPageIntegrationTest</a> that demonstrates a fully working example.</p>
 
 <a id="junit_rule" class="anchor" href="#junit_rule">&nbsp;</a>
 
@@ -264,7 +264,7 @@
 
 <p>MockServer can be run using the Test Extension <strong>MockServerExtension</strong>. The <strong>MockServerExtension</strong> starts MockServer (<strong>for both mocking and proxying</strong>) before the any test runs and stops MockServer after all tests have completed.</p>
 <p>The port(s) MockServer uses can be controlled using <strong>MockServerSettings</strong></p>
-<p>An instance of <strong>MockServerClient</strong> or <strong>ClientAndServer</strong> is injected into any method using <a href="https://junit.org/junit5/docs/current/user-guide/#extensions-parameter-resolution">Parameter Resolution</a> this includes: constructors, lifecycle methods (like <span class="annotation">@BeforeEach</span> / <span class="annotation">@BeforeAll</span>), or test methods.</p>
+<p>An instance of <strong>MockServerClient</strong> or <strong>ClientAndServer</strong> is injected into any method using <a target="_blank" href="https://junit.org/junit5/docs/current/user-guide/#extensions-parameter-resolution">Parameter Resolution</a> this includes: constructors, lifecycle methods (like <span class="annotation">@BeforeEach</span> / <span class="annotation">@BeforeAll</span>), or test methods.</p>
 
 <p>The <strong>MockServerExtension</strong> Test Extension can be added to your project by including the following maven dependency:</p>
 
@@ -433,7 +433,7 @@ public class ExampleSpringTestListenerTestWithPortInjection {
 
 <h3>Running From Command Line - Using Homebrew</h3>
 
-<p><a href="https://brew.sh/">Homebrew</a>, a packaging manager for OS X (i.e. Apple Mac), can be used to install MockServer, as follows:</p>
+<p><a target="_blank" href="https://brew.sh/">Homebrew</a>, a packaging manager for OS X (i.e. Apple Mac), can be used to install MockServer, as follows:</p>
 
 <pre><code class="code">brew install mockserver</code></pre>
 
@@ -494,7 +494,7 @@ i.e. mockserver -logLevel INFO -serverPort <span class="numeric_literal">1080,10
 <p>MockServer can be run directly from the command line using java directly as follow:</p>
 
 <ol>
-	<li><p>download <a href="https://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/5.12.0/mockserver-netty-5.12.0-shaded.jar">mockserver-netty-5.12.0-shaded.jar</a> from Maven Central</p></li>
+	<li><p>download <a target="_blank" href="https://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/5.12.0/mockserver-netty-5.12.0-shaded.jar">mockserver-netty-5.12.0-shaded.jar</a> from Maven Central</p></li>
 	<li>
 		<code class="code inline">java -jar <span class="command_line_argument_placeholder">&lt;path to mockserver-netty-5.12.0-shaded.jar&gt;</span> -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span></code>
 	</li>
@@ -574,7 +574,7 @@ i.e. java -jar ./mockserver-jetty-shaded.jar -serverPort <span class="numeric_li
 <p>To run as a WAR deployed on any JEE web server:</p>
 
 <ol>
-	<li>download <a href="https://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/5.12.0/mockserver-war-5.12.0.war">mockserver-war-5.12.0.war</a> from Maven Central</li>
+	<li>download <a target="_blank" href="https://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/5.12.0/mockserver-war-5.12.0.war">mockserver-war-5.12.0.war</a> from Maven Central</li>
 	<li>deploy <strong>mockserver-war-5.12.0.war</strong> to any JEE web server</li>
 </ol>
 

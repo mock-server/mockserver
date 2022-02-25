@@ -107,7 +107,7 @@ sitemap:
 
 <h4>Java JDK HttpURLConnection (HTTP)</h4>
 
-<p>Configure the Web or Secure Web Proxy with an <a href="https://docs.oracle.com/javase/8/docs/api/java/net/HttpURLConnection.html">HttpURLConnection</a> from the Java JDK, as follows:</p>
+<p>Configure the Web or Secure Web Proxy with an <a target="_blank" href="https://docs.oracle.com/javase/8/docs/api/java/net/HttpURLConnection.html">HttpURLConnection</a> from the Java JDK, as follows:</p>
 
 <pre><code class="code"><span class="keyword">private</span> HttpURLConnection sendRequestViaProxy(URL url) throws IOException {
     Proxy proxy = <span class="keyword">new</span> Proxy(Proxy.Type.<span class="constant">HTTP</span>, <span class="keyword">new</span> InetSocketAddress(System.getProperty(<span class="string_literal">"http.proxyHost"</span>), Integer.parseInt(System.getProperty(<span class="string_literal">"http.proxyPort"</span>))));
@@ -118,20 +118,20 @@ sitemap:
 
 <h4>Apache HttpClient (HTTP)</h4>
 
-<p>Configure the Web or Secure Web Proxy with an <a href="https://hc.apache.org/httpcomponents-client-ga/">Apache HttpClient</a>, as follows:</p>
+<p>Configure the Web or Secure Web Proxy with an <a target="_blank" href="https://hc.apache.org/httpcomponents-client-ga/">Apache HttpClient</a>, as follows:</p>
 
 <pre><code class="code">HttpHost httpHost = <span class="keyword">new</span> HttpHost(System.getProperty(<span class="string_literal">"http.proxyHost"</span>), Integer.parseInt(System.getProperty(<span class="string_literal">"http.proxyPort"</span>)));
 DefaultProxyRoutePlanner defaultProxyRoutePlanner = <span class="keyword">new</span> DefaultProxyRoutePlanner(httpHost);
 HttpClient httpClient = HttpClients.custom().setRoutePlanner(defaultProxyRoutePlanner).build();</code></pre>
 
-<p>The <a href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/test/java/org/mockserver/examples/proxy/web/controller">mockserver-example</a> project contains an example of using the Web Proxy (i.e. HTTP Proxy) with a Apache HttpClient called
-    <a href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/main/java/org/mockserver/examples/proxy/service/apacheclient/BookServiceApacheHttpClient.java">BookServiceApacheHttpClient</a> that demonstrates a fully working example.</p>
+<p>The <a target="_blank"href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/test/java/org/mockserver/examples/proxy/web/controller">mockserver-example</a> project contains an example of using the Web Proxy (i.e. HTTP Proxy) with a Apache HttpClient called
+    <a target="_blank"href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/main/java/org/mockserver/examples/proxy/service/apacheclient/BookServiceApacheHttpClient.java">BookServiceApacheHttpClient</a> that demonstrates a fully working example.</p>
 
 <a id="spring_rest_template" class="anchor" href="#spring_rest_template">&nbsp;</a>
 
 <h4>Spring RestTemplate</h4>
 
-<p>Configure the Web or Secure Web Proxy with a <a href="https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/client/RestTemplate.html">Spring RestTemplate</a>, as follows:</p>
+<p>Configure the Web or Secure Web Proxy with a <a target="_blank" href="https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/client/RestTemplate.html">Spring RestTemplate</a>, as follows:</p>
 
 <pre><code class="code">RestTemplate restTemplate = <span class="keyword">new</span> RestTemplate();
 HttpHost httpHost = <span class="keyword">new</span> HttpHost(
@@ -142,14 +142,14 @@ DefaultProxyRoutePlanner defaultProxyRoutePlanner = <span class="keyword">new</s
 HttpClient httpClient = HttpClients.custom().setRoutePlanner(defaultProxyRoutePlanner).build();
 restTemplate.setRequestFactory(<span class="keyword">new</span> HttpComponentsClientHttpRequestFactory(httpClient));</code></pre>
 
-<p>The <a href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/test/java/org/mockserver/examples/proxy/web/controller">mockserver-example</a> project contains an example of using the Web Proxy (i.e. HTTP Proxy) with a Spring RestTemplate called
-    <a href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/main/java/org/mockserver/examples/proxy/service/springclient/BookServiceSpringRestTemplate.java">BookServiceSpringRestTemplate</a> that demonstrates a fully working example.</p>
+<p>The <a target="_blank"href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/test/java/org/mockserver/examples/proxy/web/controller">mockserver-example</a> project contains an example of using the Web Proxy (i.e. HTTP Proxy) with a Spring RestTemplate called
+    <a target="_blank"href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/main/java/org/mockserver/examples/proxy/service/springclient/BookServiceSpringRestTemplate.java">BookServiceSpringRestTemplate</a> that demonstrates a fully working example.</p>
 
 <a id="spring_web_client" class="anchor" href="#spring_web_client">&nbsp;</a>
 
 <h4>Spring WebClient</h4>
 
-<p>Configure the Web or Secure Web Proxy with a <a href="https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html#webflux-client">Spring RestTemplate</a>, as follows:</p>
+<p>Configure the Web or Secure Web Proxy with a <a target="_blank" href="https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html#webflux-client">Spring RestTemplate</a>, as follows:</p>
 
 <pre><code class="code">SslContext sslContext = <span class="keyword">new</span> NettySslContextFactory(<span class="keyword">new</span> MockServerLogger(getClass())).createClientSslContext(<span class="keyword">false</span>);
 return WebClient.builder()
@@ -168,14 +168,14 @@ return WebClient.builder()
     .baseUrl(baseUrl)
     .build();</code></pre>
 
-<p>The <a href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/test/java/org/mockserver/examples/proxy/web/controller">mockserver-example</a> project contains an example of using the Web Proxy (i.e. HTTP Proxy) with a Spring WebClient called
-    <a href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/main/java/org/mockserver/examples/proxy/service/springclient/BookServiceSpringWebClient.java">BookServiceSpringWebClient</a> that demonstrates a fully working example.</p>
+<p>The <a target="_blank"href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/test/java/org/mockserver/examples/proxy/web/controller">mockserver-example</a> project contains an example of using the Web Proxy (i.e. HTTP Proxy) with a Spring WebClient called
+    <a target="_blank"href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/main/java/org/mockserver/examples/proxy/service/springclient/BookServiceSpringWebClient.java">BookServiceSpringWebClient</a> that demonstrates a fully working example.</p>
 
 <a id="google_http_client" class="anchor" href="#google_http_client">&nbsp;</a>
 
 <h4>Google Client (HTTP)</h4>
 
-<p>Configure the Web or Secure Web Proxy with a <a href="https://github.com/google/google-http-java-client">Google HTTP Client</a>, as follows:</p>
+<p>Configure the Web or Secure Web Proxy with a <a target="_blank"href="https://github.com/google/google-http-java-client">Google HTTP Client</a>, as follows:</p>
 
 <pre><code class="code"><span class="keyword">private</span> HttpResponse sendRequestViaProxy(URL url, String method, <span class="annotation">@Nullable</span> HttpContent content) <span class="keyword">throws</span> IOException {
     ProxySelector defaultProxySelector = ProxySelector.getDefault();
@@ -203,7 +203,7 @@ return WebClient.builder()
 
 <h4>Jetty HttpClient</h4>
 
-<p>Configure the Web or Secure Web Proxy with a <a href="https://www.eclipse.org/jetty/documentation/current/http-client.html">Jetty HttpClient</a>, as follows:</p>
+<p>Configure the Web or Secure Web Proxy with a <a target="_blank" href="https://www.eclipse.org/jetty/documentation/current/http-client.html">Jetty HttpClient</a>, as follows:</p>
 
 <p><strong>Jetty HttpClient 9.x</strong></p>
 
@@ -225,14 +225,14 @@ return WebClient.builder()
     <span class="keyword">throw new</span> RuntimeException(<span class="string_literal">"Exception creating HttpClient"</span>, e);
 }</code></pre>
 
-<p>The <a href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/test/java/org/mockserver/examples/proxy/web/controller">mockserver-example</a> project contains an example of using the Web Proxy (i.e. HTTP Proxy) with a Jetty HttpClient called
-    <a href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/main/java/org/mockserver/examples/proxy/service/jettyclient/BookServiceJettyHttpClient.java">BookServiceJettyHttpClient</a> that demonstrates a fully working example.</p>
+<p>The <a target="_blank"href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/test/java/org/mockserver/examples/proxy/web/controller">mockserver-example</a> project contains an example of using the Web Proxy (i.e. HTTP Proxy) with a Jetty HttpClient called
+    <a target="_blank"href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/main/java/org/mockserver/examples/proxy/service/jettyclient/BookServiceJettyHttpClient.java">BookServiceJettyHttpClient</a> that demonstrates a fully working example.</p>
 
 <a id="jersey_client" class="anchor" href="#jersey_client">&nbsp;</a>
 
 <h4>Jersey Client</h4>
 
-<p>Configure the Web or Secure Web Proxy with a <a href="https://jersey.java.net/documentation/latest/client.html">Jersey Client</a>, as follows:</p>
+<p>Configure the Web or Secure Web Proxy with a <a target="_blank" href="https://jersey.java.net/documentation/latest/client.html">Jersey Client</a>, as follows:</p>
 
 <pre><code class="code">ClientConfig clientConfig = <span class="keyword">new</span> ClientConfig().register(<span class="keyword">new</span> JacksonFeature())
                                               .connectorProvider(<span class="keyword">new</span> ApacheConnectorProvider());
@@ -240,22 +240,22 @@ clientConfig.property(ClientProperties.<span class="constant">PROXY_URI</span>, 
 Client client = ClientBuilder.newClient(clientConfig);</code></pre>
 
 
-<p>The <a href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/test/java/org/mockserver/examples/proxy/web/controller">mockserver-example</a> project contains an example of using the Web Proxy (i.e. HTTP Proxy) with a Jersey Client called
-    <a href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/main/java/org/mockserver/examples/proxy/service/jerseyclient/BookServiceJerseyClient.java">BookServiceJerseyClient</a> that demonstrates a fully working example.</p>
+<p>The <a target="_blank"href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/test/java/org/mockserver/examples/proxy/web/controller">mockserver-example</a> project contains an example of using the Web Proxy (i.e. HTTP Proxy) with a Jersey Client called
+    <a target="_blank"href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/main/java/org/mockserver/examples/proxy/service/jerseyclient/BookServiceJerseyClient.java">BookServiceJerseyClient</a> that demonstrates a fully working example.</p>
 
 <a id="grizzly_async_http_client" class="anchor" href="#grizzly_async_http_client">&nbsp;</a>
 
 <h4>Grizzly AsyncHttpClient</h4>
 
-<p>Configure the Web or Secure Web Proxy with a <a href="https://github.com/AsyncHttpClient/async-http-client">Grizzly AsyncHttpClient</a>, as follows:</p>
+<p>Configure the Web or Secure Web Proxy with a <a target="_blank"href="https://github.com/AsyncHttpClient/async-http-client">Grizzly AsyncHttpClient</a>, as follows:</p>
 
 <pre><code class="code">AsyncHttpClientConfig.Builder clientConfigBuilder = <span class="keyword">new</span> AsyncHttpClientConfig.Builder();
 clientConfigBuilder.setProxyServerSelector(ProxyUtils.createProxyServerSelector(HttpProxy.proxySelector()));
 AsyncHttpClient asyncHttpClient = <span class="keyword">new</span> AsyncHttpClient(clientConfigBuilder.build());</code></pre>
 
 
-<p>The <a href="https://github.com/mock-server/mockserver/tree/ec6e389cde20150429e22b8e9f8a60f57c8a24c3/mockserver-examples">mockserver-example</a> project contains an example of using the Web Proxy (i.e. HTTP Proxy) with a Grizzly AsyncHttpClient called
-	<a href="https://github.com/mock-server/mockserver/blob/ec6e389cde20150429e22b8e9f8a60f57c8a24c3/mockserver-examples/src/main/java/org/mockserver/service/grizzlyclient/BookServiceGrizzlyHttpClient.java">BookServiceGrizzlyHttpClient</a> that demonstrates a fully working example.</p>
+<p>The <a target="_blank"href="https://github.com/mock-server/mockserver/tree/ec6e389cde20150429e22b8e9f8a60f57c8a24c3/mockserver-examples">mockserver-example</a> project contains an example of using the Web Proxy (i.e. HTTP Proxy) with a Grizzly AsyncHttpClient called
+	<a target="_blank"href="https://github.com/mock-server/mockserver/blob/ec6e389cde20150429e22b8e9f8a60f57c8a24c3/mockserver-examples/src/main/java/org/mockserver/service/grizzlyclient/BookServiceGrizzlyHttpClient.java">BookServiceGrizzlyHttpClient</a> that demonstrates a fully working example.</p>
 
 <a id="apple_mac_http_https" class="anchor" href="#apple_mac_http_https">&nbsp;</a>
 
@@ -311,7 +311,7 @@ AsyncHttpClient asyncHttpClient = <span class="keyword">new</span> AsyncHttpClie
 
 <h4>Apache HttpClient (SOCKS)</h4>
 
-<p>Configure the SOCKS Proxy with an <a href="https://hc.apache.org/httpcomponents-client-ga/">Apache HttpClient</a>, as follows:</p>
+<p>Configure the SOCKS Proxy with an <a target="_blank" href="https://hc.apache.org/httpcomponents-client-ga/">Apache HttpClient</a>, as follows:</p>
 
 <pre><code class="code">Registry&lt;ConnectionSocketFactory&gt; socketFactoryRegistry = RegistryBuilder.&lt;ConnectionSocketFactory&gt;create()
         .register(<span class="string_literal">"http"</span>, <span class="keyword">new</span> ConnectionSocketFactory() {
@@ -361,21 +361,21 @@ HttpClient httpClient = HttpClients.custom()
 
 <h4>Java JDK HttpURLConnection (SOCKS)</h4>
 
-<p>Configure the SOCKS Proxy with an <a href="https://docs.oracle.com/javase/8/docs/api/java/net/HttpURLConnection.html">HttpURLConnection</a> from the Java JDK, as follows:</p>
+<p>Configure the SOCKS Proxy with an <a target="_blank" href="https://docs.oracle.com/javase/8/docs/api/java/net/HttpURLConnection.html">HttpURLConnection</a> from the Java JDK, as follows:</p>
 
 <pre><code class="code"><span class="keyword">private</span> HttpURLConnection sendRequestViaProxy(URL url) throws IOException {
     Proxy proxy = <span class="keyword">new</span> Proxy(Proxy.Type.<span class="constant">SOCKS</span>, <span class="keyword">new</span> InetSocketAddress(System.getProperty(<span class="string_literal">"http.proxyHost"</span>), Integer.parseInt(System.getProperty(<span class="string_literal">"http.proxyPort"</span>))));
     <span class="keyword">return</span> (HttpURLConnection) url.openConnection(proxy);
 }</code></pre>
 
-<p>The <a href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/test/java/org/mockserver/examples/proxy/web/controller">mockserver-example</a> project contains an example of using the SOCKS Proxy with a HttpURLConnection called
-    <a href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/main/java/org/mockserver/examples/proxy/service/javaclient">BookServiceJavaHttpClient</a> that demonstrates a fully working example.</p>
+<p>The <a target="_blank"href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/test/java/org/mockserver/examples/proxy/web/controller">mockserver-example</a> project contains an example of using the SOCKS Proxy with a HttpURLConnection called
+    <a target="_blank"href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/main/java/org/mockserver/examples/proxy/service/javaclient">BookServiceJavaHttpClient</a> that demonstrates a fully working example.</p>
 
 <a id="socks_google_http_client" class="anchor" href="#socks_google_http_client">&nbsp;</a>
 
 <h4>Google HTTP Client (SOCKS)</h4>
 
-<p>Configure the SOCKS Proxy with a <a href="https://github.com/google/google-http-java-client">Google HTTP Client</a>, as follows:</p>
+<p>Configure the SOCKS Proxy with a <a target="_blank"href="https://github.com/google/google-http-java-client">Google HTTP Client</a>, as follows:</p>
 
 <pre><code class="code"><span class="keyword">private</span> HttpResponse sendRequestViaProxy(URL url, String method, <span class="annotation">@Nullable</span> HttpContent content) <span class="keyword">throws</span> IOException {
     ProxySelector defaultProxySelector = ProxySelector.getDefault();
@@ -399,8 +399,8 @@ HttpClient httpClient = HttpClients.custom()
     }
 }</code></pre>
 
-<p>The <a href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/test/java/org/mockserver/examples/proxy/web/controller">mockserver-example</a> project contains an example of using the SOCKS Proxy with a Google HTTP Client called
-	<a href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/main/java/org/mockserver/examples/proxy/service/googleclient/BookServiceGoogleHttpClient.java">BookServiceGoogleHttpClient</a> that demonstrates a fully working example.</p>
+<p>The <a target="_blank"href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/test/java/org/mockserver/examples/proxy/web/controller">mockserver-example</a> project contains an example of using the SOCKS Proxy with a Google HTTP Client called
+	<a target="_blank"href="https://github.com/mock-server/mockserver/tree/master/mockserver-examples/src/main/java/org/mockserver/examples/proxy/service/googleclient/BookServiceGoogleHttpClient.java">BookServiceGoogleHttpClient</a> that demonstrates a fully working example.</p>
 
 <a id="socks_jvm_configuration" class="anchor" href="#socks_jvm_configuration">&nbsp;</a>
 
