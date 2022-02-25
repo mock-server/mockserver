@@ -1,4 +1,4 @@
-FROM ubuntu:impish-20220128
+FROM ubuntu:focal
 
 RUN apt-get update && apt-get install -y \
     curl \
