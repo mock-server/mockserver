@@ -3,6 +3,7 @@ package org.mockserver.socket.tls;
 import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.SslProvider;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
@@ -67,6 +68,7 @@ public class NettySslContextFactory {
                 SslContextBuilder sslContextBuilder =
                     SslContextBuilder
                         .forClient()
+                        .sslProvider(SslProvider.JDK)
                         .keyManager(
                             forwardProxyPrivateKey(),
                             forwardProxyCertificateChain()
@@ -163,6 +165,7 @@ public class NettySslContextFactory {
                         keyAndCertificateFactory.x509Certificate(),
                         keyAndCertificateFactory.certificateAuthorityX509Certificate()
                     )
+                    .sslProvider(SslProvider.JDK)
                     .trustManager(trustCertificateChain())
                     .clientAuth(ConfigurationProperties.tlsMutualAuthenticationRequired() ? ClientAuth.REQUIRE : ClientAuth.NONE)
                     .build();
