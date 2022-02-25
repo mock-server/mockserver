@@ -37,8 +37,8 @@ public class SubSetMatcher {
         Set<Integer> matchingIndexes = new HashSet<>();
         for (int i = 0; i < matchedList.size(); i++) {
             ImmutableEntry matchedItem = matchedList.get(i);
-            boolean keyMatches = regexStringMatcher.matches(matcherItem.getKey(), matchedItem.getKey(), true);
-            boolean valueMatches = regexStringMatcher.matches(matcherItem.getValue(), matchedItem.getValue(), true);
+            boolean keyMatches = regexStringMatcher.matches(matcherItem.getKey(), matchedItem.getKey());
+            boolean valueMatches = regexStringMatcher.matches(matcherItem.getValue(), matchedItem.getValue());
             if (keyMatches && valueMatches) {
                 matchingIndexes.add(i);
             }
@@ -48,7 +48,7 @@ public class SubSetMatcher {
 
     private static boolean containsKey(RegexStringMatcher regexStringMatcher, ImmutableEntry matcherItem, List<ImmutableEntry> matchedList) {
         for (ImmutableEntry matchedItem : matchedList) {
-            if (regexStringMatcher.matches(matcherItem.getKey(), matchedItem.getKey(), true)) {
+            if (regexStringMatcher.matches(matcherItem.getKey(), matchedItem.getKey())) {
                 return true;
             }
         }
@@ -60,7 +60,7 @@ public class SubSetMatcher {
             NottableString unNottedMatcherItemKey = string(matcherItem.getKey().getValue());
             for (ImmutableEntry matchedItem : matchedList) {
                 if (!matchedItem.getKey().isNot()) {
-                    if (regexStringMatcher.matches(unNottedMatcherItemKey, matchedItem.getKey(), true)) {
+                    if (regexStringMatcher.matches(unNottedMatcherItemKey, matchedItem.getKey())) {
                         return true;
                     }
                 }

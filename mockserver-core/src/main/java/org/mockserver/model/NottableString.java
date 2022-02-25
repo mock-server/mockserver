@@ -25,7 +25,6 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
     private final int hashCode;
     private final String json;
     private Pattern pattern;
-    private Pattern lowercasePattern;
     private ParameterStyle parameterStyle;
 
     NottableString(String value, Boolean not) {
@@ -212,25 +211,9 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
 
     public boolean matches(String input) {
         if (pattern == null) {
-            pattern = Pattern.compile(getValue());
+            pattern = Pattern.compile(getValue(), Pattern.DOTALL | Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
         }
         return pattern.matcher(input).matches();
-    }
-
-    public boolean matchesIgnoreCase(String input) {
-        if (lowercasePattern == null) {
-            lowercasePattern = Pattern.compile(getValue().toLowerCase());
-        }
-        return lowercasePattern.matcher(input.toLowerCase()).matches();
-    }
-
-    public boolean fieldsEqual(NottableString that) {
-        if (this == that) {
-            return true;
-        }
-        return isBlank == that.isBlank &&
-            Objects.equals(json, that.json) &&
-            parameterStyle == that.parameterStyle;
     }
 
     @Override

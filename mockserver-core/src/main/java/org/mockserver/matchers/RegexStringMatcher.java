@@ -35,15 +35,11 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
     }
 
     public boolean matches(String matched) {
-        return matches(null, string(matched));
+        return matches((MatchDifference) null, string(matched));
     }
 
     public boolean matches(final MatchDifference context, NottableString matched) {
-        boolean result = false;
-
-        if (matcher == null || matches(matcher, matched, true)) {
-            result = true;
-        }
+        boolean result = matcher == null || matches(matcher, matched);
 
         if (!result && context != null) {
             context.addDifference(mockServerLogger, "string or regex match failed expected:{}found:{}", this.matcher, matched);
@@ -52,25 +48,25 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
         return not != result;
     }
 
-    public boolean matches(NottableString matcher, NottableString matched, boolean ignoreCase) {
+    public boolean matches(NottableString matcher, NottableString matched) {
         if (matcher instanceof NottableSchemaString && matched instanceof NottableSchemaString) {
-            return controlPlaneMatcher && matchesByNottedStrings(matcher, matched, ignoreCase);
+            return controlPlaneMatcher && matchesByNottedStrings(matcher, matched);
         } else if (matcher instanceof NottableSchemaString) {
             return matchesBySchemas((NottableSchemaString) matcher, matched);
         } else if (matched instanceof NottableSchemaString) {
             return controlPlaneMatcher && matchesBySchemas((NottableSchemaString) matched, matcher);
         } else {
-            return matchesByNottedStrings(matcher, matched, ignoreCase);
+            return matchesByNottedStrings(matcher, matched);
         }
     }
 
-    private boolean matchesByNottedStrings(NottableString matcher, NottableString matched, boolean ignoreCase) {
+    private boolean matchesByNottedStrings(NottableString matcher, NottableString matched) {
         if (matcher.isNot() && matched.isNot()) {
             // mutual notted control plane match
-            return matchesByStrings(matcher, matched, ignoreCase);
+            return matchesByStrings(matcher, matched);
         } else {
             // data plane & control plan match
-            return (matcher.isNot() || matched.isNot()) ^ matchesByStrings(matcher, matched, ignoreCase);
+            return (matcher.isNot() || matched.isNot()) ^ matchesByStrings(matcher, matched);
         }
     }
 
@@ -78,7 +74,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
         return string.isNot() != schema.matches(string.getValue());
     }
 
-    private boolean matchesByStrings(NottableString matcher, NottableString matched, boolean ignoreCase) {
+    private boolean matchesByStrings(NottableString matcher, NottableString matched) {
         final String matcherValue = matcher.getValue();
         if (StringUtils.isBlank(matcherValue)) {
             return true;
@@ -86,7 +82,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
             final String matchedValue = matched.getValue();
             if (matchedValue != null) {
                 // match as exact string
-                if (matchedValue.equals(matcherValue)) {
+                if (matchedValue.equals(matcherValue) || matchedValue.equalsIgnoreCase(matcherValue)) {
                     return true;
                 }
 
@@ -124,43 +120,6 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                                 new LogEntry()
                                     .setLogLevel(DEBUG)
                                     .setMessageFormat("error while matching regex [" + matched + "] for string [" + matcher + "] " + pse.getMessage())
-                                    .setThrowable(pse)
-                            );
-                        }
-                    }
-                }
-                // case-insensitive comparison is mainly to improve matching in web containers like Tomcat that convert header names to lower case
-                if (ignoreCase) {
-                    // match as exact string lower-case
-                    if (matchedValue.equalsIgnoreCase(matcherValue)) {
-                        return true;
-                    }
-                    // match as regex - matcher -> matched (data plane or control plane)
-                    try {
-                        if (matcher.matchesIgnoreCase(matchedValue)) {
-                            return true;
-                        }
-                    } catch (PatternSyntaxException pse) {
-                        if (MockServerLogger.isEnabled(DEBUG)) {
-                            mockServerLogger.logEvent(
-                                new LogEntry()
-                                    .setLogLevel(DEBUG)
-                                    .setMessageFormat("error while matching regex [" + matcherValue.toLowerCase() + "] for string [" + matchedValue.toLowerCase() + "] " + pse.getMessage())
-                                    .setThrowable(pse)
-                            );
-                        }
-                    }
-                    // match as regex - matched -> matcher (control plane only)
-                    try {
-                        if (controlPlaneMatcher && matched.matchesIgnoreCase(matcherValue)) {
-                            return true;
-                        }
-                    } catch (PatternSyntaxException pse) {
-                        if (MockServerLogger.isEnabled(DEBUG)) {
-                            mockServerLogger.logEvent(
-                                new LogEntry()
-                                    .setLogLevel(DEBUG)
-                                    .setMessageFormat("error while matching regex [" + matchedValue.toLowerCase() + "] for string [" + matcherValue.toLowerCase() + "] " + pse.getMessage())
                                     .setThrowable(pse)
                             );
                         }

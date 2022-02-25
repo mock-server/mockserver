@@ -165,10 +165,6 @@ public class NottableSchemaString extends NottableString {
         }
     }
 
-    public boolean matchesIgnoreCase(String json) {
-        return matches(json);
-    }
-
     @Override
     public String toString() {
         return json;

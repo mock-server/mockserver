@@ -57,7 +57,7 @@ public class NottableStringMultiMap extends ObjectWithReflectiveEqualsHashCodeTo
                     for (NottableString matchedValue : matchedValuesForKey) {
                         boolean matchesValue = false;
                         for (NottableString matcherValue : matcherValuesForKey) {
-                            if (regexStringMatcher.matches(matcherValue, matchedValue, true)) {
+                            if (regexStringMatcher.matches(matcherValue, matchedValue)) {
                                 matchesValue = true;
                                 break;
                             }
@@ -103,7 +103,7 @@ public class NottableStringMultiMap extends ObjectWithReflectiveEqualsHashCodeTo
         if (!isEmpty()) {
             List<NottableString> values = new ArrayList<>();
             for (Map.Entry<NottableString, List<NottableString>> entry : backingMap.entrySet()) {
-                if (regexStringMatcher.matches(key, entry.getKey(), true)) {
+                if (regexStringMatcher.matches(key, entry.getKey())) {
                     values.addAll(entry.getValue());
                 }
             }
