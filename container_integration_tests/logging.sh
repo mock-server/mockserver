@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-function printMessageWithColour() {
+function printMessageWithColourAndBorders() {
   COLOUR="${2}"
   echo
   printf -v str "%-$((${#1}))s" ' '
@@ -16,20 +16,33 @@ function printMessageWithColour() {
   echo
 }
 
+function printMessageWithColour() {
+  COLOUR="${2}"
+  printf "${COLOUR}%s\e[0m\n" "${1}"
+}
+
 function printMessage() {
-  printMessageWithColour "${1}" "\e[0;33m"
+  printMessageWithColourAndBorders >&2 "${1}" "\e[0;33m"
 }
 
 function printPassMessage() {
-  printMessageWithColour "${1}" "\e[0;32m"
+  printMessageWithColourAndBorders >&2 "${1}" "\e[0;32m"
 }
 
-function printErrorMessage() {
-  printMessageWithColour "${1}" "\e[0;31m"
+function printPlainPassMessage() {
+  printMessageWithColour >&2 "${1}" "\e[0;32m"
+}
+
+function printFailureMessage() {
+  printMessageWithColourAndBorders >&2 "${1}" "\e[0;31m"
+}
+
+function printPlainFailureMessage() {
+  printMessageWithColour >&2 "${1}" "\e[0;31m"
 }
 
 function runCommand() {
-  printMessageWithColour >&2 "$1" "\e[0;33m"
+  printMessageWithColourAndBorders >&2 "$1" "\e[0;33m"
   if ! eval "$(echo $1)"; then
     return 1
   fi
@@ -46,5 +59,22 @@ function retryCommand() {
   if [ "$n" -ge "${2:-3}" ]; then
     printMessage "The command has failed after $n attempts."
     return 1
+  fi
+}
+
+function logTestResult() {
+  TEST_EXIT_CODE="${1}"
+  TEST_CASE="${2}"
+  if [[ "${TEST_EXIT_CODE}" != "0" ]]; then
+    printFailureMessage "Failed: ${TEST_CASE}"
+    if [ -n "${3:-}" ]; then
+      container-logs "${3:-}"
+    fi
+    container-logs
+    printFailureMessage "Failed: ${TEST_CASE}"
+    printPlainFailureMessage "  - ${TEST_CASE}" >>${FAIL_LOG_FILE} 2>&1
+  else
+    printPassMessage "Passed: ${TEST_CASE}"
+    printPlainPassMessage "  - ${TEST_CASE}" >>${PASS_LOG_FILE} 2>&1
   fi
 }

@@ -29,3 +29,8 @@ function start-up() {
 function tear-down() {
   runCommand "helm --kube-context microk8s --namespace ${1:-mockserver} delete ${1:-mockserver}"
 }
+
+function container-logs() {
+  printMessage "${1:-mockserver} logs"
+  runCommand "kubectl --context microk8s --namespace ${1:-mockserver} logs $(kubectl --context microk8s --namespace ${1:-mockserver} get po -l app=mockserver,release=${1:-mockserver} -o=jsonpath='{.items[0].metadata.name}')"
+}

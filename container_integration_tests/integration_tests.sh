@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2155
 
 set -euo pipefail
 
@@ -27,6 +28,10 @@ function test() {
 }
 
 function run_all_tests() {
+  start-up-k8s &
+  export PASS_LOG_FILE=$(mktemp)
+  export FAIL_LOG_FILE=$(mktemp)
+
   if [[ "${SKIP_ALL_TESTS:-}" != "true" ]]; then
     # docker compose test
     test "docker_compose_forward_with_override"
@@ -43,6 +48,23 @@ function run_all_tests() {
     test "helm_remote_host_and_port"
     tear-down-k8s
   fi
+
+  printMessage "TEST SUMMARY"
+  if [[ -s "${PASS_LOG_FILE}" ]]; then
+      printMessage "PASSED:"
+      cat "${PASS_LOG_FILE}"
+      rm "${PASS_LOG_FILE}"
+      printf "\n\n"
+  fi
+  if [[ -s "${FAIL_LOG_FILE}" ]]; then
+      printMessage "FAILED:"
+      cat "${FAIL_LOG_FILE}"
+      rm "${FAIL_LOG_FILE}"
+      printf "\n\n"
+      EXIT_CODE=1
+  fi
+
+  exit ${EXIT_CODE:-0}
 }
 
 build_docker

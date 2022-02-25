@@ -24,17 +24,11 @@ function integration_test() {
     RESPONSE_BODY=$(docker-exec-client "curl -v -s -X PUT 'http://mockserver:1234/some/path'")
 
     if [[ "${RESPONSE_BODY}" != "some_response_body" ]]; then
-      printErrorMessage "Failed to retrieve response body for expectation matched by path, found: \"${RESPONSE_BODY}\""
+      printFailureMessage "Failed to retrieve response body for expectation matched by path, found: \"${RESPONSE_BODY}\""
       TEST_EXIT_CODE=1
     fi
   fi
-  if [[ "${TEST_EXIT_CODE}" != "0" ]]; then
-    printErrorMessage "Failed: ${TEST_CASE}"
-    docker-compose logs
-    printErrorMessage "Failed: ${TEST_CASE}"
-  else
-    printPassMessage "Passed: ${TEST_CASE}"
-  fi
+  logTestResult "${TEST_EXIT_CODE}" "${TEST_CASE}"
   tear-down
   return ${TEST_EXIT_CODE}
 }
