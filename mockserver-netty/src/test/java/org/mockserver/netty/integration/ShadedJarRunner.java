@@ -4,6 +4,7 @@ import com.google.common.base.Joiner;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.file.FileReader;
 import org.mockserver.netty.integration.mock.ExtendedShadedJarMockingIntegrationTest;
+import org.mockserver.version.Version;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,10 +18,10 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 public class ShadedJarRunner {
 
     public static MockServerClient startServerUsingShadedJar(int mockServerPort) {
-        File jarFile = new File(System.getProperty("project.basedir", ".") + "/target/mockserver-netty-" + System.getProperty("project.version", "5.12.1-SNAPSHOT") + "-shaded.jar");
+        File jarFile = new File(System.getProperty("project.basedir", ".") + "/target/mockserver-netty-" + System.getProperty("project.version", Version.getVersion()) + "-shaded.jar");
         if (!jarFile.exists()) {
             String defaultLocation = jarFile.getAbsolutePath();
-            jarFile = new File(System.getProperty("project.basedir", ".") + "/mockserver-netty/target/mockserver-netty-" + System.getProperty("project.version", "5.12.1-SNAPSHOT") + "-shaded.jar");
+            jarFile = new File(System.getProperty("project.basedir", ".") + "/mockserver-netty/target/mockserver-netty-" + System.getProperty("project.version", Version.getVersion()) + "-shaded.jar");
             if (!jarFile.exists()) {
                 throw new RuntimeException("Can't find jar file in the following locations: " + Arrays.asList(defaultLocation, jarFile.getAbsolutePath()));
             }

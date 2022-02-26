@@ -3,7 +3,7 @@ package org.mockserver.java;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang3.StringUtils;
 
-public class Version {
+public class JDKVersion {
 
     @VisibleForTesting
     public static String javaVersion = System.getProperty("java.version");
