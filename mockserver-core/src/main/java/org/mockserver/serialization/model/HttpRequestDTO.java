@@ -2,6 +2,8 @@ package org.mockserver.serialization.model;
 
 import org.mockserver.model.*;
 
+import java.util.List;
+
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -17,7 +19,8 @@ public class HttpRequestDTO extends RequestDefinitionDTO implements DTO<HttpRequ
     private Headers headers;
     private Boolean keepAlive;
     private Boolean secure;
-    private SocketAddressDTO socketAddress;
+    private List<X509Certificate> clientCertificateChain;
+    private SocketAddress socketAddress;
 
     public HttpRequestDTO() {
         super(null);
@@ -35,9 +38,8 @@ public class HttpRequestDTO extends RequestDefinitionDTO implements DTO<HttpRequ
             body = BodyDTO.createDTO(httpRequest.getBody());
             keepAlive = httpRequest.isKeepAlive();
             secure = httpRequest.isSecure();
-            if (httpRequest.getSocketAddress() != null) {
-                socketAddress = new SocketAddressDTO(httpRequest.getSocketAddress());
-            }
+            clientCertificateChain = httpRequest.getClientCertificateChain();
+            socketAddress = httpRequest.getSocketAddress();
         }
     }
 
@@ -52,7 +54,8 @@ public class HttpRequestDTO extends RequestDefinitionDTO implements DTO<HttpRequ
             .withCookies(cookies)
             .withSecure(secure)
             .withKeepAlive(keepAlive)
-            .withSocketAddress(socketAddress != null ? socketAddress.buildObject() : null)
+            .withClientCertificateChain(clientCertificateChain)
+            .withSocketAddress(socketAddress)
             .withNot(getNot());
     }
 
@@ -137,11 +140,20 @@ public class HttpRequestDTO extends RequestDefinitionDTO implements DTO<HttpRequ
         return this;
     }
 
-    public SocketAddressDTO getSocketAddress() {
+    public List<X509Certificate> getClientCertificateChain() {
+        return clientCertificateChain;
+    }
+
+    public HttpRequestDTO setClientCertificateChain(List<X509Certificate> clientCertificateChain) {
+        this.clientCertificateChain = clientCertificateChain;
+        return this;
+    }
+
+    public SocketAddress getSocketAddress() {
         return socketAddress;
     }
 
-    public HttpRequestDTO setSocketAddress(SocketAddressDTO socketAddress) {
+    public HttpRequestDTO setSocketAddress(SocketAddress socketAddress) {
         this.socketAddress = socketAddress;
         return this;
     }

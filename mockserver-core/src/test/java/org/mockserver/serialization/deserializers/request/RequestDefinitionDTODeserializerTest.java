@@ -169,12 +169,11 @@ public class RequestDefinitionDTODeserializerTest {
                 ))
                 .setSecure(true)
                 .setKeepAlive(false)
-                .setSocketAddress(new SocketAddressDTO(
-                    new SocketAddress()
-                        .withHost("someHost")
-                        .withPort(1234)
-                        .withScheme(SocketAddress.Scheme.HTTPS)
-                )),
+                .setSocketAddress(new SocketAddress()
+                    .withHost("someHost")
+                    .withPort(1234)
+                    .withScheme(SocketAddress.Scheme.HTTPS)
+                ),
             requestDefinitionDTO);
     }
 

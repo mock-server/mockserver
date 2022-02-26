@@ -33,6 +33,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     private Cookies cookies;
     private Boolean keepAlive = null;
     private Boolean secure = null;
+    private List<X509Certificate> clientCertificateChain;
     private SocketAddress socketAddress;
 
     public static HttpRequest request() {
@@ -80,6 +81,16 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
                 secure = true;
             }
         }
+        this.hashCode = 0;
+        return this;
+    }
+
+    public List<X509Certificate> getClientCertificateChain() {
+        return clientCertificateChain;
+    }
+
+    public HttpRequest withClientCertificateChain(List<X509Certificate> clientCertificateChain) {
+        this.clientCertificateChain = clientCertificateChain;
         this.hashCode = 0;
         return this;
     }
@@ -1158,6 +1169,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
             Objects.equals(cookies, that.cookies) &&
             Objects.equals(keepAlive, that.keepAlive) &&
             Objects.equals(secure, that.secure) &&
+            Objects.equals(clientCertificateChain, that.clientCertificateChain) &&
             Objects.equals(socketAddress, that.socketAddress);
     }
 
@@ -1166,7 +1178,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         // need to call isSecure because getter can change the hashcode
         isSecure();
         if (hashCode == 0) {
-            hashCode = Objects.hash(super.hashCode(), method, path, pathParameters, queryStringParameters, body, headers, cookies, keepAlive, secure, socketAddress);
+            hashCode = Objects.hash(super.hashCode(), method, path, pathParameters, queryStringParameters, body, headers, cookies, keepAlive, secure, clientCertificateChain, socketAddress);
         }
         return hashCode;
     }

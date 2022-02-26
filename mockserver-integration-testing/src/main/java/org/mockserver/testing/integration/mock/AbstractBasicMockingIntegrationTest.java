@@ -2665,7 +2665,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_https"),
-                HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE
+            )
         );
     }
 

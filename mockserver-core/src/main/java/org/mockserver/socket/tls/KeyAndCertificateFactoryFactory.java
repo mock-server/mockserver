@@ -1,7 +1,7 @@
 package org.mockserver.socket.tls;
 
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.java.Version;
+import org.mockserver.java.JDKVersion;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.jdk.JDKKeyAndCertificateFactory;
@@ -46,7 +46,7 @@ public class KeyAndCertificateFactoryFactory {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(Level.WARN)
-                                .setMessageFormat("can not load classes in 'sun.security.x509' or 'sun.security.util' so falling back to BouncyCastle KeyAndCertificateFactory but failed to instantiate BouncyCastle; for " + (Version.getVersion() >= 16 ? "this Java version " + Version.getVersion() + " (which is >= 16)" : "Java versions >= 16") + " access to packages 'sun.security.x509' and 'sun.security.util' is denied by default at runtime EITHER (1) allow this by adding JVM arguments '--add-exports=java.base/sun.security.x509=ALL-UNNAMED' and '--add-exports=java.base/sun.security.util=ALL-UNNAMED' OR (2) ensure the following dependencies for BouncyCastle are available")
+                                .setMessageFormat("can not load classes in 'sun.security.x509' or 'sun.security.util' so falling back to BouncyCastle KeyAndCertificateFactory but failed to instantiate BouncyCastle; for " + (JDKVersion.getVersion() >= 16 ? "this Java version " + JDKVersion.getVersion() + " (which is >= 16)" : "Java versions >= 16") + " access to packages 'sun.security.x509' and 'sun.security.util' is denied by default at runtime EITHER (1) allow this by adding JVM arguments '--add-exports=java.base/sun.security.x509=ALL-UNNAMED' and '--add-exports=java.base/sun.security.util=ALL-UNNAMED' OR (2) ensure the following dependencies for BouncyCastle are available")
                                 .setArguments("<dependency>\n" +
                                     "    <groupId>org.bouncycastle</groupId>\n" +
                                     "    <artifactId>bcprov-jdk15on</artifactId>\n" +
@@ -63,10 +63,10 @@ public class KeyAndCertificateFactoryFactory {
                 try {
                     Class<KeyAndCertificateFactory> keyAndCertificateFactorClass = (Class<KeyAndCertificateFactory>) CLASS_LOADER.loadClass("org.mockserver.socket.tls.bouncycastle.BCKeyAndCertificateFactory");
                     Constructor<KeyAndCertificateFactory> keyAndCertificateFactorConstructor = keyAndCertificateFactorClass.getDeclaredConstructor(MockServerLogger.class);
-                    if (MockServerLogger.isEnabled(Level.DEBUG)) {
+                    if (MockServerLogger.isEnabled(Level.TRACE)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
-                                .setLogLevel(Level.DEBUG)
+                                .setLogLevel(Level.TRACE)
                                 .setMessageFormat("using Bouncy Castle for X.509 Certificate and Private Key generation")
                         );
                     }

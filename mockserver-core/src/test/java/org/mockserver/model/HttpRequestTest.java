@@ -32,11 +32,63 @@ public class HttpRequestTest {
     @Test
     public void returnsPath() {
         assertEquals(string("somepath"), new HttpRequest().withPath("somepath").getPath());
+        assertEquals(string("somepath"), request("somepath").getPath());
     }
 
     @Test
     public void returnsMethod() {
         assertEquals(string("POST"), new HttpRequest().withMethod("POST").getMethod());
+    }
+
+    @Test
+    public void setAndGetSocketAddress() {
+        assertEquals(
+            new SocketAddress()
+                .withHost("someHost")
+                .withPort(1234)
+                .withScheme(SocketAddress.Scheme.HTTPS),
+            new HttpRequest().withSocketAddress(
+                new SocketAddress()
+                    .withHost("someHost")
+                    .withPort(1234)
+                    .withScheme(SocketAddress.Scheme.HTTPS)
+            ).getSocketAddress()
+        );
+        assertEquals(
+            new SocketAddress()
+                .withHost("someHost")
+                .withPort(1234)
+                .withScheme(SocketAddress.Scheme.HTTPS),
+            new HttpRequest().withSocketAddress("someHost", 1234, SocketAddress.Scheme.HTTPS).getSocketAddress()
+        );
+        assertEquals(
+            new SocketAddress()
+                .withHost("someHost")
+                .withPort(1234)
+                .withScheme(SocketAddress.Scheme.HTTPS),
+            new HttpRequest().withSecure(true).withSocketAddress("someHost", 1234).getSocketAddress()
+        );
+        assertEquals(
+            new SocketAddress()
+                .withHost("someHost")
+                .withPort(1234)
+                .withScheme(SocketAddress.Scheme.HTTP),
+            new HttpRequest().withSecure(false).withSocketAddress("someHost", 1234).getSocketAddress()
+        );
+        assertEquals(
+            new SocketAddress()
+                .withHost("someHost")
+                .withPort(1234)
+                .withScheme(SocketAddress.Scheme.HTTPS),
+            new HttpRequest().withSocketAddress(true, "someHost", 1234).getSocketAddress()
+        );
+        assertEquals(
+            new SocketAddress()
+                .withHost("someHost")
+                .withPort(1234)
+                .withScheme(SocketAddress.Scheme.HTTP),
+            new HttpRequest().withSocketAddress(false, "someHost", 1234).getSocketAddress()
+        );
     }
 
     @Test

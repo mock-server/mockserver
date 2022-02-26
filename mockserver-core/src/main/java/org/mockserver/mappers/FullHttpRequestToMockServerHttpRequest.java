@@ -11,14 +11,23 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Cookies;
 import org.mockserver.model.Headers;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.X509Certificate;
 import org.mockserver.url.URLParser;
 import org.slf4j.event.Level;
 
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLPeerUnverifiedException;
+import javax.net.ssl.SSLSession;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.COOKIE;
 import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
+import static org.slf4j.event.Level.INFO;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -29,13 +38,15 @@ public class FullHttpRequestToMockServerHttpRequest {
     private final BodyDecoderEncoder bodyDecoderEncoder;
     private final ExpandedParameterDecoder formParameterParser;
     private final boolean isSecure;
+    private final SSLEngine sslEngine;
     private final Integer port;
 
-    public FullHttpRequestToMockServerHttpRequest(MockServerLogger mockServerLogger, boolean isSecure, Integer port) {
+    public FullHttpRequestToMockServerHttpRequest(MockServerLogger mockServerLogger, boolean isSecure, SSLEngine sslEngine, Integer port) {
         this.mockServerLogger = mockServerLogger;
         this.bodyDecoderEncoder = new BodyDecoderEncoder();
-        formParameterParser = new ExpandedParameterDecoder(mockServerLogger);
+        this.formParameterParser = new ExpandedParameterDecoder(mockServerLogger);
         this.isSecure = isSecure;
+        this.sslEngine = sslEngine;
         this.port = port;
     }
 
@@ -59,6 +70,7 @@ public class FullHttpRequestToMockServerHttpRequest {
                 setCookies(httpRequest, fullHttpRequest);
                 setBody(httpRequest, fullHttpRequest);
                 setSocketAddress(httpRequest, isSecure, port, fullHttpRequest);
+                setClientCertificates(httpRequest, sslEngine);
 
                 httpRequest.withKeepAlive(isKeepAlive(fullHttpRequest));
                 httpRequest.withSecure(isSecure);
@@ -77,6 +89,35 @@ public class FullHttpRequestToMockServerHttpRequest {
 
     private void setSocketAddress(HttpRequest httpRequest, boolean isSecure, Integer port, FullHttpRequest fullHttpRequest) {
         httpRequest.withSocketAddress(isSecure, fullHttpRequest.headers().get("host"), port);
+    }
+
+    private void setClientCertificates(HttpRequest httpRequest, SSLEngine sslEngine) {
+        if (sslEngine != null) {
+            SSLSession sslSession = sslEngine.getSession();
+            if (sslSession != null) {
+                try {
+                    List<X509Certificate> clientCertificateChain = Arrays
+                        .stream(sslSession.getPeerCertificateChain())
+                        .map(x509Certificate -> new X509Certificate()
+                            .withSerialNumber(x509Certificate.getSerialNumber().toString())
+                            .withIssuerDistinguishedName(x509Certificate.getIssuerDN().getName())
+                            .withSubjectDistinguishedName(x509Certificate.getSubjectDN().getName())
+                            .withSignatureAlgorithmName(x509Certificate.getSigAlgName())
+                        )
+                        .collect(Collectors.toList());
+                    httpRequest.withClientCertificateChain(clientCertificateChain);
+                } catch (SSLPeerUnverifiedException ignore) {
+                    if (MockServerLogger.isEnabled(TRACE)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(Level.TRACE)
+                                .setHttpRequest(httpRequest)
+                                .setMessageFormat("no client certificate chain as client did not complete mTLS")
+                        );
+                    }
+                }
+            }
+        }
     }
 
     private void setMethod(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {

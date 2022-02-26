@@ -208,15 +208,15 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(TRACE)
-                        .setMessageFormat("loaded dynamic CA private key from path{}containing PEM{}")
-                        .setArguments(certificateAuthorityPrivateKeyPath(), certificateAuthorityPrivateKey)
+                        .setMessageFormat("loaded CA private key from path{}containing PEM{}")
+                        .setArguments(FileReader.absolutePathFromClassPathOrPath(certificateAuthorityPrivateKeyPath()), certificateAuthorityPrivateKey)
                 );
             } else if (MockServerLogger.isEnabled(INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(INFO)
-                        .setMessageFormat("loaded dynamic CA private key from path{}")
-                        .setArguments(certificateAuthorityPrivateKeyPath())
+                        .setMessageFormat("loaded CA private key from path{}")
+                        .setArguments(FileReader.absolutePathFromClassPathOrPath(certificateAuthorityPrivateKeyPath()))
                 );
             }
         }
@@ -233,15 +233,15 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(DEBUG)
-                        .setMessageFormat("loaded dynamic CA X509 from path{}containing PEM{}as{}")
-                        .setArguments(certificateAuthorityX509CertificatePath(), FileReader.readFileFromClassPathOrPath(certificateAuthorityX509CertificatePath()), certificateAuthorityX509Certificate)
+                        .setMessageFormat("loaded CA X509 from path{}containing PEM{}as{}")
+                        .setArguments(FileReader.absolutePathFromClassPathOrPath(certificateAuthorityX509CertificatePath()), FileReader.readFileFromClassPathOrPath(certificateAuthorityX509CertificatePath()), certificateAuthorityX509Certificate)
                 );
             } else if (MockServerLogger.isEnabled(INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(INFO)
-                        .setMessageFormat("loaded dynamic CA X509 from path{}containing PEM{}")
-                        .setArguments(certificateAuthorityX509CertificatePath(), FileReader.readFileFromClassPathOrPath(certificateAuthorityX509CertificatePath()))
+                        .setMessageFormat("loaded CA X509 from path{}containing PEM{}")
+                        .setArguments(FileReader.absolutePathFromClassPathOrPath(certificateAuthorityX509CertificatePath()), FileReader.readFileFromClassPathOrPath(certificateAuthorityX509CertificatePath()))
                 );
             }
         }

@@ -39,7 +39,7 @@ public class NettyHttpToMockServerHttpRequestDecoderTest {
 
     @Before
     public void setupFixture() {
-        mockServerRequestDecoder = new NettyHttpToMockServerHttpRequestDecoder(new MockServerLogger(), false, null);
+        mockServerRequestDecoder = new NettyHttpToMockServerHttpRequestDecoder(new MockServerLogger(), false, null, null);
         output = new ArrayList<>();
     }
 

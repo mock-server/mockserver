@@ -5,6 +5,7 @@ import io.netty.handler.codec.DecoderException;
 import io.netty.handler.ssl.AbstractSniHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslHandler;
+import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.Future;
 import io.netty.util.internal.PlatformDependent;
@@ -16,6 +17,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @author jamesdbloom
  */
 public class SniHandler extends AbstractSniHandler<SslContext> {
+
+    public static final AttributeKey<SslHandler> TLS_UPSTREAM_HANDLER = AttributeKey.valueOf("TLS_UPSTREAM_HANDLER");
 
     private final NettySslContextFactory nettySslContextFactory;
 
@@ -52,6 +55,7 @@ public class SniHandler extends AbstractSniHandler<SslContext> {
         SslHandler sslHandler = null;
         try {
             sslHandler = sslContext.getNow().newHandler(ctx.alloc());
+            ctx.channel().attr(TLS_UPSTREAM_HANDLER).set(sslHandler);
             ctx.pipeline().replace(this, SslHandler.class.getName(), sslHandler);
             sslHandler = null;
         } finally {

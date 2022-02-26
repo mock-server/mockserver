@@ -10,6 +10,7 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.slf4j.event.Level;
 
+import javax.net.ssl.SSLException;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 import java.security.KeyStore;
@@ -21,9 +22,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.function.Function;
-import javax.net.ssl.SSLException;
+import java.util.function.Supplier;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.socket.tls.KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory;
@@ -159,16 +159,20 @@ public class NettySslContextFactory {
                             keyAndCertificateFactory.x509Certificate().getSubjectDN()
                         )
                 );
-                serverSslContext = SslContextBuilder
+                SslContextBuilder sslContextBuilder = SslContextBuilder
                     .forServer(
                         keyAndCertificateFactory.privateKey(),
                         keyAndCertificateFactory.x509Certificate(),
                         keyAndCertificateFactory.certificateAuthorityX509Certificate()
                     )
                     .sslProvider(SslProvider.JDK)
-                    .trustManager(trustCertificateChain())
-                    .clientAuth(ConfigurationProperties.tlsMutualAuthenticationRequired() ? ClientAuth.REQUIRE : ClientAuth.NONE)
-                    .build();
+                    .clientAuth(ConfigurationProperties.tlsMutualAuthenticationRequired() ? ClientAuth.REQUIRE : ClientAuth.OPTIONAL);
+                if (ConfigurationProperties.tlsMutualAuthenticationRequired()) {
+                    sslContextBuilder.trustManager(trustCertificateChain());
+                } else {
+                    sslContextBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE);
+                }
+                serverSslContext = sslContextBuilder.build();
                 ConfigurationProperties.rebuildServerTLSContext(false);
             } catch (Throwable throwable) {
                 mockServerLogger.logEvent(

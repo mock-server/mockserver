@@ -5,7 +5,10 @@ import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
-import org.mockserver.serialization.model.*;
+import org.mockserver.serialization.model.BodyDTO;
+import org.mockserver.serialization.model.BodyWithContentTypeDTO;
+import org.mockserver.serialization.model.HttpRequestDTO;
+import org.mockserver.serialization.model.StringBodyDTO;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -510,12 +513,11 @@ public class HttpRequestSerializerIntegrationTest {
             ))
             .setSecure(true)
             .setKeepAlive(false)
-            .setSocketAddress(new SocketAddressDTO(
-                new SocketAddress()
-                    .withHost("someHost")
-                    .withPort(1234)
-                    .withScheme(SocketAddress.Scheme.HTTPS)
-            ))
+            .setSocketAddress(new SocketAddress()
+                .withHost("someHost")
+                .withPort(1234)
+                .withScheme(SocketAddress.Scheme.HTTPS)
+            )
             .buildObject(), httpRequest);
     }
 

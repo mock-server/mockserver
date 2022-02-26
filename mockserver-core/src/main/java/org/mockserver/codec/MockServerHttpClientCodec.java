@@ -8,4 +8,5 @@ public class MockServerHttpClientCodec extends CombinedChannelDuplexHandler<Nett
     public MockServerHttpClientCodec(MockServerLogger mockServerLogger) {
         init(new NettyHttpToMockServerHttpResponseDecoder(mockServerLogger), new MockServerHttpToNettyHttpRequestEncoder(mockServerLogger));
     }
+
 }

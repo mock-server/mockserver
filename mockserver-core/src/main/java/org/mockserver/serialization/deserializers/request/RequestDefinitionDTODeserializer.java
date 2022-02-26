@@ -5,10 +5,7 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import org.mockserver.model.Cookies;
-import org.mockserver.model.Headers;
-import org.mockserver.model.NottableString;
-import org.mockserver.model.Parameters;
+import org.mockserver.model.*;
 import org.mockserver.serialization.model.*;
 
 import java.io.IOException;
@@ -35,7 +32,7 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
             Headers headers = null;
             Boolean keepAlive = null;
             Boolean secure = null;
-            SocketAddressDTO socketAddress = null;
+            SocketAddress socketAddress = null;
             String specUrlOrPayload = null;
             String operationId = null;
             while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
@@ -94,7 +91,7 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
                         }
                         case "socketAddress": {
                             jsonParser.nextToken();
-                            socketAddress = ctxt.readValue(jsonParser, SocketAddressDTO.class);
+                            socketAddress = ctxt.readValue(jsonParser, SocketAddress.class);
                             break;
                         }
                         case "specUrlOrPayload": {

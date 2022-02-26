@@ -525,12 +525,11 @@ public class ExpectationSerializerIntegrationTest {
                     .setCookies(new Cookies().withEntries(
                         cookie("someCookieName", "someCookieValue")
                     ))
-                    .setSocketAddress(new SocketAddressDTO(
-                        new SocketAddress()
-                            .withHost("someHost")
-                            .withPort(1234)
-                            .withScheme(SocketAddress.Scheme.HTTPS)
-                    ))
+                    .setSocketAddress(new SocketAddress()
+                        .withHost("someHost")
+                        .withPort(1234)
+                        .withScheme(SocketAddress.Scheme.HTTPS)
+                    )
             )
             .setHttpResponse(
                 new HttpResponseDTO()
@@ -655,12 +654,11 @@ public class ExpectationSerializerIntegrationTest {
                     .setCookies(new Cookies().withEntries(
                         cookie("someCookieName", "someCookieValue")
                     ))
-                    .setSocketAddress(new SocketAddressDTO(
-                        new SocketAddress()
-                            .withHost("someHost")
-                            .withPort(1234)
-                            .withScheme(SocketAddress.Scheme.HTTPS)
-                    ))
+                    .setSocketAddress(new SocketAddress()
+                        .withHost("someHost")
+                        .withPort(1234)
+                        .withScheme(SocketAddress.Scheme.HTTPS)
+                    )
             )
             .setHttpResponse(
                 new HttpResponseDTO()

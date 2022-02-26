@@ -11,8 +11,6 @@ import org.mockserver.logging.MockServerLogger;
 
 import java.io.*;
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -53,6 +51,14 @@ public class FileReader {
         return new InputStreamReader(openStreamToFileFromClassPathOrPath(filename));
     }
 
+    public static String absolutePathFromClassPathOrPath(String filename) {
+        URL resource = FileReader.class.getClassLoader().getResource(filename);
+        if (resource != null) {
+            return resource.getPath();
+        }
+        return new File(filename).getAbsolutePath();
+    }
+
     public static URL getURL(String filepath) {
         File file = new File(filepath);
         if (file.exists()) {
@@ -68,10 +74,6 @@ public class FileReader {
             }
         }
         return FileReader.class.getClassLoader().getResource(filepath);
-    }
-
-    public static void main(String[] args) {
-        System.out.println("expandFilePathGlobs = " + expandFilePathGlobs("/Users/jamesbloom/git/mockserver/**/*ack*k.json"));
     }
 
     public static List<String> expandFilePathGlobs(String filePath) {
