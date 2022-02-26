@@ -54,17 +54,19 @@ function run_all_tests() {
 
   printMessage "TEST SUMMARY"
   if [[ -s "${PASS_LOG_FILE}" ]]; then
-      printMessage "PASSED: $(cat "${PASS_LOG_FILE}" | wc -l)"
-      cat "${PASS_LOG_FILE}"
-      rm "${PASS_LOG_FILE}"
-      printf "\n\n"
+    NUMBER_OF_PASSED_TESTS=$(cat "${PASS_LOG_FILE}" | wc -l)
+    printMessage "PASSED: ${NUMBER_OF_PASSED_TESTS}"
+    cat "${PASS_LOG_FILE}"
+    rm "${PASS_LOG_FILE}"
+    printf "\n\n"
   fi
   if [[ -s "${FAIL_LOG_FILE}" ]]; then
-      printMessage "FAILED: $(cat "${FAIL_LOG_FILE}" | wc -l)"
-      cat "${FAIL_LOG_FILE}"
-      rm "${FAIL_LOG_FILE}"
-      printf "\n\n"
-      EXIT_CODE=1
+    NUMBER_OF_FAILED_TESTS=$(cat "${FAIL_LOG_FILE}" | wc -l)
+    printMessage "FAILED: ${NUMBER_OF_FAILED_TESTS}"
+    cat "${FAIL_LOG_FILE}"
+    rm "${FAIL_LOG_FILE}"
+    printf "\n\n"
+    EXIT_CODE=1
   fi
 
   exit ${EXIT_CODE:-0}
