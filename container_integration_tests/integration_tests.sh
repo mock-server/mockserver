@@ -17,6 +17,7 @@ function build_docker() {
   runCommand "cp ../mockserver-netty/target/mockserver-netty-*-SNAPSHOT-shaded.jar ../docker/mockserver-netty-shaded.jar"
   runCommand "docker build --no-cache -t mockserver/mockserver:integration_testing --build-arg source=copy ../docker"
   runCommand "rm ../docker/mockserver-netty-shaded.jar"
+  runCommand "docker build -t mockserver/mockserver:integration_testing_client -f ClientDockerfile ."
 }
 
 function test() {
@@ -28,40 +29,48 @@ function test() {
 }
 
 function run_all_tests() {
-  start-up-k8s &
+  if [[ "${SKIP_HELM_TESTS:-}" != "true" ]]; then
+    start-up-k8s &
+  fi
   export PASS_LOG_FILE=$(mktemp)
   export FAIL_LOG_FILE=$(mktemp)
 
   if [[ "${SKIP_ALL_TESTS:-}" != "true" ]]; then
-    # docker compose test
-    test "docker_compose_forward_with_override"
-    test "docker_compose_remote_host_and_port_by_environment_variable"
-    test "docker_compose_server_port_by_command"
-    test "docker_compose_server_port_by_environment_variable_long_name"
-    test "docker_compose_server_port_by_environment_variable_short_name"
-    test "docker_compose_without_server_port"
-    test "docker_compose_with_persisted_expectations"
-    test "docker_compose_with_server_port_from_default_properties_file"
-    test "docker_compose_with_server_port_from_custom_properties_file"
-    # helm test
-    start-up-k8s
-    test "helm_default_config"
-    test "helm_local_docker_container"
-    test "helm_custom_server_port"
-    test "helm_remote_host_and_port"
-    tear-down-k8s
+    set +euo pipefail
+    if [[ "${SKIP_DOCKER_TESTS:-}" != "true" ]]; then
+      # docker compose test
+      test "docker_compose_forward_with_override"
+      test "docker_compose_remote_host_and_port_by_environment_variable"
+      test "docker_compose_server_port_by_command"
+      test "docker_compose_server_port_by_environment_variable_long_name"
+      test "docker_compose_server_port_by_environment_variable_short_name"
+      test "docker_compose_without_server_port"
+      test "docker_compose_with_persisted_expectations"
+      test "docker_compose_with_server_port_from_default_properties_file"
+      test "docker_compose_with_server_port_from_custom_properties_file"
+    fi
+    if [[ "${SKIP_HELM_TESTS:-}" != "true" ]]; then
+      # helm test
+      start-up-k8s
+      test "helm_default_config"
+      test "helm_local_docker_container"
+      test "helm_custom_server_port"
+      test "helm_remote_host_and_port"
+      tear-down-k8s
+    fi
+    set -euo pipefail
   fi
 
   printMessage "TEST SUMMARY"
   if [[ -s "${PASS_LOG_FILE}" ]]; then
-    NUMBER_OF_PASSED_TESTS=$(cat "${PASS_LOG_FILE}" | wc -l)
+    NUMBER_OF_PASSED_TESTS=$(cat "${PASS_LOG_FILE}" | wc -l | sed -r 's/( )+//g')
     printMessage "PASSED: ${NUMBER_OF_PASSED_TESTS}"
     cat "${PASS_LOG_FILE}"
     rm "${PASS_LOG_FILE}"
     printf "\n\n"
   fi
   if [[ -s "${FAIL_LOG_FILE}" ]]; then
-    NUMBER_OF_FAILED_TESTS=$(cat "${FAIL_LOG_FILE}" | wc -l)
+    NUMBER_OF_FAILED_TESTS=$(cat "${FAIL_LOG_FILE}" | wc -l | sed -r 's/( )+//g')
     printMessage "FAILED: ${NUMBER_OF_FAILED_TESTS}"
     cat "${FAIL_LOG_FILE}"
     rm "${FAIL_LOG_FILE}"

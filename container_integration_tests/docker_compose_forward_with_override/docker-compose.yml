@@ -1,9 +1,7 @@
 version: "2.4"
 services:
   client:
-    build:
-      context: .
-      dockerfile: ../ClientDockerfile
+    image: mockserver/mockserver:integration_testing_client
     networks:
       - test-network
     command:
