@@ -11,6 +11,9 @@ import io.netty.util.concurrent.Future;
 import io.netty.util.internal.PlatformDependent;
 import org.mockserver.configuration.ConfigurationProperties;
 
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
@@ -31,7 +34,11 @@ public class SniHandler extends AbstractSniHandler<SslContext> {
         if (isNotBlank(hostname)) {
             ConfigurationProperties.addSslSubjectAlternativeNameDomains(hostname);
         }
-        return ctx.executor().newSucceededFuture(nettySslContextFactory.createServerSslContext());
+        Integer channelPort = null;
+        if (ctx.channel() != null && ctx.channel().localAddress() instanceof InetSocketAddress) {
+            channelPort = ((InetSocketAddress) ctx.channel().localAddress()).getPort();
+        }
+        return ctx.executor().newSucceededFuture(nettySslContextFactory.createServerSslContext(channelPort));
     }
 
     @Override

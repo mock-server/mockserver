@@ -92,7 +92,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                     ChannelPipeline pipelineToProxyClient = proxyClientCtx.channel().pipeline();
 
                                     if (isSslEnabledUpstream(proxyClientCtx.channel()) && pipelineToProxyClient.get(SslHandler.class) == null) {
-                                        pipelineToProxyClient.addLast(nettySslContextFactory(proxyClientCtx.channel()).createServerSslContext().newHandler(proxyClientCtx.alloc()));
+                                        pipelineToProxyClient.addLast(nettySslContextFactory(proxyClientCtx.channel()).createServerSslContext(null).newHandler(proxyClientCtx.alloc()));
                                     }
 
                                     if (MockServerLogger.isEnabled(Level.TRACE)) {

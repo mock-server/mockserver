@@ -58,7 +58,7 @@ public class BookServer {
 
                             // add HTTPS support
                             if (secure) {
-                                pipeline.addLast(nettySslContextFactory.createServerSslContext().newHandler(ch.alloc()));
+                                pipeline.addLast(nettySslContextFactory.createServerSslContext(null).newHandler(ch.alloc()));
                             }
 
                             pipeline.addLast(new HttpServerCodec());

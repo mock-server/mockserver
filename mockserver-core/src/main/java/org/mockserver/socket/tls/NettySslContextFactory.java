@@ -1,5 +1,6 @@
 package org.mockserver.socket.tls;
 
+import io.netty.channel.Channel;
 import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
@@ -48,13 +49,14 @@ public class NettySslContextFactory {
     private final KeyAndCertificateFactory keyAndCertificateFactory;
     private SslContext clientSslContext = null;
     private SslContext serverSslContext = null;
+    private SslContext controlPlaneServerSslContext = null;
 
     public NettySslContextFactory(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
         keyAndCertificateFactory = createKeyAndCertificateFactory(mockServerLogger);
         System.setProperty("https.protocols", "SSLv3,TLSv1,TLSv1.1,TLSv1.2");
         if (ConfigurationProperties.proactivelyInitialiseTLS()) {
-            createServerSslContext();
+            createServerSslContext(null);
         }
     }
 
@@ -138,7 +140,7 @@ public class NettySslContextFactory {
         return x509Certificates.toArray(new X509Certificate[0]);
     }
 
-    public synchronized SslContext createServerSslContext() {
+    public synchronized SslContext createServerSslContext(Integer channelPort) {
         if (serverSslContext == null
             // create x509 and private key if none exist yet
             || keyAndCertificateFactory.certificateNotYetCreated()
