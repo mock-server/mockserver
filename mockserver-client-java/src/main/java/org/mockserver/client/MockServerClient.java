@@ -54,7 +54,7 @@ import static org.slf4j.event.Level.*;
 /**
  * @author jamesdbloom
  */
-@SuppressWarnings("UnusedReturnValue")
+@SuppressWarnings({"UnusedReturnValue", "FieldMayBeFinal"})
 public class MockServerClient implements Stoppable {
 
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(MockServerClient.class);
@@ -67,23 +67,14 @@ public class MockServerClient implements Stoppable {
     private Boolean secure;
     private Integer port;
     private HttpRequest requestOverride;
-    @SuppressWarnings("FieldMayBeFinal")
     private NettyHttpClient nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, null, false, new NettySslContextFactory(MOCK_SERVER_LOGGER));
-    @SuppressWarnings("FieldMayBeFinal")
     private RequestDefinitionSerializer requestDefinitionSerializer = new RequestDefinitionSerializer(MOCK_SERVER_LOGGER);
-    @SuppressWarnings("FieldMayBeFinal")
     private ExpectationIdSerializer expectationIdSerializer = new ExpectationIdSerializer(MOCK_SERVER_LOGGER);
-    @SuppressWarnings("FieldMayBeFinal")
     private LogEventRequestAndResponseSerializer httpRequestResponseSerializer = new LogEventRequestAndResponseSerializer(MOCK_SERVER_LOGGER);
-    @SuppressWarnings("FieldMayBeFinal")
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(MOCK_SERVER_LOGGER);
-    @SuppressWarnings("FieldMayBeFinal")
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer(MOCK_SERVER_LOGGER);
-    @SuppressWarnings("FieldMayBeFinal")
     private OpenAPIExpectationSerializer openAPIExpectationSerializer = new OpenAPIExpectationSerializer(MOCK_SERVER_LOGGER);
-    @SuppressWarnings("FieldMayBeFinal")
     private VerificationSerializer verificationSerializer = new VerificationSerializer(MOCK_SERVER_LOGGER);
-    @SuppressWarnings("FieldMayBeFinal")
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer(MOCK_SERVER_LOGGER);
     private final CompletableFuture<MockServerClient> stopFuture = new CompletableFuture<>();
 
