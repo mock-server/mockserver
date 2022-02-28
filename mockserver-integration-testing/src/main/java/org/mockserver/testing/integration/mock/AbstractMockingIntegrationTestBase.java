@@ -9,6 +9,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.log.model.LogEntry;
@@ -67,6 +68,11 @@ public abstract class AbstractMockingIntegrationTestBase {
     protected static EchoServer secureEchoServer;
 
     @BeforeClass
+    public static void resetConfigProperties() {
+        ConfigurationProperties.resetAllSystemProperties();
+    }
+
+    @BeforeClass
     public static void startEchoServer() {
         if (insecureEchoServer == null) {
             insecureEchoServer = new EchoServer(false);
@@ -85,6 +91,10 @@ public abstract class AbstractMockingIntegrationTestBase {
 
     public int getServerSecurePort() {
         return getServerPort();
+    }
+
+    protected boolean isSecureControlPlane() {
+        return false;
     }
 
     @Before
@@ -115,8 +125,8 @@ public abstract class AbstractMockingIntegrationTestBase {
         return (!path.startsWith("/") ? "/" : "") + path;
     }
 
-    private static EventLoopGroup clientEventLoopGroup;
-    static NettyHttpClient httpClient;
+    protected static EventLoopGroup clientEventLoopGroup;
+    protected static NettyHttpClient httpClient;
 
     @BeforeClass
     public static void createClientAndEventLoopGroup() {
@@ -126,11 +136,13 @@ public abstract class AbstractMockingIntegrationTestBase {
 
     @AfterClass
     public static void stopEventLoopGroup() {
-        clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
+        if (clientEventLoopGroup != null) {
+            clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
+        }
     }
 
     @SuppressWarnings("DuplicatedCode")
-    String addContextToPath(String path) {
+    protected String addContextToPath(String path) {
         String cleanedPath = path;
         if (isNotBlank(servletContext)) {
             cleanedPath =

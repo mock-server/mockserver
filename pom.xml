@@ -216,6 +216,12 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty-handler</artifactId>
                 <version>${netty.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.netty</groupId>
+                        <artifactId>netty-tcnative-classes</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
@@ -226,6 +232,11 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty-transport</artifactId>
                 <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-tcnative-boringssl-static</artifactId>
+                <version>2.0.50.Final</version>
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
@@ -627,8 +638,8 @@
                         <arg>-XDignore.symbol.file</arg>
                         <arg>-Xlint:all</arg>
                         <!-- lines below should be uncommented if switching to java 9+ -->
-<!--                        <arg>&#45;&#45;add-exports=java.base/sun.security.x509=ALL-UNNAMED</arg>-->
-<!--                        <arg>&#45;&#45;add-exports=java.base/sun.security.util=ALL-UNNAMED</arg>-->
+                        <!-- <arg>&#45;&#45;add-exports=java.base/sun.security.x509=ALL-UNNAMED</arg>-->
+                        <!-- <arg>&#45;&#45;add-exports=java.base/sun.security.util=ALL-UNNAMED</arg>-->
                     </compilerArgs>
                 </configuration>
                 <executions>
@@ -678,7 +689,7 @@
                 <artifactId>maven-clean-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <verbose>true</verbose>
+                    <verbose>false</verbose>
                     <filesets>
                         <fileset>
                             <directory>${basedir}</directory>
@@ -725,8 +736,9 @@
                         <exclude>**/*IntegrationTest.java</exclude>
                     </excludes>
                     <systemProperties>
+                        <excludeFromPropertyReset>mockserver.logLevel,mockserver.disableSystemOut,mockserver.nioEventLoopThreadCount</excludeFromPropertyReset>
                         <mockserver.logLevel>ERROR</mockserver.logLevel>
-                        <mockserver.disableSystemOut>true</mockserver.disableSystemOut>
+                        <mockserver.disableSystemOut>false</mockserver.disableSystemOut>
                         <mockserver.nioEventLoopThreadCount>1</mockserver.nioEventLoopThreadCount>
                     </systemProperties>
                     <argLine>-Duser.language=en -Duser.country=GB</argLine>
@@ -750,8 +762,9 @@
                         <include>**/*IntegrationTest.java</include>
                     </includes>
                     <systemProperties>
+                        <excludeFromPropertyReset>mockserver.logLevel,mockserver.disableSystemOut,mockserver.nioEventLoopThreadCount,mockserver.webSocketClientEventLoopThreadCount</excludeFromPropertyReset>
                         <mockserver.logLevel>ERROR</mockserver.logLevel>
-                        <mockserver.disableSystemOut>true</mockserver.disableSystemOut>
+                        <mockserver.disableSystemOut>false</mockserver.disableSystemOut>
                         <mockserver.nioEventLoopThreadCount>20</mockserver.nioEventLoopThreadCount>
                         <mockserver.webSocketClientEventLoopThreadCount>5</mockserver.webSocketClientEventLoopThreadCount>
                         <project.version>${project.version}</project.version>

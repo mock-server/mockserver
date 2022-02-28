@@ -56,7 +56,8 @@ public class NettyHttpClientErrorHandlingTest {
         ));
 
         // when
-        new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null, false).sendRequest(request().withHeader(HOST.toString(), "127.0.0.1:" + freePort))
+        new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null, false)
+            .sendRequest(request().withHeader(HOST.toString(), "127.0.0.1:" + freePort))
             .get(10, TimeUnit.SECONDS);
     }
 
@@ -106,7 +107,7 @@ public class NettyHttpClientErrorHandlingTest {
                     .withStatusCode(200)
                     .withReasonPhrase("OK")
                     .withHeader(CONTENT_TYPE.toString(), "text/plain")
-                    .withHeader(header(ACCEPT_ENCODING.toString(), GZIP.toString() + "," + DEFLATE.toString()))
+                    .withHeader(header(ACCEPT_ENCODING.toString(), GZIP + "," + DEFLATE))
                     .withHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()))
                     .withHeader(header(CONTENT_LENGTH.toString(), "this is an example body".length() / 2))
                     .withBody(exact("this is an ", MediaType.TEXT_PLAIN))

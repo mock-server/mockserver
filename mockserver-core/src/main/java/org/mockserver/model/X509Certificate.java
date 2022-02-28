@@ -1,9 +1,14 @@
 package org.mockserver.model;
 
+import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class X509Certificate extends ObjectWithJsonToString {
 
+    private Certificate certificate;
+    private byte[] certificateBytes;
     private String issuerDistinguishedName;
     private String subjectDistinguishedName;
     private String serialNumber;
@@ -12,6 +17,17 @@ public class X509Certificate extends ObjectWithJsonToString {
 
     public static X509Certificate x509Certificate() {
         return new X509Certificate();
+    }
+
+    public Certificate getCertificate() {
+        return certificate;
+    }
+
+    public X509Certificate withCertificate(Certificate certificate) throws CertificateEncodingException {
+        this.certificate = certificate;
+        this.certificateBytes = certificate.getEncoded();
+        this.hashCode = 0;
+        return this;
     }
 
     public String getIssuerDistinguishedName() {
@@ -78,13 +94,17 @@ public class X509Certificate extends ObjectWithJsonToString {
             return false;
         }
         X509Certificate that = (X509Certificate) o;
-        return Objects.equals(issuerDistinguishedName, that.issuerDistinguishedName) && Objects.equals(subjectDistinguishedName, that.subjectDistinguishedName) && Objects.equals(serialNumber, that.serialNumber) && Objects.equals(signatureAlgorithmName, that.signatureAlgorithmName);
+        return Arrays.equals(certificateBytes, that.certificateBytes) &&
+            Objects.equals(issuerDistinguishedName, that.issuerDistinguishedName) &&
+            Objects.equals(subjectDistinguishedName, that.subjectDistinguishedName) &&
+            Objects.equals(serialNumber, that.serialNumber) &&
+            Objects.equals(signatureAlgorithmName, that.signatureAlgorithmName);
     }
 
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(issuerDistinguishedName, subjectDistinguishedName, serialNumber, signatureAlgorithmName, hashCode);
+            hashCode = Objects.hash(Arrays.hashCode(certificateBytes), issuerDistinguishedName, subjectDistinguishedName, serialNumber, signatureAlgorithmName, hashCode);
         }
         return hashCode;
     }

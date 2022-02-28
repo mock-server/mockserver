@@ -1,7 +1,6 @@
 package org.mockserver.integration;
 
 import org.mockserver.client.MockServerClient;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.lifecycle.ExpectationsListener;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.netty.MockServer;
@@ -12,8 +11,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.configuration.ConfigurationProperties.launchUIForLogLevelDebug;
-import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.HttpResponse.response;
 import static org.slf4j.event.Level.DEBUG;
 
 /**
@@ -22,13 +19,6 @@ import static org.slf4j.event.Level.DEBUG;
 public class ClientAndServer extends MockServerClient {
 
     private final MockServer mockServer;
-
-    public static void main(String[] args) {
-        ConfigurationProperties.logLevel("DEBUG");
-        ClientAndServer clientAndServer = startClientAndServer(1080);
-        clientAndServer.when(request()).respond(response());
-        clientAndServer.stop();
-    }
 
     public ClientAndServer(Integer... ports) {
         super(new CompletableFuture<>());

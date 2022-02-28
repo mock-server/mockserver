@@ -1,8 +1,11 @@
 package org.mockserver.client;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
 import org.mockserver.client.MockServerEventBus.EventType;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.httpclient.NettyHttpClient;
@@ -24,22 +27,26 @@ import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
 import org.mockserver.version.Version;
 
+import javax.net.ssl.SSLException;
 import java.awt.*;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.function.Function;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.UNAUTHORIZED;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.*;
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.mock.HttpState.LOG_SEPARATOR;
@@ -47,6 +54,8 @@ import static org.mockserver.model.ExpectationId.expectationId;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.MediaType.APPLICATION_JSON_UTF_8;
 import static org.mockserver.model.PortBinding.portBinding;
+import static org.mockserver.socket.tls.PEMToFile.privateKeyFromPEMFile;
+import static org.mockserver.socket.tls.PEMToFile.x509ChainFromPEMFile;
 import static org.mockserver.verify.Verification.verification;
 import static org.mockserver.verify.VerificationTimes.exactly;
 import static org.slf4j.event.Level.*;
@@ -67,7 +76,8 @@ public class MockServerClient implements Stoppable {
     private Boolean secure;
     private Integer port;
     private HttpRequest requestOverride;
-    private NettyHttpClient nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, null, false, new NettySslContextFactory(MOCK_SERVER_LOGGER));
+    private ProxyConfiguration proxyConfiguration;
+    private NettyHttpClient nettyHttpClient;
     private RequestDefinitionSerializer requestDefinitionSerializer = new RequestDefinitionSerializer(MOCK_SERVER_LOGGER);
     private ExpectationIdSerializer expectationIdSerializer = new ExpectationIdSerializer(MOCK_SERVER_LOGGER);
     private LogEventRequestAndResponseSerializer httpRequestResponseSerializer = new LogEventRequestAndResponseSerializer(MOCK_SERVER_LOGGER);
@@ -131,7 +141,7 @@ public class MockServerClient implements Stoppable {
      * Configure communication to MockServer to go via a proxy
      */
     public MockServerClient setProxyConfiguration(ProxyConfiguration proxyConfiguration) {
-        this.nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, ImmutableList.of(proxyConfiguration), false, new NettySslContextFactory(MOCK_SERVER_LOGGER));
+        this.proxyConfiguration = proxyConfiguration;
         return this;
     }
 
@@ -200,6 +210,42 @@ public class MockServerClient implements Stoppable {
         return (!cleanedPath.startsWith("/") ? "/" : "") + cleanedPath;
     }
 
+    @VisibleForTesting
+    public void resetNettyHttpClient() {
+        nettyHttpClient = null;
+    }
+
+    private NettyHttpClient getNettyHttpClient() {
+        if (nettyHttpClient == null) {
+            NettySslContextFactory nettySslContextFactory = new NettySslContextFactory(MOCK_SERVER_LOGGER);
+            Function<SslContextBuilder, SslContext> clientSslContextBuilderFunction = NettySslContextFactory.clientSslContextBuilderFunction;
+            if (ConfigurationProperties.controlPlaneTLSMutualAuthenticationRequired()) {
+                if (isBlank(ConfigurationProperties.controlPlanePrivateKeyPath()) || isBlank(ConfigurationProperties.controlPlaneX509CertificatePath()) || isBlank(ConfigurationProperties.controlPlaneTLSMutualAuthenticationCAChain())) {
+                    throw new IllegalArgumentException("when 'controlPlaneTLSMutualAuthenticationRequired' is enabled 'controlPlanePrivateKeyPath', 'controlPlaneX509CertificatePath' and 'controlPlaneTLSMutualAuthenticationCAChain' must all be specified,\n\tfound controlPlanePrivateKeyPath: \"" + ConfigurationProperties.controlPlanePrivateKeyPath() + "\"\n\tand controlPlaneX509CertificatePath: \"" + ConfigurationProperties.controlPlaneX509CertificatePath() + "\"\n\tand controlPlaneTLSMutualAuthenticationCAChain: \"" + ConfigurationProperties.controlPlaneTLSMutualAuthenticationCAChain() + "\"");
+                }
+                clientSslContextBuilderFunction =
+                    sslContextBuilder -> {
+                        try {
+                            RSAPrivateKey key = privateKeyFromPEMFile(ConfigurationProperties.controlPlanePrivateKeyPath());
+                            X509Certificate[] keyCertChain = x509ChainFromPEMFile(ConfigurationProperties.controlPlaneX509CertificatePath()).toArray(new X509Certificate[0]);
+                            X509Certificate[] trustCertCollection = nettySslContextFactory.trustCertificateChain(ConfigurationProperties.controlPlaneTLSMutualAuthenticationCAChain());
+                            sslContextBuilder
+                                .keyManager(
+                                    key,
+                                    keyCertChain
+                                )
+                                .trustManager(trustCertCollection);
+                            return sslContextBuilder.build();
+                        } catch (SSLException e) {
+                            throw new RuntimeException(e);
+                        }
+                    };
+            }
+            this.nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, proxyConfiguration != null ? ImmutableList.of(proxyConfiguration) : null, false, nettySslContextFactory.withClientSslContextBuilderFunction(clientSslContextBuilderFunction));
+        }
+        return nettyHttpClient;
+    }
+
     private HttpResponse sendRequest(HttpRequest request, boolean ignoreErrors) {
         if (!stopFuture.isDone()) {
             try {
@@ -214,7 +260,7 @@ public class MockServerClient implements Stoppable {
                 if (requestOverride != null) {
                     request = request.update(requestOverride, null);
                 }
-                HttpResponse response = nettyHttpClient.sendRequest(
+                HttpResponse response = getNettyHttpClient().sendRequest(
                     request.withHeader(HOST.toString(), this.host + ":" + port()),
                     ConfigurationProperties.maxSocketTimeout(),
                     TimeUnit.MILLISECONDS,
@@ -222,9 +268,12 @@ public class MockServerClient implements Stoppable {
                 );
 
                 if (response != null) {
-                    if (response.getStatusCode() != null &&
-                        response.getStatusCode() == BAD_REQUEST.code()) {
-                        throw new IllegalArgumentException(response.getBodyAsString());
+                    if (response.getStatusCode() != null) {
+                        if (response.getStatusCode() == BAD_REQUEST.code()) {
+                            throw new IllegalArgumentException(response.getBodyAsString());
+                        } else if (response.getStatusCode() == UNAUTHORIZED.code()) {
+                            throw new AuthenticationException(response.getBodyAsString());
+                        }
                     }
                     String serverVersion = response.getFirstHeader("version");
                     String clientVersion = Version.getVersion();
@@ -657,6 +706,8 @@ public class MockServerClient implements Stoppable {
             if (result != null && !result.isEmpty()) {
                 throw new AssertionError(result);
             }
+        } catch (AuthenticationException authenticationException) {
+            throw authenticationException;
         } catch (Throwable throwable) {
             throw new AssertionError(throwable.getMessage());
         }
@@ -719,6 +770,8 @@ public class MockServerClient implements Stoppable {
             if (result != null && !result.isEmpty()) {
                 throw new AssertionError(result);
             }
+        } catch (AuthenticationException authenticationException) {
+            throw authenticationException;
         } catch (Throwable throwable) {
             throw new AssertionError(throwable.getMessage());
         }
@@ -768,6 +821,8 @@ public class MockServerClient implements Stoppable {
             if (result != null && !result.isEmpty()) {
                 throw new AssertionError(result);
             }
+        } catch (AuthenticationException authenticationException) {
+            throw authenticationException;
         } catch (Throwable throwable) {
             throw new AssertionError(throwable.getMessage());
         }
@@ -843,6 +898,8 @@ public class MockServerClient implements Stoppable {
             if (result != null && !result.isEmpty()) {
                 throw new AssertionError(result);
             }
+        } catch (AuthenticationException authenticationException) {
+            throw authenticationException;
         } catch (Throwable throwable) {
             throw new AssertionError(throwable.getMessage());
         }
@@ -869,6 +926,8 @@ public class MockServerClient implements Stoppable {
             if (result != null && !result.isEmpty()) {
                 throw new AssertionError(result);
             }
+        } catch (AuthenticationException authenticationException) {
+            throw authenticationException;
         } catch (Throwable throwable) {
             throw new AssertionError(throwable.getMessage());
         }

@@ -1,7 +1,6 @@
 package org.mockserver.examples.proxy.service.springwebclient.https;
 
 import io.netty.handler.ssl.SslContext;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.examples.proxy.model.Book;
 import org.mockserver.examples.proxy.service.BookService;
 import org.mockserver.logging.MockServerLogger;
@@ -73,7 +72,6 @@ public class BookServiceSpringWebClient implements BookService {
     @Override
     @SuppressWarnings("ConstantConditions")
     public Book getBook(String id) {
-        ConfigurationProperties.logLevel("TRACE");
         try {
             logger.info("Sending request to " + baseUrl + "/get_book?id=" + id);
             WebClient.RequestHeadersSpec<?> uri = webClient

@@ -6,7 +6,7 @@ import org.mockserver.cli.Main;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.socket.PortFactory;
 
-import static org.mockserver.configuration.ConfigurationProperties.tlsMutualAuthenticationRequired;
+import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
@@ -15,10 +15,15 @@ import static org.mockserver.stop.Stop.stopQuietly;
 public class ClientAuthenticationMockingIntegrationTest extends AbstractClientAuthenticationMockingIntegrationTest {
 
     private static final int severHttpPort = PortFactory.findFreePort();
+    private static boolean originalTLSMutualAuthenticationRequired;
 
     @BeforeClass
     public static void startServer() {
+        // save original value
+        originalTLSMutualAuthenticationRequired = tlsMutualAuthenticationRequired();
+
         tlsMutualAuthenticationRequired(true);
+
         Main.main("-serverPort", "" + severHttpPort);
 
         mockServerClient = new MockServerClient("localhost", severHttpPort).withSecure(true);
@@ -27,7 +32,9 @@ public class ClientAuthenticationMockingIntegrationTest extends AbstractClientAu
     @AfterClass
     public static void stopServer() {
         stopQuietly(mockServerClient);
-        tlsMutualAuthenticationRequired(false);
+
+        // set back to original value
+        tlsMutualAuthenticationRequired(originalTLSMutualAuthenticationRequired);
     }
 
     @Override

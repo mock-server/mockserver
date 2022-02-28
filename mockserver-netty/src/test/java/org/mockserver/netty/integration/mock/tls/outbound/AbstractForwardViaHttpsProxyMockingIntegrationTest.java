@@ -45,13 +45,13 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
         if (trustNoneTLSEchoServer == null) {
             trustNoneTLSEchoServer = new EchoServer(SslContextBuilder
                 .forServer(
-                    privateKeyFromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/leaf-key-pkcs8.pem"),
-                    x509FromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/leaf-cert.pem"),
-                    x509FromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/ca.pem")
+                    privateKeyFromPEMFile("org/mockserver/netty/integration/tls/separateca/leaf-key-pkcs8.pem"),
+                    x509FromPEMFile("org/mockserver/netty/integration/tls/separateca/leaf-cert.pem"),
+                    x509FromPEMFile("org/mockserver/netty/integration/tls/separateca/ca.pem")
                 )
                 .trustManager(
-                    x509FromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/leaf-cert.pem"),
-                    x509FromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/ca.pem")
+                    x509FromPEMFile("org/mockserver/netty/integration/tls/separateca/leaf-cert.pem"),
+                    x509FromPEMFile("org/mockserver/netty/integration/tls/separateca/ca.pem")
                 )
                 .clientAuth(ClientAuth.REQUIRE)
                 .build());
@@ -99,7 +99,7 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -137,7 +137,7 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         assertThat(insecureEchoServer
@@ -194,7 +194,7 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
 
@@ -261,7 +261,7 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // then - valid certificate returns response
@@ -283,7 +283,7 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -322,7 +322,7 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE
+                HEADERS_TO_IGNORE
 
             )
         );
@@ -360,7 +360,7 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
                         header("x-echo-server-port", secureEchoServer.getPort())
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE
+                HEADERS_TO_IGNORE
             )
         );
     }
@@ -408,7 +408,7 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE
+                HEADERS_TO_IGNORE
             )
         );
     }
@@ -458,7 +458,7 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // - respond
         assertEquals(
@@ -470,7 +470,7 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
                 request()
                     .withSecure(true)
                     .withPath(calculatePath("test_headers_and_body")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // - no response or forward
         assertEquals(
@@ -481,7 +481,7 @@ public abstract class AbstractForwardViaHttpsProxyMockingIntegrationTest extends
                 request()
                     .withSecure(true)
                     .withPath(calculatePath("test_headers_and_body")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 }

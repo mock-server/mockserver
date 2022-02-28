@@ -674,6 +674,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         HttpResponse httpResponse = httpClient.sendRequest(
             request()
                 .withMethod("PUT")
+                .withSecure(isSecureControlPlane())
                 .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
                 .withPath(addContextToPath("mockserver/expectation"))
                 .withBody("" +
@@ -696,6 +697,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "]"
                 )
         ).get(10, SECONDS);
+        assertThat(httpResponse.getStatusCode(), equalTo(201));
 
         // then
         Expectation[] upsertedExpectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(httpResponse.getBodyAsString(), true);
@@ -2041,6 +2043,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         HttpResponse httpResponse = httpClient.sendRequest(
             request()
                 .withMethod("PUT")
+                .withSecure(isSecureControlPlane())
                 .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
                 .withPath(addContextToPath("mockserver/expectation"))
                 .withBody("{" + NEW_LINE +
@@ -2103,6 +2106,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         HttpResponse httpResponse = httpClient.sendRequest(
             request()
                 .withMethod("PUT")
+                .withSecure(isSecureControlPlane())
                 .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
                 .withPath(addContextToPath("mockserver/clear"))
                 .withBody("{" + NEW_LINE +

@@ -6,10 +6,12 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.lifecycle.ExpectationsListener;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.mock.ControlPlaneMTLSAuthenticationHandler;
 import org.mockserver.mock.action.http.HttpActionHandler;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.socket.tls.NettySslContextFactory;
@@ -125,6 +127,9 @@ public class MockServer extends LifeCycle {
         }
 
         NettySslContextFactory nettySslContextFactory = new NettySslContextFactory(mockServerLogger);
+        if (ConfigurationProperties.controlPlaneTLSMutualAuthenticationRequired()) {
+            httpState.setControlPlaneAuthenticationHandler(new ControlPlaneMTLSAuthenticationHandler(mockServerLogger, nettySslContextFactory));
+        }
         serverServerBootstrap = new ServerBootstrap()
             .group(bossGroup, workerGroup)
             .option(ChannelOption.SO_BACKLOG, 1024)

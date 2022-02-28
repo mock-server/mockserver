@@ -6,8 +6,7 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.FullHttpRequestToMockServerHttpRequest;
 
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLSession;
+import java.security.cert.Certificate;
 import java.util.List;
 
 /**
@@ -17,8 +16,8 @@ public class NettyHttpToMockServerHttpRequestDecoder extends MessageToMessageDec
 
     private final FullHttpRequestToMockServerHttpRequest fullHttpRequestToMockServerRequest;
 
-    public NettyHttpToMockServerHttpRequestDecoder(MockServerLogger mockServerLogger, boolean isSecure, SSLEngine sslEngine, Integer port) {
-        fullHttpRequestToMockServerRequest = new FullHttpRequestToMockServerHttpRequest(mockServerLogger, isSecure, sslEngine, port);
+    public NettyHttpToMockServerHttpRequestDecoder(MockServerLogger mockServerLogger, boolean isSecure, Certificate[] clientCertificates, Integer port) {
+        fullHttpRequestToMockServerRequest = new FullHttpRequestToMockServerHttpRequest(mockServerLogger, isSecure, clientCertificates, port);
     }
 
     @Override

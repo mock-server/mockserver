@@ -6,10 +6,14 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.KeyStoreFactory;
 import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
+import org.slf4j.event.Level;
 
 import java.nio.charset.StandardCharsets;
 
@@ -149,6 +153,7 @@ public abstract class AbstractClientAuthenticationMockingIntegrationTest extends
             assertThat(throwable.getMessage(),
                 anyOf(
                     containsString("Received fatal alert: certificate_unknown"),
+                    containsString("Received fatal alert: internal_error"),
                     containsString("readHandshakeRecord"),
                     containsString("Broken pipe"),
                     containsString("wrong type for socket")

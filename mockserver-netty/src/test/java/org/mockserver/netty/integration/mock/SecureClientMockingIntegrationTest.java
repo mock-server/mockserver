@@ -33,4 +33,9 @@ public class SecureClientMockingIntegrationTest extends AbstractExtendedSameJVMM
         return severHttpPort;
     }
 
+    @Override
+    protected boolean isSecureControlPlane() {
+        return true;
+    }
+
 }

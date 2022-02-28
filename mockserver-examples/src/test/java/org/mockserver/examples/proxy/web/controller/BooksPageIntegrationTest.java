@@ -4,7 +4,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.examples.proxy.model.Book;
 import org.mockserver.examples.proxy.web.controller.pageobjects.BookPage;
 import org.mockserver.examples.proxy.web.controller.pageobjects.BooksPage;
@@ -47,7 +46,6 @@ public abstract class BooksPageIntegrationTest {
 
     @BeforeClass
     public static void startProxy() {
-        ConfigurationProperties.logLevel("TRACE");
         proxy = ClientAndServer.startClientAndServer();
         System.setProperty("http.proxyHost", "127.0.0.1");
         System.setProperty("http.proxyPort", String.valueOf(proxy.getPort()));

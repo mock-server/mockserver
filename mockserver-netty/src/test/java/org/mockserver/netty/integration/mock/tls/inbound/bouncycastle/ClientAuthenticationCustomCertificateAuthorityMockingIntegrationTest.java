@@ -8,6 +8,7 @@ import org.mockserver.netty.integration.mock.tls.inbound.AbstractClientAuthentic
 import org.mockserver.socket.PortFactory;
 
 import static org.mockserver.configuration.ConfigurationProperties.*;
+import static org.mockserver.configuration.ConfigurationProperties.useBouncyCastleForKeyAndCertificateGeneration;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
@@ -18,12 +19,16 @@ public class ClientAuthenticationCustomCertificateAuthorityMockingIntegrationTes
     private static final int severHttpPort = PortFactory.findFreePort();
     private static String originalCertificateAuthorityCertificate;
     private static String originalCertificateAuthorityPrivateKey;
+    private static boolean originalUseBouncyCastleForKeyAndCertificateGeneration;
+    private static boolean originalTLSMutualAuthenticationRequired;
 
     @BeforeClass
     public static void startServer() {
         // save original value
         originalCertificateAuthorityCertificate = certificateAuthorityCertificate();
         originalCertificateAuthorityPrivateKey = certificateAuthorityPrivateKey();
+        originalUseBouncyCastleForKeyAndCertificateGeneration = useBouncyCastleForKeyAndCertificateGeneration();
+        originalTLSMutualAuthenticationRequired = tlsMutualAuthenticationRequired();
 
         // set new certificate authority values
         certificateAuthorityCertificate("org/mockserver/netty/integration/tls/ca.pem");
@@ -43,8 +48,8 @@ public class ClientAuthenticationCustomCertificateAuthorityMockingIntegrationTes
         // set back to original value
         certificateAuthorityCertificate(originalCertificateAuthorityCertificate);
         certificateAuthorityPrivateKey(originalCertificateAuthorityPrivateKey);
-        useBouncyCastleForKeyAndCertificateGeneration(false);
-        tlsMutualAuthenticationRequired(false);
+        useBouncyCastleForKeyAndCertificateGeneration(originalUseBouncyCastleForKeyAndCertificateGeneration);
+        tlsMutualAuthenticationRequired(originalTLSMutualAuthenticationRequired);
     }
 
     @Override

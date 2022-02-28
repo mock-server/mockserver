@@ -35,7 +35,6 @@ import org.mockserver.socket.tls.NettySslContextFactory;
 import org.mockserver.socket.tls.SniHandler;
 import org.slf4j.event.Level;
 
-import javax.net.ssl.SSLEngine;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -53,7 +52,6 @@ import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.netty.HttpRequestHandler.LOCAL_HOST_HEADERS;
 import static org.mockserver.netty.HttpRequestHandler.PROXYING;
 import static org.mockserver.netty.proxy.relay.RelayConnectHandler.*;
-import static org.mockserver.socket.tls.SniHandler.TLS_UPSTREAM_HANDLER;
 import static org.slf4j.event.Level.TRACE;
 import static org.slf4j.event.Level.WARN;
 
@@ -72,15 +70,15 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     private final LoggingHandler loggingHandlerLast = new LoggingHandler(PortUnificationHandler.class.getSimpleName() + "-last");
     private final HttpContentLengthRemover httpContentLengthRemover = new HttpContentLengthRemover();
     private final LifeCycle server;
-    private final HttpState httpStateHandler;
+    private final HttpState httpState;
     private final HttpActionHandler actionHandler;
     private final NettySslContextFactory nettySslContextFactory;
     private final MockServerHttpResponseToFullHttpResponse mockServerHttpResponseToFullHttpResponse;
 
-    public PortUnificationHandler(LifeCycle server, HttpState httpStateHandler, HttpActionHandler actionHandler, NettySslContextFactory nettySslContextFactory) {
+    public PortUnificationHandler(LifeCycle server, HttpState httpState, HttpActionHandler actionHandler, NettySslContextFactory nettySslContextFactory) {
         this.server = server;
-        this.mockServerLogger = httpStateHandler.getMockServerLogger();
-        this.httpStateHandler = httpStateHandler;
+        this.mockServerLogger = httpState.getMockServerLogger();
+        this.httpState = httpState;
         this.actionHandler = actionHandler;
         this.nettySslContextFactory = nettySslContextFactory;
         this.mockServerHttpResponseToFullHttpResponse = new MockServerHttpResponseToFullHttpResponse(mockServerLogger);
@@ -250,16 +248,10 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                 )
                 .addListener((ChannelFuture future) -> future.channel().disconnect().awaitUninterruptibly());
         } else {
-            SSLEngine sslEngine = null;
-            if (isSslEnabledUpstream(ctx.channel())) {
-                if (ctx.channel().attr(TLS_UPSTREAM_HANDLER).get() != null) {
-                    sslEngine = ctx.channel().attr(TLS_UPSTREAM_HANDLER).get().engine();
-                }
-            }
-            addLastIfNotPresent(pipeline, new CallbackWebSocketServerHandler(httpStateHandler));
-            addLastIfNotPresent(pipeline, new DashboardWebSocketHandler(httpStateHandler, isSslEnabledUpstream(ctx.channel()), false));
-            addLastIfNotPresent(pipeline, new MockServerHttpServerCodec(mockServerLogger, isSslEnabledUpstream(ctx.channel()), ctx.channel().localAddress(), sslEngine));
-            addLastIfNotPresent(pipeline, new HttpRequestHandler(server, httpStateHandler, actionHandler));
+            addLastIfNotPresent(pipeline, new CallbackWebSocketServerHandler(httpState));
+            addLastIfNotPresent(pipeline, new DashboardWebSocketHandler(httpState, isSslEnabledUpstream(ctx.channel()), false));
+            addLastIfNotPresent(pipeline, new MockServerHttpServerCodec(mockServerLogger, isSslEnabledUpstream(ctx.channel()), ctx.channel().localAddress(), SniHandler.retrieveClientCertificates(mockServerLogger, ctx)));
+            addLastIfNotPresent(pipeline, new HttpRequestHandler(server, httpState, actionHandler));
             pipeline.remove(this);
 
             ctx.channel().attr(LOCAL_HOST_HEADERS).set(getLocalAddresses(ctx));
@@ -299,7 +291,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     }
 
     private void switchToBinary(ChannelHandlerContext ctx, ByteBuf msg) {
-        addLastIfNotPresent(ctx.pipeline(), new BinaryHandler(httpStateHandler.getMockServerLogger(), httpStateHandler.getScheduler(), actionHandler.getHttpClient()));
+        addLastIfNotPresent(ctx.pipeline(), new BinaryHandler(httpState.getMockServerLogger(), httpState.getScheduler(), actionHandler.getHttpClient()));
         // fire message back through pipeline
         ctx.fireChannelRead(msg.readBytes(actualReadableBytes()));
     }

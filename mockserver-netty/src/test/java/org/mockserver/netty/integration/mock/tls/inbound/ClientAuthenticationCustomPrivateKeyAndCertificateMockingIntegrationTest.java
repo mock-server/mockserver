@@ -45,6 +45,7 @@ public class ClientAuthenticationCustomPrivateKeyAndCertificateMockingIntegratio
     private static String originalCertificateAuthorityCertificate;
     private static String originalPrivateKeyPath;
     private static String originalX509CertificatePath;
+    private static boolean originalTLSMutualAuthenticationRequired;
 
     @BeforeClass
     public static void startServer() {
@@ -52,6 +53,7 @@ public class ClientAuthenticationCustomPrivateKeyAndCertificateMockingIntegratio
         originalCertificateAuthorityCertificate = certificateAuthorityCertificate();
         originalPrivateKeyPath = privateKeyPath();
         originalX509CertificatePath = x509CertificatePath();
+        originalTLSMutualAuthenticationRequired = tlsMutualAuthenticationRequired();
 
         // set new certificate authority values
         certificateAuthorityCertificate("org/mockserver/netty/integration/tls/ca.pem");
@@ -72,7 +74,7 @@ public class ClientAuthenticationCustomPrivateKeyAndCertificateMockingIntegratio
         certificateAuthorityCertificate(originalCertificateAuthorityCertificate);
         privateKeyPath(originalPrivateKeyPath);
         x509CertificatePath(originalX509CertificatePath);
-        tlsMutualAuthenticationRequired(false);
+        tlsMutualAuthenticationRequired(originalTLSMutualAuthenticationRequired);
     }
 
     @Override

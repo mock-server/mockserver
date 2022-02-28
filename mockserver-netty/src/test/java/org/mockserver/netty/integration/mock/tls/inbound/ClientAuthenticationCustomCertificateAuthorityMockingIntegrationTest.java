@@ -17,12 +17,14 @@ public class ClientAuthenticationCustomCertificateAuthorityMockingIntegrationTes
     private static final int severHttpPort = PortFactory.findFreePort();
     private static String originalCertificateAuthorityCertificate;
     private static String originalCertificateAuthorityPrivateKey;
+    private static boolean originalTLSMutualAuthenticationRequired;
 
     @BeforeClass
     public static void startServer() {
         // save original value
         originalCertificateAuthorityCertificate = certificateAuthorityCertificate();
         originalCertificateAuthorityPrivateKey = certificateAuthorityPrivateKey();
+        originalTLSMutualAuthenticationRequired = tlsMutualAuthenticationRequired();
 
         // set new certificate authority values
         certificateAuthorityCertificate("org/mockserver/netty/integration/tls/ca.pem");
@@ -41,7 +43,7 @@ public class ClientAuthenticationCustomCertificateAuthorityMockingIntegrationTes
         // set back to original value
         certificateAuthorityCertificate(originalCertificateAuthorityCertificate);
         certificateAuthorityPrivateKey(originalCertificateAuthorityPrivateKey);
-        tlsMutualAuthenticationRequired(false);
+        tlsMutualAuthenticationRequired(originalTLSMutualAuthenticationRequired);
     }
 
     @Override

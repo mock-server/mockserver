@@ -2134,10 +2134,11 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     @Test
     public void shouldReturnResponseByMatchingBodyWithJsonAsRawBody() {
         // when
-        makeRequest(
+        HttpResponse httpResponse = makeRequest(
             request()
                 .withPath(calculatePath("mockserver/expectation"))
                 .withMethod("PUT")
+                .withSecure(isSecureControlPlane())
                 .withBody("{" + NEW_LINE +
                     "  \"httpRequest\" : {" + NEW_LINE +
                     "    \"body\" : {" + NEW_LINE +
@@ -2157,6 +2158,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     "  }" + NEW_LINE +
                     "}"),
             HEADERS_TO_IGNORE);
+        assertThat(httpResponse.getStatusCode(), equalTo(201));
 
         // then
         assertEquals(
@@ -2187,10 +2189,11 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     @Test
     public void shouldReturnResponseByMatchingBodyWithJsonWithBlankFields() {
         // when
-        makeRequest(
+        HttpResponse httpResponse = makeRequest(
             request()
                 .withPath(calculatePath("mockserver/expectation"))
                 .withMethod("PUT")
+                .withSecure(isSecureControlPlane())
                 .withBody("{" + NEW_LINE +
                     "  \"httpRequest\" : {" + NEW_LINE +
                     "    \"body\" : {" + NEW_LINE +
@@ -2212,6 +2215,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     "  }" + NEW_LINE +
                     "}"),
             HEADERS_TO_IGNORE);
+        assertThat(httpResponse.getStatusCode(), equalTo(201));
 
         // then
         assertEquals(
@@ -4921,12 +4925,18 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withPath(calculatePath("some_path")),
                 HEADERS_TO_IGNORE)
         );
-        mockServerClient.verify(request()
-            .withPath(calculatePath("some_path"))
-            .withSecure(false));
-        mockServerClient.verify(request()
-            .withPath(calculatePath("some_path"))
-            .withSecure(false), VerificationTimes.exactly(1));
+        mockServerClient
+            .verify(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withSecure(false)
+            );
+        mockServerClient
+            .verify(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withSecure(false), VerificationTimes.exactly(1)
+            );
 
         // - in https
         assertEquals(
@@ -4940,12 +4950,18 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withSecure(true),
                 HEADERS_TO_IGNORE)
         );
-        mockServerClient.verify(request()
-            .withPath(calculatePath("some_secure_path"))
-            .withSecure(true));
-        mockServerClient.verify(request()
-            .withPath(calculatePath("some_secure_path"))
-            .withSecure(true), VerificationTimes.exactly(1));
+        mockServerClient
+            .verify(
+                request()
+                    .withPath(calculatePath("some_secure_path"))
+                    .withSecure(true)
+            );
+        mockServerClient
+            .verify(
+                request()
+                    .withPath(calculatePath("some_secure_path"))
+                    .withSecure(true), VerificationTimes.exactly(1)
+            );
     }
 
     @Test

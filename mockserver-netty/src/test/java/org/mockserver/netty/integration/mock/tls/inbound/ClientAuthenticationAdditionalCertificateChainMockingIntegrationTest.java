@@ -44,14 +44,14 @@ import static org.mockserver.stop.Stop.stopQuietly;
 public class ClientAuthenticationAdditionalCertificateChainMockingIntegrationTest extends AbstractMockingIntegrationTestBase {
 
     private static final int severHttpPort = PortFactory.findFreePort();
-    private static String originalCertificateAuthorityCertificate;
-    private static String originalCertificateAuthorityPrivateKey;
+    private static String originalTLSMutualAuthenticationCertificateChain;
+    private static boolean originalTLSMutualAuthenticationRequired;
 
     @BeforeClass
     public static void startServer() {
         // save original value
-        originalCertificateAuthorityCertificate = certificateAuthorityCertificate();
-        originalCertificateAuthorityPrivateKey = certificateAuthorityPrivateKey();
+        originalTLSMutualAuthenticationCertificateChain = tlsMutualAuthenticationCertificateChain();
+        originalTLSMutualAuthenticationRequired = tlsMutualAuthenticationRequired();
 
         // set new certificate authority values
         tlsMutualAuthenticationCertificateChain("org/mockserver/netty/integration/tls/ca.pem");
@@ -67,9 +67,8 @@ public class ClientAuthenticationAdditionalCertificateChainMockingIntegrationTes
         stopQuietly(mockServerClient);
 
         // set back to original value
-        certificateAuthorityCertificate(originalCertificateAuthorityCertificate);
-        certificateAuthorityPrivateKey(originalCertificateAuthorityPrivateKey);
-        tlsMutualAuthenticationRequired(false);
+        tlsMutualAuthenticationCertificateChain(originalTLSMutualAuthenticationCertificateChain);
+        tlsMutualAuthenticationRequired(originalTLSMutualAuthenticationRequired);
     }
 
     @Override
@@ -102,7 +101,7 @@ public class ClientAuthenticationAdditionalCertificateChainMockingIntegrationTes
                 request()
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -183,8 +182,10 @@ public class ClientAuthenticationAdditionalCertificateChainMockingIntegrationTes
             assertThat(throwable.getMessage(),
                 anyOf(
                     containsString("Received fatal alert: certificate_unknown"),
+                    containsString("Received fatal alert: internal_error"),
                     containsString("readHandshakeRecord"),
-                    containsString("Broken pipe")
+                    containsString("Broken pipe"),
+                    containsString("wrong type for socket")
                 )
             );
         }

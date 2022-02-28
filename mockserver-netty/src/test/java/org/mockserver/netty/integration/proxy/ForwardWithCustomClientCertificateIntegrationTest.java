@@ -35,12 +35,14 @@ public class ForwardWithCustomClientCertificateIntegrationTest extends AbstractM
     private static MockServer mockServer;
     private static EchoServer trustNoneTLSEchoServer;
     private static EchoServer trustCustomTLSEchoServer;
-    private static ForwardProxyTLSX509CertificatesTrustManager originalForwardProxyTLSX509CertificatesTrustManager;
+    private static String originalForwardProxyPrivateKey;
+    private static String originalForwardProxyCertificateChain;
 
     @BeforeClass
     public static void startServer() {
         // save original value
-        originalForwardProxyTLSX509CertificatesTrustManager = ConfigurationProperties.forwardProxyTLSX509CertificatesTrustManagerType();
+        originalForwardProxyPrivateKey = forwardProxyPrivateKey();
+        originalForwardProxyCertificateChain = forwardProxyCertificateChain();
 
         forwardProxyPrivateKey("org/mockserver/netty/integration/tls/leaf-key-pkcs8.pem");
         forwardProxyCertificateChain("org/mockserver/netty/integration/tls/leaf-cert-chain.pem");
@@ -48,6 +50,16 @@ public class ForwardWithCustomClientCertificateIntegrationTest extends AbstractM
         mockServer = new MockServer();
 
         mockServerClient = new MockServerClient("localhost", mockServer.getLocalPort(), servletContext);
+    }
+
+    @AfterClass
+    public static void stopServer() {
+        stopQuietly(mockServer);
+        stopQuietly(mockServerClient);
+
+        // set back to original value
+        forwardProxyPrivateKey(originalForwardProxyPrivateKey);
+        forwardProxyCertificateChain(originalForwardProxyCertificateChain);
     }
 
     @BeforeClass
@@ -69,13 +81,13 @@ public class ForwardWithCustomClientCertificateIntegrationTest extends AbstractM
         if (trustNoneTLSEchoServer == null) {
             trustNoneTLSEchoServer = new EchoServer(SslContextBuilder
                 .forServer(
-                    privateKeyFromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/leaf-key-pkcs8.pem"),
-                    x509FromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/leaf-cert.pem"),
-                    x509FromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/ca.pem")
+                    privateKeyFromPEMFile("org/mockserver/netty/integration/tls/separateca/leaf-key-pkcs8.pem"),
+                    x509FromPEMFile("org/mockserver/netty/integration/tls/separateca/leaf-cert.pem"),
+                    x509FromPEMFile("org/mockserver/netty/integration/tls/separateca/ca.pem")
                 )
                 .trustManager(
-                    x509FromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/leaf-cert.pem"),
-                    x509FromPEMFile("org/mockserver/netty/integration/tls/trustnoneechoserver/ca.pem")
+                    x509FromPEMFile("org/mockserver/netty/integration/tls/separateca/leaf-cert.pem"),
+                    x509FromPEMFile("org/mockserver/netty/integration/tls/separateca/ca.pem")
                 )
                 .clientAuth(ClientAuth.REQUIRE)
                 .build());
@@ -90,15 +102,6 @@ public class ForwardWithCustomClientCertificateIntegrationTest extends AbstractM
         if (trustNoneTLSEchoServer != null) {
             trustNoneTLSEchoServer.stop();
         }
-    }
-
-    @AfterClass
-    public static void stopServer() {
-        stopQuietly(mockServer);
-        stopQuietly(mockServerClient);
-
-        // set back to original value
-        forwardProxyTLSX509CertificatesTrustManagerType(originalForwardProxyTLSX509CertificatesTrustManager.name());
     }
 
     @Override
@@ -160,7 +163,7 @@ public class ForwardWithCustomClientCertificateIntegrationTest extends AbstractM
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // then - trusted certificate returns response
@@ -182,7 +185,7 @@ public class ForwardWithCustomClientCertificateIntegrationTest extends AbstractM
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
 
         // then - valid certificate returns response
@@ -204,7 +207,7 @@ public class ForwardWithCustomClientCertificateIntegrationTest extends AbstractM
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 

@@ -525,7 +525,6 @@ public class NettyHttpsProxyIntegrationTest {
             String password = UUIDService.getUUID();
             ConfigurationProperties.proxyAuthenticationUsername(username);
             ConfigurationProperties.proxyAuthenticationPassword(password);
-            ConfigurationProperties.logLevel("DEBUG");
 //            ConfigurationProperties.forwardProxyAuthenticationUsername(username);
 //            ConfigurationProperties.forwardProxyAuthenticationPassword(password);
 

@@ -10,18 +10,25 @@ import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.Future;
 import io.netty.util.internal.PlatformDependent;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.MockServerLogger;
+import org.slf4j.event.Level;
 
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLPeerUnverifiedException;
+import javax.net.ssl.SSLSession;
+import java.security.cert.Certificate;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
  */
 public class SniHandler extends AbstractSniHandler<SslContext> {
 
-    public static final AttributeKey<SslHandler> TLS_UPSTREAM_HANDLER = AttributeKey.valueOf("TLS_UPSTREAM_HANDLER");
+    private static final AttributeKey<SSLEngine> UPSTREAM_SSL_ENGINE = AttributeKey.valueOf("UPSTREAM_SSL_ENGINE");
+    private static final AttributeKey<Certificate[]> UPSTREAM_CLIENT_CERTIFICATES = AttributeKey.valueOf("UPSTREAM_CLIENT_CERTIFICATES");
 
     private final NettySslContextFactory nettySslContextFactory;
 
@@ -34,11 +41,7 @@ public class SniHandler extends AbstractSniHandler<SslContext> {
         if (isNotBlank(hostname)) {
             ConfigurationProperties.addSslSubjectAlternativeNameDomains(hostname);
         }
-        Integer channelPort = null;
-        if (ctx.channel() != null && ctx.channel().localAddress() instanceof InetSocketAddress) {
-            channelPort = ((InetSocketAddress) ctx.channel().localAddress()).getPort();
-        }
-        return ctx.executor().newSucceededFuture(nettySslContextFactory.createServerSslContext(channelPort));
+        return ctx.executor().newSucceededFuture(nettySslContextFactory.createServerSslContext());
     }
 
     @Override
@@ -62,7 +65,7 @@ public class SniHandler extends AbstractSniHandler<SslContext> {
         SslHandler sslHandler = null;
         try {
             sslHandler = sslContext.getNow().newHandler(ctx.alloc());
-            ctx.channel().attr(TLS_UPSTREAM_HANDLER).set(sslHandler);
+            ctx.channel().attr(UPSTREAM_SSL_ENGINE).set(sslHandler.engine());
             ctx.pipeline().replace(this, SslHandler.class.getName(), sslHandler);
             sslHandler = null;
         } finally {
@@ -73,5 +76,33 @@ public class SniHandler extends AbstractSniHandler<SslContext> {
                 ReferenceCountUtil.safeRelease(sslHandler.engine());
             }
         }
+    }
+
+    public static Certificate[] retrieveClientCertificates(MockServerLogger mockServerLogger, ChannelHandlerContext ctx) {
+        Certificate[] clientCertificates = null;
+        if (ctx.channel().attr(UPSTREAM_CLIENT_CERTIFICATES).get() != null) {
+            clientCertificates = ctx.channel().attr(UPSTREAM_CLIENT_CERTIFICATES).get();
+        } else if (ctx.channel().attr(UPSTREAM_SSL_ENGINE).get() != null) {
+            SSLEngine sslEngine = ctx.channel().attr(UPSTREAM_SSL_ENGINE).get();
+            if (sslEngine != null) {
+                SSLSession sslSession = sslEngine.getSession();
+                if (sslSession != null) {
+                    try {
+                        Certificate[] peerCertificates = sslSession.getPeerCertificates();
+                        ctx.channel().attr(UPSTREAM_CLIENT_CERTIFICATES).set(peerCertificates);
+                        return peerCertificates;
+                    } catch (SSLPeerUnverifiedException ignore) {
+                        if (MockServerLogger.isEnabled(TRACE)) {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setLogLevel(Level.TRACE)
+                                    .setMessageFormat("no client certificate chain as client did not complete mTLS")
+                            );
+                        }
+                    }
+                }
+            }
+        }
+        return clientCertificates;
     }
 }

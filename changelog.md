@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - added support for configuring log level via properties file
 - allow proactively initialisation of TLS so dynamic TLS CA key pair is created at start up
+- added control plane authorisation using mTLS
 
 ### Changed
 - included Bouncy Castle now used by default to resolve issues with modules in Java 16+ and backwards compatibility for Java 8

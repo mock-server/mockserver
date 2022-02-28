@@ -78,6 +78,7 @@ public class HttpState {
     private LogEntrySerializer logEntrySerializer;
     private final MemoryMonitoring memoryMonitoring;
     private OpenAPIConverter openAPIConverter;
+    private ControlPlaneAuthenticationHandler controlPlaneAuthenticationHandler;
 
     public static void setPort(final HttpRequest request) {
         if (request != null && request.getSocketAddress() != null) {
@@ -120,6 +121,10 @@ public class HttpState {
         }
         this.memoryMonitoring = new MemoryMonitoring(this.mockServerLog, this.requestMatchers);
         new ExpectationInitializerLoader(mockServerLogger, requestMatchers);
+    }
+
+    public void setControlPlaneAuthenticationHandler(ControlPlaneAuthenticationHandler controlPlaneAuthenticationHandler) {
+        this.controlPlaneAuthenticationHandler = controlPlaneAuthenticationHandler;
     }
 
     public MockServerLogger getMockServerLogger() {
@@ -574,86 +579,106 @@ public class HttpState {
 
             if (request.matches("PUT", PATH_PREFIX + "/expectation", "/expectation")) {
 
-                List<Expectation> upsertedExpectations = new ArrayList<>();
-                for (Expectation expectation : getExpectationSerializer().deserializeArray(request.getBodyAsJsonOrXmlString(), false)) {
-                    if (!warDeployment || validateSupportedFeatures(expectation, request, responseWriter)) {
-                        upsertedExpectations.addAll(add(expectation));
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    List<Expectation> upsertedExpectations = new ArrayList<>();
+                    for (Expectation expectation : getExpectationSerializer().deserializeArray(request.getBodyAsJsonOrXmlString(), false)) {
+                        if (!warDeployment || validateSupportedFeatures(expectation, request, responseWriter)) {
+                            upsertedExpectations.addAll(add(expectation));
+                        }
                     }
-                }
 
-                responseWriter.writeResponse(request, response()
-                    .withStatusCode(CREATED.code())
-                    .withBody(getExpectationSerializer().serialize(upsertedExpectations), MediaType.JSON_UTF_8), true);
+                    responseWriter.writeResponse(request, response()
+                        .withStatusCode(CREATED.code())
+                        .withBody(getExpectationSerializer().serialize(upsertedExpectations), MediaType.JSON_UTF_8), true);
+                }
                 canHandle.complete(true);
 
             } else if (request.matches("PUT", PATH_PREFIX + "/openapi", "/openapi")) {
 
-                try {
-                    List<Expectation> upsertedExpectations = new ArrayList<>();
-                    for (OpenAPIExpectation openAPIExpectation : getOpenAPIExpectationSerializer().deserializeArray(request.getBodyAsJsonOrXmlString(), false)) {
-                        upsertedExpectations.addAll(add(openAPIExpectation));
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    try {
+                        List<Expectation> upsertedExpectations = new ArrayList<>();
+                        for (OpenAPIExpectation openAPIExpectation : getOpenAPIExpectationSerializer().deserializeArray(request.getBodyAsJsonOrXmlString(), false)) {
+                            upsertedExpectations.addAll(add(openAPIExpectation));
+                        }
+                        responseWriter.writeResponse(request, response()
+                            .withStatusCode(CREATED.code())
+                            .withBody(getExpectationSerializer().serialize(upsertedExpectations), MediaType.JSON_UTF_8), true);
+                    } catch (IllegalArgumentException iae) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(Level.ERROR)
+                                .setMessageFormat("exception handling request for open api expectation:{}error:{}")
+                                .setArguments(request, iae.getMessage())
+                                .setThrowable(iae)
+                        );
+                        responseWriter.writeResponse(
+                            request,
+                            BAD_REQUEST,
+                            (!iae.getMessage().startsWith(OPEN_API_LOAD_ERROR) ? OPEN_API_LOAD_ERROR + (isNotBlank(iae.getMessage()) ? ", " : "") : "") + iae.getMessage(),
+                            MediaType.create("text", "plain").toString()
+                        );
                     }
-                    responseWriter.writeResponse(request, response()
-                        .withStatusCode(CREATED.code())
-                        .withBody(getExpectationSerializer().serialize(upsertedExpectations), MediaType.JSON_UTF_8), true);
-                } catch (IllegalArgumentException iae) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception handling request for open api expectation:{}error:{}")
-                            .setArguments(request, iae.getMessage())
-                            .setThrowable(iae)
-                    );
-                    responseWriter.writeResponse(
-                        request,
-                        BAD_REQUEST,
-                        (!iae.getMessage().startsWith(OPEN_API_LOAD_ERROR) ? OPEN_API_LOAD_ERROR + (isNotBlank(iae.getMessage()) ? ", " : "") : "") + iae.getMessage(),
-                        MediaType.create("text", "plain").toString()
-                    );
                 }
                 canHandle.complete(true);
 
             } else if (request.matches("PUT", PATH_PREFIX + "/clear", "/clear")) {
 
-                clear(request);
-                responseWriter.writeResponse(request, OK);
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    clear(request);
+                    responseWriter.writeResponse(request, OK);
+                }
                 canHandle.complete(true);
 
             } else if (request.matches("PUT", PATH_PREFIX + "/reset", "/reset")) {
 
-                reset();
-                responseWriter.writeResponse(request, OK);
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    reset();
+                    responseWriter.writeResponse(request, OK);
+                }
                 canHandle.complete(true);
 
             } else if (request.matches("PUT", PATH_PREFIX + "/retrieve", "/retrieve")) {
 
-                responseWriter.writeResponse(request, retrieve(request), true);
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    responseWriter.writeResponse(request, retrieve(request), true);
+                }
                 canHandle.complete(true);
 
             } else if (request.matches("PUT", PATH_PREFIX + "/verify", "/verify")) {
 
-                verify(getVerificationSerializer().deserialize(request.getBodyAsJsonOrXmlString()), result -> {
-                    if (isEmpty(result)) {
-                        responseWriter.writeResponse(request, ACCEPTED);
-                    } else {
-                        responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
-                    }
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    verify(getVerificationSerializer().deserialize(request.getBodyAsJsonOrXmlString()), result -> {
+                        if (isEmpty(result)) {
+                            responseWriter.writeResponse(request, ACCEPTED);
+                        } else {
+                            responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
+                        }
+                        canHandle.complete(true);
+                    });
+                } else {
                     canHandle.complete(true);
-                });
+                }
 
             } else if (request.matches("PUT", PATH_PREFIX + "/verifySequence", "/verifySequence")) {
 
-                verify(getVerificationSequenceSerializer().deserialize(request.getBodyAsJsonOrXmlString()), result -> {
-                    if (isEmpty(result)) {
-                        responseWriter.writeResponse(request, ACCEPTED);
-                    } else {
-                        responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
-                    }
+                if (controlPlaneRequestAuthenticated(request, responseWriter)) {
+                    verify(getVerificationSequenceSerializer().deserialize(request.getBodyAsJsonOrXmlString()), result -> {
+                        if (isEmpty(result)) {
+                            responseWriter.writeResponse(request, ACCEPTED);
+                        } else {
+                            responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
+                        }
+                        canHandle.complete(true);
+                    });
+                } else {
                     canHandle.complete(true);
-                });
+                }
 
             } else {
+
                 canHandle.complete(false);
+
             }
 
             try {
@@ -675,6 +700,15 @@ public class HttpState {
 
         }
 
+    }
+
+    private boolean controlPlaneRequestAuthenticated(HttpRequest request, ResponseWriter responseWriter) {
+        if (controlPlaneAuthenticationHandler == null || controlPlaneAuthenticationHandler.controlPlaneRequestAuthenticated(request)) {
+            return true;
+        } else {
+            responseWriter.writeResponse(request, UNAUTHORIZED, "Unauthorized for control plane", MediaType.create("text", "plain").toString());
+            return false;
+        }
     }
 
     @SuppressWarnings("rawtypes")

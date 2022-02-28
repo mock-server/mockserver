@@ -45,7 +45,7 @@ public class ConfigurationPropertiesTest {
         java.util.Properties properties = new java.util.Properties();
         properties.load(new StringReader(propertiesBeforeTest));
         System.setProperties(properties);
-        ConfigurationProperties.reset();
+        ConfigurationProperties.resetAllSystemProperties();
     }
 
     @Test
@@ -613,17 +613,22 @@ public class ConfigurationPropertiesTest {
 
     @Test
     public void shouldSetAndReadCertificateAuthorityCertificate() throws IOException {
-        // given
-        System.clearProperty("mockserver.certificateAuthorityCertificate");
+        String originalCertificateAuthorityCertificate = certificateAuthorityCertificate();
+        try {
+            // given
+            System.clearProperty("mockserver.certificateAuthorityCertificate");
 
-        // when
-        assertEquals("org/mockserver/socket/CertificateAuthorityCertificate.pem", certificateAuthorityCertificate());
-        File tempFile = File.createTempFile("prefix", "suffix");
-        certificateAuthorityCertificate(tempFile.getAbsolutePath());
+            // when
+            assertEquals("org/mockserver/socket/CertificateAuthorityCertificate.pem", certificateAuthorityCertificate());
+            File tempFile = File.createTempFile("prefix", "suffix");
+            certificateAuthorityCertificate(tempFile.getAbsolutePath());
 
-        // then
-        assertEquals(tempFile.getAbsolutePath(), certificateAuthorityCertificate());
-        assertEquals(tempFile.getAbsolutePath(), System.getProperty("mockserver.certificateAuthorityCertificate"));
+            // then
+            assertEquals(tempFile.getAbsolutePath(), certificateAuthorityCertificate());
+            assertEquals(tempFile.getAbsolutePath(), System.getProperty("mockserver.certificateAuthorityCertificate"));
+        } finally {
+            certificateAuthorityCertificate(originalCertificateAuthorityCertificate);
+        }
     }
 
     @Test
@@ -806,13 +811,59 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldSetAndReadControlPlaneTLSMutualAuthenticationRequired() {
+        boolean originalControlPlaneTLSMutualAuthenticationRequired = controlPlaneTLSMutualAuthenticationRequired();
+        try {
+            // given
+            System.clearProperty("mockserver.controlPlaneTLSMutualAuthenticationRequired");
+
+            // then
+            assertFalse(controlPlaneTLSMutualAuthenticationRequired());
+
+            // when
+            controlPlaneTLSMutualAuthenticationRequired(true);
+
+            // then
+            assertTrue(controlPlaneTLSMutualAuthenticationRequired());
+            assertEquals("true", System.getProperty("mockserver.controlPlaneTLSMutualAuthenticationRequired"));
+
+            // when
+            controlPlaneTLSMutualAuthenticationRequired(false);
+
+            // then
+            assertFalse(controlPlaneTLSMutualAuthenticationRequired());
+            assertEquals("false", System.getProperty("mockserver.controlPlaneTLSMutualAuthenticationRequired"));
+        } finally {
+            controlPlaneTLSMutualAuthenticationRequired(originalControlPlaneTLSMutualAuthenticationRequired);
+        }
+    }
+
+    @Test
+    public void shouldSetAndReadcontrolPlaneTLSMutualAuthenticationCAChain() throws IOException {
+        // given
+        System.clearProperty("mockserver.controlPlaneTLSMutualAuthenticationCAChain");
+
+        // then
+        assertThat(controlPlaneTLSMutualAuthenticationCAChain(), is(""));
+
+        // when
+        File tempFile = File.createTempFile("some", "temp");
+        controlPlaneTLSMutualAuthenticationCAChain(tempFile.getAbsolutePath());
+
+        // then
+        assertThat(controlPlaneTLSMutualAuthenticationCAChain(), is(tempFile.getAbsolutePath()));
+        assertEquals(tempFile.getAbsolutePath(), System.getProperty("mockserver.controlPlaneTLSMutualAuthenticationCAChain"));
+    }
+
+    @Test
     public void shouldSetAndReadLogLevelUsingSLF4J() {
         // SAVE
-        String previousValue = logLevel().name();
+        String originalLogLevel = logLevel().name();
         try {
             // given
             System.clearProperty("mockserver.logLevel");
-            ConfigurationProperties.reset();
+            ConfigurationProperties.resetAllSystemProperties();
+            logLevel("INFO");
 
             // when
             assertEquals(Level.INFO, logLevel());
@@ -824,18 +875,19 @@ public class ConfigurationPropertiesTest {
             assertEquals("TRACE", System.getProperty("mockserver.logLevel"));
         } finally {
             // RESET
-            logLevel(previousValue);
+            logLevel(originalLogLevel);
         }
     }
 
     @Test
     public void shouldSetAndReadLogLevelUsingJavaLogger() {
         // SAVE
-        String previousValue = logLevel().name();
+        String originalLogLevel = logLevel().name();
         try {
             // given
             System.clearProperty("mockserver.logLevel");
-            ConfigurationProperties.reset();
+            ConfigurationProperties.resetAllSystemProperties();
+            logLevel("INFO");
 
             // when
             assertEquals(Level.INFO, logLevel());
@@ -847,7 +899,7 @@ public class ConfigurationPropertiesTest {
             assertEquals("FINEST", System.getProperty("mockserver.logLevel"));
         } finally {
             // RESET
-            logLevel(previousValue);
+            logLevel(originalLogLevel);
         }
     }
 
@@ -1304,7 +1356,7 @@ public class ConfigurationPropertiesTest {
     public void shouldSetAndReadEnableCORSSettingForAPI() {
         // given
         System.clearProperty("mockserver.enableCORSForAPI");
-        reset();
+        resetAllSystemProperties();
 
         // when
         assertFalse(ConfigurationProperties.enableCORSForAPI());
@@ -1319,7 +1371,7 @@ public class ConfigurationPropertiesTest {
     public void shouldDetectEnableCORSSettingForAPIHasBeenExplicitlySet() {
         // given
         System.clearProperty("mockserver.enableCORSForAPI");
-        reset();
+        resetAllSystemProperties();
 
         // when
         assertFalse(ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());

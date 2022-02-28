@@ -11,6 +11,7 @@ import org.mockserver.uuid.UUIDService;
 import java.io.File;
 
 import static org.mockserver.configuration.ConfigurationProperties.*;
+import static org.mockserver.configuration.ConfigurationProperties.useBouncyCastleForKeyAndCertificateGeneration;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
@@ -19,10 +20,20 @@ import static org.mockserver.stop.Stop.stopQuietly;
 public class ClientAuthenticationDynamicCAMockingIntegrationTest extends AbstractClientAuthenticationMockingIntegrationTest {
 
     private static final int severHttpPort = PortFactory.findFreePort();
+    private static boolean originalUseBouncyCastleForKeyAndCertificateGeneration;
+    private static boolean originalTLSMutualAuthenticationRequired;
+    private static boolean originalDynamicallyCreateCertificateAuthorityCertificate;
+    private static String originalDirectoryToSaveDynamicSSLCertificate;
 
     @BeforeClass
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void startServer() throws Exception {
+        // save original value
+        originalUseBouncyCastleForKeyAndCertificateGeneration = useBouncyCastleForKeyAndCertificateGeneration();
+        originalTLSMutualAuthenticationRequired = tlsMutualAuthenticationRequired();
+        originalDynamicallyCreateCertificateAuthorityCertificate = dynamicallyCreateCertificateAuthorityCertificate();
+        originalDirectoryToSaveDynamicSSLCertificate = directoryToSaveDynamicSSLCertificate();
+
         // temporary directory
         File temporaryDirectory = new File(File.createTempFile("random", "temp").getParent(), UUIDService.getUUID());
         temporaryDirectory.mkdirs();
@@ -31,6 +42,7 @@ public class ClientAuthenticationDynamicCAMockingIntegrationTest extends Abstrac
         tlsMutualAuthenticationRequired(true);
         dynamicallyCreateCertificateAuthorityCertificate(true);
         directoryToSaveDynamicSSLCertificate(temporaryDirectory.getAbsolutePath());
+
         Main.main("-serverPort", "" + severHttpPort);
 
         mockServerClient = new MockServerClient("localhost", severHttpPort).withSecure(true);
@@ -41,10 +53,10 @@ public class ClientAuthenticationDynamicCAMockingIntegrationTest extends Abstrac
         stopQuietly(mockServerClient);
 
         // set back to original value
-        useBouncyCastleForKeyAndCertificateGeneration(false);
-        tlsMutualAuthenticationRequired(false);
-        dynamicallyCreateCertificateAuthorityCertificate(false);
-        directoryToSaveDynamicSSLCertificate("");
+        useBouncyCastleForKeyAndCertificateGeneration(originalUseBouncyCastleForKeyAndCertificateGeneration);
+        tlsMutualAuthenticationRequired(originalTLSMutualAuthenticationRequired);
+        dynamicallyCreateCertificateAuthorityCertificate(originalDynamicallyCreateCertificateAuthorityCertificate);
+        directoryToSaveDynamicSSLCertificate(originalDirectoryToSaveDynamicSSLCertificate);
     }
 
     @Override
