@@ -4,7 +4,6 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
-import io.netty.handler.ssl.util.LazyJavaxX509Certificate;
 import org.mockserver.codec.BodyDecoderEncoder;
 import org.mockserver.codec.ExpandedParameterDecoder;
 import org.mockserver.log.model.LogEntry;
@@ -12,21 +11,15 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Cookies;
 import org.mockserver.model.Headers;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.X509Certificate;
 import org.mockserver.url.URLParser;
 import org.slf4j.event.Level;
 
 import java.security.cert.Certificate;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.COOKIE;
 import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
-import static org.slf4j.event.Level.INFO;
 
 /**
  * @author jamesdbloom
@@ -39,6 +32,7 @@ public class FullHttpRequestToMockServerHttpRequest {
     private final boolean isSecure;
     private final Certificate[] clientCertificates;
     private final Integer port;
+    private final JDKCertificateToMockServerX509Certificate jdkCertificateToMockServerX509Certificate;
 
     public FullHttpRequestToMockServerHttpRequest(MockServerLogger mockServerLogger, boolean isSecure, Certificate[] clientCertificates, Integer port) {
         this.mockServerLogger = mockServerLogger;
@@ -47,6 +41,7 @@ public class FullHttpRequestToMockServerHttpRequest {
         this.isSecure = isSecure;
         this.clientCertificates = clientCertificates;
         this.port = port;
+        this.jdkCertificateToMockServerX509Certificate = new JDKCertificateToMockServerX509Certificate(mockServerLogger);
     }
 
     public HttpRequest mapFullHttpRequestToMockServerRequest(FullHttpRequest fullHttpRequest) {
@@ -69,7 +64,7 @@ public class FullHttpRequestToMockServerHttpRequest {
                 setCookies(httpRequest, fullHttpRequest);
                 setBody(httpRequest, fullHttpRequest);
                 setSocketAddress(httpRequest, isSecure, port, fullHttpRequest);
-                setClientCertificates(httpRequest, clientCertificates);
+                jdkCertificateToMockServerX509Certificate.setClientCertificates(httpRequest, clientCertificates);
 
                 httpRequest.withKeepAlive(isKeepAlive(fullHttpRequest));
                 httpRequest.withSecure(isSecure);
@@ -88,40 +83,6 @@ public class FullHttpRequestToMockServerHttpRequest {
 
     private void setSocketAddress(HttpRequest httpRequest, boolean isSecure, Integer port, FullHttpRequest fullHttpRequest) {
         httpRequest.withSocketAddress(isSecure, fullHttpRequest.headers().get("host"), port);
-    }
-
-    private void setClientCertificates(HttpRequest httpRequest, Certificate[] clientCertificates) {
-        if (clientCertificates != null) {
-            List<X509Certificate> clientCertificateChain = Arrays
-                .stream(clientCertificates)
-                .flatMap(certificate -> {
-                        try {
-                            LazyJavaxX509Certificate x509Certificate = new LazyJavaxX509Certificate(certificate.getEncoded());
-                            return Stream.of(
-                                new X509Certificate()
-                                    .withSerialNumber(x509Certificate.getSerialNumber().toString())
-                                    .withIssuerDistinguishedName(x509Certificate.getIssuerDN().getName())
-                                    .withSubjectDistinguishedName(x509Certificate.getSubjectDN().getName())
-                                    .withSignatureAlgorithmName(x509Certificate.getSigAlgName())
-                                    .withCertificate(certificate)
-                            );
-                        } catch (Throwable throwable) {
-                            if (MockServerLogger.isEnabled(INFO)) {
-                                mockServerLogger.logEvent(
-                                    new LogEntry()
-                                        .setLogLevel(INFO)
-                                        .setHttpRequest(httpRequest)
-                                        .setMessageFormat("exception decoding client certificate")
-                                        .setThrowable(throwable)
-                                );
-                            }
-                        }
-                        return Stream.empty();
-                    }
-                )
-                .collect(Collectors.toList());
-            httpRequest.withClientCertificateChain(clientCertificateChain);
-        }
     }
 
     private void setMethod(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {

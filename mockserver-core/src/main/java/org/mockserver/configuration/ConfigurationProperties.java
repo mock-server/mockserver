@@ -65,6 +65,7 @@ public class ConfigurationProperties {
     private static final String DEFAULT_FORWARD_PROXY_TLS_PRIVATE_KEY = "";
     private static final String DEFAULT_FORWARD_PROXY_TLS_X509_CERTIFICATE_CHAIN = "";
     private static final String DEFAULT_CONTROL_PLANE_TLS_MUTUAL_AUTHENTICATION_REQUIRED = "false";
+    private static final String DEFAULT_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED = "false";
     private static final String DEFAULT_CORS_ALLOW_HEADERS = "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization";
     private static final String DEFAULT_CORS_ALLOW_METHODS = "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE";
     private static final String DEFAULT_CORS_ALLOW_CREDENTIALS = "true";
@@ -113,6 +114,8 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_CONTROL_PLANE_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN = "mockserver.controlPlaneTLSMutualAuthenticationCAChain";
     private static final String MOCKSERVER_CONTROL_PLANE_TLS_PRIVATE_KEY_PATH = "mockserver.controlPlanePrivateKeyPath";
     private static final String MOCKSERVER_CONTROL_PLANE_TLS_X509_CERTIFICATE_PATH = "mockserver.controlPlaneX509CertificatePath";
+    private static final String MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED = "mockserver.controlPlaneJWTAuthenticationRequired";
+    private static final String MOCKSERVER_CONTROL_PLANE_JWT_SOURCE = "mockserver.controlPlaneJWTAuthenticationJWKSource";
     private static final String MOCKSERVER_LOG_LEVEL = "mockserver.logLevel";
     private static final String MOCKSERVER_METRICS_ENABLED = "mockserver.metricsEnabled";
     private static final String MOCKSERVER_DISABLE_SYSTEM_OUT = "mockserver.disableSystemOut";
@@ -232,6 +235,7 @@ public class ConfigurationProperties {
     private static String forwardProxyCertificateChain = readPropertyHierarchically(PROPERTIES, MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATE_CHAIN, "MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATE_CHAIN", DEFAULT_FORWARD_PROXY_TLS_X509_CERTIFICATE_CHAIN);
     private static boolean controlPlaneTLSMutualAuthenticationRequired = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_TLS_MUTUAL_AUTHENTICATION_REQUIRED, "MOCKSERVER_CONTROL_PLANE_TLS_MUTUAL_AUTHENTICATION_REQUIRED", DEFAULT_CONTROL_PLANE_TLS_MUTUAL_AUTHENTICATION_REQUIRED));
     private static String controlPlaneTLSMutualAuthenticationCAChain = readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN, "MOCKSERVER_CONTROL_PLANE_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN", DEFAULT_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN);
+    private static boolean controlPlaneJWTAuthenticationRequired = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED, "MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED", DEFAULT_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED));
     private static boolean enableCORSForAPI = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_ENABLE_CORS_FOR_API, "MOCKSERVER_ENABLE_CORS_FOR_API", DEFAULT_ENABLE_CORS_FOR_API));
     private static boolean enableCORSForAPIHasBeenSetExplicitly = System.getProperty(MOCKSERVER_ENABLE_CORS_FOR_API) != null || PROPERTIES.getProperty(MOCKSERVER_ENABLE_CORS_FOR_API) != null;
     private static boolean enableCORSForAllResponses = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES, "MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES", DEFAULT_ENABLE_CORS_FOR_ALL_RESPONSES));
@@ -276,6 +280,7 @@ public class ConfigurationProperties {
         forwardProxyCertificateChain = readPropertyHierarchically(PROPERTIES, MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATE_CHAIN, "MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATE_CHAIN", DEFAULT_FORWARD_PROXY_TLS_X509_CERTIFICATE_CHAIN);
         controlPlaneTLSMutualAuthenticationRequired = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_TLS_MUTUAL_AUTHENTICATION_REQUIRED, "MOCKSERVER_CONTROL_PLANE_TLS_MUTUAL_AUTHENTICATION_REQUIRED", DEFAULT_CONTROL_PLANE_TLS_MUTUAL_AUTHENTICATION_REQUIRED));
         controlPlaneTLSMutualAuthenticationCAChain = readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN, "MOCKSERVER_CONTROL_PLANE_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN", DEFAULT_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN);
+        controlPlaneJWTAuthenticationRequired = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED, "MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED", DEFAULT_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED));
         enableCORSForAPI = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_ENABLE_CORS_FOR_API, "MOCKSERVER_ENABLE_CORS_FOR_API", DEFAULT_ENABLE_CORS_FOR_API));
         enableCORSForAPIHasBeenSetExplicitly = System.getProperty(MOCKSERVER_ENABLE_CORS_FOR_API) != null || PROPERTIES.getProperty(MOCKSERVER_ENABLE_CORS_FOR_API) != null;
         enableCORSForAllResponses = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES, "MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES", DEFAULT_ENABLE_CORS_FOR_ALL_RESPONSES));
@@ -603,7 +608,7 @@ public class ConfigurationProperties {
     }
 
     /**
-     * File location of custom Private Key for Certificate Authority for TLS, the private key must be a PKCS#8 PEM file and must match the certificateAuthorityCertificate
+     * File location or classpath location of custom Private Key for Certificate Authority for TLS, the private key must be a PKCS#8 PEM file and must match the certificateAuthorityCertificate
      * To convert a PKCS#1 (i.e. default for Bouncy Castle) to a PKCS#8 the following command can be used: openssl pkcs8 -topk8 -inform PEM -in private_key_PKCS_1.pem -out private_key_PKCS_8.pem -nocrypt
      *
      * @param certificateAuthorityPrivateKey location of the PEM file containing the certificate authority private key
@@ -617,7 +622,7 @@ public class ConfigurationProperties {
     }
 
     /**
-     * File location of custom X.509 Certificate for Certificate Authority for TLS, the certificate must be a X509 PEM file and must match the certificateAuthorityPrivateKey
+     * File location or classpath location of custom X.509 Certificate for Certificate Authority for TLS, the certificate must be a X509 PEM file and must match the certificateAuthorityPrivateKey
      *
      * @param certificateAuthorityCertificate location of the PEM file containing the certificate authority X509 certificate
      */
@@ -688,7 +693,7 @@ public class ConfigurationProperties {
     }
 
     /**
-     * File location of a fixed custom private key for TLS connections into MockServer.
+     * File location or classpath location of a fixed custom private key for TLS connections into MockServer.
      * <p>
      * The private key must be a PKCS#8 PEM file and must be the private key corresponding to the x509CertificatePath X509 (public key) configuration.
      * The certificateAuthorityCertificate configuration must be the Certificate Authority for the corresponding X509 certificate (i.e. able to valid its signature), see: x509CertificatePath.
@@ -710,7 +715,7 @@ public class ConfigurationProperties {
     }
 
     /**
-     * File location of a fixed custom X.509 Certificate for TLS connections into MockServer.
+     * File location or classpath location of a fixed custom X.509 Certificate for TLS connections into MockServer.
      * <p>
      * The certificate must be a X509 PEM file and must be the public key corresponding to the privateKeyPath private key configuration.
      * The certificateAuthorityCertificate configuration must be the Certificate Authority for this certificate (i.e. able to valid its signature).
@@ -743,11 +748,11 @@ public class ConfigurationProperties {
     }
 
     /**
-     * File location of custom mTLS (TLS client authentication) X.509 Certificate Chain for trusting (i.e. signature verification of) Client X.509 Certificates, the certificate chain must be a X509 PEM file.
+     * File location or classpath location of custom mTLS (TLS client authentication) X.509 Certificate Chain for trusting (i.e. signature verification of) Client X.509 Certificates, the certificate chain must be a X509 PEM file.
      * <p>
      * This certificate chain will be used if MockServer performs mTLS (client authentication) for inbound TLS connections because tlsMutualAuthenticationRequired is enabled
      *
-     * @param trustCertificateChain file location of custom mTLS (TLS client authentication) X.509 Certificate Chain for Trusting (i.e. signature verification of) Client X.509 Certificates
+     * @param trustCertificateChain file location or classpath location of custom mTLS (TLS client authentication) X.509 Certificate Chain for Trusting (i.e. signature verification of) Client X.509 Certificates
      */
     public static void tlsMutualAuthenticationCertificateChain(String trustCertificateChain) {
         System.setProperty(MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN, "" + trustCertificateChain);
@@ -780,7 +785,7 @@ public class ConfigurationProperties {
     }
 
     /**
-     * File location of custom file for trusted X509 Certificate Authority roots for forwarded or proxied requests, the certificate chain must be a X509 PEM file.
+     * File location or classpath location of custom file for trusted X509 Certificate Authority roots for forwarded or proxied requests, the certificate chain must be a X509 PEM file.
      * <p>
      * MockServer will only be able to establish a TLS connection to endpoints that have an X509 certificate chain that is signed by one of the provided custom
      * certificates, i.e. where a path can be established from the endpoints X509 certificate to one or more of the custom X509 certificates provided.
@@ -798,7 +803,7 @@ public class ConfigurationProperties {
     }
 
     /**
-     * File location of custom Private Key for proxied TLS connections out of MockServer, the private key must be a PKCS#8 PEM file
+     * File location or classpath location of custom Private Key for proxied TLS connections out of MockServer, the private key must be a PKCS#8 PEM file
      * <p>
      * To convert a PKCS#1 (i.e. default for Bouncy Castle) to a PKCS#8 the following command can be used: openssl pkcs8 -topk8 -inform PEM -in private_key_PKCS_1.pem -out private_key_PKCS_8.pem -nocrypt
      * <p>
@@ -817,7 +822,7 @@ public class ConfigurationProperties {
     }
 
     /**
-     * File location of custom mTLS (TLS client authentication) X.509 Certificate Chain for Trusting (i.e. signature verification of) Client X.509 Certificates, the certificate chain must be a X509 PEM file.
+     * File location or classpath location of custom mTLS (TLS client authentication) X.509 Certificate Chain for Trusting (i.e. signature verification of) Client X.509 Certificates, the certificate chain must be a X509 PEM file.
      * <p>
      * This certificate chain will be used if MockServer needs to perform mTLS (client authentication) for outbound TLS connections.
      *
@@ -848,13 +853,13 @@ public class ConfigurationProperties {
     }
 
     /**
-     * File location of custom mTLS (TLS client authentication) X.509 Certificate Chain for control plane authentication
+     * File location or classpath location of custom mTLS (TLS client authentication) X.509 Certificate Chain for control plane authentication
      * <p>
      * The X.509 Certificate Chain is for trusting (i.e. signature verification of) Client X.509 Certificates, the certificate chain must be a X509 PEM file.
      * <p>
      * This certificate chain will be used for to performs mTLS (client authentication) for inbound TLS connections if controlPlaneTLSMutualAuthenticationRequired is enabled
      *
-     * @param trustCertificateChain file location of custom mTLS (TLS client authentication) X.509 Certificate Chain for Trusting (i.e. signature verification of) Client X.509 Certificates
+     * @param trustCertificateChain file location or classpath location of custom mTLS (TLS client authentication) X.509 Certificate Chain for Trusting (i.e. signature verification of) Client X.509 Certificates
      */
     public static void controlPlaneTLSMutualAuthenticationCAChain(String trustCertificateChain) {
         System.setProperty(MOCKSERVER_CONTROL_PLANE_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN, "" + trustCertificateChain);
@@ -866,7 +871,7 @@ public class ConfigurationProperties {
     }
 
     /**
-     * File location of a fixed custom private key for control plane connections using TLS for authentication.
+     * File location or classpath location of a fixed custom private key for control plane connections using TLS for authentication.
      * <p>
      * The private key must be a PKCS#8 PEM file and must be the private key corresponding to the x509CertificatePath X509 (public key) configuration.
      * The certificateAuthorityCertificate configuration must be the Certificate Authority for the corresponding X509 certificate (i.e. able to valid its signature), see: x509CertificatePath.
@@ -888,7 +893,7 @@ public class ConfigurationProperties {
     }
 
     /**
-     * File location of a fixed custom X.509 Certificate for control plane connections using TLS for authentication.
+     * File location or classpath location of a fixed custom X.509 Certificate for control plane connections using TLS for authentication.
      * <p>
      * The certificate must be a X509 PEM file and must be the public key corresponding to the privateKeyPath private key configuration.
      * The certificateAuthorityCertificate configuration must be the Certificate Authority for this certificate (i.e. able to valid its signature).
@@ -901,6 +906,44 @@ public class ConfigurationProperties {
         fileExists(x509CertificatePath);
         System.setProperty(MOCKSERVER_CONTROL_PLANE_TLS_X509_CERTIFICATE_PATH, x509CertificatePath);
     }
+
+    public static boolean controlPlaneJWTAuthenticationRequired() {
+        return controlPlaneJWTAuthenticationRequired;
+    }
+
+    /**
+     * <p>
+     * Require JWT authentication for all control plane requests
+     * </p>
+     *
+     * @param enable TLS mutual authentication for all control plane requests
+     */
+    public static void controlPlaneJWTAuthenticationRequired(boolean enable) {
+        System.setProperty(MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED, "" + enable);
+        controlPlaneJWTAuthenticationRequired = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED, "MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED", DEFAULT_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED));
+    }
+
+    public static String controlPlaneJWTAuthenticationJWKSource() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_JWT_SOURCE, "MOCKSERVER_CONTROL_PLANE_JWT_SOURCE", "");
+    }
+
+    /**
+     * <p>
+     * JWK source used when JWK authentication is enabled for control plane requests
+     * </p>
+     * <p>
+     * JWK source can be a file location, classpath location or a URL
+     * </p>
+     * <p>
+     * See: https://openid.net/specs/draft-jones-json-web-key-03.html
+     * </p>
+     *
+     * @param controlPlaneJWTAuthenticationJWKSource file location, classpath location or a URL of JWK source
+     */
+    public static void controlPlaneJWTAuthenticationJWKSource(String controlPlaneJWTAuthenticationJWKSource) {
+        System.setProperty(MOCKSERVER_CONTROL_PLANE_JWT_SOURCE, "" + controlPlaneJWTAuthenticationJWKSource);
+    }
+
 
     public static Level logLevel() {
         return logLevel;

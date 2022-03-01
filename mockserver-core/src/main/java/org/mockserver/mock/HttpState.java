@@ -1,6 +1,8 @@
 package org.mockserver.mock;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.mockserver.authentication.AuthenticationException;
+import org.mockserver.authentication.ControlPlaneAuthenticationHandler;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.MockServerEventLog;
@@ -703,12 +705,16 @@ public class HttpState {
     }
 
     private boolean controlPlaneRequestAuthenticated(HttpRequest request, ResponseWriter responseWriter) {
-        if (controlPlaneAuthenticationHandler == null || controlPlaneAuthenticationHandler.controlPlaneRequestAuthenticated(request)) {
-            return true;
-        } else {
-            responseWriter.writeResponse(request, UNAUTHORIZED, "Unauthorized for control plane", MediaType.create("text", "plain").toString());
+        try {
+            if (controlPlaneAuthenticationHandler == null || controlPlaneAuthenticationHandler.controlPlaneRequestAuthenticated(request)) {
+                return true;
+            }
+        } catch (AuthenticationException authenticationException) {
+            responseWriter.writeResponse(request, UNAUTHORIZED, "Unauthorized for control plane - " + authenticationException.getMessage(), MediaType.create("text", "plain").toString());
             return false;
         }
+        responseWriter.writeResponse(request, UNAUTHORIZED, "Unauthorized for control plane", MediaType.create("text", "plain").toString());
+        return false;
     }
 
     @SuppressWarnings("rawtypes")

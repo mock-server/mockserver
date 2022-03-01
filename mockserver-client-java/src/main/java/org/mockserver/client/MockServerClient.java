@@ -6,6 +6,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
+import org.mockserver.authentication.AuthenticationException;
 import org.mockserver.client.MockServerEventBus.EventType;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.httpclient.NettyHttpClient;

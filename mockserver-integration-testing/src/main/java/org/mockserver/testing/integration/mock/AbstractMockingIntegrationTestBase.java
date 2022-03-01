@@ -97,6 +97,10 @@ public abstract class AbstractMockingIntegrationTestBase {
         return false;
     }
 
+    protected Header authorisationHeader() {
+        return null;
+    }
+
     @Before
     public void resetServer() {
         try {

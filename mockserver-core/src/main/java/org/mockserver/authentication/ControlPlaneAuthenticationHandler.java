@@ -1,4 +1,4 @@
-package org.mockserver.mock;
+package org.mockserver.authentication;
 
 import org.mockserver.model.HttpRequest;
 

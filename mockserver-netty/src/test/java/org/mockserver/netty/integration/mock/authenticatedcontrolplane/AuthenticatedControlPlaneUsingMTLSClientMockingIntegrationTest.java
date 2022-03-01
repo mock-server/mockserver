@@ -14,7 +14,7 @@ import static org.mockserver.stop.Stop.stopQuietly;
 /**
  * @author jamesdbloom
  */
-public class AuthenticatedControlPlaneClientMockingIntegrationTest extends AbstractBasicMockingSameJVMIntegrationTest {
+public class AuthenticatedControlPlaneUsingMTLSClientMockingIntegrationTest extends AbstractBasicMockingSameJVMIntegrationTest {
 
     private static final int severHttpPort = PortFactory.findFreePort();
     private static String originalControlPlaneTLSMutualAuthenticationCAChain;
@@ -26,8 +26,8 @@ public class AuthenticatedControlPlaneClientMockingIntegrationTest extends Abstr
     public static void startServer() {
         // save original value
         originalControlPlaneTLSMutualAuthenticationCAChain = controlPlaneTLSMutualAuthenticationCAChain();
-        originalControlPlanePrivateKeyPath = ConfigurationProperties.controlPlanePrivateKeyPath();
-        originalControlPlaneX509CertificatePath = ConfigurationProperties.controlPlaneX509CertificatePath();
+        originalControlPlanePrivateKeyPath = controlPlanePrivateKeyPath();
+        originalControlPlaneX509CertificatePath = controlPlaneX509CertificatePath();
         originalControlPlaneTLSMutualAuthenticationRequired = controlPlaneTLSMutualAuthenticationRequired();
 
         // set new certificate authority values
@@ -47,8 +47,8 @@ public class AuthenticatedControlPlaneClientMockingIntegrationTest extends Abstr
 
         // set back to original value
         controlPlaneTLSMutualAuthenticationCAChain(originalControlPlaneTLSMutualAuthenticationCAChain);
-        ConfigurationProperties.controlPlanePrivateKeyPath(originalControlPlanePrivateKeyPath);
-        ConfigurationProperties.controlPlaneX509CertificatePath(originalControlPlaneX509CertificatePath);
+        controlPlanePrivateKeyPath(originalControlPlanePrivateKeyPath);
+        controlPlaneX509CertificatePath(originalControlPlaneX509CertificatePath);
         controlPlaneTLSMutualAuthenticationRequired(originalControlPlaneTLSMutualAuthenticationRequired);
     }
 

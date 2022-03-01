@@ -1,12 +1,12 @@
-package org.mockserver.mock;
+package org.mockserver.authentication.mtls;
 
 import com.google.common.collect.ImmutableMap;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.authentication.AuthenticationException;
+import org.mockserver.authentication.ControlPlaneAuthenticationHandler;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.serialization.ObjectMapperFactory;
-import org.mockserver.socket.tls.NettySslContextFactory;
 import org.slf4j.event.Level;
 
 import java.security.cert.X509Certificate;
@@ -14,13 +14,11 @@ import java.security.cert.X509Certificate;
 public class ControlPlaneMTLSAuthenticationHandler implements ControlPlaneAuthenticationHandler {
 
     private final MockServerLogger mockServerLogger;
-    private X509Certificate[] controlPlaneTLSMutualAuthenticationCAChain;
+    private final X509Certificate[] controlPlaneTLSMutualAuthenticationCAChain;
 
-    public ControlPlaneMTLSAuthenticationHandler(MockServerLogger mockServerLogger, NettySslContextFactory nettySslContextFactory) {
+    public ControlPlaneMTLSAuthenticationHandler(MockServerLogger mockServerLogger, X509Certificate[] controlPlaneTLSMutualAuthenticationCAChain) {
         this.mockServerLogger = mockServerLogger;
-        if (ConfigurationProperties.controlPlaneTLSMutualAuthenticationRequired()) {
-            controlPlaneTLSMutualAuthenticationCAChain = nettySslContextFactory.trustCertificateChain(ConfigurationProperties.controlPlaneTLSMutualAuthenticationCAChain());
-        }
+        this.controlPlaneTLSMutualAuthenticationCAChain = controlPlaneTLSMutualAuthenticationCAChain;
     }
 
     @Override
@@ -68,16 +66,12 @@ public class ControlPlaneMTLSAuthenticationHandler implements ControlPlaneAuthen
                         }
                     }
                 }
+                throw new AuthenticationException("control plane request failed authentication no client certificates can be validated by control plane CA");
+            } else {
+                throw new AuthenticationException("control plane request failed authentication no client certificates found");
             }
         }
-        mockServerLogger.logEvent(
-            new LogEntry()
-                .setLogLevel(Level.ERROR)
-                .setHttpRequest(request)
-                .setMessageFormat("control plane request failed authentication:{}")
-                .setArguments(request)
-        );
-        return false;
+        throw new AuthenticationException("control plane request failed authentication no control plane CA specified");
     }
 
     private String getClientCertificateInformation(String serialNumber, String issuerDistinguishedName, String subjectDistinguishedName) {

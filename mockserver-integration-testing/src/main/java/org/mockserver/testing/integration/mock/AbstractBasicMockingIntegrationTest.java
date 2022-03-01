@@ -676,6 +676,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withMethod("PUT")
                 .withSecure(isSecureControlPlane())
                 .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
+                .withHeader(authorisationHeader())
                 .withPath(addContextToPath("mockserver/expectation"))
                 .withBody("" +
                     "[" +
@@ -2045,6 +2046,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withMethod("PUT")
                 .withSecure(isSecureControlPlane())
                 .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
+                .withHeader(authorisationHeader())
                 .withPath(addContextToPath("mockserver/expectation"))
                 .withBody("{" + NEW_LINE +
                     "  \"httpRequest\" : {" + NEW_LINE +
@@ -2108,6 +2110,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withMethod("PUT")
                 .withSecure(isSecureControlPlane())
                 .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
+                .withHeader(authorisationHeader())
                 .withPath(addContextToPath("mockserver/clear"))
                 .withBody("{" + NEW_LINE +
                     "    \"path\" : 500," + NEW_LINE +

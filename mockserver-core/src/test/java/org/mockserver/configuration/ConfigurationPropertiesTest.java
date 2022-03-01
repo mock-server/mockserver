@@ -839,20 +839,119 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldSetAndReadcontrolPlaneTLSMutualAuthenticationCAChain() throws IOException {
-        // given
-        System.clearProperty("mockserver.controlPlaneTLSMutualAuthenticationCAChain");
+    public void shouldSetAndReadControlPlaneTLSMutualAuthenticationCAChain() throws IOException {
+        String originalControlPlaneTLSMutualAuthenticationCAChain = controlPlaneTLSMutualAuthenticationCAChain();
+        try {
+            // given
+            System.clearProperty("mockserver.controlPlaneTLSMutualAuthenticationCAChain");
 
-        // then
-        assertThat(controlPlaneTLSMutualAuthenticationCAChain(), is(""));
+            // then
+            assertThat(controlPlaneTLSMutualAuthenticationCAChain(), is(""));
 
-        // when
-        File tempFile = File.createTempFile("some", "temp");
-        controlPlaneTLSMutualAuthenticationCAChain(tempFile.getAbsolutePath());
+            // when
+            File tempFile = File.createTempFile("some", "temp");
+            controlPlaneTLSMutualAuthenticationCAChain(tempFile.getAbsolutePath());
 
-        // then
-        assertThat(controlPlaneTLSMutualAuthenticationCAChain(), is(tempFile.getAbsolutePath()));
-        assertEquals(tempFile.getAbsolutePath(), System.getProperty("mockserver.controlPlaneTLSMutualAuthenticationCAChain"));
+            // then
+            assertThat(controlPlaneTLSMutualAuthenticationCAChain(), is(tempFile.getAbsolutePath()));
+            assertEquals(tempFile.getAbsolutePath(), System.getProperty("mockserver.controlPlaneTLSMutualAuthenticationCAChain"));
+        } finally {
+            controlPlaneTLSMutualAuthenticationCAChain(originalControlPlaneTLSMutualAuthenticationCAChain);
+        }
+    }
+
+    @Test
+    public void shouldSetAndReadControlPlanePrivateKeyPath() throws IOException {
+        String originalControlPlanePrivateKeyPath = controlPlanePrivateKeyPath();
+        try {
+            // given
+            System.clearProperty("mockserver.controlPlanePrivateKeyPath");
+
+            // then
+            assertThat(controlPlanePrivateKeyPath(), is(""));
+
+            // when
+            File tempFile = File.createTempFile("some", "temp");
+            controlPlanePrivateKeyPath(tempFile.getAbsolutePath());
+
+            // then
+            assertThat(controlPlanePrivateKeyPath(), is(tempFile.getAbsolutePath()));
+            assertEquals(tempFile.getAbsolutePath(), System.getProperty("mockserver.controlPlanePrivateKeyPath"));
+        } finally {
+            controlPlanePrivateKeyPath(originalControlPlanePrivateKeyPath);
+        }
+    }
+
+    @Test
+    public void shouldSetAndReadControlPlaneX509CertificatePath() throws IOException {
+        String originalControlPlaneX509CertificatePath = controlPlaneX509CertificatePath();
+        try {
+            // given
+            System.clearProperty("mockserver.controlPlaneX509CertificatePath");
+
+            // then
+            assertThat(controlPlaneX509CertificatePath(), is(""));
+
+            // when
+            File tempFile = File.createTempFile("some", "temp");
+            controlPlaneX509CertificatePath(tempFile.getAbsolutePath());
+
+            // then
+            assertThat(controlPlaneX509CertificatePath(), is(tempFile.getAbsolutePath()));
+            assertEquals(tempFile.getAbsolutePath(), System.getProperty("mockserver.controlPlaneX509CertificatePath"));
+        } finally {
+            controlPlaneX509CertificatePath(originalControlPlaneX509CertificatePath);
+        }
+    }
+
+    @Test
+    public void shouldSetAndReadControlPlaneJWTAuthenticationRequired() {
+        boolean originalControlPlaneJWTAuthenticationRequired = controlPlaneJWTAuthenticationRequired();
+        try {
+            // given
+            System.clearProperty("mockserver.controlPlaneJWTAuthenticationRequired");
+
+            // then
+            assertFalse(controlPlaneJWTAuthenticationRequired());
+
+            // when
+            controlPlaneJWTAuthenticationRequired(true);
+
+            // then
+            assertTrue(controlPlaneJWTAuthenticationRequired());
+            assertEquals("true", System.getProperty("mockserver.controlPlaneJWTAuthenticationRequired"));
+
+            // when
+            controlPlaneJWTAuthenticationRequired(false);
+
+            // then
+            assertFalse(controlPlaneJWTAuthenticationRequired());
+            assertEquals("false", System.getProperty("mockserver.controlPlaneJWTAuthenticationRequired"));
+        } finally {
+            controlPlaneJWTAuthenticationRequired(originalControlPlaneJWTAuthenticationRequired);
+        }
+    }
+
+    @Test
+    public void shouldSetAndReadControlPlaneJWTAuthenticationJWKSource() throws IOException {
+        String originalControlPlaneJWTAuthenticationJWKSource = controlPlaneJWTAuthenticationJWKSource();
+        try {
+            // given
+            System.clearProperty("mockserver.controlPlaneJWTAuthenticationJWKSource");
+
+            // then
+            assertThat(controlPlaneJWTAuthenticationJWKSource(), is(""));
+
+            // when
+            File tempFile = File.createTempFile("some", "temp");
+            controlPlaneJWTAuthenticationJWKSource(tempFile.getAbsolutePath());
+
+            // then
+            assertThat(controlPlaneJWTAuthenticationJWKSource(), is(tempFile.getAbsolutePath()));
+            assertEquals(tempFile.getAbsolutePath(), System.getProperty("mockserver.controlPlaneJWTAuthenticationJWKSource"));
+        } finally {
+            controlPlaneJWTAuthenticationJWKSource(originalControlPlaneJWTAuthenticationJWKSource);
+        }
     }
 
     @Test

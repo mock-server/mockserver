@@ -6,7 +6,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 import org.mockserver.cli.Main;
-import org.mockserver.client.AuthenticationException;
+import org.mockserver.authentication.AuthenticationException;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.logging.MockServerLogger;
@@ -47,7 +47,7 @@ import static org.mockserver.verify.VerificationTimes.exactly;
 /**
  * @author jamesdbloom
  */
-public class AuthenticatedControlPlaneClientNotAuthenticatedIntegrationTest extends AbstractMockingIntegrationTestBase {
+public class AuthenticatedControlPlaneUsingMTLSClientNotAuthenticatedIntegrationTest extends AbstractMockingIntegrationTestBase {
 
     private static final int severHttpPort = PortFactory.findFreePort();
     private static String originalControlPlaneTLSMutualAuthenticationCAChain;
@@ -390,7 +390,7 @@ public class AuthenticatedControlPlaneClientNotAuthenticatedIntegrationTest exte
         AuthenticationException authenticationException = assertThrows(AuthenticationException.class, throwingRunnable);
 
         // then
-        assertThat(authenticationException.getMessage(), equalTo("Unauthorized for control plane"));
+        assertThat(authenticationException.getMessage(), equalTo("Unauthorized for control plane - control plane request failed authentication no client certificates can be validated by control plane CA"));
     }
 
     private void httpAPIOperationIsAuthenticated(HttpRequest httpRequest) {
@@ -399,7 +399,7 @@ public class AuthenticatedControlPlaneClientNotAuthenticatedIntegrationTest exte
 
         // then
         assertThat(httpResponse.getStatusCode(), equalTo(401));
-        assertThat(httpResponse.getBodyAsString(), equalTo("Unauthorized for control plane"));
+        assertThat(httpResponse.getBodyAsString(), equalTo("Unauthorized for control plane - control plane request failed authentication no client certificates can be validated by control plane CA"));
     }
 
 }
