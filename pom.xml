@@ -233,6 +233,7 @@
                 <artifactId>netty-transport</artifactId>
                 <version>${netty.version}</version>
             </dependency>
+            <!-- when upgrading this dependency make sure to also update Dockerfiles -->
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-tcnative-boringssl-static</artifactId>

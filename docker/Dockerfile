@@ -19,12 +19,18 @@ ARG VERSION=RELEASE
 # see: https://oss.sonatype.org/nexus-restlet1x-plugin/default/docs/path__artifact_maven_redirect.html
 ARG REPOSITORY_URL=https://oss.sonatype.org/service/local/artifact/maven/redirect?r=${REPOSITORY}&g=org.mock-server&a=mockserver-netty&c=shaded&e=jar&v=${VERSION}
 RUN wget --max-redirect=10 -O mockserver-netty-shaded.jar "$REPOSITORY_URL"
+# add netty-tcnative-boringssl so file
+RUN wget --max-redirect=10 -O netty-tcnative-boringssl-static.jar "https://oss.sonatype.org/service/local/artifact/maven/redirect?r=releases&g=io.netty&a=netty-tcnative-boringssl-static&c=linux-x86_64&e=jar&v=2.0.50.Final"
+RUN unzip netty-tcnative-boringssl-static.jar
 
 # build image
 FROM alpine as copy
 
 # copy jar
 COPY mockserver-netty-shaded.jar .
+# add netty-tcnative-boringssl so file
+RUN wget --max-redirect=10 -O netty-tcnative-boringssl-static.jar "https://oss.sonatype.org/service/local/artifact/maven/redirect?r=releases&g=io.netty&a=netty-tcnative-boringssl-static&c=linux-x86_64&e=jar&v=2.0.50.Final"
+RUN unzip netty-tcnative-boringssl-static.jar
 
 FROM ${source} as intermediate
 
@@ -39,6 +45,7 @@ EXPOSE 1080
 
 # copy in jar
 COPY --from=intermediate mockserver-netty-shaded.jar /
+COPY --from=intermediate META-INF/native/libnetty_tcnative_linux_x86_64.so /usr/lib/x86_64-linux-gnu/libnetty_tcnative_linux_x86_64.so
 
 # don't run MockServer as root
 USER nonroot
