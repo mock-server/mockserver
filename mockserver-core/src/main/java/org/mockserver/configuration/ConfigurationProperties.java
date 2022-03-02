@@ -441,7 +441,7 @@ public class ConfigurationProperties {
     }
 
     public static long maxFutureTimeout() {
-        return readLongProperty(MOCKSERVER_MAX_FUTURE_TIMEOUT, "DEFAULT_MAX_FUTURE_TIMEOUT", TimeUnit.SECONDS.toMillis(DEFAULT_MAX_FUTURE_TIMEOUT));
+        return readLongProperty(MOCKSERVER_MAX_FUTURE_TIMEOUT, "MOCKSERVER_MAX_FUTURE_TIMEOUT", TimeUnit.SECONDS.toMillis(DEFAULT_MAX_FUTURE_TIMEOUT));
     }
 
     public static void maxFutureTimeout(long milliseconds) {
