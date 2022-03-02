@@ -77,7 +77,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_MAX_EXPECTATIONS = "mockserver.maxExpectations";
     private static final String MOCKSERVER_MAX_LOG_ENTRIES = "mockserver.maxLogEntries";
     private static final String MOCKSERVER_OUTPUT_MEMORY_USAGE_CSV = "mockserver.outputMemoryUsageCsv";
-    private static final String MOCKSERVER_MEMORY_USAGE_DIRECTORY = "mockserver.memoryUsageCsvDirectory";
+    private static final String MOCKSERVER_MEMORY_USAGE_CSV_DIRECTORY = "mockserver.memoryUsageCsvDirectory";
     private static final String MOCKSERVER_MAX_WEB_SOCKET_EXPECTATIONS = "mockserver.maxWebSocketExpectations";
     private static final String MOCKSERVER_MAX_INITIAL_LINE_LENGTH = "mockserver.maxInitialLineLength";
     private static final String MOCKSERVER_MAX_HEADER_SIZE = "mockserver.maxHeaderSize";
@@ -342,17 +342,27 @@ public class ConfigurationProperties {
         return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_OUTPUT_MEMORY_USAGE_CSV, "MOCKSERVER_OUTPUT_MEMORY_USAGE_CSV", DEFAULT_OUTPUT_MEMORY_USAGE_CSV));
     }
 
+    /**
+     * <p>Output JVM memory usage metrics to CSV file periodically called <strong>memoryUsage_&lt;yyyy-MM-dd&gt;.csv</strong></p>
+     *
+     * @param enable output of JVM memory metrics
+     */
     public static void outputMemoryUsageCsv(boolean enable) {
         System.setProperty(MOCKSERVER_OUTPUT_MEMORY_USAGE_CSV, "" + enable);
     }
 
     public static String memoryUsageCsvDirectory() {
-        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_MEMORY_USAGE_DIRECTORY, "MOCKSERVER_MEMORY_USAGE_DIRECTORY", ".");
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_MEMORY_USAGE_CSV_DIRECTORY, "MOCKSERVER_MEMORY_USAGE_CSV_DIRECTORY", ".");
     }
 
+    /**
+     * <p>Directory to output JVM memory usage metrics CSV files to when outputMemoryUsageCsv enabled</p>
+     *
+     * @param directory directory to save JVM memory metrics CSV files
+     */
     public static void memoryUsageCsvDirectory(String directory) {
         fileExists(directory);
-        System.setProperty(MOCKSERVER_MEMORY_USAGE_DIRECTORY, directory);
+        System.setProperty(MOCKSERVER_MEMORY_USAGE_CSV_DIRECTORY, directory);
     }
 
     public static int maxWebSocketExpectations() {

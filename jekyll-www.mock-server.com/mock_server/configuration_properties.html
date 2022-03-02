@@ -157,6 +157,22 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.outputMemoryUsageCsv="true"</code></pre>
 </div>
 
+<button id="button_configuration_memory_statistics_directory" class="accordion title"><strong>Directory For Outputting JVM Memory Usage</strong></button>
+<div class="panel title">
+    <p>Directory to output JVM memory usage metrics CSV files to when outputMemoryUsageCsv enabled</p>
+    <p>Type: <span class="keyword">String</span> Default: <span class="this_value">"."</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.memoryUsageCsvDirectory(String directory)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.memoryUsageCsvDirectory=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_MEMORY_USAGE_CSV_DIRECTORY=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.memoryUsageCsvDirectory=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.memoryUsageCsvDirectory="."</code></pre>
+</div>
+
 <a id="http_request_size_configuration" class="anchor" href="#http_request_size_configuration">&nbsp;</a>
 
 <h2>Http Request Size Configuration:</h2>
