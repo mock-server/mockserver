@@ -17,7 +17,7 @@ lastmod: 2019-11-10T08:00:00+01:00
     <li>java code (highest precedence)</li>
     <li>system property</li>
     <li>property file</li>
-    <li>environment property (lowest precedence)</li>
+    <li>environment variable (lowest precedence)</li>
 </ol>
 <p>The order of precedence means that properties set by java code overrides those set by system properties which overrides property file properties which overrides environment variables.</p>
 <p>Some properties need to be set before MockServer starts because they are only read at start-up, for example, <a href="#button_configuration_nio_event_loop_thread_count">nioEventLoopThreadCount</a>.</p>
