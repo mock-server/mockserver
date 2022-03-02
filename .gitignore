@@ -108,3 +108,7 @@ mockserverInitialization.json
 /*.pem
 _test*.java
 dependency-reduced-pom.xml
+
+# soft links #
+##############
+kube_config.yaml
