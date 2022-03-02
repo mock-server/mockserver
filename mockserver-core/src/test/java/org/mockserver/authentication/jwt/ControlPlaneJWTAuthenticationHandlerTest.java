@@ -30,7 +30,7 @@ public class ControlPlaneJWTAuthenticationHandlerTest {
     private static final MockServerLogger mockServerLogger = new MockServerLogger();
 
     @Test
-    public void shouldValidateJWT() throws IOException {
+    public void shouldValidateJWT() {
         // given
         AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
@@ -44,7 +44,7 @@ public class ControlPlaneJWTAuthenticationHandlerTest {
     }
 
     @Test
-    public void shouldValidateWithMatchingClaimsAndRequiredClaimsAndAudience() throws IOException {
+    public void shouldValidateWithMatchingClaimsAndRequiredClaimsAndAudience() {
         // given
         AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
@@ -72,7 +72,21 @@ public class ControlPlaneJWTAuthenticationHandlerTest {
     }
 
     @Test
-    public void shouldNotValidateExpiredJWT() throws IOException {
+    public void shouldValidateForAuthorizationHeaderWithExtraSpaces() {
+        // given
+        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
+        String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
+        String jwt = new JWTGenerator(asymmetricKeyPair).generateJWT();
+
+        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneJWTAuthenticationHandler(mockServerLogger, jwkFile);
+        HttpRequest request = request().withHeader(AUTHORIZATION.toString(), "Bearer           " + jwt);
+
+        // when
+        assertThat(authenticationHandler.controlPlaneRequestAuthenticated(request), equalTo(true));
+    }
+
+    @Test
+    public void shouldNotValidateExpiredJWT() {
         // given
         AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
@@ -97,7 +111,7 @@ public class ControlPlaneJWTAuthenticationHandlerTest {
     }
 
     @Test
-    public void shouldNotValidateWrongAudience() throws IOException {
+    public void shouldNotValidateWrongAudience() {
         // given
         AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
@@ -124,7 +138,7 @@ public class ControlPlaneJWTAuthenticationHandlerTest {
     }
 
     @Test
-    public void shouldNotValidateWrongMatchingClaims() throws IOException {
+    public void shouldNotValidateWrongMatchingClaims() {
         // given
         AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
@@ -151,7 +165,7 @@ public class ControlPlaneJWTAuthenticationHandlerTest {
     }
 
     @Test
-    public void shouldNotValidateMissingRequiredClaims() throws IOException {
+    public void shouldNotValidateMissingRequiredClaims() {
         // given
         AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
@@ -178,7 +192,7 @@ public class ControlPlaneJWTAuthenticationHandlerTest {
     }
 
     @Test
-    public void shouldNotValidateWrongMatchingClaimsAndMissingRequiredClaimsAndWrongAudience() throws IOException {
+    public void shouldNotValidateWrongMatchingClaimsAndMissingRequiredClaimsAndWrongAudience() {
         // given
         AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
@@ -204,6 +218,49 @@ public class ControlPlaneJWTAuthenticationHandlerTest {
         // when
         AuthenticationException authenticationException = assertThrows(AuthenticationException.class, () -> authenticationHandler.controlPlaneRequestAuthenticated(request));
         assertThat(authenticationException.getMessage(), equalTo("JWT audience rejected: [wrong_audience]"));
+    }
+
+    @Test
+    public void shouldNotValidateNoAuthorizationHeader() {
+        // given
+        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
+        String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
+
+        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneJWTAuthenticationHandler(mockServerLogger, jwkFile);
+        HttpRequest request = request();
+
+        // when
+        AuthenticationException authenticationException = assertThrows(AuthenticationException.class, () -> authenticationHandler.controlPlaneRequestAuthenticated(request));
+        assertThat(authenticationException.getMessage(), equalTo("no authorization header found"));
+    }
+
+    @Test
+    public void shouldNotValidateNotAJWT() {
+        // given
+        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
+        String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
+
+        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneJWTAuthenticationHandler(mockServerLogger, jwkFile);
+        HttpRequest request = request().withHeader(AUTHORIZATION.toString(), "Bearer " + UUID.randomUUID());
+
+        // when
+        AuthenticationException authenticationException = assertThrows(AuthenticationException.class, () -> authenticationHandler.controlPlaneRequestAuthenticated(request));
+        assertThat(authenticationException.getMessage(), equalTo("Invalid JWT serialization: Missing dot delimiter(s)"));
+    }
+
+    @Test
+    public void shouldNotValidateIncorrectSchemeForAuthorizationHeader() {
+        // given
+        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
+        String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
+        String jwt = new JWTGenerator(asymmetricKeyPair).generateJWT();
+
+        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneJWTAuthenticationHandler(mockServerLogger, jwkFile);
+        HttpRequest request = request().withHeader(AUTHORIZATION.toString(), "JWT " + jwt);
+
+        // when
+        AuthenticationException authenticationException = assertThrows(AuthenticationException.class, () -> authenticationHandler.controlPlaneRequestAuthenticated(request));
+        assertThat(authenticationException.getMessage(), equalTo("only \"Bearer\" supported for authorization header"));
     }
 
 }

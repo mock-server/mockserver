@@ -75,6 +75,9 @@ public class ControlPlaneJWTAuthenticationHandler implements ControlPlaneAuthent
             );
         } else {
             List<String> authorizationHeaders = request.getHeader(AUTHORIZATION.toString());
+            if (authorizationHeaders.isEmpty()) {
+                logAuthorisationFailure(request, "no authorization header found");
+            }
             for (String authorizationHeader : authorizationHeaders) {
                 int idx = authorizationHeader.indexOf(' ');
                 if (idx <= 0) {
