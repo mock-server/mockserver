@@ -84,6 +84,39 @@
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.clientNioEventLoopThreadCount="5"</code></pre>
 </div>
 
+<button id="button_configuration_max_socket_timeout" class="accordion title"><strong>Maximum Future Timeout In Millis</strong></button>
+<div class="panel title">
+    <p>Maximum time allowed in milliseconds for any future to wait, for example when waiting for a response over a web socket callback.</p>
+    <p>Type: <span class="keyword">long</span> Default: <span class="this_value">60000</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxFutureTimeout(long milliseconds)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxFutureTimeout=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_MAX_FUTURE_TIMEOUT=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.maxFutureTimeout=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxFutureTimeout="60000"</code></pre>
+</div>
+
+<button id="button_configuration_matchers_fail_fast" class="accordion title"><strong>Request Matchers Fail Fast</strong></button>
+<div class="panel title">
+    <p>If true (the default) request matchers will fail on the first non-matching field, if false request matchers will compare all fields.</p>
+    <p>This is useful to see all mismatching fields in the log event recording that a request matcher did not match.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">true</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.matchersFailFast(boolean enable)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.matchersFailFast=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_MATCHERS_FAIL_FAST=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.matchersFailFast=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.matchersFailFast="false"</code></pre>
+</div>
+
 <button id="button_configuration_performance_log_level" class="accordion title"><strong>Log Level</strong></button>
 <div class="panel title">
     <p>The the minimum level of logs to record in the event log and to output to system out (if <a href="#button_configuration_performance_disable_system_out">system out log output</a> is not disabled).  The lower the log level the more log entries will be captured, particularly at TRACE level logging.</p>

@@ -51,6 +51,38 @@
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.disableLogging="true"</code></pre>
 </div>
 
+<button id="button_configuration_detailed_match_failures" class="accordion title"><strong>Detailed Match Failures</strong></button>
+<div class="panel title">
+    <p>If true (the default) the log event recording that a request matcher did not match will include a detailed reason why each non matching field did not match.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">true</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.detailedMatchFailures(boolean enable)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.detailedMatchFailures=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_DETAILED_MATCH_FAILURES=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.detailedMatchFailures=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.detailedMatchFailures="false"</code></pre>
+</div>
+
+<button id="button_configuration_launch_ui__debug" class="accordion title"><strong>ClientAndServer launches UI when log level DEBUG</strong></button>
+<div class="panel title">
+    <p>If true (the default) the ClientAndServer constructor or static factor methods will open the UI in the default browser when the log level is set to DEBUG.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.launchUIForLogLevelDebug(boolean enable)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.launchUIForLogLevelDebug=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_LAUNCH_UI_FOR_LOG_LEVEL_DEBUG=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.launchUIForLogLevelDebug=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.launchUIForLogLevelDebug="false"</code></pre>
+</div>
+
 <button id="button_configuration_enabled_metrics" class="accordion title"><strong>Enable Metrics</strong></button>
 <div class="panel title">
     <p>Enable the recording of metrics for different activities within MockServer, such as, EXPECTATION_NOT_MATCHED_COUNT, ACTION_RESPONSE_COUNT, WEBSOCKET_CALLBACK_CLIENT_COUNT, etc</p>
