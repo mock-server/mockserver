@@ -29,6 +29,7 @@ FROM alpine as copy
 # copy jar
 COPY mockserver-netty-shaded.jar .
 # add netty-tcnative-boringssl so file
+RUN apk add --update openssl ca-certificates bash wget
 RUN wget --max-redirect=10 -O netty-tcnative-boringssl-static.jar "https://oss.sonatype.org/service/local/artifact/maven/redirect?r=releases&g=io.netty&a=netty-tcnative-boringssl-static&c=linux-x86_64&e=jar&v=2.0.50.Final"
 RUN unzip netty-tcnative-boringssl-static.jar
 
