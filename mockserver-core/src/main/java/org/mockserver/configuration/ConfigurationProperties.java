@@ -32,7 +32,6 @@ import static org.slf4j.event.Level.WARN;
 /**
  * @author jamesdbloom
  */
-@SuppressWarnings("DeprecatedIsStillUsed")
 public class ConfigurationProperties {
 
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(ConfigurationProperties.class);
@@ -125,12 +124,6 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_MATCHERS_FAIL_FAST = "mockserver.matchersFailFast";
     private static final String MOCKSERVER_LOCAL_BOUND_IP = "mockserver.localBoundIP";
     private static final String MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION = "mockserver.attemptToProxyIfNoMatchingExpectation";
-    @Deprecated
-    private static final String MOCKSERVER_HTTP_PROXY = "mockserver.httpProxy";
-    @Deprecated
-    private static final String MOCKSERVER_HTTPS_PROXY = "mockserver.httpsProxy";
-    @Deprecated
-    private static final String MOCKSERVER_SOCKS_PROXY = "mockserver.socksProxy";
     private static final String MOCKSERVER_FORWARD_HTTP_PROXY = "mockserver.forwardHttpProxy";
     private static final String MOCKSERVER_FORWARD_HTTPS_PROXY = "mockserver.forwardHttpsProxy";
     private static final String MOCKSERVER_FORWARD_SOCKS_PROXY = "mockserver.forwardSocksProxy";
@@ -237,7 +230,6 @@ public class ConfigurationProperties {
     private static String controlPlaneTLSMutualAuthenticationCAChain = readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN, "MOCKSERVER_CONTROL_PLANE_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN", DEFAULT_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN);
     private static boolean controlPlaneJWTAuthenticationRequired = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED, "MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED", DEFAULT_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED));
     private static boolean enableCORSForAPI = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_ENABLE_CORS_FOR_API, "MOCKSERVER_ENABLE_CORS_FOR_API", DEFAULT_ENABLE_CORS_FOR_API));
-    private static boolean enableCORSForAPIHasBeenSetExplicitly = System.getProperty(MOCKSERVER_ENABLE_CORS_FOR_API) != null || PROPERTIES.getProperty(MOCKSERVER_ENABLE_CORS_FOR_API) != null;
     private static boolean enableCORSForAllResponses = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES, "MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES", DEFAULT_ENABLE_CORS_FOR_ALL_RESPONSES));
     private static int maxInitialLineLength = readIntegerProperty(MOCKSERVER_MAX_INITIAL_LINE_LENGTH, "MOCKSERVER_MAX_INITIAL_LINE_LENGTH", DEFAULT_MAX_INITIAL_LINE_LENGTH);
     private static int maxHeaderSize = readIntegerProperty(MOCKSERVER_MAX_HEADER_SIZE, "MOCKSERVER_MAX_HEADER_SIZE", DEFAULT_MAX_HEADER_SIZE);
@@ -282,7 +274,6 @@ public class ConfigurationProperties {
         controlPlaneTLSMutualAuthenticationCAChain = readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN, "MOCKSERVER_CONTROL_PLANE_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN", DEFAULT_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN);
         controlPlaneJWTAuthenticationRequired = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED, "MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED", DEFAULT_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED));
         enableCORSForAPI = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_ENABLE_CORS_FOR_API, "MOCKSERVER_ENABLE_CORS_FOR_API", DEFAULT_ENABLE_CORS_FOR_API));
-        enableCORSForAPIHasBeenSetExplicitly = System.getProperty(MOCKSERVER_ENABLE_CORS_FOR_API) != null || PROPERTIES.getProperty(MOCKSERVER_ENABLE_CORS_FOR_API) != null;
         enableCORSForAllResponses = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES, "MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES", DEFAULT_ENABLE_CORS_FOR_ALL_RESPONSES));
         maxInitialLineLength = readIntegerProperty(MOCKSERVER_MAX_INITIAL_LINE_LENGTH, "MOCKSERVER_MAX_INITIAL_LINE_LENGTH", DEFAULT_MAX_INITIAL_LINE_LENGTH);
         maxHeaderSize = readIntegerProperty(MOCKSERVER_MAX_HEADER_SIZE, "MOCKSERVER_MAX_HEADER_SIZE", DEFAULT_MAX_HEADER_SIZE);
@@ -482,7 +473,6 @@ public class ConfigurationProperties {
         rebuildServerTLSContext(true);
     }
 
-    @SuppressWarnings("UnstableApiUsage")
     public static void addSubjectAlternativeName(String host) {
         if (isNotBlank(host)) {
             String hostWithoutPort = substringBefore(host, ":");
@@ -1050,7 +1040,6 @@ public class ConfigurationProperties {
         return readPropertyHierarchically(PROPERTIES, MOCKSERVER_LOCAL_BOUND_IP, "MOCKSERVER_LOCAL_BOUND_IP", "");
     }
 
-    @SuppressWarnings("UnstableApiUsage")
     public static void localBoundIP(String localBoundIP) {
         System.setProperty(MOCKSERVER_LOCAL_BOUND_IP, InetAddresses.forString(localBoundIP).getHostAddress());
     }
@@ -1068,54 +1057,6 @@ public class ConfigurationProperties {
     public static void attemptToProxyIfNoMatchingExpectation(boolean enable) {
         System.setProperty(MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION, "" + enable);
         attemptToProxyIfNoMatchingExpectation = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION, "MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION", "" + true));
-    }
-
-    /**
-     * @deprecated use forwardHttpProxy instead
-     */
-    @Deprecated
-    public static InetSocketAddress httpProxy() {
-        return readInetSocketAddressProperty(MOCKSERVER_HTTP_PROXY, "MOCKSERVER_HTTP_PROXY");
-    }
-
-    /**
-     * @deprecated use forwardHttpProxy instead
-     */
-    @Deprecated
-    public static void httpProxy(String hostAndPort) {
-        validateHostAndPort(hostAndPort, "httpProxy", MOCKSERVER_HTTP_PROXY);
-    }
-
-    /**
-     * @deprecated use forwardHttpsProxy instead
-     */
-    @Deprecated
-    public static InetSocketAddress httpsProxy() {
-        return readInetSocketAddressProperty(MOCKSERVER_HTTPS_PROXY, "MOCKSERVER_HTTPS_PROXY");
-    }
-
-    /**
-     * @deprecated use forwardHttpsProxy instead
-     */
-    @Deprecated
-    public static void httpsProxy(String hostAndPort) {
-        validateHostAndPort(hostAndPort, "httpsProxy", MOCKSERVER_HTTPS_PROXY);
-    }
-
-    /**
-     * @deprecated use forwardSocksProxy instead
-     */
-    @Deprecated
-    public static InetSocketAddress socksProxy() {
-        return readInetSocketAddressProperty(MOCKSERVER_SOCKS_PROXY, "MOCKSERVER_SOCKS_PROXY");
-    }
-
-    /**
-     * @deprecated use forwardSocksProxy instead
-     */
-    @Deprecated
-    public static void socksProxy(String hostAndPort) {
-        validateHostAndPort(hostAndPort, "socksProxy", MOCKSERVER_SOCKS_PROXY);
     }
 
     public static InetSocketAddress forwardHttpProxy() {
@@ -1234,14 +1175,9 @@ public class ConfigurationProperties {
         return enableCORSForAPI;
     }
 
-    public static boolean enableCORSForAPIHasBeenSetExplicitly() {
-        return enableCORSForAPIHasBeenSetExplicitly;
-    }
-
     public static void enableCORSForAPI(boolean enable) {
         System.setProperty(MOCKSERVER_ENABLE_CORS_FOR_API, "" + enable);
         enableCORSForAPI = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_ENABLE_CORS_FOR_API, "MOCKSERVER_ENABLE_CORS_FOR_API", DEFAULT_ENABLE_CORS_FOR_API));
-        enableCORSForAPIHasBeenSetExplicitly = true;
     }
 
     public static boolean enableCORSForAllResponses() {
@@ -1320,7 +1256,7 @@ public class ConfigurationProperties {
     private static void validateHostAndPort(String hostAndPort, String propertyName, String mockserverSocksProxy) {
         String errorMessage = "Invalid " + propertyName + " property must include <host>:<port> for example \"127.0.0.1:1090\" or \"localhost:1090\"";
         try {
-            URI uri = new URI("http://" + hostAndPort);
+            URI uri = new URI("https://" + hostAndPort);
             if (uri.getHost() == null || uri.getPort() == -1) {
                 throw new IllegalArgumentException(errorMessage);
             } else {

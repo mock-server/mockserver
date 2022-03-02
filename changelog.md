@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - disabled privilege escalation in helm chart
 - added setting of command line flags (i.e. serverPort) via system properties and properties file in addition to environment variables
 - improved log output for command line flags, environment variables and system properties
+- removed deprecated configuration properties for forward proxying 
 
 ### Fixed
 - worked around JDK error 'flip()Ljava/nio/ByteBuffer; does not exist in class java.nio.ByteBuffer'

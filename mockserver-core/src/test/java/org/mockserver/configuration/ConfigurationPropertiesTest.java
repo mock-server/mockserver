@@ -1163,78 +1163,6 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    @Deprecated
-    public void shouldSetAndReadHttpProxy() {
-        // given
-        System.clearProperty("mockserver.httpProxy");
-
-        // when
-        assertNull(httpProxy());
-        httpProxy("127.0.0.1:1090");
-
-        // then
-        assertEquals("/127.0.0.1:1090", httpProxy().toString());
-        assertEquals("127.0.0.1:1090", System.getProperty("mockserver.httpProxy"));
-    }
-
-    @Test
-    @Deprecated
-    public void shouldThrowIllegalArgumentExceptionForInvalidHttpProxy() {
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("Invalid httpProxy property must include <host>:<port> for example \"127.0.0.1:1090\" or \"localhost:1090\""));
-
-        httpProxy("abc.def");
-    }
-
-    @Test
-    @Deprecated
-    public void shouldSetAndReadHttpsProxy() {
-        // given
-        System.clearProperty("mockserver.httpsProxy");
-
-        // when
-        assertNull(httpsProxy());
-        httpsProxy("127.0.0.1:1090");
-
-        // then
-        assertEquals("/127.0.0.1:1090", httpsProxy().toString());
-        assertEquals("127.0.0.1:1090", System.getProperty("mockserver.httpsProxy"));
-    }
-
-    @Test
-    @Deprecated
-    public void shouldThrowIllegalArgumentExceptionForInvalidHttpsProxy() {
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("Invalid httpsProxy property must include <host>:<port> for example \"127.0.0.1:1090\" or \"localhost:1090\""));
-
-        httpsProxy("abc.def");
-    }
-
-    @Test
-    @Deprecated
-    public void shouldSetAndReadSocksProxy() {
-        // given
-        System.clearProperty("mockserver.socksProxy");
-
-        // when
-        assertNull(socksProxy());
-        socksProxy("127.0.0.1:1090");
-
-        // then
-        assertEquals("/127.0.0.1:1090", socksProxy().toString());
-        assertEquals("127.0.0.1:1090", System.getProperty("mockserver.socksProxy"));
-    }
-
-    @Test
-    @Deprecated
-    public void shouldThrowIllegalArgumentExceptionForInvalidSocksProxy() {
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("Invalid socksProxy property must include <host>:<port> for example \"127.0.0.1:1090\" or \"localhost:1090\""));
-
-        socksProxy("abc.def");
-    }
-
-    @Test
     public void shouldSetAndReadForwardHttpProxy() {
         // given
         System.clearProperty("mockserver.forwardHttpProxy");
@@ -1464,18 +1392,6 @@ public class ConfigurationPropertiesTest {
         // then
         assertTrue(ConfigurationProperties.enableCORSForAPI());
         assertEquals("true", System.getProperty("mockserver.enableCORSForAPI"));
-    }
-
-    @Test
-    public void shouldDetectEnableCORSSettingForAPIHasBeenExplicitlySet() {
-        // given
-        System.clearProperty("mockserver.enableCORSForAPI");
-        resetAllSystemProperties();
-
-        // when
-        assertFalse(ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());
-        ConfigurationProperties.enableCORSForAPI(true);
-        assertTrue(ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());
     }
 
     @Test
