@@ -2,7 +2,7 @@ package org.mockserver.authentication.mtls;
 
 import com.google.common.collect.ImmutableMap;
 import org.mockserver.authentication.AuthenticationException;
-import org.mockserver.authentication.ControlPlaneAuthenticationHandler;
+import org.mockserver.authentication.AuthenticationHandler;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -11,12 +11,12 @@ import org.slf4j.event.Level;
 
 import java.security.cert.X509Certificate;
 
-public class ControlPlaneMTLSAuthenticationHandler implements ControlPlaneAuthenticationHandler {
+public class MTLSAuthenticationHandler implements AuthenticationHandler {
 
     private final MockServerLogger mockServerLogger;
     private final X509Certificate[] controlPlaneTLSMutualAuthenticationCAChain;
 
-    public ControlPlaneMTLSAuthenticationHandler(MockServerLogger mockServerLogger, X509Certificate[] controlPlaneTLSMutualAuthenticationCAChain) {
+    public MTLSAuthenticationHandler(MockServerLogger mockServerLogger, X509Certificate[] controlPlaneTLSMutualAuthenticationCAChain) {
         this.mockServerLogger = mockServerLogger;
         this.controlPlaneTLSMutualAuthenticationCAChain = controlPlaneTLSMutualAuthenticationCAChain;
     }

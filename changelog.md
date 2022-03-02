@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - allow proactively initialisation of TLS so dynamic TLS CA key pair is created at start up
 - added control plane authorisation using mTLS
 - added control plane authorisation using JWT
+- added control plane authorisation using both JWT and mTLS
 
 ### Changed
 - included Bouncy Castle now used by default to resolve issues with modules in Java 16+ and backwards compatibility for Java 8

@@ -4,7 +4,7 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.RemoteJWKSet;
 import org.mockserver.authentication.AuthenticationException;
-import org.mockserver.authentication.ControlPlaneAuthenticationHandler;
+import org.mockserver.authentication.AuthenticationHandler;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -21,13 +21,13 @@ import java.util.Set;
 import static io.netty.handler.codec.http.HttpHeaderNames.AUTHORIZATION;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-public class ControlPlaneJWTAuthenticationHandler implements ControlPlaneAuthenticationHandler {
+public class JWTAuthenticationHandler implements AuthenticationHandler {
 
     private final MockServerLogger mockServerLogger;
     private Throwable jwtValidatorInitialisationException;
     private JWTValidator jwtValidator;
 
-    public ControlPlaneJWTAuthenticationHandler(MockServerLogger mockServerLogger, String jwkSource) {
+    public JWTAuthenticationHandler(MockServerLogger mockServerLogger, String jwkSource) {
         this.mockServerLogger = mockServerLogger;
         try {
             if (URLParser.isFullUrl(jwkSource)) {
@@ -47,17 +47,17 @@ public class ControlPlaneJWTAuthenticationHandler implements ControlPlaneAuthent
         }
     }
 
-    public ControlPlaneJWTAuthenticationHandler withExpectedAudience(String expectedAudience) {
+    public JWTAuthenticationHandler withExpectedAudience(String expectedAudience) {
         jwtValidator.withExpectedAudience(expectedAudience);
         return this;
     }
 
-    public ControlPlaneJWTAuthenticationHandler withMatchingClaims(Map<String, String> matchingClaims) {
+    public JWTAuthenticationHandler withMatchingClaims(Map<String, String> matchingClaims) {
         jwtValidator.withMatchingClaims(matchingClaims);
         return this;
     }
 
-    public ControlPlaneJWTAuthenticationHandler withRequiredClaims(Set<String> requiredClaims) {
+    public JWTAuthenticationHandler withRequiredClaims(Set<String> requiredClaims) {
         jwtValidator.withRequiredClaims(requiredClaims);
         return this;
     }

@@ -2,7 +2,7 @@ package org.mockserver.mock;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.mockserver.authentication.AuthenticationException;
-import org.mockserver.authentication.ControlPlaneAuthenticationHandler;
+import org.mockserver.authentication.AuthenticationHandler;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.MockServerEventLog;
@@ -80,7 +80,7 @@ public class HttpState {
     private LogEntrySerializer logEntrySerializer;
     private final MemoryMonitoring memoryMonitoring;
     private OpenAPIConverter openAPIConverter;
-    private ControlPlaneAuthenticationHandler controlPlaneAuthenticationHandler;
+    private AuthenticationHandler controlPlaneAuthenticationHandler;
 
     public static void setPort(final HttpRequest request) {
         if (request != null && request.getSocketAddress() != null) {
@@ -125,7 +125,7 @@ public class HttpState {
         new ExpectationInitializerLoader(mockServerLogger, requestMatchers);
     }
 
-    public void setControlPlaneAuthenticationHandler(ControlPlaneAuthenticationHandler controlPlaneAuthenticationHandler) {
+    public void setControlPlaneAuthenticationHandler(AuthenticationHandler controlPlaneAuthenticationHandler) {
         this.controlPlaneAuthenticationHandler = controlPlaneAuthenticationHandler;
     }
 

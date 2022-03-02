@@ -4,15 +4,11 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.mockserver.authentication.AuthenticationException;
-import org.mockserver.authentication.ControlPlaneAuthenticationHandler;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.authentication.AuthenticationHandler;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.test.TempFileWriter;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Arrays;
@@ -25,7 +21,7 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThrows;
 import static org.mockserver.model.HttpRequest.request;
 
-public class ControlPlaneJWTAuthenticationHandlerTest {
+public class JWTAuthenticationHandlerTest {
 
     private static final MockServerLogger mockServerLogger = new MockServerLogger();
 
@@ -36,7 +32,7 @@ public class ControlPlaneJWTAuthenticationHandlerTest {
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
         String jwt = new JWTGenerator(asymmetricKeyPair).generateJWT();
 
-        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneJWTAuthenticationHandler(mockServerLogger, jwkFile);
+        AuthenticationHandler authenticationHandler = new JWTAuthenticationHandler(mockServerLogger, jwkFile);
         HttpRequest request = request().withHeader(AUTHORIZATION.toString(), "Bearer " + jwt);
 
         // when
@@ -61,7 +57,7 @@ public class ControlPlaneJWTAuthenticationHandlerTest {
                 )
             );
 
-        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneJWTAuthenticationHandler(mockServerLogger, jwkFile)
+        AuthenticationHandler authenticationHandler = new JWTAuthenticationHandler(mockServerLogger, jwkFile)
             .withExpectedAudience("some_audience")
             .withRequiredClaims(new HashSet<>(Arrays.asList("nbf", "scope")))
             .withMatchingClaims(ImmutableMap.of("sub", "some_subject"));
@@ -78,7 +74,7 @@ public class ControlPlaneJWTAuthenticationHandlerTest {
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
         String jwt = new JWTGenerator(asymmetricKeyPair).generateJWT();
 
-        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneJWTAuthenticationHandler(mockServerLogger, jwkFile);
+        AuthenticationHandler authenticationHandler = new JWTAuthenticationHandler(mockServerLogger, jwkFile);
         HttpRequest request = request().withHeader(AUTHORIZATION.toString(), "Bearer           " + jwt);
 
         // when
@@ -102,7 +98,7 @@ public class ControlPlaneJWTAuthenticationHandlerTest {
                 )
             );
 
-        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneJWTAuthenticationHandler(mockServerLogger, jwkFile);
+        AuthenticationHandler authenticationHandler = new JWTAuthenticationHandler(mockServerLogger, jwkFile);
         HttpRequest request = request().withHeader(AUTHORIZATION.toString(), "Bearer " + jwt);
 
         // when
@@ -128,7 +124,7 @@ public class ControlPlaneJWTAuthenticationHandlerTest {
                 )
             );
 
-        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneJWTAuthenticationHandler(mockServerLogger, jwkFile)
+        AuthenticationHandler authenticationHandler = new JWTAuthenticationHandler(mockServerLogger, jwkFile)
             .withExpectedAudience("some_audience");
         HttpRequest request = request().withHeader(AUTHORIZATION.toString(), "Bearer " + jwt);
 
@@ -155,7 +151,7 @@ public class ControlPlaneJWTAuthenticationHandlerTest {
                 )
             );
 
-        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneJWTAuthenticationHandler(mockServerLogger, jwkFile)
+        AuthenticationHandler authenticationHandler = new JWTAuthenticationHandler(mockServerLogger, jwkFile)
             .withMatchingClaims(ImmutableMap.of("sub", "some_subject"));
         HttpRequest request = request().withHeader(AUTHORIZATION.toString(), "Bearer " + jwt);
 
@@ -182,7 +178,7 @@ public class ControlPlaneJWTAuthenticationHandlerTest {
                 )
             );
 
-        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneJWTAuthenticationHandler(mockServerLogger, jwkFile)
+        AuthenticationHandler authenticationHandler = new JWTAuthenticationHandler(mockServerLogger, jwkFile)
             .withRequiredClaims(new HashSet<>(Arrays.asList("jti", "scopes")));
         HttpRequest request = request().withHeader(AUTHORIZATION.toString(), "Bearer " + jwt);
 
@@ -209,7 +205,7 @@ public class ControlPlaneJWTAuthenticationHandlerTest {
                 )
             );
 
-        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneJWTAuthenticationHandler(mockServerLogger, jwkFile)
+        AuthenticationHandler authenticationHandler = new JWTAuthenticationHandler(mockServerLogger, jwkFile)
             .withExpectedAudience("some_audience")
             .withRequiredClaims(new HashSet<>(Arrays.asList("jti", "scopes")))
             .withMatchingClaims(ImmutableMap.of("sub", "some_subject"));
@@ -226,7 +222,7 @@ public class ControlPlaneJWTAuthenticationHandlerTest {
         AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
 
-        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneJWTAuthenticationHandler(mockServerLogger, jwkFile);
+        AuthenticationHandler authenticationHandler = new JWTAuthenticationHandler(mockServerLogger, jwkFile);
         HttpRequest request = request();
 
         // when
@@ -240,7 +236,7 @@ public class ControlPlaneJWTAuthenticationHandlerTest {
         AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
 
-        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneJWTAuthenticationHandler(mockServerLogger, jwkFile);
+        AuthenticationHandler authenticationHandler = new JWTAuthenticationHandler(mockServerLogger, jwkFile);
         HttpRequest request = request().withHeader(AUTHORIZATION.toString(), "Bearer " + UUID.randomUUID());
 
         // when
@@ -255,7 +251,7 @@ public class ControlPlaneJWTAuthenticationHandlerTest {
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
         String jwt = new JWTGenerator(asymmetricKeyPair).generateJWT();
 
-        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneJWTAuthenticationHandler(mockServerLogger, jwkFile);
+        AuthenticationHandler authenticationHandler = new JWTAuthenticationHandler(mockServerLogger, jwkFile);
         HttpRequest request = request().withHeader(AUTHORIZATION.toString(), "JWT " + jwt);
 
         // when

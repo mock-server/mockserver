@@ -2,7 +2,7 @@ package org.mockserver.authentication.mtls;
 
 import org.junit.Test;
 import org.mockserver.authentication.AuthenticationException;
-import org.mockserver.authentication.ControlPlaneAuthenticationHandler;
+import org.mockserver.authentication.AuthenticationHandler;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.JDKCertificateToMockServerX509Certificate;
 import org.mockserver.model.HttpRequest;
@@ -17,14 +17,14 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThrows;
 import static org.mockserver.model.HttpRequest.request;
 
-public class ControlPlaneMTLSAuthenticationHandlerTest {
+public class MTLSAuthenticationHandlerTest {
 
     private static final MockServerLogger mockServerLogger = new MockServerLogger();
 
     @Test
     public void shouldValidateCertificate() {
         // given
-        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneMTLSAuthenticationHandler(
+        AuthenticationHandler authenticationHandler = new MTLSAuthenticationHandler(
             mockServerLogger,
             PEMToFile.x509ChainFromPEMFile("org/mockserver/authentication/mtls/ca.pem").toArray(new X509Certificate[0])
         );
@@ -44,7 +44,7 @@ public class ControlPlaneMTLSAuthenticationHandlerTest {
         controlPlaneTLSMutualAuthenticationCAChain.addAll(PEMToFile.x509ChainFromPEMFile("org/mockserver/authentication/mtls/ca.pem"));
         controlPlaneTLSMutualAuthenticationCAChain.addAll(PEMToFile.x509ChainFromPEMFile("org/mockserver/authentication/mtls/separateca/ca.pem"));
 
-        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneMTLSAuthenticationHandler(
+        AuthenticationHandler authenticationHandler = new MTLSAuthenticationHandler(
             mockServerLogger,
             controlPlaneTLSMutualAuthenticationCAChain.toArray(new X509Certificate[0])
         );
@@ -64,7 +64,7 @@ public class ControlPlaneMTLSAuthenticationHandlerTest {
         controlPlaneTLSMutualAuthenticationCAChain.addAll(PEMToFile.x509ChainFromPEMFile("org/mockserver/authentication/mtls/separateca/ca.pem"));
         controlPlaneTLSMutualAuthenticationCAChain.addAll(PEMToFile.x509ChainFromPEMFile("org/mockserver/authentication/mtls/ca.pem"));
 
-        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneMTLSAuthenticationHandler(
+        AuthenticationHandler authenticationHandler = new MTLSAuthenticationHandler(
             mockServerLogger,
             controlPlaneTLSMutualAuthenticationCAChain.toArray(new X509Certificate[0])
         );
@@ -80,7 +80,7 @@ public class ControlPlaneMTLSAuthenticationHandlerTest {
     @Test
     public void shouldValidateCertificateWithPeerCertificatesMatchingFirst() {
         // given
-        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneMTLSAuthenticationHandler(
+        AuthenticationHandler authenticationHandler = new MTLSAuthenticationHandler(
             mockServerLogger,
             PEMToFile.x509ChainFromPEMFile("org/mockserver/authentication/mtls/ca.pem").toArray(new X509Certificate[0])
         );
@@ -101,7 +101,7 @@ public class ControlPlaneMTLSAuthenticationHandlerTest {
     @Test
     public void shouldValidateCertificateWithPeerCertificatesMatchingSecond() {
         // given
-        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneMTLSAuthenticationHandler(
+        AuthenticationHandler authenticationHandler = new MTLSAuthenticationHandler(
             mockServerLogger,
             PEMToFile.x509ChainFromPEMFile("org/mockserver/authentication/mtls/ca.pem").toArray(new X509Certificate[0])
         );
@@ -122,7 +122,7 @@ public class ControlPlaneMTLSAuthenticationHandlerTest {
     @Test
     public void shouldNotValidateCertificate() {
         // given
-        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneMTLSAuthenticationHandler(
+        AuthenticationHandler authenticationHandler = new MTLSAuthenticationHandler(
             mockServerLogger,
             PEMToFile.x509ChainFromPEMFile("org/mockserver/authentication/mtls/separateca/ca.pem").toArray(new X509Certificate[0])
         );
@@ -139,7 +139,7 @@ public class ControlPlaneMTLSAuthenticationHandlerTest {
     @Test
     public void shouldNotValidateCertificateChain() {
         // given
-        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneMTLSAuthenticationHandler(
+        AuthenticationHandler authenticationHandler = new MTLSAuthenticationHandler(
             mockServerLogger,
             PEMToFile.x509ChainFromPEMFile("org/mockserver/authentication/mtls/separateca/ca.pem").toArray(new X509Certificate[0])
         );
@@ -159,7 +159,7 @@ public class ControlPlaneMTLSAuthenticationHandlerTest {
     @Test
     public void shouldNotValidateEmptyClientCertifcates() {
         // given
-        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneMTLSAuthenticationHandler(
+        AuthenticationHandler authenticationHandler = new MTLSAuthenticationHandler(
             mockServerLogger,
             PEMToFile.x509ChainFromPEMFile("org/mockserver/authentication/mtls/separateca/ca.pem").toArray(new X509Certificate[0])
         );
@@ -176,7 +176,7 @@ public class ControlPlaneMTLSAuthenticationHandlerTest {
     @Test
     public void shouldNotValidateNoClientCertifcates() {
         // given
-        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneMTLSAuthenticationHandler(
+        AuthenticationHandler authenticationHandler = new MTLSAuthenticationHandler(
             mockServerLogger,
             PEMToFile.x509ChainFromPEMFile("org/mockserver/authentication/mtls/separateca/ca.pem").toArray(new X509Certificate[0])
         );
@@ -190,7 +190,7 @@ public class ControlPlaneMTLSAuthenticationHandlerTest {
     @Test
     public void shouldNotValidateEmptyCACertificates() {
         // given
-        ControlPlaneAuthenticationHandler authenticationHandler = new ControlPlaneMTLSAuthenticationHandler(
+        AuthenticationHandler authenticationHandler = new MTLSAuthenticationHandler(
             mockServerLogger,
             new X509Certificate[0]
         );
