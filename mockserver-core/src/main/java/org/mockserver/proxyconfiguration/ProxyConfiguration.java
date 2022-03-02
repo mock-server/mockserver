@@ -31,7 +31,6 @@ public class ProxyConfiguration extends ObjectWithJsonToString {
         this.password = password;
     }
 
-    @SuppressWarnings("deprecation")
     public static List<ProxyConfiguration> proxyConfiguration() {
         List<ProxyConfiguration> proxyConfigurations = new ArrayList<>();
         String username = forwardProxyAuthenticationUsername();
