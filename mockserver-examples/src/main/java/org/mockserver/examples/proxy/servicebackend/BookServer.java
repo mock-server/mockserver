@@ -25,6 +25,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+import static org.mockserver.configuration.Configuration.configuration;
 
 /**
  * @author jamesdbloom
@@ -41,7 +42,7 @@ public class BookServer {
     BookServer(int httpPort, boolean secure) {
         this.httpPort = httpPort;
         this.secure = secure;
-        this.nettySslContextFactory = new NettySslContextFactory(new MockServerLogger());
+        this.nettySslContextFactory = new NettySslContextFactory(configuration(), new MockServerLogger());
     }
 
     @PostConstruct

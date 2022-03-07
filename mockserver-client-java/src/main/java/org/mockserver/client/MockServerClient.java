@@ -1,6 +1,5 @@
 package org.mockserver.client;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -8,7 +7,8 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import org.mockserver.authentication.AuthenticationException;
 import org.mockserver.client.MockServerEventBus.EventType;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.closurecallback.websocketregistry.LocalCallbackRegistry;
+import org.mockserver.configuration.ClientConfiguration;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.httpclient.SocketConnectionException;
 import org.mockserver.log.model.LogEntry;
@@ -48,7 +48,8 @@ import static io.netty.handler.codec.http.HttpResponseStatus.UNAUTHORIZED;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.*;
-import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
+import static org.mockserver.configuration.ClientConfiguration.clientConfiguration;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.mock.HttpState.LOG_SEPARATOR;
 import static org.mockserver.model.ExpectationId.expectationId;
@@ -69,7 +70,7 @@ public class MockServerClient implements Stoppable {
 
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(MockServerClient.class);
     private static final Map<Integer, MockServerEventBus> EVENT_BUS_MAP = new ConcurrentHashMap<>();
-    private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(ConfigurationProperties.clientNioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop"));
+    private final EventLoopGroup eventLoopGroup;
     private final String host;
     private final String contextPath;
     private final Class<MockServerClient> clientClass;
@@ -77,8 +78,10 @@ public class MockServerClient implements Stoppable {
     private Boolean secure;
     private Integer port;
     private HttpRequest requestOverride;
+    private ClientConfiguration configuration;
     private ProxyConfiguration proxyConfiguration;
     private NettyHttpClient nettyHttpClient;
+    private LocalCallbackRegistry localCallbackRegistry;
     private RequestDefinitionSerializer requestDefinitionSerializer = new RequestDefinitionSerializer(MOCK_SERVER_LOGGER);
     private ExpectationIdSerializer expectationIdSerializer = new ExpectationIdSerializer(MOCK_SERVER_LOGGER);
     private LogEventRequestAndResponseSerializer httpRequestResponseSerializer = new LogEventRequestAndResponseSerializer(MOCK_SERVER_LOGGER);
@@ -95,11 +98,17 @@ public class MockServerClient implements Stoppable {
      *
      * @param portFuture the port for the MockServer to communicate with
      */
-    public MockServerClient(CompletableFuture<Integer> portFuture) {
+    public MockServerClient(ClientConfiguration configuration, CompletableFuture<Integer> portFuture) {
+        if (configuration == null) {
+            configuration = clientConfiguration();
+        }
         this.clientClass = MockServerClient.class;
         this.host = "127.0.0.1";
         this.portFuture = portFuture;
         this.contextPath = "";
+        this.configuration = configuration;
+        this.eventLoopGroup = eventLoopGroup();
+        LocalCallbackRegistry.setMaxWebSocketExpectations(configuration.maxWebSocketExpectations());
     }
 
     /**
@@ -113,6 +122,19 @@ public class MockServerClient implements Stoppable {
      */
     public MockServerClient(String host, int port) {
         this(host, port, "");
+    }
+
+    /**
+     * Start the client communicating to a MockServer at the specified host and port
+     * for example:
+     * <p>
+     * MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
+     *
+     * @param host the host for the MockServer to communicate with
+     * @param port the port for the MockServer to communicate with
+     */
+    public MockServerClient(ClientConfiguration configuration, String host, int port) {
+        this(configuration, host, port, "");
     }
 
     /**
@@ -136,6 +158,41 @@ public class MockServerClient implements Stoppable {
         this.host = host;
         this.port = port;
         this.contextPath = contextPath;
+        this.configuration = clientConfiguration();
+        this.eventLoopGroup = eventLoopGroup();
+        LocalCallbackRegistry.setMaxWebSocketExpectations(configuration.maxWebSocketExpectations());
+    }
+
+    /**
+     * Start the client communicating to a MockServer at the specified host and port
+     * and contextPath for example:
+     * <p>
+     * MockServerClient mockServerClient = new MockServerClient("localhost", 1080, "/mockserver");
+     *
+     * @param host        the host for the MockServer to communicate with
+     * @param port        the port for the MockServer to communicate with
+     * @param contextPath the context path that the MockServer war is deployed to
+     */
+    public MockServerClient(ClientConfiguration configuration, String host, int port, String contextPath) {
+        this.clientClass = MockServerClient.class;
+        if (isEmpty(host)) {
+            throw new IllegalArgumentException("Host can not be null or empty");
+        }
+        if (contextPath == null) {
+            throw new IllegalArgumentException("ContextPath can not be null");
+        }
+        if (configuration == null) {
+            configuration = clientConfiguration();
+        }
+        this.configuration = configuration;
+        this.host = host;
+        this.port = port;
+        this.contextPath = contextPath;
+        this.eventLoopGroup = eventLoopGroup();
+    }
+
+    private NioEventLoopGroup eventLoopGroup() {
+        return new NioEventLoopGroup(configuration.clientNioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop"));
     }
 
     /**
@@ -178,7 +235,7 @@ public class MockServerClient implements Stoppable {
     private int port() {
         if (this.port == null) {
             try {
-                port = portFuture.get(maxFutureTimeout(), MILLISECONDS);
+                port = portFuture.get(configuration.maxFutureTimeoutInMillis(), MILLISECONDS);
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
@@ -211,25 +268,20 @@ public class MockServerClient implements Stoppable {
         return (!cleanedPath.startsWith("/") ? "/" : "") + cleanedPath;
     }
 
-    @VisibleForTesting
-    public void resetNettyHttpClient() {
-        nettyHttpClient = null;
-    }
-
     private NettyHttpClient getNettyHttpClient() {
         if (nettyHttpClient == null) {
-            NettySslContextFactory nettySslContextFactory = new NettySslContextFactory(MOCK_SERVER_LOGGER);
+            NettySslContextFactory nettySslContextFactory = new NettySslContextFactory(configuration.toServerConfiguration(), MOCK_SERVER_LOGGER);
             Function<SslContextBuilder, SslContext> clientSslContextBuilderFunction = NettySslContextFactory.clientSslContextBuilderFunction;
-            if (ConfigurationProperties.controlPlaneTLSMutualAuthenticationRequired()) {
-                if (isBlank(ConfigurationProperties.controlPlanePrivateKeyPath()) || isBlank(ConfigurationProperties.controlPlaneX509CertificatePath()) || isBlank(ConfigurationProperties.controlPlaneTLSMutualAuthenticationCAChain())) {
-                    throw new IllegalArgumentException("when 'controlPlaneTLSMutualAuthenticationRequired' is enabled 'controlPlanePrivateKeyPath', 'controlPlaneX509CertificatePath' and 'controlPlaneTLSMutualAuthenticationCAChain' must all be specified,\n\tfound controlPlanePrivateKeyPath: \"" + ConfigurationProperties.controlPlanePrivateKeyPath() + "\"\n\tand controlPlaneX509CertificatePath: \"" + ConfigurationProperties.controlPlaneX509CertificatePath() + "\"\n\tand controlPlaneTLSMutualAuthenticationCAChain: \"" + ConfigurationProperties.controlPlaneTLSMutualAuthenticationCAChain() + "\"");
+            if (configuration.controlPlaneTLSMutualAuthenticationRequired()) {
+                if (isBlank(configuration.controlPlanePrivateKeyPath()) || isBlank(configuration.controlPlaneX509CertificatePath()) || isBlank(configuration.controlPlaneTLSMutualAuthenticationCAChain())) {
+                    throw new IllegalArgumentException("when 'controlPlaneTLSMutualAuthenticationRequired' is enabled 'controlPlanePrivateKeyPath', 'controlPlaneX509CertificatePath' and 'controlPlaneTLSMutualAuthenticationCAChain' must all be specified,\n\tfound controlPlanePrivateKeyPath: \"" + configuration.controlPlanePrivateKeyPath() + "\"\n\tand controlPlaneX509CertificatePath: \"" + configuration.controlPlaneX509CertificatePath() + "\"\n\tand controlPlaneTLSMutualAuthenticationCAChain: \"" + configuration.controlPlaneTLSMutualAuthenticationCAChain() + "\"");
                 }
                 clientSslContextBuilderFunction =
                     sslContextBuilder -> {
                         try {
-                            RSAPrivateKey key = privateKeyFromPEMFile(ConfigurationProperties.controlPlanePrivateKeyPath());
-                            X509Certificate[] keyCertChain = x509ChainFromPEMFile(ConfigurationProperties.controlPlaneX509CertificatePath()).toArray(new X509Certificate[0]);
-                            X509Certificate[] trustCertCollection = nettySslContextFactory.trustCertificateChain(ConfigurationProperties.controlPlaneTLSMutualAuthenticationCAChain());
+                            RSAPrivateKey key = privateKeyFromPEMFile(configuration.controlPlanePrivateKeyPath());
+                            X509Certificate[] keyCertChain = x509ChainFromPEMFile(configuration.controlPlaneX509CertificatePath()).toArray(new X509Certificate[0]);
+                            X509Certificate[] trustCertCollection = nettySslContextFactory.trustCertificateChain(configuration.controlPlaneTLSMutualAuthenticationCAChain());
                             sslContextBuilder
                                 .keyManager(
                                     key,
@@ -242,7 +294,7 @@ public class MockServerClient implements Stoppable {
                         }
                     };
             }
-            this.nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, proxyConfiguration != null ? ImmutableList.of(proxyConfiguration) : null, false, nettySslContextFactory.withClientSslContextBuilderFunction(clientSslContextBuilderFunction));
+            this.nettyHttpClient = new NettyHttpClient(configuration(), MOCK_SERVER_LOGGER, eventLoopGroup, proxyConfiguration != null ? ImmutableList.of(proxyConfiguration) : null, false, nettySslContextFactory.withClientSslContextBuilderFunction(clientSslContextBuilderFunction));
         }
         return nettyHttpClient;
     }
@@ -263,7 +315,7 @@ public class MockServerClient implements Stoppable {
                 }
                 HttpResponse response = getNettyHttpClient().sendRequest(
                     request.withHeader(HOST.toString(), this.host + ":" + port()),
-                    ConfigurationProperties.maxSocketTimeout(),
+                    configuration.maxSocketTimeoutInMillis(),
                     TimeUnit.MILLISECONDS,
                     ignoreErrors
                 );
@@ -1116,7 +1168,7 @@ public class MockServerClient implements Stoppable {
      * @return an Expectation object that can be used to specify the response
      */
     public ForwardChainExpectation when(RequestDefinition requestDefinition, Times times) {
-        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(requestDefinition, times, TimeToLive.unlimited(), 0));
+        return new ForwardChainExpectation(configuration, MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(requestDefinition, times, TimeToLive.unlimited(), 0));
     }
 
     /**
@@ -1145,7 +1197,7 @@ public class MockServerClient implements Stoppable {
      * @return an Expectation object that can be used to specify the response
      */
     public ForwardChainExpectation when(RequestDefinition requestDefinition, Times times, TimeToLive timeToLive) {
-        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(requestDefinition, times, timeToLive, 0));
+        return new ForwardChainExpectation(configuration, MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(requestDefinition, times, timeToLive, 0));
     }
 
     /**
@@ -1180,7 +1232,7 @@ public class MockServerClient implements Stoppable {
      * @return an Expectation object that can be used to specify the response
      */
     public ForwardChainExpectation when(RequestDefinition requestDefinition, Times times, TimeToLive timeToLive, Integer priority) {
-        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(requestDefinition, times, timeToLive, priority));
+        return new ForwardChainExpectation(configuration, MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(requestDefinition, times, timeToLive, priority));
     }
 
     /**

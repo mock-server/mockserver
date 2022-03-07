@@ -17,7 +17,6 @@ import java.util.logging.LogManager;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.slf4j.event.Level.ERROR;
 
@@ -40,14 +39,14 @@ public class MockServerLogger {
                     "java.util.logging.SimpleFormatter.format=%1$tF %1$tT " + Version.getVersion() + " %4$s %5$s %6$s%n" + NEW_LINE +
                     "org.mockserver.level=INFO" + NEW_LINE +
                     "io.netty.level=WARNING").getBytes(UTF_8)));
-                if (isNotBlank(javaLoggerLogLevel())) {
+                if (isNotBlank(ConfigurationProperties.javaLoggerLogLevel())) {
                     String loggingConfiguration = "" +
-                        (!disableSystemOut() ? "handlers=org.mockserver.logging.StandardOutConsoleHandler" + NEW_LINE +
+                        (!ConfigurationProperties.disableSystemOut() ? "handlers=org.mockserver.logging.StandardOutConsoleHandler" + NEW_LINE +
                             "org.mockserver.logging.StandardOutConsoleHandler.level=ALL" + NEW_LINE +
                             "org.mockserver.logging.StandardOutConsoleHandler.formatter=java.util.logging.SimpleFormatter" + NEW_LINE : "") +
                         "java.util.logging.SimpleFormatter.format=%1$tF %1$tT " + Version.getVersion() + " %4$s %5$s %6$s%n" + NEW_LINE +
-                        "org.mockserver.level=" + javaLoggerLogLevel() + NEW_LINE +
-                        "io.netty.level=" + (Arrays.asList("TRACE", "FINEST").contains(javaLoggerLogLevel()) ? "FINE" : "WARNING");
+                        "org.mockserver.level=" + ConfigurationProperties.javaLoggerLogLevel() + NEW_LINE +
+                        "io.netty.level=" + (Arrays.asList("TRACE", "FINEST").contains(ConfigurationProperties.javaLoggerLogLevel()) ? "FINE" : "WARNING");
                     LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(loggingConfiguration.getBytes(UTF_8)));
                 }
             }
@@ -138,6 +137,6 @@ public class MockServerLogger {
     }
 
     public static boolean isEnabled(final Level level) {
-        return logLevel() != null && level.toInt() >= logLevel().toInt();
+        return ConfigurationProperties.logLevel() != null && level.toInt() >= ConfigurationProperties.logLevel().toInt();
     }
 }

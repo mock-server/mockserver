@@ -34,10 +34,7 @@ import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collector;
 
 import static org.mockserver.socket.tls.PEMToFile.*;
@@ -112,7 +109,7 @@ public class X509Generator {
         return x509CertInfo;
     }
 
-    private void updateWithCertificateExtensions(final X509CertInfo x509CertInfo, final PublicKey publicKey, final PublicKey caPublicKey, final List<String> subjectAlternativeNames) throws IOException, CertificateException {
+    private void updateWithCertificateExtensions(final X509CertInfo x509CertInfo, final PublicKey publicKey, final PublicKey caPublicKey, final Set<String> subjectAlternativeNames) throws IOException, CertificateException {
         CertificateExtensions certificateExtensions = new CertificateExtensions();
 
         GeneralNames generalNames = subjectAlternativeNames

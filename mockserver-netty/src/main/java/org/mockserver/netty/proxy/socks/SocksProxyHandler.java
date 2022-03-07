@@ -4,13 +4,13 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.slf4j.event.Level;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.configuration.ConfigurationProperties.addSubjectAlternativeName;
 import static org.mockserver.exception.ExceptionHandling.connectionClosedException;
 import static org.mockserver.netty.HttpRequestHandler.PROXYING;
 import static org.mockserver.netty.unification.PortUnificationHandler.disableSslDownstream;
@@ -19,11 +19,13 @@ import static org.mockserver.netty.unification.PortUnificationHandler.enableSslD
 @ChannelHandler.Sharable
 public abstract class SocksProxyHandler<T> extends SimpleChannelInboundHandler<T> {
 
+    protected final Configuration configuration;
     protected final LifeCycle server;
     protected final MockServerLogger mockServerLogger;
 
-    public SocksProxyHandler(LifeCycle server, MockServerLogger mockServerLogger) {
+    public SocksProxyHandler(Configuration configuration, MockServerLogger mockServerLogger, LifeCycle server) {
         super(false);
+        this.configuration = configuration;
         this.server = server;
         this.mockServerLogger = mockServerLogger;
     }
@@ -39,7 +41,7 @@ public abstract class SocksProxyHandler<T> extends SimpleChannelInboundHandler<T
 
         // add Subject Alternative Name for SSL certificate
         if (isNotBlank(addr)) {
-            server.getScheduler().submit(() -> addSubjectAlternativeName(addr));
+            server.getScheduler().submit(() -> configuration.addSubjectAlternativeName(addr));
         }
 
         ctx.pipeline().replace(this, null, forwarder);

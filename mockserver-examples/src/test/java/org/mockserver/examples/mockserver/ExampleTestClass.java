@@ -10,6 +10,8 @@ import org.mockserver.socket.tls.KeyStoreFactory;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import static org.mockserver.configuration.Configuration.configuration;
+
 public class ExampleTestClass {
 
     private static ClientAndServer mockServer;
@@ -18,13 +20,15 @@ public class ExampleTestClass {
     public static void startMockServer() {
         // ensure all connection using HTTPS will use the SSL context defined by
         // MockServer to allow dynamically generated certificates to be accepted
-        HttpsURLConnection.setDefaultSSLSocketFactory(new KeyStoreFactory(new MockServerLogger()).sslContext().getSocketFactory());
+        HttpsURLConnection.setDefaultSSLSocketFactory(new KeyStoreFactory(configuration(), new MockServerLogger()).sslContext().getSocketFactory());
         mockServer = ClientAndServer.startClientAndServer(PortFactory.findFreePort());
     }
 
     @AfterClass
     public static void stopMockServer() {
-        mockServer.stop();
+        if (mockServer != null) {
+            mockServer.stop();
+        }
     }
 
     @Test

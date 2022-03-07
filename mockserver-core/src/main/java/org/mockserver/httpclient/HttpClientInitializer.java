@@ -19,6 +19,7 @@ import org.mockserver.socket.tls.NettySslContextFactory;
 import java.net.InetSocketAddress;
 import java.util.Map;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.httpclient.NettyHttpClient.REMOTE_SOCKET;
 import static org.mockserver.httpclient.NettyHttpClient.SECURE;
 import static org.slf4j.event.Level.TRACE;
@@ -52,14 +53,14 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
         if (proxyConfigurations != null) {
             if (secure && proxyConfigurations.containsKey(ProxyConfiguration.Type.HTTPS)) {
                 ProxyConfiguration proxyConfiguration = proxyConfigurations.get(ProxyConfiguration.Type.HTTPS);
-                if (proxyConfiguration.getUsername() != null && proxyConfiguration.getPassword() != null) {
+                if (isNotBlank(proxyConfiguration.getUsername()) && isNotBlank(proxyConfiguration.getPassword())) {
                     pipeline.addLast(new HttpProxyHandler(proxyConfiguration.getProxyAddress(), proxyConfiguration.getUsername(), proxyConfiguration.getPassword()));
                 } else {
                     pipeline.addLast(new HttpProxyHandler(proxyConfiguration.getProxyAddress()));
                 }
             } else if (proxyConfigurations.containsKey(ProxyConfiguration.Type.SOCKS5)) {
                 ProxyConfiguration proxyConfiguration = proxyConfigurations.get(ProxyConfiguration.Type.SOCKS5);
-                if (proxyConfiguration.getUsername() != null && proxyConfiguration.getPassword() != null) {
+                if (isNotBlank(proxyConfiguration.getUsername()) && isNotBlank(proxyConfiguration.getPassword())) {
                     pipeline.addLast(new Socks5ProxyHandler(proxyConfiguration.getProxyAddress(), proxyConfiguration.getUsername(), proxyConfiguration.getPassword()));
                 } else {
                     pipeline.addLast(new Socks5ProxyHandler(proxyConfiguration.getProxyAddress()));

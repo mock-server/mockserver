@@ -9,6 +9,7 @@ import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.Future;
 import io.netty.util.internal.PlatformDependent;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -30,16 +31,18 @@ public class SniHandler extends AbstractSniHandler<SslContext> {
     private static final AttributeKey<SSLEngine> UPSTREAM_SSL_ENGINE = AttributeKey.valueOf("UPSTREAM_SSL_ENGINE");
     private static final AttributeKey<Certificate[]> UPSTREAM_CLIENT_CERTIFICATES = AttributeKey.valueOf("UPSTREAM_CLIENT_CERTIFICATES");
 
+    private final Configuration configuration;
     private final NettySslContextFactory nettySslContextFactory;
 
-    public SniHandler(NettySslContextFactory nettySslContextFactory) {
+    public SniHandler(Configuration configuration, NettySslContextFactory nettySslContextFactory) {
+        this.configuration = configuration;
         this.nettySslContextFactory = nettySslContextFactory;
     }
 
     @Override
     protected Future<SslContext> lookup(ChannelHandlerContext ctx, String hostname) {
         if (isNotBlank(hostname)) {
-            ConfigurationProperties.addSslSubjectAlternativeNameDomains(hostname);
+            configuration.addSubjectAlternativeName(hostname);
         }
         return ctx.executor().newSucceededFuture(nettySslContextFactory.createServerSslContext());
     }

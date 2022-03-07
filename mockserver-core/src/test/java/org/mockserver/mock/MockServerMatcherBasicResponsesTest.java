@@ -10,6 +10,7 @@ import org.mockserver.scheduler.Scheduler;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
 import static org.mockito.Mockito.mock;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.API;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -25,7 +26,7 @@ public class MockServerMatcherBasicResponsesTest {
     public void prepareTestFixture() {
         Scheduler scheduler = mock(Scheduler.class);
         WebSocketClientRegistry webSocketClientRegistry = mock(WebSocketClientRegistry.class);
-        requestMatchers = new RequestMatchers(new MockServerLogger(), scheduler, webSocketClientRegistry);
+        requestMatchers = new RequestMatchers(configuration(), new MockServerLogger(), scheduler, webSocketClientRegistry);
     }
 
     @Test

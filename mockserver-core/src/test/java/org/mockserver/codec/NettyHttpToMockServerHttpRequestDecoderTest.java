@@ -7,6 +7,7 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 
@@ -19,6 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
@@ -39,7 +41,7 @@ public class NettyHttpToMockServerHttpRequestDecoderTest {
 
     @Before
     public void setupFixture() {
-        mockServerRequestDecoder = new NettyHttpToMockServerHttpRequestDecoder(new MockServerLogger(), false, null, null);
+        mockServerRequestDecoder = new NettyHttpToMockServerHttpRequestDecoder(configuration(), new MockServerLogger(), false, null, null);
         output = new ArrayList<>();
     }
 

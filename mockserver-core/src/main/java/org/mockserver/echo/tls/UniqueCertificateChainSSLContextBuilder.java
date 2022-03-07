@@ -1,7 +1,7 @@
 package org.mockserver.echo.tls;
 
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.KeyAndCertificateFactory;
@@ -21,10 +21,10 @@ import static org.slf4j.event.Level.ERROR;
 
 public class UniqueCertificateChainSSLContextBuilder {
 
-    public static SSLContext uniqueCertificateChainSSLContext() throws Exception {
+    public static SSLContext uniqueCertificateChainSSLContext(Configuration configuration) throws Exception {
         // ssl context
         SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
-        sslContext.init(new KeyManager[]{new UniqueCertificateChainX509KeyManager()}, InsecureTrustManagerFactory.INSTANCE.getTrustManagers(), null);
+        sslContext.init(new KeyManager[]{new UniqueCertificateChainX509KeyManager(configuration)}, InsecureTrustManagerFactory.INSTANCE.getTrustManagers(), null);
         return sslContext;
     }
 
@@ -34,22 +34,22 @@ public class UniqueCertificateChainSSLContextBuilder {
         X509Certificate[] x509Certificates;
         PrivateKey privateKey;
 
-        private UniqueCertificateChainX509KeyManager() {
+        private UniqueCertificateChainX509KeyManager(Configuration configuration) {
             MockServerLogger mockServerLogger = new MockServerLogger();
-            boolean originalDynamicallyCreateCertificateAuthorityCertificate = ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate();
-            String originalDirectoryToSaveDynamicSSLCertificate = ConfigurationProperties.directoryToSaveDynamicSSLCertificate();
-            String originalPrivateKeyPath = ConfigurationProperties.privateKeyPath();
-            String originalX509CertificatePath = ConfigurationProperties.x509CertificatePath();
+            boolean originalDynamicallyCreateCertificateAuthorityCertificate = configuration.dynamicallyCreateCertificateAuthorityCertificate();
+            String originalDirectoryToSaveDynamicSSLCertificate = configuration.directoryToSaveDynamicSSLCertificate();
+            String originalPrivateKeyPath = configuration.privateKeyPath();
+            String originalX509CertificatePath = configuration.x509CertificatePath();
             try {
                 File tempDirectory = new File(File.createTempFile("prefix", "suffix").getParentFile().getAbsolutePath() + "/" + UUID.randomUUID());
                 if (!tempDirectory.mkdir()) {
                     throw new RuntimeException("Exception creating temporary directory for test certificates " + tempDirectory);
                 }
-                ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate(true);
-                ConfigurationProperties.directoryToSaveDynamicSSLCertificate(tempDirectory.getAbsolutePath());
-                ConfigurationProperties.privateKeyPath("");
-                ConfigurationProperties.x509CertificatePath("");
-                KeyAndCertificateFactory keyAndCertificateFactory = KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory(mockServerLogger);
+                configuration.dynamicallyCreateCertificateAuthorityCertificate(true);
+                configuration.directoryToSaveDynamicSSLCertificate(tempDirectory.getAbsolutePath());
+                configuration.privateKeyPath("");
+                configuration.x509CertificatePath("");
+                KeyAndCertificateFactory keyAndCertificateFactory = KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory(configuration, mockServerLogger);
                 keyAndCertificateFactory.buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
                 keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
                 x509Certificates = new X509Certificate[]{
@@ -65,10 +65,10 @@ public class UniqueCertificateChainSSLContextBuilder {
                         .setThrowable(throwable)
                 );
             } finally {
-                ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate(originalDynamicallyCreateCertificateAuthorityCertificate);
-                ConfigurationProperties.directoryToSaveDynamicSSLCertificate(originalDirectoryToSaveDynamicSSLCertificate);
-                ConfigurationProperties.privateKeyPath(originalPrivateKeyPath);
-                ConfigurationProperties.x509CertificatePath(originalX509CertificatePath);
+                configuration.dynamicallyCreateCertificateAuthorityCertificate(originalDynamicallyCreateCertificateAuthorityCertificate);
+                configuration.directoryToSaveDynamicSSLCertificate(originalDirectoryToSaveDynamicSSLCertificate);
+                configuration.privateKeyPath(originalPrivateKeyPath);
+                configuration.x509CertificatePath(originalX509CertificatePath);
             }
         }
 

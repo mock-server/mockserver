@@ -3,7 +3,9 @@ package org.mockserver.closurecallback.websocketregistry;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import org.mockserver.closurecallback.websocketclient.WebSocketException;
 import org.mockserver.collections.CircularHashMap;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.metrics.Metrics;
@@ -13,12 +15,10 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.serialization.WebSocketMessageSerializer;
 import org.mockserver.serialization.model.WebSocketClientIdDTO;
 import org.mockserver.serialization.model.WebSocketErrorDTO;
-import org.mockserver.closurecallback.websocketclient.WebSocketException;
 
 import java.util.Collections;
 import java.util.Map;
 
-import static org.mockserver.configuration.ConfigurationProperties.maxWebSocketExpectations;
 import static org.mockserver.metrics.Metrics.Name.*;
 import static org.mockserver.metrics.Metrics.clearWebSocketMetrics;
 import static org.mockserver.model.HttpResponse.response;
@@ -33,13 +33,18 @@ public class WebSocketClientRegistry {
     public static final String WEB_SOCKET_CORRELATION_ID_HEADER_NAME = "WebSocketCorrelationId";
     private final MockServerLogger mockServerLogger;
     private final WebSocketMessageSerializer webSocketMessageSerializer;
-    private final Map<String, Channel> clientRegistry = Collections.synchronizedMap(new CircularHashMap<>(maxWebSocketExpectations()));
-    private final Map<String, WebSocketResponseCallback> responseCallbackRegistry = new CircularHashMap<>(maxWebSocketExpectations());
-    private final Map<String, WebSocketRequestCallback> forwardCallbackRegistry = new CircularHashMap<>(maxWebSocketExpectations());
+    private final Map<String, Channel> clientRegistry;
+    private final Map<String, WebSocketResponseCallback> responseCallbackRegistry;
+    private final Map<String, WebSocketRequestCallback> forwardCallbackRegistry;
+    private final Metrics metrics;
 
-    public WebSocketClientRegistry(MockServerLogger mockServerLogger) {
+    public WebSocketClientRegistry(Configuration configuration, MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
         this.webSocketMessageSerializer = new WebSocketMessageSerializer(mockServerLogger);
+        this.clientRegistry = Collections.synchronizedMap(new CircularHashMap<>(configuration.maxWebSocketExpectations()));
+        this.responseCallbackRegistry = new CircularHashMap<>(configuration.maxWebSocketExpectations());
+        this.forwardCallbackRegistry = new CircularHashMap<>(configuration.maxWebSocketExpectations());
+        this.metrics = new Metrics(configuration);
     }
 
     public void receivedTextWebSocketFrame(TextWebSocketFrame textWebSocketFrame) {
@@ -105,7 +110,7 @@ public class WebSocketClientRegistry {
             throw new WebSocketException("Exception while sending web socket registration client id message to client " + clientId, e);
         }
         clientRegistry.put(clientId, ctx.channel());
-        Metrics.set(WEBSOCKET_CALLBACK_CLIENT_COUNT, clientRegistry.size());
+        metrics.set(WEBSOCKET_CALLBACK_CLIENT_COUNT, clientRegistry.size());
         if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -121,7 +126,7 @@ public class WebSocketClientRegistry {
         if (removeChannel != null && removeChannel.isOpen()) {
             removeChannel.close();
         }
-        Metrics.set(WEBSOCKET_CALLBACK_CLIENT_COUNT, clientRegistry.size());
+        metrics.set(WEBSOCKET_CALLBACK_CLIENT_COUNT, clientRegistry.size());
         if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -133,7 +138,7 @@ public class WebSocketClientRegistry {
 
     public void registerResponseCallbackHandler(String webSocketCorrelationId, WebSocketResponseCallback expectationResponseCallback) {
         responseCallbackRegistry.put(webSocketCorrelationId, expectationResponseCallback);
-        Metrics.set(WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT, responseCallbackRegistry.size());
+        metrics.set(WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT, responseCallbackRegistry.size());
         if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -145,7 +150,7 @@ public class WebSocketClientRegistry {
 
     public void unregisterResponseCallbackHandler(String webSocketCorrelationId) {
         responseCallbackRegistry.remove(webSocketCorrelationId);
-        Metrics.set(WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT, responseCallbackRegistry.size());
+        metrics.set(WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT, responseCallbackRegistry.size());
         if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -157,7 +162,7 @@ public class WebSocketClientRegistry {
 
     public void registerForwardCallbackHandler(String webSocketCorrelationId, WebSocketRequestCallback expectationForwardCallback) {
         forwardCallbackRegistry.put(webSocketCorrelationId, expectationForwardCallback);
-        Metrics.set(WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT, forwardCallbackRegistry.size());
+        metrics.set(WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT, forwardCallbackRegistry.size());
         if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -169,7 +174,7 @@ public class WebSocketClientRegistry {
 
     public void unregisterForwardCallbackHandler(String webSocketCorrelationId) {
         forwardCallbackRegistry.remove(webSocketCorrelationId);
-        Metrics.set(WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT, forwardCallbackRegistry.size());
+        metrics.set(WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT, forwardCallbackRegistry.size());
         if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()

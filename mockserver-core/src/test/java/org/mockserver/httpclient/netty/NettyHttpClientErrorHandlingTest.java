@@ -26,6 +26,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -56,7 +57,7 @@ public class NettyHttpClientErrorHandlingTest {
         ));
 
         // when
-        new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null, false)
+        new NettyHttpClient(configuration(), mockServerLogger, clientEventLoopGroup, null, false)
             .sendRequest(request().withHeader(HOST.toString(), "127.0.0.1:" + freePort))
             .get(10, TimeUnit.SECONDS);
     }
@@ -76,7 +77,7 @@ public class NettyHttpClientErrorHandlingTest {
             ));
 
             // when
-            new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null, false).sendRequest(request().withSecure(true).withHeader(HOST.toString(), "127.0.0.1:" + echoServer.getPort()))
+            new NettyHttpClient(configuration(), mockServerLogger, clientEventLoopGroup, null, false).sendRequest(request().withSecure(true).withHeader(HOST.toString(), "127.0.0.1:" + echoServer.getPort()))
                 .get(10, TimeUnit.SECONDS);
         } finally {
             stopQuietly(echoServer);
@@ -91,7 +92,7 @@ public class NettyHttpClientErrorHandlingTest {
         try {
             // when
             InetSocketAddress socket = new InetSocketAddress("127.0.0.1", echoServer.getPort());
-            HttpResponse httpResponse = new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null, false)
+            HttpResponse httpResponse = new NettyHttpClient(configuration(), mockServerLogger, clientEventLoopGroup, null, false)
                 .sendRequest(
                     request()
                         .withHeader(CONTENT_TYPE.toString(), MediaType.TEXT_PLAIN.toString())

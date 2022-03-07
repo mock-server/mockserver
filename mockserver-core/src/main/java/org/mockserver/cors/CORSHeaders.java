@@ -1,13 +1,13 @@
 package org.mockserver.cors;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.model.Headers;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
 import static io.netty.handler.codec.http.HttpMethod.OPTIONS;
-import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
+import static org.mockserver.configuration.Configuration.configuration;
 
 /**
  * @author jamesdbloom
@@ -23,28 +23,29 @@ public class CORSHeaders {
     private final String corsMaxAge;
 
     public CORSHeaders(String corsAllowHeaders, String corsAllowMethods, boolean corsAllowCredentials, int corsMaxAge) {
-        this.corsAllowHeaders = corsAllowHeaders;
-        this.corsAllowMethods = corsAllowMethods;
-        this.corsAllowCredentials = corsAllowCredentials;
-        this.corsMaxAge = "" + corsMaxAge;
+        this(
+            configuration()
+                .corsAllowHeaders(corsAllowHeaders)
+                .corsAllowMethods(corsAllowMethods)
+                .corsAllowCredentials(corsAllowCredentials)
+                .corsMaxAgeInSeconds(corsMaxAge)
+        );
     }
 
-
-    public CORSHeaders() {
-        // Default constuctor builds from the ConfigurationProperties
-        this(ConfigurationProperties.corsAllowHeaders(),
-                ConfigurationProperties.corsAllowMethods(),
-                ConfigurationProperties.corsAllowCredentials(),
-                ConfigurationProperties.corsMaxAgeInSeconds());
+    public CORSHeaders(Configuration configuration) {
+        this.corsAllowHeaders = configuration.corsAllowHeaders();
+        this.corsAllowMethods = configuration.corsAllowMethods();
+        this.corsAllowCredentials = configuration.corsAllowCredentials();
+        this.corsMaxAge = "" + configuration.corsMaxAgeInSeconds();
     }
 
-    public static boolean isPreflightRequest(HttpRequest request) {
+    public static boolean isPreflightRequest(Configuration configuration, HttpRequest request) {
         final Headers headers = request.getHeaders();
         boolean isPreflightRequest = request.getMethod().getValue().equals(OPTIONS.name()) &&
             headers.containsEntry(HttpHeaderNames.ORIGIN.toString()) &&
             headers.containsEntry(HttpHeaderNames.ACCESS_CONTROL_REQUEST_METHOD.toString());
         if (isPreflightRequest) {
-            enableCORSForAPI(true);
+            configuration.enableCORSForAPI(true);
         }
         return isPreflightRequest;
     }

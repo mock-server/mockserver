@@ -50,6 +50,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.OK_200;
@@ -81,7 +82,7 @@ public abstract class AbstractProxyIntegrationTest {
     protected HttpClient createHttpClient() {
         return HttpClients
             .custom()
-            .setSSLSocketFactory(new SSLConnectionSocketFactory(new KeyStoreFactory(new MockServerLogger()).sslContext(), NoopHostnameVerifier.INSTANCE))
+            .setSSLSocketFactory(new SSLConnectionSocketFactory(new KeyStoreFactory(configuration(), new MockServerLogger()).sslContext(), NoopHostnameVerifier.INSTANCE))
             .setRoutePlanner(new DefaultProxyRoutePlanner(
                 new HttpHost(
                     System.getProperty("http.proxyHost", "127.0.0.1"),
@@ -940,7 +941,7 @@ public abstract class AbstractProxyIntegrationTest {
     @Test
     public void shouldReturnErrorForInvalidRequestToClear() throws Exception {
         // when
-        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false).sendRequest(
+        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false).sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "127.0.0.1:" + getProxyPort())
@@ -976,7 +977,7 @@ public abstract class AbstractProxyIntegrationTest {
     @Test
     public void shouldReturnErrorForInvalidRequestToVerify() throws Exception {
         // when
-        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false).sendRequest(
+        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false).sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "127.0.0.1:" + getProxyPort())
@@ -1011,7 +1012,7 @@ public abstract class AbstractProxyIntegrationTest {
     @Test
     public void shouldReturnErrorForInvalidRequestToVerifySequence() throws Exception {
         // when
-        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false).sendRequest(
+        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false).sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "127.0.0.1:" + getProxyPort())

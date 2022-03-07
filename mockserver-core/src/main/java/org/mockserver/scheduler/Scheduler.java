@@ -1,8 +1,8 @@
 package org.mockserver.scheduler;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.httpclient.SocketCommunicationException;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.action.http.HttpForwardActionResult;
@@ -25,11 +25,8 @@ import static org.mockserver.mock.HttpState.setPort;
  */
 public class Scheduler {
 
-    private final ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(
-        ConfigurationProperties.actionHandlerThreadCount(),
-        new SchedulerThreadFactory("Scheduler"),
-        new ThreadPoolExecutor.CallerRunsPolicy()
-    );
+    private final Configuration configuration;
+    private final ScheduledExecutorService scheduler;
 
     private final boolean synchronous;
 
@@ -60,14 +57,24 @@ public class Scheduler {
 
     private final MockServerLogger mockServerLogger;
 
-    public Scheduler(MockServerLogger mockServerLogger) {
-        this(mockServerLogger, false);
+    public Scheduler(Configuration configuration, MockServerLogger mockServerLogger) {
+        this(configuration, mockServerLogger, false);
     }
 
     @VisibleForTesting
-    public Scheduler(MockServerLogger mockServerLogger, boolean synchronous) {
+    public Scheduler(Configuration configuration, MockServerLogger mockServerLogger, boolean synchronous) {
+        this.configuration = configuration;
         this.mockServerLogger = mockServerLogger;
         this.synchronous = synchronous;
+        if (!this.synchronous) {
+            this.scheduler = new ScheduledThreadPoolExecutor(
+                configuration.actionHandlerThreadCount(),
+                new SchedulerThreadFactory("Scheduler"),
+                new ThreadPoolExecutor.CallerRunsPolicy()
+            );
+        } else {
+            this.scheduler = null;
+        }
     }
 
     public synchronized void shutdown() {
@@ -151,9 +158,9 @@ public class Scheduler {
         if (future != null) {
             if (this.synchronous || synchronous) {
                 try {
-                    future.getHttpResponse().get(ConfigurationProperties.maxSocketTimeout(), MILLISECONDS);
+                    future.getHttpResponse().get(configuration.maxSocketTimeoutInMillis(), MILLISECONDS);
                 } catch (TimeoutException e) {
-                    future.getHttpResponse().completeExceptionally(new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause()));
+                    future.getHttpResponse().completeExceptionally(new SocketCommunicationException("Response was not received after " + configuration.maxSocketTimeoutInMillis() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or configuration.maxSocketTimeout(long milliseconds)", e.getCause()));
                 } catch (InterruptedException | ExecutionException ex) {
                     future.getHttpResponse().completeExceptionally(ex);
                 }
@@ -180,9 +187,9 @@ public class Scheduler {
         if (future != null) {
             if (this.synchronous || synchronous) {
                 try {
-                    future.get(ConfigurationProperties.maxSocketTimeout(), MILLISECONDS);
+                    future.get(configuration.maxSocketTimeoutInMillis(), MILLISECONDS);
                 } catch (TimeoutException e) {
-                    future.completeExceptionally(new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause()));
+                    future.completeExceptionally(new SocketCommunicationException("Response was not received after " + configuration.maxSocketTimeoutInMillis() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause()));
                 } catch (InterruptedException | ExecutionException ex) {
                     future.completeExceptionally(ex);
                 }
@@ -199,9 +206,9 @@ public class Scheduler {
                 HttpResponse httpResponse = null;
                 Throwable exception = null;
                 try {
-                    httpResponse = future.getHttpResponse().get(ConfigurationProperties.maxSocketTimeout(), MILLISECONDS);
+                    httpResponse = future.getHttpResponse().get(configuration.maxSocketTimeoutInMillis(), MILLISECONDS);
                 } catch (TimeoutException e) {
-                    exception = new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause());
+                    exception = new SocketCommunicationException("Response was not received after " + configuration.maxSocketTimeoutInMillis() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause());
                 } catch (InterruptedException | ExecutionException ex) {
                     exception = ex;
                 }

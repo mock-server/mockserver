@@ -28,6 +28,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LogMessageType.FORWARDED_REQUEST;
 import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
 import static org.mockserver.model.HttpRequest.request;
@@ -1279,8 +1280,8 @@ public class DashboardWebSocketHandlerTest {
     private void shouldRenderFilteredLogEntriesCorrectly(boolean contains, RequestDefinition requestFilter, List<LogEntry> logEntries, List<Expectation> expectations, String... renderListSections) throws InterruptedException {
         // given
         MockServerLogger mockServerLogger = new MockServerLogger(DashboardWebSocketHandlerTest.class);
-        Scheduler scheduler = new Scheduler(mockServerLogger, true);
-        HttpState httpState = new HttpState(mockServerLogger, scheduler);
+        Scheduler scheduler = new Scheduler(configuration(), mockServerLogger, true);
+        HttpState httpState = new HttpState(configuration(), mockServerLogger, scheduler);
         new Scheduler.SchedulerThreadFactory("MockServer Test " + this.getClass().getSimpleName()).newThread(() -> {
             MockServerEventLog mockServerEventLog = httpState.getMockServerLog();
             for (LogEntry logEntry : logEntries) {

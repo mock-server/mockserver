@@ -1,6 +1,7 @@
 package org.mockserver.socket.tls;
 
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -15,6 +16,7 @@ import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.mockserver.socket.tls.KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory;
 import static org.slf4j.event.Level.*;
@@ -47,12 +49,24 @@ public class KeyStoreFactory {
     private static final String SSL_CONTEXT_FALLBACK_PROTOCOL = "TLSv1";
 
     private SSLContext sslContext;
+    private final Configuration configuration;
     private final MockServerLogger mockServerLogger;
     private final KeyAndCertificateFactory keyAndCertificateFactory;
 
+    /**
+     * @deprecated use constructor that specifies configuration explicitly
+     */
+    @Deprecated
     public KeyStoreFactory(MockServerLogger mockServerLogger) {
+        this.configuration = configuration();
         this.mockServerLogger = mockServerLogger;
-        this.keyAndCertificateFactory = createKeyAndCertificateFactory(mockServerLogger);
+        this.keyAndCertificateFactory = createKeyAndCertificateFactory(configuration, mockServerLogger);
+    }
+
+    public KeyStoreFactory(Configuration configuration, MockServerLogger mockServerLogger) {
+        this.configuration = configuration;
+        this.mockServerLogger = mockServerLogger;
+        this.keyAndCertificateFactory = createKeyAndCertificateFactory(configuration, mockServerLogger);
     }
 
     public synchronized SSLContext sslContext() {
@@ -68,7 +82,7 @@ public class KeyStoreFactory {
     }
 
     public synchronized SSLContext sslContext(PrivateKey privateKey, X509Certificate x509Certificate, X509Certificate certificateAuthorityX509Certificate, X509Certificate[] trustX509CertificateChain) {
-        if (sslContext == null || ConfigurationProperties.rebuildTLSContext()) {
+        if (sslContext == null || configuration.rebuildTLSContext()) {
             try {
                 // key manager
                 KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
@@ -89,7 +103,7 @@ public class KeyStoreFactory {
         return sslContext;
     }
 
-    @SuppressWarnings({"InfiniteRecursion", "UnusedReturnValue"})
+    @SuppressWarnings({"UnusedReturnValue"})
     public KeyStore loadOrCreateKeyStore() {
         if (keyAndCertificateFactory.certificateNotYetCreated()) {
             keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();

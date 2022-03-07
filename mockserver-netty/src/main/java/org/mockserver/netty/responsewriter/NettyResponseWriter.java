@@ -3,8 +3,8 @@ package org.mockserver.netty.responsewriter;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.cors.CORSHeaders;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.ConnectionOptions;
@@ -25,9 +25,9 @@ public class NettyResponseWriter extends ResponseWriter {
     private final MockServerLogger mockServerLogger;
     private final ChannelHandlerContext ctx;
     private final Scheduler scheduler;
-    private static final CORSHeaders CORS_HEADERS = new CORSHeaders();
 
-    public NettyResponseWriter(MockServerLogger mockServerLogger, ChannelHandlerContext ctx, Scheduler scheduler) {
+    public NettyResponseWriter(Configuration configuration, MockServerLogger mockServerLogger, ChannelHandlerContext ctx, Scheduler scheduler) {
+        super(configuration);
         this.mockServerLogger = mockServerLogger;
         this.ctx = ctx;
         this.scheduler = scheduler;
@@ -49,7 +49,7 @@ public class NettyResponseWriter extends ResponseWriter {
         }
 
         ChannelFuture channelFuture = ctx.writeAndFlush(response);
-        if (closeChannel || ConfigurationProperties.alwaysCloseSocketConnections()) {
+        if (closeChannel || configuration.alwaysCloseSocketConnections()) {
             channelFuture.addListener((ChannelFutureListener) future -> {
                 Delay closeSocketDelay = connectionOptions != null ? connectionOptions.getCloseSocketDelay() : null;
                 if (closeSocketDelay == null) {

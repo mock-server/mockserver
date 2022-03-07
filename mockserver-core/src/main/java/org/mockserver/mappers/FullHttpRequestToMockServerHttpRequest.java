@@ -6,6 +6,7 @@ import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import org.mockserver.codec.BodyDecoderEncoder;
 import org.mockserver.codec.ExpandedParameterDecoder;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Cookies;
@@ -34,10 +35,10 @@ public class FullHttpRequestToMockServerHttpRequest {
     private final Integer port;
     private final JDKCertificateToMockServerX509Certificate jdkCertificateToMockServerX509Certificate;
 
-    public FullHttpRequestToMockServerHttpRequest(MockServerLogger mockServerLogger, boolean isSecure, Certificate[] clientCertificates, Integer port) {
+    public FullHttpRequestToMockServerHttpRequest(Configuration configuration, MockServerLogger mockServerLogger, boolean isSecure, Certificate[] clientCertificates, Integer port) {
         this.mockServerLogger = mockServerLogger;
         this.bodyDecoderEncoder = new BodyDecoderEncoder();
-        this.formParameterParser = new ExpandedParameterDecoder(mockServerLogger);
+        this.formParameterParser = new ExpandedParameterDecoder(configuration, mockServerLogger);
         this.isSecure = isSecure;
         this.clientCertificates = clientCertificates;
         this.port = port;

@@ -1,6 +1,7 @@
 package org.mockserver.integration;
 
 import org.mockserver.client.MockServerClient;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.lifecycle.ExpectationsListener;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.netty.MockServer;
@@ -10,7 +11,8 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import static org.mockserver.configuration.ConfigurationProperties.launchUIForLogLevelDebug;
+import static org.mockserver.configuration.ClientConfiguration.clientConfiguration;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.slf4j.event.Level.DEBUG;
 
 /**
@@ -18,37 +20,61 @@ import static org.slf4j.event.Level.DEBUG;
  */
 public class ClientAndServer extends MockServerClient {
 
-    private final MockServer mockServer;
-
-    public ClientAndServer(Integer... ports) {
-        super(new CompletableFuture<>());
-        mockServer = new MockServer(ports);
-        completePortFutureAndOpenUI();
-    }
-
-    public ClientAndServer(String remoteHost, Integer remotePort, Integer... ports) {
-        super(new CompletableFuture<>());
-        mockServer = new MockServer(remotePort, remoteHost, ports);
-        completePortFutureAndOpenUI();
-    }
-
-    private void completePortFutureAndOpenUI() {
-        if (MockServerLogger.isEnabled(DEBUG) && launchUIForLogLevelDebug()) {
-            portFuture.whenComplete((integer, throwable) -> openUI());
-        }
-        portFuture.complete(mockServer.getLocalPort());
-    }
+    private final Configuration configuration;
 
     public static ClientAndServer startClientAndServer(List<Integer> ports) {
         return startClientAndServer(ports.toArray(new Integer[0]));
     }
 
+    public static ClientAndServer startClientAndServer(Configuration configuration, List<Integer> ports) {
+        return startClientAndServer(configuration, ports.toArray(new Integer[0]));
+    }
+
     public static ClientAndServer startClientAndServer(Integer... port) {
-        return new ClientAndServer(port);
+        return startClientAndServer(configuration(), port);
+    }
+
+    public static ClientAndServer startClientAndServer(Configuration configuration, Integer... port) {
+        return new ClientAndServer(configuration, port);
     }
 
     public static ClientAndServer startClientAndServer(String remoteHost, Integer remotePort, Integer... port) {
-        return new ClientAndServer(remoteHost, remotePort, port);
+        return startClientAndServer(configuration(), remoteHost, remotePort, port);
+    }
+
+    public static ClientAndServer startClientAndServer(Configuration configuration, String remoteHost, Integer remotePort, Integer... port) {
+        return new ClientAndServer(configuration, remoteHost, remotePort, port);
+    }
+
+    private final MockServer mockServer;
+
+    public ClientAndServer(Integer... ports) {
+        this(configuration(), ports);
+    }
+
+    public ClientAndServer(Configuration configuration, Integer... ports) {
+        super(clientConfiguration(configuration), new CompletableFuture<>());
+        this.configuration = configuration;
+        this.mockServer = new MockServer(configuration, ports);
+        completePortFutureAndOpenUI();
+    }
+
+    public ClientAndServer(String remoteHost, Integer remotePort, Integer... ports) {
+        this(configuration(), remoteHost, remotePort, ports);
+    }
+
+    public ClientAndServer(Configuration configuration, String remoteHost, Integer remotePort, Integer... ports) {
+        super(clientConfiguration(configuration), new CompletableFuture<>());
+        this.configuration = configuration;
+        this.mockServer = new MockServer(configuration, remotePort, remoteHost, ports);
+        completePortFutureAndOpenUI();
+    }
+
+    private void completePortFutureAndOpenUI() {
+        if (MockServerLogger.isEnabled(DEBUG) && configuration.launchUIForLogLevelDebug()) {
+            portFuture.whenComplete((integer, throwable) -> openUI());
+        }
+        portFuture.complete(mockServer.getLocalPort());
     }
 
     /**

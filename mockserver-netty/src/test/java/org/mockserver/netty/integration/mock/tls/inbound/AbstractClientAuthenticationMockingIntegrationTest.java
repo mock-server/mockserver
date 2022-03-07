@@ -23,6 +23,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.echo.tls.UniqueCertificateChainSSLContextBuilder.uniqueCertificateChainSSLContext;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -108,7 +109,7 @@ public abstract class AbstractClientAuthenticationMockingIntegrationTest extends
             );
 
         // when
-        HttpClient httpClient = HttpClients.custom().setSSLContext(new KeyStoreFactory(new MockServerLogger()).sslContext()).build();
+        HttpClient httpClient = HttpClients.custom().setSSLContext(new KeyStoreFactory(configuration(), new MockServerLogger()).sslContext()).build();
         HttpResponse response = httpClient.execute(new HttpPost(new URIBuilder()
             .setScheme("https")
             .setHost("localhost")
@@ -139,7 +140,7 @@ public abstract class AbstractClientAuthenticationMockingIntegrationTest extends
 
         // when
         try {
-            HttpClient httpClient = HttpClients.custom().setSSLContext(uniqueCertificateChainSSLContext()).build();
+            HttpClient httpClient = HttpClients.custom().setSSLContext(uniqueCertificateChainSSLContext(configuration())).build();
             httpClient.execute(new HttpPost(new URIBuilder()
                 .setScheme("https")
                 .setHost("localhost")
@@ -178,7 +179,7 @@ public abstract class AbstractClientAuthenticationMockingIntegrationTest extends
             );
 
         // when
-        HttpClient httpClient = HttpClients.custom().setSSLContext(new KeyStoreFactory(new MockServerLogger()).sslContext()).build();
+        HttpClient httpClient = HttpClients.custom().setSSLContext(new KeyStoreFactory(configuration(), new MockServerLogger()).sslContext()).build();
         HttpResponse response = httpClient.execute(new HttpPost(new URIBuilder()
             .setScheme("http")
             .setHost("localhost")

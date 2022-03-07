@@ -3,7 +3,9 @@ package org.mockserver.mock;
 import com.google.common.annotations.VisibleForTesting;
 import org.mockserver.authentication.AuthenticationException;
 import org.mockserver.authentication.AuthenticationHandler;
+import org.mockserver.closurecallback.websocketregistry.LocalCallbackRegistry;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
@@ -42,8 +44,6 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.*;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.configuration.ConfigurationProperties.addSubjectAlternativeName;
-import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.log.model.LogEntry.LogMessageType.CLEARED;
 import static org.mockserver.log.model.LogEntry.LogMessageType.RETRIEVED;
 import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE_FORMAT;
@@ -66,6 +66,7 @@ public class HttpState {
     private ExpectationFileWatcher expectationFileWatcher;
     // mockserver
     private final RequestMatchers requestMatchers;
+    private final Configuration configuration;
     private final MockServerLogger mockServerLogger;
     private final WebSocketClientRegistry webSocketClientRegistry;
     // serializers
@@ -109,20 +110,22 @@ public class HttpState {
         return LOCAL_PORT.get();
     }
 
-    public HttpState(MockServerLogger mockServerLogger, Scheduler scheduler) {
+    public HttpState(Configuration configuration, MockServerLogger mockServerLogger, Scheduler scheduler) {
+        this.configuration = configuration;
         this.mockServerLogger = mockServerLogger.setHttpStateHandler(this);
         this.scheduler = scheduler;
-        this.webSocketClientRegistry = new WebSocketClientRegistry(mockServerLogger);
-        this.mockServerLog = new MockServerEventLog(mockServerLogger, scheduler, true);
-        this.requestMatchers = new RequestMatchers(mockServerLogger, scheduler, webSocketClientRegistry);
-        if (ConfigurationProperties.persistExpectations()) {
-            this.expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, requestMatchers);
+        this.webSocketClientRegistry = new WebSocketClientRegistry(configuration, mockServerLogger);
+        LocalCallbackRegistry.setMaxWebSocketExpectations(configuration.maxWebSocketExpectations());
+        this.mockServerLog = new MockServerEventLog(configuration, mockServerLogger, scheduler, true);
+        this.requestMatchers = new RequestMatchers(configuration, mockServerLogger, scheduler, webSocketClientRegistry);
+        if (configuration.persistExpectations()) {
+            this.expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration, mockServerLogger, requestMatchers);
         }
-        if (ConfigurationProperties.watchInitializationJson()) {
-            this.expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
+        if (configuration.watchInitializationJson()) {
+            this.expectationFileWatcher = new ExpectationFileWatcher(configuration, mockServerLogger, requestMatchers);
         }
-        this.memoryMonitoring = new MemoryMonitoring(this.mockServerLog, this.requestMatchers);
-        new ExpectationInitializerLoader(mockServerLogger, requestMatchers);
+        this.memoryMonitoring = new MemoryMonitoring(configuration, this.mockServerLog, this.requestMatchers);
+        new ExpectationInitializerLoader(configuration, mockServerLogger, requestMatchers);
     }
 
     public void setControlPlaneAuthenticationHandler(AuthenticationHandler controlPlaneAuthenticationHandler) {
@@ -241,7 +244,7 @@ public class HttpState {
             if (requestDefinition instanceof HttpRequest) {
                 final String hostHeader = ((HttpRequest) requestDefinition).getFirstHeader(HOST.toString());
                 if (isNotBlank(hostHeader)) {
-                    scheduler.submit(() -> addSubjectAlternativeName(hostHeader));
+                    scheduler.submit(() -> configuration.addSubjectAlternativeName(hostHeader));
                 }
             }
             upsertedExpectations.add(requestMatchers.add(expectation, Cause.API));
@@ -500,7 +503,7 @@ public class HttpState {
                 }
 
                 try {
-                    return httpResponseFuture.get(maxFutureTimeout(), MILLISECONDS);
+                    return httpResponseFuture.get(configuration.maxFutureTimeoutInMillis(), MILLISECONDS);
                 } catch (ExecutionException | InterruptedException | TimeoutException ex) {
                     mockServerLogger.logEvent(
                         new LogEntry()
@@ -684,7 +687,7 @@ public class HttpState {
             }
 
             try {
-                return canHandle.get(maxFutureTimeout(), MILLISECONDS);
+                return canHandle.get(configuration.maxFutureTimeoutInMillis(), MILLISECONDS);
             } catch (InterruptedException | ExecutionException | TimeoutException ex) {
                 mockServerLogger.logEvent(
                     new LogEntry()

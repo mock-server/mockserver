@@ -14,7 +14,7 @@ import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.util.IPAddress;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -34,7 +34,6 @@ import java.security.interfaces.RSAPrivateKey;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.mockserver.configuration.ConfigurationProperties.preventCertificateDynamicUpdate;
 import static org.mockserver.socket.tls.PEMToFile.*;
 import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.NOT_AFTER;
 import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.NOT_BEFORE;
@@ -48,6 +47,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
     private static final String PROVIDER_NAME = BouncyCastleProvider.PROVIDER_NAME;
     private static final String SIGNATURE_ALGORITHM = "SHA256WithRSAEncryption";
 
+    private final Configuration configuration;
     private final MockServerLogger mockServerLogger;
 
     static {
@@ -59,7 +59,8 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
     private RSAPrivateKey certificateAuthorityPrivateKey;
     private X509Certificate certificateAuthorityX509Certificate;
 
-    public BCKeyAndCertificateFactory(MockServerLogger mockServerLogger) {
+    public BCKeyAndCertificateFactory(Configuration configuration, MockServerLogger mockServerLogger) {
+        this.configuration = configuration;
         this.mockServerLogger = mockServerLogger;
     }
 
@@ -146,7 +147,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
     }
 
     private boolean dynamicallyUpdateCertificateAuthority() {
-        return ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate();
+        return configuration.dynamicallyCreateCertificateAuthorityCertificate();
     }
 
     public boolean certificateAuthorityCertificateNotYetCreated() {
@@ -155,17 +156,17 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
 
     private String certificateAuthorityPrivateKeyPath() {
         if (dynamicallyUpdateCertificateAuthority()) {
-            return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "PKCS8CertificateAuthorityPrivateKey.pem").getAbsolutePath();
+            return new File(new File(configuration.directoryToSaveDynamicSSLCertificate()), "PKCS8CertificateAuthorityPrivateKey.pem").getAbsolutePath();
         } else {
-            return ConfigurationProperties.certificateAuthorityPrivateKey();
+            return configuration.certificateAuthorityPrivateKey();
         }
     }
 
     private String certificateAuthorityX509CertificatePath() {
         if (dynamicallyUpdateCertificateAuthority()) {
-            return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "CertificateAuthorityCertificate.pem").getAbsolutePath();
+            return new File(new File(configuration.directoryToSaveDynamicSSLCertificate()), "CertificateAuthorityCertificate.pem").getAbsolutePath();
         } else {
-            return ConfigurationProperties.certificateAuthorityCertificate();
+            return configuration.certificateAuthorityCertificate();
         }
     }
 
@@ -249,7 +250,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
     }
 
     private boolean customPrivateKeyAndCertificateProvided() {
-        return isBlank(ConfigurationProperties.privateKeyPath()) || isBlank(ConfigurationProperties.x509CertificatePath());
+        return isBlank(configuration.privateKeyPath()) || isBlank(configuration.x509CertificatePath());
     }
 
     @Override
@@ -266,19 +267,19 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
                     certificateAuthorityX509Certificate(),
                     certificateAuthorityPrivateKey(),
                     certificateAuthorityX509Certificate().getPublicKey(),
-                    ConfigurationProperties.sslCertificateDomainName(),
-                    ConfigurationProperties.sslSubjectAlternativeNameDomains(),
-                    ConfigurationProperties.sslSubjectAlternativeNameIps()
+                    configuration.sslCertificateDomainName(),
+                    configuration.sslSubjectAlternativeNameDomains(),
+                    configuration.sslSubjectAlternativeNameIps()
                 );
                 if (MockServerLogger.isEnabled(TRACE)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(TRACE)
                             .setMessageFormat("created new X509{}with SAN Domain Names{}and IPs{}")
-                            .setArguments(x509Certificate(), Arrays.toString(ConfigurationProperties.sslSubjectAlternativeNameDomains()), Arrays.toString(ConfigurationProperties.sslSubjectAlternativeNameIps()))
+                            .setArguments(x509Certificate(), configuration.sslSubjectAlternativeNameDomains(), configuration.sslSubjectAlternativeNameIps())
                     );
                 }
-                if (preventCertificateDynamicUpdate()) {
+                if (configuration.preventCertificateDynamicUpdate()) {
                     saveAsPEMFile(x509Certificate, x509CertificatePath(), "X509 Certificate");
                     saveAsPEMFile(privateKey, privateKeyPath(), "Private Key");
                 }
@@ -296,7 +297,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
     /**
      * Create a server certificate for the given domain and subject alternative names, signed by the given Certificate Authority.
      */
-    private X509Certificate createCASignedCert(PublicKey publicKey, X509Certificate certificateAuthorityCert, PrivateKey certificateAuthorityPrivateKey, PublicKey certificateAuthorityPublicKey, String domain, String[] subjectAlternativeNameDomains, String[] subjectAlternativeNameIps) throws Exception {
+    private X509Certificate createCASignedCert(PublicKey publicKey, X509Certificate certificateAuthorityCert, PrivateKey certificateAuthorityPrivateKey, PublicKey certificateAuthorityPublicKey, String domain, Set<String> subjectAlternativeNameDomains, Set<String> subjectAlternativeNameIps) throws Exception {
 
         // signers name
         X500Name issuer = new X509CertificateHolder(certificateAuthorityCert.getEncoded()).getSubject();
@@ -370,18 +371,18 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
     }
 
     private String privateKeyPath() {
-        return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "PKCS8PrivateKey.pem").getAbsolutePath();
+        return new File(new File(configuration.directoryToSaveDynamicSSLCertificate()), "PKCS8PrivateKey.pem").getAbsolutePath();
     }
 
     private String x509CertificatePath() {
-        return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "Certificate.pem").getAbsolutePath();
+        return new File(new File(configuration.directoryToSaveDynamicSSLCertificate()), "Certificate.pem").getAbsolutePath();
     }
 
     public PrivateKey privateKey() {
         if (customPrivateKeyAndCertificateProvided()) {
             return privateKey;
         } else {
-            return privateKeyFromPEMFile(ConfigurationProperties.privateKeyPath());
+            return privateKeyFromPEMFile(configuration.privateKeyPath());
         }
     }
 
@@ -389,7 +390,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
         if (customPrivateKeyAndCertificateProvided()) {
             return x509Certificate;
         } else {
-            return x509FromPEMFile(ConfigurationProperties.x509CertificatePath());
+            return x509FromPEMFile(configuration.x509CertificatePath());
         }
     }
 }

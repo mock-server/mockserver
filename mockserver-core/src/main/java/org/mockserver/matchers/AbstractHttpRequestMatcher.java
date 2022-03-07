@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.listeners.MockServerMatcherNotifier;
@@ -21,6 +22,7 @@ public abstract class AbstractHttpRequestMatcher extends NotMatcher<RequestDefin
     protected static final String MATCHED = " matched";
     protected static final String COLON_NEW_LINES = ": " + NEW_LINE + NEW_LINE;
 
+    protected final Configuration configuration;
     protected final MockServerLogger mockServerLogger;
     private int hashCode;
     private boolean isBlank = false;
@@ -32,7 +34,8 @@ public abstract class AbstractHttpRequestMatcher extends NotMatcher<RequestDefin
     protected String didNotMatchExpectationBecause = REQUEST_DID_NOT_MATCH + EXPECTATION + BECAUSE;
     protected String didNotMatchExpectationWithoutBecause = REQUEST_DID_NOT_MATCH + EXPECTATION;
 
-    protected AbstractHttpRequestMatcher(MockServerLogger mockServerLogger) {
+    protected AbstractHttpRequestMatcher(Configuration configuration, MockServerLogger mockServerLogger) {
+        this.configuration = configuration;
         this.mockServerLogger = mockServerLogger;
     }
 

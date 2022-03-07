@@ -3,6 +3,7 @@ package org.mockserver.log;
 import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 import org.mockserver.collections.CircularConcurrentLinkedDeque;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -72,19 +73,22 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             .withHttpResponse(logEntry.getHttpResponse())
             .withTimestamp(logEntry.getTimestamp());
     private static final String[] EXCLUDED_FIELDS = {"id", "disruptor"};
+    private final Configuration configuration;
     private MockServerLogger mockServerLogger;
-    private CircularConcurrentLinkedDeque<LogEntry> eventLog = new CircularConcurrentLinkedDeque<>(ConfigurationProperties.maxLogEntries(), LogEntry::clear);
+    private CircularConcurrentLinkedDeque<LogEntry> eventLog;
     private MatcherBuilder matcherBuilder;
     private RequestDefinitionSerializer requestDefinitionSerializer;
     private final boolean asynchronousEventProcessing;
     private Disruptor<LogEntry> disruptor;
 
-    public MockServerEventLog(MockServerLogger mockServerLogger, Scheduler scheduler, boolean asynchronousEventProcessing) {
+    public MockServerEventLog(Configuration configuration, MockServerLogger mockServerLogger, Scheduler scheduler, boolean asynchronousEventProcessing) {
         super(scheduler);
+        this.configuration = configuration;
         this.mockServerLogger = mockServerLogger;
-        this.matcherBuilder = new MatcherBuilder(mockServerLogger);
+        this.matcherBuilder = new MatcherBuilder(configuration, mockServerLogger);
         this.requestDefinitionSerializer = new RequestDefinitionSerializer(mockServerLogger);
         this.asynchronousEventProcessing = asynchronousEventProcessing;
+        this.eventLog = new CircularConcurrentLinkedDeque<>(configuration.maxLogEntries(), LogEntry::clear);
         startRingBuffer();
     }
 
@@ -111,7 +115,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     }
 
     private void startRingBuffer() {
-        disruptor = new Disruptor<>(LogEntry::new, ConfigurationProperties.ringBufferSize(), new Scheduler.SchedulerThreadFactory("EventLog"));
+        disruptor = new Disruptor<>(LogEntry::new, configuration.ringBufferSize(), new Scheduler.SchedulerThreadFactory("EventLog"));
 
         final ExceptionHandler<LogEntry> errorHandler = new ExceptionHandler<LogEntry>() {
             @Override

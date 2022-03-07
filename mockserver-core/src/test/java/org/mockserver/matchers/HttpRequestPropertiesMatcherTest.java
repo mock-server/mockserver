@@ -1,6 +1,7 @@
 package org.mockserver.matchers;
 
 import org.junit.Test;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
@@ -11,6 +12,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.jar.Attributes.Name.CONTENT_TYPE;
 import static junit.framework.TestCase.*;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.matchers.NotMatcher.notMatcher;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.Cookie.schemaCookie;
@@ -67,16 +69,17 @@ public class HttpRequestPropertiesMatcherTest {
      * - schema control plane
      */
 
+    private final Configuration configuration = configuration();
     private final MockServerLogger mockServerLogger = new MockServerLogger(HttpRequestPropertiesMatcherTest.class);
 
     HttpRequestPropertiesMatcher update(RequestDefinition requestDefinition) {
-        HttpRequestPropertiesMatcher httpRequestPropertiesMatcher = new HttpRequestPropertiesMatcher(mockServerLogger);
+        HttpRequestPropertiesMatcher httpRequestPropertiesMatcher = new HttpRequestPropertiesMatcher(configuration, mockServerLogger);
         httpRequestPropertiesMatcher.update(new Expectation(requestDefinition));
         return httpRequestPropertiesMatcher;
     }
 
     HttpRequestPropertiesMatcher updateForControlPlane(RequestDefinition requestDefinition) {
-        HttpRequestPropertiesMatcher httpRequestPropertiesMatcher = new HttpRequestPropertiesMatcher(mockServerLogger);
+        HttpRequestPropertiesMatcher httpRequestPropertiesMatcher = new HttpRequestPropertiesMatcher(configuration, mockServerLogger);
         httpRequestPropertiesMatcher.update(requestDefinition);
         return httpRequestPropertiesMatcher;
     }

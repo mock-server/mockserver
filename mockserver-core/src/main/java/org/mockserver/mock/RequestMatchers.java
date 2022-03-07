@@ -3,7 +3,7 @@ package org.mockserver.mock;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.collections.CircularHashMap;
 import org.mockserver.collections.CircularPriorityQueue;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
@@ -23,7 +23,6 @@ import java.util.stream.Stream;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.configuration.ConfigurationProperties.maxExpectations;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.log.model.LogEntryMessages.*;
 import static org.mockserver.metrics.Metrics.Name.*;
@@ -37,24 +36,30 @@ import static org.slf4j.event.Level.DEBUG;
 @SuppressWarnings("FieldMayBeFinal")
 public class RequestMatchers extends MockServerMatcherNotifier {
 
-    final CircularPriorityQueue<String, HttpRequestMatcher, SortableExpectationId> httpRequestMatchers = new CircularPriorityQueue<>(
-        maxExpectations(),
-        EXPECTATION_SORTABLE_PRIORITY_COMPARATOR,
-        httpRequestMatcher -> httpRequestMatcher.getExpectation() != null ? httpRequestMatcher.getExpectation().getSortableId() : NULL,
-        httpRequestMatcher -> httpRequestMatcher.getExpectation() != null ? httpRequestMatcher.getExpectation().getId() : ""
-    );
-    final CircularHashMap<String, RequestDefinition> expectationRequestDefinitions = new CircularHashMap<>(maxExpectations());
+    final CircularPriorityQueue<String, HttpRequestMatcher, SortableExpectationId> httpRequestMatchers;
+    final CircularHashMap<String, RequestDefinition> expectationRequestDefinitions;
     private final MockServerLogger mockServerLogger;
+    private final Configuration configuration;
     private final Scheduler scheduler;
     private WebSocketClientRegistry webSocketClientRegistry;
     private MatcherBuilder matcherBuilder;
+    private Metrics metrics;
 
-    public RequestMatchers(MockServerLogger mockServerLogger, Scheduler scheduler, WebSocketClientRegistry webSocketClientRegistry) {
+    public RequestMatchers(Configuration configuration, MockServerLogger mockServerLogger, Scheduler scheduler, WebSocketClientRegistry webSocketClientRegistry) {
         super(scheduler);
+        this.configuration = configuration;
         this.scheduler = scheduler;
-        this.matcherBuilder = new MatcherBuilder(mockServerLogger);
+        this.matcherBuilder = new MatcherBuilder(configuration, mockServerLogger);
         this.mockServerLogger = mockServerLogger;
         this.webSocketClientRegistry = webSocketClientRegistry;
+        this.metrics = new Metrics(configuration);
+        httpRequestMatchers = new CircularPriorityQueue<>(
+            configuration.maxExpectations(),
+            EXPECTATION_SORTABLE_PRIORITY_COMPARATOR,
+            httpRequestMatcher -> httpRequestMatcher.getExpectation() != null ? httpRequestMatcher.getExpectation().getSortableId() : NULL,
+            httpRequestMatcher -> httpRequestMatcher.getExpectation() != null ? httpRequestMatcher.getExpectation().getId() : ""
+        );
+        expectationRequestDefinitions = new CircularHashMap<>(configuration.maxExpectations());
     }
 
     public Expectation add(Expectation expectation, Cause cause) {
@@ -65,7 +70,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                 .getByKey(expectation.getId())
                 .map(httpRequestMatcher -> {
                     if (httpRequestMatcher.getExpectation() != null && httpRequestMatcher.getExpectation().getAction() != null) {
-                        Metrics.decrement(httpRequestMatcher.getExpectation().getAction().getType());
+                        metrics.decrement(httpRequestMatcher.getExpectation().getAction().getType());
                     }
                     if (httpRequestMatcher.getExpectation() != null) {
                         // propagate created time from previous entry to avoid re-ordering on update
@@ -85,7 +90,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                             );
                         }
                         if (expectation.getAction() != null) {
-                            Metrics.increment(expectation.getAction().getType());
+                            metrics.increment(expectation.getAction().getType());
                         }
                     } else {
                         httpRequestMatchers.addPriorityKey(httpRequestMatcher);
@@ -123,7 +128,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                             // update source to new cause
                             httpRequestMatcher.withSource(cause);
                             if (httpRequestMatcher.getExpectation() != null && httpRequestMatcher.getExpectation().getAction() != null) {
-                                Metrics.decrement(httpRequestMatcher.getExpectation().getAction().getType());
+                                metrics.decrement(httpRequestMatcher.getExpectation().getAction().getType());
                             }
                             if (httpRequestMatcher.getExpectation() != null) {
                                 // propagate created time from previous entry to avoid re-ordering on update
@@ -144,7 +149,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                                     );
                                 }
                                 if (expectation.getAction() != null) {
-                                    Metrics.increment(expectation.getAction().getType());
+                                    metrics.increment(expectation.getAction().getType());
                                 }
                             } else {
                                 httpRequestMatchers.addPriorityKey(httpRequestMatcher);
@@ -161,7 +166,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                     HttpRequestMatcher httpRequestMatcher = httpRequestMatchersByKey.get(key);
                     removeHttpRequestMatcher(httpRequestMatcher, cause, false, UUIDService.getUUID());
                     if (httpRequestMatcher.getExpectation() != null && httpRequestMatcher.getExpectation().getAction() != null) {
-                        Metrics.decrement(httpRequestMatcher.getExpectation().getAction().getType());
+                        metrics.decrement(httpRequestMatcher.getExpectation().getAction().getType());
                     }
                 });
             if (numberOfChanges.get() > 0) {
@@ -175,7 +180,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
         httpRequestMatchers.add(httpRequestMatcher);
         httpRequestMatcher.withSource(cause);
         if (expectation.getAction() != null) {
-            Metrics.increment(expectation.getAction().getType());
+            metrics.increment(expectation.getAction().getType());
         }
         if (MockServerLogger.isEnabled(Level.INFO)) {
             mockServerLogger.logEvent(
@@ -214,7 +219,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
             .map(httpRequestMatcher -> {
                 Expectation matchingExpectation = null;
                 boolean remainingMatchesDecremented = false;
-                if (httpRequestMatcher.matches(MockServerLogger.isEnabled(DEBUG) ? new MatchDifference(httpRequest) : null, httpRequest)) {
+                if (httpRequestMatcher.matches(MockServerLogger.isEnabled(DEBUG) ? new MatchDifference(configuration.detailedMatchFailures(), httpRequest) : null, httpRequest)) {
                     matchingExpectation = httpRequestMatcher.getExpectation();
                     httpRequestMatcher.setResponseInProgress(true);
                     if (matchingExpectation.decrementRemainingMatches()) {
@@ -230,13 +235,13 @@ public class RequestMatchers extends MockServerMatcherNotifier {
             })
             .filter(Objects::nonNull)
             .findFirst();
-        if (ConfigurationProperties.metricsEnabled()) {
+        if (configuration.metricsEnabled()) {
             if (!first.isPresent() || first.get().getAction() == null) {
-                Metrics.increment(EXPECTATION_NOT_MATCHED_COUNT);
+                metrics.increment(EXPECTATION_NOT_MATCHED_COUNT);
             } else if (first.get().getAction().getType().direction == Action.Direction.FORWARD) {
-                Metrics.increment(FORWARD_EXPECTATION_MATCHED_COUNT);
+                metrics.increment(FORWARD_EXPECTATION_MATCHED_COUNT);
             } else {
-                Metrics.increment(RESPONSE_EXPECTATION_MATCHED_COUNT);
+                metrics.increment(RESPONSE_EXPECTATION_MATCHED_COUNT);
             }
         }
         return first.orElse(null);
@@ -334,7 +339,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                     webSocketClientRegistry.unregisterClient(((HttpObjectCallback) action).getClientId());
                 }
                 if (notifyAndUpdateMetrics && action != null) {
-                    Metrics.decrement(action.getType());
+                    metrics.decrement(action.getType());
                 }
             }
             if (notifyAndUpdateMetrics) {

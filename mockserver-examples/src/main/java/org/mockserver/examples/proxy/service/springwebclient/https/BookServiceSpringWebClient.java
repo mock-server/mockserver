@@ -17,6 +17,8 @@ import reactor.netty.transport.ProxyProvider;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
+import static org.mockserver.configuration.Configuration.configuration;
+
 /**
  * @author jamesdbloom
  */
@@ -35,7 +37,7 @@ public class BookServiceSpringWebClient implements BookService {
     }
 
     private WebClient createWebClient() {
-        SslContext sslContext = new NettySslContextFactory(new MockServerLogger(getClass())).createClientSslContext(false);
+        SslContext sslContext = new NettySslContextFactory(configuration(), new MockServerLogger(getClass())).createClientSslContext(false);
         return WebClient.builder()
             .clientConnector(
                 new ReactorClientHttpConnector(

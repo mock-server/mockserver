@@ -3,6 +3,7 @@ package org.mockserver.mockservlet;
 import com.google.common.collect.ImmutableSet;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
@@ -31,7 +32,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.rtsp.RtspResponseStatuses.NOT_IMPLEMENTED;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.configuration.ConfigurationProperties.addSubjectAlternativeName;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.mock.HttpState.PATH_PREFIX;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
@@ -39,8 +40,10 @@ import static org.mockserver.model.PortBinding.portBinding;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("FieldMayBeFinal")
 public class MockServerServlet extends HttpServlet implements ServletContextListener {
 
+    private Configuration configuration;
     private MockServerLogger mockServerLogger;
     // generic handling
     private HttpState httpStateHandler;
@@ -51,17 +54,19 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
     private HttpServletRequestToMockServerHttpRequestDecoder httpServletRequestToMockServerRequestDecoder;
     // mockserver
     private HttpActionHandler actionHandler;
-    private EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop"));
+    private final EventLoopGroup workerGroup;
 
     @SuppressWarnings("WeakerAccess")
     public MockServerServlet() {
+        this.configuration = configuration();
         this.mockServerLogger = new MockServerLogger(MockServerEventLog.class);
-        this.httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerHttpRequestDecoder(this.mockServerLogger);
-        this.scheduler = new Scheduler(mockServerLogger);
-        this.httpStateHandler = new HttpState(this.mockServerLogger, this.scheduler);
+        this.httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerHttpRequestDecoder(this.configuration, this.mockServerLogger);
+        this.scheduler = new Scheduler(configuration(), mockServerLogger);
+        this.httpStateHandler = new HttpState(configuration(), mockServerLogger, this.scheduler);
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
-        this.actionHandler = new HttpActionHandler(workerGroup, httpStateHandler, null, new NettySslContextFactory(mockServerLogger));
+        this.workerGroup = new NioEventLoopGroup(configuration.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop"));
+        this.actionHandler = new HttpActionHandler(configuration(), workerGroup, httpStateHandler, null, new NettySslContextFactory(this.configuration, this.mockServerLogger));
     }
 
     @Override
@@ -90,14 +95,14 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
     @Override
     public void service(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
 
-        ResponseWriter responseWriter = new ServletResponseWriter(new MockServerLogger(), httpServletResponse);
+        ResponseWriter responseWriter = new ServletResponseWriter(configuration(), new MockServerLogger(), httpServletResponse);
         HttpRequest request = null;
         try {
 
             request = httpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest);
             final String hostHeader = request.getFirstHeader(HOST.toString());
             if (isNotBlank(hostHeader)) {
-                scheduler.submit(() -> addSubjectAlternativeName(hostHeader));
+                scheduler.submit(() -> configuration.addSubjectAlternativeName(hostHeader));
             }
 
             if (!httpStateHandler.handle(request, responseWriter, true)) {
@@ -107,7 +112,7 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
                     responseWriter.writeResponse(request, NOT_IMPLEMENTED, "ExpectationResponseCallback, ExpectationForwardCallback or ExpectationForwardAndResponseCallback is not supported by MockServer deployed as a WAR", "text/plain");
 
                 } else if (request.matches("PUT", PATH_PREFIX + "/status", "/status") ||
-                    isNotBlank(ConfigurationProperties.livenessHttpGetPath()) && request.matches("GET", ConfigurationProperties.livenessHttpGetPath())) {
+                    isNotBlank(configuration.livenessHttpGetPath()) && request.matches("GET", configuration.livenessHttpGetPath())) {
 
                     responseWriter.writeResponse(request, OK, portBindingSerializer.serialize(portBinding(httpServletRequest.getLocalPort())), "application/json");
 

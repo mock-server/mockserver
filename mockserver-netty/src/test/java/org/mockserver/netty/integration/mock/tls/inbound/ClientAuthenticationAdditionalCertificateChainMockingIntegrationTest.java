@@ -29,6 +29,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.echo.tls.UniqueCertificateChainSSLContextBuilder.uniqueCertificateChainSSLContext;
 import static org.mockserver.model.HttpRequest.request;
@@ -136,10 +137,10 @@ public class ClientAuthenticationAdditionalCertificateChainMockingIntegrationTes
     }
 
     private SSLContext getSslContext() {
-        KeyAndCertificateFactory keyAndCertificateFactory = KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory(new MockServerLogger());
+        KeyAndCertificateFactory keyAndCertificateFactory = KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory(configuration(), new MockServerLogger());
         assertThat(keyAndCertificateFactory, notNullValue());
         keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
-        return new KeyStoreFactory(new MockServerLogger())
+        return new KeyStoreFactory(configuration(), new MockServerLogger())
             .sslContext(
                 privateKeyFromPEMFile("org/mockserver/netty/integration/tls/leaf-key-pkcs8.pem"),
                 x509FromPEMFile("org/mockserver/netty/integration/tls/leaf-cert.pem"),
@@ -168,7 +169,7 @@ public class ClientAuthenticationAdditionalCertificateChainMockingIntegrationTes
 
         // when
         try {
-            HttpClient httpClient = HttpClients.custom().setSSLContext(uniqueCertificateChainSSLContext()).build();
+            HttpClient httpClient = HttpClients.custom().setSSLContext(uniqueCertificateChainSSLContext(configuration())).build();
             httpClient.execute(new HttpPost(new URIBuilder()
                 .setScheme("https")
                 .setHost("localhost")

@@ -48,6 +48,7 @@ import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.proxyconfiguration.ProxyConfiguration.proxyConfiguration;
 import static org.mockserver.stop.Stop.stopQuietly;
@@ -291,7 +292,7 @@ public class NettyHttpsProxyShadedJarIntegrationTest {
         // given
         HttpClient httpClient = HttpClients
             .custom()
-            .setSSLSocketFactory(new SSLConnectionSocketFactory(new KeyStoreFactory(new MockServerLogger()).sslContext(), NoopHostnameVerifier.INSTANCE))
+            .setSSLSocketFactory(new SSLConnectionSocketFactory(new KeyStoreFactory(configuration(), new MockServerLogger()).sslContext(), NoopHostnameVerifier.INSTANCE))
             .setRoutePlanner(
                 new DefaultProxyRoutePlanner(
                     new HttpHost(

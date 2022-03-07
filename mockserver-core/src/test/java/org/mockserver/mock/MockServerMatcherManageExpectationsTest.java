@@ -19,6 +19,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.mock;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.API;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -33,7 +34,7 @@ public class MockServerMatcherManageExpectationsTest {
     @Before
     public void prepareTestFixture() {
         WebSocketClientRegistry webSocketClientRegistry = mock(WebSocketClientRegistry.class);
-        requestMatchers = new RequestMatchers(new MockServerLogger(), new Scheduler(new MockServerLogger(), true), webSocketClientRegistry);
+        requestMatchers = new RequestMatchers(configuration(), new MockServerLogger(), new Scheduler(configuration(), new MockServerLogger(), true), webSocketClientRegistry);
     }
 
     @Test

@@ -24,6 +24,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
@@ -58,7 +59,7 @@ public class NettyHttpClientTest {
     @Test
     public void shouldSendBasicRequest() throws Exception {
         // given
-        NettyHttpClient nettyHttpClient = new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null, false);
+        NettyHttpClient nettyHttpClient = new NettyHttpClient(configuration(), mockServerLogger, clientEventLoopGroup, null, false);
 
         // when
         HttpResponse httpResponse = nettyHttpClient.sendRequest(request().withHeader("Host", "0.0.0.0:" + echoServer.getPort()))
@@ -79,7 +80,7 @@ public class NettyHttpClientTest {
     @Test
     public void shouldSendBasicRequestToAnotherIpAndPort() throws Exception {
         // given
-        NettyHttpClient nettyHttpClient = new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null, false);
+        NettyHttpClient nettyHttpClient = new NettyHttpClient(configuration(), mockServerLogger, clientEventLoopGroup, null, false);
 
         // when
         HttpResponse httpResponse = nettyHttpClient.sendRequest(request().withHeader("Host", "www.google.com"), new InetSocketAddress("0.0.0.0", echoServer.getPort()))
@@ -100,7 +101,7 @@ public class NettyHttpClientTest {
     @Test
     public void shouldSendBasicRequestToAnotherIpAndPortWithNoHostHeader() throws Exception {
         // given
-        NettyHttpClient nettyHttpClient = new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null, false);
+        NettyHttpClient nettyHttpClient = new NettyHttpClient(configuration(), mockServerLogger, clientEventLoopGroup, null, false);
 
         // when
         HttpResponse httpResponse = nettyHttpClient.sendRequest(request(), new InetSocketAddress("0.0.0.0", echoServer.getPort()))
@@ -120,7 +121,7 @@ public class NettyHttpClientTest {
     @Test
     public void shouldSendComplexRequestWithStringBody() throws Exception {
         // given
-        NettyHttpClient nettyHttpClient = new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null, false);
+        NettyHttpClient nettyHttpClient = new NettyHttpClient(configuration(), mockServerLogger, clientEventLoopGroup, null, false);
 
         // when
         HttpResponse httpResponse = nettyHttpClient.sendRequest(
@@ -156,7 +157,7 @@ public class NettyHttpClientTest {
     @Test
     public void shouldSendComplexRequestWithStringBodyAndNotContentType() throws Exception {
         // given
-        NettyHttpClient nettyHttpClient = new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null, false);
+        NettyHttpClient nettyHttpClient = new NettyHttpClient(configuration(), mockServerLogger, clientEventLoopGroup, null, false);
 
         // when
         HttpResponse httpResponse = nettyHttpClient.sendRequest(
@@ -190,7 +191,7 @@ public class NettyHttpClientTest {
     @Test
     public void shouldSendComplexRequestWithBinaryBody() throws Exception {
         // given
-        NettyHttpClient nettyHttpClient = new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null, false);
+        NettyHttpClient nettyHttpClient = new NettyHttpClient(configuration(), mockServerLogger, clientEventLoopGroup, null, false);
 
         // when
         HttpResponse httpResponse = nettyHttpClient.sendRequest(

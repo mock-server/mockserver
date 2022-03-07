@@ -1,6 +1,7 @@
 package org.mockserver.codec;
 
 import org.junit.Test;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Parameter;
@@ -14,6 +15,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.iterableWithSize;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.Parameter.param;
 
@@ -22,6 +24,7 @@ import static org.mockserver.model.Parameter.param;
  */
 public class ExpandedParameterDecoderTest {
 
+    private final Configuration configuration = configuration();
     private final MockServerLogger mockServerLogger = new MockServerLogger(ExpandedParameterDecoderTest.class);
 
     @Test
@@ -114,7 +117,7 @@ public class ExpandedParameterDecoderTest {
 
     @Test
     public void shouldSplitMatrixParameters() {
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.MATRIX_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -129,7 +132,7 @@ public class ExpandedParameterDecoderTest {
                 string("5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.MATRIX_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -144,7 +147,7 @@ public class ExpandedParameterDecoderTest {
                 string("5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.MATRIX_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -159,7 +162,7 @@ public class ExpandedParameterDecoderTest {
                 string("5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.MATRIX_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -178,7 +181,7 @@ public class ExpandedParameterDecoderTest {
 
     @Test
     public void shouldNotSplitMatrixParameters() {
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.MATRIX,
             "parameterName",
             Arrays.asList(
@@ -190,7 +193,7 @@ public class ExpandedParameterDecoderTest {
                 string("3;parameterName=4;parameterName=5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.MATRIX,
             "parameterName",
             Arrays.asList(
@@ -202,7 +205,7 @@ public class ExpandedParameterDecoderTest {
                 string("3;parameterName=4;parameterName=5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.MATRIX,
             "parameterName",
             Arrays.asList(
@@ -214,7 +217,7 @@ public class ExpandedParameterDecoderTest {
                 string("3;parameterName=4;parameterName=5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.MATRIX,
             "parameterName",
             Arrays.asList(
@@ -232,7 +235,7 @@ public class ExpandedParameterDecoderTest {
 
     @Test
     public void shouldSplitLabelParameters() {
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.LABEL_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -247,7 +250,7 @@ public class ExpandedParameterDecoderTest {
                 string("5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.LABEL_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -262,7 +265,7 @@ public class ExpandedParameterDecoderTest {
                 string("5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.LABEL_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -277,7 +280,7 @@ public class ExpandedParameterDecoderTest {
                 string("5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.LABEL_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -296,7 +299,7 @@ public class ExpandedParameterDecoderTest {
 
     @Test
     public void shouldNotSplitLabelParameters() {
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.LABEL,
             "parameterName",
             Arrays.asList(
@@ -308,7 +311,7 @@ public class ExpandedParameterDecoderTest {
                 string("3.4.5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.LABEL,
             "parameterName",
             Arrays.asList(
@@ -320,7 +323,7 @@ public class ExpandedParameterDecoderTest {
                 string("3.4.5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.LABEL,
             "parameterName",
             Arrays.asList(
@@ -332,7 +335,7 @@ public class ExpandedParameterDecoderTest {
                 string("3.4.5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.LABEL,
             "parameterName",
             Arrays.asList(
@@ -350,7 +353,7 @@ public class ExpandedParameterDecoderTest {
 
     @Test
     public void shouldSplitFormParameters() {
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.FORM,
             "parameterName",
             Arrays.asList(
@@ -365,7 +368,7 @@ public class ExpandedParameterDecoderTest {
                 string("5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.FORM,
             "parameterName",
             Arrays.asList(
@@ -380,7 +383,7 @@ public class ExpandedParameterDecoderTest {
                 string("5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.FORM,
             "parameterName",
             Arrays.asList(
@@ -395,7 +398,7 @@ public class ExpandedParameterDecoderTest {
                 string("5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.FORM,
             "parameterName",
             Arrays.asList(
@@ -414,7 +417,7 @@ public class ExpandedParameterDecoderTest {
 
     @Test
     public void shouldNotSplitFormParameters() {
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.FORM_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -426,7 +429,7 @@ public class ExpandedParameterDecoderTest {
                 string("3,4,5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.FORM_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -438,7 +441,7 @@ public class ExpandedParameterDecoderTest {
                 string("3,4,5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.FORM_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -450,7 +453,7 @@ public class ExpandedParameterDecoderTest {
                 string("3,4,5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.FORM_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -468,7 +471,7 @@ public class ExpandedParameterDecoderTest {
 
     @Test
     public void shouldSplitPipeDelimitedParameters() {
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.PIPE_DELIMITED,
             "parameterName",
             Arrays.asList(
@@ -483,7 +486,7 @@ public class ExpandedParameterDecoderTest {
                 string("5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.PIPE_DELIMITED,
             "parameterName",
             Arrays.asList(
@@ -498,7 +501,7 @@ public class ExpandedParameterDecoderTest {
                 string("5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.PIPE_DELIMITED,
             "parameterName",
             Arrays.asList(
@@ -513,7 +516,7 @@ public class ExpandedParameterDecoderTest {
                 string("5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.PIPE_DELIMITED,
             "parameterName",
             Arrays.asList(
@@ -532,7 +535,7 @@ public class ExpandedParameterDecoderTest {
 
     @Test
     public void shouldNotSplitPipeDelimitedParameters() {
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.PIPE_DELIMITED_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -544,7 +547,7 @@ public class ExpandedParameterDecoderTest {
                 string("3|4|5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.PIPE_DELIMITED_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -556,7 +559,7 @@ public class ExpandedParameterDecoderTest {
                 string("3|4|5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.PIPE_DELIMITED_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -568,7 +571,7 @@ public class ExpandedParameterDecoderTest {
                 string("3|4|5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.PIPE_DELIMITED_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -586,7 +589,7 @@ public class ExpandedParameterDecoderTest {
 
     @Test
     public void shouldSplitSpaceDelimitedWithPercentCharParameters() {
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.SPACE_DELIMITED,
             "parameterName",
             Arrays.asList(
@@ -601,7 +604,7 @@ public class ExpandedParameterDecoderTest {
                 string("5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.SPACE_DELIMITED,
             "parameterName",
             Arrays.asList(
@@ -616,7 +619,7 @@ public class ExpandedParameterDecoderTest {
                 string("5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.SPACE_DELIMITED,
             "parameterName",
             Arrays.asList(
@@ -631,7 +634,7 @@ public class ExpandedParameterDecoderTest {
                 string("5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.SPACE_DELIMITED,
             "parameterName",
             Arrays.asList(
@@ -650,7 +653,7 @@ public class ExpandedParameterDecoderTest {
 
     @Test
     public void shouldNotSplitSpaceDelimitedWithPercentCharParameters() {
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.SPACE_DELIMITED_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -662,7 +665,7 @@ public class ExpandedParameterDecoderTest {
                 string("3%204%205")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.SPACE_DELIMITED_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -674,7 +677,7 @@ public class ExpandedParameterDecoderTest {
                 string("3%204%205")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.SPACE_DELIMITED_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -686,7 +689,7 @@ public class ExpandedParameterDecoderTest {
                 string("3%204%205")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.SPACE_DELIMITED_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -702,7 +705,7 @@ public class ExpandedParameterDecoderTest {
 
     @Test
     public void shouldSplitSpaceDelimitedWithSpaceCharParameters() {
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.SPACE_DELIMITED,
             "parameterName",
             Arrays.asList(
@@ -717,7 +720,7 @@ public class ExpandedParameterDecoderTest {
                 string("5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.SPACE_DELIMITED,
             "parameterName",
             Arrays.asList(
@@ -732,7 +735,7 @@ public class ExpandedParameterDecoderTest {
                 string("5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.SPACE_DELIMITED,
             "parameterName",
             Arrays.asList(
@@ -747,7 +750,7 @@ public class ExpandedParameterDecoderTest {
                 string("5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.SPACE_DELIMITED,
             "parameterName",
             Arrays.asList(
@@ -766,7 +769,7 @@ public class ExpandedParameterDecoderTest {
 
     @Test
     public void shouldNotSplitSpaceDelimitedWithSpaceCharParameters() {
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.SPACE_DELIMITED_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -778,7 +781,7 @@ public class ExpandedParameterDecoderTest {
                 string("3 4 5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.SPACE_DELIMITED_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -790,7 +793,7 @@ public class ExpandedParameterDecoderTest {
                 string("3 4 5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.SPACE_DELIMITED_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -802,7 +805,7 @@ public class ExpandedParameterDecoderTest {
                 string("3 4 5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.SPACE_DELIMITED_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -818,7 +821,7 @@ public class ExpandedParameterDecoderTest {
 
     @Test
     public void shouldSplitSpaceDelimitedWithPlusCharParameters() {
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.SPACE_DELIMITED,
             "parameterName",
             Arrays.asList(
@@ -833,7 +836,7 @@ public class ExpandedParameterDecoderTest {
                 string("5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.SPACE_DELIMITED,
             "parameterName",
             Arrays.asList(
@@ -848,7 +851,7 @@ public class ExpandedParameterDecoderTest {
                 string("5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.SPACE_DELIMITED,
             "parameterName",
             Arrays.asList(
@@ -863,7 +866,7 @@ public class ExpandedParameterDecoderTest {
                 string("5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.SPACE_DELIMITED,
             "parameterName",
             Arrays.asList(
@@ -882,7 +885,7 @@ public class ExpandedParameterDecoderTest {
 
     @Test
     public void shouldNotSplitSpaceDelimitedWithPlusCharParameters() {
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.PIPE_DELIMITED_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -894,7 +897,7 @@ public class ExpandedParameterDecoderTest {
                 string("3+4+5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.PIPE_DELIMITED_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -906,7 +909,7 @@ public class ExpandedParameterDecoderTest {
                 string("3+4+5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.PIPE_DELIMITED_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -918,7 +921,7 @@ public class ExpandedParameterDecoderTest {
                 string("3+4+5")
             )
         );
-        assertThat(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(
+        assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
             ParameterStyle.PIPE_DELIMITED_EXPLODED,
             "parameterName",
             Arrays.asList(
@@ -933,7 +936,7 @@ public class ExpandedParameterDecoderTest {
     }
 
     private void shouldParseParameters(String path, Parameter... parameters) {
-        List<Parameter> actual = new ExpandedParameterDecoder(mockServerLogger).retrieveFormParameters(path, path.contains("?")).getEntries();
+        List<Parameter> actual = new ExpandedParameterDecoder(configuration, mockServerLogger).retrieveFormParameters(path, path.contains("?")).getEntries();
         if (parameters.length > 0) {
             assertThat(actual, containsInAnyOrder(parameters));
         } else {
@@ -958,7 +961,7 @@ public class ExpandedParameterDecoderTest {
         );
 
         // when
-        new ExpandedParameterDecoder(mockServerLogger).splitParameters(matcher, matched);
+        new ExpandedParameterDecoder(configuration, mockServerLogger).splitParameters(matcher, matched);
 
         // then
         assertThat(matched, is(new Parameters(
@@ -983,7 +986,7 @@ public class ExpandedParameterDecoderTest {
         );
 
         // when
-        new ExpandedParameterDecoder(mockServerLogger).splitParameters(matcher, matched);
+        new ExpandedParameterDecoder(configuration, mockServerLogger).splitParameters(matcher, matched);
 
         // then
         assertThat(matched, is(new Parameters(

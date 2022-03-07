@@ -1,6 +1,6 @@
 package org.mockserver.socket.tls.jdk;
 
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -15,8 +15,6 @@ import java.security.cert.X509Certificate;
 import java.util.Arrays;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.configuration.ConfigurationProperties.preventCertificateDynamicUpdate;
 import static org.mockserver.socket.tls.PEMToFile.*;
 import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.*;
 import static org.slf4j.event.Level.*;
@@ -26,6 +24,7 @@ import static org.slf4j.event.Level.*;
  */
 public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
 
+    private final Configuration configuration;
     private final MockServerLogger mockServerLogger;
     private final X509Generator x509Generator;
 
@@ -33,7 +32,8 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
     private String certificateAuthorityPrivateKey;
     private X509Certificate certificateAuthorityX509Certificate;
 
-    public JDKKeyAndCertificateFactory(MockServerLogger mockServerLogger) {
+    public JDKKeyAndCertificateFactory(Configuration configuration, MockServerLogger mockServerLogger) {
+        this.configuration = configuration;
         this.mockServerLogger = mockServerLogger;
         this.x509Generator = new X509Generator(new MockServerLogger());
     }
@@ -124,7 +124,7 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
     }
 
     private boolean dynamicallyUpdateCertificateAuthority() {
-        return ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate();
+        return configuration.dynamicallyCreateCertificateAuthorityCertificate();
     }
 
     public boolean certificateAuthorityCertificateNotYetCreated() {
@@ -133,17 +133,17 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
 
     private String certificateAuthorityPrivateKeyPath() {
         if (dynamicallyUpdateCertificateAuthority()) {
-            return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "PKCS8CertificateAuthorityPrivateKey.pem").getAbsolutePath();
+            return new File(new File(configuration.directoryToSaveDynamicSSLCertificate()), "PKCS8CertificateAuthorityPrivateKey.pem").getAbsolutePath();
         } else {
-            return ConfigurationProperties.certificateAuthorityPrivateKey();
+            return configuration.certificateAuthorityPrivateKey();
         }
     }
 
     private String certificateAuthorityX509CertificatePath() {
         if (dynamicallyUpdateCertificateAuthority()) {
-            return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "CertificateAuthorityCertificate.pem").getAbsolutePath();
+            return new File(new File(configuration.directoryToSaveDynamicSSLCertificate()), "CertificateAuthorityCertificate.pem").getAbsolutePath();
         } else {
-            return ConfigurationProperties.certificateAuthorityCertificate();
+            return configuration.certificateAuthorityCertificate();
         }
     }
 
@@ -198,7 +198,7 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
     }
 
     private boolean customPrivateKeyAndCertificateProvided() {
-        return isBlank(ConfigurationProperties.privateKeyPath()) || isBlank(ConfigurationProperties.x509CertificatePath());
+        return isBlank(configuration.privateKeyPath()) || isBlank(configuration.x509CertificatePath());
     }
 
     @Override
@@ -215,9 +215,9 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
                         .setKeyPairAlgorithm(KEY_GENERATION_ALGORITHM)
                         .setSigningAlgorithm(SIGNING_ALGORITHM)
                         .setCommonName(ROOT_COMMON_NAME)
-                        .setCommonName(ConfigurationProperties.sslCertificateDomainName())
-                        .addSubjectAlternativeNames(ConfigurationProperties.sslSubjectAlternativeNameDomains())
-                        .addSubjectAlternativeNames(ConfigurationProperties.sslSubjectAlternativeNameIps())
+                        .setCommonName(configuration.sslCertificateDomainName())
+                        .addSubjectAlternativeNames(configuration.sslSubjectAlternativeNameDomains())
+                        .addSubjectAlternativeNames(configuration.sslSubjectAlternativeNameIps())
                         .setKeyPairSize(MOCK_KEY_SIZE),
                     certificateAuthorityX509Certificate.getIssuerDN().getName(),
                     caPrivateKey,
@@ -228,10 +228,10 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
                         new LogEntry()
                             .setLogLevel(TRACE)
                             .setMessageFormat("created new X509{}with SAN Domain Names{}and IPs{}")
-                            .setArguments(x509Certificate(), Arrays.toString(ConfigurationProperties.sslSubjectAlternativeNameDomains()), Arrays.toString(ConfigurationProperties.sslSubjectAlternativeNameIps()))
+                            .setArguments(x509Certificate(), configuration.sslSubjectAlternativeNameDomains(), configuration.sslSubjectAlternativeNameIps())
                     );
                 }
-                if (preventCertificateDynamicUpdate()) {
+                if (configuration.preventCertificateDynamicUpdate()) {
                     saveAsPEMFile(x509AndPrivateKey.getCert(), x509CertificatePath(), "X509 Certificate");
                     saveAsPEMFile(x509AndPrivateKey.getPrivateKey(), privateKeyPath(), "Private Key");
                 }
@@ -251,18 +251,18 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
     }
 
     private String privateKeyPath() {
-        return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "PKCS8PrivateKey.pem").getAbsolutePath();
+        return new File(new File(configuration.directoryToSaveDynamicSSLCertificate()), "PKCS8PrivateKey.pem").getAbsolutePath();
     }
 
     private String x509CertificatePath() {
-        return new File(new File(ConfigurationProperties.directoryToSaveDynamicSSLCertificate()), "Certificate.pem").getAbsolutePath();
+        return new File(new File(configuration.directoryToSaveDynamicSSLCertificate()), "Certificate.pem").getAbsolutePath();
     }
 
     public PrivateKey privateKey() {
         if (customPrivateKeyAndCertificateProvided()) {
             return privateKeyFromPEM(x509AndPrivateKey.getPrivateKey());
         } else {
-            return privateKeyFromPEMFile(ConfigurationProperties.privateKeyPath());
+            return privateKeyFromPEMFile(configuration.privateKeyPath());
         }
     }
 
@@ -270,7 +270,7 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
         if (customPrivateKeyAndCertificateProvided()) {
             return x509FromPEM(x509AndPrivateKey.getCert());
         } else {
-            return x509FromPEMFile(ConfigurationProperties.x509CertificatePath());
+            return x509FromPEMFile(configuration.x509CertificatePath());
         }
     }
 

@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static org.mockserver.configuration.Configuration.configuration;
 
 public class RunServletEmbeddedExample {
 
@@ -39,7 +40,7 @@ public class RunServletEmbeddedExample {
         defaultConnector.setRedirectPort(SERVER_HTTPS_PORT);
 
         // add https connector
-        KeyStoreFactory keyStoreFactory = new KeyStoreFactory(new MockServerLogger());
+        KeyStoreFactory keyStoreFactory = new KeyStoreFactory(configuration(), new MockServerLogger());
         keyStoreFactory.loadOrCreateKeyStore();
         Connector httpsConnector = new Connector();
         httpsConnector.setPort(SERVER_HTTPS_PORT);

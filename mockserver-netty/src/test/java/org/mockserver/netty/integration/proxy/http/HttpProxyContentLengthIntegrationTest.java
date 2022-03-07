@@ -19,6 +19,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.HttpRequest.request;
@@ -89,6 +90,7 @@ public class HttpProxyContentLengthIntegrationTest {
 
         // when
         HttpResponse httpResponse = new NettyHttpClient(
+            configuration(),
             new MockServerLogger(),
             clientEventLoopGroup,
             ImmutableList.of(proxyConfiguration(

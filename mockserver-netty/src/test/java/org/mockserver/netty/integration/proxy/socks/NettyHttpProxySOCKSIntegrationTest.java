@@ -46,6 +46,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assume.assumeThat;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.stop.Stop.stopQuietly;
 import static org.mockserver.test.Assert.assertContains;
@@ -135,7 +136,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
             });
 
             // and - an HTTP client
-            HttpClient httpClient = HttpClientBuilder.create().setSSLContext(new KeyStoreFactory(new MockServerLogger()).sslContext()).build();
+            HttpClient httpClient = HttpClientBuilder.create().setSSLContext(new KeyStoreFactory(configuration(), new MockServerLogger()).sslContext()).build();
 
             // when
             HttpResponse response = httpClient.execute(new HttpHost("127.0.0.1", insecureEchoServer.getPort(), "http"), new HttpGet("/"));
@@ -181,7 +182,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
             });
 
             // and - an HTTP client
-            HttpClient httpClient = HttpClientBuilder.create().setSSLContext(new KeyStoreFactory(new MockServerLogger()).sslContext()).build();
+            HttpClient httpClient = HttpClientBuilder.create().setSSLContext(new KeyStoreFactory(configuration(), new MockServerLogger()).sslContext()).build();
 
             // when
             HttpResponse response = httpClient.execute(new HttpHost("127.0.0.1", secureEchoServer.getPort(), "https"), new HttpGet("/"));

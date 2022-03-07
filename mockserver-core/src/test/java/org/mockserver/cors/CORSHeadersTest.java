@@ -1,12 +1,14 @@
 package org.mockserver.cors;
 
 import org.junit.Test;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.cors.CORSHeaders.isPreflightRequest;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -16,27 +18,33 @@ import static org.mockserver.model.HttpResponse.response;
  */
 public class CORSHeadersTest {
 
+    private final Configuration configuration = configuration();
+
     @Test
     public void shouldDetectPreflightRequest() {
         assertThat(isPreflightRequest(
+            configuration,
             request()
                 .withMethod("OPTIONS")
                 .withHeader("origin", "some_origin_header")
                 .withHeader("access-control-request-method", "true")
         ), is(true));
         assertThat(isPreflightRequest(
+            configuration,
             request()
                 .withMethod("GET")
                 .withHeader("origin", "some_origin_header")
                 .withHeader("access-control-request-method", "true")
         ), is(false));
         assertThat(isPreflightRequest(
+            configuration,
             request()
                 .withMethod("OPTIONS")
                 .withHeader("not_origin", "some_origin_header")
                 .withHeader("access-control-request-method", "true")
         ), is(false));
         assertThat(isPreflightRequest(
+            configuration,
             request()
                 .withMethod("OPTIONS")
                 .withHeader("origin", "some_origin_header")

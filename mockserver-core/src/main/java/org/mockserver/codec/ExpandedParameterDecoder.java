@@ -3,6 +3,7 @@ package org.mockserver.codec;
 import io.netty.handler.codec.http.HttpConstants;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.apache.commons.lang3.StringUtils;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -28,9 +29,11 @@ public class ExpandedParameterDecoder {
     private static final Pattern QUOTED_PARAMETER_VALUE = Pattern.compile("\\s*^[\"']+(.*)[\"']+\\s*$");
     private static final Pattern JSON_VALUE = Pattern.compile("(?s)^\\s*[{\\[].*[}\\]]\\s*$");
 
+    private final Configuration configuration;
     private final MockServerLogger mockServerLogger;
 
-    public ExpandedParameterDecoder(MockServerLogger mockServerLogger) {
+    public ExpandedParameterDecoder(Configuration configuration, MockServerLogger mockServerLogger) {
+        this.configuration = configuration;
         this.mockServerLogger = mockServerLogger;
     }
 
@@ -39,7 +42,7 @@ public class ExpandedParameterDecoder {
         Map<String, List<String>> parameterMap = new HashMap<>();
         if (isNotBlank(parameterString)) {
             try {
-                parameterMap.putAll(new QueryStringDecoder(parameterString, HttpConstants.DEFAULT_CHARSET, parameterString.contains("/") || hasPath, 1024, !ConfigurationProperties.useSemicolonAsQueryParameterSeparator()).parameters());
+                parameterMap.putAll(new QueryStringDecoder(parameterString, HttpConstants.DEFAULT_CHARSET, parameterString.contains("/") || hasPath, 1024, !configuration.useSemicolonAsQueryParameterSeparator()).parameters());
             } catch (IllegalArgumentException iae) {
                 mockServerLogger.logEvent(
                     new LogEntry()
@@ -79,7 +82,7 @@ public class ExpandedParameterDecoder {
                 if (matcherEntry.getName().getParameterStyle() != null && matcherEntry.getName().getParameterStyle().isExploded()) {
                     for (Parameter matchedEntry : matched.getEntries()) {
                         if (matcherEntry.getName().getValue().equals(matchedEntry.getName().getValue()) || matchedEntry.getName().getValue().matches(matcherEntry.getName().getValue())) {
-                            matchedEntry.replaceValues(new ExpandedParameterDecoder(mockServerLogger).splitOnDelimiter(matcherEntry.getName().getParameterStyle(), matcherEntry.getName().getValue(), matchedEntry.getValues()));
+                            matchedEntry.replaceValues(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(matcherEntry.getName().getParameterStyle(), matcherEntry.getName().getValue(), matchedEntry.getValues()));
                             matched.replaceEntry(matchedEntry);
                         }
                     }

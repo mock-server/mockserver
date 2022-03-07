@@ -13,6 +13,7 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
@@ -48,8 +49,8 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
     private List<HttpRequest> httpRequests;
     private static final ObjectWriter OBJECT_WRITER = ObjectMapperFactory.createObjectMapper(new JsonNodeExampleSerializer()).writerWithDefaultPrettyPrinter();
 
-    protected HttpRequestsPropertiesMatcher(MockServerLogger mockServerLogger) {
-        super(mockServerLogger);
+    protected HttpRequestsPropertiesMatcher(Configuration configuration, MockServerLogger mockServerLogger) {
+        super(configuration, mockServerLogger);
     }
 
     public List<HttpRequestPropertiesMatcher> getHttpRequestPropertiesMatchers() {
@@ -478,7 +479,7 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
 
     private void addRequestMatcher(OpenAPIDefinition openAPIDefinition, Pair<String, Operation> methodOperationPair, HttpRequest httpRequest, String contentType) {
         httpRequests.add(httpRequest);
-        HttpRequestPropertiesMatcher httpRequestPropertiesMatcher = new HttpRequestPropertiesMatcher(mockServerLogger);
+        HttpRequestPropertiesMatcher httpRequestPropertiesMatcher = new HttpRequestPropertiesMatcher(configuration, mockServerLogger);
         httpRequestPropertiesMatcher.update(httpRequest);
         httpRequestPropertiesMatcher.setControlPlaneMatcher(controlPlaneMatcher);
         int maxUrlOrPathLength = 40;
@@ -500,11 +501,11 @@ public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
             for (HttpRequestPropertiesMatcher httpRequestPropertiesMatcher : httpRequestPropertiesMatchers) {
                 if (context == null) {
                     if (MockServerLogger.isEnabled(Level.TRACE) && requestDefinition instanceof HttpRequest) {
-                        context = new MatchDifference(requestDefinition);
+                        context = new MatchDifference(configuration.detailedMatchFailures(), requestDefinition);
                     }
                     result = httpRequestPropertiesMatcher.matches(context, requestDefinition);
                 } else {
-                    MatchDifference singleMatchDifference = new MatchDifference(context.getHttpRequest());
+                    MatchDifference singleMatchDifference = new MatchDifference(configuration.detailedMatchFailures(), context.getHttpRequest());
                     result = httpRequestPropertiesMatcher.matches(singleMatchDifference, requestDefinition);
                     context.addDifferences(singleMatchDifference.getAllDifferences());
                 }

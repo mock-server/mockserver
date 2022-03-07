@@ -18,6 +18,7 @@ import java.util.concurrent.*;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -39,7 +40,7 @@ public class ConcurrencyBasicResponseMockingIntegrationTest {
                     .withPath("/my/echo")
             )
             .respond(callback().withCallbackClass(ConcurrencyBasicResponseMockingIntegrationTest.ClassCallback.class));
-        httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false);
+        httpClient = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false);
     }
 
     @AfterClass

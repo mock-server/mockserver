@@ -5,6 +5,9 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.closurecallback.websocketclient.WebSocketClient;
+import org.mockserver.closurecallback.websocketregistry.LocalCallbackRegistry;
+import org.mockserver.configuration.ClientConfiguration;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
@@ -13,6 +16,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
+import static org.mockserver.configuration.ClientConfiguration.clientConfiguration;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpForward.forward;
@@ -39,7 +44,8 @@ public class ForwardChainExpectationTest {
         mockAbstractClient = mock(MockServerClient.class);
         mockExpectation = mock(Expectation.class);
         when(mockAbstractClient.upsert(mockExpectation)).thenReturn(new Expectation[]{mockExpectation});
-        forwardChainExpectation = new ForwardChainExpectation(new MockServerLogger(), new MockServerEventBus(), mockAbstractClient, mockExpectation);
+        ClientConfiguration configuration = clientConfiguration();
+        forwardChainExpectation = new ForwardChainExpectation(configuration, new MockServerLogger(), new MockServerEventBus(), mockAbstractClient, mockExpectation);
         openMocks(this);
     }
 

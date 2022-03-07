@@ -1,6 +1,6 @@
 package org.mockserver.socket.tls;
 
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.java.JDKVersion;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -20,13 +20,13 @@ public class KeyAndCertificateFactoryFactory {
     private static final ClassLoader CLASS_LOADER = KeyAndCertificateFactoryFactory.class.getClassLoader();
 
     @SuppressWarnings("unchecked")
-    public static KeyAndCertificateFactory createKeyAndCertificateFactory(MockServerLogger mockServerLogger) {
+    public static KeyAndCertificateFactory createKeyAndCertificateFactory(Configuration configuration, MockServerLogger mockServerLogger) {
         if (customKeyAndCertificateFactorySupplier != null) {
             return customKeyAndCertificateFactorySupplier.apply(mockServerLogger);
         } else {
-            if (ConfigurationProperties.useBouncyCastleForKeyAndCertificateGeneration() || canNotLoadSunSecurityPackages()) {
+            if (configuration.useBouncyCastleForKeyAndCertificateGeneration() || canNotLoadSunSecurityPackages()) {
                 if (canNotLoadBouncyCastleClasses()) {
-                    if (ConfigurationProperties.useBouncyCastleForKeyAndCertificateGeneration()) {
+                    if (configuration.useBouncyCastleForKeyAndCertificateGeneration()) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(Level.ERROR)
@@ -62,7 +62,7 @@ public class KeyAndCertificateFactoryFactory {
                 }
                 try {
                     Class<KeyAndCertificateFactory> keyAndCertificateFactorClass = (Class<KeyAndCertificateFactory>) CLASS_LOADER.loadClass("org.mockserver.socket.tls.bouncycastle.BCKeyAndCertificateFactory");
-                    Constructor<KeyAndCertificateFactory> keyAndCertificateFactorConstructor = keyAndCertificateFactorClass.getDeclaredConstructor(MockServerLogger.class);
+                    Constructor<KeyAndCertificateFactory> keyAndCertificateFactorConstructor = keyAndCertificateFactorClass.getDeclaredConstructor(Configuration.class, MockServerLogger.class);
                     if (MockServerLogger.isEnabled(Level.TRACE)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
@@ -70,7 +70,7 @@ public class KeyAndCertificateFactoryFactory {
                                 .setMessageFormat("using Bouncy Castle for X.509 Certificate and Private Key generation")
                         );
                     }
-                    return keyAndCertificateFactorConstructor.newInstance(mockServerLogger);
+                    return keyAndCertificateFactorConstructor.newInstance(configuration, mockServerLogger);
                 } catch (Throwable throwable) {
                     mockServerLogger.logEvent(
                         new LogEntry()
@@ -81,7 +81,7 @@ public class KeyAndCertificateFactoryFactory {
                     throw new RuntimeException("failed to instantiate the BouncyCastle KeyAndCertificateFactory");
                 }
             } else {
-                return new JDKKeyAndCertificateFactory(mockServerLogger);
+                return new JDKKeyAndCertificateFactory(configuration, mockServerLogger);
             }
         }
     }

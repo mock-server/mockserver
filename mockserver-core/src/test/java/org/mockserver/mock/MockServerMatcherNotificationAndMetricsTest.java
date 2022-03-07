@@ -21,6 +21,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.mock;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.API;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
@@ -38,14 +39,14 @@ public class MockServerMatcherNotificationAndMetricsTest {
     @BeforeClass
     public static void createScheduler() {
         mockServerLogger = new MockServerLogger();
-        scheduler = new Scheduler(mockServerLogger);
+        scheduler = new Scheduler(configuration(), mockServerLogger);
         ConfigurationProperties.metricsEnabled(true);
     }
 
     @Before
     public void createMatcher() {
         WebSocketClientRegistry webSocketClientRegistry = mock(WebSocketClientRegistry.class);
-        requestMatchers = new RequestMatchers(mockServerLogger, scheduler, webSocketClientRegistry);
+        requestMatchers = new RequestMatchers(configuration(), mockServerLogger, scheduler, webSocketClientRegistry);
         Metrics.clear();
     }
 

@@ -1,6 +1,7 @@
 package org.mockserver.matchers;
 
 import org.junit.Test;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -20,6 +21,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.matchers.MatchDifference.Field.*;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.JsonBody.json;
@@ -32,6 +34,7 @@ import static org.slf4j.event.Level.ERROR;
  */
 public class HttpRequestsPropertiesMatcherTest {
 
+    private final Configuration configuration = configuration();
     private final MockServerLogger mockServerLogger = new MockServerLogger(HttpRequestsPropertiesMatcherTest.class);
 
     /**
@@ -87,7 +90,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByMethod() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -114,7 +117,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByMethodWithOperationId() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -144,7 +147,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPath() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -171,7 +174,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithOperationId() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -201,7 +204,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldThrowExceptionForAllowReserved() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
 
         // when
@@ -240,7 +243,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithPathParameter() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -282,7 +285,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithMultiplePathParameter() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -335,7 +338,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithMultipleMissingPathParameter() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -384,7 +387,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithPathParameterAndOperationId() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -427,7 +430,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithOptionalPathParameter() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -473,7 +476,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithAllowEmptyPathParameter() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -520,7 +523,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithSimplePathParameter() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -572,7 +575,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithSimpleExplodedPathParameter() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -624,7 +627,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithLabelPathParameter() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -676,7 +679,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithLabelExplodedPathParameter() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -728,7 +731,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithMatrixPathParameter() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -784,7 +787,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithMatrixExplodedPathParameter() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -840,7 +843,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithSimpleAndLabelExplodedPathParameter() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -932,7 +935,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithLabelAndMatrixExplodedPathParameter() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -1010,7 +1013,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByQueryStringParameter() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -1048,7 +1051,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByQueryStringParameterWithOperationId() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -1087,7 +1090,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByOptionalQueryString() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -1129,7 +1132,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByOptionalNotSpecifiedQueryString() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -1170,7 +1173,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchQueryStringWithAllowEmpty() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -1213,7 +1216,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByOptionalQueryStringWithAllowEmpty() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -1260,7 +1263,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByQueryStringParameterCommonForAllPaths() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -1319,7 +1322,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByQueryStringParameterCommonForPath() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -1357,7 +1360,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByQueryStringParameterCommonForAllPathsOverriddenAtPath() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -1421,7 +1424,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByQueryStringParameterCommonForAllPathsOverriddenAtMethod() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -1491,7 +1494,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithFormQueryStringParameter() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -1548,7 +1551,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithFormExplodedQueryStringParameter() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -1605,7 +1608,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithSpaceDelimitedQueryStringParameter() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -1702,7 +1705,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithSpaceDelimitedExplodedQueryStringParameter() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -1759,7 +1762,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithPipeDelimitedQueryStringParameter() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -1816,7 +1819,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithPipeDelimitedExplodedQueryStringParameter() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -1873,7 +1876,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithFormExplodedAndPipeDelimitedQueryStringParameter() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -1967,7 +1970,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPathWithSpaceDelimitedAndPipeDelimitedQueryStringParameter() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -2069,7 +2072,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByHeader() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -2107,7 +2110,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByHeaderWithOperationId() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -2146,7 +2149,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByOptionalHeader() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -2188,7 +2191,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByOptionalNotSpecifiedHeader() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -2229,7 +2232,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchHeaderWithAllowEmpty() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -2272,7 +2275,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByHeaderCommonForAllPaths() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -2331,7 +2334,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByHeaderCommonForPath() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -2369,7 +2372,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByHeaderCommonForAllPathsOverriddenAtMethod() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -2441,7 +2444,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByCookie() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -2479,7 +2482,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByCookieWithOperationId() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -2518,7 +2521,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByOptionalCookie() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -2560,7 +2563,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByOptionalNotSpecifiedCookie() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -2601,7 +2604,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchCookieWithAllowEmpty() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -2644,7 +2647,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByCookieCommonForPath() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -2682,7 +2685,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByCookieCommonForAllPaths() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -2741,7 +2744,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByCookieCommonForAllPathsOverriddenAtMethod() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -2813,7 +2816,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldThrowExceptionForRequestBodyWithMultipartForm() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         ArrayList<LogEntry> logEntries = new ArrayList<>();
@@ -2870,7 +2873,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByJsonBody() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -2936,7 +2939,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByJsonBodyWithMediaTypeRange() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -2997,7 +3000,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByJsonBodyWithDefaultMediaType() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -3058,7 +3061,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByJsonBodyWithSchemaComponent() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -3114,7 +3117,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByJsonBodyWithRequestBodyAndSchemaComponent() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -3175,7 +3178,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPlainTextBody() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -3241,7 +3244,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPlainTextBodyWithRequiredFalse() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -3320,7 +3323,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPlainTextBodyWithRequiredDefaulted() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -3398,7 +3401,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPlainTextBodyWithMediaTypeRange() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -3459,7 +3462,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPlainTextBodyWithDefaultMediaType() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -3517,7 +3520,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPlainTextBodyWithSchemaComponent() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -3573,7 +3576,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByPlainTextBodyWithRequestBodyAndSchemaComponent() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -3634,7 +3637,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByXmlBody() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -3703,7 +3706,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByXmlBodyWithRequiredFalse() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -3785,7 +3788,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByXmlBodyWithRequiredDefaulted() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -3866,7 +3869,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByXmlBodyWithSchemaComponent() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -3922,7 +3925,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByXmlBodyWithRequestBodyAndSchemaComponent() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -3983,7 +3986,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByFormBody() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -4040,7 +4043,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByFormBodyWithFormEncoding() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -4104,7 +4107,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByFormBodyWithSpaceDelimitedEncoding() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -4193,7 +4196,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByFormBodyWithPipeDelimitedEncoding() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -4257,7 +4260,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByFormBodyWithRequiredFalse() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -4327,7 +4330,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByFormBodyWithRequiredDefaulted() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -4396,7 +4399,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByFormBodyWithSchemaComponent() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -4453,7 +4456,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByFormBodyWithRequestBodyAndSchemaComponent() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -4512,14 +4515,14 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldHandleBlankStrings() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("")
                 .withOperationId("")
         ));
         HttpRequest httpRequest = request();
-        MatchDifference context = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
         // when
         boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
@@ -4535,7 +4538,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchBySecuritySchemeInHeaderWithBasic() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -4577,7 +4580,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchBySecuritySchemeInHeaderWithBearer() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -4619,7 +4622,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchBySecuritySchemeInHeaderWithApiKey() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -4658,7 +4661,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchBySecuritySchemeInHeaderWithOpenIdConnect() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -4694,7 +4697,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchBySecuritySchemeInHeaderWithOAuth2() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -4737,7 +4740,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchBySecuritySchemeInHeaderWithMultiAuthorizationHeaderSchemes() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -4787,7 +4790,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchBySecuritySchemeInHeaderWithMultiSchemesIncludingAPIKey() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -4850,7 +4853,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByDefaultSecuritySchemeInHeaderWithMultiSchemesIncludingAPIKey() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -4913,7 +4916,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByDefaultSecuritySchemeInHeaderWithMultiSchemesIncludingAPIKeyWithOperationOverride() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -4979,7 +4982,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchBySecuritySchemeInQueryStringParameterWithBasic() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -5022,7 +5025,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchBySecuritySchemeInQueryStringParameterWithBearer() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -5065,7 +5068,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchBySecuritySchemeInQueryStringParameterWithApiKey() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -5104,7 +5107,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchBySecuritySchemeInQueryStringParameterWithOpenIdConnect() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -5141,7 +5144,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchBySecuritySchemeInQueryStringParameterWithOAuth2() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -5185,7 +5188,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchBySecuritySchemeInQueryStringParameterWithMultiAuthorizationQueryStringParameterSchemes() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -5237,7 +5240,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchBySecuritySchemeInQueryStringParameterWithMultiSchemesIncludingAPIKey() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -5302,7 +5305,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByDefaultSecuritySchemeInQueryStringParameterWithMultiSchemesIncludingAPIKey() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -5367,7 +5370,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByDefaultSecuritySchemeInQueryStringParameterWithMultiSchemesIncludingAPIKeyWithOperationOverride() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -5435,7 +5438,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchBySecuritySchemeInCookieWithBasic() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -5478,7 +5481,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchBySecuritySchemeInCookieWithBearer() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -5521,7 +5524,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchBySecuritySchemeInCookieWithApiKey() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -5560,7 +5563,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchBySecuritySchemeInCookieWithOpenIdConnect() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -5597,7 +5600,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchBySecuritySchemeInCookieWithOAuth2() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -5641,7 +5644,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchBySecuritySchemeInCookieWithMultiAuthorizationCookieSchemes() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -5693,7 +5696,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchBySecuritySchemeInCookieWithMultiSchemesIncludingAPIKey() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -5758,7 +5761,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByDefaultSecuritySchemeInCookieWithMultiSchemesIncludingAPIKey() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -5823,7 +5826,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByDefaultSecuritySchemeInCookieWithMultiSchemesIncludingAPIKeyWithOperationOverride() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -5891,7 +5894,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchByDefaultSecuritySchemeInMultipleWithMultiSchemesIncludingAPIKey() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         // when
         httpRequestsPropertiesMatcher.update(new Expectation(
@@ -5971,14 +5974,14 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldHandleNulls() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload(null)
                 .withOperationId(null)
         ));
         HttpRequest httpRequest = request();
-        MatchDifference context = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
         // when
         boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
@@ -5990,7 +5993,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldHandleInvalidOpenAPIJsonSpec() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         try {
             // when
@@ -6010,7 +6013,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldHandleInvalidOpenAPIYamlSpec() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         try {
             // when
@@ -6037,7 +6040,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldHandleInvalidOpenAPIUrl() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
 
         try {
             // when
@@ -6057,7 +6060,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchSingleOperationInOpenAPIJsonUrl() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
@@ -6067,7 +6070,7 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("GET")
             .withPath("/pets")
             .withQueryStringParameter("limit", "10");
-        MatchDifference context = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
         // when
         boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
@@ -6079,7 +6082,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchSingleOperationWithPathVariablesInOpenAPIJsonUrl() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
@@ -6090,7 +6093,7 @@ public class HttpRequestsPropertiesMatcherTest {
             .withPath("/pets/12345")
             .withHeader("X-Request-ID", UUID.randomUUID().toString())
             .withHeader("Other-Header", UUID.randomUUID().toString());
-        MatchDifference context = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
         // when
         boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
@@ -6102,7 +6105,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchSingleOperationInOpenAPIJsonSpec() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json"))
@@ -6112,7 +6115,7 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("GET")
             .withPath("/pets")
             .withQueryStringParameter("limit", "10");
-        MatchDifference context = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
         // when
         boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
@@ -6124,7 +6127,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchSingleOperationInOpenAPIYamlUrl() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.yaml")
@@ -6134,7 +6137,7 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("GET")
             .withPath("/pets")
             .withQueryStringParameter("limit", "10");
-        MatchDifference context = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
         // when
         boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
@@ -6146,7 +6149,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchSingleOperationInOpenAPIYamlSpec() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.yaml"))
@@ -6156,7 +6159,7 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("GET")
             .withPath("/pets")
             .withQueryStringParameter("limit", "10");
-        MatchDifference context = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
         // when
         boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
@@ -6168,7 +6171,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldMatchAnyOperationInOpenAPI() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
@@ -6178,7 +6181,7 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("GET")
             .withPath("/pets")
             .withQueryStringParameter("limit", "10");
-        MatchDifference context = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
         // when
         boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
@@ -6190,7 +6193,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldNotMatchRequestWithWrongOperationIdInOpenAPI() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
@@ -6200,7 +6203,7 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("GET")
             .withPath("/pets")
             .withQueryStringParameter("limit", "10");
-        MatchDifference context = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
         // when
         boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
@@ -6231,7 +6234,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldNotMatchRequestWithWrongOperationIdWithNullContextInOpenAPI() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
@@ -6241,7 +6244,7 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("GET")
             .withPath("/pets")
             .withQueryStringParameter("limit", "10");
-        MatchDifference context = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
         // when
         boolean matches = httpRequestsPropertiesMatcher.matches(httpRequest);
@@ -6253,7 +6256,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldNotMatchRequestWithMethodMismatchInOpenAPI() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
@@ -6263,7 +6266,7 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("PUT")
             .withPath("/pets")
             .withQueryStringParameter("limit", "10");
-        MatchDifference context = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
         // when
         boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
@@ -6291,7 +6294,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldNotMatchRequestWithPathMismatchInOpenAPI() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
@@ -6301,7 +6304,7 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("GET")
             .withPath("/wrong")
             .withQueryStringParameter("limit", "10");
-        MatchDifference context = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
         // when
         boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
@@ -6332,7 +6335,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldNotMatchRequestWithHeaderMismatchInOpenAPI() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
@@ -6342,7 +6345,7 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("GET")
             .withPath("/some/path")
             .withQueryStringParameter("limit", "10");
-        MatchDifference context = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
         // when
         boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
@@ -6385,7 +6388,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldNotMatchRequestWithHeaderAndQueryParameterMismatchInOpenAPI() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
@@ -6395,7 +6398,7 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("GET")
             .withPath("/some/path")
             .withQueryStringParameter("limit", "not_a_number");
-        MatchDifference context = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
         // when
         boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
@@ -6438,7 +6441,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldNotMatchRequestWithHeaderAndQueryParameterMismatchInOpenAPIWithoutOperationId() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
@@ -6447,7 +6450,7 @@ public class HttpRequestsPropertiesMatcherTest {
             .withMethod("GET")
             .withPath("/some/path")
             .withQueryStringParameter("limit", "not_a_number");
-        MatchDifference context = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
         // when
         boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
@@ -6516,7 +6519,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldNotMatchRequestWithBodyMismatchWithContentTypeInOpenAPI() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
@@ -6531,7 +6534,7 @@ public class HttpRequestsPropertiesMatcherTest {
                 "    \"name\": \"scruffles\", " + NEW_LINE +
                 "    \"tag\": \"dog\"" + NEW_LINE +
                 "}"));
-        MatchDifference context = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
         // when
         boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
@@ -6585,7 +6588,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldNotMatchRequestWithBodyMismatchWithContentTypeInOpenAPIWithoutOperationID() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
@@ -6599,7 +6602,7 @@ public class HttpRequestsPropertiesMatcherTest {
                 "    \"name\": \"scruffles\", " + NEW_LINE +
                 "    \"tag\": \"dog\"" + NEW_LINE +
                 "}"));
-        MatchDifference context = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
         // when
         boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);
@@ -6660,7 +6663,7 @@ public class HttpRequestsPropertiesMatcherTest {
     @Test
     public void shouldNotMatchRequestInOpenAPIWithBodyMismatch() {
         // given
-        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(mockServerLogger);
+        HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
                 .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
@@ -6674,7 +6677,7 @@ public class HttpRequestsPropertiesMatcherTest {
                 "    \"name\": \"scruffles\", " + NEW_LINE +
                 "    \"tag\": \"dog\"" + NEW_LINE +
                 "}"));
-        MatchDifference context = new MatchDifference(httpRequest);
+        MatchDifference context = new MatchDifference(configuration.detailedMatchFailures(), httpRequest);
 
         // when
         boolean matches = httpRequestsPropertiesMatcher.matches(context, httpRequest);

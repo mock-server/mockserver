@@ -2,6 +2,7 @@ package org.mockserver.mappers;
 
 import com.google.common.collect.Lists;
 import org.junit.Test;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -16,6 +17,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -38,7 +40,7 @@ public class HttpServletRequestToMockServerHttpRequestDecoderTest {
         httpServletRequest.setContent("bodyParameterNameOne=bodyParameterValueOne_One&bodyParameterNameOne=bodyParameterValueOne_Two&bodyParameterNameTwo=bodyParameterValueTwo_One".getBytes(UTF_8));
 
         // when
-        HttpRequest httpRequest = new HttpServletRequestToMockServerHttpRequestDecoder(new MockServerLogger()).mapHttpServletRequestToMockServerRequest(httpServletRequest);
+        HttpRequest httpRequest = new HttpServletRequestToMockServerHttpRequestDecoder(configuration(), new MockServerLogger()).mapHttpServletRequestToMockServerRequest(httpServletRequest);
 
         // then
         assertEquals(string("/requestURI"), httpRequest.getPath());
@@ -72,7 +74,7 @@ public class HttpServletRequestToMockServerHttpRequestDecoderTest {
         httpServletRequest.setContent("".getBytes(UTF_8));
 
         // when
-        HttpRequest httpRequest = new HttpServletRequestToMockServerHttpRequestDecoder(new MockServerLogger()).mapHttpServletRequestToMockServerRequest(httpServletRequest);
+        HttpRequest httpRequest = new HttpServletRequestToMockServerHttpRequestDecoder(configuration(), new MockServerLogger()).mapHttpServletRequestToMockServerRequest(httpServletRequest);
 
         // then
         assertEquals(string("/pathInfo"), httpRequest.getPath());
@@ -91,6 +93,6 @@ public class HttpServletRequestToMockServerHttpRequestDecoderTest {
         when(httpServletRequest.getInputStream()).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
-        new HttpServletRequestToMockServerHttpRequestDecoder(new MockServerLogger()).mapHttpServletRequestToMockServerRequest(httpServletRequest);
+        new HttpServletRequestToMockServerHttpRequestDecoder(configuration(), new MockServerLogger()).mapHttpServletRequestToMockServerRequest(httpServletRequest);
     }
 }

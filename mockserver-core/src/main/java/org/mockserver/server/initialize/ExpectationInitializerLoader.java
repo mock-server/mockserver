@@ -3,7 +3,7 @@ package org.mockserver.server.initialize;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang3.ArrayUtils;
 import org.mockserver.cache.LRUCache;
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -29,22 +29,24 @@ import static org.slf4j.event.Level.*;
 public class ExpectationInitializerLoader {
 
     private static final LRUCache<String, List<String>> EXPANDED_INITIALIZATION_JSON_PATHS = new LRUCache<>(new MockServerLogger(LRUCache.class), 10, TimeUnit.HOURS.toMillis(1));
+    private final Configuration configuration;
     private final ExpectationSerializer expectationSerializer;
     private final MockServerLogger mockServerLogger;
     private final RequestMatchers requestMatchers;
 
-    public ExpectationInitializerLoader(MockServerLogger mockServerLogger, RequestMatchers requestMatchers) {
+    public ExpectationInitializerLoader(Configuration configuration, MockServerLogger mockServerLogger, RequestMatchers requestMatchers) {
+        this.configuration = configuration;
         this.expectationSerializer = new ExpectationSerializer(mockServerLogger);
         this.mockServerLogger = mockServerLogger;
         this.requestMatchers = requestMatchers;
         addExpectationsFromInitializer();
     }
 
-    public static List<String> expandedInitializationJsonPaths() {
-        List<String> expandedInitializationJsonPaths = EXPANDED_INITIALIZATION_JSON_PATHS.get(ConfigurationProperties.initializationJsonPath());
+    public static List<String> expandedInitializationJsonPaths(String initializationJsonPath) {
+        List<String> expandedInitializationJsonPaths = EXPANDED_INITIALIZATION_JSON_PATHS.get(initializationJsonPath);
         if (expandedInitializationJsonPaths == null) {
-            expandedInitializationJsonPaths = FileReader.expandFilePathGlobs(ConfigurationProperties.initializationJsonPath());
-            EXPANDED_INITIALIZATION_JSON_PATHS.put(ConfigurationProperties.initializationJsonPath(), expandedInitializationJsonPaths);
+            expandedInitializationJsonPaths = FileReader.expandFilePathGlobs(initializationJsonPath);
+            EXPANDED_INITIALIZATION_JSON_PATHS.put(initializationJsonPath, expandedInitializationJsonPaths);
         }
         return expandedInitializationJsonPaths;
     }
@@ -58,7 +60,7 @@ public class ExpectationInitializerLoader {
 
     private Expectation[] retrieveExpectationsFromInitializerClass() {
         Expectation[] expectations = new Expectation[0];
-        String initializationClass = ConfigurationProperties.initializationClass();
+        String initializationClass = configuration.initializationClass();
         try {
             if (isNotBlank(initializationClass)) {
                 if (MockServerLogger.isEnabled(INFO)) {
@@ -107,7 +109,7 @@ public class ExpectationInitializerLoader {
 
     @SuppressWarnings("FuseStreamOperations")
     private Expectation[] retrieveExpectationsFromJson() {
-        List<String> initializationJsonPaths = ExpectationInitializerLoader.expandedInitializationJsonPaths();
+        List<String> initializationJsonPaths = ExpectationInitializerLoader.expandedInitializationJsonPaths(configuration.initializationJsonPath());
         List<Expectation> collect = initializationJsonPaths
             .stream()
             .flatMap(initializationJsonPath -> {

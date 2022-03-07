@@ -7,13 +7,14 @@ import org.mockserver.socket.tls.KeyAndCertificateFactory;
 import java.math.BigInteger;
 
 import static junit.framework.TestCase.assertTrue;
+import static org.mockserver.configuration.Configuration.configuration;
 
 /**
  * @author jnormington
  */
 public class JDKKeyAndCertificateFactoryTest {
 
-    private final KeyAndCertificateFactory keyAndCertificateFactory = new JDKKeyAndCertificateFactory(new MockServerLogger());
+    private final KeyAndCertificateFactory keyAndCertificateFactory = new JDKKeyAndCertificateFactory(configuration(), new MockServerLogger());
 
     @Test
     public void shouldCreateCACertWithPositiveSerialNumber() {

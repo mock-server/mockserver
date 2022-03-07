@@ -40,6 +40,7 @@ import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.mock;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.BinaryBody.binary;
@@ -322,7 +323,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                                 header("x-test", "test_headers_and_body")
                             )
                             .withBody("an_example_body_http");
-                        if (new MatcherBuilder(mock(MockServerLogger.class)).transformsToMatcher(expectation).matches(null, httpRequest)) {
+                        if (new MatcherBuilder(configuration(), mock(MockServerLogger.class)).transformsToMatcher(expectation).matches(null, httpRequest)) {
                             return response()
                                 .withStatusCode(ACCEPTED_202.code())
                                 .withReasonPhrase(ACCEPTED_202.reasonPhrase())
@@ -400,7 +401,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                             header("x-test", "test_headers_and_body")
                         )
                         .withBody("an_example_body_http");
-                    if (new MatcherBuilder(mock(MockServerLogger.class)).transformsToMatcher(expectation).matches(null, httpRequest)) {
+                    if (new MatcherBuilder(configuration(), mock(MockServerLogger.class)).transformsToMatcher(expectation).matches(null, httpRequest)) {
                         return response()
                             .withStatusCode(ACCEPTED_202.code())
                             .withReasonPhrase(ACCEPTED_202.reasonPhrase())
@@ -2006,7 +2007,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                                 header("x-test", "test_headers_and_body")
                             )
                             .withBody("an_example_body_http");
-                        if (new MatcherBuilder(mock(MockServerLogger.class)).transformsToMatcher(expectation).matches(null, httpRequest)) {
+                        if (new MatcherBuilder(configuration(), mock(MockServerLogger.class)).transformsToMatcher(expectation).matches(null, httpRequest)) {
                             return response()
                                 .withStatusCode(ACCEPTED_202.code())
                                 .withReasonPhrase(ACCEPTED_202.reasonPhrase())
@@ -2068,7 +2069,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                             header("x-test", "test_headers_and_body")
                         )
                         .withBody("an_example_body_http");
-                    if (new MatcherBuilder(mock(MockServerLogger.class)).transformsToMatcher(expectation).matches(null, httpRequest)) {
+                    if (new MatcherBuilder(configuration(), mock(MockServerLogger.class)).transformsToMatcher(expectation).matches(null, httpRequest)) {
                         return response()
                             .withStatusCode(ACCEPTED_202.code())
                             .withReasonPhrase(ACCEPTED_202.reasonPhrase())

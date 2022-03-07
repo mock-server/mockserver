@@ -4,6 +4,7 @@ import org.apache.commons.text.StringEscapeUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.log.TimeService;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
@@ -21,6 +22,7 @@ import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.configuration.ConfigurationProperties.logLevel;
 import static org.mockserver.configuration.ConfigurationProperties.matchersFailFast;
 import static org.mockserver.log.model.LogEntry.LOG_DATE_FORMAT;
@@ -39,8 +41,9 @@ import static org.mockserver.model.XmlSchemaBody.xmlSchema;
  */
 public class HttpRequestPropertiesMatcherLogTest {
 
+    private final Configuration configuration = configuration();
     private final MockServerLogger mockServerLogger = new MockServerLogger(HttpRequestPropertiesMatcherLogTest.class);
-    private final HttpState httpStateHandler = new HttpState(mockServerLogger, new Scheduler(mockServerLogger));
+    private final HttpState httpStateHandler = new HttpState(configuration(), mockServerLogger, new Scheduler(configuration(), mockServerLogger));
     private static Level originalLevel;
 
     @BeforeClass
@@ -59,15 +62,15 @@ public class HttpRequestPropertiesMatcherLogTest {
     }
 
     private boolean match(HttpRequest matcher, HttpRequest matched) {
-        HttpRequestPropertiesMatcher httpRequestPropertiesMatcher = new HttpRequestPropertiesMatcher(mockServerLogger);
+        HttpRequestPropertiesMatcher httpRequestPropertiesMatcher = new HttpRequestPropertiesMatcher(configuration, mockServerLogger);
         httpRequestPropertiesMatcher.update(matcher);
-        return httpRequestPropertiesMatcher.withControlPlaneMatcher(false).matches(new MatchDifference(matched), matched);
+        return httpRequestPropertiesMatcher.withControlPlaneMatcher(false).matches(new MatchDifference(configuration.detailedMatchFailures(), matched), matched);
     }
 
     private boolean match(Expectation matcher, HttpRequest matched) {
-        HttpRequestPropertiesMatcher httpRequestPropertiesMatcher = new HttpRequestPropertiesMatcher(mockServerLogger);
+        HttpRequestPropertiesMatcher httpRequestPropertiesMatcher = new HttpRequestPropertiesMatcher(configuration, mockServerLogger);
         httpRequestPropertiesMatcher.update(matcher);
-        return httpRequestPropertiesMatcher.matches(new MatchDifference(matched), matched);
+        return httpRequestPropertiesMatcher.matches(new MatchDifference(configuration.detailedMatchFailures(), matched), matched);
     }
 
     @Test

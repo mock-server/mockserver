@@ -28,6 +28,7 @@ import java.util.concurrent.CompletableFuture;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE_FORMAT;
 import static org.mockserver.mock.action.http.HttpActionHandler.REMOTE_SOCKET;
@@ -102,10 +103,10 @@ public class HttpActionHandlerTest {
         ConfigurationProperties.logLevel("INFO");
 
         mockHttpStateHandler = mock(HttpState.class);
-        scheduler = spy(new Scheduler(mockServerLogger));
+        scheduler = spy(new Scheduler(configuration(), mockServerLogger));
         when(mockHttpStateHandler.getScheduler()).thenReturn(scheduler);
         when(mockHttpStateHandler.getUniqueLoopPreventionHeaderValue()).thenReturn("MockServer_" + UUIDService.getUUID());
-        actionHandler = new HttpActionHandler(null, mockHttpStateHandler, null, null);
+        actionHandler = new HttpActionHandler(configuration(), null, mockHttpStateHandler, null, null);
 
         openMocks(this);
         request = request("some_path");

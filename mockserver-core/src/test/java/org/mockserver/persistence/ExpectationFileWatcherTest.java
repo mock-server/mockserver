@@ -32,6 +32,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.collection.IsEmptyCollection.emptyCollectionOf;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
@@ -63,7 +64,7 @@ public class ExpectationFileWatcherTest {
     @Before
     public void createMockServerMatcher() {
         mockServerLogger = new MockServerLogger();
-        requestMatchers = new RequestMatchers(mockServerLogger, new Scheduler(mockServerLogger), new WebSocketClientRegistry(mockServerLogger));
+        requestMatchers = new RequestMatchers(configuration(), mockServerLogger, new Scheduler(configuration(), mockServerLogger), new WebSocketClientRegistry(configuration(), mockServerLogger));
     }
 
     @Test
@@ -80,7 +81,7 @@ public class ExpectationFileWatcherTest {
             CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
             requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
             // and - file watcher
-            expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
+            expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers);
             assertThat(mockserverInitialization.exists(), equalTo(false));
 
             // when
@@ -190,7 +191,7 @@ public class ExpectationFileWatcherTest {
             CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
             requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
             // and - file watcher
-            expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
+            expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers);
 
             // when
             String watchedFileContents = "[ {" + NEW_LINE +
@@ -303,7 +304,7 @@ public class ExpectationFileWatcherTest {
             AtomicInteger expectationsUpdatedCount = new AtomicInteger();
             requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdatedCount.incrementAndGet());
             // and - file watcher
-            expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
+            expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers);
 
             // when
             Expectation[] expections = {
@@ -522,7 +523,7 @@ public class ExpectationFileWatcherTest {
             CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
             requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
             // and - file watcher
-            expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
+            expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers);
 
             // when
             watchedFileContents = "[ ]";
@@ -605,7 +606,7 @@ public class ExpectationFileWatcherTest {
             CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
             requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
             // and - file watcher
-            expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, requestMatchers);
+            expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers);
 
             // when
             watchedFileContents = "[ {" + NEW_LINE +

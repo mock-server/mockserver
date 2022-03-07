@@ -29,6 +29,7 @@ import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -101,7 +102,7 @@ public class ClientAuthenticationCustomPrivateKeyAndCertificateMockingIntegratio
         // when
         HttpClient httpClient = HttpClients
             .custom()
-            .setSSLContext(new KeyStoreFactory(new MockServerLogger()).sslContext())
+            .setSSLContext(new KeyStoreFactory(configuration(), new MockServerLogger()).sslContext())
             .setSSLHostnameVerifier(new PinningHostnameVerifier(Sets.newHashSet(
                 x509Certificate
                     .getSerialNumber()

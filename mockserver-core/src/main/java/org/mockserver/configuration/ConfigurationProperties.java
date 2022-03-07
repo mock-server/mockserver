@@ -1,9 +1,7 @@
 package org.mockserver.configuration;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
@@ -22,8 +20,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import static org.apache.commons.lang3.StringUtils.*;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.mockserver.logging.MockServerLogger.configureLogger;
 import static org.slf4j.event.Level.DEBUG;
@@ -145,16 +145,9 @@ public class ConfigurationProperties {
 
     private static Level logLevel = Level.valueOf(getSLF4JOrJavaLoggerToSLF4JLevelMapping().get(readPropertyHierarchically(null, MOCKSERVER_LOG_LEVEL, "MOCKSERVER_LOG_LEVEL", DEFAULT_LOG_LEVEL).toUpperCase()));
     public static final Properties PROPERTIES = readPropertyFile();
-    private static final Set<String> ALL_SUBJECT_ALTERNATIVE_DOMAINS = Sets.newConcurrentHashSet();
-    private static final Set<String> ALL_SUBJECT_ALTERNATIVE_IPS = Sets.newConcurrentHashSet();
     private static final AtomicBoolean REBUILD_KEY_STORE = new AtomicBoolean(false);
     private static final AtomicBoolean REBUILD_SERVER_KEY_STORE = new AtomicBoolean(false);
     private static final IntegerStringListParser INTEGER_STRING_LIST_PARSER = new IntegerStringListParser();
-
-    static {
-        addSslSubjectAlternativeNameDomains(readPropertyHierarchically(PROPERTIES, MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS, "MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS", "localhost").split(","));
-        addSslSubjectAlternativeNameIps(readPropertyHierarchically(PROPERTIES, MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS, "MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS", "127.0.0.1,0.0.0.0").split(","));
-    }
 
     private static Map<String, String> slf4jOrJavaLoggerToJavaLoggerLevelMapping;
 
@@ -209,7 +202,7 @@ public class ConfigurationProperties {
         }
     }
 
-    private static final MemoryMonitoring memoryMonitoring = new MemoryMonitoring();
+    private static final MemoryMonitoring memoryMonitoring = new MemoryMonitoring(configuration());
     private static int defaultMaxExpectations = memoryMonitoring.startingMaxExpectations();
     private static int defaultMaxLogEntries = memoryMonitoring.startingMaxLogEntries();
     private static String javaLoggerLogLevel = getSLF4JOrJavaLoggerToJavaLoggerLevelMapping().get(readPropertyHierarchically(PROPERTIES, MOCKSERVER_LOG_LEVEL, "MOCKSERVER_LOG_LEVEL", DEFAULT_LOG_LEVEL).toUpperCase());
@@ -241,8 +234,6 @@ public class ConfigurationProperties {
 
     @VisibleForTesting
     public synchronized static void resetAllSystemProperties() {
-        ALL_SUBJECT_ALTERNATIVE_DOMAINS.clear();
-        ALL_SUBJECT_ALTERNATIVE_IPS.clear();
         REBUILD_KEY_STORE.set(false);
         REBUILD_SERVER_KEY_STORE.set(false);
         List<String> excludeFromPropertyReset = Arrays.asList(System.getProperty("excludeFromPropertyReset", "").split(","));
@@ -322,20 +313,6 @@ public class ConfigurationProperties {
 
     public static void maxLogEntries(int count) {
         System.setProperty(MOCKSERVER_MAX_LOG_ENTRIES, "" + count);
-    }
-
-    public static int ringBufferSize() {
-        return nextPowerOfTwo(Math.min(defaultMaxLogEntries(), 1500));
-    }
-
-    private static int nextPowerOfTwo(int value) {
-        for (int i = 0; i < 16; i++) {
-            double powOfTwo = Math.pow(2, i);
-            if (powOfTwo > value) {
-                return (int) powOfTwo;
-            }
-        }
-        return (int) Math.pow(2, 16);
     }
 
     public static boolean outputMemoryUsageCsv() {
@@ -480,84 +457,24 @@ public class ConfigurationProperties {
 
     public static void sslCertificateDomainName(String domainName) {
         System.setProperty(MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME, domainName);
-        rebuildServerTLSContext(true);
     }
 
-    public static void addSubjectAlternativeName(String host) {
-        if (isNotBlank(host)) {
-            String hostWithoutPort = substringBefore(host, ":");
-            if (isNotBlank(hostWithoutPort)) {
-                if (InetAddresses.isInetAddress(hostWithoutPort)) {
-                    addSslSubjectAlternativeNameIps(hostWithoutPort);
-                } else {
-                    addSslSubjectAlternativeNameDomains(hostWithoutPort);
-                }
-            }
-        }
+    // TODO(jamesdbloom) add description
+    public static void sslSubjectAlternativeNameDomains(String sslSubjectAlternativeNameDomains) {
+        System.setProperty(MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS, sslSubjectAlternativeNameDomains);
     }
 
-    public static String[] sslSubjectAlternativeNameDomains() {
-        return ALL_SUBJECT_ALTERNATIVE_DOMAINS.toArray(new String[0]);
+    public static String sslSubjectAlternativeNameDomains() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS, "MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS", "localhost");
     }
 
-    public static void addSslSubjectAlternativeNameDomains(String... additionalSubjectAlternativeNameDomains) {
-        boolean subjectAlternativeDomainsModified = false;
-        for (String subjectAlternativeDomain : additionalSubjectAlternativeNameDomains) {
-            if (ALL_SUBJECT_ALTERNATIVE_DOMAINS.add(subjectAlternativeDomain.trim())) {
-                subjectAlternativeDomainsModified = true;
-            }
-        }
-        if (subjectAlternativeDomainsModified) {
-            System.setProperty(MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS, Joiner.on(",").join(new TreeSet<>(ALL_SUBJECT_ALTERNATIVE_DOMAINS)));
-            rebuildServerTLSContext(true);
-        }
+    // TODO(jamesdbloom) add description
+    public static void sslSubjectAlternativeNameIps(String sslSubjectAlternativeNameIps) {
+        System.setProperty(MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS, sslSubjectAlternativeNameIps);
     }
 
-    public static void clearSslSubjectAlternativeNameDomains() {
-        ALL_SUBJECT_ALTERNATIVE_DOMAINS.clear();
-    }
-
-    @SuppressWarnings("unused")
-    public static boolean containsSslSubjectAlternativeName(String domainOrIp) {
-        return ALL_SUBJECT_ALTERNATIVE_DOMAINS.contains(domainOrIp) || ALL_SUBJECT_ALTERNATIVE_IPS.contains(domainOrIp);
-    }
-
-    public static String[] sslSubjectAlternativeNameIps() {
-        return ALL_SUBJECT_ALTERNATIVE_IPS.toArray(new String[0]);
-    }
-
-    public static void addSslSubjectAlternativeNameIps(String... additionalSubjectAlternativeNameIps) {
-        boolean subjectAlternativeIpsModified = false;
-        for (String subjectAlternativeIp : additionalSubjectAlternativeNameIps) {
-            if (ALL_SUBJECT_ALTERNATIVE_IPS.add(subjectAlternativeIp.trim())) {
-                subjectAlternativeIpsModified = true;
-            }
-        }
-        if (subjectAlternativeIpsModified) {
-            System.setProperty(MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS, Joiner.on(",").join(new TreeSet<>(ALL_SUBJECT_ALTERNATIVE_IPS)));
-            rebuildServerTLSContext(true);
-        }
-    }
-
-    public static void clearSslSubjectAlternativeNameIps() {
-        ALL_SUBJECT_ALTERNATIVE_IPS.clear();
-        addSslSubjectAlternativeNameIps(readPropertyHierarchically(PROPERTIES, MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS, "MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS", "127.0.0.1,0.0.0.0").split(","));
-    }
-
-    public static boolean rebuildTLSContext() {
-        return REBUILD_KEY_STORE.get();
-    }
-
-    public static void rebuildTLSContext(boolean rebuildTLSContext) {
-        ConfigurationProperties.REBUILD_KEY_STORE.set(rebuildTLSContext);
-    }
-
-    public static boolean rebuildServerTLSContext() {
-        return REBUILD_SERVER_KEY_STORE.get();
-    }
-
-    public static void rebuildServerTLSContext(boolean rebuildServerTLSContext) {
-        ConfigurationProperties.REBUILD_SERVER_KEY_STORE.set(rebuildServerTLSContext);
+    public static String sslSubjectAlternativeNameIps() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS, "MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS", "127.0.0.1,0.0.0.0");
     }
 
     /**
@@ -1074,7 +991,7 @@ public class ConfigurationProperties {
     }
 
     public static void forwardHttpProxy(String hostAndPort) {
-        validateHostAndPort(hostAndPort, "forwardHttpProxy", MOCKSERVER_FORWARD_HTTP_PROXY);
+        validateHostAndPortAndSetProperty(hostAndPort, MOCKSERVER_FORWARD_HTTP_PROXY);
     }
 
     public static InetSocketAddress forwardHttpsProxy() {
@@ -1082,7 +999,7 @@ public class ConfigurationProperties {
     }
 
     public static void forwardHttpsProxy(String hostAndPort) {
-        validateHostAndPort(hostAndPort, "forwardHttpsProxy", MOCKSERVER_FORWARD_HTTPS_PROXY);
+        validateHostAndPortAndSetProperty(hostAndPort, MOCKSERVER_FORWARD_HTTPS_PROXY);
     }
 
     public static InetSocketAddress forwardSocksProxy() {
@@ -1090,7 +1007,7 @@ public class ConfigurationProperties {
     }
 
     public static void forwardSocksProxy(String hostAndPort) {
-        validateHostAndPort(hostAndPort, "forwardSocksProxy", MOCKSERVER_FORWARD_SOCKS_PROXY);
+        validateHostAndPortAndSetProperty(hostAndPort, MOCKSERVER_FORWARD_SOCKS_PROXY);
     }
 
     public static String forwardProxyAuthenticationUsername() {
@@ -1263,17 +1180,21 @@ public class ConfigurationProperties {
     }
 
 
-    private static void validateHostAndPort(String hostAndPort, String propertyName, String mockserverSocksProxy) {
-        String errorMessage = "Invalid " + propertyName + " property must include <host>:<port> for example \"127.0.0.1:1090\" or \"localhost:1090\"";
-        try {
-            URI uri = new URI("https://" + hostAndPort);
-            if (uri.getHost() == null || uri.getPort() == -1) {
+    private static void validateHostAndPortAndSetProperty(String hostAndPort, String mockserverSocksProxy) {
+        if (isNotBlank(hostAndPort)) {
+            String errorMessage = "Invalid property \"" + mockserverSocksProxy + "\" must include <host>:<port> for example \"127.0.0.1:1090\" or \"localhost:1090\"";
+            try {
+                URI uri = new URI("https://" + hostAndPort);
+                if (uri.getHost() == null || uri.getPort() == -1) {
+                    throw new IllegalArgumentException(errorMessage);
+                } else {
+                    System.setProperty(mockserverSocksProxy, hostAndPort);
+                }
+            } catch (URISyntaxException ex) {
                 throw new IllegalArgumentException(errorMessage);
-            } else {
-                System.setProperty(mockserverSocksProxy, hostAndPort);
             }
-        } catch (URISyntaxException ex) {
-            throw new IllegalArgumentException(errorMessage);
+        } else {
+            System.clearProperty(mockserverSocksProxy);
         }
     }
 

@@ -1,6 +1,7 @@
 package org.mockserver.socket.tls;
 
 import org.junit.Test;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.bouncycastle.BCKeyAndCertificateFactory;
 
@@ -10,6 +11,7 @@ import java.util.function.Function;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.mockserver.configuration.Configuration.configuration;
 
 public class CustomKeyAndCertificateFactorySupplierTest {
 
@@ -18,6 +20,7 @@ public class CustomKeyAndCertificateFactorySupplierTest {
         Function<MockServerLogger, KeyAndCertificateFactory> originalCustomKeyAndCertificateFactorySupplier = KeyAndCertificateFactoryFactory.getCustomKeyAndCertificateFactorySupplier();
 
         // given
+        Configuration configuration = configuration();
         MockServerLogger mockServerLogger = new MockServerLogger();
         KeyAndCertificateFactory factoryInstance = new KeyAndCertificateFactory() {
             @Override
@@ -54,7 +57,7 @@ public class CustomKeyAndCertificateFactorySupplierTest {
             KeyAndCertificateFactoryFactory.setCustomKeyAndCertificateFactorySupplier(logger -> factoryInstance);
 
             // then
-            assertThat(KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory(mockServerLogger), equalTo(factoryInstance));
+            assertThat(KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory(configuration, mockServerLogger), equalTo(factoryInstance));
         } finally {
             KeyAndCertificateFactoryFactory.setCustomKeyAndCertificateFactorySupplier(originalCustomKeyAndCertificateFactorySupplier);
         }

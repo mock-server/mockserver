@@ -37,6 +37,7 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LOG_DATE_FORMAT;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE_FORMAT;
@@ -71,7 +72,7 @@ public class ProxyServletTest {
         mockActionHandler = mock(HttpActionHandler.class);
         Scheduler scheduler = mock(Scheduler.class);
 
-        httpStateHandler = spy(new HttpState(new MockServerLogger(), scheduler));
+        httpStateHandler = spy(new HttpState(configuration(), new MockServerLogger(), scheduler));
         response = new MockHttpServletResponse();
         proxyServlet = new ProxyServlet();
 

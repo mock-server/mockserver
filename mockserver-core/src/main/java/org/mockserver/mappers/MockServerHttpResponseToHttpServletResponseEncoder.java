@@ -2,7 +2,6 @@ package org.mockserver.mappers;
 
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
-import org.mockserver.codec.BodyDecoderEncoder;
 import org.mockserver.codec.BodyServletDecoderEncoder;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Cookie;

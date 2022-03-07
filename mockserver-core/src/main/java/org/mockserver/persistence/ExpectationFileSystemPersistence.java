@@ -1,6 +1,7 @@
 package org.mockserver.persistence;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
@@ -30,19 +31,21 @@ import static org.slf4j.event.Level.*;
 
 public class ExpectationFileSystemPersistence implements MockServerMatcherListener {
 
-    private final ObjectWriter objectWriter;
+    private final Configuration configuration;
     private final MockServerLogger mockServerLogger;
+    private final RequestMatchers requestMatchers;
+    private final ObjectWriter objectWriter;
     private final Path filePath;
     private final boolean initializationPathMatchesPersistencePath;
     private final ReentrantLock fileWriteLock = new ReentrantLock();
-    private final RequestMatchers requestMatchers;
 
-    public ExpectationFileSystemPersistence(MockServerLogger mockServerLogger, RequestMatchers requestMatchers) {
-        if (ConfigurationProperties.persistExpectations()) {
+    public ExpectationFileSystemPersistence(Configuration configuration, MockServerLogger mockServerLogger, RequestMatchers requestMatchers) {
+        this.configuration = configuration;
+        if (configuration.persistExpectations()) {
             this.mockServerLogger = mockServerLogger;
             this.requestMatchers = requestMatchers;
             this.objectWriter = createObjectMapper(true, new TimeToLiveSerializer());
-            this.filePath = Paths.get(ConfigurationProperties.persistedExpectationsPath());
+            this.filePath = Paths.get(configuration.persistedExpectationsPath());
             try {
                 Files.createFile(filePath);
             } catch (FileAlreadyExistsException ignore) {
@@ -54,14 +57,14 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
                         .setThrowable(throwable)
                 );
             }
-            this.initializationPathMatchesPersistencePath = FileReader.expandFilePathGlobs(ConfigurationProperties.initializationJsonPath()).contains(ConfigurationProperties.persistedExpectationsPath());
+            this.initializationPathMatchesPersistencePath = FileReader.expandFilePathGlobs(configuration.initializationJsonPath()).contains(configuration.persistedExpectationsPath());
             requestMatchers.registerListener(this);
             if (MockServerLogger.isEnabled(INFO)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(INFO)
                         .setMessageFormat("created expectation file system persistence for{}")
-                        .setArguments(ConfigurationProperties.persistedExpectationsPath())
+                        .setArguments(configuration.persistedExpectationsPath())
                 );
             }
         } else {
@@ -92,14 +95,14 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
                                     new LogEntry()
                                         .setLogLevel(TRACE)
                                         .setMessageFormat("persisting expectations{}to{}")
-                                        .setArguments(expectations, ConfigurationProperties.persistedExpectationsPath())
+                                        .setArguments(expectations, configuration.persistedExpectationsPath())
                                 );
                             } else if (MockServerLogger.isEnabled(DEBUG)) {
                                 mockServerLogger.logEvent(
                                     new LogEntry()
                                         .setLogLevel(DEBUG)
                                         .setMessageFormat("persisting expectations to{}")
-                                        .setArguments(ConfigurationProperties.persistedExpectationsPath())
+                                        .setArguments(configuration.persistedExpectationsPath())
                                 );
                             }
                             byte[] data = serialize(expectations).getBytes(UTF_8);

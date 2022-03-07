@@ -421,129 +421,59 @@ public class ConfigurationPropertiesTest {
 
     @Test
     public void shouldSetAndReadSslCertificateDomainName() {
-        // given
-        System.clearProperty("mockserver.sslCertificateDomainName");
+        String originalSslCertificateDomainName = sslCertificateDomainName();
+        try {
+            // given
+            System.clearProperty("mockserver.sslCertificateDomainName");
 
-        // when
-        assertEquals(CertificateSigningRequest.CERTIFICATE_DOMAIN, sslCertificateDomainName());
-        sslCertificateDomainName("newDomain");
+            // when
+            assertEquals(CertificateSigningRequest.CERTIFICATE_DOMAIN, sslCertificateDomainName());
+            sslCertificateDomainName("newDomain");
 
-        // then
-        assertEquals("newDomain", sslCertificateDomainName());
-        assertEquals("newDomain", System.getProperty("mockserver.sslCertificateDomainName"));
-        assertTrue(rebuildServerTLSContext());
+            // then
+            assertEquals("newDomain", sslCertificateDomainName());
+            assertEquals("newDomain", System.getProperty("mockserver.sslCertificateDomainName"));
+        } finally {
+            sslCertificateDomainName(originalSslCertificateDomainName);
+        }
     }
 
     @Test
     public void shouldSetAndReadSslSubjectAlternativeNameDomains() {
-        // given
-        ConfigurationProperties.clearSslSubjectAlternativeNameDomains();
+        String originalSslSubjectAlternativeNameDomains = sslSubjectAlternativeNameDomains();
+        try {
+            // given
+            System.clearProperty("mockserver.sslSubjectAlternativeNameDomains");
 
-        // when
-        assertThat(Arrays.asList(sslSubjectAlternativeNameDomains()), empty());
-        addSslSubjectAlternativeNameDomains("a", "b", "c", "d");
+            // when
+            assertEquals("localhost", sslSubjectAlternativeNameDomains());
+            sslSubjectAlternativeNameDomains("a,b,c,d");
 
-        // then
-        assertThat(Arrays.asList(sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d"));
-        assertEquals("a,b,c,d", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
-        assertTrue(rebuildServerTLSContext());
-    }
-
-    @Test
-    public void shouldAddSslSubjectAlternativeNameDomains() {
-        // given
-        ConfigurationProperties.clearSslSubjectAlternativeNameDomains();
-        rebuildServerTLSContext(false);
-
-        // when
-        assertThat(Arrays.asList(sslSubjectAlternativeNameDomains()), empty());
-        addSslSubjectAlternativeNameDomains("a", "b", "c");
-        addSubjectAlternativeName("d:1090");
-
-        // then
-        assertThat(Arrays.asList(sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d"));
-        assertEquals("a,b,c,d", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
-
-        // when
-        addSslSubjectAlternativeNameDomains("e", "f", "g");
-
-        // then - add subject alternative domain names
-        assertThat(Arrays.asList(sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d", "e", "f", "g"));
-        assertEquals("a,b,c,d,e,f,g", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
-        assertTrue(rebuildServerTLSContext());
-
-        // given
-        rebuildServerTLSContext(false);
-
-        // when
-        addSslSubjectAlternativeNameDomains("e", "f", "g");
-
-        // then - do not add duplicate subject alternative domain names
-        assertThat(Arrays.asList(sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d", "e", "f", "g"));
-        assertEquals("a,b,c,d,e,f,g", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
-        assertFalse(rebuildServerTLSContext());
+            // then
+            assertEquals("a,b,c,d", sslSubjectAlternativeNameDomains());
+            assertEquals("a,b,c,d", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
+        } finally {
+            sslCertificateDomainName(originalSslSubjectAlternativeNameDomains);
+        }
     }
 
     @Test
     public void shouldSetAndReadSslSubjectAlternativeNameIps() {
-        // given
-        clearSslSubjectAlternativeNameIps();
+        String originalSslSubjectAlternativeNameIps = sslSubjectAlternativeNameIps();
+        try {
+            // given
+            System.clearProperty("mockserver.sslSubjectAlternativeNameIps");
 
-        // when
-        assertThat(Arrays.asList(sslSubjectAlternativeNameIps()), containsInAnyOrder("127.0.0.1", "0.0.0.0"));
-        addSslSubjectAlternativeNameIps("1", "2", "3", "4");
+            // when
+            assertEquals("127.0.0.1,0.0.0.0", sslSubjectAlternativeNameIps());
+            sslSubjectAlternativeNameIps("1.2.3.4,5.6.7.8");
 
-        // then
-        assertThat(Arrays.asList(sslSubjectAlternativeNameIps()), containsInAnyOrder("0.0.0.0", "1", "127.0.0.1", "2", "3", "4"));
-        assertEquals("0.0.0.0,1,127.0.0.1,2,3,4", System.getProperty("mockserver.sslSubjectAlternativeNameIps"));
-        assertTrue(rebuildServerTLSContext());
-    }
-
-    @Test
-    public void shouldAddSslSubjectAlternativeNameIps() {
-        // given
-        clearSslSubjectAlternativeNameIps();
-        rebuildServerTLSContext(false);
-
-        // when
-        assertThat(Arrays.asList(sslSubjectAlternativeNameIps()), containsInAnyOrder("127.0.0.1", "0.0.0.0"));
-        addSslSubjectAlternativeNameIps("1", "2", "3", "4");
-
-        // then
-        assertThat(Arrays.asList(sslSubjectAlternativeNameIps()), containsInAnyOrder("0.0.0.0", "1", "127.0.0.1", "2", "3", "4"));
-        assertEquals("0.0.0.0,1,127.0.0.1,2,3,4", System.getProperty("mockserver.sslSubjectAlternativeNameIps"));
-
-        // when
-        addSslSubjectAlternativeNameIps("5", "6", "7");
-
-        // then - add subject alternative domain names
-        assertThat(Arrays.asList(sslSubjectAlternativeNameIps()), containsInAnyOrder("0.0.0.0", "1", "127.0.0.1", "2", "3", "4", "5", "6", "7"));
-        assertEquals("0.0.0.0,1,127.0.0.1,2,3,4,5,6,7", System.getProperty("mockserver.sslSubjectAlternativeNameIps"));
-        assertTrue(rebuildServerTLSContext());
-
-        // given
-        rebuildServerTLSContext(false);
-
-        // when
-        addSslSubjectAlternativeNameIps("5", "6", "7");
-
-        // then - do not add duplicate subject alternative domain names
-        assertThat(Arrays.asList(sslSubjectAlternativeNameIps()), containsInAnyOrder("0.0.0.0", "1", "127.0.0.1", "2", "3", "4", "5", "6", "7"));
-        assertEquals("0.0.0.0,1,127.0.0.1,2,3,4,5,6,7", System.getProperty("mockserver.sslSubjectAlternativeNameIps"));
-        assertFalse(rebuildServerTLSContext());
-    }
-
-    @Test
-    public void shouldSetAndReadRebuildKeyStore() {
-        // given
-        rebuildServerTLSContext(false);
-
-        // when
-        assertFalse(rebuildTLSContext());
-        rebuildServerTLSContext(true);
-
-        // then
-        assertTrue(rebuildServerTLSContext());
+            // then
+            assertEquals("1.2.3.4,5.6.7.8", sslSubjectAlternativeNameIps());
+            assertEquals("1.2.3.4,5.6.7.8", System.getProperty("mockserver.sslSubjectAlternativeNameIps"));
+        } finally {
+            sslCertificateDomainName(originalSslSubjectAlternativeNameIps);
+        }
     }
 
     @Test
@@ -1180,7 +1110,7 @@ public class ConfigurationPropertiesTest {
     @Test
     public void shouldThrowIllegalArgumentExceptionForInvalidForwardHttpProxy() {
         exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("Invalid forwardHttpProxy property must include <host>:<port> for example \"127.0.0.1:1090\" or \"localhost:1090\""));
+        exception.expectMessage(containsString("Invalid property \"mockserver.forwardHttpProxy\" must include <host>:<port> for example \"127.0.0.1:1090\" or \"localhost:1090\""));
 
         forwardHttpProxy("abc.def");
     }
@@ -1203,7 +1133,7 @@ public class ConfigurationPropertiesTest {
     @Test
     public void shouldThrowIllegalArgumentExceptionForInvalidForwardHttpsProxy() {
         exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("Invalid forwardHttpsProxy property must include <host>:<port> for example \"127.0.0.1:1090\" or \"localhost:1090\""));
+        exception.expectMessage(containsString("Invalid property \"mockserver.forwardHttpsProxy\" must include <host>:<port> for example \"127.0.0.1:1090\" or \"localhost:1090\""));
 
         forwardHttpsProxy("abc.def");
     }
@@ -1226,7 +1156,7 @@ public class ConfigurationPropertiesTest {
     @Test
     public void shouldThrowIllegalArgumentExceptionForInvalidForwardSocksProxy() {
         exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("Invalid forwardSocksProxy property must include <host>:<port> for example \"127.0.0.1:1090\" or \"localhost:1090\""));
+        exception.expectMessage(containsString("Invalid property \"mockserver.forwardSocksProxy\" must include <host>:<port> for example \"127.0.0.1:1090\" or \"localhost:1090\""));
 
         forwardSocksProxy("abc.def");
     }

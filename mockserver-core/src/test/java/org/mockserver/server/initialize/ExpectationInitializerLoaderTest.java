@@ -15,6 +15,7 @@ import java.util.UUID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
@@ -33,7 +34,7 @@ public class ExpectationInitializerLoaderTest {
             ConfigurationProperties.initializationJsonPath("org/mockserver/server/initialize/initializerJson.json");
 
             // when
-            final Expectation[] expectations = new ExpectationInitializerLoader(new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
+            final Expectation[] expectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
 
             // then
             assertThat(expectations, is(new Expectation[]{
@@ -67,7 +68,7 @@ public class ExpectationInitializerLoaderTest {
             ConfigurationProperties.initializationJsonPath("org/mockserver/server/initialize/initializerJson*.json");
 
             // when
-            final Expectation[] expectations = new ExpectationInitializerLoader(new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
+            final Expectation[] expectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
 
             // then
             assertThat(expectations, is(new Expectation[]{
@@ -149,7 +150,7 @@ public class ExpectationInitializerLoaderTest {
             ConfigurationProperties.initializationJsonPath("org/mockserver/server/initialize/initializerJson???.json");
 
             // when
-            final Expectation[] expectations = new ExpectationInitializerLoader(new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
+            final Expectation[] expectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
 
             // then
             assertThat(expectations, is(new Expectation[]{
@@ -219,7 +220,7 @@ public class ExpectationInitializerLoaderTest {
             ConfigurationProperties.initializationJsonPath(mockserverInitializer.getAbsolutePath());
 
             // when
-            final Expectation[] expectations = new ExpectationInitializerLoader(new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
+            final Expectation[] expectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
 
             // then
             assertThat(expectations, is(expections));
@@ -317,7 +318,7 @@ public class ExpectationInitializerLoaderTest {
             ConfigurationProperties.initializationJsonPath(mockserverInitializer.getParentFile().getAbsolutePath() + "/" + uniquePrefix + "_mockserverInitialization*.json");
 
             // when
-            final Expectation[] expectations = new ExpectationInitializerLoader(new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
+            final Expectation[] expectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
 
             // then
             assertThat(expectations, is(new Expectation[]{
@@ -480,7 +481,7 @@ public class ExpectationInitializerLoaderTest {
             ConfigurationProperties.initializationJsonPath(mockserverInitializer.getParentFile().getAbsolutePath() + "/" + uniquePrefix + "_mockserverInitialization{One,Two}*.json");
 
             // when
-            final Expectation[] expectations = new ExpectationInitializerLoader(new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
+            final Expectation[] expectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
 
             // then
             assertThat(expectations, is(new Expectation[]{
@@ -530,7 +531,7 @@ public class ExpectationInitializerLoaderTest {
             ConfigurationProperties.initializationClass(ExpectationInitializerExample.class.getName());
 
             // when
-            final Expectation[] expectations = new ExpectationInitializerLoader(new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
+            final Expectation[] expectations = new ExpectationInitializerLoader(configuration(), new MockServerLogger(), mock(RequestMatchers.class)).loadExpectations();
 
             // then
             assertThat(expectations, is(new Expectation[]{

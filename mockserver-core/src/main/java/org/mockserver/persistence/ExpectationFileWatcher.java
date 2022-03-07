@@ -1,6 +1,6 @@
 package org.mockserver.persistence;
 
-import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -26,17 +26,19 @@ import static org.slf4j.event.Level.*;
  */
 public class ExpectationFileWatcher {
 
-    private final ExpectationSerializer expectationSerializer;
+    private final Configuration configuration;
     private final MockServerLogger mockServerLogger;
     private final RequestMatchers requestMatchers;
+    private final ExpectationSerializer expectationSerializer;
     private List<FileWatcher> fileWatchers;
 
-    public ExpectationFileWatcher(MockServerLogger mockServerLogger, RequestMatchers requestMatchers) {
-        if (ConfigurationProperties.watchInitializationJson()) {
+    public ExpectationFileWatcher(Configuration configuration, MockServerLogger mockServerLogger, RequestMatchers requestMatchers) {
+        this.configuration = configuration;
+        if (configuration.watchInitializationJson()) {
             this.expectationSerializer = new ExpectationSerializer(mockServerLogger);
             this.mockServerLogger = mockServerLogger;
             this.requestMatchers = requestMatchers;
-            List<String> initializationJsonPaths = ExpectationInitializerLoader.expandedInitializationJsonPaths();
+            List<String> initializationJsonPaths = ExpectationInitializerLoader.expandedInitializationJsonPaths(configuration.initializationJsonPath());
             try {
                 fileWatchers = initializationJsonPaths
                     .stream()
@@ -48,7 +50,7 @@ public class ExpectationFileWatcher {
                                         new LogEntry()
                                             .setLogLevel(DEBUG)
                                             .setMessageFormat("expectation file watcher updating expectations as modification detected on file{}")
-                                            .setArguments(ConfigurationProperties.initializationJsonPath())
+                                            .setArguments(configuration.initializationJsonPath())
                                     );
                                 }
                                 addExpectationsFromInitializer();
@@ -101,7 +103,7 @@ public class ExpectationFileWatcher {
 
     private synchronized void addExpectationsFromInitializer() {
         ExpectationInitializerLoader
-            .expandedInitializationJsonPaths()
+            .expandedInitializationJsonPaths(configuration.initializationJsonPath())
             .forEach(initializationJsonPath -> {
                 Expectation[] expectations = new Expectation[0];
                 if (isNotBlank(initializationJsonPath)) {

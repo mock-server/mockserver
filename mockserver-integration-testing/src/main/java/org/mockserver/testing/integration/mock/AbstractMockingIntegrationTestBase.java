@@ -30,6 +30,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.Header.header;
 import static org.slf4j.event.Level.WARN;
 
@@ -135,7 +136,7 @@ public abstract class AbstractMockingIntegrationTestBase {
     @BeforeClass
     public static void createClientAndEventLoopGroup() {
         clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(AbstractMockingIntegrationTestBase.class.getSimpleName() + "-eventLoop"));
-        httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false);
+        httpClient = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false);
     }
 
     @AfterClass
@@ -163,7 +164,7 @@ public abstract class AbstractMockingIntegrationTestBase {
             throw new AssertionError("Number of request matchers does not match number of requests, expected:<" + httpRequestMatchers.length + "> but was:<" + requestDefinitions.length + ">");
         } else {
             for (int i = 0; i < httpRequestMatchers.length; i++) {
-                if (!new MatcherBuilder(MOCK_SERVER_LOGGER).transformsToMatcher(httpRequestMatchers[i]).matches(null, requestDefinitions[i])) {
+                if (!new MatcherBuilder(configuration(), MOCK_SERVER_LOGGER).transformsToMatcher(httpRequestMatchers[i]).matches(null, requestDefinitions[i])) {
                     throw new AssertionError("Request does not match request matcher, expected <" + httpRequestMatchers[i] + "> but was:<" + requestDefinitions[i] + ">, full list requests is: " + Arrays.toString(httpRequestMatchers));
                 }
             }

@@ -14,6 +14,7 @@ import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.configuration.ConfigurationProperties.forwardProxyTLSX509CertificatesTrustManagerType;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpForward.forward;
@@ -41,10 +42,13 @@ public class ForwardViaHttpAndHttpsProxyMockingIntegrationTest extends AbstractF
         forwardProxyTLSX509CertificatesTrustManagerType(ForwardProxyTLSX509CertificatesTrustManager.ANY.name());
 
         proxy = new MockServer();
-        mockServer = new MockServer(ImmutableList.of(
-            proxyConfiguration(ProxyConfiguration.Type.HTTPS, "127.0.0.1:" + proxy.getLocalPort()),
-            proxyConfiguration(ProxyConfiguration.Type.HTTP, "127.0.0.1:" + proxy.getLocalPort())
-        ));
+        mockServer = new MockServer(
+            configuration(),
+            ImmutableList.of(
+                proxyConfiguration(ProxyConfiguration.Type.HTTPS, "127.0.0.1:" + proxy.getLocalPort()),
+                proxyConfiguration(ProxyConfiguration.Type.HTTP, "127.0.0.1:" + proxy.getLocalPort())
+            )
+        );
 
         mockServerClient = new MockServerClient("localhost", mockServer.getLocalPort(), servletContext);
         proxyClient = new MockServerClient("localhost", proxy.getLocalPort(), "");
@@ -103,7 +107,7 @@ public class ForwardViaHttpAndHttpsProxyMockingIntegrationTest extends AbstractF
                 .withBody("an_example_body_http"),
             makeRequest(
                 httpRequest,
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         proxyClient.verify(httpRequest.withSecure(false));
     }
@@ -143,7 +147,7 @@ public class ForwardViaHttpAndHttpsProxyMockingIntegrationTest extends AbstractF
                 .withBody("an_example_body_http"),
             makeRequest(
                 httpRequest,
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         proxyClient.verify(httpRequest.withSecure(true));
     }

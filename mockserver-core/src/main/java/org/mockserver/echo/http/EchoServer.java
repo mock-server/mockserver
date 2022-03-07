@@ -11,6 +11,7 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.util.AttributeKey;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -28,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
+import static org.mockserver.configuration.Configuration.configuration;
 
 
 public class EchoServer implements Stoppable {
@@ -38,8 +39,9 @@ public class EchoServer implements Stoppable {
     static final AttributeKey<LastRequest> LAST_REQUEST = AttributeKey.valueOf("LAST_REQUEST");
     private static final MockServerLogger mockServerLogger = new MockServerLogger(EchoServer.class);
 
-    private final Scheduler scheduler = new Scheduler(mockServerLogger);
-    private final MockServerEventLog mockServerEventLog = new MockServerEventLog(mockServerLogger, scheduler, true);
+    private final Configuration configuration = configuration();
+    private final Scheduler scheduler = new Scheduler(configuration, mockServerLogger);
+    private final MockServerEventLog mockServerEventLog = new MockServerEventLog(configuration, mockServerLogger, scheduler, true);
     private final NextResponse nextResponse = new NextResponse();
     private final LastRequest lastRequest = new LastRequest();
     private final CompletableFuture<Integer> boundPort = new CompletableFuture<>();
@@ -72,7 +74,7 @@ public class EchoServer implements Stoppable {
                 .channel(NioServerSocketChannel.class)
                 .option(ChannelOption.SO_BACKLOG, 100)
                 .handler(new LoggingHandler(EchoServer.class))
-                .childHandler(new EchoServerInitializer(mockServerLogger, secure, sslContext, error, registeredClients, websocketChannels, textWebSocketFrames))
+                .childHandler(new EchoServerInitializer(configuration, mockServerLogger, secure, sslContext, error, registeredClients, websocketChannels, textWebSocketFrames))
                 .childAttr(LOG_FILTER, mockServerEventLog)
                 .childAttr(NEXT_RESPONSE, nextResponse)
                 .childAttr(LAST_REQUEST, lastRequest)
@@ -88,7 +90,7 @@ public class EchoServer implements Stoppable {
 
         try {
             // wait for proxy to start all channels
-            boundPort.get(maxFutureTimeout(), MILLISECONDS);
+            boundPort.get(configuration.maxFutureTimeoutInMillis(), MILLISECONDS);
             TimeUnit.MILLISECONDS.sleep(5);
         } catch (Exception e) {
             mockServerLogger.logEvent(
@@ -113,7 +115,7 @@ public class EchoServer implements Stoppable {
 
     public Integer getPort() {
         try {
-            return boundPort.get(maxFutureTimeout(), MILLISECONDS);
+            return boundPort.get(configuration.maxFutureTimeoutInMillis(), MILLISECONDS);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -170,7 +172,7 @@ public class EchoServer implements Stoppable {
     }
 
     public static class NextResponse {
-        public final Queue<HttpResponse> httpResponse = new LinkedList<HttpResponse>();
+        public final Queue<HttpResponse> httpResponse = new LinkedList<>();
     }
 
     public static class LastRequest {

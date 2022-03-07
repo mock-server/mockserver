@@ -5,6 +5,7 @@ import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -26,6 +27,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.socket.tls.KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory;
 import static org.mockserver.socket.tls.PEMToFile.privateKeyFromPEMFile;
 import static org.mockserver.socket.tls.PEMToFile.x509ChainFromPEMFile;
@@ -45,17 +47,33 @@ public class NettySslContextFactory {
             }
         };
 
+    private final Configuration configuration;
     private final MockServerLogger mockServerLogger;
     private final KeyAndCertificateFactory keyAndCertificateFactory;
     private SslContext clientSslContext = null;
     private SslContext serverSslContext = null;
     private Function<SslContextBuilder, SslContext> instanceClientSslContextBuilderFunction = clientSslContextBuilderFunction;
 
+    /**
+     * @deprecated use constructor that specifies configuration explicitly
+     */
+    @Deprecated
     public NettySslContextFactory(MockServerLogger mockServerLogger) {
+        this.configuration = configuration();
         this.mockServerLogger = mockServerLogger;
-        keyAndCertificateFactory = createKeyAndCertificateFactory(mockServerLogger);
+        keyAndCertificateFactory = createKeyAndCertificateFactory(configuration, mockServerLogger);
         System.setProperty("https.protocols", Joiner.on(",").join(TLS_PROTOCOLS));
-        if (ConfigurationProperties.proactivelyInitialiseTLS()) {
+        if (configuration.proactivelyInitialiseTLS()) {
+            createServerSslContext();
+        }
+    }
+
+    public NettySslContextFactory(Configuration configuration, MockServerLogger mockServerLogger) {
+        this.configuration = configuration;
+        this.mockServerLogger = mockServerLogger;
+        keyAndCertificateFactory = createKeyAndCertificateFactory(configuration, mockServerLogger);
+        System.setProperty("https.protocols", Joiner.on(",").join(TLS_PROTOCOLS));
+        if (configuration.proactivelyInitialiseTLS()) {
             createServerSslContext();
         }
     }
@@ -66,7 +84,7 @@ public class NettySslContextFactory {
     }
 
     public synchronized SslContext createClientSslContext(boolean forwardProxyClient) {
-        if (clientSslContext == null || ConfigurationProperties.rebuildTLSContext()) {
+        if (clientSslContext == null || configuration.rebuildTLSContext()) {
             try {
                 // create x509 and private key if none exist yet
                 if (keyAndCertificateFactory.certificateNotYetCreated()) {
@@ -82,7 +100,7 @@ public class NettySslContextFactory {
                             forwardProxyCertificateChain()
                         );
                 if (forwardProxyClient) {
-                    switch (ConfigurationProperties.forwardProxyTLSX509CertificatesTrustManagerType()) {
+                    switch (configuration.forwardProxyTLSX509CertificatesTrustManagerType()) {
                         case ANY:
                             sslContextBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE);
                             break;
@@ -97,7 +115,7 @@ public class NettySslContextFactory {
                     sslContextBuilder.trustManager(trustCertificateChain());
                 }
                 clientSslContext = instanceClientSslContextBuilderFunction.apply(sslContextBuilder);
-                ConfigurationProperties.rebuildTLSContext(false);
+                configuration.rebuildTLSContext(false);
             } catch (Throwable throwable) {
                 throw new RuntimeException("Exception creating SSL context for client", throwable);
             }
@@ -106,16 +124,16 @@ public class NettySslContextFactory {
     }
 
     private PrivateKey forwardProxyPrivateKey() {
-        if (isNotBlank(ConfigurationProperties.forwardProxyPrivateKey())) {
-            return privateKeyFromPEMFile(ConfigurationProperties.forwardProxyPrivateKey());
+        if (isNotBlank(configuration.forwardProxyPrivateKey())) {
+            return privateKeyFromPEMFile(configuration.forwardProxyPrivateKey());
         } else {
             return keyAndCertificateFactory.privateKey();
         }
     }
 
     private X509Certificate[] forwardProxyCertificateChain() {
-        if (isNotBlank(ConfigurationProperties.forwardProxyCertificateChain())) {
-            return x509ChainFromPEMFile(ConfigurationProperties.forwardProxyCertificateChain()).toArray(new X509Certificate[0]);
+        if (isNotBlank(configuration.forwardProxyCertificateChain())) {
+            return x509ChainFromPEMFile(configuration.forwardProxyCertificateChain()).toArray(new X509Certificate[0]);
         } else {
             return new X509Certificate[]{
                 keyAndCertificateFactory.x509Certificate(),
@@ -142,7 +160,7 @@ public class NettySslContextFactory {
         ArrayList<X509Certificate> x509Certificates = new ArrayList<>();
         x509Certificates.add(keyAndCertificateFactory.x509Certificate());
         x509Certificates.add(keyAndCertificateFactory.certificateAuthorityX509Certificate());
-        x509Certificates.addAll(x509ChainFromPEMFile(ConfigurationProperties.forwardProxyTLSCustomTrustX509Certificates()));
+        x509Certificates.addAll(x509ChainFromPEMFile(configuration.forwardProxyTLSCustomTrustX509Certificates()));
         return x509Certificates.toArray(new X509Certificate[0]);
     }
 
@@ -151,7 +169,7 @@ public class NettySslContextFactory {
             // create x509 and private key if none exist yet
             || keyAndCertificateFactory.certificateNotYetCreated()
             // re-create x509 and private key if SAN list has been updated and dynamic update has not been disabled
-            || ConfigurationProperties.rebuildServerTLSContext() && !ConfigurationProperties.preventCertificateDynamicUpdate()) {
+            || configuration.rebuildServerTLSContext() && !configuration.preventCertificateDynamicUpdate()) {
             try {
                 keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
                 mockServerLogger.logEvent(
@@ -175,14 +193,14 @@ public class NettySslContextFactory {
                     )
                     .protocols(TLS_PROTOCOLS)
 //                    .sslProvider(SslProvider.JDK)
-                    .clientAuth(ConfigurationProperties.tlsMutualAuthenticationRequired() ? ClientAuth.REQUIRE : ClientAuth.OPTIONAL);
-                if (ConfigurationProperties.tlsMutualAuthenticationRequired()) {
+                    .clientAuth(configuration.tlsMutualAuthenticationRequired() ? ClientAuth.REQUIRE : ClientAuth.OPTIONAL);
+                if (configuration.tlsMutualAuthenticationRequired()) {
                     sslContextBuilder.trustManager(trustCertificateChain());
                 } else {
                     sslContextBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE);
                 }
                 serverSslContext = sslContextBuilder.build();
-                ConfigurationProperties.rebuildServerTLSContext(false);
+                configuration.rebuildServerTLSContext(false);
             } catch (Throwable throwable) {
                 mockServerLogger.logEvent(
                     new LogEntry()
@@ -196,7 +214,7 @@ public class NettySslContextFactory {
     }
 
     private X509Certificate[] trustCertificateChain() {
-        return trustCertificateChain(ConfigurationProperties.tlsMutualAuthenticationCertificateChain());
+        return trustCertificateChain(configuration.tlsMutualAuthenticationCertificateChain());
     }
 
     public X509Certificate[] trustCertificateChain(String tlsMutualAuthenticationCertificateChain) {

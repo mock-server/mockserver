@@ -3,12 +3,14 @@ package org.mockserver.proxyconfiguration;
 import com.google.common.collect.ImmutableList;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.configuration.Configuration;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertThrows;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.proxyconfiguration.ProxyConfiguration.proxyConfiguration;
 
@@ -35,7 +37,7 @@ public class ProxyConfigurationTest {
         // then
         assertEquals("/" + proxyAddress, forwardHttpProxy().toString());
         assertEquals(proxyAddress, System.getProperty("mockserver.forwardHttpProxy"));
-        assertThat(proxyConfiguration(), equalTo(ImmutableList.of(proxyConfiguration(ProxyConfiguration.Type.HTTP, proxyAddress, null, null))));
+        assertThat(proxyConfiguration(configuration()), equalTo(ImmutableList.of(proxyConfiguration(ProxyConfiguration.Type.HTTP, proxyAddress, null, null))));
     }
 
     @Test
@@ -50,7 +52,7 @@ public class ProxyConfigurationTest {
         // then
         assertEquals("/" + proxyAddress, forwardHttpsProxy().toString());
         assertEquals(proxyAddress, System.getProperty("mockserver.forwardHttpsProxy"));
-        assertThat(proxyConfiguration(), equalTo(ImmutableList.of(proxyConfiguration(ProxyConfiguration.Type.HTTPS, proxyAddress, null, null))));
+        assertThat(proxyConfiguration(configuration()), equalTo(ImmutableList.of(proxyConfiguration(ProxyConfiguration.Type.HTTPS, proxyAddress, null, null))));
     }
 
     @Test
@@ -69,7 +71,7 @@ public class ProxyConfigurationTest {
         assertEquals(proxyAddress, System.getProperty("mockserver.forwardHttpProxy"));
         assertEquals("/" + proxyAddress, forwardHttpsProxy().toString());
         assertEquals(proxyAddress, System.getProperty("mockserver.forwardHttpsProxy"));
-        assertThat(proxyConfiguration(), equalTo(ImmutableList.of(
+        assertThat(proxyConfiguration(configuration()), equalTo(ImmutableList.of(
             proxyConfiguration(ProxyConfiguration.Type.HTTP, proxyAddress, null, null),
             proxyConfiguration(ProxyConfiguration.Type.HTTPS, proxyAddress, null, null)
         )));
@@ -97,7 +99,7 @@ public class ProxyConfigurationTest {
         assertEquals(userName, System.getProperty("mockserver.forwardProxyAuthenticationUsername"));
         assertEquals(password, forwardProxyAuthenticationPassword());
         assertEquals(password, System.getProperty("mockserver.forwardProxyAuthenticationPassword"));
-        assertThat(proxyConfiguration(), equalTo(ImmutableList.of(proxyConfiguration(ProxyConfiguration.Type.HTTPS, proxyAddress, userName, password))));
+        assertThat(proxyConfiguration(configuration()), equalTo(ImmutableList.of(proxyConfiguration(ProxyConfiguration.Type.HTTPS, proxyAddress, userName, password))));
     }
 
     @Test
@@ -112,7 +114,7 @@ public class ProxyConfigurationTest {
         // then
         assertEquals("/" + proxyAddress, forwardSocksProxy().toString());
         assertEquals(proxyAddress, System.getProperty("mockserver.forwardSocksProxy"));
-        assertThat(proxyConfiguration(), equalTo(ImmutableList.of(proxyConfiguration(ProxyConfiguration.Type.SOCKS5, proxyAddress, null, null))));
+        assertThat(proxyConfiguration(configuration()), equalTo(ImmutableList.of(proxyConfiguration(ProxyConfiguration.Type.SOCKS5, proxyAddress, null, null))));
     }
 
     @Test
@@ -137,7 +139,7 @@ public class ProxyConfigurationTest {
         assertEquals(userName, System.getProperty("mockserver.forwardProxyAuthenticationUsername"));
         assertEquals(password, forwardProxyAuthenticationPassword());
         assertEquals(password, System.getProperty("mockserver.forwardProxyAuthenticationPassword"));
-        assertThat(proxyConfiguration(), equalTo(ImmutableList.of(proxyConfiguration(ProxyConfiguration.Type.SOCKS5, proxyAddress, userName, password))));
+        assertThat(proxyConfiguration(configuration()), equalTo(ImmutableList.of(proxyConfiguration(ProxyConfiguration.Type.SOCKS5, proxyAddress, userName, password))));
     }
 
     @Test
@@ -156,7 +158,7 @@ public class ProxyConfigurationTest {
         assertEquals(proxyAddress, System.getProperty("mockserver.forwardHttpProxy"));
         assertEquals("/" + proxyAddress, forwardSocksProxy().toString());
         assertEquals(proxyAddress, System.getProperty("mockserver.forwardSocksProxy"));
-        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, ProxyConfiguration::proxyConfiguration);
+        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, () -> proxyConfiguration(configuration()));
         assertThat(illegalArgumentException.getMessage(), equalTo("Invalid proxy configuration it is not possible to configure HTTP or HTTPS proxy at the same time as a SOCKS proxy, please choose either HTTP(S) proxy OR a SOCKS proxy"));
     }
 
@@ -176,7 +178,7 @@ public class ProxyConfigurationTest {
         assertEquals(proxyAddress, System.getProperty("mockserver.forwardHttpsProxy"));
         assertEquals("/" + proxyAddress, forwardSocksProxy().toString());
         assertEquals(proxyAddress, System.getProperty("mockserver.forwardSocksProxy"));
-        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, ProxyConfiguration::proxyConfiguration);
+        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, () -> proxyConfiguration(configuration()));
         assertThat(illegalArgumentException.getMessage(), equalTo("Invalid proxy configuration it is not possible to configure HTTP or HTTPS proxy at the same time as a SOCKS proxy, please choose either HTTP(S) proxy OR a SOCKS proxy"));
     }
 
@@ -200,7 +202,7 @@ public class ProxyConfigurationTest {
         assertEquals(proxyAddress, System.getProperty("mockserver.forwardHttpsProxy"));
         assertEquals("/" + proxyAddress, forwardSocksProxy().toString());
         assertEquals(proxyAddress, System.getProperty("mockserver.forwardSocksProxy"));
-        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, ProxyConfiguration::proxyConfiguration);
+        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, () -> proxyConfiguration(configuration()));
         assertThat(illegalArgumentException.getMessage(), equalTo("Invalid proxy configuration it is not possible to configure HTTP or HTTPS proxy at the same time as a SOCKS proxy, please choose either HTTP(S) proxy OR a SOCKS proxy"));
     }
 

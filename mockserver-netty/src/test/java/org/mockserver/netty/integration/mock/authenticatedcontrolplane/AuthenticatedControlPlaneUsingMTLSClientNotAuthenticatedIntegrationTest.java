@@ -33,6 +33,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThrows;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.HttpRequest.request;
@@ -84,7 +85,7 @@ public class AuthenticatedControlPlaneUsingMTLSClientNotAuthenticatedIntegration
 
         mockServerClient = new MockServerClient("localhost", severHttpPort).withSecure(true);
         MockServerLogger mockServerLogger = new MockServerLogger();
-        NettySslContextFactory nettySslContextFactory = new NettySslContextFactory(MOCK_SERVER_LOGGER);
+        NettySslContextFactory nettySslContextFactory = new NettySslContextFactory(configuration(), MOCK_SERVER_LOGGER);
         nettySslContextFactory.withClientSslContextBuilderFunction(
             sslContextBuilder -> {
                 try {
@@ -103,7 +104,7 @@ public class AuthenticatedControlPlaneUsingMTLSClientNotAuthenticatedIntegration
                 }
             }
         );
-        httpClient = new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null, false, nettySslContextFactory);
+        httpClient = new NettyHttpClient(configuration(), mockServerLogger, clientEventLoopGroup, null, false, nettySslContextFactory);
     }
 
     @AfterClass

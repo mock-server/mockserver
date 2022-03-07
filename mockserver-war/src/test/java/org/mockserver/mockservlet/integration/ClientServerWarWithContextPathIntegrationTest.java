@@ -16,6 +16,7 @@ import org.mockserver.testing.integration.mock.AbstractBasicMockingSameJVMIntegr
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
@@ -40,7 +41,7 @@ public class ClientServerWarWithContextPathIntegrationTest extends AbstractBasic
         defaultConnector.setRedirectPort(SERVER_HTTPS_PORT);
 
         // add https connector
-        KeyStoreFactory keyStoreFactory = new KeyStoreFactory(new MockServerLogger());
+        KeyStoreFactory keyStoreFactory = new KeyStoreFactory(configuration(), new MockServerLogger());
         keyStoreFactory.loadOrCreateKeyStore();
         Connector httpsConnector = new Connector();
         httpsConnector.setPort(SERVER_HTTPS_PORT);

@@ -25,6 +25,7 @@ import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.mock;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE_FORMAT;
 import static org.mockserver.model.HttpRequest.request;
@@ -45,7 +46,7 @@ public class MockServerEventLogTest {
     @Before
     public void setupTestFixture() {
         Scheduler scheduler = mock(Scheduler.class);
-        HttpState httpStateHandler = new HttpState(new MockServerLogger(), scheduler);
+        HttpState httpStateHandler = new HttpState(configuration(), new MockServerLogger(), scheduler);
         mockServerLogger = httpStateHandler.getMockServerLogger();
         mockServerEventLog = httpStateHandler.getMockServerLog();
     }

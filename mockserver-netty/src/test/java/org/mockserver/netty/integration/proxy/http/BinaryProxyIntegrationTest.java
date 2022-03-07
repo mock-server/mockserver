@@ -24,6 +24,7 @@ import java.util.concurrent.CompletableFuture;
 import static java.util.concurrent.TimeUnit.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.BinaryMessage.bytes;
 import static org.mockserver.testing.tls.SSLSocketFactory.sslSocketFactory;
@@ -68,7 +69,7 @@ public class BinaryProxyIntegrationTest {
                 }).start();
 
                 // when
-                CompletableFuture<BinaryMessage> binaryResponseFuture = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false)
+                CompletableFuture<BinaryMessage> binaryResponseFuture = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false)
                     .sendRequest(
                         bytes(randomRequestBytes),
                         false,
@@ -126,7 +127,7 @@ public class BinaryProxyIntegrationTest {
                 }).start();
 
                 // when
-                CompletableFuture<BinaryMessage> binaryResponseFuture = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false)
+                CompletableFuture<BinaryMessage> binaryResponseFuture = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false)
                     .sendRequest(
                         bytes(randomRequestBytes),
                         true,
@@ -135,7 +136,7 @@ public class BinaryProxyIntegrationTest {
                     );
 
                 // then
-                Socket socket = socketFuture.get(5, MINUTES); // TODO why does this timeout sometimes fail the build?
+                Socket socket = socketFuture.get(5, MINUTES);
                 byte[] receivedBytes = new byte[randomRequestBytes.length];
                 int bytesRead = socket.getInputStream().read(receivedBytes);
                 assertThat(bytesRead, is(randomRequestBytes.length));
@@ -170,7 +171,7 @@ public class BinaryProxyIntegrationTest {
         ClientAndServer clientAndServer = startClientAndServer();
 
         // when
-        BinaryMessage binaryResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null, false)
+        BinaryMessage binaryResponse = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false)
             .sendRequest(
                 bytes(randomRequestBytes),
                 true,

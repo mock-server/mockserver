@@ -17,6 +17,7 @@ import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.verify.Verification.verification;
@@ -28,12 +29,12 @@ import static org.mockserver.verify.VerificationTimes.exactly;
  */
 public class MockServerEventLogRequestLogEntryVerificationTest {
 
-    private static final Scheduler scheduler = new Scheduler(new MockServerLogger());
+    private static final Scheduler scheduler = new Scheduler(configuration(), new MockServerLogger());
     private MockServerEventLog mockServerEventLog;
 
     @Before
     public void setupTestFixture() {
-        mockServerEventLog = new MockServerEventLog(new MockServerLogger(), scheduler, true);
+        mockServerEventLog = new MockServerEventLog(configuration(), new MockServerLogger(), scheduler, true);
     }
 
     @AfterClass

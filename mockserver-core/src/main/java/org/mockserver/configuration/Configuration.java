@@ -1,19 +1,30 @@
 package org.mockserver.configuration;
 
+import com.google.common.collect.Sets;
+import com.google.common.net.InetAddresses;
 import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
 import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
+import java.util.Arrays;
+import java.util.Set;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
 
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings({"UnusedReturnValue", "unused"})
 public class Configuration {
+
+    public static Configuration configuration() {
+        return new Configuration();
+    }
 
     // logging
     private Level logLevel;
     private Boolean disableSystemOut;
-    private Boolean disableLogging;
     private Boolean detailedMatchFailures;
     private Boolean launchUIForLogLevelDebug;
     private Boolean metricsEnabled;
@@ -78,7 +89,8 @@ public class Configuration {
     // liveness
     private String livenessHttpGetPath;
 
-    // control plane authentication (TODO(jamesdbloom) missing from html)
+    // control plane authentication
+    // TODO(jamesdbloom) missing from html
     private Boolean controlPlaneTLSMutualAuthenticationRequired;
     private String controlPlaneTLSMutualAuthenticationCAChain;
     private String controlPlanePrivateKeyPath;
@@ -88,8 +100,10 @@ public class Configuration {
 
     // TLS
     private Boolean useBouncyCastleForKeyAndCertificateGeneration;
-    // missing from html
+    // TODO(jamesdbloom) missing from html
     private Boolean proactivelyInitialiseTLS;
+    private boolean rebuildTLSContext;
+    private boolean rebuildServerTLSContext;
 
     // inbound - dynamic CA
     private Boolean dynamicallyCreateCertificateAuthorityCertificate;
@@ -98,8 +112,8 @@ public class Configuration {
     // inbound - dynamic private key & x509
     private Boolean preventCertificateDynamicUpdate;
     private String sslCertificateDomainName;
-    private String[] sslSubjectAlternativeNameDomains;
-    private String[] sslSubjectAlternativeNameIps;
+    private Set<String> sslSubjectAlternativeNameDomains;
+    private Set<String> sslSubjectAlternativeNameIps;
 
     // inbound - fixed CA
     private String certificateAuthorityPrivateKey;
@@ -122,525 +136,9 @@ public class Configuration {
     private String forwardProxyPrivateKey;
     private String forwardProxyCertificateChain;
 
-    public Integer defaultMaxExpectations() {
-        if (defaultMaxExpectations == null) {
-            defaultMaxExpectations = ConfigurationProperties.defaultMaxExpectations();
-        }
-        return defaultMaxExpectations;
-    }
-
-    public Configuration defaultMaxExpectations(Integer defaultMaxExpectations) {
-        this.defaultMaxExpectations = defaultMaxExpectations;
-        return this;
-    }
-
-    public Integer maxExpectations() {
-        if (maxExpectations == null) {
-            maxExpectations = ConfigurationProperties.maxExpectations();
-        }
-        return maxExpectations;
-    }
-
-    public Configuration maxExpectations(Integer maxExpectations) {
-        this.maxExpectations = maxExpectations;
-        return this;
-    }
-
-    public Integer defaultMaxLogEntries() {
-        if (defaultMaxLogEntries == null) {
-            defaultMaxLogEntries = ConfigurationProperties.defaultMaxLogEntries();
-        }
-        return defaultMaxLogEntries;
-    }
-
-    public Configuration defaultMaxLogEntries(Integer defaultMaxLogEntries) {
-        this.defaultMaxLogEntries = defaultMaxLogEntries;
-        return this;
-    }
-
-    public Integer maxLogEntries() {
-        if (maxLogEntries == null) {
-            maxLogEntries = ConfigurationProperties.maxLogEntries();
-        }
-        return maxLogEntries;
-    }
-
-    public Configuration maxLogEntries(Integer maxLogEntries) {
-        this.maxLogEntries = maxLogEntries;
-        return this;
-    }
-
-    public Boolean outputMemoryUsageCsv() {
-        if (outputMemoryUsageCsv == null) {
-            outputMemoryUsageCsv = ConfigurationProperties.outputMemoryUsageCsv();
-        }
-        return outputMemoryUsageCsv;
-    }
-
-    public Configuration outputMemoryUsageCsv(Boolean outputMemoryUsageCsv) {
-        this.outputMemoryUsageCsv = outputMemoryUsageCsv;
-        return this;
-    }
-
-    public String memoryUsageCsvDirectory() {
-        if (memoryUsageCsvDirectory == null) {
-            memoryUsageCsvDirectory = ConfigurationProperties.memoryUsageCsvDirectory();
-        }
-        return memoryUsageCsvDirectory;
-    }
-
-    public Configuration memoryUsageCsvDirectory(String memoryUsageCsvDirectory) {
-        this.memoryUsageCsvDirectory = memoryUsageCsvDirectory;
-        return this;
-    }
-
-    public Integer maxWebSocketExpectations() {
-        if (maxWebSocketExpectations == null) {
-            maxWebSocketExpectations = ConfigurationProperties.maxWebSocketExpectations();
-        }
-        return maxWebSocketExpectations;
-    }
-
-    public Configuration maxWebSocketExpectations(Integer maxWebSocketExpectations) {
-        this.maxWebSocketExpectations = maxWebSocketExpectations;
-        return this;
-    }
-
-    public Integer maxInitialLineLength() {
-        if (maxInitialLineLength == null) {
-            maxInitialLineLength = ConfigurationProperties.maxInitialLineLength();
-        }
-        return maxInitialLineLength;
-    }
-
-    public Configuration maxInitialLineLength(Integer maxInitialLineLength) {
-        this.maxInitialLineLength = maxInitialLineLength;
-        return this;
-    }
-
-    public Integer maxHeaderSize() {
-        if (maxHeaderSize == null) {
-            maxHeaderSize = ConfigurationProperties.maxHeaderSize();
-        }
-        return maxHeaderSize;
-    }
-
-    public Configuration maxHeaderSize(Integer maxHeaderSize) {
-        this.maxHeaderSize = maxHeaderSize;
-        return this;
-    }
-
-    public Integer maxChunkSize() {
-        if (maxChunkSize == null) {
-            maxChunkSize = ConfigurationProperties.maxChunkSize();
-        }
-        return maxChunkSize;
-    }
-
-    public Configuration maxChunkSize(Integer maxChunkSize) {
-        this.maxChunkSize = maxChunkSize;
-        return this;
-    }
-
-    public Integer nioEventLoopThreadCount() {
-        if (nioEventLoopThreadCount == null) {
-            nioEventLoopThreadCount = ConfigurationProperties.nioEventLoopThreadCount();
-        }
-        return nioEventLoopThreadCount;
-    }
-
-    public Configuration nioEventLoopThreadCount(Integer nioEventLoopThreadCount) {
-        this.nioEventLoopThreadCount = nioEventLoopThreadCount;
-        return this;
-    }
-
-    public Integer clientNioEventLoopThreadCount() {
-        if (clientNioEventLoopThreadCount == null) {
-            clientNioEventLoopThreadCount = ConfigurationProperties.clientNioEventLoopThreadCount();
-        }
-        return clientNioEventLoopThreadCount;
-    }
-
-    public Configuration clientNioEventLoopThreadCount(Integer clientNioEventLoopThreadCount) {
-        this.clientNioEventLoopThreadCount = clientNioEventLoopThreadCount;
-        return this;
-    }
-
-    public Integer actionHandlerThreadCount() {
-        if (actionHandlerThreadCount == null) {
-            actionHandlerThreadCount = ConfigurationProperties.actionHandlerThreadCount();
-        }
-        return actionHandlerThreadCount;
-    }
-
-    public Configuration actionHandlerThreadCount(Integer actionHandlerThreadCount) {
-        this.actionHandlerThreadCount = actionHandlerThreadCount;
-        return this;
-    }
-
-    public Integer webSocketClientEventLoopThreadCount() {
-        if (webSocketClientEventLoopThreadCount == null) {
-            webSocketClientEventLoopThreadCount = ConfigurationProperties.webSocketClientEventLoopThreadCount();
-        }
-        return webSocketClientEventLoopThreadCount;
-    }
-
-    public Configuration webSocketClientEventLoopThreadCount(Integer webSocketClientEventLoopThreadCount) {
-        this.webSocketClientEventLoopThreadCount = webSocketClientEventLoopThreadCount;
-        return this;
-    }
-
-    public Long maxSocketTimeoutInMillis() {
-        if (maxSocketTimeoutInMillis == null) {
-            maxSocketTimeoutInMillis = ConfigurationProperties.maxSocketTimeout();
-        }
-        return maxSocketTimeoutInMillis;
-    }
-
-    public Configuration maxSocketTimeoutInMillis(Long maxSocketTimeoutInMillis) {
-        this.maxSocketTimeoutInMillis = maxSocketTimeoutInMillis;
-        return this;
-    }
-
-    public Long maxFutureTimeoutInMillis() {
-        if (maxFutureTimeoutInMillis == null) {
-            maxFutureTimeoutInMillis = ConfigurationProperties.maxFutureTimeout();
-        }
-        return maxFutureTimeoutInMillis;
-    }
-
-    public Configuration maxFutureTimeoutInMillis(Long maxFutureTimeoutInMillis) {
-        this.maxFutureTimeoutInMillis = maxFutureTimeoutInMillis;
-        return this;
-    }
-
-    public Integer socketConnectionTimeoutInMillis() {
-        if (socketConnectionTimeoutInMillis == null) {
-            socketConnectionTimeoutInMillis = ConfigurationProperties.socketConnectionTimeout();
-        }
-        return socketConnectionTimeoutInMillis;
-    }
-
-    public Configuration socketConnectionTimeoutInMillis(Integer socketConnectionTimeoutInMillis) {
-        this.socketConnectionTimeoutInMillis = socketConnectionTimeoutInMillis;
-        return this;
-    }
-
-    public Boolean alwaysCloseSocketConnections() {
-        if (alwaysCloseSocketConnections == null) {
-            alwaysCloseSocketConnections = ConfigurationProperties.alwaysCloseSocketConnections();
-        }
-        return alwaysCloseSocketConnections;
-    }
-
-    public Configuration alwaysCloseSocketConnections(Boolean alwaysCloseSocketConnections) {
-        this.alwaysCloseSocketConnections = alwaysCloseSocketConnections;
-        return this;
-    }
-
-    public Boolean useSemicolonAsQueryParameterSeparator() {
-        if (useSemicolonAsQueryParameterSeparator == null) {
-            useSemicolonAsQueryParameterSeparator = ConfigurationProperties.useSemicolonAsQueryParameterSeparator();
-        }
-        return useSemicolonAsQueryParameterSeparator;
-    }
-
-    public Configuration useSemicolonAsQueryParameterSeparator(Boolean useSemicolonAsQueryParameterSeparator) {
-        this.useSemicolonAsQueryParameterSeparator = useSemicolonAsQueryParameterSeparator;
-        return this;
-    }
-
-    public String sslCertificateDomainName() {
-        if (sslCertificateDomainName == null) {
-            sslCertificateDomainName = ConfigurationProperties.sslCertificateDomainName();
-        }
-        return sslCertificateDomainName;
-    }
-
-    public Configuration sslCertificateDomainName(String sslCertificateDomainName) {
-        this.sslCertificateDomainName = sslCertificateDomainName;
-        return this;
-    }
-
-    public String[] sslSubjectAlternativeNameDomains() {
-        if (sslSubjectAlternativeNameDomains == null) {
-            sslSubjectAlternativeNameDomains = ConfigurationProperties.sslSubjectAlternativeNameDomains();
-        }
-        return sslSubjectAlternativeNameDomains;
-    }
-
-    public Configuration sslSubjectAlternativeNameDomains(String[] sslSubjectAlternativeNameDomains) {
-        this.sslSubjectAlternativeNameDomains = sslSubjectAlternativeNameDomains;
-        return this;
-    }
-
-    public String[] sslSubjectAlternativeNameIps() {
-        if (sslSubjectAlternativeNameIps == null) {
-            sslSubjectAlternativeNameIps = ConfigurationProperties.sslSubjectAlternativeNameIps();
-        }
-        return sslSubjectAlternativeNameIps;
-    }
-
-    public Configuration sslSubjectAlternativeNameIps(String[] sslSubjectAlternativeNameIps) {
-        this.sslSubjectAlternativeNameIps = sslSubjectAlternativeNameIps;
-        return this;
-    }
-
-    public Boolean useBouncyCastleForKeyAndCertificateGeneration() {
-        if (useBouncyCastleForKeyAndCertificateGeneration == null) {
-            useBouncyCastleForKeyAndCertificateGeneration = ConfigurationProperties.useBouncyCastleForKeyAndCertificateGeneration();
-        }
-        return useBouncyCastleForKeyAndCertificateGeneration;
-    }
-
-    public Configuration useBouncyCastleForKeyAndCertificateGeneration(Boolean useBouncyCastleForKeyAndCertificateGeneration) {
-        this.useBouncyCastleForKeyAndCertificateGeneration = useBouncyCastleForKeyAndCertificateGeneration;
-        return this;
-    }
-
-    public Boolean preventCertificateDynamicUpdate() {
-        if (preventCertificateDynamicUpdate == null) {
-            preventCertificateDynamicUpdate = ConfigurationProperties.preventCertificateDynamicUpdate();
-        }
-        return preventCertificateDynamicUpdate;
-    }
-
-    public Configuration preventCertificateDynamicUpdate(Boolean preventCertificateDynamicUpdate) {
-        this.preventCertificateDynamicUpdate = preventCertificateDynamicUpdate;
-        return this;
-    }
-
-    public String certificateAuthorityPrivateKey() {
-        if (certificateAuthorityPrivateKey == null) {
-            certificateAuthorityPrivateKey = ConfigurationProperties.certificateAuthorityPrivateKey();
-        }
-        return certificateAuthorityPrivateKey;
-    }
-
-    public Configuration certificateAuthorityPrivateKey(String certificateAuthorityPrivateKey) {
-        this.certificateAuthorityPrivateKey = certificateAuthorityPrivateKey;
-        return this;
-    }
-
-    public String certificateAuthorityCertificate() {
-        if (certificateAuthorityCertificate == null) {
-            certificateAuthorityCertificate = ConfigurationProperties.certificateAuthorityCertificate();
-        }
-        return certificateAuthorityCertificate;
-    }
-
-    public Configuration certificateAuthorityCertificate(String certificateAuthorityCertificate) {
-        this.certificateAuthorityCertificate = certificateAuthorityCertificate;
-        return this;
-    }
-
-    public Boolean dynamicallyCreateCertificateAuthorityCertificate() {
-        if (dynamicallyCreateCertificateAuthorityCertificate == null) {
-            dynamicallyCreateCertificateAuthorityCertificate = ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate();
-        }
-        return dynamicallyCreateCertificateAuthorityCertificate;
-    }
-
-    public Configuration dynamicallyCreateCertificateAuthorityCertificate(Boolean dynamicallyCreateCertificateAuthorityCertificate) {
-        this.dynamicallyCreateCertificateAuthorityCertificate = dynamicallyCreateCertificateAuthorityCertificate;
-        return this;
-    }
-
-    public String directoryToSaveDynamicSSLCertificate() {
-        if (directoryToSaveDynamicSSLCertificate == null) {
-            directoryToSaveDynamicSSLCertificate = ConfigurationProperties.directoryToSaveDynamicSSLCertificate();
-        }
-        return directoryToSaveDynamicSSLCertificate;
-    }
-
-    public Configuration directoryToSaveDynamicSSLCertificate(String directoryToSaveDynamicSSLCertificate) {
-        this.directoryToSaveDynamicSSLCertificate = directoryToSaveDynamicSSLCertificate;
-        return this;
-    }
-
-    public Boolean proactivelyInitialiseTLS() {
-        if (proactivelyInitialiseTLS == null) {
-            proactivelyInitialiseTLS = ConfigurationProperties.proactivelyInitialiseTLS();
-        }
-        return proactivelyInitialiseTLS;
-    }
-
-    public Configuration proactivelyInitialiseTLS(Boolean proactivelyInitialiseTLS) {
-        this.proactivelyInitialiseTLS = proactivelyInitialiseTLS;
-        return this;
-    }
-
-    public String privateKeyPath() {
-        if (privateKeyPath == null) {
-            privateKeyPath = ConfigurationProperties.privateKeyPath();
-        }
-        return privateKeyPath;
-    }
-
-    public Configuration privateKeyPath(String privateKeyPath) {
-        this.privateKeyPath = privateKeyPath;
-        return this;
-    }
-
-    public String x509CertificatePath() {
-        if (x509CertificatePath == null) {
-            x509CertificatePath = ConfigurationProperties.x509CertificatePath();
-        }
-        return x509CertificatePath;
-    }
-
-    public Configuration x509CertificatePath(String x509CertificatePath) {
-        this.x509CertificatePath = x509CertificatePath;
-        return this;
-    }
-
-    public Boolean tlsMutualAuthenticationRequired() {
-        if (tlsMutualAuthenticationRequired == null) {
-            tlsMutualAuthenticationRequired = ConfigurationProperties.tlsMutualAuthenticationRequired();
-        }
-        return tlsMutualAuthenticationRequired;
-    }
-
-    public Configuration tlsMutualAuthenticationRequired(Boolean tlsMutualAuthenticationRequired) {
-        this.tlsMutualAuthenticationRequired = tlsMutualAuthenticationRequired;
-        return this;
-    }
-
-    public String tlsMutualAuthenticationCertificateChain() {
-        if (tlsMutualAuthenticationCertificateChain == null) {
-            tlsMutualAuthenticationCertificateChain = ConfigurationProperties.tlsMutualAuthenticationCertificateChain();
-        }
-        return tlsMutualAuthenticationCertificateChain;
-    }
-
-    public Configuration tlsMutualAuthenticationCertificateChain(String tlsMutualAuthenticationCertificateChain) {
-        this.tlsMutualAuthenticationCertificateChain = tlsMutualAuthenticationCertificateChain;
-        return this;
-    }
-
-    public ForwardProxyTLSX509CertificatesTrustManager forwardProxyTLSX509CertificatesTrustManagerType() {
-        if (forwardProxyTLSX509CertificatesTrustManagerType == null) {
-            forwardProxyTLSX509CertificatesTrustManagerType = ConfigurationProperties.forwardProxyTLSX509CertificatesTrustManagerType();
-        }
-        return forwardProxyTLSX509CertificatesTrustManagerType;
-    }
-
-    public Configuration forwardProxyTLSX509CertificatesTrustManagerType(ForwardProxyTLSX509CertificatesTrustManager forwardProxyTLSX509CertificatesTrustManagerType) {
-        this.forwardProxyTLSX509CertificatesTrustManagerType = forwardProxyTLSX509CertificatesTrustManagerType;
-        return this;
-    }
-
-    public String forwardProxyTLSCustomTrustX509Certificates() {
-        if (forwardProxyTLSCustomTrustX509Certificates == null) {
-            forwardProxyTLSCustomTrustX509Certificates = ConfigurationProperties.forwardProxyTLSCustomTrustX509Certificates();
-        }
-        return forwardProxyTLSCustomTrustX509Certificates;
-    }
-
-    public Configuration forwardProxyTLSCustomTrustX509Certificates(String forwardProxyTLSCustomTrustX509Certificates) {
-        this.forwardProxyTLSCustomTrustX509Certificates = forwardProxyTLSCustomTrustX509Certificates;
-        return this;
-    }
-
-    public String forwardProxyPrivateKey() {
-        if (forwardProxyPrivateKey == null) {
-            forwardProxyPrivateKey = ConfigurationProperties.forwardProxyPrivateKey();
-        }
-        return forwardProxyPrivateKey;
-    }
-
-    public Configuration forwardProxyPrivateKey(String forwardProxyPrivateKey) {
-        this.forwardProxyPrivateKey = forwardProxyPrivateKey;
-        return this;
-    }
-
-    public String forwardProxyCertificateChain() {
-        if (forwardProxyCertificateChain == null) {
-            forwardProxyCertificateChain = ConfigurationProperties.forwardProxyCertificateChain();
-        }
-        return forwardProxyCertificateChain;
-    }
-
-    public Configuration forwardProxyCertificateChain(String forwardProxyCertificateChain) {
-        this.forwardProxyCertificateChain = forwardProxyCertificateChain;
-        return this;
-    }
-
-    public Boolean controlPlaneTLSMutualAuthenticationRequired() {
-        if (controlPlaneTLSMutualAuthenticationRequired == null) {
-            controlPlaneTLSMutualAuthenticationRequired = ConfigurationProperties.controlPlaneTLSMutualAuthenticationRequired();
-        }
-        return controlPlaneTLSMutualAuthenticationRequired;
-    }
-
-    public Configuration controlPlaneTLSMutualAuthenticationRequired(Boolean controlPlaneTLSMutualAuthenticationRequired) {
-        this.controlPlaneTLSMutualAuthenticationRequired = controlPlaneTLSMutualAuthenticationRequired;
-        return this;
-    }
-
-    public String controlPlaneTLSMutualAuthenticationCAChain() {
-        if (controlPlaneTLSMutualAuthenticationCAChain == null) {
-            controlPlaneTLSMutualAuthenticationCAChain = ConfigurationProperties.controlPlaneTLSMutualAuthenticationCAChain();
-        }
-        return controlPlaneTLSMutualAuthenticationCAChain;
-    }
-
-    public Configuration controlPlaneTLSMutualAuthenticationCAChain(String controlPlaneTLSMutualAuthenticationCAChain) {
-        this.controlPlaneTLSMutualAuthenticationCAChain = controlPlaneTLSMutualAuthenticationCAChain;
-        return this;
-    }
-
-    public String controlPlanePrivateKeyPath() {
-        if (controlPlanePrivateKeyPath == null) {
-            controlPlanePrivateKeyPath = ConfigurationProperties.controlPlanePrivateKeyPath();
-        }
-        return controlPlanePrivateKeyPath;
-    }
-
-    public Configuration controlPlanePrivateKeyPath(String controlPlanePrivateKeyPath) {
-        this.controlPlanePrivateKeyPath = controlPlanePrivateKeyPath;
-        return this;
-    }
-
-    public String controlPlaneX509CertificatePath() {
-        if (controlPlaneX509CertificatePath == null) {
-            controlPlaneX509CertificatePath = ConfigurationProperties.controlPlaneX509CertificatePath();
-        }
-        return controlPlaneX509CertificatePath;
-    }
-
-    public Configuration controlPlaneX509CertificatePath(String controlPlaneX509CertificatePath) {
-        this.controlPlaneX509CertificatePath = controlPlaneX509CertificatePath;
-        return this;
-    }
-
-    public Boolean controlPlaneJWTAuthenticationRequired() {
-        if (controlPlaneJWTAuthenticationRequired == null) {
-            controlPlaneJWTAuthenticationRequired = ConfigurationProperties.controlPlaneJWTAuthenticationRequired();
-        }
-        return controlPlaneJWTAuthenticationRequired;
-    }
-
-    public Configuration controlPlaneJWTAuthenticationRequired(Boolean controlPlaneJWTAuthenticationRequired) {
-        this.controlPlaneJWTAuthenticationRequired = controlPlaneJWTAuthenticationRequired;
-        return this;
-    }
-
-    public String controlPlaneJWTAuthenticationJWKSource() {
-        if (controlPlaneJWTAuthenticationJWKSource == null) {
-            controlPlaneJWTAuthenticationJWKSource = ConfigurationProperties.controlPlaneJWTAuthenticationJWKSource();
-        }
-        return controlPlaneJWTAuthenticationJWKSource;
-    }
-
-    public Configuration controlPlaneJWTAuthenticationJWKSource(String controlPlaneJWTAuthenticationJWKSource) {
-        this.controlPlaneJWTAuthenticationJWKSource = controlPlaneJWTAuthenticationJWKSource;
-        return this;
-    }
-
     public Level logLevel() {
         if (logLevel == null) {
-            logLevel = ConfigurationProperties.logLevel();
+            return ConfigurationProperties.logLevel();
         }
         return logLevel;
     }
@@ -652,7 +150,7 @@ public class Configuration {
 
     public Boolean disableSystemOut() {
         if (disableSystemOut == null) {
-            disableSystemOut = ConfigurationProperties.disableSystemOut();
+            return ConfigurationProperties.disableSystemOut();
         }
         return disableSystemOut;
     }
@@ -662,21 +160,9 @@ public class Configuration {
         return this;
     }
 
-    public Boolean disableLogging() {
-        if (disableLogging == null) {
-            disableLogging = ConfigurationProperties.disableLogging();
-        }
-        return disableLogging;
-    }
-
-    public Configuration disableLogging(Boolean disableLogging) {
-        this.disableLogging = disableLogging;
-        return this;
-    }
-
     public Boolean detailedMatchFailures() {
         if (detailedMatchFailures == null) {
-            detailedMatchFailures = ConfigurationProperties.detailedMatchFailures();
+            return ConfigurationProperties.detailedMatchFailures();
         }
         return detailedMatchFailures;
     }
@@ -688,7 +174,7 @@ public class Configuration {
 
     public Boolean launchUIForLogLevelDebug() {
         if (launchUIForLogLevelDebug == null) {
-            launchUIForLogLevelDebug = ConfigurationProperties.launchUIForLogLevelDebug();
+            return ConfigurationProperties.launchUIForLogLevelDebug();
         }
         return launchUIForLogLevelDebug;
     }
@@ -698,21 +184,9 @@ public class Configuration {
         return this;
     }
 
-    public Boolean matchersFailFast() {
-        if (matchersFailFast == null) {
-            matchersFailFast = ConfigurationProperties.matchersFailFast();
-        }
-        return matchersFailFast;
-    }
-
-    public Configuration matchersFailFast(Boolean matchersFailFast) {
-        this.matchersFailFast = matchersFailFast;
-        return this;
-    }
-
     public Boolean metricsEnabled() {
         if (metricsEnabled == null) {
-            metricsEnabled = ConfigurationProperties.metricsEnabled();
+            return ConfigurationProperties.metricsEnabled();
         }
         return metricsEnabled;
     }
@@ -722,9 +196,201 @@ public class Configuration {
         return this;
     }
 
+    public Integer maxExpectations() {
+        if (maxExpectations == null) {
+            return ConfigurationProperties.maxExpectations();
+        }
+        return maxExpectations;
+    }
+
+    public Configuration maxExpectations(Integer maxExpectations) {
+        this.maxExpectations = maxExpectations;
+        return this;
+    }
+
+    public Integer defaultMaxExpectations() {
+        if (defaultMaxExpectations == null) {
+            return ConfigurationProperties.defaultMaxExpectations();
+        }
+        return defaultMaxExpectations;
+    }
+
+    public Configuration defaultMaxExpectations(Integer defaultMaxExpectations) {
+        this.defaultMaxExpectations = defaultMaxExpectations;
+        return this;
+    }
+
+    public Integer maxLogEntries() {
+        if (maxLogEntries == null) {
+            return ConfigurationProperties.maxLogEntries();
+        }
+        return maxLogEntries;
+    }
+
+    public Configuration maxLogEntries(Integer maxLogEntries) {
+        this.maxLogEntries = maxLogEntries;
+        return this;
+    }
+
+    public Integer defaultMaxLogEntries() {
+        if (defaultMaxLogEntries == null) {
+            return ConfigurationProperties.defaultMaxLogEntries();
+        }
+        return defaultMaxLogEntries;
+    }
+
+    public Configuration defaultMaxLogEntries(Integer defaultMaxLogEntries) {
+        this.defaultMaxLogEntries = defaultMaxLogEntries;
+        return this;
+    }
+
+    public Integer maxWebSocketExpectations() {
+        if (maxWebSocketExpectations == null) {
+            return ConfigurationProperties.maxWebSocketExpectations();
+        }
+        return maxWebSocketExpectations;
+    }
+
+    public Configuration maxWebSocketExpectations(Integer maxWebSocketExpectations) {
+        this.maxWebSocketExpectations = maxWebSocketExpectations;
+        return this;
+    }
+
+    public Boolean outputMemoryUsageCsv() {
+        if (outputMemoryUsageCsv == null) {
+            return ConfigurationProperties.outputMemoryUsageCsv();
+        }
+        return outputMemoryUsageCsv;
+    }
+
+    public Configuration outputMemoryUsageCsv(Boolean outputMemoryUsageCsv) {
+        this.outputMemoryUsageCsv = outputMemoryUsageCsv;
+        return this;
+    }
+
+    public String memoryUsageCsvDirectory() {
+        if (memoryUsageCsvDirectory == null) {
+            return ConfigurationProperties.memoryUsageCsvDirectory();
+        }
+        return memoryUsageCsvDirectory;
+    }
+
+    public Configuration memoryUsageCsvDirectory(String memoryUsageCsvDirectory) {
+        this.memoryUsageCsvDirectory = memoryUsageCsvDirectory;
+        return this;
+    }
+
+    public Integer nioEventLoopThreadCount() {
+        if (nioEventLoopThreadCount == null) {
+            return ConfigurationProperties.nioEventLoopThreadCount();
+        }
+        return nioEventLoopThreadCount;
+    }
+
+    public Configuration nioEventLoopThreadCount(Integer nioEventLoopThreadCount) {
+        this.nioEventLoopThreadCount = nioEventLoopThreadCount;
+        return this;
+    }
+
+    public Integer actionHandlerThreadCount() {
+        if (actionHandlerThreadCount == null) {
+            return ConfigurationProperties.actionHandlerThreadCount();
+        }
+        return actionHandlerThreadCount;
+    }
+
+    public Configuration actionHandlerThreadCount(Integer actionHandlerThreadCount) {
+        this.actionHandlerThreadCount = actionHandlerThreadCount;
+        return this;
+    }
+
+    public Integer webSocketClientEventLoopThreadCount() {
+        if (webSocketClientEventLoopThreadCount == null) {
+            return ConfigurationProperties.webSocketClientEventLoopThreadCount();
+        }
+        return webSocketClientEventLoopThreadCount;
+    }
+
+    public Configuration webSocketClientEventLoopThreadCount(Integer webSocketClientEventLoopThreadCount) {
+        this.webSocketClientEventLoopThreadCount = webSocketClientEventLoopThreadCount;
+        return this;
+    }
+
+    public Integer clientNioEventLoopThreadCount() {
+        if (clientNioEventLoopThreadCount == null) {
+            return ConfigurationProperties.clientNioEventLoopThreadCount();
+        }
+        return clientNioEventLoopThreadCount;
+    }
+
+    public Configuration clientNioEventLoopThreadCount(Integer clientNioEventLoopThreadCount) {
+        this.clientNioEventLoopThreadCount = clientNioEventLoopThreadCount;
+        return this;
+    }
+
+    public Long maxFutureTimeoutInMillis() {
+        if (maxFutureTimeoutInMillis == null) {
+            return ConfigurationProperties.maxFutureTimeout();
+        }
+        return maxFutureTimeoutInMillis;
+    }
+
+    public Configuration maxFutureTimeoutInMillis(Long maxFutureTimeoutInMillis) {
+        this.maxFutureTimeoutInMillis = maxFutureTimeoutInMillis;
+        return this;
+    }
+
+    public Boolean matchersFailFast() {
+        if (matchersFailFast == null) {
+            return ConfigurationProperties.matchersFailFast();
+        }
+        return matchersFailFast;
+    }
+
+    public Configuration matchersFailFast(Boolean matchersFailFast) {
+        this.matchersFailFast = matchersFailFast;
+        return this;
+    }
+
+    public Long maxSocketTimeoutInMillis() {
+        if (maxSocketTimeoutInMillis == null) {
+            return ConfigurationProperties.maxSocketTimeout();
+        }
+        return maxSocketTimeoutInMillis;
+    }
+
+    public Configuration maxSocketTimeoutInMillis(Long maxSocketTimeoutInMillis) {
+        this.maxSocketTimeoutInMillis = maxSocketTimeoutInMillis;
+        return this;
+    }
+
+    public Integer socketConnectionTimeoutInMillis() {
+        if (socketConnectionTimeoutInMillis == null) {
+            return ConfigurationProperties.socketConnectionTimeout();
+        }
+        return socketConnectionTimeoutInMillis;
+    }
+
+    public Configuration socketConnectionTimeoutInMillis(Integer socketConnectionTimeoutInMillis) {
+        this.socketConnectionTimeoutInMillis = socketConnectionTimeoutInMillis;
+        return this;
+    }
+
+    public Boolean alwaysCloseSocketConnections() {
+        if (alwaysCloseSocketConnections == null) {
+            return ConfigurationProperties.alwaysCloseSocketConnections();
+        }
+        return alwaysCloseSocketConnections;
+    }
+
+    public Configuration alwaysCloseSocketConnections(Boolean alwaysCloseSocketConnections) {
+        this.alwaysCloseSocketConnections = alwaysCloseSocketConnections;
+        return this;
+    }
+
     public String localBoundIP() {
         if (localBoundIP == null) {
-            localBoundIP = ConfigurationProperties.localBoundIP();
+            return ConfigurationProperties.localBoundIP();
         }
         return localBoundIP;
     }
@@ -734,177 +400,57 @@ public class Configuration {
         return this;
     }
 
-    public Boolean attemptToProxyIfNoMatchingExpectation() {
-        if (attemptToProxyIfNoMatchingExpectation == null) {
-            attemptToProxyIfNoMatchingExpectation = ConfigurationProperties.attemptToProxyIfNoMatchingExpectation();
+    public Integer maxInitialLineLength() {
+        if (maxInitialLineLength == null) {
+            return ConfigurationProperties.maxInitialLineLength();
         }
-        return attemptToProxyIfNoMatchingExpectation;
+        return maxInitialLineLength;
     }
 
-    public Configuration attemptToProxyIfNoMatchingExpectation(Boolean attemptToProxyIfNoMatchingExpectation) {
-        this.attemptToProxyIfNoMatchingExpectation = attemptToProxyIfNoMatchingExpectation;
+    public Configuration maxInitialLineLength(Integer maxInitialLineLength) {
+        this.maxInitialLineLength = maxInitialLineLength;
         return this;
     }
 
-    public InetSocketAddress forwardHttpProxy() {
-        if (forwardHttpProxy == null) {
-            forwardHttpProxy = ConfigurationProperties.forwardHttpProxy();
+    public Integer maxHeaderSize() {
+        if (maxHeaderSize == null) {
+            return ConfigurationProperties.maxHeaderSize();
         }
-        return forwardHttpProxy;
+        return maxHeaderSize;
     }
 
-    public Configuration forwardHttpProxy(InetSocketAddress forwardHttpProxy) {
-        this.forwardHttpProxy = forwardHttpProxy;
+    public Configuration maxHeaderSize(Integer maxHeaderSize) {
+        this.maxHeaderSize = maxHeaderSize;
         return this;
     }
 
-    public InetSocketAddress forwardHttpsProxy() {
-        if (forwardHttpsProxy == null) {
-            forwardHttpsProxy = ConfigurationProperties.forwardHttpsProxy();
+    public Integer maxChunkSize() {
+        if (maxChunkSize == null) {
+            return ConfigurationProperties.maxChunkSize();
         }
-        return forwardHttpsProxy;
+        return maxChunkSize;
     }
 
-    public Configuration forwardHttpsProxy(InetSocketAddress forwardHttpsProxy) {
-        this.forwardHttpsProxy = forwardHttpsProxy;
+    public Configuration maxChunkSize(Integer maxChunkSize) {
+        this.maxChunkSize = maxChunkSize;
         return this;
     }
 
-    public InetSocketAddress forwardSocksProxy() {
-        if (forwardSocksProxy == null) {
-            forwardSocksProxy = ConfigurationProperties.forwardSocksProxy();
+    public Boolean useSemicolonAsQueryParameterSeparator() {
+        if (useSemicolonAsQueryParameterSeparator == null) {
+            return ConfigurationProperties.useSemicolonAsQueryParameterSeparator();
         }
-        return forwardSocksProxy;
+        return useSemicolonAsQueryParameterSeparator;
     }
 
-    public Configuration forwardSocksProxy(InetSocketAddress forwardSocksProxy) {
-        this.forwardSocksProxy = forwardSocksProxy;
-        return this;
-    }
-
-    public String forwardProxyAuthenticationUsername() {
-        if (forwardProxyAuthenticationUsername == null) {
-            forwardProxyAuthenticationUsername = ConfigurationProperties.forwardProxyAuthenticationUsername();
-        }
-        return forwardProxyAuthenticationUsername;
-    }
-
-    public Configuration forwardProxyAuthenticationUsername(String forwardProxyAuthenticationUsername) {
-        this.forwardProxyAuthenticationUsername = forwardProxyAuthenticationUsername;
-        return this;
-    }
-
-    public String forwardProxyAuthenticationPassword() {
-        if (forwardProxyAuthenticationPassword == null) {
-            forwardProxyAuthenticationPassword = ConfigurationProperties.forwardProxyAuthenticationPassword();
-        }
-        return forwardProxyAuthenticationPassword;
-    }
-
-    public Configuration forwardProxyAuthenticationPassword(String forwardProxyAuthenticationPassword) {
-        this.forwardProxyAuthenticationPassword = forwardProxyAuthenticationPassword;
-        return this;
-    }
-
-    public String proxyAuthenticationRealm() {
-        if (proxyAuthenticationRealm == null) {
-            proxyAuthenticationRealm = ConfigurationProperties.proxyAuthenticationRealm();
-        }
-        return proxyAuthenticationRealm;
-    }
-
-    public Configuration proxyAuthenticationRealm(String proxyAuthenticationRealm) {
-        this.proxyAuthenticationRealm = proxyAuthenticationRealm;
-        return this;
-    }
-
-    public String proxyAuthenticationUsername() {
-        if (proxyAuthenticationUsername == null) {
-            proxyAuthenticationUsername = ConfigurationProperties.proxyAuthenticationUsername();
-        }
-        return proxyAuthenticationUsername;
-    }
-
-    public Configuration proxyAuthenticationUsername(String proxyAuthenticationUsername) {
-        this.proxyAuthenticationUsername = proxyAuthenticationUsername;
-        return this;
-    }
-
-    public String proxyAuthenticationPassword() {
-        if (proxyAuthenticationPassword == null) {
-            proxyAuthenticationPassword = ConfigurationProperties.proxyAuthenticationPassword();
-        }
-        return proxyAuthenticationPassword;
-    }
-
-    public Configuration proxyAuthenticationPassword(String proxyAuthenticationPassword) {
-        this.proxyAuthenticationPassword = proxyAuthenticationPassword;
-        return this;
-    }
-
-    public String initializationClass() {
-        if (initializationClass == null) {
-            initializationClass = ConfigurationProperties.initializationClass();
-        }
-        return initializationClass;
-    }
-
-    public Configuration initializationClass(String initializationClass) {
-        this.initializationClass = initializationClass;
-        return this;
-    }
-
-    public String initializationJsonPath() {
-        if (initializationJsonPath == null) {
-            initializationJsonPath = ConfigurationProperties.initializationJsonPath();
-        }
-        return initializationJsonPath;
-    }
-
-    public Configuration initializationJsonPath(String initializationJsonPath) {
-        this.initializationJsonPath = initializationJsonPath;
-        return this;
-    }
-
-    public Boolean watchInitializationJson() {
-        if (watchInitializationJson == null) {
-            watchInitializationJson = ConfigurationProperties.watchInitializationJson();
-        }
-        return watchInitializationJson;
-    }
-
-    public Configuration watchInitializationJson(Boolean watchInitializationJson) {
-        this.watchInitializationJson = watchInitializationJson;
-        return this;
-    }
-
-    public Boolean persistExpectations() {
-        if (persistExpectations == null) {
-            persistExpectations = ConfigurationProperties.persistExpectations();
-        }
-        return persistExpectations;
-    }
-
-    public Configuration persistExpectations(Boolean persistExpectations) {
-        this.persistExpectations = persistExpectations;
-        return this;
-    }
-
-    public String persistedExpectationsPath() {
-        if (persistedExpectationsPath == null) {
-            persistedExpectationsPath = ConfigurationProperties.persistedExpectationsPath();
-        }
-        return persistedExpectationsPath;
-    }
-
-    public Configuration persistedExpectationsPath(String persistedExpectationsPath) {
-        this.persistedExpectationsPath = persistedExpectationsPath;
+    public Configuration useSemicolonAsQueryParameterSeparator(Boolean useSemicolonAsQueryParameterSeparator) {
+        this.useSemicolonAsQueryParameterSeparator = useSemicolonAsQueryParameterSeparator;
         return this;
     }
 
     public Boolean enableCORSForAPI() {
         if (enableCORSForAPI == null) {
-            enableCORSForAPI = ConfigurationProperties.enableCORSForAPI();
+            return ConfigurationProperties.enableCORSForAPI();
         }
         return enableCORSForAPI;
     }
@@ -916,7 +462,7 @@ public class Configuration {
 
     public Boolean enableCORSForAllResponses() {
         if (enableCORSForAllResponses == null) {
-            enableCORSForAllResponses = ConfigurationProperties.enableCORSForAllResponses();
+            return ConfigurationProperties.enableCORSForAllResponses();
         }
         return enableCORSForAllResponses;
     }
@@ -928,7 +474,7 @@ public class Configuration {
 
     public String corsAllowHeaders() {
         if (corsAllowHeaders == null) {
-            corsAllowHeaders = ConfigurationProperties.corsAllowHeaders();
+            return ConfigurationProperties.corsAllowHeaders();
         }
         return corsAllowHeaders;
     }
@@ -940,7 +486,7 @@ public class Configuration {
 
     public String corsAllowMethods() {
         if (corsAllowMethods == null) {
-            corsAllowMethods = ConfigurationProperties.corsAllowMethods();
+            return ConfigurationProperties.corsAllowMethods();
         }
         return corsAllowMethods;
     }
@@ -952,7 +498,7 @@ public class Configuration {
 
     public Boolean corsAllowCredentials() {
         if (corsAllowCredentials == null) {
-            corsAllowCredentials = ConfigurationProperties.corsAllowCredentials();
+            return ConfigurationProperties.corsAllowCredentials();
         }
         return corsAllowCredentials;
     }
@@ -964,7 +510,7 @@ public class Configuration {
 
     public Integer corsMaxAgeInSeconds() {
         if (corsMaxAgeInSeconds == null) {
-            corsMaxAgeInSeconds = ConfigurationProperties.corsMaxAgeInSeconds();
+            return ConfigurationProperties.corsMaxAgeInSeconds();
         }
         return corsMaxAgeInSeconds;
     }
@@ -974,9 +520,177 @@ public class Configuration {
         return this;
     }
 
+    public String initializationClass() {
+        if (initializationClass == null) {
+            return ConfigurationProperties.initializationClass();
+        }
+        return initializationClass;
+    }
+
+    public Configuration initializationClass(String initializationClass) {
+        this.initializationClass = initializationClass;
+        return this;
+    }
+
+    public String initializationJsonPath() {
+        if (initializationJsonPath == null) {
+            return ConfigurationProperties.initializationJsonPath();
+        }
+        return initializationJsonPath;
+    }
+
+    public Configuration initializationJsonPath(String initializationJsonPath) {
+        this.initializationJsonPath = initializationJsonPath;
+        return this;
+    }
+
+    public Boolean watchInitializationJson() {
+        if (watchInitializationJson == null) {
+            return ConfigurationProperties.watchInitializationJson();
+        }
+        return watchInitializationJson;
+    }
+
+    public Configuration watchInitializationJson(Boolean watchInitializationJson) {
+        this.watchInitializationJson = watchInitializationJson;
+        return this;
+    }
+
+    public Boolean persistExpectations() {
+        if (persistExpectations == null) {
+            return ConfigurationProperties.persistExpectations();
+        }
+        return persistExpectations;
+    }
+
+    public Configuration persistExpectations(Boolean persistExpectations) {
+        this.persistExpectations = persistExpectations;
+        return this;
+    }
+
+    public String persistedExpectationsPath() {
+        if (persistedExpectationsPath == null) {
+            return ConfigurationProperties.persistedExpectationsPath();
+        }
+        return persistedExpectationsPath;
+    }
+
+    public Configuration persistedExpectationsPath(String persistedExpectationsPath) {
+        this.persistedExpectationsPath = persistedExpectationsPath;
+        return this;
+    }
+
+    public Boolean attemptToProxyIfNoMatchingExpectation() {
+        if (attemptToProxyIfNoMatchingExpectation == null) {
+            return ConfigurationProperties.attemptToProxyIfNoMatchingExpectation();
+        }
+        return attemptToProxyIfNoMatchingExpectation;
+    }
+
+    public Configuration attemptToProxyIfNoMatchingExpectation(Boolean attemptToProxyIfNoMatchingExpectation) {
+        this.attemptToProxyIfNoMatchingExpectation = attemptToProxyIfNoMatchingExpectation;
+        return this;
+    }
+
+    public InetSocketAddress forwardHttpProxy() {
+        if (forwardHttpProxy == null) {
+            return ConfigurationProperties.forwardHttpProxy();
+        }
+        return forwardHttpProxy;
+    }
+
+    public Configuration forwardHttpProxy(InetSocketAddress forwardHttpProxy) {
+        this.forwardHttpProxy = forwardHttpProxy;
+        return this;
+    }
+
+    public InetSocketAddress forwardHttpsProxy() {
+        if (forwardHttpsProxy == null) {
+            return ConfigurationProperties.forwardHttpsProxy();
+        }
+        return forwardHttpsProxy;
+    }
+
+    public Configuration forwardHttpsProxy(InetSocketAddress forwardHttpsProxy) {
+        this.forwardHttpsProxy = forwardHttpsProxy;
+        return this;
+    }
+
+    public InetSocketAddress forwardSocksProxy() {
+        if (forwardSocksProxy == null) {
+            return ConfigurationProperties.forwardSocksProxy();
+        }
+        return forwardSocksProxy;
+    }
+
+    public Configuration forwardSocksProxy(InetSocketAddress forwardSocksProxy) {
+        this.forwardSocksProxy = forwardSocksProxy;
+        return this;
+    }
+
+    public String forwardProxyAuthenticationUsername() {
+        if (forwardProxyAuthenticationUsername == null) {
+            return ConfigurationProperties.forwardProxyAuthenticationUsername();
+        }
+        return forwardProxyAuthenticationUsername;
+    }
+
+    public Configuration forwardProxyAuthenticationUsername(String forwardProxyAuthenticationUsername) {
+        this.forwardProxyAuthenticationUsername = forwardProxyAuthenticationUsername;
+        return this;
+    }
+
+    public String forwardProxyAuthenticationPassword() {
+        if (forwardProxyAuthenticationPassword == null) {
+            return ConfigurationProperties.forwardProxyAuthenticationPassword();
+        }
+        return forwardProxyAuthenticationPassword;
+    }
+
+    public Configuration forwardProxyAuthenticationPassword(String forwardProxyAuthenticationPassword) {
+        this.forwardProxyAuthenticationPassword = forwardProxyAuthenticationPassword;
+        return this;
+    }
+
+    public String proxyAuthenticationRealm() {
+        if (proxyAuthenticationRealm == null) {
+            return ConfigurationProperties.proxyAuthenticationRealm();
+        }
+        return proxyAuthenticationRealm;
+    }
+
+    public Configuration proxyAuthenticationRealm(String proxyAuthenticationRealm) {
+        this.proxyAuthenticationRealm = proxyAuthenticationRealm;
+        return this;
+    }
+
+    public String proxyAuthenticationUsername() {
+        if (proxyAuthenticationUsername == null) {
+            return ConfigurationProperties.proxyAuthenticationUsername();
+        }
+        return proxyAuthenticationUsername;
+    }
+
+    public Configuration proxyAuthenticationUsername(String proxyAuthenticationUsername) {
+        this.proxyAuthenticationUsername = proxyAuthenticationUsername;
+        return this;
+    }
+
+    public String proxyAuthenticationPassword() {
+        if (proxyAuthenticationPassword == null) {
+            return ConfigurationProperties.proxyAuthenticationPassword();
+        }
+        return proxyAuthenticationPassword;
+    }
+
+    public Configuration proxyAuthenticationPassword(String proxyAuthenticationPassword) {
+        this.proxyAuthenticationPassword = proxyAuthenticationPassword;
+        return this;
+    }
+
     public String livenessHttpGetPath() {
         if (livenessHttpGetPath == null) {
-            livenessHttpGetPath = ConfigurationProperties.livenessHttpGetPath();
+            return ConfigurationProperties.livenessHttpGetPath();
         }
         return livenessHttpGetPath;
     }
@@ -984,5 +698,380 @@ public class Configuration {
     public Configuration livenessHttpGetPath(String livenessHttpGetPath) {
         this.livenessHttpGetPath = livenessHttpGetPath;
         return this;
+    }
+
+    public Boolean controlPlaneTLSMutualAuthenticationRequired() {
+        if (controlPlaneTLSMutualAuthenticationRequired == null) {
+            return ConfigurationProperties.controlPlaneTLSMutualAuthenticationRequired();
+        }
+        return controlPlaneTLSMutualAuthenticationRequired;
+    }
+
+    public Configuration controlPlaneTLSMutualAuthenticationRequired(Boolean controlPlaneTLSMutualAuthenticationRequired) {
+        this.controlPlaneTLSMutualAuthenticationRequired = controlPlaneTLSMutualAuthenticationRequired;
+        return this;
+    }
+
+    public String controlPlaneTLSMutualAuthenticationCAChain() {
+        if (controlPlaneTLSMutualAuthenticationCAChain == null) {
+            return ConfigurationProperties.controlPlaneTLSMutualAuthenticationCAChain();
+        }
+        return controlPlaneTLSMutualAuthenticationCAChain;
+    }
+
+    public Configuration controlPlaneTLSMutualAuthenticationCAChain(String controlPlaneTLSMutualAuthenticationCAChain) {
+        this.controlPlaneTLSMutualAuthenticationCAChain = controlPlaneTLSMutualAuthenticationCAChain;
+        return this;
+    }
+
+    public String controlPlanePrivateKeyPath() {
+        if (controlPlanePrivateKeyPath == null) {
+            return ConfigurationProperties.controlPlanePrivateKeyPath();
+        }
+        return controlPlanePrivateKeyPath;
+    }
+
+    public Configuration controlPlanePrivateKeyPath(String controlPlanePrivateKeyPath) {
+        this.controlPlanePrivateKeyPath = controlPlanePrivateKeyPath;
+        return this;
+    }
+
+    public String controlPlaneX509CertificatePath() {
+        if (controlPlaneX509CertificatePath == null) {
+            return ConfigurationProperties.controlPlaneX509CertificatePath();
+        }
+        return controlPlaneX509CertificatePath;
+    }
+
+    public Configuration controlPlaneX509CertificatePath(String controlPlaneX509CertificatePath) {
+        this.controlPlaneX509CertificatePath = controlPlaneX509CertificatePath;
+        return this;
+    }
+
+    public Boolean controlPlaneJWTAuthenticationRequired() {
+        if (controlPlaneJWTAuthenticationRequired == null) {
+            return ConfigurationProperties.controlPlaneJWTAuthenticationRequired();
+        }
+        return controlPlaneJWTAuthenticationRequired;
+    }
+
+    public Configuration controlPlaneJWTAuthenticationRequired(Boolean controlPlaneJWTAuthenticationRequired) {
+        this.controlPlaneJWTAuthenticationRequired = controlPlaneJWTAuthenticationRequired;
+        return this;
+    }
+
+    public String controlPlaneJWTAuthenticationJWKSource() {
+        if (controlPlaneJWTAuthenticationJWKSource == null) {
+            return ConfigurationProperties.controlPlaneJWTAuthenticationJWKSource();
+        }
+        return controlPlaneJWTAuthenticationJWKSource;
+    }
+
+    public Configuration controlPlaneJWTAuthenticationJWKSource(String controlPlaneJWTAuthenticationJWKSource) {
+        this.controlPlaneJWTAuthenticationJWKSource = controlPlaneJWTAuthenticationJWKSource;
+        return this;
+    }
+
+    public Boolean useBouncyCastleForKeyAndCertificateGeneration() {
+        if (useBouncyCastleForKeyAndCertificateGeneration == null) {
+            return ConfigurationProperties.useBouncyCastleForKeyAndCertificateGeneration();
+        }
+        return useBouncyCastleForKeyAndCertificateGeneration;
+    }
+
+    public Configuration useBouncyCastleForKeyAndCertificateGeneration(Boolean useBouncyCastleForKeyAndCertificateGeneration) {
+        this.useBouncyCastleForKeyAndCertificateGeneration = useBouncyCastleForKeyAndCertificateGeneration;
+        return this;
+    }
+
+    public Boolean proactivelyInitialiseTLS() {
+        if (proactivelyInitialiseTLS == null) {
+            return ConfigurationProperties.proactivelyInitialiseTLS();
+        }
+        return proactivelyInitialiseTLS;
+    }
+
+    public Configuration proactivelyInitialiseTLS(Boolean proactivelyInitialiseTLS) {
+        this.proactivelyInitialiseTLS = proactivelyInitialiseTLS;
+        return this;
+    }
+
+    public boolean rebuildTLSContext() {
+        return rebuildTLSContext;
+    }
+
+    public Configuration rebuildTLSContext(boolean rebuildTLSContext) {
+        this.rebuildTLSContext = rebuildTLSContext;
+        return this;
+    }
+
+    public boolean rebuildServerTLSContext() {
+        return rebuildServerTLSContext;
+    }
+
+    public Configuration rebuildServerTLSContext(boolean rebuildServerTLSContext) {
+        this.rebuildServerTLSContext = rebuildServerTLSContext;
+        return this;
+    }
+
+    public Boolean dynamicallyCreateCertificateAuthorityCertificate() {
+        if (dynamicallyCreateCertificateAuthorityCertificate == null) {
+            return ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate();
+        }
+        return dynamicallyCreateCertificateAuthorityCertificate;
+    }
+
+    public Configuration dynamicallyCreateCertificateAuthorityCertificate(Boolean dynamicallyCreateCertificateAuthorityCertificate) {
+        this.dynamicallyCreateCertificateAuthorityCertificate = dynamicallyCreateCertificateAuthorityCertificate;
+        return this;
+    }
+
+    public String directoryToSaveDynamicSSLCertificate() {
+        if (directoryToSaveDynamicSSLCertificate == null) {
+            return ConfigurationProperties.directoryToSaveDynamicSSLCertificate();
+        }
+        return directoryToSaveDynamicSSLCertificate;
+    }
+
+    public Configuration directoryToSaveDynamicSSLCertificate(String directoryToSaveDynamicSSLCertificate) {
+        this.directoryToSaveDynamicSSLCertificate = directoryToSaveDynamicSSLCertificate;
+        return this;
+    }
+
+    public Boolean preventCertificateDynamicUpdate() {
+        if (preventCertificateDynamicUpdate == null) {
+            return ConfigurationProperties.preventCertificateDynamicUpdate();
+        }
+        return preventCertificateDynamicUpdate;
+    }
+
+    public Configuration preventCertificateDynamicUpdate(Boolean preventCertificateDynamicUpdate) {
+        this.preventCertificateDynamicUpdate = preventCertificateDynamicUpdate;
+        return this;
+    }
+
+    public String sslCertificateDomainName() {
+        if (sslCertificateDomainName == null) {
+            return ConfigurationProperties.sslCertificateDomainName();
+        }
+        return sslCertificateDomainName;
+    }
+
+    public Configuration sslCertificateDomainName(String sslCertificateDomainName) {
+        this.sslCertificateDomainName = sslCertificateDomainName;
+        return this;
+    }
+
+    public Set<String> sslSubjectAlternativeNameDomains() {
+        if (sslSubjectAlternativeNameDomains == null) {
+            return Sets.newConcurrentHashSet(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains().split(",")));
+        }
+        return sslSubjectAlternativeNameDomains;
+    }
+
+    public Configuration sslSubjectAlternativeNameDomains(String... sslSubjectAlternativeNameDomains) {
+        this.sslSubjectAlternativeNameDomains = Sets.newConcurrentHashSet(Arrays.asList(sslSubjectAlternativeNameDomains));
+        return this;
+    }
+
+    public Configuration sslSubjectAlternativeNameDomains(Set<String> sslSubjectAlternativeNameDomains) {
+        this.sslSubjectAlternativeNameDomains = sslSubjectAlternativeNameDomains;
+        return this;
+    }
+
+    public Set<String> sslSubjectAlternativeNameIps() {
+        if (sslSubjectAlternativeNameIps == null) {
+            return Sets.newConcurrentHashSet(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameIps().split(",")));
+        }
+        return sslSubjectAlternativeNameIps;
+    }
+
+    public Configuration sslSubjectAlternativeNameIps(String... sslSubjectAlternativeNameIps) {
+        sslSubjectAlternativeNameIps(Sets.newConcurrentHashSet(Arrays.asList(sslSubjectAlternativeNameIps)));
+        return this;
+    }
+
+    public Configuration sslSubjectAlternativeNameIps(Set<String> sslSubjectAlternativeNameIps) {
+        this.sslSubjectAlternativeNameIps = sslSubjectAlternativeNameIps;
+        return this;
+    }
+
+    public String certificateAuthorityPrivateKey() {
+        if (certificateAuthorityPrivateKey == null) {
+            return ConfigurationProperties.certificateAuthorityPrivateKey();
+        }
+        return certificateAuthorityPrivateKey;
+    }
+
+    public Configuration certificateAuthorityPrivateKey(String certificateAuthorityPrivateKey) {
+        this.certificateAuthorityPrivateKey = certificateAuthorityPrivateKey;
+        return this;
+    }
+
+    public String certificateAuthorityCertificate() {
+        if (certificateAuthorityCertificate == null) {
+            return ConfigurationProperties.certificateAuthorityCertificate();
+        }
+        return certificateAuthorityCertificate;
+    }
+
+    public Configuration certificateAuthorityCertificate(String certificateAuthorityCertificate) {
+        this.certificateAuthorityCertificate = certificateAuthorityCertificate;
+        return this;
+    }
+
+    public String privateKeyPath() {
+        if (privateKeyPath == null) {
+            return ConfigurationProperties.privateKeyPath();
+        }
+        return privateKeyPath;
+    }
+
+    public Configuration privateKeyPath(String privateKeyPath) {
+        this.privateKeyPath = privateKeyPath;
+        return this;
+    }
+
+    public String x509CertificatePath() {
+        if (x509CertificatePath == null) {
+            return ConfigurationProperties.x509CertificatePath();
+        }
+        return x509CertificatePath;
+    }
+
+    public Configuration x509CertificatePath(String x509CertificatePath) {
+        this.x509CertificatePath = x509CertificatePath;
+        return this;
+    }
+
+    public Boolean tlsMutualAuthenticationRequired() {
+        if (tlsMutualAuthenticationRequired == null) {
+            return ConfigurationProperties.tlsMutualAuthenticationRequired();
+        }
+        return tlsMutualAuthenticationRequired;
+    }
+
+    public Configuration tlsMutualAuthenticationRequired(Boolean tlsMutualAuthenticationRequired) {
+        this.tlsMutualAuthenticationRequired = tlsMutualAuthenticationRequired;
+        return this;
+    }
+
+    public String tlsMutualAuthenticationCertificateChain() {
+        if (tlsMutualAuthenticationCertificateChain == null) {
+            return ConfigurationProperties.tlsMutualAuthenticationCertificateChain();
+        }
+        return tlsMutualAuthenticationCertificateChain;
+    }
+
+    public Configuration tlsMutualAuthenticationCertificateChain(String tlsMutualAuthenticationCertificateChain) {
+        this.tlsMutualAuthenticationCertificateChain = tlsMutualAuthenticationCertificateChain;
+        return this;
+    }
+
+    public ForwardProxyTLSX509CertificatesTrustManager forwardProxyTLSX509CertificatesTrustManagerType() {
+        if (forwardProxyTLSX509CertificatesTrustManagerType == null) {
+            return ConfigurationProperties.forwardProxyTLSX509CertificatesTrustManagerType();
+        }
+        return forwardProxyTLSX509CertificatesTrustManagerType;
+    }
+
+    public Configuration forwardProxyTLSX509CertificatesTrustManagerType(ForwardProxyTLSX509CertificatesTrustManager forwardProxyTLSX509CertificatesTrustManagerType) {
+        this.forwardProxyTLSX509CertificatesTrustManagerType = forwardProxyTLSX509CertificatesTrustManagerType;
+        return this;
+    }
+
+    public String forwardProxyTLSCustomTrustX509Certificates() {
+        if (forwardProxyTLSCustomTrustX509Certificates == null) {
+            return ConfigurationProperties.forwardProxyTLSCustomTrustX509Certificates();
+        }
+        return forwardProxyTLSCustomTrustX509Certificates;
+    }
+
+    public Configuration forwardProxyTLSCustomTrustX509Certificates(String forwardProxyTLSCustomTrustX509Certificates) {
+        this.forwardProxyTLSCustomTrustX509Certificates = forwardProxyTLSCustomTrustX509Certificates;
+        return this;
+    }
+
+    public String forwardProxyPrivateKey() {
+        if (forwardProxyPrivateKey == null) {
+            return ConfigurationProperties.forwardProxyPrivateKey();
+        }
+        return forwardProxyPrivateKey;
+    }
+
+    public Configuration forwardProxyPrivateKey(String forwardProxyPrivateKey) {
+        this.forwardProxyPrivateKey = forwardProxyPrivateKey;
+        return this;
+    }
+
+    public String forwardProxyCertificateChain() {
+        if (forwardProxyCertificateChain == null) {
+            return ConfigurationProperties.forwardProxyCertificateChain();
+        }
+        return forwardProxyCertificateChain;
+    }
+
+    public Configuration forwardProxyCertificateChain(String forwardProxyCertificateChain) {
+        this.forwardProxyCertificateChain = forwardProxyCertificateChain;
+        return this;
+    }
+
+    public void addSubjectAlternativeName(String host) {
+        if (isNotBlank(host)) {
+            String hostWithoutPort = substringBefore(host, ":");
+            if (isNotBlank(hostWithoutPort)) {
+                if (InetAddresses.isInetAddress(hostWithoutPort)) {
+                    addSslSubjectAlternativeNameIps(hostWithoutPort);
+                } else {
+                    addSslSubjectAlternativeNameDomains(hostWithoutPort);
+                }
+            }
+        }
+    }
+
+    public void addSslSubjectAlternativeNameIps(String... additionalSubjectAlternativeNameIps) {
+        boolean subjectAlternativeIpsModified = false;
+        for (String subjectAlternativeIp : additionalSubjectAlternativeNameIps) {
+            if (sslSubjectAlternativeNameIps().add(subjectAlternativeIp.trim())) {
+                subjectAlternativeIpsModified = true;
+            }
+        }
+        if (subjectAlternativeIpsModified) {
+            rebuildServerTLSContext(true);
+        }
+    }
+
+    public void clearSslSubjectAlternativeNameIps() {
+        sslSubjectAlternativeNameIps.clear();
+    }
+
+    public void addSslSubjectAlternativeNameDomains(String... additionalSubjectAlternativeNameDomains) {
+        boolean subjectAlternativeDomainsModified = false;
+        for (String subjectAlternativeDomain : additionalSubjectAlternativeNameDomains) {
+            if (sslSubjectAlternativeNameDomains().add(subjectAlternativeDomain.trim())) {
+                subjectAlternativeDomainsModified = true;
+            }
+        }
+        if (subjectAlternativeDomainsModified) {
+            rebuildServerTLSContext(true);
+        }
+    }
+
+    public void clearSslSubjectAlternativeNameDomains() {
+        sslSubjectAlternativeNameDomains.clear();
+    }
+
+    public int ringBufferSize() {
+        return nextPowerOfTwo(Math.min(defaultMaxLogEntries(), 1500));
+    }
+
+    private int nextPowerOfTwo(int value) {
+        for (int i = 0; i < 16; i++) {
+            double powOfTwo = Math.pow(2, i);
+            if (powOfTwo > value) {
+                return (int) powOfTwo;
+            }
+        }
+        return (int) Math.pow(2, 16);
     }
 }

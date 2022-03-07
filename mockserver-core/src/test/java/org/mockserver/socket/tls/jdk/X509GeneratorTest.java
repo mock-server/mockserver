@@ -24,6 +24,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertArrayEquals;
 import static org.mockserver.socket.tls.PEMToFile.*;
 import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.*;
@@ -235,7 +236,7 @@ public class X509GeneratorTest {
             .stream()
             .map(subjectAlternativeName -> subjectAlternativeName.get(1))
             .collect(Collectors.toList());
-        assertThat(collect, contains(domainNames));
+        assertThat(collect, containsInAnyOrder(domainNames));
     }
 
     @Test

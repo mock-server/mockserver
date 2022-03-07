@@ -1,6 +1,7 @@
 package org.mockserver.responsewriter;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.cors.CORSHeaders;
 import org.mockserver.model.ConnectionOptions;
@@ -12,8 +13,6 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
 import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
-import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
-import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
 import static org.mockserver.mock.HttpState.PATH_PREFIX;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
@@ -24,7 +23,13 @@ import static org.mockserver.model.HttpResponse.response;
  */
 public abstract class ResponseWriter {
 
-    private static final CORSHeaders CORS_HEADERS = new CORSHeaders();
+    protected final Configuration configuration;
+    private final CORSHeaders corsHeaders;
+
+    protected ResponseWriter(Configuration configuration) {
+        corsHeaders = new CORSHeaders(configuration);
+        this.configuration = configuration;
+    }
 
     public void writeResponse(final HttpRequest request, final HttpResponseStatus responseStatus) {
         writeResponse(request, responseStatus, "", "application/json");
@@ -45,15 +50,15 @@ public abstract class ResponseWriter {
         if (response == null) {
             response = notFoundResponse();
         }
-        if (enableCORSForAllResponses()) {
-            CORS_HEADERS.addCORSHeaders(request, response);
-        } else if (apiResponse && enableCORSForAPI()) {
-            CORS_HEADERS.addCORSHeaders(request, response);
+        if (configuration.enableCORSForAllResponses()) {
+            corsHeaders.addCORSHeaders(request, response);
+        } else if (apiResponse && configuration.enableCORSForAPI()) {
+            corsHeaders.addCORSHeaders(request, response);
         }
         if (apiResponse) {
             response.withHeader("version", Version.getVersion());
             final String path = request.getPath().getValue();
-            if (!path.startsWith(PATH_PREFIX) && !path.equals(ConfigurationProperties.livenessHttpGetPath())) {
+            if (!path.startsWith(PATH_PREFIX) && !path.equals(configuration.livenessHttpGetPath())) {
                 response.withHeader("deprecated",
                     "\"" + path + "\" is deprecated use \"" + PATH_PREFIX + path + "\" instead");
             }

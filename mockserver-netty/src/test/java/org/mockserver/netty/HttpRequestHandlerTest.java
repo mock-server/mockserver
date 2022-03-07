@@ -44,6 +44,7 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LOG_DATE_FORMAT;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.mock.action.http.HttpActionHandler.REMOTE_SOCKET;
@@ -81,8 +82,8 @@ public class HttpRequestHandlerTest {
         when(server.getScheduler()).thenReturn(mock(Scheduler.class));
         mockActionHandler = mock(HttpActionHandler.class);
 
-        httpStateHandler = new HttpState(new MockServerLogger(), mock(Scheduler.class));
-        mockServerHandler = new HttpRequestHandler(server, httpStateHandler, null);
+        httpStateHandler = new HttpState(configuration(), new MockServerLogger(), mock(Scheduler.class));
+        mockServerHandler = new HttpRequestHandler(configuration(), server, httpStateHandler, null);
 
         openMocks(this);
 

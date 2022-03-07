@@ -185,7 +185,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
         }
         for (RequestDefinition httpRequest : httpRequests) {
             RequestDefinition request = httpRequest.cloneWithLogCorrelationId();
-            if (matcher.matches(type == LogMessageType.RECEIVED_REQUEST ? new MatchDifference(request) : null, request)) {
+            if (matcher.matches(type == LogMessageType.RECEIVED_REQUEST ? new MatchDifference(false, request) : null, request)) {
                 return true;
             }
         }

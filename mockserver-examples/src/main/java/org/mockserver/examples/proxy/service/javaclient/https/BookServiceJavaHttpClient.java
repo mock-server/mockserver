@@ -1,6 +1,7 @@
 package org.mockserver.examples.proxy.service.javaclient.https;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.examples.proxy.model.Book;
 import org.mockserver.examples.proxy.service.BookService;
 import org.mockserver.logging.MockServerLogger;
@@ -18,6 +19,7 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
 
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.examples.proxy.json.ObjectMapperFactory.createObjectMapper;
 
 /**
@@ -41,7 +43,7 @@ public class BookServiceJavaHttpClient implements BookService {
 
     private HttpURLConnection sendRequestViaProxy(URL url) throws IOException {
         Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort"))));
-        SSLContext sslContext = new KeyStoreFactory(new MockServerLogger(this.getClass())).sslContext();
+        SSLContext sslContext = new KeyStoreFactory(configuration(), new MockServerLogger(this.getClass())).sslContext();
         HttpsURLConnection httpURLConnection = (HttpsURLConnection) url.openConnection(proxy);
         httpURLConnection.setSSLSocketFactory(sslContext.getSocketFactory());
         return httpURLConnection;

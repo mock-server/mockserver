@@ -1,9 +1,8 @@
 package org.mockserver.socket.tls.jdk;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import com.google.common.collect.Sets;
+
+import java.util.*;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.DAYS;
@@ -11,6 +10,7 @@ import static java.util.concurrent.TimeUnit.DAYS;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("UnusedReturnValue")
 public class CertificateSigningRequest {
 
     // defaults
@@ -49,7 +49,7 @@ public class CertificateSigningRequest {
 
     private String commonName;
     private int keyPairSize;
-    private List<String> subjectAlternativeNames;
+    private Set<String> subjectAlternativeNames;
     private String signingAlgorithm = DEFAULT_SIGNING_ALGORITHM;
     private String keyPairAlgorithm = DEFAULT_KEY_GENERATION_ALGORITHM;
     private Long validityInMillis = DAYS.toMillis(DEFAULT_VALIDITY);
@@ -76,13 +76,21 @@ public class CertificateSigningRequest {
         return this;
     }
 
-    public List<String> getSubjectAlternativeNames() {
+    public Set<String> getSubjectAlternativeNames() {
         return subjectAlternativeNames;
+    }
+
+    public CertificateSigningRequest addSubjectAlternativeNames(Set<String> subjectAlternativeNames) {
+        if (this.subjectAlternativeNames == null) {
+            this.subjectAlternativeNames = Sets.newConcurrentHashSet();
+        }
+        this.subjectAlternativeNames.addAll(subjectAlternativeNames);
+        return this;
     }
 
     public CertificateSigningRequest addSubjectAlternativeNames(String... subjectAlternativeNames) {
         if (this.subjectAlternativeNames == null) {
-            this.subjectAlternativeNames = new ArrayList<>();
+            this.subjectAlternativeNames = Sets.newConcurrentHashSet();
         }
         this.subjectAlternativeNames.addAll(Arrays.asList(subjectAlternativeNames));
         return this;

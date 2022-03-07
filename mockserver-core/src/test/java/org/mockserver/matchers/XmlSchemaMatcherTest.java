@@ -95,7 +95,7 @@ public class XmlSchemaMatcherTest {
             when(mockXmlSchemaValidator.isValid(xml)).thenReturn("validator_error");
 
             // when
-            assertFalse(xmlSchemaMatcher.matches(new MatchDifference(request()), xml));
+            assertFalse(xmlSchemaMatcher.matches(new MatchDifference(false, request()), xml));
 
             // then
             verify(logger).trace("xml schema match failed expected:" + NEW_LINE +
@@ -146,7 +146,7 @@ public class XmlSchemaMatcherTest {
             when(mockXmlSchemaValidator.isValid(xml)).thenThrow(test_exception);
 
             // when
-            assertFalse(xmlSchemaMatcher.matches(new MatchDifference(request()), xml));
+            assertFalse(xmlSchemaMatcher.matches(new MatchDifference(false, request()), xml));
 
             // then
             verify(logger).trace("xml schema match failed expected:" + NEW_LINE +
