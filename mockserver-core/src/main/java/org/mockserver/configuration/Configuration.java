@@ -75,6 +75,9 @@ public class Configuration {
     private Boolean persistExpectations;
     private String persistedExpectationsPath;
 
+    // verification
+    private Integer maximumNumberOfRequestToReturnInVerificationFailure;
+
     // proxy
     private Boolean attemptToProxyIfNoMatchingExpectation;
     private InetSocketAddress forwardHttpProxy;
@@ -577,6 +580,18 @@ public class Configuration {
 
     public Configuration persistedExpectationsPath(String persistedExpectationsPath) {
         this.persistedExpectationsPath = persistedExpectationsPath;
+        return this;
+    }
+
+    public Integer maximumNumberOfRequestToReturnInVerificationFailure() {
+        if (maximumNumberOfRequestToReturnInVerificationFailure == null) {
+            return ConfigurationProperties.maximumNumberOfRequestToReturnInVerificationFailure();
+        }
+        return maximumNumberOfRequestToReturnInVerificationFailure;
+    }
+
+    public Configuration maximumNumberOfRequestToReturnInVerificationFailure(Integer maximumNumberOfRequestToReturnInVerificationFailure) {
+        this.maximumNumberOfRequestToReturnInVerificationFailure = maximumNumberOfRequestToReturnInVerificationFailure;
         return this;
     }
 

@@ -14,14 +14,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import static junit.framework.TestCase.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsEmptyCollection.empty;
-import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.mockserver.configuration.ConfigurationProperties.*;
 
 /**
@@ -1306,6 +1303,25 @@ public class ConfigurationPropertiesTest {
             assertEquals("otherPersistedExpectations.json", System.getProperty("mockserver.persistedExpectationsPath"));
         } finally {
             System.clearProperty("mockserver.persistedExpectationsPath");
+        }
+    }
+
+    @Test
+    public void shouldSetAndReadMaximumNumberOfRequestToReturnInVerificationFailure() {
+        Integer originalMaximumNumberOfRequestToReturnInVerificationFailure = maximumNumberOfRequestToReturnInVerificationFailure();
+        try {
+            // given
+            System.clearProperty("mockserver.maximumNumberOfRequestToReturnInVerificationFailure");
+
+            // when
+            assertThat(maximumNumberOfRequestToReturnInVerificationFailure(), equalTo(10));
+            maximumNumberOfRequestToReturnInVerificationFailure(1);
+
+            // then
+            assertEquals("1", System.getProperty("mockserver.maximumNumberOfRequestToReturnInVerificationFailure"));
+            assertThat(maximumNumberOfRequestToReturnInVerificationFailure(), equalTo(1));
+        } finally {
+            maximumNumberOfRequestToReturnInVerificationFailure(originalMaximumNumberOfRequestToReturnInVerificationFailure);
         }
     }
 

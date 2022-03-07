@@ -3,6 +3,7 @@ package org.mockserver.log;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -360,6 +361,48 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
                 "}, {" + NEW_LINE +
                 "  \"path\" : \"some_path\"" + NEW_LINE +
                 "} ]>"));
+    }
+
+    @Test
+    public void shouldFailVerificationWithLimitedReturnedRequests() {
+        Integer originalMaximumNumberOfRequestToReturnInVerificationFailure = ConfigurationProperties.maximumNumberOfRequestToReturnInVerificationFailure();
+        try {
+            // given
+            HttpRequest httpRequest = new HttpRequest().withPath("some_path");
+            HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
+            ConfigurationProperties.maximumNumberOfRequestToReturnInVerificationFailure(1);
+
+            // when
+            mockServerEventLog.add(
+                new LogEntry()
+                    .setHttpRequest(httpRequest)
+                    .setType(RECEIVED_REQUEST)
+            );
+            mockServerEventLog.add(
+                new LogEntry()
+                    .setHttpRequest(otherHttpRequest)
+                    .setType(RECEIVED_REQUEST)
+            );
+            mockServerEventLog.add(
+                new LogEntry()
+                    .setHttpRequest(httpRequest)
+                    .setType(RECEIVED_REQUEST)
+            );
+
+            // then
+            assertThat(verify(
+                    verification()
+                        .withRequest(
+                            new HttpRequest().withPath("some_other_path")
+                        )
+                        .withTimes(atLeast(2))
+                ),
+                is("Request not found at least 2 times, expected:<{" + NEW_LINE +
+                    "  \"path\" : \"some_other_path\"" + NEW_LINE +
+                    "}> but was not found, found 3 other requests"));
+        } finally {
+            ConfigurationProperties.maximumNumberOfRequestToReturnInVerificationFailure(originalMaximumNumberOfRequestToReturnInVerificationFailure);
+        }
     }
 
     @Test

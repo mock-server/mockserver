@@ -4,7 +4,6 @@ import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 import org.mockserver.collections.CircularConcurrentLinkedDeque;
 import org.mockserver.configuration.Configuration;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
@@ -381,8 +380,12 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                         retrieveRequests(null, allRequests -> {
                             String failureMessage;
                             String serializedRequestToBeVerified = requestDefinitionSerializer.serialize(true, verification.getHttpRequest());
-                            String serializedAllRequestInLog = allRequests.size() == 1 ? requestDefinitionSerializer.serialize(true, allRequests.get(0)) : requestDefinitionSerializer.serialize(true, allRequests);
-                            failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
+                            if (allRequests.size() < configuration.maximumNumberOfRequestToReturnInVerificationFailure()) {
+                                String serializedAllRequestInLog = allRequests.size() == 1 ? requestDefinitionSerializer.serialize(true, allRequests.get(0)) : requestDefinitionSerializer.serialize(true, allRequests);
+                                failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
+                            } else {
+                                failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was not found, found " + allRequests.size() + " other requests";
+                            }
                             final Object[] arguments = new Object[]{verification.getHttpRequest(), allRequests.size() == 1 ? allRequests.get(0) : allRequests};
                             if (MockServerLogger.isEnabled(Level.INFO)) {
                                 mockServerLogger.logEvent(
@@ -465,8 +468,12 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                             }
                             if (!foundRequest) {
                                 String serializedRequestToBeVerified = requestDefinitionSerializer.serialize(true, verificationSequence.getHttpRequests());
-                                String serializedAllRequestInLog = allRequests.size() == 1 ? requestDefinitionSerializer.serialize(true, allRequests.get(0)) : requestDefinitionSerializer.serialize(true, allRequests);
-                                failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
+                                if (allRequests.size() < configuration.maximumNumberOfRequestToReturnInVerificationFailure()) {
+                                    String serializedAllRequestInLog = allRequests.size() == 1 ? requestDefinitionSerializer.serialize(true, allRequests.get(0)) : requestDefinitionSerializer.serialize(true, allRequests);
+                                    failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
+                                } else {
+                                    failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was not found, found " + allRequests.size() + " other requests";
+                                }
                                 final Object[] arguments = new Object[]{verificationSequence.getHttpRequests(), allRequests.size() == 1 ? allRequests.get(0) : allRequests};
                                 if (MockServerLogger.isEnabled(Level.INFO)) {
                                     mockServerLogger.logEvent(

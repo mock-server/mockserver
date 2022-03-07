@@ -17,7 +17,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -135,8 +134,9 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_INITIALIZATION_CLASS = "mockserver.initializationClass";
     private static final String MOCKSERVER_INITIALIZATION_JSON_PATH = "mockserver.initializationJsonPath";
     private static final String MOCKSERVER_WATCH_INITIALIZATION_JSON = "mockserver.watchInitializationJson";
-    private static final String MOCKSERVER_PERSISTED_EXPECTATIONS_PATH = "mockserver.persistedExpectationsPath";
     private static final String MOCKSERVER_PERSIST_EXPECTATIONS = "mockserver.persistExpectations";
+    private static final String MOCKSERVER_PERSISTED_EXPECTATIONS_PATH = "mockserver.persistedExpectationsPath";
+    private static final String MOCKSERVER_MAXIMUM_NUMBER_OF_REQUESTS_TO_RETURN_IN_VERIFICATION_FAILURE = "mockserver.maximumNumberOfRequestToReturnInVerificationFailure";
     private static final String MOCKSERVER_CORS_ALLOW_HEADERS = "mockserver.corsAllowHeaders";
     private static final String MOCKSERVER_CORS_ALLOW_METHODS = "mockserver.corsAllowMethods";
     private static final String MOCKSERVER_CORS_ALLOW_CREDENTIALS = "mockserver.corsAllowCredentials";
@@ -145,8 +145,6 @@ public class ConfigurationProperties {
 
     private static Level logLevel = Level.valueOf(getSLF4JOrJavaLoggerToSLF4JLevelMapping().get(readPropertyHierarchically(null, MOCKSERVER_LOG_LEVEL, "MOCKSERVER_LOG_LEVEL", DEFAULT_LOG_LEVEL).toUpperCase()));
     public static final Properties PROPERTIES = readPropertyFile();
-    private static final AtomicBoolean REBUILD_KEY_STORE = new AtomicBoolean(false);
-    private static final AtomicBoolean REBUILD_SERVER_KEY_STORE = new AtomicBoolean(false);
     private static final IntegerStringListParser INTEGER_STRING_LIST_PARSER = new IntegerStringListParser();
 
     private static Map<String, String> slf4jOrJavaLoggerToJavaLoggerLevelMapping;
@@ -234,8 +232,6 @@ public class ConfigurationProperties {
 
     @VisibleForTesting
     public synchronized static void resetAllSystemProperties() {
-        REBUILD_KEY_STORE.set(false);
-        REBUILD_SERVER_KEY_STORE.set(false);
         List<String> excludeFromPropertyReset = Arrays.asList(System.getProperty("excludeFromPropertyReset", "").split(","));
         new Properties(System.getProperties()).forEach((key, value) -> {
             if (key instanceof String && value instanceof String) {
@@ -1096,6 +1092,14 @@ public class ConfigurationProperties {
 
     public static void persistedExpectationsPath(String persistedExpectationsPath) {
         System.setProperty(MOCKSERVER_PERSISTED_EXPECTATIONS_PATH, persistedExpectationsPath);
+    }
+
+    public static Integer maximumNumberOfRequestToReturnInVerificationFailure() {
+        return readIntegerProperty(MOCKSERVER_MAXIMUM_NUMBER_OF_REQUESTS_TO_RETURN_IN_VERIFICATION_FAILURE, "MOCKSERVER_MAXIMUM_NUMBER_OF_REQUESTS_TO_RETURN_IN_VERIFICATION_FAILURE", 10);
+    }
+
+    public static void maximumNumberOfRequestToReturnInVerificationFailure(Integer maximumNumberOfRequestToReturnInVerification) {
+        System.setProperty(MOCKSERVER_MAXIMUM_NUMBER_OF_REQUESTS_TO_RETURN_IN_VERIFICATION_FAILURE, "" + maximumNumberOfRequestToReturnInVerification);
     }
 
     public static boolean enableCORSForAPI() {

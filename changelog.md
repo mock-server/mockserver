@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added control plane authorisation using mTLS
 - added control plane authorisation using JWT
 - added control plane authorisation using both JWT and mTLS
+- property to control maximum number of requests to return in verification failure (defaulted to 10)
 
 ### Changed
 - included Bouncy Castle now used by default to resolve issues with modules in Java 16+ and backwards compatibility for Java 8
