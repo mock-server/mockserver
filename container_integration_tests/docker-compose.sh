@@ -26,3 +26,8 @@ function container-logs() {
   printMessage "mockserver logs"
   docker-compose logs
 }
+
+function clean-up-docker-containers() {
+  runCommand "docker ps --all | grep mockserver/mockserver:integration_testing | awk '{ print \$1 }' | xargs docker stop"
+  runCommand "docker ps --all | grep mockserver/mockserver:integration_testing | awk '{ print \$1 }' | xargs docker rm"
+}
