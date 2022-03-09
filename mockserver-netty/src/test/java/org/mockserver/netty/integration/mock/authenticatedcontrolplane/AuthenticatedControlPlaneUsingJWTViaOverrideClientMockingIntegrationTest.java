@@ -23,7 +23,7 @@ import static org.mockserver.stop.Stop.stopQuietly;
 /**
  * @author jamesdbloom
  */
-public class AuthenticatedControlPlaneUsingJWTClientMockingIntegrationTest extends AbstractBasicMockingSameJVMIntegrationTest {
+public class AuthenticatedControlPlaneUsingJWTViaOverrideClientMockingIntegrationTest extends AbstractBasicMockingSameJVMIntegrationTest {
 
     private static final int severHttpPort = PortFactory.findFreePort();
     private static String originalControlPlaneJWTAuthenticationJWKSource;

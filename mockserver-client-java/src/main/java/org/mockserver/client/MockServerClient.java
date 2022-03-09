@@ -40,9 +40,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
-import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.UNAUTHORIZED;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -80,8 +80,8 @@ public class MockServerClient implements Stoppable {
     private HttpRequest requestOverride;
     private ClientConfiguration configuration;
     private ProxyConfiguration proxyConfiguration;
+    private Supplier<String> controlPlaneJWTSupplier;
     private NettyHttpClient nettyHttpClient;
-    private LocalCallbackRegistry localCallbackRegistry;
     private RequestDefinitionSerializer requestDefinitionSerializer = new RequestDefinitionSerializer(MOCK_SERVER_LOGGER);
     private ExpectationIdSerializer expectationIdSerializer = new ExpectationIdSerializer(MOCK_SERVER_LOGGER);
     private LogEventRequestAndResponseSerializer httpRequestResponseSerializer = new LogEventRequestAndResponseSerializer(MOCK_SERVER_LOGGER);
@@ -203,6 +203,21 @@ public class MockServerClient implements Stoppable {
         return this;
     }
 
+    /**
+     * Specify JWT to use for control plane authorisation
+     */
+    public MockServerClient setControlPlaneJWT(String controlPlaneJWT) {
+        return setControlPlaneJWT(() -> controlPlaneJWT);
+    }
+
+    /**
+     * Specify JWT supplier to use for control plane authorisation
+     */
+    public MockServerClient setControlPlaneJWT(Supplier<String> controlPlaneJWTSupplier) {
+        this.controlPlaneJWTSupplier = controlPlaneJWTSupplier;
+        return this;
+    }
+
     public MockServerClient setRequestOverride(HttpRequest requestOverride) {
         if (requestOverride == null) {
             throw new IllegalArgumentException("Request with default properties can not be null");
@@ -312,6 +327,14 @@ public class MockServerClient implements Stoppable {
                 }
                 if (requestOverride != null) {
                     request = request.update(requestOverride, null);
+                }
+                if (controlPlaneJWTSupplier != null) {
+                    String jwt = controlPlaneJWTSupplier.get();
+                    if (isNotBlank(jwt)) {
+                        request.withHeader(AUTHORIZATION.toString(), "Bearer " + jwt);
+                    } else {
+                        throw new IllegalArgumentException("Control plane jwt supplier returned invalid JWT \"" + jwt + "\"");
+                    }
                 }
                 HttpResponse response = getNettyHttpClient().sendRequest(
                     request.withHeader(HOST.toString(), this.host + ":" + port()),
