@@ -283,6 +283,16 @@ public class ConfigurationProperties {
         return defaultMaxExpectations;
     }
 
+    /**
+     * <p>
+     * Default maximum number of expectations stored in memory.  Expectations are stored in a circular queue so once this limit is reach the oldest and lowest priority expectations are overwritten
+     * </p>
+     * <p>
+     * This default maximum depends on the available memory in the JVM with an upper limit of 5000
+     * </p>
+     *
+     * @param defaultMaxExpectations maximum number of expectations to store
+     */
     public static void defaultMaxExpectations(int defaultMaxExpectations) {
         ConfigurationProperties.defaultMaxExpectations = defaultMaxExpectations;
     }
@@ -291,6 +301,16 @@ public class ConfigurationProperties {
         return readIntegerProperty(MOCKSERVER_MAX_EXPECTATIONS, "MOCKSERVER_MAX_EXPECTATIONS", defaultMaxExpectations());
     }
 
+    /**
+     * <p>
+     * Maximum number of expectations stored in memory.  Expectations are stored in a circular queue so once this limit is reach the oldest and lowest priority expectations are overwritten
+     * </p>
+     * <p>
+     * The default maximum depends on the available memory in the JVM with an upper limit of 5000
+     * </p>
+     *
+     * @param count maximum number of expectations to store
+     */
     public static void maxExpectations(int count) {
         System.setProperty(MOCKSERVER_MAX_EXPECTATIONS, "" + count);
     }
@@ -299,6 +319,16 @@ public class ConfigurationProperties {
         return defaultMaxLogEntries;
     }
 
+    /**
+     * <p>
+     * Maximum number of log entries stored in memory.  Log entries are stored in a circular queue so once this limit is reach the oldest log entries are overwritten.
+     * </p>
+     * <p>
+     * The default maximum depends on the available memory in the JVM with an upper limit of 60000
+     * </p>
+     *
+     * @param defaultMaxLogEntries maximum number of expectations to store
+     */
     public static void defaultMaxLogEntries(int defaultMaxLogEntries) {
         ConfigurationProperties.defaultMaxLogEntries = defaultMaxLogEntries;
     }
@@ -307,6 +337,16 @@ public class ConfigurationProperties {
         return readIntegerProperty(MOCKSERVER_MAX_LOG_ENTRIES, "MOCKSERVER_MAX_LOG_ENTRIES", defaultMaxLogEntries());
     }
 
+    /**
+     * <p>
+     * Maximum number of log entries stored in memory.  Log entries are stored in a circular queue so once this limit is reach the oldest log entries are overwritten.
+     * </p>
+     * <p>
+     * The default maximum depends on the available memory in the JVM with an upper limit of 60000, but can be overridden using defaultMaxLogEntries
+     * </p>
+     *
+     * @param count maximum number of expectations to store
+     */
     public static void maxLogEntries(int count) {
         System.setProperty(MOCKSERVER_MAX_LOG_ENTRIES, "" + count);
     }
@@ -342,6 +382,16 @@ public class ConfigurationProperties {
         return readIntegerProperty(MOCKSERVER_MAX_WEB_SOCKET_EXPECTATIONS, "MOCKSERVER_MAX_WEB_SOCKET_EXPECTATIONS", DEFAULT_MAX_WEB_SOCKET_EXPECTATIONS);
     }
 
+    /**
+     * <p>
+     * Maximum number of remote (not the same JVM) method callbacks (i.e. web sockets) registered for expectations.  The web socket client registry entries are stored in a circular queue so once this limit is reach the oldest are overwritten.
+     * </p>
+     * <p>
+     * The default is 1500
+     * </p>
+     *
+     * @param count maximum number of method callbacks (i.e. web sockets) registered for expectations
+     */
     public static void maxWebSocketExpectations(int count) {
         System.setProperty(MOCKSERVER_MAX_WEB_SOCKET_EXPECTATIONS, "" + count);
     }
@@ -377,6 +427,11 @@ public class ConfigurationProperties {
         return readIntegerProperty(MOCKSERVER_NIO_EVENT_LOOP_THREAD_COUNT, "MOCKSERVER_NIO_EVENT_LOOP_THREAD_COUNT", DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT);
     }
 
+    /**
+     * <p>Netty worker thread pool size for handling requests and response.  These threads are used for fast non-blocking activities such as, reading and de-serialise all requests and responses.</p>
+     *
+     * @param count Netty worker thread pool size
+     */
     public static void nioEventLoopThreadCount(int count) {
         System.setProperty(MOCKSERVER_NIO_EVENT_LOOP_THREAD_COUNT, "" + count);
     }
@@ -385,6 +440,13 @@ public class ConfigurationProperties {
         return readIntegerProperty(MOCKSERVER_CLIENT_NIO_EVENT_LOOP_THREAD_COUNT, "MOCKSERVER_CLIENT_NIO_EVENT_LOOP_THREAD_COUNT", DEFAULT_CLIENT_NIO_EVENT_LOOP_THREAD_COUNT);
     }
 
+    /**
+     * <p>Client Netty worker thread pool size for handling requests and response.  These threads handle deserializing and serialising HTTP requests and responses and some other fast logic.</p>
+     *
+     * <p>Default is 5 threads</p>
+     *
+     * @param count Client Netty worker thread pool size
+     */
     public static void clientNioEventLoopThreadCount(int count) {
         System.setProperty(MOCKSERVER_CLIENT_NIO_EVENT_LOOP_THREAD_COUNT, "" + count);
     }
@@ -393,6 +455,20 @@ public class ConfigurationProperties {
         return readIntegerProperty(MOCKSERVER_ACTION_HANDLER_THREAD_COUNT, "MOCKSERVER_ACTION_HANDLER_THREAD_COUNT", DEFAULT_ACTION_HANDLER_THREAD_COUNT);
     }
 
+    /**
+     * <p>Number of threads for the action handler thread pool</p>
+     * <p>These threads are used for handling actions such as:</p>
+     *     <ul>
+     *         <li>serialising and writing expectation or proxied responses</li>
+     *         <li>handling response delays in a non-blocking way (i.e. using a scheduler)</li>
+     *         <li>executing class callbacks</li>
+     *         <li>handling method / closure callbacks (using web sockets)</li>
+     *     </ul>
+     * <p>
+     * <p>Default is maximum of 5 or available processors count</p>
+     *
+     * @param count Netty worker thread pool size
+     */
     public static void actionHandlerThreadCount(int count) {
         System.setProperty(MOCKSERVER_ACTION_HANDLER_THREAD_COUNT, "" + count);
     }
@@ -401,6 +477,13 @@ public class ConfigurationProperties {
         return readIntegerProperty(MOCKSERVER_WEB_SOCKET_CLIENT_EVENT_LOOP_THREAD_COUNT, "MOCKSERVER_WEB_SOCKET_CLIENT_EVENT_LOOP_THREAD_COUNT", DEFAULT_WEB_SOCKET_CLIENT_EVENT_LOOP_THREAD_COUNT);
     }
 
+    /**
+     * <p>Web socket thread pool size for expectations with remote (not the same JVM) method callbacks (i.e. web sockets).</p>
+     * <p>
+     * Default is 5 threads
+     *
+     * @param count web socket worker thread pool size
+     */
     public static void webSocketClientEventLoopThreadCount(int count) {
         System.setProperty(MOCKSERVER_WEB_SOCKET_CLIENT_EVENT_LOOP_THREAD_COUNT, "" + count);
     }
@@ -409,6 +492,13 @@ public class ConfigurationProperties {
         return readLongProperty(MOCKSERVER_MAX_SOCKET_TIMEOUT, "MOCKSERVER_MAX_SOCKET_TIMEOUT", TimeUnit.SECONDS.toMillis(DEFAULT_MAX_TIMEOUT));
     }
 
+    /**
+     * Maximum time in milliseconds allowed for a response from a socket
+     * <p>
+     * Default is 20,000 ms
+     *
+     * @param milliseconds maximum time in milliseconds allowed
+     */
     public static void maxSocketTimeout(long milliseconds) {
         System.setProperty(MOCKSERVER_MAX_SOCKET_TIMEOUT, "" + milliseconds);
     }
@@ -417,6 +507,13 @@ public class ConfigurationProperties {
         return readLongProperty(MOCKSERVER_MAX_FUTURE_TIMEOUT, "MOCKSERVER_MAX_FUTURE_TIMEOUT", TimeUnit.SECONDS.toMillis(DEFAULT_MAX_FUTURE_TIMEOUT));
     }
 
+    /**
+     * Maximum time allowed in milliseconds for any future to wait, for example when waiting for a response over a web socket callback.
+     * <p>
+     * Default is 60,000 ms
+     *
+     * @param milliseconds maximum time allowed in milliseconds
+     */
     public static void maxFutureTimeout(long milliseconds) {
         System.setProperty(MOCKSERVER_MAX_FUTURE_TIMEOUT, "" + milliseconds);
     }
@@ -425,6 +522,13 @@ public class ConfigurationProperties {
         return readIntegerProperty(MOCKSERVER_SOCKET_CONNECTION_TIMEOUT, "MOCKSERVER_SOCKET_CONNECTION_TIMEOUT", DEFAULT_CONNECT_TIMEOUT);
     }
 
+    /**
+     * Maximum time in milliseconds allowed to connect to a socket
+     * <p>
+     * Default is 20,000 ms
+     *
+     * @param milliseconds maximum time allowed in milliseconds
+     */
     public static void socketConnectionTimeout(int milliseconds) {
         System.setProperty(MOCKSERVER_SOCKET_CONNECTION_TIMEOUT, "" + milliseconds);
     }
@@ -892,6 +996,11 @@ public class ConfigurationProperties {
         return disableSystemOut;
     }
 
+    /**
+     * Disable printing log to system out for JVM, default is enabled
+     *
+     * @param disable printing log to system out for JVM
+     */
     public static void disableSystemOut(boolean disable) {
         System.setProperty(MOCKSERVER_DISABLE_SYSTEM_OUT, "" + disable);
         disableSystemOut = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_DISABLE_SYSTEM_OUT, "MOCKSERVER_DISABLE_SYSTEM_OUT", "" + false));
@@ -954,6 +1063,11 @@ public class ConfigurationProperties {
         return metricsEnabled;
     }
 
+    /**
+     * Enable gathering of metrics, default is false
+     *
+     * @param enable enable metrics
+     */
     public static void metricsEnabled(boolean enable) {
         System.setProperty(MOCKSERVER_METRICS_ENABLED, "" + enable);
         metricsEnabled = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_METRICS_ENABLED, "MOCKSERVER_METRICS_ENABLED", "" + false));

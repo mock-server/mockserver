@@ -78,6 +78,16 @@ public class ClientConfiguration {
         return maxWebSocketExpectations;
     }
 
+    /**
+     * <p>
+     * Maximum number of remote (not the same JVM) method callbacks (i.e. web sockets) registered for expectations.  The web socket client registry entries are stored in a circular queue so once this limit is reach the oldest are overwritten.
+     * </p>
+     * <p>
+     * The default is 1500
+     * </p>
+     *
+     * @param maxWebSocketExpectations maximum number of method callbacks (i.e. web sockets) registered for expectations
+     */
     public ClientConfiguration maxWebSocketExpectations(Integer maxWebSocketExpectations) {
         this.maxWebSocketExpectations = maxWebSocketExpectations;
         return this;
@@ -90,6 +100,13 @@ public class ClientConfiguration {
         return webSocketClientEventLoopThreadCount;
     }
 
+    /**
+     * <p>Client Netty worker thread pool size for handling requests and response.  These threads handle deserializing and serialising HTTP requests and responses and some other fast logic.</p>
+     *
+     * <p>Default is 5 threads</p>
+     *
+     * @param webSocketClientEventLoopThreadCount Client Netty worker thread pool size
+     */
     public ClientConfiguration webSocketClientEventLoopThreadCount(Integer webSocketClientEventLoopThreadCount) {
         this.webSocketClientEventLoopThreadCount = webSocketClientEventLoopThreadCount;
         return this;
@@ -102,6 +119,13 @@ public class ClientConfiguration {
         return clientNioEventLoopThreadCount;
     }
 
+    /**
+     * <p>Client Netty worker thread pool size for handling requests and response.  These threads handle deserializing and serialising HTTP requests and responses and some other fast logic.</p>
+     *
+     * <p>Default is 5 threads</p>
+     *
+     * @param clientNioEventLoopThreadCount Client Netty worker thread pool size
+     */
     public ClientConfiguration clientNioEventLoopThreadCount(Integer clientNioEventLoopThreadCount) {
         this.clientNioEventLoopThreadCount = clientNioEventLoopThreadCount;
         return this;
@@ -114,6 +138,13 @@ public class ClientConfiguration {
         return maxSocketTimeoutInMillis;
     }
 
+    /**
+     * Maximum time in milliseconds allowed for a response from a socket
+     * <p>
+     * Default is 20,000 ms
+     *
+     * @param maxSocketTimeoutInMillis maximum time in milliseconds allowed
+     */
     public ClientConfiguration maxSocketTimeoutInMillis(Long maxSocketTimeoutInMillis) {
         this.maxSocketTimeoutInMillis = maxSocketTimeoutInMillis;
         return this;
@@ -126,6 +157,13 @@ public class ClientConfiguration {
         return maxFutureTimeoutInMillis;
     }
 
+    /**
+     * Maximum time allowed in milliseconds for any future to wait, for example when waiting for a response over a web socket callback.
+     * <p>
+     * Default is 60,000 ms
+     *
+     * @param maxFutureTimeoutInMillis maximum time allowed in milliseconds
+     */
     public ClientConfiguration maxFutureTimeoutInMillis(Long maxFutureTimeoutInMillis) {
         this.maxFutureTimeoutInMillis = maxFutureTimeoutInMillis;
         return this;

@@ -146,8 +146,13 @@ public class Configuration {
         return logLevel;
     }
 
-    public Configuration logLevel(Level logLevel) {
-        this.logLevel = logLevel;
+    /**
+     * Override the default logging level of INFO
+     *
+     * @param level the log level, which can be TRACE, DEBUG, INFO, WARN, ERROR, OFF, FINEST, FINE, INFO, WARNING, SEVERE
+     */
+    public Configuration logLevel(Level level) {
+        this.logLevel = level;
         return this;
     }
 
@@ -158,6 +163,11 @@ public class Configuration {
         return disableSystemOut;
     }
 
+    /**
+     * Disable printing log to system out for JVM, default is enabled
+     *
+     * @param disableSystemOut printing log to system out for JVM
+     */
     public Configuration disableSystemOut(Boolean disableSystemOut) {
         this.disableSystemOut = disableSystemOut;
         return this;
@@ -170,6 +180,11 @@ public class Configuration {
         return detailedMatchFailures;
     }
 
+    /**
+     * If true (the default) the log event recording that a request matcher did not match will include a detailed reason why each non matching field did not match.
+     *
+     * @param detailedMatchFailures enabled detailed match failure log events
+     */
     public Configuration detailedMatchFailures(Boolean detailedMatchFailures) {
         this.detailedMatchFailures = detailedMatchFailures;
         return this;
@@ -182,6 +197,11 @@ public class Configuration {
         return launchUIForLogLevelDebug;
     }
 
+    /**
+     * If true (the default) the ClientAndServer constructor will open the UI in the default browser when the log level is set to DEBUG.
+     *
+     * @param launchUIForLogLevelDebug enabled ClientAndServer constructor launching UI when log level is DEBUG
+     */
     public Configuration launchUIForLogLevelDebug(Boolean launchUIForLogLevelDebug) {
         this.launchUIForLogLevelDebug = launchUIForLogLevelDebug;
         return this;
@@ -194,6 +214,11 @@ public class Configuration {
         return metricsEnabled;
     }
 
+    /**
+     * Enable gathering of metrics, default is false
+     *
+     * @param metricsEnabled enable metrics
+     */
     public Configuration metricsEnabled(Boolean metricsEnabled) {
         this.metricsEnabled = metricsEnabled;
         return this;
@@ -206,6 +231,15 @@ public class Configuration {
         return maxExpectations;
     }
 
+    /**
+     * <p>
+     * Maximum number of expectations stored in memory.  Expectations are stored in a circular queue so once this limit is reach the oldest and lowest priority expectations are overwritten
+     * </p>
+     * <p>
+     * The default maximum depends on the available memory in the JVM with an upper limit of 5000, but can be overridden using defaultMaxExpectations
+     *</p>
+     * @param maxExpectations maximum number of expectations to store
+     */
     public Configuration maxExpectations(Integer maxExpectations) {
         this.maxExpectations = maxExpectations;
         return this;
@@ -218,6 +252,15 @@ public class Configuration {
         return defaultMaxExpectations;
     }
 
+    /**
+     * <p>
+     * Default maximum number of expectations stored in memory.  Expectations are stored in a circular queue so once this limit is reach the oldest and lowest priority expectations are overwritten
+     * </p>
+     * <p>
+     * This default maximum depends on the available memory in the JVM with an upper limit of 5000
+     *</p>
+     * @param defaultMaxExpectations maximum number of expectations to store
+     */
     public Configuration defaultMaxExpectations(Integer defaultMaxExpectations) {
         this.defaultMaxExpectations = defaultMaxExpectations;
         return this;
@@ -230,6 +273,15 @@ public class Configuration {
         return maxLogEntries;
     }
 
+    /**
+     * <p>
+     * Maximum number of log entries stored in memory.  Log entries are stored in a circular queue so once this limit is reach the oldest log entries are overwritten
+     * </p>
+     * <p>
+     * The default maximum depends on the available memory in the JVM with an upper limit of 60000, but can be overridden using defaultMaxLogEntries
+     *</p>
+     * @param maxLogEntries maximum number of expectations to store
+     */
     public Configuration maxLogEntries(Integer maxLogEntries) {
         this.maxLogEntries = maxLogEntries;
         return this;
@@ -242,6 +294,15 @@ public class Configuration {
         return defaultMaxLogEntries;
     }
 
+    /**
+     * <p>
+     * Maximum number of log entries stored in memory.  Log entries are stored in a circular queue so once this limit is reach the oldest log entries are overwritten
+     * </p>
+     * <p>
+     * The default maximum depends on the available memory in the JVM with an upper limit of 60000
+     *</p>
+     * @param defaultMaxLogEntries maximum number of expectations to store
+     */
     public Configuration defaultMaxLogEntries(Integer defaultMaxLogEntries) {
         this.defaultMaxLogEntries = defaultMaxLogEntries;
         return this;
@@ -254,6 +315,16 @@ public class Configuration {
         return maxWebSocketExpectations;
     }
 
+    /**
+     * <p>
+     * Maximum number of remote (not the same JVM) method callbacks (i.e. web sockets) registered for expectations.  The web socket client registry entries are stored in a circular queue so once this limit is reach the oldest are overwritten.
+     * </p>
+     * <p>
+     * The default is 1500
+     * </p>
+     *
+     * @param maxWebSocketExpectations maximum number of method callbacks (i.e. web sockets) registered for expectations
+     */
     public Configuration maxWebSocketExpectations(Integer maxWebSocketExpectations) {
         this.maxWebSocketExpectations = maxWebSocketExpectations;
         return this;
@@ -266,6 +337,11 @@ public class Configuration {
         return outputMemoryUsageCsv;
     }
 
+    /**
+     * <p>Output JVM memory usage metrics to CSV file periodically called <strong>memoryUsage_&lt;yyyy-MM-dd&gt;.csv</strong></p>
+     *
+     * @param outputMemoryUsageCsv output of JVM memory metrics
+     */
     public Configuration outputMemoryUsageCsv(Boolean outputMemoryUsageCsv) {
         this.outputMemoryUsageCsv = outputMemoryUsageCsv;
         return this;
@@ -278,6 +354,11 @@ public class Configuration {
         return memoryUsageCsvDirectory;
     }
 
+    /**
+     * <p>Directory to output JVM memory usage metrics CSV files to when outputMemoryUsageCsv enabled</p>
+     *
+     * @param memoryUsageCsvDirectory directory to save JVM memory metrics CSV files
+     */
     public Configuration memoryUsageCsvDirectory(String memoryUsageCsvDirectory) {
         this.memoryUsageCsvDirectory = memoryUsageCsvDirectory;
         return this;
@@ -290,6 +371,11 @@ public class Configuration {
         return nioEventLoopThreadCount;
     }
 
+    /**
+     * <p>Netty worker thread pool size for handling requests and response.  These threads handle deserializing and serialising HTTP requests and responses and some other fast logic, long running tasks are done on the action handler thread pool.</p>
+     *
+     * @param nioEventLoopThreadCount Netty worker thread pool size
+     */
     public Configuration nioEventLoopThreadCount(Integer nioEventLoopThreadCount) {
         this.nioEventLoopThreadCount = nioEventLoopThreadCount;
         return this;
@@ -302,6 +388,20 @@ public class Configuration {
         return actionHandlerThreadCount;
     }
 
+    /**
+     * <p>Number of threads for the action handler thread pool</p>
+     * <p>These threads are used for handling actions such as:</p>
+     *     <ul>
+     *         <li>serialising and writing expectation or proxied responses</li>
+     *         <li>handling response delays in a non-blocking way (i.e. using a scheduler)</li>
+     *         <li>executing class callbacks</li>
+     *         <li>handling method / closure callbacks (using web sockets)</li>
+     *     </ul>
+     * <p>
+     * <p>Default is maximum of 5 or available processors count</p>
+     *
+     * @param actionHandlerThreadCount Netty worker thread pool size
+     */
     public Configuration actionHandlerThreadCount(Integer actionHandlerThreadCount) {
         this.actionHandlerThreadCount = actionHandlerThreadCount;
         return this;
@@ -314,6 +414,13 @@ public class Configuration {
         return webSocketClientEventLoopThreadCount;
     }
 
+    /**
+     * <p>Client Netty worker thread pool size for handling requests and response.  These threads handle deserializing and serialising HTTP requests and responses and some other fast logic.</p>
+     *
+     * <p>Default is 5 threads</p>
+     *
+     * @param webSocketClientEventLoopThreadCount Client Netty worker thread pool size
+     */
     public Configuration webSocketClientEventLoopThreadCount(Integer webSocketClientEventLoopThreadCount) {
         this.webSocketClientEventLoopThreadCount = webSocketClientEventLoopThreadCount;
         return this;
@@ -326,6 +433,13 @@ public class Configuration {
         return clientNioEventLoopThreadCount;
     }
 
+    /**
+     * <p>Client Netty worker thread pool size for handling requests and response.  These threads handle deserializing and serialising HTTP requests and responses and some other fast logic.</p>
+     *
+     * <p>Default is 5 threads</p>
+     *
+     * @param clientNioEventLoopThreadCount Client Netty worker thread pool size
+     */
     public Configuration clientNioEventLoopThreadCount(Integer clientNioEventLoopThreadCount) {
         this.clientNioEventLoopThreadCount = clientNioEventLoopThreadCount;
         return this;
@@ -338,6 +452,13 @@ public class Configuration {
         return maxFutureTimeoutInMillis;
     }
 
+    /**
+     * Maximum time allowed in milliseconds for any future to wait, for example when waiting for a response over a web socket callback.
+     *
+     * Default is 60,000 ms
+     *
+     * @param maxFutureTimeoutInMillis maximum time allowed in milliseconds
+     */
     public Configuration maxFutureTimeoutInMillis(Long maxFutureTimeoutInMillis) {
         this.maxFutureTimeoutInMillis = maxFutureTimeoutInMillis;
         return this;
@@ -350,6 +471,12 @@ public class Configuration {
         return matchersFailFast;
     }
 
+    /**
+     * If true (the default) request matchers will fail on the first non-matching field, if false request matchers will compare all fields.
+     * This is useful to see all mismatching fields in the log event recording that a request matcher did not match.
+     *
+     * @param matchersFailFast enabled request matchers failing fast
+     */
     public Configuration matchersFailFast(Boolean matchersFailFast) {
         this.matchersFailFast = matchersFailFast;
         return this;
@@ -362,6 +489,13 @@ public class Configuration {
         return maxSocketTimeoutInMillis;
     }
 
+    /**
+     * Maximum time in milliseconds allowed for a response from a socket
+     *
+     * Default is 20,000 ms
+     *
+     * @param maxSocketTimeoutInMillis maximum time in milliseconds allowed
+     */
     public Configuration maxSocketTimeoutInMillis(Long maxSocketTimeoutInMillis) {
         this.maxSocketTimeoutInMillis = maxSocketTimeoutInMillis;
         return this;
@@ -374,6 +508,13 @@ public class Configuration {
         return socketConnectionTimeoutInMillis;
     }
 
+    /**
+     * Maximum time in milliseconds allowed to connect to a socket
+     *
+     * Default is 20,000 ms
+     *
+     * @param socketConnectionTimeoutInMillis maximum time allowed in milliseconds
+     */
     public Configuration socketConnectionTimeoutInMillis(Integer socketConnectionTimeoutInMillis) {
         this.socketConnectionTimeoutInMillis = socketConnectionTimeoutInMillis;
         return this;
