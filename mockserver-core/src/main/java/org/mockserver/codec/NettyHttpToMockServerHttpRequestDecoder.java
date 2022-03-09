@@ -7,6 +7,7 @@ import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.FullHttpRequestToMockServerHttpRequest;
 
+import java.net.SocketAddress;
 import java.security.cert.Certificate;
 import java.util.List;
 
@@ -23,7 +24,11 @@ public class NettyHttpToMockServerHttpRequestDecoder extends MessageToMessageDec
 
     @Override
     protected void decode(ChannelHandlerContext ctx, FullHttpRequest fullHttpRequest, List<Object> out) {
-        out.add(fullHttpRequestToMockServerRequest.mapFullHttpRequestToMockServerRequest(fullHttpRequest));
+        SocketAddress remoteAddress = null;
+        if (ctx != null && ctx.channel() != null) {
+            remoteAddress = ctx.channel().remoteAddress();
+        }
+        out.add(fullHttpRequestToMockServerRequest.mapFullHttpRequestToMockServerRequest(fullHttpRequest, remoteAddress));
     }
 
 }

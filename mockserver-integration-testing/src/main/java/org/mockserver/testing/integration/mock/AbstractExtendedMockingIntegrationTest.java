@@ -5404,7 +5404,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             .withHeader("content-length", "0")
             .withHeader("connection", "keep-alive")
             .withKeepAlive(true)
-            .withSecure(false);
+            .withSecure(false)
+            .withRemoteAddress("127.0.0.1");
         HttpRequest requestTwo = request("/some_path_three")
             .withMethod("GET")
             .withHeader("host", "localhost:" + this.getServerPort())
@@ -5412,7 +5413,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             .withHeader("content-length", "0")
             .withHeader("connection", "keep-alive")
             .withKeepAlive(true)
-            .withSecure(false);
+            .withSecure(false)
+            .withRemoteAddress("127.0.0.1");
         List<LogEntry> logEntriesExpected = Arrays.asList(
             new LogEntry()
                 .setType(RECEIVED_REQUEST)

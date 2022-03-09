@@ -385,7 +385,7 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
                                         if (request != null) {
                                             Map<String, Object> entry = new HashMap<>();
                                             entry.put("key", logEntryDTO.getId() + "_request");
-                                            Description description = recordedRequestsDescriptionProcessor.description(logEntryDTO.getHttpRequest());
+                                            Description description = recordedRequestsDescriptionProcessor.description(request);
                                             if (description != null) {
                                                 entry.put("description", description);
                                             }

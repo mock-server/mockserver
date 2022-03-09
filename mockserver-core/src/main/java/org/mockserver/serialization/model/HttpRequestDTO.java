@@ -9,6 +9,7 @@ import static org.mockserver.model.NottableString.string;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("UnusedReturnValue")
 public class HttpRequestDTO extends RequestDefinitionDTO implements DTO<HttpRequest> {
     private NottableString method = string("");
     private NottableString path = string("");
@@ -21,6 +22,7 @@ public class HttpRequestDTO extends RequestDefinitionDTO implements DTO<HttpRequ
     private Boolean secure;
     private List<X509Certificate> clientCertificateChain;
     private SocketAddress socketAddress;
+    private String remoteAddress;
 
     public HttpRequestDTO() {
         super(null);
@@ -40,6 +42,7 @@ public class HttpRequestDTO extends RequestDefinitionDTO implements DTO<HttpRequ
             secure = httpRequest.isSecure();
             clientCertificateChain = httpRequest.getClientCertificateChain();
             socketAddress = httpRequest.getSocketAddress();
+            remoteAddress = httpRequest.getRemoteAddress();
         }
     }
 
@@ -56,6 +59,7 @@ public class HttpRequestDTO extends RequestDefinitionDTO implements DTO<HttpRequ
             .withKeepAlive(keepAlive)
             .withClientCertificateChain(clientCertificateChain)
             .withSocketAddress(socketAddress)
+            .withRemoteAddress(remoteAddress)
             .withNot(getNot());
     }
 
@@ -155,6 +159,15 @@ public class HttpRequestDTO extends RequestDefinitionDTO implements DTO<HttpRequ
 
     public HttpRequestDTO setSocketAddress(SocketAddress socketAddress) {
         this.socketAddress = socketAddress;
+        return this;
+    }
+
+    public String getRemoteAddress() {
+        return remoteAddress;
+    }
+
+    public HttpRequestDTO setRemoteAddress(String remoteAddress) {
+        this.remoteAddress = remoteAddress;
         return this;
     }
 }

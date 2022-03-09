@@ -42,6 +42,7 @@ public class HttpServletRequestToMockServerHttpRequestDecoder {
 
         request.withKeepAlive(isKeepAlive(httpServletRequest));
         request.withSecure(httpServletRequest.isSecure());
+        request.withRemoteAddress(httpServletRequest.getRemoteHost());
         return request;
     }
 

@@ -35,6 +35,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     private Boolean secure = null;
     private List<X509Certificate> clientCertificateChain;
     private SocketAddress socketAddress;
+    private String remoteAddress;
 
     public static HttpRequest request() {
         return new HttpRequest();
@@ -175,6 +176,15 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         }
         this.hashCode = 0;
         return this;
+    }
+
+    public HttpRequest withRemoteAddress(String remoteAddress) {
+        this.remoteAddress = remoteAddress;
+        return this;
+    }
+
+    public String getRemoteAddress() {
+        return remoteAddress;
     }
 
     /**

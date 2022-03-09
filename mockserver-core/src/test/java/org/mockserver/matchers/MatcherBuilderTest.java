@@ -65,7 +65,7 @@ public class MatcherBuilderTest {
         fullHttpRequest.headers().add(CONTENT_TYPE, PLAIN_TEXT_UTF_8.withCharset(DEFAULT_TEXT_HTTP_CHARACTER_SET).toString());
 
         // when
-        HttpRequest httpRequest = fullHttpRequestToMockServerRequest.mapFullHttpRequestToMockServerRequest(fullHttpRequest);
+        HttpRequest httpRequest = fullHttpRequestToMockServerRequest.mapFullHttpRequestToMockServerRequest(fullHttpRequest, null);
 
         // and
         HttpRequestMatcher httpRequestMapper = new MatcherBuilder(configuration, new MockServerLogger()).transformsToMatcher(new Expectation(
@@ -94,7 +94,7 @@ public class MatcherBuilderTest {
         );
 
         // when
-        HttpRequest httpRequest = fullHttpRequestToMockServerRequest.mapFullHttpRequestToMockServerRequest(fullHttpRequest);
+        HttpRequest httpRequest = fullHttpRequestToMockServerRequest.mapFullHttpRequestToMockServerRequest(fullHttpRequest, null);
 
         // and
         HttpRequestMatcher httpRequestMapper = new MatcherBuilder(configuration, new MockServerLogger()).transformsToMatcher(new Expectation(
@@ -123,7 +123,7 @@ public class MatcherBuilderTest {
         );
 
         // when
-        HttpRequest httpRequest = fullHttpRequestToMockServerRequest.mapFullHttpRequestToMockServerRequest(fullHttpRequest);
+        HttpRequest httpRequest = fullHttpRequestToMockServerRequest.mapFullHttpRequestToMockServerRequest(fullHttpRequest, null);
 
         // and
         HttpRequestMatcher httpRequestMapper = new MatcherBuilder(configuration, new MockServerLogger()).transformsToMatcher(new Expectation(

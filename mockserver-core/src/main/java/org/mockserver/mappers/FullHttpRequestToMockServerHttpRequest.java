@@ -15,6 +15,8 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.url.URLParser;
 import org.slf4j.event.Level;
 
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.security.cert.Certificate;
 import java.util.Set;
 
@@ -45,7 +47,7 @@ public class FullHttpRequestToMockServerHttpRequest {
         this.jdkCertificateToMockServerX509Certificate = new JDKCertificateToMockServerX509Certificate(mockServerLogger);
     }
 
-    public HttpRequest mapFullHttpRequestToMockServerRequest(FullHttpRequest fullHttpRequest) {
+    public HttpRequest mapFullHttpRequestToMockServerRequest(FullHttpRequest fullHttpRequest, SocketAddress remoteAddress) {
         HttpRequest httpRequest = new HttpRequest();
         try {
             if (fullHttpRequest != null) {
@@ -64,7 +66,7 @@ public class FullHttpRequestToMockServerHttpRequest {
                 setHeaders(httpRequest, fullHttpRequest);
                 setCookies(httpRequest, fullHttpRequest);
                 setBody(httpRequest, fullHttpRequest);
-                setSocketAddress(httpRequest, isSecure, port, fullHttpRequest);
+                setSocketAddress(httpRequest, fullHttpRequest, isSecure, port, remoteAddress);
                 jdkCertificateToMockServerX509Certificate.setClientCertificates(httpRequest, clientCertificates);
 
                 httpRequest.withKeepAlive(isKeepAlive(fullHttpRequest));
@@ -82,8 +84,11 @@ public class FullHttpRequestToMockServerHttpRequest {
         return httpRequest;
     }
 
-    private void setSocketAddress(HttpRequest httpRequest, boolean isSecure, Integer port, FullHttpRequest fullHttpRequest) {
+    private void setSocketAddress(HttpRequest httpRequest, FullHttpRequest fullHttpRequest, boolean isSecure, Integer port, SocketAddress remoteAddress) {
         httpRequest.withSocketAddress(isSecure, fullHttpRequest.headers().get("host"), port);
+        if (remoteAddress instanceof InetSocketAddress) {
+            httpRequest.withRemoteAddress(((InetSocketAddress) remoteAddress).getHostString());
+        }
     }
 
     private void setMethod(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {
