@@ -374,7 +374,7 @@ public class MockServerClient implements Stoppable {
             Desktop desktop = Desktop.getDesktop();
             if (desktop != null) {
                 if (desktop.isSupported(Desktop.Action.BROWSE)) {
-                    desktop.browse(new URI("http" + (Boolean.TRUE.equals(secure) ? "s" : "") + "://" + host + ":" + port() + "/mockserver/dashboard"));
+                    desktop.browse(new URI("http://" + host + ":" + port() + "/mockserver/dashboard"));
                     timeUnit.sleep(pause);
                 } else {
                     if (MockServerLogger.isEnabled(WARN)) {

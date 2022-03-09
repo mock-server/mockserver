@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - removed deprecated configuration properties for forward proxying
 - changed docker distroless base image to distroless image for nonroot user
 - changed docker distroless base image for snapshot to distroless image for debugging
+- changed client to launch dashboard in HTTP (not HTTPS) to avoid issues with self-signed certificates
 
 ### Fixed
 - worked around JDK error 'flip()Ljava/nio/ByteBuffer; does not exist in class java.nio.ByteBuffer'
