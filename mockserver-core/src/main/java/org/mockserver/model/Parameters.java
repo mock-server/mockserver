@@ -47,7 +47,6 @@ public class Parameters extends KeysToMultiValues<Parameter, Parameters> {
         return this;
     }
 
-    @SuppressWarnings("MethodDoesntCallSuperMethod")
     public Parameters clone() {
         return new Parameters(getMultimap())
             .withRawParameterString(rawParameterString);

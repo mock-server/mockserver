@@ -52,7 +52,9 @@ public class JDKCertificateToMockServerX509Certificate {
                     }
                 )
                 .collect(Collectors.toList());
-            httpRequest.withClientCertificateChain(x509Certificates);
+            if (!x509Certificates.isEmpty()) {
+                httpRequest.withClientCertificateChain(x509Certificates);
+            }
         }
         return httpRequest;
     }

@@ -27,6 +27,7 @@ import org.mockserver.serialization.serializers.matcher.HttpRequestsPropertiesMa
 import org.mockserver.serialization.serializers.request.HttpRequestDTOSerializer;
 import org.mockserver.serialization.serializers.request.OpenAPIDefinitionDTOSerializer;
 import org.mockserver.serialization.serializers.request.OpenAPIDefinitionSerializer;
+import org.mockserver.serialization.serializers.certificate.X509CertificateSerializer;
 import org.mockserver.serialization.serializers.response.HttpResponseSerializer;
 import org.mockserver.serialization.serializers.response.*;
 import org.mockserver.serialization.serializers.schema.*;
@@ -238,6 +239,8 @@ public class ObjectMapperFactory {
             new HeadersSerializer(),
             new ParametersSerializer(),
             new CookiesSerializer(),
+            // certifcates
+            new X509CertificateSerializer(),
             // log
             new org.mockserver.serialization.serializers.log.LogEntrySerializer(),
             // matcher

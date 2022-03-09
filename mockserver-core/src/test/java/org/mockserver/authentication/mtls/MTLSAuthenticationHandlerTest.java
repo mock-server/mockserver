@@ -170,7 +170,7 @@ public class MTLSAuthenticationHandlerTest {
 
         // when
         AuthenticationException authenticationException = assertThrows(AuthenticationException.class, () -> authenticationHandler.controlPlaneRequestAuthenticated(request));
-        assertThat(authenticationException.getMessage(), equalTo("control plane request failed authentication no client certificates can be validated by control plane CA"));
+        assertThat(authenticationException.getMessage(), equalTo("control plane request failed authentication no client certificates found"));
     }
 
     @Test

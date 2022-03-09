@@ -23,9 +23,13 @@ public class X509Certificate extends ObjectWithJsonToString {
         return certificate;
     }
 
-    public X509Certificate withCertificate(Certificate certificate) throws CertificateEncodingException {
-        this.certificate = certificate;
-        this.certificateBytes = certificate.getEncoded();
+    public X509Certificate withCertificate(Certificate certificate) {
+        try {
+            this.certificate = certificate;
+            this.certificateBytes = certificate.getEncoded();
+        } catch (CertificateEncodingException cee) {
+            throw new RuntimeException(cee.getMessage(), cee);
+        }
         this.hashCode = 0;
         return this;
     }
@@ -73,6 +77,7 @@ public class X509Certificate extends ObjectWithJsonToString {
     @SuppressWarnings("MethodDoesntCallSuperMethod")
     public X509Certificate clone() {
         return x509Certificate()
+            .withCertificate(certificate)
             .withIssuerDistinguishedName(issuerDistinguishedName)
             .withSubjectDistinguishedName(subjectDistinguishedName)
             .withSerialNumber(serialNumber)

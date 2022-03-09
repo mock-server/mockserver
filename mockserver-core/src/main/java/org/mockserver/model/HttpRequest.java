@@ -6,6 +6,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
@@ -1101,7 +1102,9 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
             .withCookies(cookies != null ? cookies.clone() : null)
             .withKeepAlive(keepAlive)
             .withSecure(secure)
-            .withSocketAddress(socketAddress);
+            .withClientCertificateChain(clientCertificateChain != null && !clientCertificateChain.isEmpty() ? clientCertificateChain.stream().map(X509Certificate::clone).collect(Collectors.toList()) : null)
+            .withSocketAddress(socketAddress)
+            .withRemoteAddress(remoteAddress);
     }
 
     public HttpRequest update(HttpRequest requestOverride, HttpRequestModifier requestModifier) {

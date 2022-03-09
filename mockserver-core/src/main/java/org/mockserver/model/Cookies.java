@@ -29,7 +29,6 @@ public class Cookies extends KeysAndValues<Cookie, Cookies> {
         return new Cookie(name, value);
     }
 
-    @SuppressWarnings("MethodDoesntCallSuperMethod")
     public Cookies clone() {
         return new Cookies(getMap());
     }
