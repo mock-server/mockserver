@@ -102,7 +102,6 @@ public class Configuration {
     private String controlPlaneJWTAuthenticationJWKSource;
 
     // TLS
-    private Boolean useBouncyCastleForKeyAndCertificateGeneration;
     // TODO(jamesdbloom) missing from html
     private Boolean proactivelyInitialiseTLS;
     private boolean rebuildTLSContext;
@@ -1130,39 +1129,6 @@ public class Configuration {
     // TODO(jamesdbloom) add description and html
     public Configuration controlPlaneJWTAuthenticationJWKSource(String controlPlaneJWTAuthenticationJWKSource) {
         this.controlPlaneJWTAuthenticationJWKSource = controlPlaneJWTAuthenticationJWKSource;
-        return this;
-    }
-
-    public Boolean useBouncyCastleForKeyAndCertificateGeneration() {
-        if (useBouncyCastleForKeyAndCertificateGeneration == null) {
-            return ConfigurationProperties.useBouncyCastleForKeyAndCertificateGeneration();
-        }
-        return useBouncyCastleForKeyAndCertificateGeneration;
-    }
-
-    /**
-     * <p>Use BouncyCastle instead of the Java JDK to generate Certificate and Keys, this is helpful if:</p>
-     * <ul>
-     *     <li>using Java 16+ or</li>
-     *     <li>using the IBM JVM or</li>
-     *     <li>avoiding bugs in the X509 creation logic Java JDK (i.e. such as the format of SAN and CN)</li>
-     * </ul>
-     * <p>When enabling this setting the following dependencies must be provided on the classpath (they are not included with MockServer)</p>
-     * <pre>&lt;dependency&gt;
-     *   &lt;groupId&gt;org.bouncycastle&lt;/groupId&gt;
-     *   &lt;artifactId&gt;bcprov-jdk15on&lt;/artifactId&gt;
-     *   &lt;version&gt;1.70&lt;/version&gt;
-     * &lt;/dependency&gt;
-     * &lt;dependency&gt;
-     *   &lt;groupId&gt;org.bouncycastle&lt;/groupId&gt;
-     *   &lt;artifactId&gt;bcpkix-jdk15on&lt;/artifactId&gt;
-     *   &lt;version&gt;1.70&lt;/version&gt;
-     * &lt;/dependency&gt;</pre>
-     *
-     * @param useBouncyCastleForKeyAndCertificateGeneration enable BouncyCastle instead of the Java JDK to generate Certificate and Keys
-     */
-    public Configuration useBouncyCastleForKeyAndCertificateGeneration(Boolean useBouncyCastleForKeyAndCertificateGeneration) {
-        this.useBouncyCastleForKeyAndCertificateGeneration = useBouncyCastleForKeyAndCertificateGeneration;
         return this;
     }
 

@@ -19,7 +19,6 @@ import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.KeyAndCertificateFactory;
-import org.mockserver.socket.tls.jdk.CertificateSigningRequest;
 import org.slf4j.event.Level;
 
 import java.io.ByteArrayInputStream;
@@ -35,8 +34,6 @@ import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.socket.tls.PEMToFile.*;
-import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.NOT_AFTER;
-import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.NOT_BEFORE;
 import static org.slf4j.event.Level.*;
 
 /**
@@ -45,7 +42,6 @@ import static org.slf4j.event.Level.*;
 public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
 
     private static final String PROVIDER_NAME = BouncyCastleProvider.PROVIDER_NAME;
-    private static final String SIGNATURE_ALGORITHM = "SHA256WithRSAEncryption";
 
     private final Configuration configuration;
     private final MockServerLogger mockServerLogger;
@@ -68,7 +64,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
     public void buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate() {
         if (dynamicallyUpdateCertificateAuthority() && certificateAuthorityCertificateNotYetCreated()) {
             try {
-                KeyPair caKeyPair = generateKeyPair(CertificateSigningRequest.ROOT_KEY_SIZE);
+                KeyPair caKeyPair = generateKeyPair(KeyAndCertificateFactory.DEFAULT_ROOT_KEY_SIZE);
 
                 saveAsPEMFile(createCACert(caKeyPair.getPublic(), caKeyPair.getPrivate()), certificateAuthorityX509CertificatePath(), "Certificate Authority X509 Certificate");
                 saveAsPEMFile(caKeyPair.getPrivate(), certificateAuthorityPrivateKeyPath(), "Certificate Authority Private Key");
@@ -173,7 +169,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
     private X509Certificate createCACert(PublicKey publicKey, PrivateKey privateKey) throws Exception {
 
         // signers name
-        X500Name issuerName = new X500Name("CN=www.mockserver.com, O=MockServer, L=London, ST=England, C=UK");
+        X500Name issuerName = new X500Name("CN=" + ROOT_COMMON_NAME + ", O=" + ORGANISATION + ", L=" + LOCALITY + ", ST=" + STATE + ", C=" + COUNTRY);
 
         // serial
         BigInteger serial = BigInteger.valueOf(new Random().nextInt(Integer.MAX_VALUE));
@@ -260,7 +256,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
                 if (dynamicallyUpdateCertificateAuthority()) {
                     buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
                 }
-                KeyPair keyPair = generateKeyPair(CertificateSigningRequest.MOCK_KEY_SIZE);
+                KeyPair keyPair = generateKeyPair(KeyAndCertificateFactory.DEFAULT_LEAF_KEY_SIZE);
                 privateKey = keyPair.getPrivate();
                 x509Certificate = createCASignedCert(
                     keyPair.getPublic(),
@@ -303,7 +299,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
         X500Name issuer = new X509CertificateHolder(certificateAuthorityCert.getEncoded()).getSubject();
 
         // subjects name - the same as we are self signed.
-        X500Name subject = new X500Name("CN=" + domain + ", O=MockServer, L=London, ST=England, C=UK");
+        X500Name subject = new X500Name("CN=" + domain + ", O=" + ORGANISATION + ", L=" + LOCALITY + ", ST=" + STATE + ", C=" + COUNTRY);
 
         // serial
         BigInteger serial = BigInteger.valueOf(new Random().nextInt(Integer.MAX_VALUE));
@@ -345,7 +341,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
     }
 
     private X509Certificate signCertificate(X509v3CertificateBuilder certificateBuilder, PrivateKey privateKey) throws OperatorCreationException, CertificateException {
-        ContentSigner signer = new JcaContentSignerBuilder(SIGNATURE_ALGORITHM).setProvider(PROVIDER_NAME).build(privateKey);
+        ContentSigner signer = new JcaContentSignerBuilder(DEFAULT_SIGNATURE_ALGORITHM).setProvider(PROVIDER_NAME).build(privateKey);
         return new JcaX509CertificateConverter().setProvider(PROVIDER_NAME).getCertificate(certificateBuilder.build(signer));
     }
 
@@ -353,7 +349,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
      * Create a random 2048 bit RSA key pair with the given length
      */
     private KeyPair generateKeyPair(int keySize) throws Exception {
-        KeyPairGenerator generator = KeyPairGenerator.getInstance(KEY_GENERATION_ALGORITHM, PROVIDER_NAME);
+        KeyPairGenerator generator = KeyPairGenerator.getInstance(DEFAULT_KEY_GENERATION_ALGORITHM, PROVIDER_NAME);
         generator.initialize(keySize, new SecureRandom());
         return generator.generateKeyPair();
     }

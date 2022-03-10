@@ -351,29 +351,3 @@
     <p>Example:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.tlsMutualAuthenticationCertificateChain="/some/existing/path"</code></pre>
 </div>
-
-<a id="tls_configuration_bouncy_castle" class="anchor" href="#tls_configuration_bouncy_castle">&nbsp;</a>
-
-<h4>Bouncy Castle</h4>
-
-<button id="button_configuration_use_bouncy_castle" class="accordion title"><strong>BouncyCastle instead of the Java JDK for X.509 Certificate Creation</strong></button>
-<div class="panel title">
-    <p>Use BouncyCastle instead of the Java JDK to X.509 Certificate creation, this is helpful if:</p>
-    <ul>
-        <li>using Java 16+ or</li>
-        <li>using the IBM JVM or</li>
-        <li>avoiding bugs in the X509 creation logic Java JDK (i.e. such as the format of SAN and CN)</li>
-    </ul>
-    <p>This is now enabled by default and the BouncyCastle dependencies are included with MockServer to resolve issues with modules in Java 16+ and backwards compatibility for Java 8.</p>
-    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">true</span></p>
-    <p>Java Code:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.useBouncyCastleForKeyAndCertificateGeneration(boolean enable)</code></pre>
-    <p>System Property:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.useBouncyCastleForKeyAndCertificateGeneration=...</code></pre>
-    <p>Environment Variable:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_USE_BOUNCY_CASTLE_FOR_KEY_AND_CERTIFICATE_GENERATION=...</code></pre>
-    <p>Property File:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">mockserver.useBouncyCastleForKeyAndCertificateGeneration=...</code></pre>
-    <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.useBouncyCastleForKeyAndCertificateGeneration="true"</code></pre>
-</div>

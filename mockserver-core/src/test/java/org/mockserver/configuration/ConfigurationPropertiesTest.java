@@ -7,7 +7,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.server.initialize.ExpectationInitializerExample;
 import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
-import org.mockserver.socket.tls.jdk.CertificateSigningRequest;
+import org.mockserver.socket.tls.KeyAndCertificateFactory;
 import org.slf4j.event.Level;
 
 import java.io.File;
@@ -424,7 +424,7 @@ public class ConfigurationPropertiesTest {
             System.clearProperty("mockserver.sslCertificateDomainName");
 
             // when
-            assertEquals(CertificateSigningRequest.CERTIFICATE_DOMAIN, sslCertificateDomainName());
+            assertEquals(KeyAndCertificateFactory.CERTIFICATE_DOMAIN, sslCertificateDomainName());
             sslCertificateDomainName("newDomain");
 
             // then
@@ -480,20 +480,6 @@ public class ConfigurationPropertiesTest {
         } catch (IllegalArgumentException iae) {
             assertThat(iae.getMessage(), is("log level \"WRONG\" is not legal it must be one of SL4J levels: \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\", or the Java Logger levels: \"FINEST\", \"FINE\", \"INFO\", \"WARNING\", \"SEVERE\", \"OFF\""));
         }
-    }
-
-    @Test
-    public void shouldSetAndReadUseBouncyCastleForKeyAndCertificateGeneration() {
-        // given
-        System.clearProperty("mockserver.useBouncyCastleForKeyAndCertificateGeneration");
-
-        // when
-        assertTrue(useBouncyCastleForKeyAndCertificateGeneration());
-        useBouncyCastleForKeyAndCertificateGeneration(false);
-
-        // then
-        assertFalse(useBouncyCastleForKeyAndCertificateGeneration());
-        assertEquals("false", System.getProperty("mockserver.useBouncyCastleForKeyAndCertificateGeneration"));
     }
 
     @Test

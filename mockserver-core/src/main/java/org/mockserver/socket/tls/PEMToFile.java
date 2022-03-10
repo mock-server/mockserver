@@ -1,10 +1,6 @@
 package org.mockserver.socket.tls;
 
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.file.FileReader;
-import org.mockserver.log.model.LogEntry;
-import org.mockserver.logging.MockServerLogger;
-import org.slf4j.event.Level;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -62,14 +58,6 @@ public class PEMToFile {
     }
 
     public static byte[] privateKeyBytesFromPEM(final String pem) {
-        if (!ConfigurationProperties.useBouncyCastleForKeyAndCertificateGeneration() && (pem.contains(BEGIN_RSA_PRIVATE_KEY) || pem.contains(END_RSA_PRIVATE_KEY))) {
-            new MockServerLogger().logEvent(
-                new LogEntry()
-                    .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Private key provided in unsupported PKCS#1 only PKCS#8 format is support, to convert use openssl, for example{}")
-                    .setArguments("openssl pkcs8 -topk8 -inform PEM -in private_key_PKCS_1.pem -out private_key_PKCS_8.pem -nocrypt")
-            );
-        }
         return Base64
             .getMimeDecoder()
             .decode(

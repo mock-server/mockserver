@@ -8,7 +8,7 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.memory.MemoryMonitoring;
 import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
-import org.mockserver.socket.tls.jdk.CertificateSigningRequest;
+import org.mockserver.socket.tls.KeyAndCertificateFactory;
 import org.slf4j.event.Level;
 
 import java.io.*;
@@ -93,7 +93,6 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME = "mockserver.sslCertificateDomainName";
     private static final String MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS = "mockserver.sslSubjectAlternativeNameDomains";
     private static final String MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS = "mockserver.sslSubjectAlternativeNameIps";
-    private static final String MOCKSERVER_USE_BOUNCY_CASTLE_FOR_KEY_AND_CERTIFICATE_GENERATION = "mockserver.useBouncyCastleForKeyAndCertificateGeneration";
     private static final String MOCKSERVER_PREVENT_CERTIFICATE_DYNAMIC_UPDATE = "mockserver.preventCertificateDynamicUpdate";
     private static final String MOCKSERVER_PROACTIVELY_INITIALISE_TLS = "mockserver.proactivelyInitialiseTLS";
     private static final String MOCKSERVER_CERTIFICATE_AUTHORITY_PRIVATE_KEY = "mockserver.certificateAuthorityPrivateKey";
@@ -587,7 +586,7 @@ public class ConfigurationProperties {
     }
 
     public static String sslCertificateDomainName() {
-        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME, "MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME", CertificateSigningRequest.CERTIFICATE_DOMAIN);
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME, "MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME", KeyAndCertificateFactory.CERTIFICATE_DOMAIN);
     }
 
     /**
@@ -629,35 +628,6 @@ public class ConfigurationProperties {
 
     public static String sslSubjectAlternativeNameIps() {
         return readPropertyHierarchically(PROPERTIES, MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS, "MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS", "127.0.0.1,0.0.0.0");
-    }
-
-    /**
-     * <p>Use BouncyCastle instead of the Java JDK to generate Certificate and Keys, this is helpful if:</p>
-     * <ul>
-     *     <li>using Java 16+ or</li>
-     *     <li>using the IBM JVM or</li>
-     *     <li>avoiding bugs in the X509 creation logic Java JDK (i.e. such as the format of SAN and CN)</li>
-     * </ul>
-     * <p>When enabling this setting the following dependencies must be provided on the classpath (they are not included with MockServer)</p>
-     * <pre>&lt;dependency&gt;
-     *   &lt;groupId&gt;org.bouncycastle&lt;/groupId&gt;
-     *   &lt;artifactId&gt;bcprov-jdk15on&lt;/artifactId&gt;
-     *   &lt;version&gt;1.70&lt;/version&gt;
-     * &lt;/dependency&gt;
-     * &lt;dependency&gt;
-     *   &lt;groupId&gt;org.bouncycastle&lt;/groupId&gt;
-     *   &lt;artifactId&gt;bcpkix-jdk15on&lt;/artifactId&gt;
-     *   &lt;version&gt;1.70&lt;/version&gt;
-     * &lt;/dependency&gt;</pre>
-     *
-     * @param enable enable BouncyCastle instead of the Java JDK to generate Certificate and Keys
-     */
-    public static void useBouncyCastleForKeyAndCertificateGeneration(boolean enable) {
-        System.setProperty(MOCKSERVER_USE_BOUNCY_CASTLE_FOR_KEY_AND_CERTIFICATE_GENERATION, "" + enable);
-    }
-
-    public static boolean useBouncyCastleForKeyAndCertificateGeneration() {
-        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_USE_BOUNCY_CASTLE_FOR_KEY_AND_CERTIFICATE_GENERATION, "MOCKSERVER_USE_BOUNCY_CASTLE_FOR_KEY_AND_CERTIFICATE_GENERATION", "true"));
     }
 
     /**
