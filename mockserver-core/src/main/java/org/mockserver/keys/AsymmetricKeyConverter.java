@@ -1,4 +1,4 @@
-package org.mockserver.authentication.jwt;
+package org.mockserver.keys;
 
 import java.security.KeyFactory;
 import java.security.interfaces.ECPrivateKey;
@@ -21,7 +21,7 @@ public class AsymmetricKeyConverter {
         );
     }
 
-    static RSAPrivateKey getRSAPrivateKey(byte[] privateKey) {
+    public static RSAPrivateKey getRSAPrivateKey(byte[] privateKey) {
         return convertKey(
             "RSA",
             "private",
@@ -31,7 +31,7 @@ public class AsymmetricKeyConverter {
         );
     }
 
-    static ECPublicKey getECPublicKey(byte[] publicKey) {
+    public static ECPublicKey getECPublicKey(byte[] publicKey) {
         return convertKey(
             "EC",
             "public",
@@ -41,7 +41,7 @@ public class AsymmetricKeyConverter {
         );
     }
 
-    static ECPrivateKey getECPrivateKey(byte[] privateKey) {
+    public static ECPrivateKey getECPrivateKey(byte[] privateKey) {
         return convertKey(
             "EC",
             "private",

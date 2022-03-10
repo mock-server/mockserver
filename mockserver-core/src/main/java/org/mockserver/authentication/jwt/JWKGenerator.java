@@ -7,6 +7,8 @@ import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
+import org.mockserver.keys.AsymmetricKeyConverter;
+import org.mockserver.keys.AsymmetricKeyPair;
 import org.mockserver.serialization.ObjectMapperFactory;
 
 import java.util.Collections;
@@ -20,18 +22,18 @@ public class JWKGenerator {
         try {
             Map<String, Object> singleKey;
             switch (asymmetricKeyPair.getAlgorithm()) {
-                case ES256:
+                case EC256_SHA256:
                     singleKey = getEllipticCurveJWK(asymmetricKeyPair, Curve.P_256);
                     break;
-                case ES384:
+                case EC384_SHA384:
                     singleKey = getEllipticCurveJWK(asymmetricKeyPair, Curve.P_384);
                     break;
-                case ES512:
+                case ECP512_SHA512:
                     singleKey = getEllipticCurveJWK(asymmetricKeyPair, Curve.P_521);
                     break;
-                case RS256:
-                case RS384:
-                case RS512:
+                case RSA2048_SHA256:
+                case RSA3072_SHA384:
+                case RSA4096_SHA512:
                     singleKey = getRSAJWK(asymmetricKeyPair);
                     break;
                 default:
@@ -52,7 +54,7 @@ public class JWKGenerator {
             .Builder(AsymmetricKeyConverter.getRSAPublicKey(asymmetricKeyPair.getKeyPair().getPublic().getEncoded()))
             .keyID(asymmetricKeyPair.getKeyId())
             .keyUse(KeyUse.SIGNATURE)
-            .algorithm(new Algorithm(asymmetricKeyPair.getAlgorithm().name()))
+            .algorithm(new Algorithm(asymmetricKeyPair.getAlgorithm().getJwtAlgorithm()))
             .build()
             .toJSONObject();
     }
@@ -62,7 +64,7 @@ public class JWKGenerator {
             .Builder(curve, AsymmetricKeyConverter.getECPublicKey(asymmetricKeyPair.getKeyPair().getPublic().getEncoded()))
             .keyID(asymmetricKeyPair.getKeyId())
             .keyUse(KeyUse.SIGNATURE)
-            .algorithm(new Algorithm(asymmetricKeyPair.getAlgorithm().name()))
+            .algorithm(new Algorithm(asymmetricKeyPair.getAlgorithm().getJwtAlgorithm()))
             .build()
             .toJSONObject();
     }

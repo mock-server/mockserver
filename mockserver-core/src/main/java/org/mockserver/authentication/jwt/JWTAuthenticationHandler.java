@@ -5,6 +5,7 @@ import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.RemoteJWKSet;
 import org.mockserver.authentication.AuthenticationException;
 import org.mockserver.authentication.AuthenticationHandler;
+import org.mockserver.file.FilePath;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -33,7 +34,7 @@ public class JWTAuthenticationHandler implements AuthenticationHandler {
             if (URLParser.isFullUrl(jwkSource)) {
                 this.jwtValidator = new JWTValidator(new RemoteJWKSet<>(new URL(jwkSource)));
             } else {
-                this.jwtValidator = new JWTValidator(new ImmutableJWKSet<>(JWKSet.load(new File(FileReader.absolutePathFromClassPathOrPath(jwkSource)))));
+                this.jwtValidator = new JWTValidator(new ImmutableJWKSet<>(JWKSet.load(new File(FilePath.absolutePathFromClassPathOrPath(jwkSource)))));
             }
         } catch (Throwable throwable) {
             mockServerLogger.logEvent(

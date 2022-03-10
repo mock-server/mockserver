@@ -2,12 +2,13 @@ package org.mockserver.netty.integration.mock.authenticatedcontrolplane;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.mockserver.authentication.jwt.AsymmetricKeyGenerator;
-import org.mockserver.authentication.jwt.AsymmetricKeyPair;
+import org.mockserver.keys.AsymmetricKeyGenerator;
+import org.mockserver.keys.AsymmetricKeyPair;
 import org.mockserver.authentication.jwt.JWKGenerator;
 import org.mockserver.authentication.jwt.JWTGenerator;
 import org.mockserver.cli.Main;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.keys.AsymmetricKeyPairAlgorithm;
 import org.mockserver.model.Header;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.test.TempFileWriter;
@@ -37,7 +38,7 @@ public class AuthenticatedControlPlaneUsingJWTViaOverrideClientMockingIntegratio
         originalControlPlaneJWTAuthenticationRequired = controlPlaneJWTAuthenticationRequired();
 
         // set new certificate authority values
-        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
+        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPair(AsymmetricKeyPairAlgorithm.RSA2048_SHA256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
         String jwt = new JWTGenerator(asymmetricKeyPair).generateJWT();
         controlPlaneJWTAuthenticationJWKSource(jwkFile);

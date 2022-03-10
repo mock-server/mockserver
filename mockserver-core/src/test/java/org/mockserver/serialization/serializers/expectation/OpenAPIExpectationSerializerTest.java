@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
+import org.mockserver.file.FilePath;
 import org.mockserver.file.FileReader;
 import org.mockserver.serialization.ObjectMapperFactory;
 
@@ -58,14 +59,14 @@ public class OpenAPIExpectationSerializerTest {
     public void shouldReturnJsonWithOpenAPIUrlAndOperationId() throws JsonProcessingException {
         assertThat(objectMapper.writeValueAsString(
             openAPIExpectation()
-                .withSpecUrlOrPayload(FileReader.getURL("org/mockserver/mock/openapi_simple_example.json").toString())
+                .withSpecUrlOrPayload(FilePath.getURL("org/mockserver/mock/openapi_simple_example.json").toString())
                 .withOperationsAndResponses(ImmutableMap.of(
                     "listPets", "200",
                     "createPets", "201"
                 ))
         ), is("" +
             "{" + NEW_LINE +
-            "  \"specUrlOrPayload\" : \"" + FileReader.getURL("org/mockserver/mock/openapi_simple_example.json").toString() + "\"," + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"" + FilePath.getURL("org/mockserver/mock/openapi_simple_example.json").toString() + "\"," + NEW_LINE +
             "  \"operationsAndResponses\" : {" + NEW_LINE +
             "    \"listPets\" : \"200\"," + NEW_LINE +
             "    \"createPets\" : \"201\"" + NEW_LINE +
@@ -78,10 +79,10 @@ public class OpenAPIExpectationSerializerTest {
     public void shouldReturnJsonWithOpenAPIUrl() throws JsonProcessingException {
         assertThat(objectMapper.writeValueAsString(
             openAPIExpectation()
-                .withSpecUrlOrPayload(FileReader.getURL("org/mockserver/mock/openapi_simple_example.json").toString())
+                .withSpecUrlOrPayload(FilePath.getURL("org/mockserver/mock/openapi_simple_example.json").toString())
         ), is("" +
             "{" + NEW_LINE +
-            "  \"specUrlOrPayload\" : \"" + FileReader.getURL("org/mockserver/mock/openapi_simple_example.json").toString() + "\"" + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"" + FilePath.getURL("org/mockserver/mock/openapi_simple_example.json").toString() + "\"" + NEW_LINE +
             "}"
         ));
     }

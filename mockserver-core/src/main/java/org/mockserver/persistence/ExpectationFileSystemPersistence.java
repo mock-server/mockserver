@@ -2,8 +2,7 @@ package org.mockserver.persistence;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
 import org.mockserver.configuration.Configuration;
-import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.file.FileReader;
+import org.mockserver.file.FilePath;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
@@ -57,7 +56,7 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
                         .setThrowable(throwable)
                 );
             }
-            this.initializationPathMatchesPersistencePath = FileReader.expandFilePathGlobs(configuration.initializationJsonPath()).contains(configuration.persistedExpectationsPath());
+            this.initializationPathMatchesPersistencePath = FilePath.expandFilePathGlobs(configuration.initializationJsonPath()).contains(configuration.persistedExpectationsPath());
             requestMatchers.registerListener(this);
             if (MockServerLogger.isEnabled(INFO)) {
                 mockServerLogger.logEvent(

@@ -10,6 +10,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.file.FilePath;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.TimeService;
@@ -692,7 +693,7 @@ public class HttpStateTest {
     @Test
     public void shouldAddExceptionViaOpenApiUrl() {
         // given
-        URL schemaUrl = FileReader.getURL("org/mockserver/mock/openapi_petstore_example.json");
+        URL schemaUrl = FilePath.getURL("org/mockserver/mock/openapi_petstore_example.json");
 
         // when
         List<Expectation> actualExpectations = httpState.add(openAPIExpectation(String.valueOf(schemaUrl)));
@@ -780,7 +781,7 @@ public class HttpStateTest {
     @Test
     public void shouldAddExceptionViaOpenApiUrlWithSpecificResponses() {
         // given
-        URL schemaUrl = FileReader.getURL("org/mockserver/mock/openapi_petstore_example.json");
+        URL schemaUrl = FilePath.getURL("org/mockserver/mock/openapi_petstore_example.json");
 
         // when
         List<Expectation> actualExpectations = httpState.add(openAPIExpectation(String.valueOf(schemaUrl), ImmutableMap.of(

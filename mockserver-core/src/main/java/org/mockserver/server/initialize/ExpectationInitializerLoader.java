@@ -4,6 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang3.ArrayUtils;
 import org.mockserver.cache.LRUCache;
 import org.mockserver.configuration.Configuration;
+import org.mockserver.file.FilePath;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -45,7 +46,7 @@ public class ExpectationInitializerLoader {
     public static List<String> expandedInitializationJsonPaths(String initializationJsonPath) {
         List<String> expandedInitializationJsonPaths = EXPANDED_INITIALIZATION_JSON_PATHS.get(initializationJsonPath);
         if (expandedInitializationJsonPaths == null) {
-            expandedInitializationJsonPaths = FileReader.expandFilePathGlobs(initializationJsonPath);
+            expandedInitializationJsonPaths = FilePath.expandFilePathGlobs(initializationJsonPath);
             EXPANDED_INITIALIZATION_JSON_PATHS.put(initializationJsonPath, expandedInitializationJsonPaths);
         }
         return expandedInitializationJsonPaths;

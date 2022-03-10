@@ -5,6 +5,9 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.mockserver.authentication.AuthenticationException;
 import org.mockserver.authentication.AuthenticationHandler;
+import org.mockserver.keys.AsymmetricKeyGenerator;
+import org.mockserver.keys.AsymmetricKeyPair;
+import org.mockserver.keys.AsymmetricKeyPairAlgorithm;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.test.TempFileWriter;
@@ -28,7 +31,7 @@ public class JWTAuthenticationHandlerTest {
     @Test
     public void shouldValidateJWT() {
         // given
-        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
+        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPair(AsymmetricKeyPairAlgorithm.RSA2048_SHA256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
         String jwt = new JWTGenerator(asymmetricKeyPair).generateJWT();
 
@@ -42,7 +45,7 @@ public class JWTAuthenticationHandlerTest {
     @Test
     public void shouldValidateWithMatchingClaimsAndRequiredClaimsAndAudience() {
         // given
-        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
+        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPair(AsymmetricKeyPairAlgorithm.RSA2048_SHA256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
         String jwt = new JWTGenerator(asymmetricKeyPair)
             .signJWT(
@@ -70,7 +73,7 @@ public class JWTAuthenticationHandlerTest {
     @Test
     public void shouldValidateForAuthorizationHeaderWithExtraSpaces() {
         // given
-        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
+        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPair(AsymmetricKeyPairAlgorithm.RSA2048_SHA256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
         String jwt = new JWTGenerator(asymmetricKeyPair).generateJWT();
 
@@ -84,7 +87,7 @@ public class JWTAuthenticationHandlerTest {
     @Test
     public void shouldNotValidateExpiredJWT() {
         // given
-        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
+        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPair(AsymmetricKeyPairAlgorithm.RSA2048_SHA256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
         String jwt = new JWTGenerator(asymmetricKeyPair)
             .signJWT(
@@ -109,7 +112,7 @@ public class JWTAuthenticationHandlerTest {
     @Test
     public void shouldNotValidateWrongAudience() {
         // given
-        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
+        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPair(AsymmetricKeyPairAlgorithm.RSA2048_SHA256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
         String jwt = new JWTGenerator(asymmetricKeyPair)
             .signJWT(
@@ -136,7 +139,7 @@ public class JWTAuthenticationHandlerTest {
     @Test
     public void shouldNotValidateWrongMatchingClaims() {
         // given
-        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
+        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPair(AsymmetricKeyPairAlgorithm.RSA2048_SHA256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
         String jwt = new JWTGenerator(asymmetricKeyPair)
             .signJWT(
@@ -163,7 +166,7 @@ public class JWTAuthenticationHandlerTest {
     @Test
     public void shouldNotValidateMissingRequiredClaims() {
         // given
-        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
+        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPair(AsymmetricKeyPairAlgorithm.RSA2048_SHA256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
         String jwt = new JWTGenerator(asymmetricKeyPair)
             .signJWT(
@@ -190,7 +193,7 @@ public class JWTAuthenticationHandlerTest {
     @Test
     public void shouldNotValidateWrongMatchingClaimsAndMissingRequiredClaimsAndWrongAudience() {
         // given
-        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
+        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPair(AsymmetricKeyPairAlgorithm.RSA2048_SHA256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
         String jwt = new JWTGenerator(asymmetricKeyPair)
             .signJWT(
@@ -219,7 +222,7 @@ public class JWTAuthenticationHandlerTest {
     @Test
     public void shouldNotValidateNoAuthorizationHeader() {
         // given
-        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
+        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPair(AsymmetricKeyPairAlgorithm.RSA2048_SHA256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
 
         AuthenticationHandler authenticationHandler = new JWTAuthenticationHandler(mockServerLogger, jwkFile);
@@ -233,7 +236,7 @@ public class JWTAuthenticationHandlerTest {
     @Test
     public void shouldNotValidateNotAJWT() {
         // given
-        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
+        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPair(AsymmetricKeyPairAlgorithm.RSA2048_SHA256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
 
         AuthenticationHandler authenticationHandler = new JWTAuthenticationHandler(mockServerLogger, jwkFile);
@@ -247,7 +250,7 @@ public class JWTAuthenticationHandlerTest {
     @Test
     public void shouldNotValidateIncorrectSchemeForAuthorizationHeader() {
         // given
-        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
+        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPair(AsymmetricKeyPairAlgorithm.RSA2048_SHA256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
         String jwt = new JWTGenerator(asymmetricKeyPair).generateJWT();
 

@@ -5,6 +5,9 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.mockserver.authentication.jwt.*;
 import org.mockserver.authentication.mtls.MTLSAuthenticationHandler;
+import org.mockserver.keys.AsymmetricKeyGenerator;
+import org.mockserver.keys.AsymmetricKeyPair;
+import org.mockserver.keys.AsymmetricKeyPairAlgorithm;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.JDKCertificateToMockServerX509Certificate;
 import org.mockserver.model.HttpRequest;
@@ -14,8 +17,6 @@ import org.mockserver.test.TempFileWriter;
 import java.security.cert.X509Certificate;
 import java.time.Clock;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.AUTHORIZATION;
@@ -41,7 +42,7 @@ public class ChainedAuthenticationHandlerTest {
         );
 
         // and jwt
-        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
+        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPair(AsymmetricKeyPairAlgorithm.RSA2048_SHA256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
         String jwt = new JWTGenerator(asymmetricKeyPair).generateJWT();
 
@@ -68,7 +69,7 @@ public class ChainedAuthenticationHandlerTest {
         );
 
         // and jwt
-        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
+        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPair(AsymmetricKeyPairAlgorithm.RSA2048_SHA256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
         String jwt = new JWTGenerator(asymmetricKeyPair).generateJWT();
 
@@ -95,7 +96,7 @@ public class ChainedAuthenticationHandlerTest {
         );
 
         // and jwt
-        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
+        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPair(AsymmetricKeyPairAlgorithm.RSA2048_SHA256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
         String jwt = new JWTGenerator(asymmetricKeyPair)
             .signJWT(
@@ -132,7 +133,7 @@ public class ChainedAuthenticationHandlerTest {
         );
 
         // and jwt
-        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
+        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPair(AsymmetricKeyPairAlgorithm.RSA2048_SHA256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
         String jwt = new JWTGenerator(asymmetricKeyPair).generateJWT();
 
@@ -160,7 +161,7 @@ public class ChainedAuthenticationHandlerTest {
         );
 
         // and jwt
-        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
+        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPair(AsymmetricKeyPairAlgorithm.RSA2048_SHA256);
         String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
         String jwt = new JWTGenerator(asymmetricKeyPair)
             .signJWT(

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
+import org.mockserver.file.FilePath;
 import org.mockserver.file.FileReader;
 import org.mockserver.model.*;
 import org.mockserver.serialization.ObjectMapperFactory;
@@ -68,11 +69,11 @@ public class RequestDefinitionDTODeserializerTest {
     public void shouldParseJsonWithOpenAPIUrlAndOperationId() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().readValue("" +
             "{" + NEW_LINE +
-            "  \"specUrlOrPayload\" : \"" + FileReader.getURL("org/mockserver/mock/openapi_simple_example.json").toString() + "\"," + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"" + FilePath.getURL("org/mockserver/mock/openapi_simple_example.json").toString() + "\"," + NEW_LINE +
             "  \"operationId\" : \"listPets\"" + NEW_LINE +
             "}", RequestDefinitionDTO.class), is(
             new OpenAPIDefinitionDTO(openAPI()
-                .withSpecUrlOrPayload(FileReader.getURL("org/mockserver/mock/openapi_simple_example.json").toString())
+                .withSpecUrlOrPayload(FilePath.getURL("org/mockserver/mock/openapi_simple_example.json").toString())
                 .withOperationId("listPets")
             )));
     }
@@ -81,10 +82,10 @@ public class RequestDefinitionDTODeserializerTest {
     public void shouldParseJsonWithOpenAPIUrl() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().readValue("" +
             "{" + NEW_LINE +
-            "  \"specUrlOrPayload\" : \"" + FileReader.getURL("org/mockserver/mock/openapi_simple_example.json").toString() + "\"" + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"" + FilePath.getURL("org/mockserver/mock/openapi_simple_example.json").toString() + "\"" + NEW_LINE +
             "}", RequestDefinitionDTO.class), is(
             new OpenAPIDefinitionDTO(openAPI()
-                .withSpecUrlOrPayload(FileReader.getURL("org/mockserver/mock/openapi_simple_example.json").toString())
+                .withSpecUrlOrPayload(FilePath.getURL("org/mockserver/mock/openapi_simple_example.json").toString())
             )));
     }
 

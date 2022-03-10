@@ -1,5 +1,7 @@
 package org.mockserver.socket.tls;
 
+import org.mockserver.keys.AsymmetricKeyPairAlgorithm;
+
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Date;
@@ -10,21 +12,9 @@ import java.util.Date;
 public interface KeyAndCertificateFactory {
 
     /**
-     * default key pair generation algorithm
+     * default key pair generation and signing algorithm
      */
-    String DEFAULT_KEY_GENERATION_ALGORITHM = "RSA";
-    /**
-     * default X509 signing algorithm
-     */
-    String DEFAULT_SIGNATURE_ALGORITHM = "SHA256WithRSAEncryption";
-    /**
-     * default root key size
-     */
-    int DEFAULT_ROOT_KEY_SIZE = 2048;
-    /**
-     * default leaf key size
-     */
-    int DEFAULT_LEAF_KEY_SIZE = 2048;
+    AsymmetricKeyPairAlgorithm DEFAULT_KEY_GENERATION_AND_SIGNING_ALGORITHM = AsymmetricKeyPairAlgorithm.RSA2048_SHA256;
     /**
      * Current time minus 1 year, just in case software clock goes back due to time synchronization
      */

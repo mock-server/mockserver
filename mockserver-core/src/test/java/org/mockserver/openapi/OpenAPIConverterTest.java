@@ -2,6 +2,7 @@ package org.mockserver.openapi;
 
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
+import org.mockserver.file.FilePath;
 import org.mockserver.file.FileReader;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
@@ -159,7 +160,7 @@ public class OpenAPIConverterTest {
     @Test
     public void shouldHandleAddOpenAPIJsonUrl() {
         // given
-        String specUrlOrPayload = FileReader.getURL("org/mockserver/mock/openapi_petstore_example.json").toString();
+        String specUrlOrPayload = FilePath.getURL("org/mockserver/mock/openapi_petstore_example.json").toString();
 
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
@@ -174,7 +175,7 @@ public class OpenAPIConverterTest {
     @Test
     public void shouldHandleAddOpenAPIJsonUrlWithSpecificResponses() {
         // given
-        String specUrlOrPayload = FileReader.getURL("org/mockserver/mock/openapi_petstore_example.json").toString();
+        String specUrlOrPayload = FilePath.getURL("org/mockserver/mock/openapi_petstore_example.json").toString();
 
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
@@ -193,7 +194,7 @@ public class OpenAPIConverterTest {
     @Test
     public void shouldHandleAddOpenAPIYamlUrl() {
         // given
-        String specUrlOrPayload = FileReader.getURL("org/mockserver/mock/openapi_petstore_example.yaml").toString();
+        String specUrlOrPayload = FilePath.getURL("org/mockserver/mock/openapi_petstore_example.yaml").toString();
 
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
@@ -208,7 +209,7 @@ public class OpenAPIConverterTest {
     @Test
     public void shouldHandleAddOpenAPIYamlUrlWithSpecificResponses() {
         // given
-        String specUrlOrPayload = FileReader.getURL("org/mockserver/mock/openapi_petstore_example.yaml").toString();
+        String specUrlOrPayload = FilePath.getURL("org/mockserver/mock/openapi_petstore_example.yaml").toString();
 
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(

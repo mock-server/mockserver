@@ -14,6 +14,10 @@ import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import org.mockserver.authentication.AuthenticationException;
 import org.mockserver.file.FileReader;
+import org.mockserver.keys.AsymmetricKeyConverter;
+import org.mockserver.keys.AsymmetricKeyGenerator;
+import org.mockserver.keys.AsymmetricKeyPair;
+import org.mockserver.keys.AsymmetricKeyPairAlgorithm;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,6 +25,7 @@ import java.net.URL;
 import java.text.ParseException;
 import java.util.*;
 
+@SuppressWarnings("UnusedReturnValue")
 public class JWTValidator {
 
     private final JWKSource<SecurityContext> jwkSource;
@@ -45,28 +50,6 @@ public class JWTValidator {
     public JWTValidator withRequiredClaims(Set<String> requiredClaims) {
         this.requiredClaims = requiredClaims;
         return this;
-    }
-
-    public static void main(String[] args) throws IOException, ParseException {
-        String accessToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4" +
-            "gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.NHVaYe26MbtOYhSKkoKYdFVomg4i8ZJ" +
-            "d8_-RU8VNbftc4TSMb4bXP3l3YlNWACwyXPGffz5aXHc6lty1Y2t4SWRqGteragsVdZufDn5BlnJl9pd" +
-            "R_kdVFUsra2rWKEofkZeIC4yWytE58sMIihvo9H1ScmmVwBcQP6XETqYd0aSHp1gOa9RdUPDvoXQ5oqy" +
-            "gTqVtxaDr6wUFKrKItgBMzWIdNZ6y7O9E0DhEPTbE9rfBo6KTFsHAZnMg4k68CDp2woYIaXbmYTWcvbz" +
-            "IuHO7_37GT79XdIwkm95QJ7hYC9RiwrV7mesbY4PAahERJawntho0my942XheVLmGwLMBkQ";
-
-        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPairSynchronously(AsymmetricKeyPair.KeyPairAlgorithm.RS256);
-        JWKSource<JWKSecurityContext> jwkSource = new ImmutableJWKSet<>(new JWKSet(new RSAKey
-            .Builder(AsymmetricKeyConverter.getRSAPublicKey(asymmetricKeyPair.getKeyPair().getPublic().getEncoded()))
-            .keyID(asymmetricKeyPair.getKeyId())
-            .keyUse(KeyUse.SIGNATURE)
-            .algorithm(new com.nimbusds.jose.Algorithm(asymmetricKeyPair.getAlgorithm().name()))
-            .build()
-        ));
-        JWKSource<SecurityContext> localKeySource = new ImmutableJWKSet<>(JWKSet.load(new File(FileReader.absolutePathFromClassPathOrPath("org/mockserver/authentication/jwk.json"))));
-        JWKSource<SecurityContext> remoteKeySource = new RemoteJWKSet<>(new URL("https://demo.c2id.com/jwks.json"));
-        JWTClaimsSet jwtClaimsSet = new JWTValidator(localKeySource).validate(accessToken);
-        System.out.println("jwtClaimsSet = " + jwtClaimsSet);
     }
 
     public JWTClaimsSet validate(String jwt) {
