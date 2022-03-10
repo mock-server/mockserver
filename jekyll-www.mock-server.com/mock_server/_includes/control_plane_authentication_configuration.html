@@ -1,0 +1,127 @@
+<a id="control_plane_authentication_configuration" class="anchor" href="#control_plane_authentication_configuration">&nbsp;</a>
+
+<h2>Control Plane Authentication Configuration:</h2>
+
+<button id="button_configuration_control_plane_mtls_authentication_required" class="accordion title"><strong>Enabled Control Plane mTLS Authentication</strong></button>
+<div class="panel title">
+    <p>Enable mTLS authentication for control plane interactions (i.e. create expectations, clear, reset, verify, retrieve, stop, etc)</p>
+    <p>If enabled then all control plane requests need to be received over a mTLS connection where the client's X509 certificates will be validated using the <a href="#button_configuration_control_plane_mtls_authentication_ca_chain">controlPlaneTLSMutualAuthenticationCAChain</a>
+    </p>
+    <p>It is possible to enable both <a href="#button_configuration_control_plane_jwt_authentication_required">controlPlaneJWTAuthenticationRequired</a> and <a href="#button_configuration_control_plane_mtls_authentication_required">controlPlaneTLSMutualAuthenticationRequired</a>
+        but the mTLS will be checked first.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneTLSMutualAuthenticationRequired(boolean controlPlaneTLSMutualAuthenticationRequired)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneTLSMutualAuthenticationRequired=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CONTROL_PLANE_TLS_MUTUAL_AUTHENTICATION_REQUIRED=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.controlPlaneTLSMutualAuthenticationRequired=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneTLSMutualAuthenticationRequired="true"</code></pre>
+</div>
+
+<button id="button_configuration_control_plane_mtls_authentication_ca_chain" class="accordion title"><strong>Control Plane mTLS Authentication CA Chain</strong></button>
+<div class="panel title">
+    <p>File system path or classpath location of the CA (i.e. trust) chain to use to validate client X509 certificates if <a href="#button_configuration_control_plane_mtls_authentication_required">controlPlaneTLSMutualAuthenticationRequired</a> is enabled</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneTLSMutualAuthenticationCAChain(String controlPlaneTLSMutualAuthenticationCAChain)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneTLSMutualAuthenticationCAChain=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CONTROL_PLANE_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.controlPlaneTLSMutualAuthenticationCAChain=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneTLSMutualAuthenticationCAChain="/some/existing/path"</code></pre>
+</div>
+
+<button id="button_configuration_control_plane_mtls_authentication_private_key_path" class="accordion title"><strong>Control Plane mTLS Authentication Client Private Key</strong></button>
+<div class="panel title">
+    <p>File system path or classpath location of the private key used by MockServerClient when <a href="#button_configuration_control_plane_mtls_authentication_required">controlPlaneTLSMutualAuthenticationRequired</a> is enabled to ensure control plane request are correctly
+        authorised</p>
+    <p>For control plane requests to be authorised the private key <a href="#button_configuration_control_plane_mtls_authentication_private_key_path">controlPlanePrivateKeyPath</a> and certificate <a
+            href="#button_configuration_control_plane_mtls_authentication_private_key_path">controlPlanePrivateKeyPath</a> must:</p>
+    <ul>
+        <li>be a valid key pair</li>
+        <li>be signed by one of the certificates in the CA chain <a href="#button_configuration_control_plane_mtls_authentication_ca_chain">controlPlaneTLSMutualAuthenticationCAChain</a> for control plane requests to be authorised</li>
+    </ul>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlanePrivateKeyPath(String controlPlanePrivateKeyPath)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlanePrivateKeyPath=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CONTROL_PLANE_TLS_PRIVATE_KEY_PATH=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.controlPlanePrivateKeyPath=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlanePrivateKeyPath="/some/existing/path"</code></pre>
+</div>
+
+<button id="button_configuration_control_plane_mtls_authentication_certificate_path" class="accordion title"><strong>Control Plane mTLS Authentication Client Certificate</strong></button>
+<div class="panel title">
+    <p>File system path or classpath location of the certificate used by MockServerClient when <a href="#button_configuration_control_plane_mtls_authentication_required">controlPlaneTLSMutualAuthenticationRequired</a> is enabled to ensure control plane request are correctly
+        authorised</p>
+    <p>For control plane requests to be authorised the private key <a href="#button_configuration_control_plane_mtls_authentication_private_key_path">controlPlanePrivateKeyPath</a> and certificate <a
+            href="#button_configuration_control_plane_mtls_authentication_private_key_path">controlPlanePrivateKeyPath</a> must:</p>
+    <ul>
+        <li>be a valid key pair</li>
+        <li>be signed by one of the certificates in the CA chain <a href="#button_configuration_control_plane_mtls_authentication_ca_chain">controlPlaneTLSMutualAuthenticationCAChain</a> for control plane requests to be authorised</li>
+    </ul>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneX509CertificatePath(String controlPlaneX509CertificatePath)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneX509CertificatePath=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CONTROL_PLANE_TLS_X509_CERTIFICATE_PATH=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.controlPlaneX509CertificatePath=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneX509CertificatePath="/some/existing/path"</code></pre>
+</div>
+
+<button id="button_configuration_control_plane_jwt_authentication_required" class="accordion title"><strong>Enabled Control Plane JWT Authentication</strong></button>
+<div class="panel title">
+    <p>Enable JWT authentication for control plane interactions (i.e. create expectations, clear, reset, verify, retrieve, stop, etc)</p>
+    <p>If enabled then all control plane requests need and JWT via a <strong>authorization</strong> header which is validated using the <a href="#button_configuration_control_plane_jwt_authentication_jwk_source">controlPlaneJWTAuthenticationJWKSource</a>
+    </p>
+    <p>It is possible to enable both <a href="#button_configuration_control_plane_jwt_authentication_required">controlPlaneJWTAuthenticationRequired</a> and <a href="#button_configuration_control_plane_mtls_authentication_required">controlPlaneTLSMutualAuthenticationRequired</a>
+        but the mTLS will be checked first.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneJWTAuthenticationRequired(boolean controlPlaneJWTAuthenticationRequired)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneJWTAuthenticationRequired=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.controlPlaneJWTAuthenticationRequired=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneJWTAuthenticationRequired="true"</code></pre>
+</div>
+
+<button id="button_configuration_control_plane_jwt_authentication_jwk_source" class="accordion title"><strong>Control Plane JWT Authentication JWK Source</strong></button>
+<div class="panel title">
+    <p>URL, file system path or classpath location of the JWK source when <a href="#button_configuration_control_plane_jwt_authentication_required">controlPlaneJWTAuthenticationRequired</a> is enabled to validate JWT signatures</p>
+    <p>For control plane requests to be authorised:</p>
+    <ul>
+        <li>they must include an <strong>authorization</strong> header, with a Bearer auth scheme, containing a JWT</li>
+        <li>the JWT should be validated by a key in the JWK source</li>
+    </ul>
+    <p>For details of JWK see the <a href="https://openid.net/specs/draft-jones-json-web-key-03.html">JWK specification</a></p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneJWTAuthenticationJWKSource(String controlPlaneJWTAuthenticationJWKSource)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneJWTAuthenticationJWKSource=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CONTROL_PLANE_JWT_SOURCE=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.controlPlaneJWTAuthenticationJWKSource=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneJWTAuthenticationJWKSource="/some/existing/path"</code></pre>
+</div>

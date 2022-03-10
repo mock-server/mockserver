@@ -1038,7 +1038,11 @@ public class Configuration {
         return controlPlaneTLSMutualAuthenticationRequired;
     }
 
-    // TODO(jamesdbloom) add description and html
+    /**
+     * Require mTLS (also called client authentication and two-way TLS) for all control plane requests
+     *
+     * @param controlPlaneTLSMutualAuthenticationRequired TLS mutual authentication for all control plane requests
+     */
     public Configuration controlPlaneTLSMutualAuthenticationRequired(Boolean controlPlaneTLSMutualAuthenticationRequired) {
         this.controlPlaneTLSMutualAuthenticationRequired = controlPlaneTLSMutualAuthenticationRequired;
         return this;
@@ -1051,7 +1055,15 @@ public class Configuration {
         return controlPlaneTLSMutualAuthenticationCAChain;
     }
 
-    // TODO(jamesdbloom) add description and html
+    /**
+     * File system path or classpath location of custom mTLS (TLS client authentication) X.509 Certificate Chain for control plane mTLS authentication
+     * <p>
+     * The X.509 Certificate Chain is for trusting (i.e. signature verification of) Client X.509 Certificates, the certificate chain must be a X509 PEM file.
+     * <p>
+     * This certificate chain will be used for to performs mTLS (client authentication) for inbound TLS connections if controlPlaneTLSMutualAuthenticationRequired is enabled
+     *
+     * @param controlPlaneTLSMutualAuthenticationCAChain File system path or classpath location of custom mTLS (TLS client authentication) X.509 Certificate Chain for Trusting (i.e. signature verification of) Client X.509 Certificates
+     */
     public Configuration controlPlaneTLSMutualAuthenticationCAChain(String controlPlaneTLSMutualAuthenticationCAChain) {
         this.controlPlaneTLSMutualAuthenticationCAChain = controlPlaneTLSMutualAuthenticationCAChain;
         return this;
@@ -1064,7 +1076,18 @@ public class Configuration {
         return controlPlanePrivateKeyPath;
     }
 
-    // TODO(jamesdbloom) add description and html
+    /**
+     * File system path or classpath location of a fixed custom private key for control plane connections using mTLS for authentication.
+     * <p>
+     * The private key must be a PKCS#8 or PKCS#1 PEM file and must be the private key corresponding to the controlPlaneX509CertificatePath X509 (public key) configuration.
+     * The controlPlaneTLSMutualAuthenticationCAChain configuration must be the Certificate Authority for the corresponding X509 certificate (i.e. able to valid its signature).
+     * <p>
+     * To convert a PKCS#1 (i.e. default for Bouncy Castle) to a PKCS#8 the following command can be used: openssl pkcs8 -topk8 -inform PEM -in private_key_PKCS_1.pem -out private_key_PKCS_8.pem -nocrypt
+     * <p>
+     * This configuration will be ignored unless x509CertificatePath is also set.
+     *
+     * @param controlPlanePrivateKeyPath location of the PKCS#8 PEM file containing the private key
+     */
     public Configuration controlPlanePrivateKeyPath(String controlPlanePrivateKeyPath) {
         this.controlPlanePrivateKeyPath = controlPlanePrivateKeyPath;
         return this;
@@ -1077,7 +1100,16 @@ public class Configuration {
         return controlPlaneX509CertificatePath;
     }
 
-    // TODO(jamesdbloom) add description and html
+    /**
+     * File system path or classpath location of a fixed custom X.509 Certificate for control plane connections using mTLS for authentication.
+     * <p>
+     * The certificate must be a X509 PEM file and must be the public key corresponding to the controlPlanePrivateKeyPath private key configuration.
+     * The controlPlaneTLSMutualAuthenticationCAChain configuration must be the Certificate Authority for this certificate (i.e. able to valid its signature).
+     * <p>
+     * This configuration will be ignored unless privateKeyPath is also set.
+     *
+     * @param controlPlaneX509CertificatePath location of the PEM file containing the X509 certificate
+     */
     public Configuration controlPlaneX509CertificatePath(String controlPlaneX509CertificatePath) {
         this.controlPlaneX509CertificatePath = controlPlaneX509CertificatePath;
         return this;
@@ -1090,7 +1122,13 @@ public class Configuration {
         return controlPlaneJWTAuthenticationRequired;
     }
 
-    // TODO(jamesdbloom) add description and html
+    /**
+     * <p>
+     * Require JWT authentication for all control plane requests
+     * </p>
+     *
+     * @param controlPlaneJWTAuthenticationRequired TLS mutual authentication for all control plane requests
+     */
     public Configuration controlPlaneJWTAuthenticationRequired(Boolean controlPlaneJWTAuthenticationRequired) {
         this.controlPlaneJWTAuthenticationRequired = controlPlaneJWTAuthenticationRequired;
         return this;
@@ -1103,7 +1141,19 @@ public class Configuration {
         return controlPlaneJWTAuthenticationJWKSource;
     }
 
-    // TODO(jamesdbloom) add description and html
+    /**
+     * <p>
+     * JWK source used when JWK authentication is enabled for control plane requests
+     * </p>
+     * <p>
+     * JWK source can be a file system path, classpath location or a URL
+     * </p>
+     * <p>
+     * See: https://openid.net/specs/draft-jones-json-web-key-03.html
+     * </p>
+     *
+     * @param controlPlaneJWTAuthenticationJWKSource file system path, classpath location or a URL of JWK source
+     */
     public Configuration controlPlaneJWTAuthenticationJWKSource(String controlPlaneJWTAuthenticationJWKSource) {
         this.controlPlaneJWTAuthenticationJWKSource = controlPlaneJWTAuthenticationJWKSource;
         return this;
@@ -1289,7 +1339,7 @@ public class Configuration {
     }
 
     /**
-     * File location or classpath location of custom Private Key for Certificate Authority for TLS, the private key must be a PKCS#8 PEM file and must match the certificateAuthorityCertificate
+     * File system path or classpath location of custom Private Key for Certificate Authority for TLS, the private key must be a PKCS#8 or PKCS#1 PEM file and must match the certificateAuthorityCertificate
      * To convert a PKCS#1 (i.e. default for Bouncy Castle) to a PKCS#8 the following command can be used: openssl pkcs8 -topk8 -inform PEM -in private_key_PKCS_1.pem -out private_key_PKCS_8.pem -nocrypt
      *
      * @param certificateAuthorityPrivateKey location of the PEM file containing the certificate authority private key
@@ -1307,7 +1357,7 @@ public class Configuration {
     }
 
     /**
-     * File location or classpath location of custom X.509 Certificate for Certificate Authority for TLS, the certificate must be a X509 PEM file and must match the certificateAuthorityPrivateKey
+     * File system path or classpath location of custom X.509 Certificate for Certificate Authority for TLS, the certificate must be a X509 PEM file and must match the certificateAuthorityPrivateKey
      *
      * @param certificateAuthorityCertificate location of the PEM file containing the certificate authority X509 certificate
      */
@@ -1324,9 +1374,9 @@ public class Configuration {
     }
 
     /**
-     * File location or classpath location of a fixed custom private key for TLS connections into MockServer.
+     * File system path or classpath location of a fixed custom private key for TLS connections into MockServer.
      * <p>
-     * The private key must be a PKCS#8 PEM file and must be the private key corresponding to the x509CertificatePath X509 (public key) configuration.
+     * The private key must be a PKCS#8 or PKCS#1 PEM file and must be the private key corresponding to the x509CertificatePath X509 (public key) configuration.
      * The certificateAuthorityCertificate configuration must be the Certificate Authority for the corresponding X509 certificate (i.e. able to valid its signature), see: x509CertificatePath.
      * <p>
      * To convert a PKCS#1 (i.e. default for Bouncy Castle) to a PKCS#8 the following command can be used: openssl pkcs8 -topk8 -inform PEM -in private_key_PKCS_1.pem -out private_key_PKCS_8.pem -nocrypt
@@ -1348,7 +1398,7 @@ public class Configuration {
     }
 
     /**
-     * File location or classpath location of a fixed custom X.509 Certificate for TLS connections into MockServer.
+     * File system path or classpath location of a fixed custom X.509 Certificate for TLS connections into MockServer.
      * <p>
      * The certificate must be a X509 PEM file and must be the public key corresponding to the privateKeyPath private key configuration.
      * The certificateAuthorityCertificate configuration must be the Certificate Authority for this certificate (i.e. able to valid its signature).
@@ -1387,11 +1437,11 @@ public class Configuration {
     }
 
     /**
-     * File location or classpath location of custom mTLS (TLS client authentication) X.509 Certificate Chain for trusting (i.e. signature verification of) Client X.509 Certificates, the certificate chain must be a X509 PEM file.
+     * File system path or classpath location of custom mTLS (TLS client authentication) X.509 Certificate Chain for trusting (i.e. signature verification of) Client X.509 Certificates, the certificate chain must be a X509 PEM file.
      * <p>
      * This certificate chain will be used if MockServer performs mTLS (client authentication) for inbound TLS connections because tlsMutualAuthenticationRequired is enabled
      *
-     * @param tlsMutualAuthenticationCertificateChain file location or classpath location of custom mTLS (TLS client authentication) X.509 Certificate Chain for Trusting (i.e. signature verification of) Client X.509 Certificates
+     * @param tlsMutualAuthenticationCertificateChain File system path or classpath location of custom mTLS (TLS client authentication) X.509 Certificate Chain for Trusting (i.e. signature verification of) Client X.509 Certificates
      */
     public Configuration tlsMutualAuthenticationCertificateChain(String tlsMutualAuthenticationCertificateChain) {
         this.tlsMutualAuthenticationCertificateChain = tlsMutualAuthenticationCertificateChain;
@@ -1430,7 +1480,7 @@ public class Configuration {
     }
 
     /**
-     * File location or classpath location of custom file for trusted X509 Certificate Authority roots for forwarded or proxied requests, the certificate chain must be a X509 PEM file.
+     * File system path or classpath location of custom file for trusted X509 Certificate Authority roots for forwarded or proxied requests, the certificate chain must be a X509 PEM file.
      * <p>
      * MockServer will only be able to establish a TLS connection to endpoints that have an X509 certificate chain that is signed by one of the provided custom
      * certificates, i.e. where a path can be established from the endpoints X509 certificate to one or more of the custom X509 certificates provided.
@@ -1450,7 +1500,7 @@ public class Configuration {
     }
 
     /**
-     * File location or classpath location of custom Private Key for proxied TLS connections out of MockServer, the private key must be a PKCS#8 PEM file
+     * File system path or classpath location of custom Private Key for proxied TLS connections out of MockServer, the private key must be a PKCS#8 or PKCS#1 PEM file
      * <p>
      * To convert a PKCS#1 (i.e. default for Bouncy Castle) to a PKCS#8 the following command can be used: openssl pkcs8 -topk8 -inform PEM -in private_key_PKCS_1.pem -out private_key_PKCS_8.pem -nocrypt
      * <p>
@@ -1471,7 +1521,7 @@ public class Configuration {
     }
 
     /**
-     * File location or classpath location of custom mTLS (TLS client authentication) X.509 Certificate Chain for Trusting (i.e. signature verification of) Client X.509 Certificates, the certificate chain must be a X509 PEM file.
+     * File system path or classpath location of custom mTLS (TLS client authentication) X.509 Certificate Chain for Trusting (i.e. signature verification of) Client X.509 Certificates, the certificate chain must be a X509 PEM file.
      * <p>
      * This certificate chain will be used if MockServer needs to perform mTLS (client authentication) for outbound TLS connections.
      *
