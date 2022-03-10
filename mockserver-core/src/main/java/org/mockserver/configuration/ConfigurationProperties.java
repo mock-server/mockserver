@@ -199,9 +199,9 @@ public class ConfigurationProperties {
         }
     }
 
-    private static final MemoryMonitoring memoryMonitoring = new MemoryMonitoring(configuration());
-    private static int defaultMaxExpectations = memoryMonitoring.startingMaxExpectations();
-    private static int defaultMaxLogEntries = memoryMonitoring.startingMaxLogEntries();
+    static final MemoryMonitoring memoryMonitoring = new MemoryMonitoring(configuration());
+    private static int maxExpectations = memoryMonitoring.startingMaxExpectations();
+    private static int maxLogEntries = memoryMonitoring.startingMaxLogEntries();
     private static String javaLoggerLogLevel = getSLF4JOrJavaLoggerToJavaLoggerLevelMapping().get(readPropertyHierarchically(PROPERTIES, MOCKSERVER_LOG_LEVEL, "MOCKSERVER_LOG_LEVEL", DEFAULT_LOG_LEVEL).toUpperCase());
     private static boolean metricsEnabled = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_METRICS_ENABLED, "MOCKSERVER_METRICS_ENABLED", "" + false));
     private static boolean disableSystemOut = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_DISABLE_SYSTEM_OUT, "MOCKSERVER_DISABLE_SYSTEM_OUT", "" + false));
@@ -240,8 +240,8 @@ public class ConfigurationProperties {
                 }
             }
         });
-        defaultMaxExpectations = memoryMonitoring.startingMaxExpectations();
-        defaultMaxLogEntries = memoryMonitoring.startingMaxLogEntries();
+        maxExpectations = memoryMonitoring.startingMaxExpectations();
+        maxLogEntries = memoryMonitoring.startingMaxLogEntries();
         javaLoggerLogLevel = getSLF4JOrJavaLoggerToJavaLoggerLevelMapping().get(readPropertyHierarchically(PROPERTIES, MOCKSERVER_LOG_LEVEL, "MOCKSERVER_LOG_LEVEL", DEFAULT_LOG_LEVEL).toUpperCase());
         metricsEnabled = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_METRICS_ENABLED, "MOCKSERVER_METRICS_ENABLED", "" + false));
         disableSystemOut = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_DISABLE_SYSTEM_OUT, "MOCKSERVER_DISABLE_SYSTEM_OUT", "" + false));
@@ -278,26 +278,8 @@ public class ConfigurationProperties {
         }
     }
 
-    public static int defaultMaxExpectations() {
-        return defaultMaxExpectations;
-    }
-
-    /**
-     * <p>
-     * Default maximum number of expectations stored in memory.  Expectations are stored in a circular queue so once this limit is reach the oldest and lowest priority expectations are overwritten
-     * </p>
-     * <p>
-     * This default maximum depends on the available memory in the JVM with an upper limit of 5000
-     * </p>
-     *
-     * @param defaultMaxExpectations maximum number of expectations to store
-     */
-    public static void defaultMaxExpectations(int defaultMaxExpectations) {
-        ConfigurationProperties.defaultMaxExpectations = defaultMaxExpectations;
-    }
-
     public static int maxExpectations() {
-        return readIntegerProperty(MOCKSERVER_MAX_EXPECTATIONS, "MOCKSERVER_MAX_EXPECTATIONS", defaultMaxExpectations());
+        return readIntegerProperty(MOCKSERVER_MAX_EXPECTATIONS, "MOCKSERVER_MAX_EXPECTATIONS", memoryMonitoring.adjustedMaxExpectations());
     }
 
     /**
@@ -314,26 +296,8 @@ public class ConfigurationProperties {
         System.setProperty(MOCKSERVER_MAX_EXPECTATIONS, "" + count);
     }
 
-    public static int defaultMaxLogEntries() {
-        return defaultMaxLogEntries;
-    }
-
-    /**
-     * <p>
-     * Maximum number of log entries stored in memory.  Log entries are stored in a circular queue so once this limit is reach the oldest log entries are overwritten.
-     * </p>
-     * <p>
-     * The default maximum depends on the available memory in the JVM with an upper limit of 60000
-     * </p>
-     *
-     * @param defaultMaxLogEntries maximum number of expectations to store
-     */
-    public static void defaultMaxLogEntries(int defaultMaxLogEntries) {
-        ConfigurationProperties.defaultMaxLogEntries = defaultMaxLogEntries;
-    }
-
     public static int maxLogEntries() {
-        return readIntegerProperty(MOCKSERVER_MAX_LOG_ENTRIES, "MOCKSERVER_MAX_LOG_ENTRIES", defaultMaxLogEntries());
+        return readIntegerProperty(MOCKSERVER_MAX_LOG_ENTRIES, "MOCKSERVER_MAX_LOG_ENTRIES", memoryMonitoring.adjustedMaxLogEntries());
     }
 
     /**
@@ -1035,6 +999,13 @@ public class ConfigurationProperties {
         return disableLogging;
     }
 
+    /**
+     * Disable all logging and processing of log events
+     *
+     * The default is false
+     *
+     * @param disable disable all logging
+     */
     public static void disableLogging(boolean disable) {
         System.setProperty(MOCKSERVER_DISABLE_LOGGING, "" + disable);
         disableLogging = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_DISABLE_LOGGING, "MOCKSERVER_DISABLE_LOGGING", "" + false));
@@ -1337,6 +1308,11 @@ public class ConfigurationProperties {
         return readIntegerProperty(MOCKSERVER_MAXIMUM_NUMBER_OF_REQUESTS_TO_RETURN_IN_VERIFICATION_FAILURE, "MOCKSERVER_MAXIMUM_NUMBER_OF_REQUESTS_TO_RETURN_IN_VERIFICATION_FAILURE", 10);
     }
 
+    /**
+     * The maximum number of requests to return in verification failure result, if more expectations are found the failure result does not list them separately
+     *
+     * @param maximumNumberOfRequestToReturnInVerification maximum number of expectations to return in verification failure result
+     */
     public static void maximumNumberOfRequestToReturnInVerificationFailure(Integer maximumNumberOfRequestToReturnInVerification) {
         System.setProperty(MOCKSERVER_MAXIMUM_NUMBER_OF_REQUESTS_TO_RETURN_IN_VERIFICATION_FAILURE, "" + maximumNumberOfRequestToReturnInVerification);
     }
@@ -1378,7 +1354,7 @@ public class ConfigurationProperties {
     }
 
     /**
-     * <p>Configure the default value used for CORS in the access-control-allow-headers and access-control-expose-headers headers.</p>
+     * <p>The default value used for CORS in the access-control-allow-headers and access-control-expose-headers headers.</p>
      * <p>In addition to this default value any headers specified in the request header access-control-request-headers also get added to access-control-allow-headers and access-control-expose-headers headers in a CORS response.</p>
      * <p>The default is "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"</p>
      *
@@ -1393,7 +1369,7 @@ public class ConfigurationProperties {
     }
 
     /**
-     * <p>Configure the value used for CORS in the access-control-allow-methods header.</p>
+     * <p>The value used for CORS in the access-control-allow-methods header.</p>
      * <p>The default is "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE"</p>
      *
      * @param corsAllowMethods the value used for CORS in the access-control-allow-methods header
@@ -1407,7 +1383,7 @@ public class ConfigurationProperties {
     }
 
     /**
-     * Configure the value used for CORS in the access-control-allow-credentials header.
+     * The value used for CORS in the access-control-allow-credentials header.
      * <p>
      * The default is true
      *
@@ -1422,7 +1398,7 @@ public class ConfigurationProperties {
     }
 
     /**
-     * Configure the value used for CORS in the access-control-max-age header.
+     * The value used for CORS in the access-control-max-age header.
      * <p>
      * The default is 300
      *

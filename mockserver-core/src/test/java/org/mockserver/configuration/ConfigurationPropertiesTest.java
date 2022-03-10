@@ -158,7 +158,7 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.maxExpectations");
 
         // when
-        assertEquals(defaultMaxExpectations(), maxExpectations());
+        assertEquals(memoryMonitoring.startingMaxExpectations(), maxExpectations());
         maxExpectations(100);
 
         // then
@@ -172,7 +172,7 @@ public class ConfigurationPropertiesTest {
         System.setProperty("mockserver.maxExpectations", "invalid");
 
         // then
-        assertEquals(defaultMaxExpectations(), maxExpectations());
+        assertEquals(memoryMonitoring.startingMaxExpectations(), maxExpectations());
     }
 
     @Test
@@ -181,7 +181,7 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.maxLogEntries");
 
         // when
-        assertEquals(defaultMaxLogEntries(), maxLogEntries());
+        assertEquals(memoryMonitoring.startingMaxLogEntries(), maxLogEntries());
         maxLogEntries(100);
 
         // then
@@ -195,7 +195,7 @@ public class ConfigurationPropertiesTest {
         System.setProperty("mockserver.requestLogSize", "invalid");
 
         // then
-        assertEquals(defaultMaxLogEntries(), maxLogEntries());
+        assertEquals(memoryMonitoring.startingMaxLogEntries(), maxLogEntries());
     }
 
     @Test

@@ -32,7 +32,7 @@
     <p>Property File:</p>
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.initializationJsonPath=...</code></pre>
     <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.initializationJsonPath=org/mockserver/server/initialize/initializerJson.json</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.initializationJsonPath="org/mockserver/server/initialize/initializerJson.json"</code></pre>
 </div>
 
 <button id="button_configuration_watch_initialization_json" class="accordion title"><strong>Watch Expectation Initialization JSON File</strong></button>
@@ -50,7 +50,7 @@
     <p>Property File:</p>
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.watchInitializationJson=...</code></pre>
     <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.watchInitializationJson="org/mockserver/server/initialize/initializerJson.json"</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.watchInitializationJson="false"</code></pre>
 </div>
 
 <button id="button_configuration_persist_expectations_as_json" class="accordion title"><strong>Persist Expectations As JSON</strong></button>
@@ -83,4 +83,24 @@
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.persistedExpectationsPath=...</code></pre>
     <p>Example:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.persistedExpectationsPath="org/mockserver/server/initialize/initializerJson.json"</code></pre>
+</div>
+
+<a id="verification_configuration" class="anchor" href="#verification_configuration">&nbsp;</a>
+
+<h2>Verification Configuration:</h2>
+
+<button id="button_configuration_maximum_number_of_requests_to_return_in_verification_failure" class="accordion title"><strong>Maximum Number Of Requests To Return In Verification Failure</strong></button>
+<div class="panel title">
+    <p>The maximum number of requests to return in verification failure result, if more expectations are found the failure result does not list them separately</p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">10</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maximumNumberOfRequestToReturnInVerificationFailure(String maximumNumberOfRequestToReturnInVerificationFailure)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maximumNumberOfRequestToReturnInVerificationFailure=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_MAXIMUM_NUMBER_OF_REQUESTS_TO_RETURN_IN_VERIFICATION_FAILURE=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.maximumNumberOfRequestToReturnInVerificationFailure=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maximumNumberOfRequestToReturnInVerificationFailure="org/mockserver/server/initialize/initializerJson.json"</code></pre>
 </div>

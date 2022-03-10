@@ -25,15 +25,14 @@ public class Configuration {
     // logging
     private Level logLevel;
     private Boolean disableSystemOut;
+    private Boolean disableLogging;
     private Boolean detailedMatchFailures;
     private Boolean launchUIForLogLevelDebug;
     private Boolean metricsEnabled;
 
     // memory usage
     private Integer maxExpectations;
-    private Integer defaultMaxExpectations;
     private Integer maxLogEntries;
-    private Integer defaultMaxLogEntries;
     private Integer maxWebSocketExpectations;
     private Boolean outputMemoryUsageCsv;
     private String memoryUsageCsvDirectory;
@@ -93,7 +92,6 @@ public class Configuration {
     private String livenessHttpGetPath;
 
     // control plane authentication
-    // TODO(jamesdbloom) missing from html
     private Boolean controlPlaneTLSMutualAuthenticationRequired;
     private String controlPlaneTLSMutualAuthenticationCAChain;
     private String controlPlanePrivateKeyPath;
@@ -102,7 +100,6 @@ public class Configuration {
     private String controlPlaneJWTAuthenticationJWKSource;
 
     // TLS
-    // TODO(jamesdbloom) missing from html
     private Boolean proactivelyInitialiseTLS;
     private boolean rebuildTLSContext;
     private boolean rebuildServerTLSContext;
@@ -134,6 +131,7 @@ public class Configuration {
 
     // outbound - fixed CA
     private String forwardProxyTLSCustomTrustX509Certificates;
+
     // outbound - fixed private key & x509
     private String forwardProxyPrivateKey;
     private String forwardProxyCertificateChain;
@@ -172,6 +170,25 @@ public class Configuration {
         return this;
     }
 
+    public Boolean disableLogging() {
+        if (disableLogging == null) {
+            return ConfigurationProperties.disableLogging();
+        }
+        return disableLogging;
+    }
+
+    /**
+     * Disable all logging and processing of log events
+     *
+     * The default is false
+     *
+     * @param disableLogging disable all logging
+     */
+    public Configuration disableLogging(Boolean disableLogging) {
+        this.disableLogging = disableLogging;
+        return this;
+    }
+
     public Boolean detailedMatchFailures() {
         if (detailedMatchFailures == null) {
             return ConfigurationProperties.detailedMatchFailures();
@@ -180,7 +197,7 @@ public class Configuration {
     }
 
     /**
-     * If true (the default) the log event recording that a request matcher did not match will include a detailed reason why each non matching field did not match.
+     * If true (the default) the log event recording that a request matcher did not match will include a detailed reason why each non-matching field did not match.
      *
      * @param detailedMatchFailures enabled detailed match failure log events
      */
@@ -235,35 +252,13 @@ public class Configuration {
      * Maximum number of expectations stored in memory.  Expectations are stored in a circular queue so once this limit is reach the oldest and lowest priority expectations are overwritten
      * </p>
      * <p>
-     * The default maximum depends on the available memory in the JVM with an upper limit of 5000, but can be overridden using defaultMaxExpectations
+     * The default maximum depends on the available memory in the JVM with an upper limit of 5000
      * </p>
      *
      * @param maxExpectations maximum number of expectations to store
      */
     public Configuration maxExpectations(Integer maxExpectations) {
         this.maxExpectations = maxExpectations;
-        return this;
-    }
-
-    public Integer defaultMaxExpectations() {
-        if (defaultMaxExpectations == null) {
-            return ConfigurationProperties.defaultMaxExpectations();
-        }
-        return defaultMaxExpectations;
-    }
-
-    /**
-     * <p>
-     * Default maximum number of expectations stored in memory.  Expectations are stored in a circular queue so once this limit is reach the oldest and lowest priority expectations are overwritten
-     * </p>
-     * <p>
-     * This default maximum depends on the available memory in the JVM with an upper limit of 5000
-     * </p>
-     *
-     * @param defaultMaxExpectations maximum number of expectations to store
-     */
-    public Configuration defaultMaxExpectations(Integer defaultMaxExpectations) {
-        this.defaultMaxExpectations = defaultMaxExpectations;
         return this;
     }
 
@@ -279,35 +274,13 @@ public class Configuration {
      * Maximum number of log entries stored in memory.  Log entries are stored in a circular queue so once this limit is reach the oldest log entries are overwritten
      * </p>
      * <p>
-     * The default maximum depends on the available memory in the JVM with an upper limit of 60000, but can be overridden using defaultMaxLogEntries
+     * The default maximum depends on the available memory in the JVM with an upper limit of 60000
      * </p>
      *
      * @param maxLogEntries maximum number of expectations to store
      */
     public Configuration maxLogEntries(Integer maxLogEntries) {
         this.maxLogEntries = maxLogEntries;
-        return this;
-    }
-
-    public Integer defaultMaxLogEntries() {
-        if (defaultMaxLogEntries == null) {
-            return ConfigurationProperties.defaultMaxLogEntries();
-        }
-        return defaultMaxLogEntries;
-    }
-
-    /**
-     * <p>
-     * Maximum number of log entries stored in memory.  Log entries are stored in a circular queue so once this limit is reach the oldest log entries are overwritten
-     * </p>
-     * <p>
-     * The default maximum depends on the available memory in the JVM with an upper limit of 60000
-     * </p>
-     *
-     * @param defaultMaxLogEntries maximum number of expectations to store
-     */
-    public Configuration defaultMaxLogEntries(Integer defaultMaxLogEntries) {
-        this.defaultMaxLogEntries = defaultMaxLogEntries;
         return this;
     }
 
@@ -683,7 +656,7 @@ public class Configuration {
     }
 
     /**
-     * <p>Configure the default value used for CORS in the access-control-allow-headers and access-control-expose-headers headers.</p>
+     * <p>The default value used for CORS in the access-control-allow-headers and access-control-expose-headers headers.</p>
      * <p>In addition to this default value any headers specified in the request header access-control-request-headers also get added to access-control-allow-headers and access-control-expose-headers headers in a CORS response.</p>
      * <p>The default is "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"</p>
      *
@@ -702,7 +675,7 @@ public class Configuration {
     }
 
     /**
-     * <p>Configure the default value used for CORS in the access-control-allow-methods header.</p>
+     * <p>The default value used for CORS in the access-control-allow-methods header.</p>
      * <p>The default is "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE"</p>
      *
      * @param corsAllowMethods the default value used for CORS in the access-control-allow-methods header
@@ -720,7 +693,7 @@ public class Configuration {
     }
 
     /**
-     * Configure the value used for CORS in the access-control-allow-credentials header.
+     * The value used for CORS in the access-control-allow-credentials header.
      * <p>
      * The default is true
      *
@@ -739,7 +712,7 @@ public class Configuration {
     }
 
     /**
-     * Configure the value used for CORS in the access-control-max-age header.
+     * The value used for CORS in the access-control-max-age header.
      * <p>
      * The default is 300
      *
@@ -758,7 +731,7 @@ public class Configuration {
     }
 
     /**
-     * The class (and package) used to initialize expectations in MockServer at startup, if set MockServer will load and call this class to initialise expectations when is starts.
+     * The class (and package) used to initialize expectations in MockServer at startup, if set MockServer will load and call this class to initialize expectations when is starts.
      * <p>
      * The default is null
      *
@@ -816,7 +789,7 @@ public class Configuration {
     }
 
     /**
-     * Enable the persisting of expectations as json, which is updated whenever the expectation state is updated (i.e. add, clear, expires, etc)
+     * Enable the persisting of expectations as json, which is updated whenever the expectation state is updated (i.e. add, clear, expires, etc.)
      * <p>
      * The default is false
      *
@@ -835,7 +808,7 @@ public class Configuration {
     }
 
     /**
-     * The file path used to save persisted expectations as json, which is updated whenever the expectation state is updated (i.e. add, clear, expires, etc)
+     * The file path used to save persisted expectations as json, which is updated whenever the expectation state is updated (i.e. add, clear, expires, etc.)
      * <p>
      * The default is "persistedExpectations.json"
      *
@@ -853,7 +826,11 @@ public class Configuration {
         return maximumNumberOfRequestToReturnInVerificationFailure;
     }
 
-    // TODO(jamesdbloom) add description and html
+    /**
+     * The maximum number of requests to return in verification failure result, if more expectations are found the failure result does not list them separately
+     *
+     * @param maximumNumberOfRequestToReturnInVerificationFailure maximum number of expectations to return in verification failure result
+     */
     public Configuration maximumNumberOfRequestToReturnInVerificationFailure(Integer maximumNumberOfRequestToReturnInVerificationFailure) {
         this.maximumNumberOfRequestToReturnInVerificationFailure = maximumNumberOfRequestToReturnInVerificationFailure;
         return this;
@@ -1551,7 +1528,7 @@ public class Configuration {
     }
 
     public int ringBufferSize() {
-        return nextPowerOfTwo(Math.min(defaultMaxLogEntries(), 1500));
+        return nextPowerOfTwo(Math.min(maxLogEntries(), 1500));
     }
 
     private int nextPowerOfTwo(int value) {

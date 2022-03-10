@@ -125,7 +125,7 @@ public class MemoryMonitoring implements MockServerLogListener, MockServerMatche
     public void updated(MockServerEventLog mockServerLog) {
         currentLogEntriesCount.set(mockServerLog.size());
         if (shouldUpdate()) {
-            updateMemoryUsageMaximums();
+            logMemoryMetrics();
             mockServerLog.setMaxSize(configuration.maxLogEntries());
         }
     }
@@ -134,7 +134,7 @@ public class MemoryMonitoring implements MockServerLogListener, MockServerMatche
     public void updated(RequestMatchers requestMatchers, MockServerMatcherNotifier.Cause cause) {
         currentExpectationsCount.set(requestMatchers.size());
         if (shouldUpdate()) {
-            updateMemoryUsageMaximums();
+            logMemoryMetrics();
             requestMatchers.setMaxSize(configuration.maxExpectations());
         }
     }
@@ -143,9 +143,4 @@ public class MemoryMonitoring implements MockServerLogListener, MockServerMatche
         return memoryUpdateFrequency.incrementAndGet() % 500 == 0;
     }
 
-    public void updateMemoryUsageMaximums() {
-        configuration.defaultMaxExpectations(adjustedMaxExpectations());
-        configuration.defaultMaxLogEntries(adjustedMaxLogEntries());
-        logMemoryMetrics();
-    }
 }

@@ -107,7 +107,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 
 <button id="button_configuration_max_web_socket_expectations" class="accordion title"><strong>Maximum WebSockets For Object Callback Expectations</strong></button>
 <div class="panel title">
-    <p>Maximum number of WebSockets held in the in-memory ring buffer</p>
+    <p>Maximum number of remote (not the same JVM) method callbacks (i.e. web sockets) registered for expectations.  The web socket client registry entries are stored in a circular queue so once this limit is reach the oldest are overwritten.</p>
     <p>Type: <span class="keyword">int</span> Default: <span class="this_value">1500</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxWebSocketExpectations(int count)</code></pre>
