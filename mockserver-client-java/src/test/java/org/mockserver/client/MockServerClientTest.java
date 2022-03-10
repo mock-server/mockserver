@@ -99,7 +99,7 @@ public class MockServerClientTest {
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage(containsString("Request with default properties can not be null"));
 
-        mockServerClient.setRequestOverride(null);
+        mockServerClient.withRequestOverride(null);
     }
 
     @Test
@@ -112,7 +112,7 @@ public class MockServerClientTest {
 
         // when
         mockServerClient
-            .setRequestOverride(defaultRequestProperties)
+            .withRequestOverride(defaultRequestProperties)
             .reset();
 
         // then

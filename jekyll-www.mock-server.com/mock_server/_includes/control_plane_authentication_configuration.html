@@ -119,9 +119,59 @@
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneJWTAuthenticationJWKSource=...</code></pre>
     <p>Environment Variable:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CONTROL_PLANE_JWT_SOURCE=...</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_JWK_SOURCE=...</code></pre>
     <p>Property File:</p>
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.controlPlaneJWTAuthenticationJWKSource=...</code></pre>
     <p>Example:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneJWTAuthenticationJWKSource="/some/existing/path"</code></pre>
+</div>
+
+<button id="button_configuration_control_plane_jwt_authentication_required_audience" class="accordion title"><strong>Control Plane JWT Authentication Required Audience</strong></button>
+<div class="panel title">
+    <p>Audience claim (i.e. aud) required when JWT authentication is enabled for control plane requests</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneJWTAuthenticationExpectedAudience(String controlPlaneJWTAuthenticationExpectedAudience)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneJWTAuthenticationExpectedAudience=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_EXPECTED_AUDIENCE=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.controlPlaneJWTAuthenticationExpectedAudience=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneJWTAuthenticationExpectedAudience="/some/existing/path"</code></pre>
+</div>
+
+<button id="button_configuration_control_plane_jwt_authentication_matching_claims" class="accordion title"><strong>Control Plane JWT Authentication Matching Claims</strong></button>
+<div class="panel title">
+    <p>Matching claims expected when JWT authentication is enabled for control plane requests</p>
+    <p>Value should be string with comma separated key=value items, for example: scope=internal public,sub=some_subject</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneJWTAuthenticationMatchingClaims(String controlPlaneJWTAuthenticationMatchingClaims)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneJWTAuthenticationMatchingClaims=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_MATCHING_CLAIMS=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.controlPlaneJWTAuthenticationMatchingClaims=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneJWTAuthenticationMatchingClaims="/some/existing/path"</code></pre>
+</div>
+
+<button id="button_configuration_control_plane_jwt_authentication_required_claims" class="accordion title"><strong>Control Plane JWT Authentication Required Claims</strong></button>
+<div class="panel title">
+    <p>Required claims that should exist (i.e. with any value) when JWT authentication is enabled for control plane requests</p>
+    <p>Value should be string with comma separated values, for example: scope,sub</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneJWTAuthenticationRequiredClaims(String controlPlaneJWTAuthenticationRequiredClaims)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneJWTAuthenticationRequiredClaims=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED_CLAIMS=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.controlPlaneJWTAuthenticationRequiredClaims=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneJWTAuthenticationRequiredClaims="/some/existing/path"</code></pre>
 </div>

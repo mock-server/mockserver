@@ -1,4 +1,4 @@
-package org.mockserver.netty.integration.mock.authenticatedcontrolplane;
+package org.mockserver.netty.integration.authenticatedcontrolplane;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -121,7 +121,7 @@ public class AuthenticatedControlPlaneUsingMTLSClientNotAuthenticatedIntegration
     @Before
     @Override
     public void resetServer() {
-        // do nothing a control authentication fails
+        // do nothing as control plane authentication fails
     }
 
     @Override

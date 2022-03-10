@@ -7,6 +7,7 @@ import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Set;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -98,6 +99,9 @@ public class Configuration {
     private String controlPlaneX509CertificatePath;
     private Boolean controlPlaneJWTAuthenticationRequired;
     private String controlPlaneJWTAuthenticationJWKSource;
+    private String controlPlaneJWTAuthenticationExpectedAudience;
+    private Map<String, String> controlPlaneJWTAuthenticationMatchingClaims;
+    private Set<String> controlPlaneJWTAuthenticationRequiredClaims;
 
     // TLS
     private Boolean proactivelyInitialiseTLS;
@@ -1143,7 +1147,7 @@ public class Configuration {
 
     /**
      * <p>
-     * JWK source used when JWK authentication is enabled for control plane requests
+     * JWK source used when JWT authentication is enabled for control plane requests
      * </p>
      * <p>
      * JWK source can be a file system path, classpath location or a URL
@@ -1156,6 +1160,69 @@ public class Configuration {
      */
     public Configuration controlPlaneJWTAuthenticationJWKSource(String controlPlaneJWTAuthenticationJWKSource) {
         this.controlPlaneJWTAuthenticationJWKSource = controlPlaneJWTAuthenticationJWKSource;
+        return this;
+    }
+
+    public String controlPlaneJWTAuthenticationExpectedAudience() {
+        if (controlPlaneJWTAuthenticationExpectedAudience == null) {
+            return ConfigurationProperties.controlPlaneJWTAuthenticationExpectedAudience();
+        }
+        return controlPlaneJWTAuthenticationExpectedAudience;
+    }
+
+    /**
+     * <p>
+     * Audience claim (i.e. aud) required when JWT authentication is enabled for control plane requests
+     * </p>
+     *
+     * @param controlPlaneJWTAuthenticationExpectedAudience required value for audience claim (i.e. aud)
+     */
+    public Configuration controlPlaneJWTAuthenticationExpectedAudience(String controlPlaneJWTAuthenticationExpectedAudience) {
+        this.controlPlaneJWTAuthenticationExpectedAudience = controlPlaneJWTAuthenticationExpectedAudience;
+        return this;
+    }
+
+    public Map<String, String> controlPlaneJWTAuthenticationMatchingClaims() {
+        if (controlPlaneJWTAuthenticationMatchingClaims == null) {
+            return ConfigurationProperties.controlPlaneJWTAuthenticationMatchingClaims();
+        }
+        return controlPlaneJWTAuthenticationMatchingClaims;
+    }
+
+    /**
+     * <p>
+     * Matching claims expected when JWT authentication is enabled for control plane requests
+     * </p>
+     * <p>
+     * Value should be string with comma separated key=value items, for example: scope=internal public,sub=some_subject
+     * </p>
+     *
+     * @param controlPlaneJWTAuthenticationMatchingClaims required values for claims
+     */
+    public Configuration controlPlaneJWTAuthenticationMatchingClaims(Map<String, String> controlPlaneJWTAuthenticationMatchingClaims) {
+        this.controlPlaneJWTAuthenticationMatchingClaims = controlPlaneJWTAuthenticationMatchingClaims;
+        return this;
+    }
+
+    public Set<String> controlPlaneJWTAuthenticationRequiredClaims() {
+        if (controlPlaneJWTAuthenticationRequiredClaims == null) {
+            return ConfigurationProperties.controlPlaneJWTAuthenticationRequiredClaims();
+        }
+        return controlPlaneJWTAuthenticationRequiredClaims;
+    }
+
+    /**
+     * <p>
+     * Required claims that should exist (i.e. with any value) when JWT authentication is enabled for control plane requests
+     * </p>
+     * <p>
+     * Value should be string with comma separated values, for example: scope,sub
+     * </p>
+     *
+     * @param controlPlaneJWTAuthenticationRequiredClaims required claims
+     */
+    public Configuration controlPlaneJWTAuthenticationRequiredClaims(Set<String> controlPlaneJWTAuthenticationRequiredClaims) {
+        this.controlPlaneJWTAuthenticationRequiredClaims = controlPlaneJWTAuthenticationRequiredClaims;
         return this;
     }
 
@@ -1271,7 +1338,7 @@ public class Configuration {
 
     public Set<String> sslSubjectAlternativeNameDomains() {
         if (sslSubjectAlternativeNameDomains == null) {
-            return Sets.newConcurrentHashSet(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains().split(",")));
+            return ConfigurationProperties.sslSubjectAlternativeNameDomains();
         }
         return sslSubjectAlternativeNameDomains;
     }
@@ -1302,7 +1369,7 @@ public class Configuration {
 
     public Set<String> sslSubjectAlternativeNameIps() {
         if (sslSubjectAlternativeNameIps == null) {
-            return Sets.newConcurrentHashSet(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameIps().split(",")));
+            return ConfigurationProperties.sslSubjectAlternativeNameIps();
         }
         return sslSubjectAlternativeNameIps;
     }

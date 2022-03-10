@@ -1,4 +1,4 @@
-package org.mockserver.netty.integration.mock.tls.inbound;
+package org.mockserver.netty.integration.tls.inbound;
 
 import com.google.common.collect.Sets;
 import org.apache.http.HttpResponse;

@@ -1,7 +1,11 @@
 package org.mockserver.configuration;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
@@ -112,7 +116,10 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_CONTROL_PLANE_TLS_PRIVATE_KEY_PATH = "mockserver.controlPlanePrivateKeyPath";
     private static final String MOCKSERVER_CONTROL_PLANE_TLS_X509_CERTIFICATE_PATH = "mockserver.controlPlaneX509CertificatePath";
     private static final String MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED = "mockserver.controlPlaneJWTAuthenticationRequired";
-    private static final String MOCKSERVER_CONTROL_PLANE_JWT_SOURCE = "mockserver.controlPlaneJWTAuthenticationJWKSource";
+    private static final String MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_JWK_SOURCE = "mockserver.controlPlaneJWTAuthenticationJWKSource";
+    private static final String MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_EXPECTED_AUDIENCE = "mockserver.controlPlaneJWTAuthenticationExpectedAudience";
+    private static final String MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_MATCHING_CLAIMS = "mockserver.controlPlaneJWTAuthenticationMatchingClaims";
+    private static final String MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED_CLAIMS = "mockserver.controlPlaneJWTAuthenticationRequiredClaims";
     private static final String MOCKSERVER_LOG_LEVEL = "mockserver.logLevel";
     private static final String MOCKSERVER_METRICS_ENABLED = "mockserver.metricsEnabled";
     private static final String MOCKSERVER_DISABLE_SYSTEM_OUT = "mockserver.disableSystemOut";
@@ -555,7 +562,7 @@ public class ConfigurationProperties {
 
     /**
      * The domain name for auto-generate TLS certificates
-     *
+     * <p>
      * The default is "localhost"
      *
      * @param domainName domain name for auto-generate TLS certificates
@@ -566,17 +573,17 @@ public class ConfigurationProperties {
 
     /**
      * The Subject Alternative Name (SAN) domain names for auto-generate TLS certificates as a comma separated list
-     *
+     * <p>
      * The default is "localhost"
      *
      * @param sslSubjectAlternativeNameDomains Subject Alternative Name (SAN) domain names for auto-generate TLS certificates
      */
-    public static void sslSubjectAlternativeNameDomains(String sslSubjectAlternativeNameDomains) {
-        System.setProperty(MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS, sslSubjectAlternativeNameDomains);
+    public static void sslSubjectAlternativeNameDomains(Set<String> sslSubjectAlternativeNameDomains) {
+        System.setProperty(MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS, Joiner.on(",").join(sslSubjectAlternativeNameDomains));
     }
 
-    public static String sslSubjectAlternativeNameDomains() {
-        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS, "MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS", "localhost");
+    public static Set<String> sslSubjectAlternativeNameDomains() {
+        return Sets.newConcurrentHashSet(Arrays.asList(readPropertyHierarchically(PROPERTIES, MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS, "MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS", "localhost").split(",")));
     }
 
     /**
@@ -586,12 +593,12 @@ public class ConfigurationProperties {
      *
      * @param sslSubjectAlternativeNameIps Subject Alternative Name (SAN) IP addresses for auto-generate TLS certificates
      */
-    public static void sslSubjectAlternativeNameIps(String sslSubjectAlternativeNameIps) {
-        System.setProperty(MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS, sslSubjectAlternativeNameIps);
+    public static void sslSubjectAlternativeNameIps(Set<String> sslSubjectAlternativeNameIps) {
+        System.setProperty(MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS, Joiner.on(",").join(sslSubjectAlternativeNameIps));
     }
 
-    public static String sslSubjectAlternativeNameIps() {
-        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS, "MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS", "127.0.0.1,0.0.0.0");
+    public static Set<String> sslSubjectAlternativeNameIps() {
+        return Sets.newConcurrentHashSet(Arrays.asList(readPropertyHierarchically(PROPERTIES, MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS, "MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS", "127.0.0.1,0.0.0.0").split(",")));
     }
 
     /**
@@ -929,12 +936,12 @@ public class ConfigurationProperties {
     }
 
     public static String controlPlaneJWTAuthenticationJWKSource() {
-        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_JWT_SOURCE, "MOCKSERVER_CONTROL_PLANE_JWT_SOURCE", "");
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_JWK_SOURCE, "MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_JWK_SOURCE", "");
     }
 
     /**
      * <p>
-     * JWK source used when JWK authentication is enabled for control plane requests
+     * JWK source used when JWT authentication is enabled for control plane requests
      * </p>
      * <p>
      * JWK source can be a file system path, classpath location or a URL
@@ -946,9 +953,70 @@ public class ConfigurationProperties {
      * @param controlPlaneJWTAuthenticationJWKSource file system path, classpath location or a URL of JWK source
      */
     public static void controlPlaneJWTAuthenticationJWKSource(String controlPlaneJWTAuthenticationJWKSource) {
-        System.setProperty(MOCKSERVER_CONTROL_PLANE_JWT_SOURCE, "" + controlPlaneJWTAuthenticationJWKSource);
+        System.setProperty(MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_JWK_SOURCE, "" + controlPlaneJWTAuthenticationJWKSource);
     }
 
+    public static String controlPlaneJWTAuthenticationExpectedAudience() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_EXPECTED_AUDIENCE, "MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_EXPECTED_AUDIENCE", "");
+    }
+
+    /**
+     * <p>
+     * Audience claim (i.e. aud) required when JWT authentication is enabled for control plane requests
+     * </p>
+     *
+     * @param controlPlaneJWTAuthenticationExpectedAudience required value for audience claim (i.e. aud)
+     */
+    public static void controlPlaneJWTAuthenticationExpectedAudience(String controlPlaneJWTAuthenticationExpectedAudience) {
+        System.setProperty(MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_EXPECTED_AUDIENCE, "" + controlPlaneJWTAuthenticationExpectedAudience);
+    }
+
+    @SuppressWarnings("UnstableApiUsage")
+    public static Map<String, String> controlPlaneJWTAuthenticationMatchingClaims() {
+        String jwtAuthenticationMatchingClaims = readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_MATCHING_CLAIMS, "MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_MATCHING_CLAIMS", "");
+        if (isNotBlank(jwtAuthenticationMatchingClaims)) {
+            return Splitter.on(",").withKeyValueSeparator("=").split(jwtAuthenticationMatchingClaims);
+        } else {
+            return ImmutableMap.of();
+        }
+    }
+
+    /**
+     * <p>
+     * Matching claims expected when JWT authentication is enabled for control plane requests
+     * </p>
+     * <p>
+     * Value should be string with comma separated key=value items, for example: scope=internal public,sub=some_subject
+     * </p>
+     *
+     * @param controlPlaneJWTAuthenticationMatchingClaims required values for claims
+     */
+    public static void controlPlaneJWTAuthenticationMatchingClaims(Map<String, String> controlPlaneJWTAuthenticationMatchingClaims) {
+        System.setProperty(MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_MATCHING_CLAIMS, Joiner.on(",").withKeyValueSeparator("=").join(controlPlaneJWTAuthenticationMatchingClaims));
+    }
+
+    public static Set<String> controlPlaneJWTAuthenticationRequiredClaims() {
+        String jwtAuthenticationRequiredClaims = readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED_CLAIMS, "MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED_CLAIMS", "");
+        if (isNotBlank(jwtAuthenticationRequiredClaims)) {
+            return Sets.newConcurrentHashSet(Arrays.asList(jwtAuthenticationRequiredClaims.split(",")));
+        } else {
+            return ImmutableSet.of();
+        }
+    }
+
+    /**
+     * <p>
+     * Required claims that should exist (i.e. with any value) when JWT authentication is enabled for control plane requests
+     * </p>
+     * <p>
+     * Value should be string with comma separated values, for example: scope,sub
+     * </p>
+     *
+     * @param controlPlaneJWTAuthenticationRequiredClaims required claims
+     */
+    public static void controlPlaneJWTAuthenticationRequiredClaims(Set<String> controlPlaneJWTAuthenticationRequiredClaims) {
+        System.setProperty(MOCKSERVER_CONTROL_PLANE_JWT_AUTHENTICATION_REQUIRED_CLAIMS, Joiner.on(",").join(controlPlaneJWTAuthenticationRequiredClaims));
+    }
 
     public static Level logLevel() {
         return logLevel;
@@ -1001,7 +1069,7 @@ public class ConfigurationProperties {
 
     /**
      * Disable all logging and processing of log events
-     *
+     * <p>
      * The default is false
      *
      * @param disable disable all logging

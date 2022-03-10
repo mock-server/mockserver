@@ -1,4 +1,4 @@
-package org.mockserver.netty.integration.mock.tls.inbound;
+package org.mockserver.netty.integration.tls.inbound;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -6,14 +6,10 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.KeyStoreFactory;
 import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
-import org.slf4j.event.Level;
 
 import java.nio.charset.StandardCharsets;
 

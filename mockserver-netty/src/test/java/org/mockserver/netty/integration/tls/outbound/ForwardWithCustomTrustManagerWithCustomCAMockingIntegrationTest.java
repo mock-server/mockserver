@@ -1,23 +1,20 @@
-package org.mockserver.netty.integration.mock.tls.outbound;
+package org.mockserver.netty.integration.tls.outbound;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.netty.MockServer;
-import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
 
 import static org.mockserver.configuration.ConfigurationProperties.*;
-import static org.mockserver.proxyconfiguration.ProxyConfiguration.proxyConfiguration;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * @author jamesdbloom
  */
-public class ForwardViaHttpsProxyWithCustomTrustManagerWithCustomCAMockingIntegrationTest extends AbstractForwardViaHttpsProxyMockingIntegrationTest {
+public class ForwardWithCustomTrustManagerWithCustomCAMockingIntegrationTest extends AbstractForwardViaHttpsProxyMockingIntegrationTest {
 
     private static MockServer mockServer;
-    private static MockServer proxy;
     private static ForwardProxyTLSX509CertificatesTrustManager originalForwardProxyTLSX509CertificatesTrustManager;
     private static String originalCertificateAuthorityCertificate;
     private static String originalCertificateAuthorityPrivateKey;
@@ -37,15 +34,13 @@ public class ForwardViaHttpsProxyWithCustomTrustManagerWithCustomCAMockingIntegr
         forwardProxyTLSX509CertificatesTrustManagerType(ForwardProxyTLSX509CertificatesTrustManager.CUSTOM.name());
         forwardProxyTLSCustomTrustX509Certificates("org/mockserver/netty/integration/tls/ca.pem");
 
-        proxy = new MockServer();
-        mockServer = new MockServer(proxyConfiguration(ProxyConfiguration.Type.HTTPS, "127.0.0.1:" + proxy.getLocalPort()));
+        mockServer = new MockServer();
 
         mockServerClient = new MockServerClient("localhost", mockServer.getLocalPort(), servletContext);
     }
 
     @AfterClass
     public static void stopServer() {
-        stopQuietly(proxy);
         stopQuietly(mockServer);
         stopQuietly(mockServerClient);
 

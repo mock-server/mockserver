@@ -1,4 +1,4 @@
-package org.mockserver.netty.integration.mock.tls.inbound;
+package org.mockserver.netty.integration.tls.inbound;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

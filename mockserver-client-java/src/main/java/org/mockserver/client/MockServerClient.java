@@ -196,9 +196,17 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
+     * @deprecated use withProxyConfiguration which is more consistent with MockServer API style
+     */
+    @Deprecated
+    public MockServerClient setProxyConfiguration(ProxyConfiguration proxyConfiguration) {
+        return withProxyConfiguration(proxyConfiguration);
+    }
+
+    /**
      * Configure communication to MockServer to go via a proxy
      */
-    public MockServerClient setProxyConfiguration(ProxyConfiguration proxyConfiguration) {
+    public MockServerClient withProxyConfiguration(ProxyConfiguration proxyConfiguration) {
         this.proxyConfiguration = proxyConfiguration;
         return this;
     }
@@ -206,19 +214,27 @@ public class MockServerClient implements Stoppable {
     /**
      * Specify JWT to use for control plane authorisation
      */
-    public MockServerClient setControlPlaneJWT(String controlPlaneJWT) {
-        return setControlPlaneJWT(() -> controlPlaneJWT);
+    public MockServerClient withControlPlaneJWT(String controlPlaneJWT) {
+        return withControlPlaneJWT(() -> controlPlaneJWT);
     }
 
     /**
      * Specify JWT supplier to use for control plane authorisation
      */
-    public MockServerClient setControlPlaneJWT(Supplier<String> controlPlaneJWTSupplier) {
+    public MockServerClient withControlPlaneJWT(Supplier<String> controlPlaneJWTSupplier) {
         this.controlPlaneJWTSupplier = controlPlaneJWTSupplier;
         return this;
     }
 
+    /**
+     * @deprecated use withRequestOverride which is more consistent with MockServer API style
+     */
+    @Deprecated
     public MockServerClient setRequestOverride(HttpRequest requestOverride) {
+        return withRequestOverride(requestOverride);
+    }
+
+    public MockServerClient withRequestOverride(HttpRequest requestOverride) {
         if (requestOverride == null) {
             throw new IllegalArgumentException("Request with default properties can not be null");
         } else {

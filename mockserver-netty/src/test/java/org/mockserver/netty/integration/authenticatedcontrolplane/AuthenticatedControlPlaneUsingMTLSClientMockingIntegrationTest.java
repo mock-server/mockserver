@@ -1,10 +1,9 @@
-package org.mockserver.netty.integration.mock.authenticatedcontrolplane;
+package org.mockserver.netty.integration.authenticatedcontrolplane;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.cli.Main;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.testing.integration.mock.AbstractBasicMockingSameJVMIntegrationTest;
 

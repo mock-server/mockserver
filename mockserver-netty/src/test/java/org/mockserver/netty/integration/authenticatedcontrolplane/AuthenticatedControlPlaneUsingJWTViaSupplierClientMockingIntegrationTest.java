@@ -1,4 +1,4 @@
-package org.mockserver.netty.integration.mock.authenticatedcontrolplane;
+package org.mockserver.netty.integration.authenticatedcontrolplane;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -49,7 +49,7 @@ public class AuthenticatedControlPlaneUsingJWTViaSupplierClientMockingIntegratio
 
         Main.main("-serverPort", "" + severHttpPort);
 
-        mockServerClient = new MockServerClient("localhost", severHttpPort).setControlPlaneJWT(controlPlaneJWTSupplier).withSecure(true);
+        mockServerClient = new MockServerClient("localhost", severHttpPort).withControlPlaneJWT(controlPlaneJWTSupplier).withSecure(true);
     }
 
     @AfterClass

@@ -1,4 +1,4 @@
-package org.mockserver.netty.integration.mock.tls.inbound;
+package org.mockserver.netty.integration.tls.inbound;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -12,16 +12,23 @@ import static org.mockserver.stop.Stop.stopQuietly;
 /**
  * @author jamesdbloom
  */
-public class ClientAuthenticationMockingIntegrationTest extends AbstractClientAuthenticationMockingIntegrationTest {
+public class ClientAuthenticationCustomCertificateAuthorityMockingIntegrationTest extends AbstractClientAuthenticationMockingIntegrationTest {
 
     private static final int severHttpPort = PortFactory.findFreePort();
+    private static String originalCertificateAuthorityCertificate;
+    private static String originalCertificateAuthorityPrivateKey;
     private static boolean originalTLSMutualAuthenticationRequired;
 
     @BeforeClass
     public static void startServer() {
         // save original value
+        originalCertificateAuthorityCertificate = certificateAuthorityCertificate();
+        originalCertificateAuthorityPrivateKey = certificateAuthorityPrivateKey();
         originalTLSMutualAuthenticationRequired = tlsMutualAuthenticationRequired();
 
+        // set new certificate authority values
+        certificateAuthorityCertificate("org/mockserver/netty/integration/tls/ca.pem");
+        certificateAuthorityPrivateKey("org/mockserver/netty/integration/tls/ca-key-pkcs8.pem");
         tlsMutualAuthenticationRequired(true);
 
         Main.main("-serverPort", "" + severHttpPort);
@@ -34,6 +41,8 @@ public class ClientAuthenticationMockingIntegrationTest extends AbstractClientAu
         stopQuietly(mockServerClient);
 
         // set back to original value
+        certificateAuthorityCertificate(originalCertificateAuthorityCertificate);
+        certificateAuthorityPrivateKey(originalCertificateAuthorityPrivateKey);
         tlsMutualAuthenticationRequired(originalTLSMutualAuthenticationRequired);
     }
 

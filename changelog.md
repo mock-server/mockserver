@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added control plane authorisation using mTLS
 - added control plane authorisation using JWT
 - added support for control plane JWTs supplier to client
+- added support for control plane JWT authorisation to specify required audience, matching claims and required claims
 - added control plane authorisation using both JWT and mTLS
 - added property to control maximum number of requests to return in verification failure (defaulted to 10)
 - added remote address field to http requests that can be used by class or method callbacks

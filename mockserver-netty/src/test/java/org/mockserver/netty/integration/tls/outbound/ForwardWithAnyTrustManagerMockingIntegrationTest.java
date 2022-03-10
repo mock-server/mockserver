@@ -1,4 +1,4 @@
-package org.mockserver.netty.integration.mock.tls.outbound;
+package org.mockserver.netty.integration.tls.outbound;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

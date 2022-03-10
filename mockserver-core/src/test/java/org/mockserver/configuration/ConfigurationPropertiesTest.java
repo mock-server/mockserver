@@ -1,5 +1,7 @@
 package org.mockserver.configuration;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -14,11 +16,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static junit.framework.TestCase.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsMapContaining.hasEntry;
 import static org.mockserver.configuration.ConfigurationProperties.*;
 
 /**
@@ -437,39 +442,39 @@ public class ConfigurationPropertiesTest {
 
     @Test
     public void shouldSetAndReadSslSubjectAlternativeNameDomains() {
-        String originalSslSubjectAlternativeNameDomains = sslSubjectAlternativeNameDomains();
+        Set<String> originalSslSubjectAlternativeNameDomains = sslSubjectAlternativeNameDomains();
         try {
             // given
             System.clearProperty("mockserver.sslSubjectAlternativeNameDomains");
 
             // when
-            assertEquals("localhost", sslSubjectAlternativeNameDomains());
-            sslSubjectAlternativeNameDomains("a,b,c,d");
+            assertEquals(ImmutableSet.of("localhost"), sslSubjectAlternativeNameDomains());
+            sslSubjectAlternativeNameDomains(ImmutableSet.of("a", "b", "c", "d"));
 
             // then
-            assertEquals("a,b,c,d", sslSubjectAlternativeNameDomains());
+            assertEquals(ImmutableSet.of("a", "b", "c", "d"), sslSubjectAlternativeNameDomains());
             assertEquals("a,b,c,d", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
         } finally {
-            sslCertificateDomainName(originalSslSubjectAlternativeNameDomains);
+            sslSubjectAlternativeNameDomains(originalSslSubjectAlternativeNameDomains);
         }
     }
 
     @Test
     public void shouldSetAndReadSslSubjectAlternativeNameIps() {
-        String originalSslSubjectAlternativeNameIps = sslSubjectAlternativeNameIps();
+        Set<String> originalSslSubjectAlternativeNameIps = sslSubjectAlternativeNameIps();
         try {
             // given
             System.clearProperty("mockserver.sslSubjectAlternativeNameIps");
 
             // when
-            assertEquals("127.0.0.1,0.0.0.0", sslSubjectAlternativeNameIps());
-            sslSubjectAlternativeNameIps("1.2.3.4,5.6.7.8");
+            assertEquals(ImmutableSet.of("127.0.0.1", "0.0.0.0"), sslSubjectAlternativeNameIps());
+            sslSubjectAlternativeNameIps(ImmutableSet.of("1.2.3.4", "5.6.7.8"));
 
             // then
-            assertEquals("1.2.3.4,5.6.7.8", sslSubjectAlternativeNameIps());
+            assertEquals(ImmutableSet.of("1.2.3.4", "5.6.7.8"), sslSubjectAlternativeNameIps());
             assertEquals("1.2.3.4,5.6.7.8", System.getProperty("mockserver.sslSubjectAlternativeNameIps"));
         } finally {
-            sslCertificateDomainName(originalSslSubjectAlternativeNameIps);
+            sslSubjectAlternativeNameIps(originalSslSubjectAlternativeNameIps);
         }
     }
 
@@ -864,6 +869,70 @@ public class ConfigurationPropertiesTest {
             assertEquals(tempFile.getAbsolutePath(), System.getProperty("mockserver.controlPlaneJWTAuthenticationJWKSource"));
         } finally {
             controlPlaneJWTAuthenticationJWKSource(originalControlPlaneJWTAuthenticationJWKSource);
+        }
+    }
+
+    @Test
+    public void shouldSetAndReadControlPlaneJWTAuthenticationExpectedAudience() throws IOException {
+        String originalControlPlaneJWTAuthenticationExpectedAudience = controlPlaneJWTAuthenticationExpectedAudience();
+        try {
+            // given
+            System.clearProperty("mockserver.controlPlaneJWTAuthenticationExpectedAudience");
+
+            // then
+            assertThat(controlPlaneJWTAuthenticationExpectedAudience(), is(""));
+
+            // when
+            File tempFile = File.createTempFile("some", "temp");
+            controlPlaneJWTAuthenticationExpectedAudience(tempFile.getAbsolutePath());
+
+            // then
+            assertThat(controlPlaneJWTAuthenticationExpectedAudience(), is(tempFile.getAbsolutePath()));
+            assertEquals(tempFile.getAbsolutePath(), System.getProperty("mockserver.controlPlaneJWTAuthenticationExpectedAudience"));
+        } finally {
+            controlPlaneJWTAuthenticationExpectedAudience(originalControlPlaneJWTAuthenticationExpectedAudience);
+        }
+    }
+
+    @Test
+    public void shouldSetAndReadControlPlaneJWTAuthenticationMatchingClaims() {
+        Map<String, String> originalControlPlaneJWTAuthenticationMatchingClaims = controlPlaneJWTAuthenticationMatchingClaims();
+        try {
+            // given
+            System.clearProperty("mockserver.controlPlaneJWTAuthenticationMatchingClaims");
+
+            // then
+            assertThat(controlPlaneJWTAuthenticationMatchingClaims(), is(ImmutableMap.of()));
+
+            // when
+            controlPlaneJWTAuthenticationMatchingClaims(ImmutableMap.of("a", "b", "c", "d"));
+
+            // then
+            assertThat(controlPlaneJWTAuthenticationMatchingClaims(), allOf(hasEntry("a", "b"), hasEntry("c", "d")));
+            assertEquals("a=b,c=d", System.getProperty("mockserver.controlPlaneJWTAuthenticationMatchingClaims"));
+        } finally {
+            controlPlaneJWTAuthenticationMatchingClaims(originalControlPlaneJWTAuthenticationMatchingClaims);
+        }
+    }
+
+    @Test
+    public void shouldSetAndReadControlPlaneJWTAuthenticationRequiredClaims() {
+        Set<String> originalControlPlaneJWTAuthenticationRequiredClaims = controlPlaneJWTAuthenticationRequiredClaims();
+        try {
+            // given
+            System.clearProperty("mockserver.controlPlaneJWTAuthenticationRequiredClaims");
+
+            // then
+            assertThat(controlPlaneJWTAuthenticationRequiredClaims(), is(ImmutableSet.of("")));
+
+            // when
+            controlPlaneJWTAuthenticationRequiredClaims(ImmutableSet.of("a", "b"));
+
+            // then
+            assertThat(controlPlaneJWTAuthenticationRequiredClaims(), is(ImmutableSet.of("a", "b")));
+            assertEquals("a,b", System.getProperty("mockserver.controlPlaneJWTAuthenticationRequiredClaims"));
+        } finally {
+            controlPlaneJWTAuthenticationRequiredClaims(originalControlPlaneJWTAuthenticationRequiredClaims);
         }
     }
 

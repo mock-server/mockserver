@@ -162,12 +162,22 @@ public class MockServer extends LifeCycle {
                 new ChainedAuthenticationHandler(
                     new MTLSAuthenticationHandler(mockServerLogger, nettySslContextFactory.trustCertificateChain(configuration.controlPlaneTLSMutualAuthenticationCAChain())),
                     new JWTAuthenticationHandler(mockServerLogger, configuration.controlPlaneJWTAuthenticationJWKSource())
+                        .withExpectedAudience(configuration.controlPlaneJWTAuthenticationExpectedAudience())
+                        .withMatchingClaims(configuration.controlPlaneJWTAuthenticationMatchingClaims())
+                        .withRequiredClaims(configuration.controlPlaneJWTAuthenticationRequiredClaims())
                 )
             );
         } else if (configuration.controlPlaneTLSMutualAuthenticationRequired()) {
-            httpState.setControlPlaneAuthenticationHandler(new MTLSAuthenticationHandler(mockServerLogger, nettySslContextFactory.trustCertificateChain(configuration.controlPlaneTLSMutualAuthenticationCAChain())));
+            httpState.setControlPlaneAuthenticationHandler(
+                new MTLSAuthenticationHandler(mockServerLogger, nettySslContextFactory.trustCertificateChain(configuration.controlPlaneTLSMutualAuthenticationCAChain()))
+            );
         } else if (configuration.controlPlaneJWTAuthenticationRequired()) {
-            httpState.setControlPlaneAuthenticationHandler(new JWTAuthenticationHandler(mockServerLogger, configuration.controlPlaneJWTAuthenticationJWKSource()));
+            httpState.setControlPlaneAuthenticationHandler(
+                new JWTAuthenticationHandler(mockServerLogger, configuration.controlPlaneJWTAuthenticationJWKSource())
+                    .withExpectedAudience(configuration.controlPlaneJWTAuthenticationExpectedAudience())
+                    .withMatchingClaims(configuration.controlPlaneJWTAuthenticationMatchingClaims())
+                    .withRequiredClaims(configuration.controlPlaneJWTAuthenticationRequiredClaims())
+            );
         }
         serverServerBootstrap = new ServerBootstrap()
             .group(bossGroup, workerGroup)

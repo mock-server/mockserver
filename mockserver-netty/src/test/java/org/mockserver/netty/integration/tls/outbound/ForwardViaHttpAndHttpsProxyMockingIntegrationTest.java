@@ -1,4 +1,4 @@
-package org.mockserver.netty.integration.mock.tls.outbound;
+package org.mockserver.netty.integration.tls.outbound;
 
 import com.google.common.collect.ImmutableList;
 import org.junit.AfterClass;

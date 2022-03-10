@@ -1,4 +1,4 @@
-package org.mockserver.netty.integration.mock.authenticatedcontrolplane;
+package org.mockserver.netty.integration.authenticatedcontrolplane;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -47,7 +47,7 @@ public class AuthenticatedControlPlaneUsingJWTViaOverrideClientMockingIntegratio
 
         Main.main("-serverPort", "" + severHttpPort);
 
-        mockServerClient = new MockServerClient("localhost", severHttpPort).setRequestOverride(request().withHeader(authorisationHeader)).withSecure(true);
+        mockServerClient = new MockServerClient("localhost", severHttpPort).withRequestOverride(request().withHeader(authorisationHeader)).withSecure(true);
     }
 
     @AfterClass
