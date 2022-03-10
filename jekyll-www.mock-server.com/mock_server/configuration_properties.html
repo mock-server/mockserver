@@ -230,7 +230,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 <button id="button_configuration_max_initial_line_length" class="accordion title"><strong>Maximum HTTP Request Initial Line Length</strong></button>
 <div class="panel title">
     <p>Maximum size the first line of an HTTP request</p>
-    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">4096</span></p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">Integer.MAX_VALUE</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxInitialLineLength(int length)</code></pre>
     <p>System Property:</p>
@@ -246,7 +246,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 <button id="button_configuration_max_header_size" class="accordion title"><strong>Maximum HTTP Request Header Size</strong></button>
 <div class="panel title">
     <p>Maximum size HTTP request headers</p>
-    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">8192</span></p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">Integer.MAX_VALUE</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxHeaderSize(int size)</code></pre>
     <p>System Property:</p>
@@ -262,7 +262,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 <button id="button_configuration_max_chunk_size" class="accordion title"><strong>Maximum HTTP Request Chunk Size</strong></button>
 <div class="panel title">
     <p>Maximum size of HTTP chunks in request or responses</p>
-    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">8192</span></p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">Integer.MAX_VALUE</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxChunkSize(int size)</code></pre>
     <p>System Property:</p>
@@ -277,7 +277,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 
 <button id="button_configuration_treat_semicolon_as_query_parameter_separator" class="accordion title"><strong>Treat Semicolon As Query Parameter Separator</strong></button>
 <div class="panel title">
-    <p>If true semicolons are treated as a separator for a query parameter string, it false the semicolon is treated as a normal character that is part of a query parameter value.</p>
+    <p>If true semicolons are treated as a separator for a query parameter string, if false the semicolon is treated as a normal character that is part of a query parameter value.</p>
     <p>Type: <span class="keyword">int</span> Default: <span class="this_value">true</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.useSemicolonAsQueryParameterSeparator(boolean useAsQueryParameterSeparator)</code></pre>
@@ -418,7 +418,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 <div class="panel title">
     <p>The required username for proxy authentication to MockServer</p>
     <p><strong>Note:</strong> <a target="_blank" href="https://www.oracle.com/java/technologies/javase/8u111-relnotes.html">8u111 Update Release Notes</a> state that the Basic authentication scheme has been deactivated when setting up an HTTPS tunnel.  To resolve this clear or set to an empty string the following system properties: <code class="inline code">jdk.http.auth.tunneling.disabledSchemes</code> and <code class="inline code">jdk.http.auth.proxying.disabledSchemes</code>.</p>
-    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">john.doe</span></p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value"></span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.proxyAuthenticationUsername(String proxyAuthenticationUsername)</code></pre>
     <p>System Property:</p>
@@ -435,7 +435,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 <div class="panel title">
     <p>The required password for proxy authentication to MockServer</p>
     <p><strong>Note:</strong> <a target="_blank" href="https://www.oracle.com/java/technologies/javase/8u111-relnotes.html">8u111 Update Release Notes</a> state that the Basic authentication scheme has been deactivated when setting up an HTTPS tunnel.  To resolve this clear or set to an empty string the following system properties: <code class="inline code">jdk.http.auth.tunneling.disabledSchemes</code> and <code class="inline code">jdk.http.auth.proxying.disabledSchemes</code>.</p>
-    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">p@ssw0rd</span></p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value"></span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.proxyAuthenticationPassword(String proxyAuthenticationPassword)</code></pre>
     <p>System Property:</p>

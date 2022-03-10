@@ -400,6 +400,13 @@ public class ConfigurationProperties {
         return maxInitialLineLength;
     }
 
+    /**
+     * Maximum size of the first line of an HTTP request
+     * <p>
+     * The default is Integer.MAX_VALUE
+     *
+     * @param length maximum size of the first line of an HTTP request
+     */
     public static void maxInitialLineLength(int length) {
         System.setProperty(MOCKSERVER_MAX_INITIAL_LINE_LENGTH, "" + length);
         maxInitialLineLength = readIntegerProperty(MOCKSERVER_MAX_INITIAL_LINE_LENGTH, "MOCKSERVER_MAX_INITIAL_LINE_LENGTH", DEFAULT_MAX_INITIAL_LINE_LENGTH);
@@ -409,6 +416,13 @@ public class ConfigurationProperties {
         return maxHeaderSize;
     }
 
+    /**
+     * Maximum size of HTTP request headers
+     * <p>
+     * The default is Integer.MAX_VALUE
+     *
+     * @param size maximum size of HTTP request headers
+     */
     public static void maxHeaderSize(int size) {
         System.setProperty(MOCKSERVER_MAX_HEADER_SIZE, "" + size);
         maxHeaderSize = readIntegerProperty(MOCKSERVER_MAX_HEADER_SIZE, "MOCKSERVER_MAX_HEADER_SIZE", DEFAULT_MAX_HEADER_SIZE);
@@ -418,6 +432,13 @@ public class ConfigurationProperties {
         return maxChunkSize;
     }
 
+    /**
+     * Maximum size of HTTP chunks in request or responses
+     * <p>
+     * The default is Integer.MAX_VALUE
+     *
+     * @param size maximum size of HTTP chunks in request or responses
+     */
     public static void maxChunkSize(int size) {
         System.setProperty(MOCKSERVER_MAX_CHUNK_SIZE, "" + size);
         maxChunkSize = readIntegerProperty(MOCKSERVER_MAX_CHUNK_SIZE, "MOCKSERVER_MAX_CHUNK_SIZE", DEFAULT_MAX_CHUNK_SIZE);
@@ -533,6 +554,13 @@ public class ConfigurationProperties {
         System.setProperty(MOCKSERVER_SOCKET_CONNECTION_TIMEOUT, "" + milliseconds);
     }
 
+    /**
+     * <p>If true socket connections will always be closed after a response is returned, if false connection is only closed if request header indicate connection should be closed.</p>
+     * <p>
+     * Default is false
+     *
+     * @param alwaysClose true socket connections will always be closed after a response is returned
+     */
     public static void alwaysCloseSocketConnections(boolean alwaysClose) {
         System.setProperty(MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS, "" + alwaysClose);
         alwaysCloseConnections = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS, "MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS", DEFAULT_MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS));
@@ -542,6 +570,13 @@ public class ConfigurationProperties {
         return alwaysCloseConnections;
     }
 
+    /**
+     * If true semicolons are treated as a separator for a query parameter string, if false the semicolon is treated as a normal character that is part of a query parameter value.
+     * <p>
+     * The default is true
+     *
+     * @param useAsQueryParameterSeparator true semicolons are treated as a separator for a query parameter string
+     */
     public static void useSemicolonAsQueryParameterSeparator(boolean useAsQueryParameterSeparator) {
         System.setProperty(MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR, "" + useAsQueryParameterSeparator);
         useSemicolonAsQueryParameterSeparator = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR, "MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR", DEFAULT_MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR));
@@ -555,11 +590,24 @@ public class ConfigurationProperties {
         return readPropertyHierarchically(PROPERTIES, MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME, "MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME", CertificateSigningRequest.CERTIFICATE_DOMAIN);
     }
 
+    /**
+     * The domain name for auto-generate TLS certificates
+     *
+     * The default is "localhost"
+     *
+     * @param domainName domain name for auto-generate TLS certificates
+     */
     public static void sslCertificateDomainName(String domainName) {
         System.setProperty(MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME, domainName);
     }
 
-    // TODO(jamesdbloom) add description
+    /**
+     * The Subject Alternative Name (SAN) domain names for auto-generate TLS certificates as a comma separated list
+     *
+     * The default is "localhost"
+     *
+     * @param sslSubjectAlternativeNameDomains Subject Alternative Name (SAN) domain names for auto-generate TLS certificates
+     */
     public static void sslSubjectAlternativeNameDomains(String sslSubjectAlternativeNameDomains) {
         System.setProperty(MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS, sslSubjectAlternativeNameDomains);
     }
@@ -568,7 +616,13 @@ public class ConfigurationProperties {
         return readPropertyHierarchically(PROPERTIES, MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS, "MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS", "localhost");
     }
 
-    // TODO(jamesdbloom) add description
+    /**
+     * <p>The Subject Alternative Name (SAN) IP addresses for auto-generate TLS certificates as a comma separated list</p>
+     *
+     * <p>The default is "127.0.0.1,0.0.0.0"</p>
+     *
+     * @param sslSubjectAlternativeNameIps Subject Alternative Name (SAN) IP addresses for auto-generate TLS certificates
+     */
     public static void sslSubjectAlternativeNameIps(String sslSubjectAlternativeNameIps) {
         System.setProperty(MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS, sslSubjectAlternativeNameIps);
     }
@@ -1077,6 +1131,13 @@ public class ConfigurationProperties {
         return readPropertyHierarchically(PROPERTIES, MOCKSERVER_LOCAL_BOUND_IP, "MOCKSERVER_LOCAL_BOUND_IP", "");
     }
 
+    /**
+     * The local IP address to bind to for accepting new socket connections
+     * <p>
+     * Default is 0.0.0.0
+     *
+     * @param localBoundIP local IP address to bind to for accepting new socket connections
+     */
     public static void localBoundIP(String localBoundIP) {
         System.setProperty(MOCKSERVER_LOCAL_BOUND_IP, InetAddresses.forString(localBoundIP).getHostAddress());
     }
@@ -1100,6 +1161,13 @@ public class ConfigurationProperties {
         return readInetSocketAddressProperty(MOCKSERVER_FORWARD_HTTP_PROXY, "MOCKSERVER_FORWARD_HTTP_PROXY");
     }
 
+    /**
+     * Use HTTP proxy (i.e. via Host header) for all outbound / forwarded requests
+     * <p>
+     * The default is null
+     *
+     * @param hostAndPort host and port for HTTP proxy (i.e. via Host header) for all outbound / forwarded requests
+     */
     public static void forwardHttpProxy(String hostAndPort) {
         validateHostAndPortAndSetProperty(hostAndPort, MOCKSERVER_FORWARD_HTTP_PROXY);
     }
@@ -1108,6 +1176,13 @@ public class ConfigurationProperties {
         return readInetSocketAddressProperty(MOCKSERVER_FORWARD_HTTPS_PROXY, "MOCKSERVER_FORWARD_HTTPS_PROXY");
     }
 
+    /**
+     * Use HTTPS proxy (i.e. HTTP CONNECT) for all outbound / forwarded requests, supports TLS tunnelling of HTTPS requests
+     * <p>
+     * The default is null
+     *
+     * @param hostAndPort host and port for HTTPS proxy (i.e. HTTP CONNECT) for all outbound / forwarded requests
+     */
     public static void forwardHttpsProxy(String hostAndPort) {
         validateHostAndPortAndSetProperty(hostAndPort, MOCKSERVER_FORWARD_HTTPS_PROXY);
     }
@@ -1116,6 +1191,13 @@ public class ConfigurationProperties {
         return readInetSocketAddressProperty(MOCKSERVER_FORWARD_SOCKS_PROXY, "MOCKSERVER_FORWARD_SOCKS_PROXY");
     }
 
+    /**
+     * Use SOCKS proxy for all outbound / forwarded requests, support TLS tunnelling of TCP connections
+     * <p>
+     * The default is null
+     *
+     * @param hostAndPort host and port for SOCKS proxy for all outbound / forwarded requests
+     */
     public static void forwardSocksProxy(String hostAndPort) {
         validateHostAndPortAndSetProperty(hostAndPort, MOCKSERVER_FORWARD_SOCKS_PROXY);
     }
@@ -1124,6 +1206,14 @@ public class ConfigurationProperties {
         return readPropertyHierarchically(PROPERTIES, MOCKSERVER_FORWARD_PROXY_AUTHENTICATION_USERNAME, "MOCKSERVER_FORWARD_PROXY_AUTHENTICATION_USERNAME", null);
     }
 
+    /**
+     * <p>Username for proxy authentication when using HTTPS proxy (i.e. HTTP CONNECT) for all outbound / forwarded requests</p>
+     * <p><strong>Note:</strong> <a target="_blank" href="https://www.oracle.com/java/technologies/javase/8u111-relnotes.html">8u111 Update Release Notes</a> state that the Basic authentication scheme has been deactivated when setting up an HTTPS tunnel.  To resolve this clear or set to an empty string the following system properties: <code class="inline code">jdk.http.auth.tunneling.disabledSchemes</code> and <code class="inline code">jdk.http.auth.proxying.disabledSchemes</code>.</p>
+     * <p>
+     * The default is null
+     *
+     * @param forwardProxyAuthenticationUsername username for proxy authentication
+     */
     public static void forwardProxyAuthenticationUsername(String forwardProxyAuthenticationUsername) {
         if (forwardProxyAuthenticationUsername != null) {
             System.setProperty(MOCKSERVER_FORWARD_PROXY_AUTHENTICATION_USERNAME, forwardProxyAuthenticationUsername);
@@ -1136,6 +1226,14 @@ public class ConfigurationProperties {
         return readPropertyHierarchically(PROPERTIES, MOCKSERVER_FORWARD_PROXY_AUTHENTICATION_PASSWORD, "MOCKSERVER_FORWARD_PROXY_AUTHENTICATION_PASSWORD", null);
     }
 
+    /**
+     * <p>Password for proxy authentication when using HTTPS proxy (i.e. HTTP CONNECT) for all outbound / forwarded requests</p>
+     * <p><strong>Note:</strong> <a target="_blank" href="https://www.oracle.com/java/technologies/javase/8u111-relnotes.html">8u111 Update Release Notes</a> state that the Basic authentication scheme has been deactivated when setting up an HTTPS tunnel.  To resolve this clear or set to an empty string the following system properties: <code class="inline code">jdk.http.auth.tunneling.disabledSchemes</code> and <code class="inline code">jdk.http.auth.proxying.disabledSchemes</code>.</p>
+     * <p>
+     * The default is null
+     *
+     * @param forwardProxyAuthenticationPassword password for proxy authentication
+     */
     public static void forwardProxyAuthenticationPassword(String forwardProxyAuthenticationPassword) {
         if (forwardProxyAuthenticationPassword != null) {
             System.setProperty(MOCKSERVER_FORWARD_PROXY_AUTHENTICATION_PASSWORD, forwardProxyAuthenticationPassword);
@@ -1148,6 +1246,11 @@ public class ConfigurationProperties {
         return readPropertyHierarchically(PROPERTIES, MOCKSERVER_PROXY_SERVER_REALM, "MOCKSERVER_PROXY_SERVER_REALM", "MockServer HTTP Proxy");
     }
 
+    /**
+     * The authentication realm for proxy authentication to MockServer
+     *
+     * @param proxyAuthenticationRealm the authentication realm for proxy authentication
+     */
     public static void proxyAuthenticationRealm(String proxyAuthenticationRealm) {
         System.setProperty(MOCKSERVER_PROXY_SERVER_REALM, proxyAuthenticationRealm);
     }
@@ -1156,6 +1259,14 @@ public class ConfigurationProperties {
         return readPropertyHierarchically(PROPERTIES, MOCKSERVER_PROXY_AUTHENTICATION_USERNAME, "MOCKSERVER_PROXY_AUTHENTICATION_USERNAME", "");
     }
 
+    /**
+     * <p>The required username for proxy authentication to MockServer</p>
+     * <p><strong>Note:</strong> <a target="_blank" href="https://www.oracle.com/java/technologies/javase/8u111-relnotes.html">8u111 Update Release Notes</a> state that the Basic authentication scheme has been deactivated when setting up an HTTPS tunnel.  To resolve this clear or set to an empty string the following system properties: <code class="inline code">jdk.http.auth.tunneling.disabledSchemes</code> and <code class="inline code">jdk.http.auth.proxying.disabledSchemes</code>.</p>
+     * <p>
+     * The default is ""
+     *
+     * @param proxyAuthenticationUsername required username for proxy authentication to MockServer
+     */
     public static void proxyAuthenticationUsername(String proxyAuthenticationUsername) {
         System.setProperty(MOCKSERVER_PROXY_AUTHENTICATION_USERNAME, proxyAuthenticationUsername);
     }
@@ -1164,6 +1275,14 @@ public class ConfigurationProperties {
         return readPropertyHierarchically(PROPERTIES, MOCKSERVER_PROXY_AUTHENTICATION_PASSWORD, "MOCKSERVER_PROXY_AUTHENTICATION_PASSWORD", "");
     }
 
+    /**
+     * <p>The required password for proxy authentication to MockServer</p>
+     * <p><strong>Note:</strong> <a target="_blank" href="https://www.oracle.com/java/technologies/javase/8u111-relnotes.html">8u111 Update Release Notes</a> state that the Basic authentication scheme has been deactivated when setting up an HTTPS tunnel.  To resolve this clear or set to an empty string the following system properties: <code class="inline code">jdk.http.auth.tunneling.disabledSchemes</code> and <code class="inline code">jdk.http.auth.proxying.disabledSchemes</code>.</p>
+     * <p>
+     * The default is ""
+     *
+     * @param proxyAuthenticationPassword required password for proxy authentication to MockServer
+     */
     public static void proxyAuthenticationPassword(String proxyAuthenticationPassword) {
         System.setProperty(MOCKSERVER_PROXY_AUTHENTICATION_PASSWORD, proxyAuthenticationPassword);
     }
@@ -1172,6 +1291,13 @@ public class ConfigurationProperties {
         return readPropertyHierarchically(PROPERTIES, MOCKSERVER_INITIALIZATION_CLASS, "MOCKSERVER_INITIALIZATION_CLASS", "");
     }
 
+    /**
+     * The class (and package) used to initialize expectations in MockServer at startup, if set MockServer will load and call this class to initialise expectations when is starts.
+     * <p>
+     * The default is null
+     *
+     * @param initializationClass class (and package) used to initialize expectations in MockServer at startup
+     */
     public static void initializationClass(String initializationClass) {
         System.setProperty(MOCKSERVER_INITIALIZATION_CLASS, initializationClass);
     }
@@ -1180,6 +1306,12 @@ public class ConfigurationProperties {
         return readPropertyHierarchically(PROPERTIES, MOCKSERVER_INITIALIZATION_JSON_PATH, "MOCKSERVER_INITIALIZATION_JSON_PATH", "");
     }
 
+    /**
+     * <p>The path to the json file used to initialize expectations in MockServer at startup, if set MockServer will load this file and initialise expectations for each item in the file when is starts.</p>
+     * <p>The expected format of the file is a JSON array of expectations, as per the <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.12.x#/Expectations" target="_blank">REST API format</a></p>
+     *
+     * @param initializationJsonPath path to the json file used to initialize expectations in MockServer at startup
+     */
     public static void initializationJsonPath(String initializationJsonPath) {
         System.setProperty(MOCKSERVER_INITIALIZATION_JSON_PATH, initializationJsonPath);
     }
@@ -1188,6 +1320,15 @@ public class ConfigurationProperties {
         return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_WATCH_INITIALIZATION_JSON, "MOCKSERVER_WATCH_INITIALIZATION_JSON", "" + false));
     }
 
+    /**
+     * <p>If enabled the initialization json file will be watched for changes, any changes found will result in expectations being created, remove or updated by matching against their key.</p>
+     * <p>If duplicate keys exist only the last duplicate key in the file will be processed and all duplicates except the last duplicate will be removed.</p>
+     * <p>The order of expectations in the file is the order in which they are created if they are new, however, re-ordering existing expectations does not change the order they are matched against incoming requests.</p>
+     *
+     * <p>The default is false</p>
+     *
+     * @param enable if enabled the initialization json file will be watched for changes
+     */
     public static void watchInitializationJson(boolean enable) {
         System.setProperty(MOCKSERVER_WATCH_INITIALIZATION_JSON, "" + enable);
     }
@@ -1196,6 +1337,13 @@ public class ConfigurationProperties {
         return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_PERSIST_EXPECTATIONS, "MOCKSERVER_PERSIST_EXPECTATIONS", "" + false));
     }
 
+    /**
+     * Enable the persisting of expectations as json, which is updated whenever the expectation state is updated (i.e. add, clear, expires, etc)
+     * <p>
+     * The default is false
+     *
+     * @param enable the persisting of expectations as json
+     */
     public static void persistExpectations(boolean enable) {
         System.setProperty(MOCKSERVER_PERSIST_EXPECTATIONS, "" + enable);
     }
@@ -1204,6 +1352,13 @@ public class ConfigurationProperties {
         return readPropertyHierarchically(PROPERTIES, MOCKSERVER_PERSISTED_EXPECTATIONS_PATH, "MOCKSERVER_PERSISTED_EXPECTATIONS_PATH", "persistedExpectations.json");
     }
 
+    /**
+     * The file path used to save persisted expectations as json, which is updated whenever the expectation state is updated (i.e. add, clear, expires, etc)
+     * <p>
+     * The default is "persistedExpectations.json"
+     *
+     * @param persistedExpectationsPath file path used to save persisted expectations as json
+     */
     public static void persistedExpectationsPath(String persistedExpectationsPath) {
         System.setProperty(MOCKSERVER_PERSISTED_EXPECTATIONS_PATH, persistedExpectationsPath);
     }
@@ -1220,6 +1375,13 @@ public class ConfigurationProperties {
         return enableCORSForAPI;
     }
 
+    /**
+     * Enable CORS for MockServer REST API so that the API can be used for javascript running in browsers, such as selenium
+     * <p>
+     * The default is false
+     *
+     * @param enable CORS for MockServer REST API
+     */
     public static void enableCORSForAPI(boolean enable) {
         System.setProperty(MOCKSERVER_ENABLE_CORS_FOR_API, "" + enable);
         enableCORSForAPI = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_ENABLE_CORS_FOR_API, "MOCKSERVER_ENABLE_CORS_FOR_API", DEFAULT_ENABLE_CORS_FOR_API));
@@ -1229,6 +1391,13 @@ public class ConfigurationProperties {
         return enableCORSForAllResponses;
     }
 
+    /**
+     * Enable CORS for all responses from MockServer, including the REST API and expectation responses
+     * <p>
+     * The default is false
+     *
+     * @param enable CORS for all responses from MockServer
+     */
     public static void enableCORSForAllResponses(boolean enable) {
         System.setProperty(MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES, "" + enable);
         enableCORSForAllResponses = Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES, "MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES", DEFAULT_ENABLE_CORS_FOR_ALL_RESPONSES));
@@ -1238,6 +1407,13 @@ public class ConfigurationProperties {
         return readPropertyHierarchically(PROPERTIES, MOCKSERVER_CORS_ALLOW_HEADERS, "MOCKSERVER_CORS_ALLOW_HEADERS", DEFAULT_CORS_ALLOW_HEADERS);
     }
 
+    /**
+     * <p>Configure the default value used for CORS in the access-control-allow-headers and access-control-expose-headers headers.</p>
+     * <p>In addition to this default value any headers specified in the request header access-control-request-headers also get added to access-control-allow-headers and access-control-expose-headers headers in a CORS response.</p>
+     * <p>The default is "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"</p>
+     *
+     * @param corsAllowHeaders the default value used for CORS in the access-control-allow-headers and access-control-expose-headers headers
+     */
     public static void corsAllowHeaders(String corsAllowHeaders) {
         System.setProperty(MOCKSERVER_CORS_ALLOW_HEADERS, corsAllowHeaders);
     }
@@ -1246,6 +1422,12 @@ public class ConfigurationProperties {
         return readPropertyHierarchically(PROPERTIES, MOCKSERVER_CORS_ALLOW_METHODS, "MOCKSERVER_CORS_ALLOW_METHODS", DEFAULT_CORS_ALLOW_METHODS);
     }
 
+    /**
+     * <p>Configure the value used for CORS in the access-control-allow-methods header.</p>
+     * <p>The default is "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE"</p>
+     *
+     * @param corsAllowMethods the value used for CORS in the access-control-allow-methods header
+     */
     public static void corsAllowMethods(String corsAllowMethods) {
         System.setProperty(MOCKSERVER_CORS_ALLOW_METHODS, corsAllowMethods);
     }
@@ -1254,6 +1436,13 @@ public class ConfigurationProperties {
         return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_CORS_ALLOW_CREDENTIALS, "MOCKSERVER_CORS_ALLOW_CREDENTIALS", DEFAULT_CORS_ALLOW_CREDENTIALS));
     }
 
+    /**
+     * Configure the value used for CORS in the access-control-allow-credentials header.
+     * <p>
+     * The default is true
+     *
+     * @param allow the value used for CORS in the access-control-allow-credentials header
+     */
     public static void corsAllowCredentials(boolean allow) {
         System.setProperty(MOCKSERVER_CORS_ALLOW_CREDENTIALS, "" + allow);
     }
@@ -1262,6 +1451,13 @@ public class ConfigurationProperties {
         return readIntegerProperty(MOCKSERVER_CORS_MAX_AGE_IN_SECONDS, "MOCKSERVER_CORS_MAX_AGE_IN_SECONDS", DEFAULT_CORS_MAX_AGE_IN_SECONDS);
     }
 
+    /**
+     * Configure the value used for CORS in the access-control-max-age header.
+     * <p>
+     * The default is 300
+     *
+     * @param ageInSeconds the value used for CORS in the access-control-max-age header.
+     */
     public static void corsMaxAgeInSeconds(int ageInSeconds) {
         System.setProperty(MOCKSERVER_CORS_MAX_AGE_IN_SECONDS, "" + ageInSeconds);
     }
@@ -1276,6 +1472,8 @@ public class ConfigurationProperties {
      * If this value is not modified then only PUT /mockserver/status but is a none blank value is provided for this value then GET requests to this path will return the 200 Ok status response showing the MockServer version and bound ports.
      * <p>
      * A GET request to this path will be matched before any expectation matching or proxying of requests.
+     * <p>
+     * The default is ""
      *
      * @param livenessPath path to support HTTP GET requests for status response
      */

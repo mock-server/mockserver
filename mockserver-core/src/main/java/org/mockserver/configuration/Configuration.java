@@ -237,7 +237,8 @@ public class Configuration {
      * </p>
      * <p>
      * The default maximum depends on the available memory in the JVM with an upper limit of 5000, but can be overridden using defaultMaxExpectations
-     *</p>
+     * </p>
+     *
      * @param maxExpectations maximum number of expectations to store
      */
     public Configuration maxExpectations(Integer maxExpectations) {
@@ -258,7 +259,8 @@ public class Configuration {
      * </p>
      * <p>
      * This default maximum depends on the available memory in the JVM with an upper limit of 5000
-     *</p>
+     * </p>
+     *
      * @param defaultMaxExpectations maximum number of expectations to store
      */
     public Configuration defaultMaxExpectations(Integer defaultMaxExpectations) {
@@ -279,7 +281,8 @@ public class Configuration {
      * </p>
      * <p>
      * The default maximum depends on the available memory in the JVM with an upper limit of 60000, but can be overridden using defaultMaxLogEntries
-     *</p>
+     * </p>
+     *
      * @param maxLogEntries maximum number of expectations to store
      */
     public Configuration maxLogEntries(Integer maxLogEntries) {
@@ -300,7 +303,8 @@ public class Configuration {
      * </p>
      * <p>
      * The default maximum depends on the available memory in the JVM with an upper limit of 60000
-     *</p>
+     * </p>
+     *
      * @param defaultMaxLogEntries maximum number of expectations to store
      */
     public Configuration defaultMaxLogEntries(Integer defaultMaxLogEntries) {
@@ -454,7 +458,7 @@ public class Configuration {
 
     /**
      * Maximum time allowed in milliseconds for any future to wait, for example when waiting for a response over a web socket callback.
-     *
+     * <p>
      * Default is 60,000 ms
      *
      * @param maxFutureTimeoutInMillis maximum time allowed in milliseconds
@@ -491,7 +495,7 @@ public class Configuration {
 
     /**
      * Maximum time in milliseconds allowed for a response from a socket
-     *
+     * <p>
      * Default is 20,000 ms
      *
      * @param maxSocketTimeoutInMillis maximum time in milliseconds allowed
@@ -510,7 +514,7 @@ public class Configuration {
 
     /**
      * Maximum time in milliseconds allowed to connect to a socket
-     *
+     * <p>
      * Default is 20,000 ms
      *
      * @param socketConnectionTimeoutInMillis maximum time allowed in milliseconds
@@ -527,6 +531,13 @@ public class Configuration {
         return alwaysCloseSocketConnections;
     }
 
+    /**
+     * <p>If true socket connections will always be closed after a response is returned, if false connection is only closed if request header indicate connection should be closed.</p>
+     * <p>
+     * Default is false
+     *
+     * @param alwaysCloseSocketConnections true socket connections will always be closed after a response is returned
+     */
     public Configuration alwaysCloseSocketConnections(Boolean alwaysCloseSocketConnections) {
         this.alwaysCloseSocketConnections = alwaysCloseSocketConnections;
         return this;
@@ -539,6 +550,13 @@ public class Configuration {
         return localBoundIP;
     }
 
+    /**
+     * The local IP address to bind to for accepting new socket connections
+     * <p>
+     * Default is 0.0.0.0
+     *
+     * @param localBoundIP local IP address to bind to for accepting new socket connections
+     */
     public Configuration localBoundIP(String localBoundIP) {
         this.localBoundIP = localBoundIP;
         return this;
@@ -551,6 +569,13 @@ public class Configuration {
         return maxInitialLineLength;
     }
 
+    /**
+     * Maximum size of the first line of an HTTP request
+     * <p>
+     * The default is Integer.MAX_VALUE
+     *
+     * @param maxInitialLineLength maximum size of the first line of an HTTP request
+     */
     public Configuration maxInitialLineLength(Integer maxInitialLineLength) {
         this.maxInitialLineLength = maxInitialLineLength;
         return this;
@@ -563,6 +588,13 @@ public class Configuration {
         return maxHeaderSize;
     }
 
+    /**
+     * Maximum size of HTTP request headers
+     * <p>
+     * The default is Integer.MAX_VALUE
+     *
+     * @param maxHeaderSize maximum size of HTTP request headers
+     */
     public Configuration maxHeaderSize(Integer maxHeaderSize) {
         this.maxHeaderSize = maxHeaderSize;
         return this;
@@ -575,6 +607,13 @@ public class Configuration {
         return maxChunkSize;
     }
 
+    /**
+     * Maximum size of HTTP chunks in request or responses
+     * <p>
+     * The default is Integer.MAX_VALUE
+     *
+     * @param maxChunkSize maximum size of HTTP chunks in request or responses
+     */
     public Configuration maxChunkSize(Integer maxChunkSize) {
         this.maxChunkSize = maxChunkSize;
         return this;
@@ -587,6 +626,13 @@ public class Configuration {
         return useSemicolonAsQueryParameterSeparator;
     }
 
+    /**
+     * If true semicolons are treated as a separator for a query parameter string, if false the semicolon is treated as a normal character that is part of a query parameter value.
+     * <p>
+     * The default is true
+     *
+     * @param useSemicolonAsQueryParameterSeparator true semicolons are treated as a separator for a query parameter string
+     */
     public Configuration useSemicolonAsQueryParameterSeparator(Boolean useSemicolonAsQueryParameterSeparator) {
         this.useSemicolonAsQueryParameterSeparator = useSemicolonAsQueryParameterSeparator;
         return this;
@@ -599,6 +645,13 @@ public class Configuration {
         return enableCORSForAPI;
     }
 
+    /**
+     * Enable CORS for MockServer REST API so that the API can be used for javascript running in browsers, such as selenium
+     * <p>
+     * The default is false
+     *
+     * @param enableCORSForAPI CORS for MockServer REST API
+     */
     public Configuration enableCORSForAPI(Boolean enableCORSForAPI) {
         this.enableCORSForAPI = enableCORSForAPI;
         return this;
@@ -611,6 +664,13 @@ public class Configuration {
         return enableCORSForAllResponses;
     }
 
+    /**
+     * Enable CORS for all responses from MockServer, including the REST API and expectation responses
+     * <p>
+     * The default is false
+     *
+     * @param enableCORSForAllResponses CORS for all responses from MockServer
+     */
     public Configuration enableCORSForAllResponses(Boolean enableCORSForAllResponses) {
         this.enableCORSForAllResponses = enableCORSForAllResponses;
         return this;
@@ -623,6 +683,13 @@ public class Configuration {
         return corsAllowHeaders;
     }
 
+    /**
+     * <p>Configure the default value used for CORS in the access-control-allow-headers and access-control-expose-headers headers.</p>
+     * <p>In addition to this default value any headers specified in the request header access-control-request-headers also get added to access-control-allow-headers and access-control-expose-headers headers in a CORS response.</p>
+     * <p>The default is "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"</p>
+     *
+     * @param corsAllowHeaders the default value used for CORS in the access-control-allow-headers and access-control-expose-headers headers
+     */
     public Configuration corsAllowHeaders(String corsAllowHeaders) {
         this.corsAllowHeaders = corsAllowHeaders;
         return this;
@@ -635,6 +702,12 @@ public class Configuration {
         return corsAllowMethods;
     }
 
+    /**
+     * <p>Configure the default value used for CORS in the access-control-allow-methods header.</p>
+     * <p>The default is "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE"</p>
+     *
+     * @param corsAllowMethods the default value used for CORS in the access-control-allow-methods header
+     */
     public Configuration corsAllowMethods(String corsAllowMethods) {
         this.corsAllowMethods = corsAllowMethods;
         return this;
@@ -647,6 +720,13 @@ public class Configuration {
         return corsAllowCredentials;
     }
 
+    /**
+     * Configure the value used for CORS in the access-control-allow-credentials header.
+     * <p>
+     * The default is true
+     *
+     * @param corsAllowCredentials the value used for CORS in the access-control-allow-credentials header
+     */
     public Configuration corsAllowCredentials(Boolean corsAllowCredentials) {
         this.corsAllowCredentials = corsAllowCredentials;
         return this;
@@ -659,6 +739,13 @@ public class Configuration {
         return corsMaxAgeInSeconds;
     }
 
+    /**
+     * Configure the value used for CORS in the access-control-max-age header.
+     * <p>
+     * The default is 300
+     *
+     * @param corsMaxAgeInSeconds the value used for CORS in the access-control-max-age header.
+     */
     public Configuration corsMaxAgeInSeconds(Integer corsMaxAgeInSeconds) {
         this.corsMaxAgeInSeconds = corsMaxAgeInSeconds;
         return this;
@@ -671,6 +758,13 @@ public class Configuration {
         return initializationClass;
     }
 
+    /**
+     * The class (and package) used to initialize expectations in MockServer at startup, if set MockServer will load and call this class to initialise expectations when is starts.
+     * <p>
+     * The default is null
+     *
+     * @param initializationClass class (and package) used to initialize expectations in MockServer at startup
+     */
     public Configuration initializationClass(String initializationClass) {
         this.initializationClass = initializationClass;
         return this;
@@ -683,6 +777,12 @@ public class Configuration {
         return initializationJsonPath;
     }
 
+    /**
+     * <p>The path to the json file used to initialize expectations in MockServer at startup, if set MockServer will load this file and initialise expectations for each item in the file when is starts.</p>
+     * <p>The expected format of the file is a JSON array of expectations, as per the <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.12.x#/Expectations" target="_blank">REST API format</a></p>
+     *
+     * @param initializationJsonPath path to the json file used to initialize expectations in MockServer at startup
+     */
     public Configuration initializationJsonPath(String initializationJsonPath) {
         this.initializationJsonPath = initializationJsonPath;
         return this;
@@ -695,6 +795,15 @@ public class Configuration {
         return watchInitializationJson;
     }
 
+    /**
+     * <p>If enabled the initialization json file will be watched for changes, any changes found will result in expectations being created, remove or updated by matching against their key.</p>
+     * <p>If duplicate keys exist only the last duplicate key in the file will be processed and all duplicates except the last duplicate will be removed.</p>
+     * <p>The order of expectations in the file is the order in which they are created if they are new, however, re-ordering existing expectations does not change the order they are matched against incoming requests.</p>
+     *
+     * <p>The default is false</p>
+     *
+     * @param watchInitializationJson if enabled the initialization json file will be watched for changes
+     */
     public Configuration watchInitializationJson(Boolean watchInitializationJson) {
         this.watchInitializationJson = watchInitializationJson;
         return this;
@@ -707,6 +816,13 @@ public class Configuration {
         return persistExpectations;
     }
 
+    /**
+     * Enable the persisting of expectations as json, which is updated whenever the expectation state is updated (i.e. add, clear, expires, etc)
+     * <p>
+     * The default is false
+     *
+     * @param persistExpectations the persisting of expectations as json
+     */
     public Configuration persistExpectations(Boolean persistExpectations) {
         this.persistExpectations = persistExpectations;
         return this;
@@ -719,6 +835,13 @@ public class Configuration {
         return persistedExpectationsPath;
     }
 
+    /**
+     * The file path used to save persisted expectations as json, which is updated whenever the expectation state is updated (i.e. add, clear, expires, etc)
+     * <p>
+     * The default is "persistedExpectations.json"
+     *
+     * @param persistedExpectationsPath file path used to save persisted expectations as json
+     */
     public Configuration persistedExpectationsPath(String persistedExpectationsPath) {
         this.persistedExpectationsPath = persistedExpectationsPath;
         return this;
@@ -731,6 +854,7 @@ public class Configuration {
         return maximumNumberOfRequestToReturnInVerificationFailure;
     }
 
+    // TODO(jamesdbloom) add description and html
     public Configuration maximumNumberOfRequestToReturnInVerificationFailure(Integer maximumNumberOfRequestToReturnInVerificationFailure) {
         this.maximumNumberOfRequestToReturnInVerificationFailure = maximumNumberOfRequestToReturnInVerificationFailure;
         return this;
@@ -743,6 +867,12 @@ public class Configuration {
         return attemptToProxyIfNoMatchingExpectation;
     }
 
+    /**
+     * If true (the default) when no matching expectation is found, and the host header of the request does not match MockServer's host, then MockServer attempts to proxy the request if that fails then a 404 is returned.
+     * If false when no matching expectation is found, and MockServer is not being used as a proxy, then MockServer always returns a 404 immediately.
+     *
+     * @param attemptToProxyIfNoMatchingExpectation enables automatically attempted proxying of request that don't match an expectation and look like they should be proxied
+     */
     public Configuration attemptToProxyIfNoMatchingExpectation(Boolean attemptToProxyIfNoMatchingExpectation) {
         this.attemptToProxyIfNoMatchingExpectation = attemptToProxyIfNoMatchingExpectation;
         return this;
@@ -755,6 +885,13 @@ public class Configuration {
         return forwardHttpProxy;
     }
 
+    /**
+     * Use HTTP proxy (i.e. via Host header) for all outbound / forwarded requests
+     * <p>
+     * The default is null
+     *
+     * @param forwardHttpProxy host and port for HTTP proxy (i.e. via Host header) for all outbound / forwarded requests
+     */
     public Configuration forwardHttpProxy(InetSocketAddress forwardHttpProxy) {
         this.forwardHttpProxy = forwardHttpProxy;
         return this;
@@ -767,6 +904,13 @@ public class Configuration {
         return forwardHttpsProxy;
     }
 
+    /**
+     * Use HTTPS proxy (i.e. HTTP CONNECT) for all outbound / forwarded requests, supports TLS tunnelling of HTTPS requests
+     * <p>
+     * The default is null
+     *
+     * @param forwardHttpsProxy host and port for HTTPS proxy (i.e. HTTP CONNECT) for all outbound / forwarded requests
+     */
     public Configuration forwardHttpsProxy(InetSocketAddress forwardHttpsProxy) {
         this.forwardHttpsProxy = forwardHttpsProxy;
         return this;
@@ -779,6 +923,13 @@ public class Configuration {
         return forwardSocksProxy;
     }
 
+    /**
+     * Use SOCKS proxy for all outbound / forwarded requests, support TLS tunnelling of TCP connections
+     * <p>
+     * The default is null
+     *
+     * @param forwardSocksProxy host and port for SOCKS proxy for all outbound / forwarded requests
+     */
     public Configuration forwardSocksProxy(InetSocketAddress forwardSocksProxy) {
         this.forwardSocksProxy = forwardSocksProxy;
         return this;
@@ -791,6 +942,14 @@ public class Configuration {
         return forwardProxyAuthenticationUsername;
     }
 
+    /**
+     * <p>Username for proxy authentication when using HTTPS proxy (i.e. HTTP CONNECT) for all outbound / forwarded requests</p>
+     * <p><strong>Note:</strong> <a target="_blank" href="https://www.oracle.com/java/technologies/javase/8u111-relnotes.html">8u111 Update Release Notes</a> state that the Basic authentication scheme has been deactivated when setting up an HTTPS tunnel.  To resolve this clear or set to an empty string the following system properties: <code class="inline code">jdk.http.auth.tunneling.disabledSchemes</code> and <code class="inline code">jdk.http.auth.proxying.disabledSchemes</code>.</p>
+     * <p>
+     * The default is null
+     *
+     * @param forwardProxyAuthenticationUsername username for proxy authentication
+     */
     public Configuration forwardProxyAuthenticationUsername(String forwardProxyAuthenticationUsername) {
         this.forwardProxyAuthenticationUsername = forwardProxyAuthenticationUsername;
         return this;
@@ -803,6 +962,14 @@ public class Configuration {
         return forwardProxyAuthenticationPassword;
     }
 
+    /**
+     * <p>Password for proxy authentication when using HTTPS proxy (i.e. HTTP CONNECT) for all outbound / forwarded requests</p>
+     * <p><strong>Note:</strong> <a target="_blank" href="https://www.oracle.com/java/technologies/javase/8u111-relnotes.html">8u111 Update Release Notes</a> state that the Basic authentication scheme has been deactivated when setting up an HTTPS tunnel.  To resolve this clear or set to an empty string the following system properties: <code class="inline code">jdk.http.auth.tunneling.disabledSchemes</code> and <code class="inline code">jdk.http.auth.proxying.disabledSchemes</code>.</p>
+     * <p>
+     * The default is null
+     *
+     * @param forwardProxyAuthenticationPassword password for proxy authentication
+     */
     public Configuration forwardProxyAuthenticationPassword(String forwardProxyAuthenticationPassword) {
         this.forwardProxyAuthenticationPassword = forwardProxyAuthenticationPassword;
         return this;
@@ -815,6 +982,11 @@ public class Configuration {
         return proxyAuthenticationRealm;
     }
 
+    /**
+     * The authentication realm for proxy authentication to MockServer
+     *
+     * @param proxyAuthenticationRealm the authentication realm for proxy authentication
+     */
     public Configuration proxyAuthenticationRealm(String proxyAuthenticationRealm) {
         this.proxyAuthenticationRealm = proxyAuthenticationRealm;
         return this;
@@ -827,6 +999,14 @@ public class Configuration {
         return proxyAuthenticationUsername;
     }
 
+    /**
+     * <p>The required username for proxy authentication to MockServer</p>
+     * <p><strong>Note:</strong> <a target="_blank" href="https://www.oracle.com/java/technologies/javase/8u111-relnotes.html">8u111 Update Release Notes</a> state that the Basic authentication scheme has been deactivated when setting up an HTTPS tunnel.  To resolve this clear or set to an empty string the following system properties: <code class="inline code">jdk.http.auth.tunneling.disabledSchemes</code> and <code class="inline code">jdk.http.auth.proxying.disabledSchemes</code>.</p>
+     * <p>
+     * The default is ""
+     *
+     * @param proxyAuthenticationUsername required username for proxy authentication to MockServer
+     */
     public Configuration proxyAuthenticationUsername(String proxyAuthenticationUsername) {
         this.proxyAuthenticationUsername = proxyAuthenticationUsername;
         return this;
@@ -839,6 +1019,14 @@ public class Configuration {
         return proxyAuthenticationPassword;
     }
 
+    /**
+     * <p>The required password for proxy authentication to MockServer</p>
+     * <p><strong>Note:</strong> <a target="_blank" href="https://www.oracle.com/java/technologies/javase/8u111-relnotes.html">8u111 Update Release Notes</a> state that the Basic authentication scheme has been deactivated when setting up an HTTPS tunnel.  To resolve this clear or set to an empty string the following system properties: <code class="inline code">jdk.http.auth.tunneling.disabledSchemes</code> and <code class="inline code">jdk.http.auth.proxying.disabledSchemes</code>.</p>
+     * <p>
+     * The default is ""
+     *
+     * @param proxyAuthenticationPassword required password for proxy authentication to MockServer
+     */
     public Configuration proxyAuthenticationPassword(String proxyAuthenticationPassword) {
         this.proxyAuthenticationPassword = proxyAuthenticationPassword;
         return this;
@@ -851,6 +1039,17 @@ public class Configuration {
         return livenessHttpGetPath;
     }
 
+    /**
+     * Path to support HTTP GET requests for status response (also available on PUT /mockserver/status).
+     * <p>
+     * If this value is not modified then only PUT /mockserver/status but is a none blank value is provided for this value then GET requests to this path will return the 200 Ok status response showing the MockServer version and bound ports.
+     * <p>
+     * A GET request to this path will be matched before any expectation matching or proxying of requests.
+     * <p>
+     * The default is ""
+     *
+     * @param livenessHttpGetPath path to support HTTP GET requests for status response
+     */
     public Configuration livenessHttpGetPath(String livenessHttpGetPath) {
         this.livenessHttpGetPath = livenessHttpGetPath;
         return this;
@@ -863,6 +1062,7 @@ public class Configuration {
         return controlPlaneTLSMutualAuthenticationRequired;
     }
 
+    // TODO(jamesdbloom) add description and html
     public Configuration controlPlaneTLSMutualAuthenticationRequired(Boolean controlPlaneTLSMutualAuthenticationRequired) {
         this.controlPlaneTLSMutualAuthenticationRequired = controlPlaneTLSMutualAuthenticationRequired;
         return this;
@@ -875,6 +1075,7 @@ public class Configuration {
         return controlPlaneTLSMutualAuthenticationCAChain;
     }
 
+    // TODO(jamesdbloom) add description and html
     public Configuration controlPlaneTLSMutualAuthenticationCAChain(String controlPlaneTLSMutualAuthenticationCAChain) {
         this.controlPlaneTLSMutualAuthenticationCAChain = controlPlaneTLSMutualAuthenticationCAChain;
         return this;
@@ -887,6 +1088,7 @@ public class Configuration {
         return controlPlanePrivateKeyPath;
     }
 
+    // TODO(jamesdbloom) add description and html
     public Configuration controlPlanePrivateKeyPath(String controlPlanePrivateKeyPath) {
         this.controlPlanePrivateKeyPath = controlPlanePrivateKeyPath;
         return this;
@@ -899,6 +1101,7 @@ public class Configuration {
         return controlPlaneX509CertificatePath;
     }
 
+    // TODO(jamesdbloom) add description and html
     public Configuration controlPlaneX509CertificatePath(String controlPlaneX509CertificatePath) {
         this.controlPlaneX509CertificatePath = controlPlaneX509CertificatePath;
         return this;
@@ -911,6 +1114,7 @@ public class Configuration {
         return controlPlaneJWTAuthenticationRequired;
     }
 
+    // TODO(jamesdbloom) add description and html
     public Configuration controlPlaneJWTAuthenticationRequired(Boolean controlPlaneJWTAuthenticationRequired) {
         this.controlPlaneJWTAuthenticationRequired = controlPlaneJWTAuthenticationRequired;
         return this;
@@ -923,6 +1127,7 @@ public class Configuration {
         return controlPlaneJWTAuthenticationJWKSource;
     }
 
+    // TODO(jamesdbloom) add description and html
     public Configuration controlPlaneJWTAuthenticationJWKSource(String controlPlaneJWTAuthenticationJWKSource) {
         this.controlPlaneJWTAuthenticationJWKSource = controlPlaneJWTAuthenticationJWKSource;
         return this;
@@ -935,6 +1140,27 @@ public class Configuration {
         return useBouncyCastleForKeyAndCertificateGeneration;
     }
 
+    /**
+     * <p>Use BouncyCastle instead of the Java JDK to generate Certificate and Keys, this is helpful if:</p>
+     * <ul>
+     *     <li>using Java 16+ or</li>
+     *     <li>using the IBM JVM or</li>
+     *     <li>avoiding bugs in the X509 creation logic Java JDK (i.e. such as the format of SAN and CN)</li>
+     * </ul>
+     * <p>When enabling this setting the following dependencies must be provided on the classpath (they are not included with MockServer)</p>
+     * <pre>&lt;dependency&gt;
+     *   &lt;groupId&gt;org.bouncycastle&lt;/groupId&gt;
+     *   &lt;artifactId&gt;bcprov-jdk15on&lt;/artifactId&gt;
+     *   &lt;version&gt;1.70&lt;/version&gt;
+     * &lt;/dependency&gt;
+     * &lt;dependency&gt;
+     *   &lt;groupId&gt;org.bouncycastle&lt;/groupId&gt;
+     *   &lt;artifactId&gt;bcpkix-jdk15on&lt;/artifactId&gt;
+     *   &lt;version&gt;1.70&lt;/version&gt;
+     * &lt;/dependency&gt;</pre>
+     *
+     * @param useBouncyCastleForKeyAndCertificateGeneration enable BouncyCastle instead of the Java JDK to generate Certificate and Keys
+     */
     public Configuration useBouncyCastleForKeyAndCertificateGeneration(Boolean useBouncyCastleForKeyAndCertificateGeneration) {
         this.useBouncyCastleForKeyAndCertificateGeneration = useBouncyCastleForKeyAndCertificateGeneration;
         return this;
@@ -947,6 +1173,12 @@ public class Configuration {
         return proactivelyInitialiseTLS;
     }
 
+    /**
+     * <p>Proactively initialise TLS during start to ensure that if dynamicallyCreateCertificateAuthorityCertificate is enabled the Certificate Authority X.509 Certificate and Private Key will be created during start up and not when the first TLS connection is received.</p>
+     * <p>This setting will also ensure any configured private key and X.509 will be loaded during start up and not when the first TLS connection is received to give immediate feedback on any related TLS configuration errors.</p>
+     *
+     * @param proactivelyInitialiseTLS proactively initialise TLS at startup
+     */
     public Configuration proactivelyInitialiseTLS(Boolean proactivelyInitialiseTLS) {
         this.proactivelyInitialiseTLS = proactivelyInitialiseTLS;
         return this;
@@ -977,6 +1209,15 @@ public class Configuration {
         return dynamicallyCreateCertificateAuthorityCertificate;
     }
 
+    /**
+     * Enable dynamic creation of Certificate Authority X509 certificate and private key.
+     * <p>
+     * Enable this property to increase the security of trusting the MockServer Certificate Authority X509 by ensuring a local dynamic value is used instead of the public value in the MockServer git repo.
+     * <p>
+     * These PEM files will be created and saved in the directory specified with configuration property directoryToSaveDynamicSSLCertificate.
+     *
+     * @param dynamicallyCreateCertificateAuthorityCertificate dynamic creation of Certificate Authority X509 certificate and private key.
+     */
     public Configuration dynamicallyCreateCertificateAuthorityCertificate(Boolean dynamicallyCreateCertificateAuthorityCertificate) {
         this.dynamicallyCreateCertificateAuthorityCertificate = dynamicallyCreateCertificateAuthorityCertificate;
         return this;
@@ -989,6 +1230,11 @@ public class Configuration {
         return directoryToSaveDynamicSSLCertificate;
     }
 
+    /**
+     * Directory used to save the dynamically generated Certificate Authority X.509 Certificate and Private Key.
+     *
+     * @param directoryToSaveDynamicSSLCertificate directory to save Certificate Authority X.509 Certificate and Private Key
+     */
     public Configuration directoryToSaveDynamicSSLCertificate(String directoryToSaveDynamicSSLCertificate) {
         this.directoryToSaveDynamicSSLCertificate = directoryToSaveDynamicSSLCertificate;
         return this;
@@ -1001,6 +1247,11 @@ public class Configuration {
         return preventCertificateDynamicUpdate;
     }
 
+    /**
+     * Prevent certificates from dynamically updating when domain list changes
+     *
+     * @param preventCertificateDynamicUpdate prevent certificates from dynamically updating when domain list changes
+     */
     public Configuration preventCertificateDynamicUpdate(Boolean preventCertificateDynamicUpdate) {
         this.preventCertificateDynamicUpdate = preventCertificateDynamicUpdate;
         return this;
@@ -1013,6 +1264,13 @@ public class Configuration {
         return sslCertificateDomainName;
     }
 
+    /**
+     * The domain name for auto-generate TLS certificates
+     *
+     * The default is "localhost"
+     *
+     * @param sslCertificateDomainName domain name for auto-generate TLS certificates
+     */
     public Configuration sslCertificateDomainName(String sslCertificateDomainName) {
         this.sslCertificateDomainName = sslCertificateDomainName;
         return this;
@@ -1025,11 +1283,25 @@ public class Configuration {
         return sslSubjectAlternativeNameDomains;
     }
 
+    /**
+     * The Subject Alternative Name (SAN) domain names for auto-generate TLS certificates
+     *
+     * The default is "localhost"
+     *
+     * @param sslSubjectAlternativeNameDomains Subject Alternative Name (SAN) domain names for auto-generate TLS certificates
+     */
     public Configuration sslSubjectAlternativeNameDomains(String... sslSubjectAlternativeNameDomains) {
         this.sslSubjectAlternativeNameDomains = Sets.newConcurrentHashSet(Arrays.asList(sslSubjectAlternativeNameDomains));
         return this;
     }
 
+    /**
+     * The Subject Alternative Name (SAN) domain names for auto-generate TLS certificates
+     *
+     * The default is "localhost"
+     *
+     * @param sslSubjectAlternativeNameDomains Subject Alternative Name (SAN) domain names for auto-generate TLS certificates
+     */
     public Configuration sslSubjectAlternativeNameDomains(Set<String> sslSubjectAlternativeNameDomains) {
         this.sslSubjectAlternativeNameDomains = sslSubjectAlternativeNameDomains;
         return this;
@@ -1042,11 +1314,25 @@ public class Configuration {
         return sslSubjectAlternativeNameIps;
     }
 
+    /**
+     * <p>The Subject Alternative Name (SAN) IP addresses for auto-generate TLS certificates</p>
+     *
+     * <p>The default is 127.0.0.1, 0.0.0.0</p>
+     *
+     * @param sslSubjectAlternativeNameIps Subject Alternative Name (SAN) IP addresses for auto-generate TLS certificates
+     */
     public Configuration sslSubjectAlternativeNameIps(String... sslSubjectAlternativeNameIps) {
         sslSubjectAlternativeNameIps(Sets.newConcurrentHashSet(Arrays.asList(sslSubjectAlternativeNameIps)));
         return this;
     }
 
+    /**
+     * <p>The Subject Alternative Name (SAN) IP addresses for auto-generate TLS certificates</p>
+     *
+     * <p>The default is 127.0.0.1, 0.0.0.0</p>
+     *
+     * @param sslSubjectAlternativeNameIps Subject Alternative Name (SAN) IP addresses for auto-generate TLS certificates
+     */
     public Configuration sslSubjectAlternativeNameIps(Set<String> sslSubjectAlternativeNameIps) {
         this.sslSubjectAlternativeNameIps = sslSubjectAlternativeNameIps;
         return this;
@@ -1059,6 +1345,12 @@ public class Configuration {
         return certificateAuthorityPrivateKey;
     }
 
+    /**
+     * File location or classpath location of custom Private Key for Certificate Authority for TLS, the private key must be a PKCS#8 PEM file and must match the certificateAuthorityCertificate
+     * To convert a PKCS#1 (i.e. default for Bouncy Castle) to a PKCS#8 the following command can be used: openssl pkcs8 -topk8 -inform PEM -in private_key_PKCS_1.pem -out private_key_PKCS_8.pem -nocrypt
+     *
+     * @param certificateAuthorityPrivateKey location of the PEM file containing the certificate authority private key
+     */
     public Configuration certificateAuthorityPrivateKey(String certificateAuthorityPrivateKey) {
         this.certificateAuthorityPrivateKey = certificateAuthorityPrivateKey;
         return this;
@@ -1071,6 +1363,11 @@ public class Configuration {
         return certificateAuthorityCertificate;
     }
 
+    /**
+     * File location or classpath location of custom X.509 Certificate for Certificate Authority for TLS, the certificate must be a X509 PEM file and must match the certificateAuthorityPrivateKey
+     *
+     * @param certificateAuthorityCertificate location of the PEM file containing the certificate authority X509 certificate
+     */
     public Configuration certificateAuthorityCertificate(String certificateAuthorityCertificate) {
         this.certificateAuthorityCertificate = certificateAuthorityCertificate;
         return this;
@@ -1083,6 +1380,18 @@ public class Configuration {
         return privateKeyPath;
     }
 
+    /**
+     * File location or classpath location of a fixed custom private key for TLS connections into MockServer.
+     * <p>
+     * The private key must be a PKCS#8 PEM file and must be the private key corresponding to the x509CertificatePath X509 (public key) configuration.
+     * The certificateAuthorityCertificate configuration must be the Certificate Authority for the corresponding X509 certificate (i.e. able to valid its signature), see: x509CertificatePath.
+     * <p>
+     * To convert a PKCS#1 (i.e. default for Bouncy Castle) to a PKCS#8 the following command can be used: openssl pkcs8 -topk8 -inform PEM -in private_key_PKCS_1.pem -out private_key_PKCS_8.pem -nocrypt
+     * <p>
+     * This configuration will be ignored unless x509CertificatePath is also set.
+     *
+     * @param privateKeyPath location of the PKCS#8 PEM file containing the private key
+     */
     public Configuration privateKeyPath(String privateKeyPath) {
         this.privateKeyPath = privateKeyPath;
         return this;
@@ -1095,6 +1404,16 @@ public class Configuration {
         return x509CertificatePath;
     }
 
+    /**
+     * File location or classpath location of a fixed custom X.509 Certificate for TLS connections into MockServer.
+     * <p>
+     * The certificate must be a X509 PEM file and must be the public key corresponding to the privateKeyPath private key configuration.
+     * The certificateAuthorityCertificate configuration must be the Certificate Authority for this certificate (i.e. able to valid its signature).
+     * <p>
+     * This configuration will be ignored unless privateKeyPath is also set.
+     *
+     * @param x509CertificatePath location of the PEM file containing the X509 certificate
+     */
     public Configuration x509CertificatePath(String x509CertificatePath) {
         this.x509CertificatePath = x509CertificatePath;
         return this;
@@ -1107,6 +1426,11 @@ public class Configuration {
         return tlsMutualAuthenticationRequired;
     }
 
+    /**
+     * Require mTLS (also called client authentication and two-way TLS) for all TLS connections / HTTPS requests to MockServer
+     *
+     * @param tlsMutualAuthenticationRequired TLS mutual authentication
+     */
     public Configuration tlsMutualAuthenticationRequired(Boolean tlsMutualAuthenticationRequired) {
         this.tlsMutualAuthenticationRequired = tlsMutualAuthenticationRequired;
         return this;
@@ -1119,6 +1443,13 @@ public class Configuration {
         return tlsMutualAuthenticationCertificateChain;
     }
 
+    /**
+     * File location or classpath location of custom mTLS (TLS client authentication) X.509 Certificate Chain for trusting (i.e. signature verification of) Client X.509 Certificates, the certificate chain must be a X509 PEM file.
+     * <p>
+     * This certificate chain will be used if MockServer performs mTLS (client authentication) for inbound TLS connections because tlsMutualAuthenticationRequired is enabled
+     *
+     * @param tlsMutualAuthenticationCertificateChain file location or classpath location of custom mTLS (TLS client authentication) X.509 Certificate Chain for Trusting (i.e. signature verification of) Client X.509 Certificates
+     */
     public Configuration tlsMutualAuthenticationCertificateChain(String tlsMutualAuthenticationCertificateChain) {
         this.tlsMutualAuthenticationCertificateChain = tlsMutualAuthenticationCertificateChain;
         return this;
@@ -1131,6 +1462,18 @@ public class Configuration {
         return forwardProxyTLSX509CertificatesTrustManagerType;
     }
 
+    /**
+     * Configure trusted set of certificates for forwarded or proxied requests.
+     * <p>
+     * MockServer will only be able to establish a TLS connection to endpoints that have a trusted X509 certificate according to the trust manager type, as follows:
+     * <p>
+     * <p>
+     * ALL - Insecure will trust all X509 certificates and not perform host name verification.
+     * JVM - Will trust all X509 certificates trust by the JVM.
+     * CUSTOM - Will trust all X509 certificates specified in forwardProxyTLSCustomTrustX509Certificates configuration value.
+     *
+     * @param forwardProxyTLSX509CertificatesTrustManagerType trusted set of certificates for forwarded or proxied requests, allowed values: ALL, JVM, CUSTOM.
+     */
     public Configuration forwardProxyTLSX509CertificatesTrustManagerType(ForwardProxyTLSX509CertificatesTrustManager forwardProxyTLSX509CertificatesTrustManagerType) {
         this.forwardProxyTLSX509CertificatesTrustManagerType = forwardProxyTLSX509CertificatesTrustManagerType;
         return this;
@@ -1143,6 +1486,14 @@ public class Configuration {
         return forwardProxyTLSCustomTrustX509Certificates;
     }
 
+    /**
+     * File location or classpath location of custom file for trusted X509 Certificate Authority roots for forwarded or proxied requests, the certificate chain must be a X509 PEM file.
+     * <p>
+     * MockServer will only be able to establish a TLS connection to endpoints that have an X509 certificate chain that is signed by one of the provided custom
+     * certificates, i.e. where a path can be established from the endpoints X509 certificate to one or more of the custom X509 certificates provided.
+     *
+     * @param forwardProxyTLSCustomTrustX509Certificates custom set of trusted X509 certificate authority roots for forwarded or proxied requests in PEM format.
+     */
     public Configuration forwardProxyTLSCustomTrustX509Certificates(String forwardProxyTLSCustomTrustX509Certificates) {
         this.forwardProxyTLSCustomTrustX509Certificates = forwardProxyTLSCustomTrustX509Certificates;
         return this;
@@ -1155,6 +1506,15 @@ public class Configuration {
         return forwardProxyPrivateKey;
     }
 
+    /**
+     * File location or classpath location of custom Private Key for proxied TLS connections out of MockServer, the private key must be a PKCS#8 PEM file
+     * <p>
+     * To convert a PKCS#1 (i.e. default for Bouncy Castle) to a PKCS#8 the following command can be used: openssl pkcs8 -topk8 -inform PEM -in private_key_PKCS_1.pem -out private_key_PKCS_8.pem -nocrypt
+     * <p>
+     * This private key will be used if MockServer needs to perform mTLS (client authentication) for outbound TLS connections.
+     *
+     * @param forwardProxyPrivateKey location of the PEM file containing the private key
+     */
     public Configuration forwardProxyPrivateKey(String forwardProxyPrivateKey) {
         this.forwardProxyPrivateKey = forwardProxyPrivateKey;
         return this;
@@ -1167,6 +1527,13 @@ public class Configuration {
         return forwardProxyCertificateChain;
     }
 
+    /**
+     * File location or classpath location of custom mTLS (TLS client authentication) X.509 Certificate Chain for Trusting (i.e. signature verification of) Client X.509 Certificates, the certificate chain must be a X509 PEM file.
+     * <p>
+     * This certificate chain will be used if MockServer needs to perform mTLS (client authentication) for outbound TLS connections.
+     *
+     * @param forwardProxyCertificateChain location of the PEM file containing the certificate chain
+     */
     public Configuration forwardProxyCertificateChain(String forwardProxyCertificateChain) {
         this.forwardProxyCertificateChain = forwardProxyCertificateChain;
         return this;
