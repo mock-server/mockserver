@@ -16,7 +16,6 @@ import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.serialization.model.HttpResponseDTO;
 import org.slf4j.event.Level;
 
-import javax.script.ScriptException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -25,9 +24,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.Is.isA;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -294,10 +292,27 @@ public class VelocityTemplateEngineTest {
             "    } ]," + NEW_LINE +
             "    'body': \"{'name': 'value'}\"" + NEW_LINE +
             "}";
-        exception.expect(RuntimeException.class);
-        exception.expectCause(isA(ScriptException.class));
-        exception.expectMessage(containsString("Exception transforming template:" + NEW_LINE +
-            NEW_LINE +
+
+        // when
+        RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> new VelocityTemplateEngine(logFormatter).executeTemplate(template, request()
+                .withPath("/someOtherPath")
+                .withQueryStringParameter("queryParameter", "someValue")
+                .withBody("some_body"),
+            HttpRequestDTO.class
+        ));
+
+        // then
+        assertThat(runtimeException.getMessage(), is("Exception:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  org.apache.velocity.exception.ParseErrorException: Encountered \"{\" at <unknown>[line 1, column 5]" + NEW_LINE +
+            "  Was expecting one of:" + NEW_LINE +
+            "      \"(\" ..." + NEW_LINE +
+            "      <WHITESPACE> ..." + NEW_LINE +
+            "      <NEWLINE> ..." + NEW_LINE +
+            "      " + NEW_LINE +
+            "" + NEW_LINE +
+            " transforming template:" + NEW_LINE +
+            "" + NEW_LINE +
             "  #if {" + NEW_LINE +
             "      'path' : \"/somePath\"," + NEW_LINE +
             "      'queryStringParameters' : [ {" + NEW_LINE +
@@ -310,24 +325,16 @@ public class VelocityTemplateEngineTest {
             "      } ]," + NEW_LINE +
             "      'body': \"{'name': 'value'}\"" + NEW_LINE +
             "  }" + NEW_LINE +
-            NEW_LINE +
+            "" + NEW_LINE +
             " for request:" + NEW_LINE +
-            NEW_LINE +
+            "" + NEW_LINE +
             "  {" + NEW_LINE +
             "    \"path\" : \"/someOtherPath\"," + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
             "      \"queryParameter\" : [ \"someValue\" ]" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"body\" : \"some_body\"" + NEW_LINE +
-            "  }"));
-
-        // when
-        new VelocityTemplateEngine(logFormatter).executeTemplate(template, request()
-                .withPath("/someOtherPath")
-                .withQueryStringParameter("queryParameter", "someValue")
-                .withBody("some_body"),
-            HttpRequestDTO.class
-        );
+            "  }" + NEW_LINE));
     }
 
     @Test

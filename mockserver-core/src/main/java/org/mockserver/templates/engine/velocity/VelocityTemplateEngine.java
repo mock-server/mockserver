@@ -27,12 +27,13 @@ import static org.mockserver.log.model.LogEntryMessages.TEMPLATE_GENERATED_MESSA
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("FieldMayBeFinal")
 public class VelocityTemplateEngine implements TemplateEngine {
 
     private static final ScriptEngineManager manager = new ScriptEngineManager();
     private static final ScriptEngine engine;
-    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
-    private final MockServerLogger logFormatter;
+    private static ObjectMapper objectMapper;
+    private final MockServerLogger mockServerLogger;
     private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer;
 
     static {
@@ -40,9 +41,12 @@ public class VelocityTemplateEngine implements TemplateEngine {
         engine = manager.getEngineByName("velocity");
     }
 
-    public VelocityTemplateEngine(MockServerLogger logFormatter) {
-        this.logFormatter = logFormatter;
-        this.httpTemplateOutputDeserializer = new HttpTemplateOutputDeserializer(logFormatter);
+    public VelocityTemplateEngine(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+        this.httpTemplateOutputDeserializer = new HttpTemplateOutputDeserializer(mockServerLogger);
+        if (objectMapper == null) {
+            objectMapper = ObjectMapperFactory.createObjectMapper();
+        }
     }
 
     @Override
@@ -56,10 +60,10 @@ public class VelocityTemplateEngine implements TemplateEngine {
             engine.eval(template, context);
             JsonNode generatedObject = null;
             try {
-                generatedObject = OBJECT_MAPPER.readTree(writer.toString());
+                generatedObject = objectMapper.readTree(writer.toString());
             } catch (Throwable throwable) {
                 if (MockServerLogger.isEnabled(Level.TRACE)) {
-                    logFormatter.logEvent(
+                    mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.TRACE)
                             .setHttpRequest(request)
@@ -69,7 +73,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
                 }
             }
             if (MockServerLogger.isEnabled(Level.INFO)) {
-                logFormatter.logEvent(
+                mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(TEMPLATE_GENERATED)
                         .setLogLevel(Level.INFO)
@@ -80,7 +84,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
             }
             result = httpTemplateOutputDeserializer.deserializer(request, writer.toString(), dtoClass);
         } catch (Exception e) {
-            throw new RuntimeException(formatLogMessage("Exception transforming template:{}for request:{}", template, request), e);
+            throw new RuntimeException(formatLogMessage("Exception:{}transforming template:{}for request:{}", e.getMessage(), template, request), e);
         }
         return result;
     }

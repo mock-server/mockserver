@@ -6,13 +6,13 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.*;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.serialization.model.HttpResponseDTO;
 
 import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -22,9 +22,8 @@ import java.util.concurrent.Future;
 
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.Is.isA;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
@@ -416,44 +415,46 @@ public class JavaScriptTemplateEngineTest {
             "    'body': \"{'name': 'value'}\"" + NEW_LINE +
             "};";
         if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
-            exception.expect(RuntimeException.class);
-            exception.expectCause(isA(ScriptException.class));
-            exception.expectMessage(containsString("Exception transforming template:" + NEW_LINE +
-                NEW_LINE +
-                "  function handle(request) {" + NEW_LINE +
-                "  " + NEW_LINE +
-                "    {" + NEW_LINE +
+            // when
+            RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> new JavaScriptTemplateEngine(logFormatter).executeTemplate(template, request()
+                    .withPath("/someOtherPath")
+                    .withQueryStringParameter("queryParameter", "someValue")
+                    .withBody("some_body"),
+                HttpRequestDTO.class
+            ));
+
+            // then
+            assertThat(runtimeException.getMessage(), is("Exception:" + NEW_LINE +
+                "" + NEW_LINE +
+                "  <eval>:4:13 Expected ; but found :" + NEW_LINE +
                 "        'path' : \"/somePath\"," + NEW_LINE +
-                "        'queryStringParameters' : [ {" + NEW_LINE +
-                "            'name' : \"queryParameter\"," + NEW_LINE +
-                "            'values' : request.queryStringParameters['queryParameter']" + NEW_LINE +
-                "        } ]," + NEW_LINE +
-                "        'headers' : [ {" + NEW_LINE +
-                "            'name' : \"Host\"," + NEW_LINE +
-                "            'values' : [ \"localhost:1090\" ]" + NEW_LINE +
-                "        } ]," + NEW_LINE +
-                "        'body': \"{'name': 'value'}\"" + NEW_LINE +
-                "    };" + NEW_LINE +
-                "  }" + NEW_LINE +
-                NEW_LINE +
+                "               ^ in <eval> at line number 4 at column number 13" + NEW_LINE +
+                "" + NEW_LINE +
+                " transforming template:" + NEW_LINE +
+                "" + NEW_LINE +
+                "  {" + NEW_LINE +
+                "      'path' : \"/somePath\"," + NEW_LINE +
+                "      'queryStringParameters' : [ {" + NEW_LINE +
+                "          'name' : \"queryParameter\"," + NEW_LINE +
+                "          'values' : request.queryStringParameters['queryParameter']" + NEW_LINE +
+                "      } ]," + NEW_LINE +
+                "      'headers' : [ {" + NEW_LINE +
+                "          'name' : \"Host\"," + NEW_LINE +
+                "          'values' : [ \"localhost:1090\" ]" + NEW_LINE +
+                "      } ]," + NEW_LINE +
+                "      'body': \"{'name': 'value'}\"" + NEW_LINE +
+                "  };" + NEW_LINE +
+                "" + NEW_LINE +
                 " for request:" + NEW_LINE +
-                NEW_LINE +
+                "" + NEW_LINE +
                 "  {" + NEW_LINE +
                 "    \"path\" : \"/someOtherPath\"," + NEW_LINE +
                 "    \"queryStringParameters\" : {" + NEW_LINE +
                 "      \"queryParameter\" : [ \"someValue\" ]" + NEW_LINE +
                 "    }," + NEW_LINE +
                 "    \"body\" : \"some_body\"" + NEW_LINE +
-                "  }"));
+                "  }" + NEW_LINE));
         }
-
-        // when
-        new JavaScriptTemplateEngine(logFormatter).executeTemplate(template, request()
-                .withPath("/someOtherPath")
-                .withQueryStringParameter("queryParameter", "someValue")
-                .withBody("some_body"),
-            HttpRequestDTO.class
-        );
     }
 
     @Test

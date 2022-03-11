@@ -289,6 +289,11 @@
                 <artifactId>velocity-engine-core</artifactId>
                 <version>${velocity.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.samskivert</groupId>
+                <artifactId>jmustache</artifactId>
+                <version>1.15</version>
+            </dependency>
 
             <!-- javascript (only Java 11+) -->
             <dependency>

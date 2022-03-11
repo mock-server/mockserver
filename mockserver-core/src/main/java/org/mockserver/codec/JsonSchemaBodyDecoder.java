@@ -8,7 +8,7 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.BodyMatcher;
 import org.mockserver.matchers.JsonSchemaMatcher;
-import org.mockserver.matchers.StringToXmlDocumentParser;
+import org.mockserver.xml.StringToXmlDocumentParser;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.serialization.ObjectMapperFactory;
@@ -26,8 +26,8 @@ import static java.util.jar.Attributes.Name.CONTENT_TYPE;
 import static java.util.stream.Collectors.toList;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXCEPTION;
-import static org.mockserver.matchers.StringToXmlDocumentParser.ErrorLevel.FATAL_ERROR;
-import static org.mockserver.matchers.StringToXmlDocumentParser.ErrorLevel.prettyPrint;
+import static org.mockserver.xml.StringToXmlDocumentParser.ErrorLevel.FATAL_ERROR;
+import static org.mockserver.xml.StringToXmlDocumentParser.ErrorLevel.prettyPrint;
 import static org.mockserver.model.NottableString.serialiseNottableString;
 
 public class JsonSchemaBodyDecoder {

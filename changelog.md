@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added remote address field to http requests that can be used by class or method callbacks
 - exposed remote address (i.e. client address) to method and class callbacks, logs and dashboard
 - exposed client certificate chain to method and class callbacks, logs and dashboard
+- added simpler mustache style response templates (in addition to existing javascript and velocity support)
 
 ### Changed
 - included Bouncy Castle now used by default to resolve issues with modules in Java 16+ and backwards compatibility for Java 8

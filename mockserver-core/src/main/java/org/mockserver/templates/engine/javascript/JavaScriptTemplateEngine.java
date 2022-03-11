@@ -26,17 +26,20 @@ import static org.mockserver.log.model.LogEntryMessages.TEMPLATE_GENERATED_MESSA
 @SuppressWarnings({"RedundantSuppression", "deprecation", "removal", "FieldMayBeFinal"})
 public class JavaScriptTemplateEngine implements TemplateEngine {
 
-    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
     private static ScriptEngine engine;
-    private final MockServerLogger logFormatter;
+    private static ObjectMapper objectMapper;
+    private final MockServerLogger mockServerLogger;
     private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer;
 
-    public JavaScriptTemplateEngine(MockServerLogger logFormatter) {
+    public JavaScriptTemplateEngine(MockServerLogger mockServerLogger) {
         if (engine == null) {
             engine = new ScriptEngineManager().getEngineByName("nashorn");
         }
-        this.logFormatter = logFormatter;
-        this.httpTemplateOutputDeserializer = new HttpTemplateOutputDeserializer(logFormatter);
+        this.mockServerLogger = mockServerLogger;
+        this.httpTemplateOutputDeserializer = new HttpTemplateOutputDeserializer(mockServerLogger);
+        if (objectMapper == null) {
+            objectMapper = ObjectMapperFactory.createObjectMapper();
+        }
     }
 
     @Override
@@ -57,10 +60,10 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
 
                 JsonNode generatedObject = null;
                 try {
-                    generatedObject = OBJECT_MAPPER.readTree(String.valueOf(stringifiedResponse));
+                    generatedObject = objectMapper.readTree(String.valueOf(stringifiedResponse));
                 } catch (Throwable throwable) {
                     if (MockServerLogger.isEnabled(Level.TRACE)) {
-                        logFormatter.logEvent(
+                        mockServerLogger.logEvent(
                             new LogEntry()
                                 .setLogLevel(Level.TRACE)
                                 .setHttpRequest(request)
@@ -70,7 +73,7 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
                     }
                 }
                 if (MockServerLogger.isEnabled(Level.INFO)) {
-                    logFormatter.logEvent(
+                    mockServerLogger.logEvent(
                         new LogEntry()
                             .setType(TEMPLATE_GENERATED)
                             .setLogLevel(Level.INFO)
@@ -81,7 +84,7 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
                 }
                 result = httpTemplateOutputDeserializer.deserializer(request, (String) stringifiedResponse, dtoClass);
             } else {
-                logFormatter.logEvent(
+                mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(Level.ERROR)
                         .setHttpRequest(request)
@@ -93,7 +96,7 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
                 );
             }
         } catch (Exception e) {
-            throw new RuntimeException(formatLogMessage("Exception transforming template:{}for request:{}", script, request), e);
+            throw new RuntimeException(formatLogMessage("Exception:{}transforming template:{}for request:{}", e.getMessage(), template, request), e);
         }
         return result;
     }

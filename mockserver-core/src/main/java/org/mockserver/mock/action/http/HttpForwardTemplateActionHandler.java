@@ -7,6 +7,7 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpTemplate;
 import org.mockserver.templates.engine.TemplateEngine;
 import org.mockserver.templates.engine.javascript.JavaScriptTemplateEngine;
+import org.mockserver.templates.engine.mustache.MustacheTemplateEngine;
 import org.mockserver.templates.engine.velocity.VelocityTemplateEngine;
 
 /**
@@ -14,8 +15,9 @@ import org.mockserver.templates.engine.velocity.VelocityTemplateEngine;
  */
 public class HttpForwardTemplateActionHandler extends HttpForwardAction {
 
-    private JavaScriptTemplateEngine javaScriptTemplateEngine;
     private VelocityTemplateEngine velocityTemplateEngine;
+    private JavaScriptTemplateEngine javaScriptTemplateEngine;
+    private MustacheTemplateEngine mustacheTemplateEngine;
 
     public HttpForwardTemplateActionHandler(MockServerLogger mockServerLogger, NettyHttpClient httpClient) {
         super(mockServerLogger, httpClient);
@@ -28,6 +30,9 @@ public class HttpForwardTemplateActionHandler extends HttpForwardAction {
                 templateEngine = getVelocityTemplateEngine();
                 break;
             case JAVASCRIPT:
+                templateEngine = getJavaScriptTemplateEngine();
+                break;
+            case MUSTACHE:
                 templateEngine = getJavaScriptTemplateEngine();
                 break;
             default:
@@ -43,6 +48,13 @@ public class HttpForwardTemplateActionHandler extends HttpForwardAction {
         return notFoundFuture(originalRequest);
     }
 
+    private VelocityTemplateEngine getVelocityTemplateEngine() {
+        if (velocityTemplateEngine == null) {
+            velocityTemplateEngine = new VelocityTemplateEngine(mockServerLogger);
+        }
+        return velocityTemplateEngine;
+    }
+
     private JavaScriptTemplateEngine getJavaScriptTemplateEngine() {
         if (javaScriptTemplateEngine == null) {
             javaScriptTemplateEngine = new JavaScriptTemplateEngine(mockServerLogger);
@@ -50,10 +62,10 @@ public class HttpForwardTemplateActionHandler extends HttpForwardAction {
         return javaScriptTemplateEngine;
     }
 
-    private VelocityTemplateEngine getVelocityTemplateEngine() {
-        if (velocityTemplateEngine == null) {
-            velocityTemplateEngine = new VelocityTemplateEngine(mockServerLogger);
+    private MustacheTemplateEngine getMustacheTemplateEngine() {
+        if (mustacheTemplateEngine == null) {
+            mustacheTemplateEngine = new MustacheTemplateEngine(mockServerLogger);
         }
-        return velocityTemplateEngine;
+        return mustacheTemplateEngine;
     }
 }

@@ -1,4 +1,4 @@
-package org.mockserver.matchers;
+package org.mockserver.xml;
 
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.w3c.dom.Document;
@@ -46,7 +46,7 @@ public class StringToXmlDocumentParser extends ObjectWithReflectiveEqualsHashCod
     }
 
     public interface ErrorLogger {
-        void logError(final String matched, final Exception exception, ErrorLevel level);
+        void logError(final String xmlAsString, final Exception exception, ErrorLevel level);
     }
 
     public enum ErrorLevel {

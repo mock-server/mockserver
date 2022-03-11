@@ -111,6 +111,10 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>com.samskivert</groupId>
+            <artifactId>jmustache</artifactId>
+        </dependency>
 
         <!-- javascript (only java 11+) -->
         <!-- <dependency>
