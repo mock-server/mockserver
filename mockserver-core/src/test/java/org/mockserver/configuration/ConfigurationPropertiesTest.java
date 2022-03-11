@@ -923,7 +923,7 @@ public class ConfigurationPropertiesTest {
             System.clearProperty("mockserver.controlPlaneJWTAuthenticationRequiredClaims");
 
             // then
-            assertThat(controlPlaneJWTAuthenticationRequiredClaims(), is(ImmutableSet.of("")));
+            assertThat(controlPlaneJWTAuthenticationRequiredClaims(), is(ImmutableSet.of()));
 
             // when
             controlPlaneJWTAuthenticationRequiredClaims(ImmutableSet.of("a", "b"));
