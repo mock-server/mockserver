@@ -10,8 +10,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.configuration.Configuration;
-import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.echo.http.EchoServer;
+import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatcherBuilder;
@@ -39,7 +39,7 @@ import static org.slf4j.event.Level.WARN;
  */
 public abstract class AbstractMockingIntegrationTestBase {
 
-    private static final Configuration CONFIGURATION = configuration();;
+    private static final Configuration CONFIGURATION = configuration();
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(AbstractMockingIntegrationTestBase.class);
     protected static MockServerClient mockServerClient;
     protected static String servletContext = "";
