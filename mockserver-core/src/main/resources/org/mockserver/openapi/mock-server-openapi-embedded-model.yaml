@@ -421,8 +421,9 @@ components:
           $ref: "#/components/schemas/Delay"
         templateType:
           enum:
-            - JAVASCRIPT
             - VELOCITY
+            - JAVASCRIPT
+            - MUSTACHE
         template:
           type: string
     HttpForward:

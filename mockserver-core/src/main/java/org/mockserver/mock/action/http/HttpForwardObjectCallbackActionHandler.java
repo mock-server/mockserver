@@ -27,7 +27,9 @@ import static org.slf4j.event.Level.*;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("FieldMayBeFinal")
 public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
+
     private WebSocketClientRegistry webSocketClientRegistry;
 
     public HttpForwardObjectCallbackActionHandler(HttpState httpStateHandler, NettyHttpClient httpClient) {

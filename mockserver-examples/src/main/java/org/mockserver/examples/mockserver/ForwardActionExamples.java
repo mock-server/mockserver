@@ -401,4 +401,33 @@ public class ForwardActionExamples {
                 )
             );
     }
+
+    public void mustacheTemplatedForward() {
+        String template = "{" + System.getProperty("line.separator") +
+            "    'path' : \"/somePath\"," + System.getProperty("line.separator") +
+            "    'queryStringParameters' : {" + System.getProperty("line.separator") +
+            // {{ request.queryStringParameters.userId }} returns an array of values for the 'userId' query parameter
+            "        'userId' : [ \"{{ request.queryStringParameters.userId.0 }}\" ]" + System.getProperty("line.separator") +
+            "    }," + System.getProperty("line.separator") +
+            "    'cookies' : {" + System.getProperty("line.separator") +
+            "        'SessionId' : \"{{ request.cookies.SessionId }}\"" + System.getProperty("line.separator") +
+            "    }," + System.getProperty("line.separator") +
+            "    'headers' : {" + System.getProperty("line.separator") +
+            "        'Host' : [ \"localhost:1081\" ]" + System.getProperty("line.separator") +
+            "    }," + System.getProperty("line.separator") +
+            "    'body': \"{'name': 'value'}\"" + System.getProperty("line.separator") +
+            "}";
+
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+            )
+            .forward(
+                template(
+                    HttpTemplate.TemplateType.MUSTACHE,
+                    template
+                )
+            );
+    }
 }

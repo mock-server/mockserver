@@ -460,6 +460,41 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
+    public void shouldReturnResponseFromMustacheTemplate() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path"))
+            )
+            .respond(
+                template(
+                    HttpTemplate.TemplateType.MUSTACHE,
+                    "{" + NEW_LINE +
+                        "     \"statusCode\": 200," + NEW_LINE +
+                        "     \"headers\": [ { \"name\": \"name\", \"values\": [ \"{{ request.headers.name.0 }}\" ] } ]," + NEW_LINE +
+                        "     \"body\": \"{{ request.body }}\"" + NEW_LINE +
+                        "}" + NEW_LINE
+                )
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader("name", "value")
+                .withBody("some_request_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withHeader("name", "value")
+                    .withBody("some_request_body"),
+                HEADERS_TO_IGNORE)
+        );
+    }
+
+    @Test
     public void shouldReturnResponseByMatchingPathAndMethod() {
         // when
         mockServerClient
@@ -3087,6 +3122,74 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                             "    }, {" + NEW_LINE +
                             "        'name' : \"x-test\"," + NEW_LINE +
                             "        'values' : [ \"$!request.headers['x-test'][0]\" ]" + NEW_LINE +
+                            "    } ]," + NEW_LINE +
+                            "    'body': \"{'name': 'value'}\"" + NEW_LINE +
+                            "}")
+                        .withDelay(MILLISECONDS, 10)
+                )
+        ));
+    }
+
+    @Test
+    public void shouldForwardTemplateInMustache() {
+        // when
+        Expectation[] upsertedExpectations = mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                template(HttpTemplate.TemplateType.MUSTACHE,
+                    "{" + NEW_LINE +
+                        "    'path' : \"/somePath\"," + NEW_LINE +
+                        "    'headers' : [ {" + NEW_LINE +
+                        "        'name' : \"Host\"," + NEW_LINE +
+                        "        'values' : [ \"127.0.0.1:" + insecureEchoServer.getPort() + "\" ]" + NEW_LINE +
+                        "    }, {" + NEW_LINE +
+                        "        'name' : \"x-test\"," + NEW_LINE +
+                        "        'values' : [ \"{{ request.headers.x-test.0 }}\" ]" + NEW_LINE +
+                        "    } ]," + NEW_LINE +
+                        "    'body': \"{'name': 'value'}\"" + NEW_LINE +
+                        "}")
+                    .withDelay(MILLISECONDS, 10)
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("{'name': 'value'}"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                HEADERS_TO_IGNORE
+            )
+        );
+        assertThat(upsertedExpectations.length, is(1));
+        assertThat(upsertedExpectations[0], is(
+            new Expectation(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+                .thenForward(
+                    template(HttpTemplate.TemplateType.MUSTACHE,
+                        "{" + NEW_LINE +
+                            "    'path' : \"/somePath\"," + NEW_LINE +
+                            "    'headers' : [ {" + NEW_LINE +
+                            "        'name' : \"Host\"," + NEW_LINE +
+                            "        'values' : [ \"127.0.0.1:" + insecureEchoServer.getPort() + "\" ]" + NEW_LINE +
+                            "    }, {" + NEW_LINE +
+                            "        'name' : \"x-test\"," + NEW_LINE +
+                            "        'values' : [ \"{{ request.headers.x-test.0 }}\" ]" + NEW_LINE +
                             "    } ]," + NEW_LINE +
                             "    'body': \"{'name': 'value'}\"" + NEW_LINE +
                             "}")

@@ -33,7 +33,7 @@ public class HttpForwardTemplateActionHandler extends HttpForwardAction {
                 templateEngine = getJavaScriptTemplateEngine();
                 break;
             case MUSTACHE:
-                templateEngine = getJavaScriptTemplateEngine();
+                templateEngine = getMustacheTemplateEngine();
                 break;
             default:
                 throw new RuntimeException("Unknown no template engine available for " + httpTemplate.getTemplateType());

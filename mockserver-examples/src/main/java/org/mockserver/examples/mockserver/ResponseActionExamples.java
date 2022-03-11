@@ -282,16 +282,16 @@ public class ResponseActionExamples {
             )
             .respond(
                 template(
-                    HttpTemplate.TemplateType.VELOCITY,
+                    HttpTemplate.TemplateType.MUSTACHE,
                     "{" + System.getProperty("line.separator") +
                         "     \"statusCode\": 200," + System.getProperty("line.separator") +
                         "     \"cookies\": { " + System.getProperty("line.separator") +
-                        "          \"session\": \"$!request.headers['Session-Id'][0]\"" + System.getProperty("line.separator") +
+                        "          \"session\": \"{{ request.headers.Session-Id.0 }}\"" + System.getProperty("line.separator") +
                         "     }," + System.getProperty("line.separator") +
                         "     \"headers\": {" + System.getProperty("line.separator") +
-                        "          \"Client-User-Agent\": [ \"$!request.headers['User-Agent'][0]\" ]" + System.getProperty("line.separator") +
+                        "          \"Client-User-Agent\": [ \"{{ request.headers.User-Agent.0 }}\" ]" + System.getProperty("line.separator") +
                         "     }," + System.getProperty("line.separator") +
-                        "     \"body\": $!request.body" + System.getProperty("line.separator") +
+                        "     \"body\": {{ request.body }}" + System.getProperty("line.separator") +
                         "}"
                 )
             );
