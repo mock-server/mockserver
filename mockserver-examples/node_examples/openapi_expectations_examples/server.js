@@ -1,7 +1,7 @@
 function matchRequestByOpenAPILoadedByHttpUrl() {
     var mockServerClient = require('mockserver-client').mockServerClient;
     mockServerClient("localhost", 1080).openAPIExpectation({
-        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json"
+        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
     }).then(
         function () {
             console.log("expectation created");
@@ -15,7 +15,7 @@ function matchRequestByOpenAPILoadedByHttpUrl() {
 function matchRequestByOpenAPIOperation() {
     var mockServerClient = require('mockserver-client').mockServerClient;
     mockServerClient("localhost", 1080).openAPIExpectation({
-        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
         "operationsAndResponses": {
             "showPetById": "200",
             "createPets": "500"
@@ -33,7 +33,7 @@ function matchRequestByOpenAPIOperation() {
 function matchRequestByOpenAPILoadedByFileUrl() {
     var mockServerClient = require('mockserver-client').mockServerClient;
     mockServerClient("localhost", 1080).openAPIExpectation({
-        "specUrlOrPayload": "file:/Users/jamesbloom/git/mockserver/mockserver/mockserver-core/target/test-classes/org/mockserver/mock/openapi_petstore_example.json"
+        "specUrlOrPayload": "file:/Users/jamesbloom/git/mockserver/mockserver/mockserver-core/target/test-classes/org/mockserver/openapi/openapi_petstore_example.json"
     }).then(
         function () {
             console.log("expectation created");
@@ -47,7 +47,7 @@ function matchRequestByOpenAPILoadedByFileUrl() {
 function matchRequestByOpenAPILoadedByClasspathLocation() {
     var mockServerClient = require('mockserver-client').mockServerClient;
     mockServerClient("localhost", 1080).openAPIExpectation({
-        "specUrlOrPayload": "org/mockserver/mock/openapi_petstore_example.json"
+        "specUrlOrPayload": "org/mockserver/openapi/openapi_petstore_example.json"
     }).then(
         function () {
             console.log("expectation created");
@@ -63,7 +63,7 @@ function matchRequestByOpenAPILoadedByJsonLiteral() {
     try {
         var mockServerClient = require('mockserver-client').mockServerClient;
         mockServerClient("localhost", 1080).openAPIExpectation({
-            "specUrlOrPayload": fs.readFileSync("/Users/jamesbloom/git/mockserver/mockserver/mockserver-core/target/test-classes/org/mockserver/mock/openapi_petstore_example.json", "utf8")
+            "specUrlOrPayload": fs.readFileSync("/Users/jamesbloom/git/mockserver/mockserver/mockserver-core/target/test-classes/org/mockserver/openapi/openapi_petstore_example.json", "utf8")
         }).then(
             function () {
                 console.log("expectation created");

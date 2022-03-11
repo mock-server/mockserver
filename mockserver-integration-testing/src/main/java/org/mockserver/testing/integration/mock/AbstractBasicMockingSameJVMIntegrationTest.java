@@ -449,7 +449,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
         // when
         Expectation[] upsertedExpectations = mockServerClient
             .upsert(openAPIExpectation(
-                "org/mockserver/mock/openapi_petstore_example.json"
+                "org/mockserver/openapi/openapi_petstore_example.json"
             ));
 
         // then
@@ -507,7 +507,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
         // and
         assertThat(upsertedExpectations.length, is(4));
         assertThat(upsertedExpectations[0], is(
-            when("org/mockserver/mock/openapi_petstore_example.json", "listPets")
+            when("org/mockserver/openapi/openapi_petstore_example.json", "listPets")
                 .thenRespond(
                     response()
                         .withStatusCode(200)
@@ -521,14 +521,14 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                 )
         ));
         assertThat(upsertedExpectations[1], is(
-            when("org/mockserver/mock/openapi_petstore_example.json", "createPets")
+            when("org/mockserver/openapi/openapi_petstore_example.json", "createPets")
                 .thenRespond(
                     response()
                         .withStatusCode(201)
                 )
         ));
         assertThat(upsertedExpectations[2], is(
-            when("org/mockserver/mock/openapi_petstore_example.json", "showPetById")
+            when("org/mockserver/openapi/openapi_petstore_example.json", "showPetById")
                 .thenRespond(
                     response()
                         .withStatusCode(200)
@@ -541,7 +541,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
                 )
         ));
         assertThat(upsertedExpectations[3], is(
-            when("org/mockserver/mock/openapi_petstore_example.json", "somePath")
+            when("org/mockserver/openapi/openapi_petstore_example.json", "somePath")
                 .thenRespond(
                     response()
                         .withStatusCode(200)
@@ -560,7 +560,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
         // when
         Expectation[] upsertedExpectations = mockServerClient
             .when(openAPI(
-                "org/mockserver/mock/openapi_petstore_example.json",
+                "org/mockserver/openapi/openapi_petstore_example.json",
                 "listPets"
             ))
             .respond(response().withBody("some_body"));
@@ -580,7 +580,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
         );
         assertThat(upsertedExpectations.length, is(1));
         assertThat(upsertedExpectations[0], is(new Expectation(openAPI(
-            "org/mockserver/mock/openapi_petstore_example.json",
+            "org/mockserver/openapi/openapi_petstore_example.json",
             "listPets"
         )).thenRespond(response().withBody("some_body"))));
     }
@@ -589,7 +589,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
     public void shouldReturnResponseByMatchingOpenAPIUrlWithoutOperationId() {
         // when
         Expectation[] upsertedExpectations = mockServerClient
-            .when(openAPI().withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json"))
+            .when(openAPI().withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json"))
             .respond(response().withBody("some_body"));
 
         // then
@@ -608,7 +608,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
         assertThat(upsertedExpectations.length, is(1));
         assertThat(upsertedExpectations[0], is(new Expectation(
             openAPI()
-                .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json")
         ).thenRespond(response().withBody("some_body"))));
     }
 
@@ -617,7 +617,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
         // when
         Expectation[] upsertedExpectations = mockServerClient
             .when(openAPI(
-                "org/mockserver/mock/openapi_petstore_example.json",
+                "org/mockserver/openapi/openapi_petstore_example.json",
                 "listPets"
             ))
             .respond(response().withBody("some_body"));
@@ -634,7 +634,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
         );
         assertThat(upsertedExpectations.length, is(1));
         assertThat(upsertedExpectations[0], is(new Expectation(openAPI(
-            "org/mockserver/mock/openapi_petstore_example.json",
+            "org/mockserver/openapi/openapi_petstore_example.json",
             "listPets"
         )).thenRespond(response().withBody("some_body"))));
     }
@@ -643,7 +643,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
     public void shouldVerifyNotEnoughRequestsReceivedWithOpenAPIUrl() {
         // when
         mockServerClient
-            .when(openAPI().withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json"), exactly(4))
+            .when(openAPI().withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json"), exactly(4))
             .respond(response().withBody("some_body"));
 
         // and
@@ -679,7 +679,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
         mockServerClient
             .verify(
                 openAPI()
-                    .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json"),
+                    .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json"),
                 VerificationTimes.atLeast(2)
             );
     }
@@ -687,7 +687,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
     @Test
     public void shouldVerifySequenceOfRequestsReceivedByOpenAPIUrl() {
         // when
-        String specUrlOrPayload = "org/mockserver/mock/openapi_petstore_example.json";
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example.json";
         mockServerClient
             .when(openAPI().withSpecUrlOrPayload(specUrlOrPayload), exactly(4))
             .respond(response().withBody("some_body"));
@@ -757,7 +757,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
     public void shouldRetrieveRecordedRequestsByOpenAPIUrl() {
         // when
         mockServerClient
-            .when(openAPI().withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json"), exactly(4))
+            .when(openAPI().withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json"), exactly(4))
             .respond(response().withBody("some_body"));
 
         // and
@@ -799,7 +799,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
         // then
         // TODO(jamesdbloom) why is this path not prefixed with context route?
         verifyRequestsMatches(
-            mockServerClient.retrieveRecordedRequests(openAPI().withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")),
+            mockServerClient.retrieveRecordedRequests(openAPI().withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json")),
             request()
                 .withMethod("GET")
                 .withPath("/pets")
@@ -822,7 +822,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
     public void shouldClearExpectationsAndLogsByOpenAPIUrl() {
         // when
         mockServerClient
-            .when(openAPI().withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json"), exactly(4))
+            .when(openAPI().withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json"), exactly(4))
             .respond(response().withBody("some_body"));
         mockServerClient
             .when(
@@ -874,7 +874,7 @@ public abstract class AbstractBasicMockingSameJVMIntegrationTest extends Abstrac
         mockServerClient
             .clear(
                 openAPI()
-                    .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                    .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json")
             );
 
 

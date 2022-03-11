@@ -111,7 +111,7 @@ public class OpenAPIConverter {
                                         response.withBody(String.valueOf(example.getValue()));
                                     }
                                 } else if (mediaType.getSchema() != null) {
-                                    org.mockserver.openapi.examples.models.Example generatedExample = ExampleBuilder.fromSchema(mediaType.getSchema(), openAPI.getComponents().getSchemas());
+                                    org.mockserver.openapi.examples.models.Example generatedExample = ExampleBuilder.fromSchema(mediaType.getSchema(), openAPI.getComponents() != null ? openAPI.getComponents().getSchemas() : null);
                                     if (generatedExample instanceof StringExample) {
                                         if (isJsonContentType(contentType.getKey())) {
                                             response.withBody(json(serialise(((StringExample) generatedExample).getValue())));

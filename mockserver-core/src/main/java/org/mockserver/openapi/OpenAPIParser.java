@@ -9,13 +9,10 @@ import io.swagger.v3.parser.core.extensions.SwaggerParserExtension;
 import io.swagger.v3.parser.core.models.AuthorizationValue;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
-import io.swagger.v3.parser.util.ResolverFully;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mockserver.cache.LRUCache;
-import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.slf4j.event.Level;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,8 +39,9 @@ public class OpenAPIParser {
             parseOptions.setResolve(true);
             parseOptions.setResolveFully(true);
             parseOptions.setResolveCombinators(true);
-            parseOptions.setFlatten(true);
-            parseOptions.setFlattenComposedSchemas(true);
+            parseOptions.setSkipMatches(true);
+            parseOptions.setAllowEmptyString(true);
+            parseOptions.setCamelCaseFlattenNaming(true);
 
             List<String> errorMessage = new ArrayList<>();
             try {
@@ -69,19 +67,7 @@ public class OpenAPIParser {
             } catch (Throwable throwable) {
                 throw new IllegalArgumentException(OPEN_API_LOAD_ERROR + (errorMessage.isEmpty() ? ", " + throwable.getMessage() : ", " + Joiner.on(", ").skipNulls().join(errorMessage)), throwable);
             }
-            if (openAPI != null) {
-                try {
-                    new ResolverFully().resolveFully(openAPI);
-                } catch (Throwable throwable) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setLogLevel(Level.INFO)
-                            .setMessageFormat("exception:{}while resolving OpenAPI:{}")
-                            .setArguments((errorMessage.isEmpty() ? ", " + throwable.getMessage() : ", " + Joiner.on(", ").skipNulls().join(errorMessage)), specUrlOrPayload)
-                            .setThrowable(throwable)
-                    );
-                }
-            } else {
+            if (openAPI == null) {
                 if (swaggerParseResult != null) {
                     String message = errorMessage.stream().filter(Objects::nonNull).collect(Collectors.joining(" and ")).trim();
                     throw new IllegalArgumentException((OPEN_API_LOAD_ERROR + (isNotBlank(message) ? ", " + message : "")));

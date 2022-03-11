@@ -535,7 +535,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         // when
         Expectation[] upsertedExpectations = mockServerClient
             .when(openAPI(
-                FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json"),
+                FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json"),
                 "listPets"
             ))
             .respond(response().withBody("some_body"));
@@ -555,7 +555,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         );
         assertThat(upsertedExpectations.length, is(1));
         assertThat(upsertedExpectations[0], is(new Expectation(openAPI(
-            ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")).toPrettyString(),
+            ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json")).toPrettyString(),
             "listPets"
         )).thenRespond(response().withBody("some_body"))));
     }
@@ -565,7 +565,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         // when
         Expectation[] upsertedExpectations = mockServerClient
             .upsert(openAPIExpectation(
-                FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json"),
+                FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json"),
                 ImmutableMap.of(
                     "listPets", "500",
                     "createPets", "default",
@@ -631,7 +631,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         // and
         assertThat(upsertedExpectations.length, is(3));
         assertThat(upsertedExpectations[0], is(
-            when(ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")).toPrettyString(), "listPets")
+            when(ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json")).toPrettyString(), "listPets")
                 .thenRespond(
                     response()
                         .withStatusCode(500)
@@ -643,7 +643,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 )
         ));
         assertThat(upsertedExpectations[1], is(
-            when(ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")).toPrettyString(), "createPets")
+            when(ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json")).toPrettyString(), "createPets")
                 .thenRespond(
                     response()
                         .withHeader("content-type", "application/json")
@@ -654,7 +654,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 )
         ));
         assertThat(upsertedExpectations[2], is(
-            when(ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")).toPrettyString(), "showPetById")
+            when(ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json")).toPrettyString(), "showPetById")
                 .thenRespond(
                     response()
                         .withStatusCode(200)
@@ -901,7 +901,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         // when
         Expectation[] upsertedExpectations = mockServerClient
             .when(openAPI(
-                FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json"),
+                FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json"),
                 "listPets"
             ))
             .respond(response().withBody("some_body"));
@@ -918,7 +918,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         );
         assertThat(upsertedExpectations.length, is(1));
         assertThat(upsertedExpectations[0], is(new Expectation(openAPI(
-            ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")).toPrettyString(),
+            ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json")).toPrettyString(),
             "listPets"
         )).thenRespond(response().withBody("some_body"))));
     }
@@ -1115,7 +1115,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     public void shouldVerifyNotEnoughRequestsReceivedWithOpenAPI() {
         // when
         mockServerClient
-            .when(openAPI().withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")), exactly(4))
+            .when(openAPI().withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json")), exactly(4))
             .respond(response().withBody("some_body"));
 
         // and
@@ -1151,7 +1151,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         mockServerClient
             .verify(
                 openAPI()
-                    .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")),
+                    .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json")),
                 VerificationTimes.atLeast(2)
             );
     }
@@ -1236,7 +1236,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     @Test
     public void shouldVerifySequenceOfRequestsReceivedByOpenAPI() throws JsonProcessingException {
         // when
-        String specUrlOrPayload = ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")).toPrettyString();
+        String specUrlOrPayload = ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json")).toPrettyString();
         mockServerClient
             .when(openAPI().withSpecUrlOrPayload(specUrlOrPayload), exactly(4))
             .respond(response().withBody("some_body"));
@@ -1354,7 +1354,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     public void shouldRetrieveRecordedRequestsByOpenAPI() {
         // when
         mockServerClient
-            .when(openAPI().withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")), exactly(4))
+            .when(openAPI().withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json")), exactly(4))
             .respond(response().withBody("some_body"));
 
         // and
@@ -1396,7 +1396,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         // then
         // TODO(jamesdbloom) why is this path not prefixed with context route?
         verifyRequestsMatches(
-            mockServerClient.retrieveRecordedRequests(openAPI().withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json"))),
+            mockServerClient.retrieveRecordedRequests(openAPI().withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json"))),
             request()
                 .withMethod("GET")
                 .withPath("/pets")
@@ -1876,7 +1876,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     public void shouldClearExpectationsAndLogsByOpenAPI() {
         // when
         mockServerClient
-            .when(openAPI().withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")), exactly(4))
+            .when(openAPI().withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json")), exactly(4))
             .respond(response().withBody("some_body"));
         mockServerClient
             .when(
@@ -1928,7 +1928,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         mockServerClient
             .clear(
                 openAPI()
-                    .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json"))
+                    .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json"))
             );
 
 

@@ -25,12 +25,12 @@ public class OpenAPIDefinitionSerializerTest {
     public void shouldReturnJsonWithOpenAPIClasspathLocationAndOperationId() throws JsonProcessingException {
         assertThat(objectMapper.writeValueAsString(
             openAPI()
-                .withSpecUrlOrPayload("org/mockserver/mock/openapi_simple_example.json")
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
                 .withOperationId("listPets")
         ), is("" +
             "{" + NEW_LINE +
             "  \"operationId\" : \"listPets\"," + NEW_LINE +
-            "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_simple_example.json\"" + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"org/mockserver/openapi/openapi_simple_example.json\"" + NEW_LINE +
             "}"
         ));
     }
@@ -39,10 +39,10 @@ public class OpenAPIDefinitionSerializerTest {
     public void shouldReturnJsonWithOpenAPIClasspathLocation() throws JsonProcessingException {
         assertThat(objectMapper.writeValueAsString(
             openAPI()
-                .withSpecUrlOrPayload("org/mockserver/mock/openapi_simple_example.json")
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
         ), is("" +
             "{" + NEW_LINE +
-            "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_simple_example.json\"" + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"org/mockserver/openapi/openapi_simple_example.json\"" + NEW_LINE +
             "}"
         ));
     }
@@ -51,12 +51,12 @@ public class OpenAPIDefinitionSerializerTest {
     public void shouldReturnJsonWithOpenAPIUrlAndOperationId() throws JsonProcessingException {
         assertThat(objectMapper.writeValueAsString(
             openAPI()
-                .withSpecUrlOrPayload(FilePath.getURL("org/mockserver/mock/openapi_simple_example.json").toString())
+                .withSpecUrlOrPayload(FilePath.getURL("org/mockserver/openapi/openapi_simple_example.json").toString())
                 .withOperationId("listPets")
         ), is("" +
             "{" + NEW_LINE +
             "  \"operationId\" : \"listPets\"," + NEW_LINE +
-            "  \"specUrlOrPayload\" : \"" + FilePath.getURL("org/mockserver/mock/openapi_simple_example.json").toString() + "\"" + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"" + FilePath.getURL("org/mockserver/openapi/openapi_simple_example.json").toString() + "\"" + NEW_LINE +
             "}"
         ));
     }
@@ -65,10 +65,10 @@ public class OpenAPIDefinitionSerializerTest {
     public void shouldReturnJsonWithOpenAPIUrl() throws JsonProcessingException {
         assertThat(objectMapper.writeValueAsString(
             openAPI()
-                .withSpecUrlOrPayload(FilePath.getURL("org/mockserver/mock/openapi_simple_example.json").toString())
+                .withSpecUrlOrPayload(FilePath.getURL("org/mockserver/openapi/openapi_simple_example.json").toString())
         ), is("" +
             "{" + NEW_LINE +
-            "  \"specUrlOrPayload\" : \"" + FilePath.getURL("org/mockserver/mock/openapi_simple_example.json").toString() + "\"" + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"" + FilePath.getURL("org/mockserver/openapi/openapi_simple_example.json").toString() + "\"" + NEW_LINE +
             "}"
         ));
     }
@@ -77,12 +77,12 @@ public class OpenAPIDefinitionSerializerTest {
     public void shouldReturnJsonWithOpenAPISpecAndOperationId() throws JsonProcessingException {
         assertThat(objectMapper.writeValueAsString(
             openAPI()
-                .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_simple_example.json"))
+                .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_simple_example.json"))
                 .withOperationId("listPets")
         ), is("" +
             "{" + NEW_LINE +
             "  \"operationId\" : \"listPets\"," + NEW_LINE +
-            "  \"specUrlOrPayload\" : " + ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_simple_example.json")).toPrettyString().replaceAll("\\R", "\n  ") + NEW_LINE +
+            "  \"specUrlOrPayload\" : " + ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_simple_example.json")).toPrettyString().replaceAll("\\R", "\n  ") + NEW_LINE +
             "}"
         ));
     }
@@ -91,10 +91,10 @@ public class OpenAPIDefinitionSerializerTest {
     public void shouldReturnJsonWithOpenAPISpec() throws JsonProcessingException {
         assertThat(objectMapper.writeValueAsString(
             openAPI()
-                .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_simple_example.json"))
+                .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_simple_example.json"))
         ), is("" +
             "{" + NEW_LINE +
-            "  \"specUrlOrPayload\" : " + ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_simple_example.json")).toPrettyString().replaceAll("\\R", "\n  ") + NEW_LINE +
+            "  \"specUrlOrPayload\" : " + ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_simple_example.json")).toPrettyString().replaceAll("\\R", "\n  ") + NEW_LINE +
             "}"
         ));
     }

@@ -106,7 +106,7 @@ public class MockServerClientExamples {
         new MockServerClient("localhost", 1080)
             .verify(
                 openAPI(
-                    "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json"
+                    "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
                 ),
                 VerificationTimes.atLeast(2)
             );
@@ -116,7 +116,7 @@ public class MockServerClientExamples {
         new MockServerClient("localhost", 1080)
             .verify(
                 openAPI(
-                    "org/mockserver/mock/openapi_petstore_example.json",
+                    "org/mockserver/openapi/openapi_petstore_example.json",
                     "showPetById"
                 ),
                 VerificationTimes.once()
@@ -150,11 +150,11 @@ public class MockServerClientExamples {
                 request()
                     .withPath("/status"),
                 openAPI(
-                    "org/mockserver/mock/openapi_petstore_example.json",
+                    "org/mockserver/openapi/openapi_petstore_example.json",
                     "listPets"
                 ),
                 openAPI(
-                    "org/mockserver/mock/openapi_petstore_example.json",
+                    "org/mockserver/openapi/openapi_petstore_example.json",
                     "showPetById"
                 )
             );
@@ -206,7 +206,7 @@ public class MockServerClientExamples {
     public void clearWithOpenAPIRequestMatcher() {
         new MockServerClient("localhost", 1080).clear(
             openAPI(
-                "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+                "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
                 "showPetById"
             )
         );
@@ -228,7 +228,7 @@ public class MockServerClientExamples {
     public void clearRequestAndLogsWithOpenAPIRequestMatcher() {
         new MockServerClient("localhost", 1080).clear(
             openAPI(
-                "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+                "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
                 "showPetById"
             ),
             ClearType.LOG

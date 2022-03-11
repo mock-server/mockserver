@@ -145,7 +145,7 @@ mockServerClient("localhost", 1080)
     <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
     .verify(
         openAPI(
-            "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json"
+            "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
         ),
         VerificationTimes.atLeast(2)
     );</code></pre>
@@ -156,7 +156,7 @@ mockServerClient("localhost", 1080)
 mockServerClient("localhost", 1080)
     .verify(
         {
-            'specUrlOrPayload': 'https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json'
+            'specUrlOrPayload': 'https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json'
         }, 2)
     .then(
         function () {
@@ -172,7 +172,7 @@ mockServerClient("localhost", 1080)
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verify" -d '{
     "httpRequest": {
-        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json"
+        "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json"
     },
     "times": {
         "atLeast": 2
@@ -188,7 +188,7 @@ mockServerClient("localhost", 1080)
     <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
     .verify(
         openAPI(
-            "org/mockserver/mock/openapi_petstore_example.json",
+            "org/mockserver/openapi/openapi_petstore_example.json",
             "showPetById"
         ),
         VerificationTimes.once()
@@ -200,7 +200,7 @@ mockServerClient("localhost", 1080)
 mockServerClient("localhost", 1080)
     .verify(
         {
-            'specUrlOrPayload': 'org/mockserver/mock/openapi_petstore_example.json',
+            'specUrlOrPayload': 'org/mockserver/openapi/openapi_petstore_example.json',
             'operationId': 'showPetById'
         }, 1, 1)
     .then(
@@ -217,7 +217,7 @@ mockServerClient("localhost", 1080)
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verify" -d '{
     "httpRequest": {
-        "specUrlOrPayload": "org/mockserver/mock/openapi_petstore_example.json",
+        "specUrlOrPayload": "org/mockserver/openapi/openapi_petstore_example.json",
         "operationId": "showPetById"
     },
     "times": {
@@ -382,11 +382,11 @@ mockServerClient("localhost", 1080)
         request()
             .withPath("/status"),
         openAPI(
-            "org/mockserver/mock/openapi_petstore_example.json",
+            "org/mockserver/openapi/openapi_petstore_example.json",
             "listPets"
         ),
         openAPI(
-            "org/mockserver/mock/openapi_petstore_example.json",
+            "org/mockserver/openapi/openapi_petstore_example.json",
             "showPetById"
         )
     );</code></pre>
@@ -400,11 +400,11 @@ mockServerClient("localhost", 1080)
             'path': '/status'
         },
         {
-            'specUrlOrPayload': 'org/mockserver/mock/openapi_petstore_example.json',
+            'specUrlOrPayload': 'org/mockserver/openapi/openapi_petstore_example.json',
             'operationId': 'listPets'
         },
         {
-            'specUrlOrPayload': 'org/mockserver/mock/openapi_petstore_example.json',
+            'specUrlOrPayload': 'org/mockserver/openapi/openapi_petstore_example.json',
             'operationId': 'showPetById'
         }
     )
@@ -426,11 +426,11 @@ mockServerClient("localhost", 1080)
          "path": "/status"
       },
       {
-         "specUrlOrPayload": "org/mockserver/mock/openapi_petstore_example.json",
+         "specUrlOrPayload": "org/mockserver/openapi/openapi_petstore_example.json",
          "operationId": "listPets"
       },
       {
-         "specUrlOrPayload": "org/mockserver/mock/openapi_petstore_example.json",
+         "specUrlOrPayload": "org/mockserver/openapi/openapi_petstore_example.json",
          "operationId": "showPetById"
       }
    ]

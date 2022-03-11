@@ -5999,7 +5999,7 @@ public class HttpRequestsPropertiesMatcherTest {
             // when
             httpRequestsPropertiesMatcher.update(
                 new OpenAPIDefinition()
-                    .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json").substring(0, 100))
+                    .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json").substring(0, 100))
                     .withOperationId("listPets")
             );
 
@@ -6019,7 +6019,7 @@ public class HttpRequestsPropertiesMatcherTest {
             // when
             httpRequestsPropertiesMatcher.update(
                 new OpenAPIDefinition()
-                    .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.yaml").substring(0, 100))
+                    .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.yaml").substring(0, 100))
                     .withOperationId("listPets")
             );
 
@@ -6063,7 +6063,7 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json")
                 .withOperationId("listPets")
         ));
         HttpRequest httpRequest = request()
@@ -6085,7 +6085,7 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json")
                 .withOperationId("showPetById")
         ));
         HttpRequest httpRequest = request()
@@ -6108,7 +6108,7 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json"))
+                .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json"))
                 .withOperationId("listPets")
         ));
         HttpRequest httpRequest = request()
@@ -6130,7 +6130,7 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.yaml")
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.yaml")
                 .withOperationId("listPets")
         ));
         HttpRequest httpRequest = request()
@@ -6152,7 +6152,7 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.yaml"))
+                .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.yaml"))
                 .withOperationId("listPets")
         ));
         HttpRequest httpRequest = request()
@@ -6174,7 +6174,7 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json")
                 .withOperationId("")
         ));
         HttpRequest httpRequest = request()
@@ -6196,7 +6196,7 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json")
                 .withOperationId("showPetById")
         ));
         HttpRequest httpRequest = request()
@@ -6237,7 +6237,7 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json")
                 .withOperationId("showPetById")
         ));
         HttpRequest httpRequest = request()
@@ -6259,7 +6259,7 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json")
                 .withOperationId("showPetById")
         ));
         HttpRequest httpRequest = request()
@@ -6297,7 +6297,7 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json")
                 .withOperationId("showPetById")
         ));
         HttpRequest httpRequest = request()
@@ -6338,7 +6338,7 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json")
                 .withOperationId("somePath")
         ));
         HttpRequest httpRequest = request()
@@ -6391,7 +6391,7 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json")
                 .withOperationId("somePath")
         ));
         HttpRequest httpRequest = request()
@@ -6444,7 +6444,7 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json")
         ));
         HttpRequest httpRequest = request()
             .withMethod("GET")
@@ -6522,7 +6522,7 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json")
                 .withOperationId("createPets")
         ));
         HttpRequest httpRequest = request()
@@ -6591,7 +6591,7 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json")
         ));
         HttpRequest httpRequest = request()
             .withMethod("POST")
@@ -6666,7 +6666,7 @@ public class HttpRequestsPropertiesMatcherTest {
         HttpRequestsPropertiesMatcher httpRequestsPropertiesMatcher = new HttpRequestsPropertiesMatcher(configuration, mockServerLogger);
         httpRequestsPropertiesMatcher.update(new Expectation(
             new OpenAPIDefinition()
-                .withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json")
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json")
                 .withOperationId("createPets")
         ));
         HttpRequest httpRequest = request()

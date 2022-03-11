@@ -24,7 +24,7 @@ public class OpenAPIConverterTest {
     @Test
     public void shouldHandleAddOpenAPIJson() {
         // given
-        String specUrlOrPayload = FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json");
+        String specUrlOrPayload = FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json");
 
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
@@ -39,7 +39,7 @@ public class OpenAPIConverterTest {
     @Test
     public void shouldHandleAddOpenAPIJsonWithSpecificResponses() {
         // given
-        String specUrlOrPayload = FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json");
+        String specUrlOrPayload = FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json");
 
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
@@ -56,9 +56,110 @@ public class OpenAPIConverterTest {
     }
 
     @Test
+    public void shouldHandleAddOpenAPIJsonWithCircularReferences() {
+        // given
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_circular_reference_example.json";
+
+        // when
+        List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
+            specUrlOrPayload,
+            null
+        );
+
+        // then
+        assertThat(actualExpectations.size(), is(4));
+        assertThat(actualExpectations.get(0), is(
+            when(specUrlOrPayload, "listPets")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("x-next", "some_string_value")
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("[ {" + NEW_LINE +
+                            "  \"id\" : 0," + NEW_LINE +
+                            "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                            "  \"tag\" : \"some_string_value\"," + NEW_LINE +
+                            "  \"accessories\" : [ {" + NEW_LINE +
+                            "    \"id\" : 0," + NEW_LINE +
+                            "    \"name\" : \"some_string_value\"," + NEW_LINE +
+                            "    \"pet\" : {" + NEW_LINE +
+                            "      \"id\" : 0," + NEW_LINE +
+                            "      \"name\" : \"some_string_value\"," + NEW_LINE +
+                            "      \"tag\" : \"some_string_value\"," + NEW_LINE +
+                            "      \"accessories\" : [ {" + NEW_LINE +
+                            "        \"id\" : 0," + NEW_LINE +
+                            "        \"name\" : \"some_string_value\"" + NEW_LINE +
+                            "      } ]" + NEW_LINE +
+                            "    }" + NEW_LINE +
+                            "  } ]" + NEW_LINE +
+                            "} ]"))
+                )
+        ));
+        assertThat(actualExpectations.get(1), is(
+            when(specUrlOrPayload, "createPets")
+                .thenRespond(
+                    response()
+                        .withStatusCode(201)
+                )
+        ));
+        assertThat(actualExpectations.get(2), is(
+            when(specUrlOrPayload, "showPetById")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("{" + NEW_LINE +
+                            "  \"id\" : 0," + NEW_LINE +
+                            "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                            "  \"tag\" : \"some_string_value\"," + NEW_LINE +
+                            "  \"accessories\" : [ {" + NEW_LINE +
+                            "    \"id\" : 0," + NEW_LINE +
+                            "    \"name\" : \"some_string_value\"," + NEW_LINE +
+                            "    \"pet\" : {" + NEW_LINE +
+                            "      \"id\" : 0," + NEW_LINE +
+                            "      \"name\" : \"some_string_value\"," + NEW_LINE +
+                            "      \"tag\" : \"some_string_value\"," + NEW_LINE +
+                            "      \"accessories\" : [ {" + NEW_LINE +
+                            "        \"id\" : 0," + NEW_LINE +
+                            "        \"name\" : \"some_string_value\"" + NEW_LINE +
+                            "      } ]" + NEW_LINE +
+                            "    }" + NEW_LINE +
+                            "  } ]" + NEW_LINE +
+                            "}"))
+                )
+        ));
+        assertThat(actualExpectations.get(3), is(
+            when(specUrlOrPayload, "somePath")
+                .thenRespond(
+                    response()
+                        .withStatusCode(200)
+                        .withHeader("content-type", "application/json")
+                        .withBody(json("{" + NEW_LINE +
+                            "  \"id\" : 0," + NEW_LINE +
+                            "  \"name\" : \"some_string_value\"," + NEW_LINE +
+                            "  \"tag\" : \"some_string_value\"," + NEW_LINE +
+                            "  \"accessories\" : [ {" + NEW_LINE +
+                            "    \"id\" : 0," + NEW_LINE +
+                            "    \"name\" : \"some_string_value\"," + NEW_LINE +
+                            "    \"pet\" : {" + NEW_LINE +
+                            "      \"id\" : 0," + NEW_LINE +
+                            "      \"name\" : \"some_string_value\"," + NEW_LINE +
+                            "      \"tag\" : \"some_string_value\"," + NEW_LINE +
+                            "      \"accessories\" : [ {" + NEW_LINE +
+                            "        \"id\" : 0," + NEW_LINE +
+                            "        \"name\" : \"some_string_value\"" + NEW_LINE +
+                            "      } ]" + NEW_LINE +
+                            "    }" + NEW_LINE +
+                            "  } ]" + NEW_LINE +
+                            "}"))
+                )
+        ));
+    }
+
+    @Test
     public void shouldHandleAddOpenAPIYaml() {
         // given
-        String specUrlOrPayload = FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.yaml");
+        String specUrlOrPayload = FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.yaml");
 
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
@@ -73,7 +174,7 @@ public class OpenAPIConverterTest {
     @Test
     public void shouldHandleAddOpenAPIYamlWithSpecificResponses() {
         // given
-        String specUrlOrPayload = FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.yaml");
+        String specUrlOrPayload = FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.yaml");
 
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
@@ -92,7 +193,7 @@ public class OpenAPIConverterTest {
     @Test
     public void shouldHandleAddOpenAPIJsonClasspath() {
         // given
-        String specUrlOrPayload = "org/mockserver/mock/openapi_petstore_example.json";
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example.json";
 
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
@@ -107,7 +208,7 @@ public class OpenAPIConverterTest {
     @Test
     public void shouldHandleAddOpenAPIJsonClasspathWithSpecificResponses() {
         // given
-        String specUrlOrPayload = "org/mockserver/mock/openapi_petstore_example.json";
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example.json";
 
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
@@ -126,7 +227,7 @@ public class OpenAPIConverterTest {
     @Test
     public void shouldHandleAddOpenAPIYamlClasspath() {
         // given
-        String specUrlOrPayload = "org/mockserver/mock/openapi_petstore_example.yaml";
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example.yaml";
 
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
@@ -141,7 +242,7 @@ public class OpenAPIConverterTest {
     @Test
     public void shouldHandleAddOpenAPIYamlClasspathWithSpecificResponses() {
         // given
-        String specUrlOrPayload = "org/mockserver/mock/openapi_petstore_example.yaml";
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example.yaml";
 
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
@@ -160,7 +261,7 @@ public class OpenAPIConverterTest {
     @Test
     public void shouldHandleAddOpenAPIJsonUrl() {
         // given
-        String specUrlOrPayload = FilePath.getURL("org/mockserver/mock/openapi_petstore_example.json").toString();
+        String specUrlOrPayload = FilePath.getURL("org/mockserver/openapi/openapi_petstore_example.json").toString();
 
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
@@ -175,7 +276,7 @@ public class OpenAPIConverterTest {
     @Test
     public void shouldHandleAddOpenAPIJsonUrlWithSpecificResponses() {
         // given
-        String specUrlOrPayload = FilePath.getURL("org/mockserver/mock/openapi_petstore_example.json").toString();
+        String specUrlOrPayload = FilePath.getURL("org/mockserver/openapi/openapi_petstore_example.json").toString();
 
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
@@ -194,7 +295,7 @@ public class OpenAPIConverterTest {
     @Test
     public void shouldHandleAddOpenAPIYamlUrl() {
         // given
-        String specUrlOrPayload = FilePath.getURL("org/mockserver/mock/openapi_petstore_example.yaml").toString();
+        String specUrlOrPayload = FilePath.getURL("org/mockserver/openapi/openapi_petstore_example.yaml").toString();
 
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
@@ -209,7 +310,7 @@ public class OpenAPIConverterTest {
     @Test
     public void shouldHandleAddOpenAPIYamlUrlWithSpecificResponses() {
         // given
-        String specUrlOrPayload = FilePath.getURL("org/mockserver/mock/openapi_petstore_example.yaml").toString();
+        String specUrlOrPayload = FilePath.getURL("org/mockserver/openapi/openapi_petstore_example.yaml").toString();
 
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
@@ -228,7 +329,7 @@ public class OpenAPIConverterTest {
     @Test
     public void shouldHandleAddOpenAPIJsonWithSpecificationExamples() {
         // given
-        String specUrlOrPayload = "org/mockserver/mock/openapi_petstore_example_with_examples.json";
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example_with_examples.json";
 
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
@@ -243,7 +344,7 @@ public class OpenAPIConverterTest {
     @Test
     public void shouldHandleAddOpenAPIJsonWithSpecificResponsesWithSpecificationExamples() {
         // given
-        String specUrlOrPayload = "org/mockserver/mock/openapi_petstore_example_with_examples.json";
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example_with_examples.json";
 
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
@@ -262,7 +363,7 @@ public class OpenAPIConverterTest {
     @Test
     public void shouldHandleAddOpenAPIYamlWithSpecificationExamples() {
         // given
-        String specUrlOrPayload = "org/mockserver/mock/openapi_petstore_example_with_examples.yaml";
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example_with_examples.yaml";
 
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
@@ -277,7 +378,7 @@ public class OpenAPIConverterTest {
     @Test
     public void shouldHandleAddOpenAPIYamlWithSpecificResponsesWithSpecificationExamples() {
         // given
-        String specUrlOrPayload = "org/mockserver/mock/openapi_petstore_example_with_examples.yaml";
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example_with_examples.yaml";
 
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
@@ -296,7 +397,7 @@ public class OpenAPIConverterTest {
     @Test
     public void shouldHandleAddOpenAPIYamlWithJsonStringExample() {
         // given
-        String specUrlOrPayload = "org/mockserver/mock/openapi_with_json_string_example.yaml";
+        String specUrlOrPayload = "org/mockserver/openapi/openapi_with_json_string_example.yaml";
 
         // when
         List<Expectation> actualExpectations = new OpenAPIConverter(mockServerLogger).buildExpectations(
@@ -349,7 +450,7 @@ public class OpenAPIConverterTest {
         try {
             // when
             new OpenAPIConverter(mockServerLogger).buildExpectations(
-                FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.yaml").substring(0, 100),
+                FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.yaml").substring(0, 100),
                 null
             );
 
@@ -399,7 +500,7 @@ public class OpenAPIConverterTest {
         try {
             // when
             new OpenAPIConverter(mockServerLogger).buildExpectations(
-                FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.yaml").substring(0, 100),
+                FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.yaml").substring(0, 100),
                 null
             );
 

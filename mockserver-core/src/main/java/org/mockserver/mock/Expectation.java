@@ -47,10 +47,10 @@ public class Expectation extends ObjectWithJsonToString {
      *   when("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById")
      *
      *   // Create from a file on the local filesystem (json or yaml)
-     *   when("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/mock/openapi_petstore_example.json", "showPetById");
+     *   when("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/openapi/openapi_petstore_example.json", "showPetById");
      *
      *   // Create from a classpath resource in the /api package (json or yaml)
-     *   when("org/mockserver/mock/openapi_petstore_example.json", "showPetById");
+     *   when("org/mockserver/openapi/openapi_petstore_example.json", "showPetById");
      *
      *   // Create from an OpenAPI payload (json or yaml)
      *   when("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById")
@@ -71,10 +71,10 @@ public class Expectation extends ObjectWithJsonToString {
      *   when("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById", 10)
      *
      *   // Create from a file on the local filesystem (json or yaml)
-     *   when("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/mock/openapi_petstore_example.json", "showPetById", 10);
+     *   when("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/openapi/openapi_petstore_example.json", "showPetById", 10);
      *
      *   // Create from a classpath resource in the /api package (json or yaml)
-     *   when("org/mockserver/mock/openapi_petstore_example.json", "showPetById", 10);
+     *   when("org/mockserver/openapi/openapi_petstore_example.json", "showPetById", 10);
      *
      *   // Create from an OpenAPI payload (json or yaml)
      *   when("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById", 10)
@@ -96,10 +96,10 @@ public class Expectation extends ObjectWithJsonToString {
      *   when("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById", 5, exactly(TimeUnit.SECONDS, 90))
      *
      *   // Create from a file on the local filesystem (json or yaml)
-     *   when("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/mock/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
+     *   when("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/openapi/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
      *
      *   // Create from a classpath resource in the /api package (json or yaml)
-     *   when("org/mockserver/mock/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
+     *   when("org/mockserver/openapi/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
      *
      *   // Create from an OpenAPI payload (json or yaml)
      *   when("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById", 5, exactly(TimeUnit.SECONDS, 90))
@@ -122,10 +122,10 @@ public class Expectation extends ObjectWithJsonToString {
      *   when("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById", 5, exactly(TimeUnit.SECONDS, 90))
      *
      *   // Create from a file on the local filesystem (json or yaml)
-     *   when("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/mock/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
+     *   when("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/openapi/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
      *
      *   // Create from a classpath resource in the /api package (json or yaml)
-     *   when("org/mockserver/mock/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
+     *   when("org/mockserver/openapi/openapi_petstore_example.json", "showPetById", 5, exactly(TimeUnit.SECONDS, 90));
      *
      *   // Create from an OpenAPI payload (json or yaml)
      *   when("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById", 5, exactly(TimeUnit.SECONDS, 90))

@@ -23,10 +23,10 @@ public class OpenAPIDefinition extends RequestDefinition {
      * openAPI("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml")
      * <p>
      * // Create from a file on the local filesystem (json or yaml)
-     * openAPI("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/mock/openapi_petstore_example.json");
+     * openAPI("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/openapi/openapi_petstore_example.json");
      * <p>
      * // Create from a classpath resource in the /api package (json or yaml)
-     * openAPI("org/mockserver/mock/openapi_petstore_example.json");
+     * openAPI("org/mockserver/openapi/openapi_petstore_example.json");
      * <p>
      * // Create from an OpenAPI payload (json or yaml)
      * openAPI("{\"openapi\": \"3.0.0\", \"info\": { ...")
@@ -47,10 +47,10 @@ public class OpenAPIDefinition extends RequestDefinition {
      * openAPI("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml", "showPetById")
      * <p>
      * // Create from a file on the local filesystem (json or yaml)
-     * openAPI("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/mock/openapi_petstore_example.json", "showPetById");
+     * openAPI("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/openapi/openapi_petstore_example.json", "showPetById");
      * <p>
      * // Create from a classpath resource in the /api package (json or yaml)
-     * openAPI("org/mockserver/mock/openapi_petstore_example.json", "showPetById");
+     * openAPI("org/mockserver/openapi/openapi_petstore_example.json", "showPetById");
      * <p>
      * // Create from an OpenAPI payload (json or yaml)
      * openAPI("{\"openapi\": \"3.0.0\", \"info\": { ...", "showPetById")
@@ -77,10 +77,10 @@ public class OpenAPIDefinition extends RequestDefinition {
      * withSpecUrlOrPayload("https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore-expanded.yaml")
      * <p>
      * // Create from a file on the local filesystem (json or yaml)
-     * withSpecUrlOrPayload("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/mock/openapi_petstore_example.json");
+     * withSpecUrlOrPayload("file://Users/myuser/git/mockserver/mockserver-core/src/test/resources/org/mockserver/openapi/openapi_petstore_example.json");
      * <p>
      * // Create from a classpath resource in the /api package (json or yaml)
-     * withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json");
+     * withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json");
      * <p>
      * // Create from an OpenAPI payload (json or yaml)
      * withSpecUrlOrPayload("{\"openapi\": \"3.0.0\", \"info\": { ...")

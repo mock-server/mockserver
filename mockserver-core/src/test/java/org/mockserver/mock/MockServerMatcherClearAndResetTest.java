@@ -145,7 +145,7 @@ public class MockServerMatcherClearAndResetTest {
 
         // when
         requestMatchers.clear(openAPI(
-            "org/mockserver/mock/openapi_petstore_example.json",
+            "org/mockserver/openapi/openapi_petstore_example.json",
             "listPets"
         ));
 
@@ -173,7 +173,7 @@ public class MockServerMatcherClearAndResetTest {
         assertThat(requestMatchers.httpRequestMatchers.size(), is(2));
 
         // when
-        requestMatchers.clear(openAPI().withSpecUrlOrPayload("org/mockserver/mock/openapi_petstore_example.json"));
+        requestMatchers.clear(openAPI().withSpecUrlOrPayload("org/mockserver/openapi/openapi_petstore_example.json"));
 
         // then
         assertThat(requestMatchers.httpRequestMatchers.size(), is(1));
@@ -200,7 +200,7 @@ public class MockServerMatcherClearAndResetTest {
 
         // when
         requestMatchers.clear(openAPI()
-            .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json"))
+            .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json"))
             .withOperationId("listPets")
         );
 
@@ -228,7 +228,7 @@ public class MockServerMatcherClearAndResetTest {
         assertThat(requestMatchers.httpRequestMatchers.size(), is(2));
 
         // when
-        requestMatchers.clear(openAPI().withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")));
+        requestMatchers.clear(openAPI().withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json")));
 
         // then
         assertThat(requestMatchers.httpRequestMatchers.size(), is(1));

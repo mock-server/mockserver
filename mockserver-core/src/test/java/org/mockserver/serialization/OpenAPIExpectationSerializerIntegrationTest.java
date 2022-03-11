@@ -33,7 +33,7 @@ public class OpenAPIExpectationSerializerIntegrationTest {
         // given
         String requestBytes = "" +
             "{" + NEW_LINE +
-            "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_simple_example.json\"," + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"org/mockserver/openapi/openapi_simple_example.json\"," + NEW_LINE +
             "  \"extra_field\": \"extra_value\"," + NEW_LINE +
             "  \"operationsAndResponses\" : {" + NEW_LINE +
             "    \"listPets\" : \"200\"," + NEW_LINE +
@@ -46,7 +46,7 @@ public class OpenAPIExpectationSerializerIntegrationTest {
         thrown.expectMessage("incorrect openapi expectation json format for:" + NEW_LINE +
             "" + NEW_LINE +
             "  {" + NEW_LINE +
-            "    \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_simple_example.json\"," + NEW_LINE +
+            "    \"specUrlOrPayload\" : \"org/mockserver/openapi/openapi_simple_example.json\"," + NEW_LINE +
             "    \"extra_field\": \"extra_value\"," + NEW_LINE +
             "    \"operationsAndResponses\" : {" + NEW_LINE +
             "      \"listPets\" : \"200\"," + NEW_LINE +
@@ -70,7 +70,7 @@ public class OpenAPIExpectationSerializerIntegrationTest {
         // given
         String requestBytes = "" +
             "{" + NEW_LINE +
-            "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_simple_example.json\"," + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"org/mockserver/openapi/openapi_simple_example.json\"," + NEW_LINE +
             "  \"operationsAndResponses\" : {" + NEW_LINE +
             "    \"listPets\" : \"200\"," + NEW_LINE +
             "    \"createPets\" : \"201\"" + NEW_LINE +
@@ -82,7 +82,7 @@ public class OpenAPIExpectationSerializerIntegrationTest {
 
         // then
         assertEquals(openAPIExpectation()
-            .withSpecUrlOrPayload("org/mockserver/mock/openapi_simple_example.json")
+            .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
             .withOperationsAndResponses(ImmutableMap.of(
                 "listPets", "200",
                 "createPets", "201"
@@ -94,7 +94,7 @@ public class OpenAPIExpectationSerializerIntegrationTest {
         // given
         String requestBytes = "" +
             "{" + NEW_LINE +
-            "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_simple_example.json\"" + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"org/mockserver/openapi/openapi_simple_example.json\"" + NEW_LINE +
             "}";
 
         // when
@@ -102,7 +102,7 @@ public class OpenAPIExpectationSerializerIntegrationTest {
 
         // then
         assertEquals(new OpenAPIExpectationDTO()
-            .setSpecUrlOrPayload("org/mockserver/mock/openapi_simple_example.json")
+            .setSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
             .buildObject(), httpResponse);
     }
 
@@ -111,7 +111,7 @@ public class OpenAPIExpectationSerializerIntegrationTest {
         // when
         String jsonOpenAPIExpectation = new OpenAPIExpectationSerializer(new MockServerLogger()).serialize(
             openAPIExpectation()
-                .withSpecUrlOrPayload("org/mockserver/mock/openapi_simple_example.json")
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
                 .withOperationsAndResponses(ImmutableMap.of(
                     "listPets", "200",
                     "createPets", "201"
@@ -120,7 +120,7 @@ public class OpenAPIExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
-            "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_simple_example.json\"," + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"org/mockserver/openapi/openapi_simple_example.json\"," + NEW_LINE +
             "  \"operationsAndResponses\" : {" + NEW_LINE +
             "    \"listPets\" : \"200\"," + NEW_LINE +
             "    \"createPets\" : \"201\"" + NEW_LINE +
@@ -135,13 +135,13 @@ public class OpenAPIExpectationSerializerIntegrationTest {
         String jsonOpenAPIExpectation = new OpenAPIExpectationSerializer(new MockServerLogger()).serialize(
             new OpenAPIExpectation[]{
                 openAPIExpectation()
-                    .withSpecUrlOrPayload("org/mockserver/mock/openapi_simple_example.json")
+                    .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
                     .withOperationsAndResponses(ImmutableMap.of(
                     "listPets", "200",
                     "createPets", "201"
                 )),
                 openAPIExpectation()
-                    .withSpecUrlOrPayload("org/mockserver/mock/openapi_simple_example.json")
+                    .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
                     .withOperationsAndResponses(ImmutableMap.of(
                     "listPets", "200",
                     "createPets", "201"
@@ -151,13 +151,13 @@ public class OpenAPIExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("[ {" + NEW_LINE +
-            "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_simple_example.json\"," + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"org/mockserver/openapi/openapi_simple_example.json\"," + NEW_LINE +
             "  \"operationsAndResponses\" : {" + NEW_LINE +
             "    \"listPets\" : \"200\"," + NEW_LINE +
             "    \"createPets\" : \"201\"" + NEW_LINE +
             "  }" + NEW_LINE +
             "}, {" + NEW_LINE +
-            "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_simple_example.json\"," + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"org/mockserver/openapi/openapi_simple_example.json\"," + NEW_LINE +
             "  \"operationsAndResponses\" : {" + NEW_LINE +
             "    \"listPets\" : \"200\"," + NEW_LINE +
             "    \"createPets\" : \"201\"" + NEW_LINE +
@@ -171,13 +171,13 @@ public class OpenAPIExpectationSerializerIntegrationTest {
         String jsonOpenAPIExpectation = new OpenAPIExpectationSerializer(new MockServerLogger()).serialize(
             Arrays.asList(
                 openAPIExpectation()
-                    .withSpecUrlOrPayload("org/mockserver/mock/openapi_simple_example.json")
+                    .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
                     .withOperationsAndResponses(ImmutableMap.of(
                         "listPets", "200",
                         "createPets", "201"
                     )),
                 openAPIExpectation()
-                    .withSpecUrlOrPayload("org/mockserver/mock/openapi_simple_example.json")
+                    .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
                     .withOperationsAndResponses(ImmutableMap.of(
                         "listPets", "200",
                         "createPets", "201"
@@ -187,13 +187,13 @@ public class OpenAPIExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("[ {" + NEW_LINE +
-            "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_simple_example.json\"," + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"org/mockserver/openapi/openapi_simple_example.json\"," + NEW_LINE +
             "  \"operationsAndResponses\" : {" + NEW_LINE +
             "    \"listPets\" : \"200\"," + NEW_LINE +
             "    \"createPets\" : \"201\"" + NEW_LINE +
             "  }" + NEW_LINE +
             "}, {" + NEW_LINE +
-            "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_simple_example.json\"," + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"org/mockserver/openapi/openapi_simple_example.json\"," + NEW_LINE +
             "  \"operationsAndResponses\" : {" + NEW_LINE +
             "    \"listPets\" : \"200\"," + NEW_LINE +
             "    \"createPets\" : \"201\"" + NEW_LINE +
@@ -210,14 +210,14 @@ public class OpenAPIExpectationSerializerIntegrationTest {
     public void shouldReturnJsonWithOpenAPIClasspathLocationAndOperationId() {
         assertThat(new OpenAPIExpectationSerializer(new MockServerLogger()).serialize(
             openAPIExpectation()
-                .withSpecUrlOrPayload("org/mockserver/mock/openapi_simple_example.json")
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
                 .withOperationsAndResponses(ImmutableMap.of(
                     "listPets", "200",
                     "createPets", "201"
                 ))
         ), is("" +
             "{" + NEW_LINE +
-            "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_simple_example.json\"," + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"org/mockserver/openapi/openapi_simple_example.json\"," + NEW_LINE +
             "  \"operationsAndResponses\" : {" + NEW_LINE +
             "    \"listPets\" : \"200\"," + NEW_LINE +
             "    \"createPets\" : \"201\"" + NEW_LINE +
@@ -230,10 +230,10 @@ public class OpenAPIExpectationSerializerIntegrationTest {
     public void shouldReturnJsonWithOpenAPIClasspathLocation() {
         assertThat(new OpenAPIExpectationSerializer(new MockServerLogger()).serialize(
             openAPIExpectation()
-                .withSpecUrlOrPayload("org/mockserver/mock/openapi_simple_example.json")
+                .withSpecUrlOrPayload("org/mockserver/openapi/openapi_simple_example.json")
         ), is("" +
             "{" + NEW_LINE +
-            "  \"specUrlOrPayload\" : \"org/mockserver/mock/openapi_simple_example.json\"" + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"org/mockserver/openapi/openapi_simple_example.json\"" + NEW_LINE +
             "}"
         ));
     }
@@ -242,14 +242,14 @@ public class OpenAPIExpectationSerializerIntegrationTest {
     public void shouldReturnJsonWithOpenAPIUrlAndOperationId() {
         assertThat(new OpenAPIExpectationSerializer(new MockServerLogger()).serialize(
             openAPIExpectation()
-                .withSpecUrlOrPayload(FilePath.getURL("org/mockserver/mock/openapi_simple_example.json").toString())
+                .withSpecUrlOrPayload(FilePath.getURL("org/mockserver/openapi/openapi_simple_example.json").toString())
                 .withOperationsAndResponses(ImmutableMap.of(
                     "listPets", "200",
                     "createPets", "201"
                 ))
         ), is("" +
             "{" + NEW_LINE +
-            "  \"specUrlOrPayload\" : \"" + FilePath.getURL("org/mockserver/mock/openapi_simple_example.json").toString() + "\"," + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"" + FilePath.getURL("org/mockserver/openapi/openapi_simple_example.json").toString() + "\"," + NEW_LINE +
             "  \"operationsAndResponses\" : {" + NEW_LINE +
             "    \"listPets\" : \"200\"," + NEW_LINE +
             "    \"createPets\" : \"201\"" + NEW_LINE +
@@ -262,10 +262,10 @@ public class OpenAPIExpectationSerializerIntegrationTest {
     public void shouldReturnJsonWithOpenAPIUrl() {
         assertThat(new OpenAPIExpectationSerializer(new MockServerLogger()).serialize(
             openAPIExpectation()
-                .withSpecUrlOrPayload(FilePath.getURL("org/mockserver/mock/openapi_simple_example.json").toString())
+                .withSpecUrlOrPayload(FilePath.getURL("org/mockserver/openapi/openapi_simple_example.json").toString())
         ), is("" +
             "{" + NEW_LINE +
-            "  \"specUrlOrPayload\" : \"" + FilePath.getURL("org/mockserver/mock/openapi_simple_example.json").toString() + "\"" + NEW_LINE +
+            "  \"specUrlOrPayload\" : \"" + FilePath.getURL("org/mockserver/openapi/openapi_simple_example.json").toString() + "\"" + NEW_LINE +
             "}"
         ));
     }
@@ -274,14 +274,14 @@ public class OpenAPIExpectationSerializerIntegrationTest {
     public void shouldReturnJsonWithOpenAPISpecAndOperationId() throws JsonProcessingException {
         assertThat(new OpenAPIExpectationSerializer(new MockServerLogger()).serialize(
             openAPIExpectation()
-                .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_simple_example.json"))
+                .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_simple_example.json"))
                 .withOperationsAndResponses(ImmutableMap.of(
                     "listPets", "200",
                     "createPets", "201"
                 ))
         ), is("" +
             "{" + NEW_LINE +
-            "  \"specUrlOrPayload\" : " + ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_simple_example.json")).toPrettyString().replaceAll("\\R", "\n  ") + "," + NEW_LINE +
+            "  \"specUrlOrPayload\" : " + ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_simple_example.json")).toPrettyString().replaceAll("\\R", "\n  ") + "," + NEW_LINE +
             "  \"operationsAndResponses\" : {" + NEW_LINE +
             "    \"listPets\" : \"200\"," + NEW_LINE +
             "    \"createPets\" : \"201\"" + NEW_LINE +
@@ -294,10 +294,10 @@ public class OpenAPIExpectationSerializerIntegrationTest {
     public void shouldReturnJsonWithOpenAPISpec() throws JsonProcessingException {
         assertThat(new OpenAPIExpectationSerializer(new MockServerLogger()).serialize(
             openAPIExpectation()
-                .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_simple_example.json"))
+                .withSpecUrlOrPayload(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_simple_example.json"))
         ), is("" +
             "{" + NEW_LINE +
-            "  \"specUrlOrPayload\" : " + ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_simple_example.json")).toPrettyString().replaceAll("\\R", "\n  ") + NEW_LINE +
+            "  \"specUrlOrPayload\" : " + ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_simple_example.json")).toPrettyString().replaceAll("\\R", "\n  ") + NEW_LINE +
             "}"
         ));
     }

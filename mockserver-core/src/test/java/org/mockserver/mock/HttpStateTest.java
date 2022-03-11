@@ -338,7 +338,7 @@ public class HttpStateTest {
         // given
         HttpRequest request = request("/mockserver/openapi").withMethod("PUT").withBody(
             openAPIExpectationSerializer.serialize(openAPIExpectation(
-                FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")
+                FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json")
             ))
         );
         FakeResponseWriter responseWriter = new FakeResponseWriter();
@@ -350,7 +350,7 @@ public class HttpStateTest {
         assertThat(handle, is(true));
         assertThat(responseWriter.response.getStatusCode(), is(201));
         List<Expectation> actualExpectations = Arrays.asList(expectationSerializer.deserializeArray(responseWriter.response.getBodyAsString(), true));
-        shouldBuildPetStoreExpectations(ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")).toPrettyString(), actualExpectations);
+        shouldBuildPetStoreExpectations(ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json")).toPrettyString(), actualExpectations);
     }
 
     @Test
@@ -358,7 +358,7 @@ public class HttpStateTest {
         // given
         HttpRequest request = request("/mockserver/openapi").withMethod("PUT").withBody(
             openAPIExpectationSerializer.serialize(openAPIExpectation(
-                FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json"), ImmutableMap.of(
+                FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json"), ImmutableMap.of(
                     "listPets", "500",
                     "createPets", "default",
                     "showPetById", "200"
@@ -374,7 +374,7 @@ public class HttpStateTest {
         assertThat(handle, is(true));
         assertThat(responseWriter.response.getStatusCode(), is(201));
         List<Expectation> actualExpectations = Arrays.asList(expectationSerializer.deserializeArray(responseWriter.response.getBodyAsString(), true));
-        shouldBuildPetStoreExpectationsWithSpecificResponses(ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json")).toPrettyString(), actualExpectations);
+        shouldBuildPetStoreExpectationsWithSpecificResponses(ObjectMapperFactory.createObjectMapper().readTree(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json")).toPrettyString(), actualExpectations);
     }
 
     @Test
@@ -411,7 +411,7 @@ public class HttpStateTest {
         // given
         HttpRequest request = request("/mockserver/openapi").withMethod("PUT").withBody(
             openAPIExpectationSerializer.serialize(openAPIExpectation(
-                FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.yaml")
+                FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.yaml")
             ))
         );
         FakeResponseWriter responseWriter = new FakeResponseWriter();
@@ -423,7 +423,7 @@ public class HttpStateTest {
         assertThat(handle, is(true));
         assertThat(responseWriter.response.getStatusCode(), is(201));
         List<Expectation> actualExpectations = Arrays.asList(expectationSerializer.deserializeArray(responseWriter.response.getBodyAsString(), true));
-        shouldBuildPetStoreExpectations(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.yaml"), actualExpectations);
+        shouldBuildPetStoreExpectations(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.yaml"), actualExpectations);
     }
 
     @Test
@@ -431,7 +431,7 @@ public class HttpStateTest {
         // given
         HttpRequest request = request("/mockserver/openapi").withMethod("PUT").withBody(
             openAPIExpectationSerializer.serialize(openAPIExpectation(
-                FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.yaml"), ImmutableMap.of(
+                FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.yaml"), ImmutableMap.of(
                     "listPets", "500",
                     "createPets", "default",
                     "showPetById", "200"
@@ -447,7 +447,7 @@ public class HttpStateTest {
         assertThat(handle, is(true));
         assertThat(responseWriter.response.getStatusCode(), is(201));
         List<Expectation> actualExpectations = Arrays.asList(expectationSerializer.deserializeArray(responseWriter.response.getBodyAsString(), true));
-        shouldBuildPetStoreExpectationsWithSpecificResponses(FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.yaml"), actualExpectations);
+        shouldBuildPetStoreExpectationsWithSpecificResponses(FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.yaml"), actualExpectations);
     }
 
     @Test
@@ -455,7 +455,7 @@ public class HttpStateTest {
         // given
         HttpRequest request = request("/mockserver/openapi").withMethod("PUT").withBody(
             openAPIExpectationSerializer.serialize(openAPIExpectation(
-                FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.yaml").substring(0, 100)
+                FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.yaml").substring(0, 100)
             ))
         );
         FakeResponseWriter responseWriter = new FakeResponseWriter();
@@ -684,16 +684,16 @@ public class HttpStateTest {
     @Test
     public void shouldAddExceptionViaOpenApiClasspath() {
         // when
-        List<Expectation> actualExpectations = httpState.add(openAPIExpectation("org/mockserver/mock/openapi_petstore_example.json"));
+        List<Expectation> actualExpectations = httpState.add(openAPIExpectation("org/mockserver/openapi/openapi_petstore_example.json"));
 
         // then
-        shouldBuildPetStoreExpectations("org/mockserver/mock/openapi_petstore_example.json", actualExpectations);
+        shouldBuildPetStoreExpectations("org/mockserver/openapi/openapi_petstore_example.json", actualExpectations);
     }
 
     @Test
     public void shouldAddExceptionViaOpenApiUrl() {
         // given
-        URL schemaUrl = FilePath.getURL("org/mockserver/mock/openapi_petstore_example.json");
+        URL schemaUrl = FilePath.getURL("org/mockserver/openapi/openapi_petstore_example.json");
 
         // when
         List<Expectation> actualExpectations = httpState.add(openAPIExpectation(String.valueOf(schemaUrl)));
@@ -705,7 +705,7 @@ public class HttpStateTest {
     @Test
     public void shouldAddExceptionViaOpenApiSpec() {
         // given
-        String schema = FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json");
+        String schema = FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json");
 
         // when
         List<Expectation> actualExpectations = httpState.add(openAPIExpectation(schema));
@@ -768,20 +768,20 @@ public class HttpStateTest {
     @Test
     public void shouldAddExceptionViaOpenApiClasspathWithSpecificResponses() {
         // when
-        List<Expectation> actualExpectations = httpState.add(openAPIExpectation("org/mockserver/mock/openapi_petstore_example.json", ImmutableMap.of(
+        List<Expectation> actualExpectations = httpState.add(openAPIExpectation("org/mockserver/openapi/openapi_petstore_example.json", ImmutableMap.of(
             "listPets", "500",
             "createPets", "default",
             "showPetById", "200"
         )));
 
         // then
-        shouldBuildPetStoreExpectationsWithSpecificResponses("org/mockserver/mock/openapi_petstore_example.json", actualExpectations);
+        shouldBuildPetStoreExpectationsWithSpecificResponses("org/mockserver/openapi/openapi_petstore_example.json", actualExpectations);
     }
 
     @Test
     public void shouldAddExceptionViaOpenApiUrlWithSpecificResponses() {
         // given
-        URL schemaUrl = FilePath.getURL("org/mockserver/mock/openapi_petstore_example.json");
+        URL schemaUrl = FilePath.getURL("org/mockserver/openapi/openapi_petstore_example.json");
 
         // when
         List<Expectation> actualExpectations = httpState.add(openAPIExpectation(String.valueOf(schemaUrl), ImmutableMap.of(
@@ -797,7 +797,7 @@ public class HttpStateTest {
     @Test
     public void shouldAddExceptionViaOpenApiSpecWithSpecificResponses() {
         // given
-        String schema = FileReader.readFileFromClassPathOrPath("org/mockserver/mock/openapi_petstore_example.json");
+        String schema = FileReader.readFileFromClassPathOrPath("org/mockserver/openapi/openapi_petstore_example.json");
 
         // when
         List<Expectation> actualExpectations = httpState.add(openAPIExpectation(schema, ImmutableMap.of(

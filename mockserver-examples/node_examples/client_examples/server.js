@@ -142,7 +142,7 @@ function verifyRequestsReceiveAtLeastTwiceByOpenAPI() {
     mockServerClient("localhost", 1080)
         .verify(
             {
-                'specUrlOrPayload': 'https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json'
+                'specUrlOrPayload': 'https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json'
             }, 2)
         .then(
             function () {
@@ -159,7 +159,7 @@ function verifyRequestsReceiveExactlyOnceByOpenAPIWithOperation() {
     mockServerClient("localhost", 1080)
         .verify(
             {
-                'specUrlOrPayload': 'org/mockserver/mock/openapi_petstore_example.json',
+                'specUrlOrPayload': 'org/mockserver/openapi/openapi_petstore_example.json',
                 'operationId': 'showPetById'
             }, 1, 1)
         .then(
@@ -221,11 +221,11 @@ function verifyRequestSequenceUsingOpenAPI() {
                 'path': '/status'
             },
             {
-                'specUrlOrPayload': 'org/mockserver/mock/openapi_petstore_example.json',
+                'specUrlOrPayload': 'org/mockserver/openapi/openapi_petstore_example.json',
                 'operationId': 'listPets'
             },
             {
-                'specUrlOrPayload': 'org/mockserver/mock/openapi_petstore_example.json',
+                'specUrlOrPayload': 'org/mockserver/openapi/openapi_petstore_example.json',
                 'operationId': 'showPetById'
             }
         )
@@ -318,7 +318,7 @@ function clearWithOpenAPIRequestMatcher() {
     var mockServerClient = require('mockserver-client').mockServerClient;
     mockServerClient("localhost", 1080)
         .clear({
-            "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+            "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
             "operationId": "showPetById"
         })
         .then(
@@ -365,7 +365,7 @@ function clearRequestAndLogsWithOpenAPIRequestMatcher() {
     var mockServerClient = require('mockserver-client').mockServerClient;
     mockServerClient("localhost", 1080)
         .clear({
-            "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/mock/openapi_petstore_example.json",
+            "specUrlOrPayload": "https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-integration-testing/src/main/resources/org/mockserver/openapi/openapi_petstore_example.json",
             "operationId": "showPetById"
         }, 'LOG')
         .then(

@@ -18,6 +18,7 @@ package org.mockserver.openapi.examples;
 
 import io.swagger.util.Json;
 import io.swagger.v3.oas.models.media.*;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.openapi.examples.models.*;
@@ -28,6 +29,10 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * See: https://github.com/swagger-api/swagger-inflector
@@ -51,10 +56,15 @@ public class ExampleBuilder {
     public static final double SAMPLE_DECIMAL_PROPERTY_VALUE = 1.5;
 
     public static Example fromSchema(Schema<?> property, Map<String, Schema> definitions) {
-        return fromProperty(null, property, definitions, new HashMap<>());
+        return fromProperty(null, property, definitions, new ConcurrentHashMap<>(), new ConcurrentSkipListSet<>(), new StringBuilder());
     }
 
-    public static Example fromProperty(String name, Schema<?> property, Map<String, Schema> definitions, Map<String, Example> processedModels) {
+    public static Example fromProperty(String name, Schema<?> property, Map<String, Schema> definitions, Map<String, Example> processedModels, Set<String> modelsStartedProcessing, StringBuilder location) {
+        location = new StringBuilder(location);
+        if (isNotBlank(name)) {
+            location.append(name).append(".");
+        }
+
         if (property == null) {
             return null;
         }
@@ -81,17 +91,23 @@ public class ExampleBuilder {
         if (property.get$ref() != null) {
             String ref = property.get$ref();
             ref = ref.substring(ref.lastIndexOf("/") + 1);
+            if (modelsStartedProcessing.contains(ref) && !processedModels.containsKey(ref)) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setMessageFormat("unable to create example for{}due to forward reference or circular reference")
+                        .setArguments(StringUtils.substringBeforeLast(location.toString(), "."))
+                );
+                return null;
+            }
+            modelsStartedProcessing.add(ref);
             if (processedModels.containsKey(ref)) {
                 // return some sort of example
-                return alreadyProcessedRefExample(ref, definitions, processedModels);
-            }
-            processedModels.put(ref, null);
-            if (definitions != null) {
+                output = alreadyProcessedRefExample(ref, definitions, processedModels);
+            } else if (definitions != null) {
                 Schema<?> model = definitions.get(ref);
                 if (model != null) {
-                    output = fromProperty(ref, model, definitions, processedModels);
+                    output = fromProperty(ref, model, definitions, processedModels, modelsStartedProcessing, location);
                     processedModels.put(ref, output);
-                    return output;
                 }
             }
         } else if (property instanceof EmailSchema) {
@@ -269,6 +285,7 @@ public class ExampleBuilder {
                         new LogEntry()
                             .setMessageFormat("unable to convert{}to JsonNode")
                             .setArguments(example)
+                            .setArguments(example)
                     );
                     output = new ObjectExample();
                 }
@@ -279,7 +296,7 @@ public class ExampleBuilder {
                 if (op.getProperties() != null) {
                     for (String propertyname : op.getProperties().keySet()) {
                         Schema<?> inner = op.getProperties().get(propertyname);
-                        Example innerExample = fromProperty(null, inner, definitions, processedModels);
+                        Example innerExample = fromProperty(propertyname, inner, definitions, processedModels, modelsStartedProcessing, location);
                         outputExample.put(propertyname, innerExample);
                     }
                     output = outputExample;
@@ -293,7 +310,8 @@ public class ExampleBuilder {
                 } catch (IOException e) {
                     MOCK_SERVER_LOGGER.logEvent(
                         new LogEntry()
-                            .setMessageFormat("unable to convert{}to JsonNode")
+                            .setMessageFormat("unable to create example for{}because unable to convert{}to JsonNode")
+                            .setArguments(StringUtils.substringBeforeLast(location.toString(), "."))
                             .setArguments(example)
                     );
                     output = new ArrayExample();
@@ -302,7 +320,7 @@ public class ExampleBuilder {
                 ArraySchema ap = (ArraySchema) property;
                 Schema<?> inner = ap.getItems();
                 if (inner != null) {
-                    Example innerExample = fromProperty(null, inner, definitions, processedModels);
+                    Example innerExample = fromProperty(property.getType(), inner, definitions, processedModels, modelsStartedProcessing, location);
                     if (innerExample != null) {
                         ArrayExample an = new ArrayExample();
                         an.add(innerExample);
@@ -312,17 +330,15 @@ public class ExampleBuilder {
                 }
             }
         } else if (property instanceof ComposedSchema) {
-            //validate resolved validators if true send back the first property if false the actual code
+            // validate resolved validators if true send back the first property if false the actual code
             ComposedSchema composedSchema = (ComposedSchema) property;
             if (composedSchema.getAllOf() != null) {
-
                 List<Schema> models = composedSchema.getAllOf();
                 ObjectExample ex = new ObjectExample();
-
                 List<Example> innerExamples = new ArrayList<>();
                 if (models != null) {
                     for (Schema im : models) {
-                        Example innerExample = fromProperty(null, im, definitions, processedModels);
+                        Example innerExample = fromProperty(property.getType(), im, definitions, processedModels, modelsStartedProcessing, location);
                         if (innerExample != null) {
                             innerExamples.add(innerExample);
                         }
@@ -332,11 +348,10 @@ public class ExampleBuilder {
                 output = ex;
             }
             if (composedSchema.getAnyOf() != null) {
-
                 List<Schema> models = composedSchema.getAnyOf();
                 if (models != null) {
                     for (Schema im : models) {
-                        Example innerExample = fromProperty(null, im, definitions, processedModels);
+                        Example innerExample = fromProperty(property.getType(), im, definitions, processedModels, modelsStartedProcessing, location);
                         if (innerExample != null) {
                             output = innerExample;
                             break;
@@ -345,12 +360,10 @@ public class ExampleBuilder {
                 }
             }
             if (composedSchema.getOneOf() != null) {
-
                 List<Schema> models = composedSchema.getOneOf();
-
                 if (models != null) {
                     for (Schema im : models) {
-                        Example innerExample = fromProperty(null, im, definitions, processedModels);
+                        Example innerExample = fromProperty(property.getType(), im, definitions, processedModels, modelsStartedProcessing, location);
                         if (innerExample != null) {
                             output = innerExample;
                             break;
@@ -377,7 +390,7 @@ public class ExampleBuilder {
                     Map<String, Schema> properties = property.getProperties();
                     for (String propertyKey : properties.keySet()) {
                         Schema inner = properties.get(propertyKey);
-                        Example propExample = fromProperty(null, inner, definitions, processedModels);
+                        Example propExample = fromProperty(propertyKey, inner, definitions, processedModels, modelsStartedProcessing, location);
                         ex.put(propertyKey, propExample);
                     }
                 }
@@ -390,7 +403,7 @@ public class ExampleBuilder {
             Schema<?> inner = (Schema<?>) property.getAdditionalProperties();
             if (inner != null) {
                 for (int i = 1; i <= 3; i++) {
-                    Example innerExample = fromProperty(null, inner, definitions, processedModels);
+                    Example innerExample = fromProperty(inner.getType(), inner, definitions, processedModels, modelsStartedProcessing, location);
                     if (innerExample != null) {
                         if (output == null) {
                             output = new ObjectExample();

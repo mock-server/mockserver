@@ -92,7 +92,7 @@ public class ExpectationInitializerIntegrationTest {
 
         try {
             // when
-            String specUrlOrPayload = "org/mockserver/mock/openapi_petstore_example.json";
+            String specUrlOrPayload = "org/mockserver/openapi/openapi_petstore_example.json";
             ConfigurationProperties.initializationJsonPath("org/mockserver/netty/integration/mock/initializer/openAPIExpectionInitializerJson.json");
             mockServer = new ClientAndServer();
 
