@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - worked around JDK error 'flip()Ljava/nio/ByteBuffer; does not exist in class java.nio.ByteBuffer'
 - null pointer exception when serialising string bodies with non string content types (i.e. image/png)
 - disabled native TLS for netty to improve TLS resilience 
+- fixed handling of circular references in OpenAPI specifications to be as gracefully as possible
 
 ## [5.12.0] - 2022-02-12
 
