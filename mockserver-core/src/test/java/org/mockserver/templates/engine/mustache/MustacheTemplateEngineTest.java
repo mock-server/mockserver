@@ -206,9 +206,9 @@ public class MustacheTemplateEngineTest {
             "}";
         HttpRequest request = request()
             .withPath("/somePath")
-            .withBody("<element>" +
-                "   <key>some_key</key>" +
-                "   <value>some_value</value>" +
+            .withBody("<element>" + NEW_LINE +
+                "   <key>some_key</key>" + NEW_LINE +
+                "   <value>some_value</value>" + NEW_LINE +
                 "</element>");
 
         // when
@@ -230,6 +230,85 @@ public class MustacheTemplateEngineTest {
                         "    {" + NEW_LINE +
                         "        'statusCode': 200," + NEW_LINE +
                         "        'body': \"{'key': 'some_key', 'value': 'some_value'}\"" + NEW_LINE +
+                        "    }" + NEW_LINE),
+                    template,
+                    request
+                )
+        );
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithMustacheResponseTemplateWithXPathWithJsonBody() throws JsonProcessingException {
+        // given
+        String template = "{" + NEW_LINE +
+            "    'statusCode': 200," + NEW_LINE +
+            "    'body': \"{'key': '{{#xPath}}/element/key{{/xPath}}', 'value': '{{#xPath}}/element/value{{/xPath}}'}\"" + NEW_LINE +
+            "}";
+        HttpRequest request = request()
+            .withPath("/somePath")
+            .withBody("{" + NEW_LINE +
+                "   \"element\": {" + NEW_LINE +
+                "      \"key\": \"some_key\"," + NEW_LINE +
+                "      \"value\": \"some_value\"" + NEW_LINE +
+                "   }" + NEW_LINE +
+                "}");
+
+        // when
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(logFormatter).executeTemplate(template, request, HttpResponseDTO.class);
+
+        // then
+        assertThat(actualHttpResponse, is(
+            response()
+                .withStatusCode(200)
+                .withBody("{'key': '', 'value': ''}")
+        ));
+        verify(logFormatter).logEvent(
+            new LogEntry()
+                .setType(TEMPLATE_GENERATED)
+                .setLogLevel(INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("generated output:{}from template:{}for request:{}")
+                .setArguments(OBJECT_MAPPER.readTree("" +
+                        "    {" + NEW_LINE +
+                        "        'statusCode': 200," + NEW_LINE +
+                        "        'body': \"{'key': '', 'value': ''}\"" + NEW_LINE +
+                        "    }" + NEW_LINE),
+                    template,
+                    request
+                )
+        );
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithMustacheResponseTemplateWithXPathWithStringBody() throws JsonProcessingException {
+        // given
+        String template = "{" + NEW_LINE +
+            "    'statusCode': 200," + NEW_LINE +
+            "    'body': \"{'key': '{{#xPath}}/element/key{{/xPath}}', 'value': '{{#xPath}}/element/value{{/xPath}}'}\"" + NEW_LINE +
+            "}";
+        HttpRequest request = request()
+            .withPath("/somePath")
+            .withBody("some_string_body");
+
+        // when
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(logFormatter).executeTemplate(template, request, HttpResponseDTO.class);
+
+        // then
+        assertThat(actualHttpResponse, is(
+            response()
+                .withStatusCode(200)
+                .withBody("{'key': '', 'value': ''}")
+        ));
+        verify(logFormatter).logEvent(
+            new LogEntry()
+                .setType(TEMPLATE_GENERATED)
+                .setLogLevel(INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("generated output:{}from template:{}for request:{}")
+                .setArguments(OBJECT_MAPPER.readTree("" +
+                        "    {" + NEW_LINE +
+                        "        'statusCode': 200," + NEW_LINE +
+                        "        'body': \"{'key': '', 'value': ''}\"" + NEW_LINE +
                         "    }" + NEW_LINE),
                     template,
                     request
@@ -291,6 +370,104 @@ public class MustacheTemplateEngineTest {
                         "    {" + NEW_LINE +
                         "        'statusCode': 200," + NEW_LINE +
                         "        'body': \"{'key': 'Sayings of the Century', 'value': 'red'}\"" + NEW_LINE +
+                        "    }" + NEW_LINE),
+                    template,
+                    request
+                )
+        );
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithMustacheResponseTemplateWithJsonPathWithXmlBody() throws JsonProcessingException {
+        // given
+        ConfigurationProperties.logLevel("TRACE");
+        String template = "{" + NEW_LINE +
+            "    'statusCode': 200," + NEW_LINE +
+            "    'body': \"{'key': '{{#jsonPath}}$.store.book[0].title{{/jsonPath}}', 'value': '{{#jsonPath}}$.store.bicycle.color{{/jsonPath}}'}\"" + NEW_LINE +
+            "}";
+        HttpRequest request = request()
+            .withPath("/somePath")
+            .withBody("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" + NEW_LINE +
+                "<root>" + NEW_LINE +
+                "  <store>" + NEW_LINE +
+                "    <book>" + NEW_LINE +
+                "      <category>reference</category>" + NEW_LINE +
+                "      <author>Nigel Rees</author>" + NEW_LINE +
+                "      <title>Sayings of the Century</title>" + NEW_LINE +
+                "      <price>18.95</price>" + NEW_LINE +
+                "    </book>" + NEW_LINE +
+                "    <book>" + NEW_LINE +
+                "      <category>fiction</category>" + NEW_LINE +
+                "      <author>Herman Melville</author>" + NEW_LINE +
+                "      <title>Moby Dick</title>" + NEW_LINE +
+                "      <isbn>0-553-21311-3</isbn>" + NEW_LINE +
+                "      <price>8.99</price>" + NEW_LINE +
+                "    </book>" + NEW_LINE +
+                "    <bicycle>" + NEW_LINE +
+                "      <color>red</color>" + NEW_LINE +
+                "      <price>19.95</price>" + NEW_LINE +
+                "    </bicycle>" + NEW_LINE +
+                "  </store>" + NEW_LINE +
+                "  <expensive>10</expensive>" + NEW_LINE +
+                "</root>");
+
+        // when
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(logFormatter).executeTemplate(template, request, HttpResponseDTO.class);
+
+        // then
+        assertThat(actualHttpResponse, is(
+            response()
+                .withStatusCode(200)
+                .withBody("{'key': '', 'value': ''}")
+        ));
+        verify(logFormatter).logEvent(
+            new LogEntry()
+                .setType(TEMPLATE_GENERATED)
+                .setLogLevel(INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("generated output:{}from template:{}for request:{}")
+                .setArguments(OBJECT_MAPPER.readTree("" +
+                        "    {" + NEW_LINE +
+                        "        'statusCode': 200," + NEW_LINE +
+                        "        'body': \"{'key': '', 'value': ''}\"" + NEW_LINE +
+                        "    }" + NEW_LINE),
+                    template,
+                    request
+                )
+        );
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithMustacheResponseTemplateWithJsonPathWithStringBody() throws JsonProcessingException {
+        // given
+        ConfigurationProperties.logLevel("TRACE");
+        String template = "{" + NEW_LINE +
+            "    'statusCode': 200," + NEW_LINE +
+            "    'body': \"{'key': '{{#jsonPath}}$.store.book[0].title{{/jsonPath}}', 'value': '{{#jsonPath}}$.store.bicycle.color{{/jsonPath}}'}\"" + NEW_LINE +
+            "}";
+        HttpRequest request = request()
+            .withPath("/somePath")
+            .withBody("some_string_body");
+
+        // when
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(logFormatter).executeTemplate(template, request, HttpResponseDTO.class);
+
+        // then
+        assertThat(actualHttpResponse, is(
+            response()
+                .withStatusCode(200)
+                .withBody("{'key': '', 'value': ''}")
+        ));
+        verify(logFormatter).logEvent(
+            new LogEntry()
+                .setType(TEMPLATE_GENERATED)
+                .setLogLevel(INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("generated output:{}from template:{}for request:{}")
+                .setArguments(OBJECT_MAPPER.readTree("" +
+                        "    {" + NEW_LINE +
+                        "        'statusCode': 200," + NEW_LINE +
+                        "        'body': \"{'key': '', 'value': ''}\"" + NEW_LINE +
                         "    }" + NEW_LINE),
                     template,
                     request
