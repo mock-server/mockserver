@@ -563,6 +563,45 @@ public class MustacheTemplateEngineTest {
     }
 
     @Test
+    public void shouldHandleHttpRequestsWithMustacheResponseTemplateInvalidFields() {
+        // given
+        String template = "{" + NEW_LINE +
+            "    'statusCode': 200," + NEW_LINE +
+            "    'body': \"{'method': '{{ request.method.invalid }}', 'path': '{{ request.invalid }}', 'headers': '{{ invalid.headers.host.0 }}'}\"" + NEW_LINE +
+            "}";
+
+        // when
+        RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> new MustacheTemplateEngine(logFormatter).executeTemplate(template, request()
+                .withPath("/somePath")
+                .withHeader(HOST.toString(), "mock-server.com")
+                .withBody("some_body"),
+            HttpRequestDTO.class
+        ));
+
+        // then
+        assertThat(runtimeException.getMessage(), is("Exception:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  No method or field with name 'request.method.invalid' on line 3" + NEW_LINE +
+            "" + NEW_LINE +
+            " transforming template:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  {" + NEW_LINE +
+            "      'statusCode': 200," + NEW_LINE +
+            "      'body': \"{'method': '{{ request.method.invalid }}', 'path': '{{ request.invalid }}', 'headers': '{{ invalid.headers.host.0 }}'}\"" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "" + NEW_LINE +
+            " for request:" + NEW_LINE +
+            "" + NEW_LINE +
+            "  {" + NEW_LINE +
+            "    \"path\" : \"/somePath\"," + NEW_LINE +
+            "    \"headers\" : {" + NEW_LINE +
+            "      \"host\" : [ \"mock-server.com\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"body\" : \"some_body\"" + NEW_LINE +
+            "  }" + NEW_LINE));
+    }
+
+    @Test
     public void shouldHandleInvalidMustacheTemplate() {
         // given
         String template = "{{ {{ }} }}";
