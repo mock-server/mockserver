@@ -36,7 +36,7 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
             } else {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setLogLevel(Level.ERROR)
+                        .setLogLevel(Level.WARN)
                         .setHttpRequest(null)
                         .setMessageFormat(httpClassCallback.getCallbackClass() + " does not implement " + callbackClass.getName() + " required for forwarded requests with class callback")
                 );
