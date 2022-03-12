@@ -16,10 +16,11 @@ public class HttpRequestTemplateObject extends RequestDefinition {
     private int hashCode;
     private String method = "";
     private String path = "";
+    private final Map<String, List<String>> pathParameters = new HashMap<>();
     private final Map<String, List<String>> queryStringParameters = new HashMap<>();
-    private BodyDTO body = null;
     private final Map<String, String> cookies = new HashMap<>();
     private final Map<String, List<String>> headers = new HashMap<>();
+    private BodyDTO body = null;
     private Boolean keepAlive = null;
     private Boolean secure = null;
 
@@ -27,14 +28,17 @@ public class HttpRequestTemplateObject extends RequestDefinition {
         if (httpRequest != null) {
             method = httpRequest.getMethod().getValue();
             path = httpRequest.getPath().getValue();
+            for (Parameter parameter : httpRequest.getPathParameterList()) {
+                pathParameters.put(parameter.getName().getValue(), parameter.getValues().stream().map(NottableString::getValue).collect(Collectors.toList()));
+            }
+            for (Parameter parameter : httpRequest.getQueryStringParameterList()) {
+                queryStringParameters.put(parameter.getName().getValue(), parameter.getValues().stream().map(NottableString::getValue).collect(Collectors.toList()));
+            }
             for (Header header : httpRequest.getHeaderList()) {
                 headers.put(header.getName().getValue(), header.getValues().stream().map(NottableString::getValue).collect(Collectors.toList()));
             }
             for (Cookie cookie : httpRequest.getCookieList()) {
                 cookies.put(cookie.getName().getValue(), cookie.getValue().getValue());
-            }
-            for (Parameter parameter : httpRequest.getQueryStringParameterList()) {
-                queryStringParameters.put(parameter.getName().getValue(), parameter.getValues().stream().map(NottableString::getValue).collect(Collectors.toList()));
             }
             body = BodyDTO.createDTO(httpRequest.getBody());
             keepAlive = httpRequest.isKeepAlive();
@@ -51,16 +55,12 @@ public class HttpRequestTemplateObject extends RequestDefinition {
         return path;
     }
 
+    public Map<String, List<String>> getPathParameters() {
+        return pathParameters;
+    }
+
     public Map<String, List<String>> getQueryStringParameters() {
         return queryStringParameters;
-    }
-
-    public BodyDTO getBody() {
-        return body;
-    }
-
-    public String getBodyAsString() {
-        return BodyDTO.toString(body);
     }
 
     public Map<String, List<String>> getHeaders() {
@@ -69,6 +69,15 @@ public class HttpRequestTemplateObject extends RequestDefinition {
 
     public Map<String, String> getCookies() {
         return cookies;
+    }
+
+    public String getBody() {
+        return BodyDTO.toString(body);
+    }
+
+    @Deprecated
+    public String getBodyAsString() {
+        return BodyDTO.toString(body);
     }
 
     public Boolean getKeepAlive() {
@@ -100,10 +109,11 @@ public class HttpRequestTemplateObject extends RequestDefinition {
         HttpRequestTemplateObject that = (HttpRequestTemplateObject) o;
         return Objects.equals(method, that.method) &&
             Objects.equals(path, that.path) &&
+            Objects.equals(pathParameters, that.pathParameters) &&
             Objects.equals(queryStringParameters, that.queryStringParameters) &&
-            Objects.equals(body, that.body) &&
             Objects.equals(cookies, that.cookies) &&
             Objects.equals(headers, that.headers) &&
+            Objects.equals(body, that.body) &&
             Objects.equals(keepAlive, that.keepAlive) &&
             Objects.equals(secure, that.secure);
     }
@@ -111,7 +121,7 @@ public class HttpRequestTemplateObject extends RequestDefinition {
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(super.hashCode(), method, path, queryStringParameters, body, cookies, headers, keepAlive, secure);
+            hashCode = Objects.hash(super.hashCode(), method, path, pathParameters, queryStringParameters, cookies, headers, body, keepAlive, secure);
         }
         return hashCode;
     }

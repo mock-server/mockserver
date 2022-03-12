@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - exposed remote address (i.e. client address) to method and class callbacks, logs and dashboard
 - exposed client certificate chain to method and class callbacks, logs and dashboard
 - added simpler mustache style response templates (in addition to existing javascript and velocity support)
+- added numerous response template functions for date, uuid, random, xPath and jsonPath 
+- added path parameters to response template model 
 
 ### Changed
 - included Bouncy Castle now used by default to resolve issues with modules in Java 16+ and backwards compatibility for Java 8
@@ -35,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - changed docker distroless base image to distroless image for nonroot user
 - changed docker distroless base image for snapshot to distroless image for debugging
 - changed client to launch dashboard in HTTP (not HTTPS) to avoid issues with self-signed certificates
+- simplified the body field for response template model
 
 ### Fixed
 - worked around JDK error 'flip()Ljava/nio/ByteBuffer; does not exist in class java.nio.ByteBuffer'

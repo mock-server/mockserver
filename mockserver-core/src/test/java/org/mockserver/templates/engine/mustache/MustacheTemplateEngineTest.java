@@ -18,6 +18,9 @@ import org.mockserver.uuid.UUIDService;
 import org.slf4j.event.Level;
 
 import javax.script.ScriptException;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
@@ -121,12 +124,17 @@ public class MustacheTemplateEngineTest {
         // given
         String template = "{" + NEW_LINE +
             "    'statusCode': 200," + NEW_LINE +
-            "    'body': \"{'queryStringParameters': '{{ request.queryStringParameters.nameOne.0 }},{{ request.queryStringParameters.nameTwo.0 }},{{ request.queryStringParameters.nameTwo.1 }}', 'cookies': '{{ request.cookies.session }}, 'body': '{{ request.body }}'}\"" + NEW_LINE +
+            "    'body': \"{'queryStringParameters': '{{ request.queryStringParameters.nameOne.0 }},{{ request.queryStringParameters.nameTwo.0 }},{{ request.queryStringParameters.nameTwo.1 }}'," +
+            " 'pathParameters': '{{ request.pathParameters.nameOne.0 }},{{ request.pathParameters.nameTwo.0 }},{{ request.pathParameters.nameTwo.1 }}'," +
+            " 'cookies': '{{ request.cookies.session }}," +
+            " 'body': '{{ request.body }}'}\"" + NEW_LINE +
             "}";
         HttpRequest request = request()
             .withPath("/somePath")
-            .withQueryStringParameter("nameOne", "valueOne")
-            .withQueryStringParameter("nameTwo", "valueTwoOne", "valueTwoTwo")
+            .withQueryStringParameter("nameOne", "queryValueOne")
+            .withQueryStringParameter("nameTwo", "queryValueTwoOne", "queryValueTwoTwo")
+            .withPathParameter("nameOne", "pathValueOne")
+            .withPathParameter("nameTwo", "pathValueTwoOne", "pathValueTwoTwo")
             .withMethod("POST")
             .withCookie("session", "some_session_id")
             .withBody("some_body");
@@ -138,7 +146,7 @@ public class MustacheTemplateEngineTest {
         assertThat(actualHttpResponse, is(
             response()
                 .withStatusCode(200)
-                .withBody("{'queryStringParameters': 'valueOne,valueTwoOne,valueTwoTwo', 'cookies': 'some_session_id, 'body': 'some_body'}")
+                .withBody("{'queryStringParameters': 'queryValueOne,queryValueTwoOne,queryValueTwoTwo', 'pathParameters': 'pathValueOne,pathValueTwoOne,pathValueTwoTwo', 'cookies': 'some_session_id, 'body': 'some_body'}")
         ));
         verify(logFormatter).logEvent(
             new LogEntry()
@@ -149,7 +157,7 @@ public class MustacheTemplateEngineTest {
                 .setArguments(OBJECT_MAPPER.readTree("" +
                         "    {" + NEW_LINE +
                         "        'statusCode': 200," + NEW_LINE +
-                        "        'body': \"{'queryStringParameters': 'valueOne,valueTwoOne,valueTwoTwo', 'cookies': 'some_session_id, 'body': 'some_body'}\"" + NEW_LINE +
+                        "        'body': \"{'queryStringParameters': 'queryValueOne,queryValueTwoOne,queryValueTwoTwo', 'pathParameters': 'pathValueOne,pathValueTwoOne,pathValueTwoTwo', 'cookies': 'some_session_id, 'body': 'some_body'}\"" + NEW_LINE +
                         "    }" + NEW_LINE),
                     template,
                     request
@@ -158,14 +166,14 @@ public class MustacheTemplateEngineTest {
     }
 
     @Test
-    public void shouldHandleHttpRequestsWithMustacheResponseTemplateDynamicValues() throws InterruptedException {
+    public void shouldHandleHttpRequestsWithMustacheResponseTemplateDynamicValuesDateAndUUID() throws InterruptedException {
         boolean originalFixedUUID = UUIDService.fixedUUID;
         try {
             // given
             UUIDService.fixedUUID = true;
             String template = "{" + NEW_LINE +
                 "    'statusCode': 200," + NEW_LINE +
-                "    'body': \"{'date': '{{ now }}', 'uuids': ['{{ uuid }}', '{{ uuid }}'] }\"" + NEW_LINE +
+                "    'body': \"{'date': '{{ now }}', 'date_epoch': '{{ now_epoch }}', 'date_iso-8601': '{{ now_iso-8601 }}', 'date_rfc_1123': '{{ now_rfc_1123 }}', 'uuids': ['{{ uuid }}', '{{ uuid }}'] }\"" + NEW_LINE +
                 "}";
             HttpRequest request = request()
                 .withPath("/somePath")
@@ -190,6 +198,46 @@ public class MustacheTemplateEngineTest {
             // then
             assertThat(secondActualHttpResponse.getBodyAsString(), allOf(startsWith("{'date': '20"), endsWith("', 'uuids': ['" + UUIDService.getUUID() + "', '" + UUIDService.getUUID() + "'] }")));
             // date should now be different
+            assertThat(secondActualHttpResponse.getBodyAsString(), not(is(firstActualHttpResponse.getBodyAsString())));
+
+        } finally {
+            UUIDService.fixedUUID = originalFixedUUID;
+        }
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithMustacheResponseTemplateDynamicValuesRandom() throws InterruptedException {
+        boolean originalFixedUUID = UUIDService.fixedUUID;
+        try {
+            // given
+            UUIDService.fixedUUID = true;
+            String template = "{" + NEW_LINE +
+                "    'statusCode': 200," + NEW_LINE +
+                "    'body': \"{'rand_int': '{{ rand_int }}', 'rand_int_10': '{{ rand_int_10 }}', 'rand_int_100': '{{ rand_int_100 }}', 'rand_bytes': ['{{ rand_bytes }}','{{ rand_bytes_16 }}','{{ rand_bytes_32 }}','{{ rand_bytes_64 }}','{{ rand_bytes_128 }}'], 'end': 'end' }\"" + NEW_LINE +
+                "}";
+            HttpRequest request = request()
+                .withPath("/somePath")
+                .withQueryStringParameter("nameOne", "valueOne")
+                .withQueryStringParameter("nameTwo", "valueTwoOne", "valueTwoTwo")
+                .withMethod("POST")
+                .withCookie("session", "some_session_id")
+                .withBody("some_body");
+
+            // when
+            HttpResponse firstActualHttpResponse = new MustacheTemplateEngine(logFormatter).executeTemplate(template, request, HttpResponseDTO.class);
+
+            // then
+            assertThat(firstActualHttpResponse.getBodyAsString(), allOf(startsWith("{'rand_int': '"), endsWith("'], 'end': 'end' }")));
+
+            // given
+            TimeUnit.SECONDS.sleep(1);
+
+            // when
+            HttpResponse secondActualHttpResponse = new MustacheTemplateEngine(logFormatter).executeTemplate(template, request, HttpResponseDTO.class);
+
+            // then
+            assertThat(firstActualHttpResponse.getBodyAsString(), allOf(startsWith("{'rand_int': '"), endsWith("'], 'end': 'end' }")));
+            // should now be different
             assertThat(secondActualHttpResponse.getBodyAsString(), not(is(firstActualHttpResponse.getBodyAsString())));
 
         } finally {
@@ -468,6 +516,45 @@ public class MustacheTemplateEngineTest {
                         "    {" + NEW_LINE +
                         "        'statusCode': 200," + NEW_LINE +
                         "        'body': \"{'key': '', 'value': ''}\"" + NEW_LINE +
+                        "    }" + NEW_LINE),
+                    template,
+                    request
+                )
+        );
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithMustacheResponseTemplateBinaryBody() throws JsonProcessingException {
+        // given
+        String template = "{" + NEW_LINE +
+            "    'statusCode': 200," + NEW_LINE +
+            "    'body': \"{'body': '{{ request.body }}'}\"" + NEW_LINE +
+            "}";
+        HttpRequest request = request()
+            .withPath("/somePath")
+            .withMethod("POST")
+            .withHeader(HOST.toString(), "mock-server.com")
+            .withBody("some_body".getBytes(StandardCharsets.UTF_8));
+
+        // when
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(logFormatter).executeTemplate(template, request, HttpResponseDTO.class);
+
+        // then
+        assertThat(actualHttpResponse, is(
+            response()
+                .withStatusCode(200)
+                .withBody("{'body': 'c29tZV9ib2R5'}")
+        ));
+        verify(logFormatter).logEvent(
+            new LogEntry()
+                .setType(TEMPLATE_GENERATED)
+                .setLogLevel(INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("generated output:{}from template:{}for request:{}")
+                .setArguments(OBJECT_MAPPER.readTree("" +
+                        "    {" + NEW_LINE +
+                        "        'statusCode': 200," + NEW_LINE +
+                        "        'body': \"{'body': 'c29tZV9ib2R5'}\"" + NEW_LINE +
                         "    }" + NEW_LINE),
                     template,
                     request
