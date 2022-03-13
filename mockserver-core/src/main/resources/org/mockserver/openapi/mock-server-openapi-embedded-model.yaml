@@ -115,13 +115,13 @@ paths:
           name: format
           schema:
             type: string
-            enum: ["java", "json", "log_entries"]
+            enum: [ "java", "json", "log_entries" ]
           description: changes response format, default if not specificed is "json", supported values are "java", "json", "log_entries"
         - in: query
           name: type
           schema:
             type: string
-            enum: ["logs", "requests", "request_responses", "recorded_expectations", "active_expectations"]
+            enum: [ "logs", "requests", "request_responses", "recorded_expectations", "active_expectations" ]
           description: specifies the type of object that is retrieve, default if not specified is "requests", supported values are "logs", "requests", "recorded_expectations", "active_expectations"
       responses:
         '200':
@@ -622,8 +622,8 @@ components:
             keyMatchStyle:
               type: string
               enum:
-              - MATCHING_KEY
-              - SUB_SET
+                - MATCHING_KEY
+                - SUB_SET
               default: SUB_SET
           # patternProperties:
           #   "^(?!keyMatchStyle)\\S+$":
@@ -691,19 +691,19 @@ components:
             parameterStyle:
               type: string
               enum:
-              - SIMPLE
-              - SIMPLE_EXPLODED
-              - LABEL
-              - LABEL_EXPLODED
-              - MATRIX
-              - MATRIX_EXPLODED
-              - FORM_EXPLODED
-              - FORM
-              - SPACE_DELIMITED_EXPLODED
-              - SPACE_DELIMITED
-              - PIPE_DELIMITED_EXPLODED
-              - PIPE_DELIMITED
-              - DEEP_OBJECT
+                - SIMPLE
+                - SIMPLE_EXPLODED
+                - LABEL
+                - LABEL_EXPLODED
+                - MATRIX
+                - MATRIX_EXPLODED
+                - FORM_EXPLODED
+                - FORM
+                - SPACE_DELIMITED_EXPLODED
+                - SPACE_DELIMITED
+                - PIPE_DELIMITED_EXPLODED
+                - PIPE_DELIMITED
+                - DEEP_OBJECT
     SocketAddress:
       title: remote address to send request to
       type: object
@@ -948,6 +948,8 @@ components:
           $ref: "#/components/schemas/RequestDefinition"
         times:
           $ref: "#/components/schemas/VerificationTimes"
+        maximumNumberOfRequestToReturnInVerificationFailure:
+          type: integer
       oneOf:
         - required:
             - expectationId
@@ -976,6 +978,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/RequestDefinition"
+        maximumNumberOfRequestToReturnInVerificationFailure:
+          type: integer
       oneOf:
         - required:
             - expectationIds

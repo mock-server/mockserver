@@ -781,12 +781,34 @@ public class MockServerClient implements Stoppable {
      * @throws AssertionError if the request has not been found
      */
     public MockServerClient verify(RequestDefinition... requestDefinitions) throws AssertionError {
+        return verify(null, requestDefinitions);
+    }
+
+    /**
+     * Verify a list of requests have been sent in the order specified for example:
+     * <pre>
+     * mockServerClient
+     *  .verify(
+     *      request()
+     *          .withPath("/first_request")
+     *          .withBody("some_request_body"),
+     *      request()
+     *          .withPath("/second_request")
+     *          .withBody("some_request_body")
+     *  );
+     * </pre>
+     *
+     * @param maximumNumberOfRequestToReturnInVerificationFailure the maximum number requests return in the error response when the verification fails
+     * @param requestDefinitions                                  the http requests that must be matched for this verification to pass
+     * @throws AssertionError if the request has not been found
+     */
+    public MockServerClient verify(Integer maximumNumberOfRequestToReturnInVerificationFailure, RequestDefinition... requestDefinitions) throws AssertionError {
         if (requestDefinitions == null || requestDefinitions.length == 0 || requestDefinitions[0] == null) {
             throw new IllegalArgumentException("verify(RequestDefinition...) requires a non-null non-empty array of RequestDefinition objects");
         }
 
         try {
-            VerificationSequence verificationSequence = new VerificationSequence().withRequests(requestDefinitions);
+            VerificationSequence verificationSequence = new VerificationSequence().withRequests(requestDefinitions).withMaximumNumberOfRequestToReturnInVerificationFailure(maximumNumberOfRequestToReturnInVerificationFailure);
             String result = sendRequest(
                 request()
                     .withMethod("PUT")
@@ -845,12 +867,34 @@ public class MockServerClient implements Stoppable {
      * @throws AssertionError if the request has not been found
      */
     public MockServerClient verify(ExpectationId... expectationIds) throws AssertionError {
+        return verify(null, expectationIds);
+    }
+
+    /**
+     * Verify a list of requests have been sent in the order specified for example:
+     * <pre>
+     * mockServerClient
+     *  .verify(
+     *      request()
+     *          .withPath("/first_request")
+     *          .withBody("some_request_body"),
+     *      request()
+     *          .withPath("/second_request")
+     *          .withBody("some_request_body")
+     *  );
+     * </pre>
+     *
+     * @param maximumNumberOfRequestToReturnInVerificationFailure the maximum number requests return in the error response when the verification fails
+     * @param expectationIds                                      the http requests that must be matched for this verification to pass
+     * @throws AssertionError if the request has not been found
+     */
+    public MockServerClient verify(Integer maximumNumberOfRequestToReturnInVerificationFailure, ExpectationId... expectationIds) throws AssertionError {
         if (expectationIds == null || expectationIds.length == 0 || expectationIds[0] == null) {
             throw new IllegalArgumentException("verify(RequestDefinition...) requires a non-null non-empty array of RequestDefinition objects");
         }
 
         try {
-            VerificationSequence verificationSequence = new VerificationSequence().withExpectationIds(expectationIds);
+            VerificationSequence verificationSequence = new VerificationSequence().withExpectationIds(expectationIds).withMaximumNumberOfRequestToReturnInVerificationFailure(maximumNumberOfRequestToReturnInVerificationFailure);
             String result = sendRequest(
                 request()
                     .withMethod("PUT")
@@ -893,6 +937,33 @@ public class MockServerClient implements Stoppable {
      */
     @SuppressWarnings("DuplicatedCode")
     public MockServerClient verify(RequestDefinition requestDefinition, VerificationTimes times) throws AssertionError {
+        return verify(requestDefinition, times, null);
+    }
+
+    /**
+     * Verify a request has been sent for example:
+     * <pre>
+     * mockServerClient
+     *  .verify(
+     *      request()
+     *          .withPath("/some_path")
+     *          .withBody("some_request_body"),
+     *      VerificationTimes.exactly(3)
+     *  );
+     * </pre>
+     * VerificationTimes supports multiple static factory methods:
+     * <p>
+     * once()      - verify the request was only received once
+     * exactly(n)  - verify the request was only received exactly n times
+     * atLeast(n)  - verify the request was only received at least n times
+     *
+     * @param requestDefinition                                   the http request that must be matched for this verification to pass
+     * @param times                                               the number of times this request must be matched
+     * @param maximumNumberOfRequestToReturnInVerificationFailure the maximum number requests return in the error response when the verification fails
+     * @throws AssertionError if the request has not been found
+     */
+    @SuppressWarnings("DuplicatedCode")
+    public MockServerClient verify(RequestDefinition requestDefinition, VerificationTimes times, Integer maximumNumberOfRequestToReturnInVerificationFailure) throws AssertionError {
         if (requestDefinition == null) {
             throw new IllegalArgumentException("verify(RequestDefinition, VerificationTimes) requires a non null RequestDefinition object");
         }
@@ -901,7 +972,10 @@ public class MockServerClient implements Stoppable {
         }
 
         try {
-            Verification verification = verification().withRequest(requestDefinition).withTimes(times);
+            Verification verification = verification()
+                .withRequest(requestDefinition)
+                .withTimes(times)
+                .withMaximumNumberOfRequestToReturnInVerificationFailure(maximumNumberOfRequestToReturnInVerificationFailure);
             String result = sendRequest(
                 request()
                     .withMethod("PUT")
@@ -970,6 +1044,33 @@ public class MockServerClient implements Stoppable {
      */
     @SuppressWarnings("DuplicatedCode")
     public MockServerClient verify(ExpectationId expectationId, VerificationTimes times) throws AssertionError {
+        return verify(expectationId, times, null);
+    }
+
+    /**
+     * Verify a request has been sent for example:
+     * <pre>
+     * mockServerClient
+     *  .verify(
+     *      request()
+     *          .withPath("/some_path")
+     *          .withBody("some_request_body"),
+     *      VerificationTimes.exactly(3)
+     *  );
+     * </pre>
+     * VerificationTimes supports multiple static factory methods:
+     * <p>
+     * once()      - verify the request was only received once
+     * exactly(n)  - verify the request was only received exactly n times
+     * atLeast(n)  - verify the request was only received at least n times
+     *
+     * @param expectationId                                       the http request that must be matched for this verification to pass
+     * @param times                                               the number of times this request must be matched
+     * @param maximumNumberOfRequestToReturnInVerificationFailure the maximum number requests return in the error response when the verification fails
+     * @throws AssertionError if the request has not been found
+     */
+    @SuppressWarnings("DuplicatedCode")
+    public MockServerClient verify(ExpectationId expectationId, VerificationTimes times, Integer maximumNumberOfRequestToReturnInVerificationFailure) throws AssertionError {
         if (expectationId == null) {
             throw new IllegalArgumentException("verify(RequestDefinition, VerificationTimes) requires a non null RequestDefinition object");
         }
@@ -978,7 +1079,10 @@ public class MockServerClient implements Stoppable {
         }
 
         try {
-            Verification verification = verification().withExpectationId(expectationId).withTimes(times);
+            Verification verification = verification()
+                .withExpectationId(expectationId)
+                .withTimes(times)
+                .withMaximumNumberOfRequestToReturnInVerificationFailure(maximumNumberOfRequestToReturnInVerificationFailure);
             String result = sendRequest(
                 request()
                     .withMethod("PUT")

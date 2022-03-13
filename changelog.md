@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added support for control plane JWTs supplier to client
 - added support for control plane JWT authorisation to specify required audience, matching claims and required claims
 - added control plane authorisation using both JWT and mTLS
-- added property to control maximum number of requests to return in verification failure (defaulted to 10)
+- added property to control maximum number of requests to return in verification failure, defaults to 10
+- added field to verifications to control maximum number of requests to return in verification failure, defaults to configuration property - item above
 - added remote address field to http requests that can be used by class or method callbacks
 - exposed remote address (i.e. client address) to method and class callbacks, logs and dashboard
 - exposed client certificate chain to method and class callbacks, logs and dashboard

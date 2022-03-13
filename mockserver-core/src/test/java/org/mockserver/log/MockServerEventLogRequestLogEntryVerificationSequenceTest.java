@@ -485,7 +485,7 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
     }
 
     @Test
-    public void shouldFailVerificationSequenceWithLimitedReturnedRequests() {
+    public void shouldFailVerificationSequenceWithLimitedReturnedRequestsViaConfiguration() {
         Integer originalMaximumNumberOfRequestToReturnInVerificationFailure = ConfigurationProperties.maximumNumberOfRequestToReturnInVerificationFailure();
         try {
             // given
@@ -583,6 +583,104 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
         } finally {
             ConfigurationProperties.maximumNumberOfRequestToReturnInVerificationFailure(originalMaximumNumberOfRequestToReturnInVerificationFailure);
         }
+    }
+
+    @Test
+    public void shouldFailVerificationSequenceWithLimitedReturnedRequestsViaVerificationSequence() {
+        // when
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("multi"))
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("three"))
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("multi"))
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(request("four"))
+                .setType(RECEIVED_REQUEST)
+        );
+
+        // then - next to each other
+        assertThat(verify(
+                new VerificationSequence()
+                    .withRequests(
+                        request("multi"),
+                        request("one")
+                    )
+                    .withMaximumNumberOfRequestToReturnInVerificationFailure(1)
+            ),
+            is("Request sequence not found, expected:<[ {" + NEW_LINE +
+                "  \"path\" : \"multi\"" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"path\" : \"one\"" + NEW_LINE +
+                "} ]> but was not found, found 5 other requests"));
+        assertThat(verify(
+                new VerificationSequence()
+                    .withRequests(
+                        request("four"),
+                        request("multi")
+                    )
+                    .withMaximumNumberOfRequestToReturnInVerificationFailure(1)
+            ),
+            is("Request sequence not found, expected:<[ {" + NEW_LINE +
+                "  \"path\" : \"four\"" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"path\" : \"multi\"" + NEW_LINE +
+                "} ]> but was not found, found 5 other requests"));
+        // then - not next to each other
+        assertThat(verify(
+                new VerificationSequence()
+                    .withRequests(
+                        request("three"),
+                        request("one")
+                    )
+                    .withMaximumNumberOfRequestToReturnInVerificationFailure(1)
+            ),
+            is("Request sequence not found, expected:<[ {" + NEW_LINE +
+                "  \"path\" : \"three\"" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"path\" : \"one\"" + NEW_LINE +
+                "} ]> but was not found, found 5 other requests"));
+        assertThat(verify(
+                new VerificationSequence()
+                    .withRequests(
+                        request("four"),
+                        request("one")
+                    )
+                    .withMaximumNumberOfRequestToReturnInVerificationFailure(1)
+            ),
+            is("Request sequence not found, expected:<[ {" + NEW_LINE +
+                "  \"path\" : \"four\"" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"path\" : \"one\"" + NEW_LINE +
+                "} ]> but was not found, found 5 other requests"));
+        assertThat(verify(
+                new VerificationSequence()
+                    .withRequests(
+                        request("four"),
+                        request("three")
+                    )
+                    .withMaximumNumberOfRequestToReturnInVerificationFailure(1)
+            ),
+            is("Request sequence not found, expected:<[ {" + NEW_LINE +
+                "  \"path\" : \"four\"" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"path\" : \"three\"" + NEW_LINE +
+                "} ]> but was not found, found 5 other requests"));
     }
 
     @Test

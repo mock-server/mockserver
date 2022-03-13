@@ -16,6 +16,9 @@
       "items": {
         "$ref": "#/definitions/requestDefinition"
       }
+    },
+    "maximumNumberOfRequestToReturnInVerificationFailure": {
+      "type": "integer"
     }
   },
   "oneOf": [

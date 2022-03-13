@@ -13,6 +13,7 @@ public class Verification extends ObjectWithJsonToString {
     private RequestDefinition httpRequest;
     private ExpectationId expectationId;
     private VerificationTimes times = VerificationTimes.atLeast(1);
+    private Integer maximumNumberOfRequestToReturnInVerificationFailure;
 
     public static Verification verification() {
         return new Verification();
@@ -43,5 +44,14 @@ public class Verification extends ObjectWithJsonToString {
 
     public VerificationTimes getTimes() {
         return times;
+    }
+
+    public Integer getMaximumNumberOfRequestToReturnInVerificationFailure() {
+        return maximumNumberOfRequestToReturnInVerificationFailure;
+    }
+
+    public Verification withMaximumNumberOfRequestToReturnInVerificationFailure(Integer maximumNumberOfRequestToReturnInVerificationFailure) {
+        this.maximumNumberOfRequestToReturnInVerificationFailure = maximumNumberOfRequestToReturnInVerificationFailure;
+        return this;
     }
 }

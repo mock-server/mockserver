@@ -380,7 +380,8 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                         retrieveRequests(null, allRequests -> {
                             String failureMessage;
                             String serializedRequestToBeVerified = requestDefinitionSerializer.serialize(true, verification.getHttpRequest());
-                            if (allRequests.size() < configuration.maximumNumberOfRequestToReturnInVerificationFailure()) {
+                            Integer maximumNumberOfRequestToReturnInVerificationFailure = verification.getMaximumNumberOfRequestToReturnInVerificationFailure() != null ? verification.getMaximumNumberOfRequestToReturnInVerificationFailure() : configuration.maximumNumberOfRequestToReturnInVerificationFailure();
+                            if (allRequests.size() < maximumNumberOfRequestToReturnInVerificationFailure) {
                                 String serializedAllRequestInLog = allRequests.size() == 1 ? requestDefinitionSerializer.serialize(true, allRequests.get(0)) : requestDefinitionSerializer.serialize(true, allRequests);
                                 failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
                             } else {
@@ -468,7 +469,8 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                             }
                             if (!foundRequest) {
                                 String serializedRequestToBeVerified = requestDefinitionSerializer.serialize(true, verificationSequence.getHttpRequests());
-                                if (allRequests.size() < configuration.maximumNumberOfRequestToReturnInVerificationFailure()) {
+                                Integer maximumNumberOfRequestToReturnInVerificationFailure = verificationSequence.getMaximumNumberOfRequestToReturnInVerificationFailure() != null ? verificationSequence.getMaximumNumberOfRequestToReturnInVerificationFailure() : configuration.maximumNumberOfRequestToReturnInVerificationFailure();
+                                if (allRequests.size() < maximumNumberOfRequestToReturnInVerificationFailure) {
                                     String serializedAllRequestInLog = allRequests.size() == 1 ? requestDefinitionSerializer.serialize(true, allRequests.get(0)) : requestDefinitionSerializer.serialize(true, allRequests);
                                     failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
                                 } else {

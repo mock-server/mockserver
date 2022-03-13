@@ -1147,6 +1147,59 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
+    public void shouldVerifyNotEnoughRequestsReceivedWithMaximumNumberOfRequestToReturnInFailure() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(3)).respond(response().withBody("some_body"));
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                HEADERS_TO_IGNORE)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                HEADERS_TO_IGNORE)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                HEADERS_TO_IGNORE)
+        );
+
+        try {
+            mockServerClient
+                .verify(
+                    request()
+                        .withPath(calculatePath("some_path")),
+                    VerificationTimes.atLeast(4),
+                    2
+                );
+            fail("expected exception to be thrown");
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), equalTo("Request not found at least 4 times, expected:<{\n" +
+                "  \"path\" : \"" + calculatePath("some_path") + "\"\n" +
+                "}> but was not found, found 3 other requests"));
+        }
+    }
+
+    @Test
     public void shouldVerifyNotEnoughRequestsReceivedWithOpenAPI() {
         // when
         mockServerClient
@@ -1335,6 +1388,62 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withSpecUrlOrPayload(specUrlOrPayload)
                     .withOperationId("createPets")
             );
+    }
+
+    @Test
+    public void shouldVerifySequenceNotFoundWithMaximumNumberOfRequestToReturnInFailure() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(3)).respond(response().withBody("some_body"));
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                HEADERS_TO_IGNORE)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                HEADERS_TO_IGNORE)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                HEADERS_TO_IGNORE)
+        );
+
+        try {
+            mockServerClient
+                .verify(
+                    2,
+                    request()
+                        .withPath(calculatePath("some_other_path")),
+                    request()
+                        .withPath(calculatePath("some_path"))
+                );
+            fail("expected exception to be thrown");
+        } catch (AssertionError ae) {
+            assertThat(ae.getMessage(), equalTo("Request sequence not found, expected:<[ {\n" +
+                "  \"path\" : \"" + calculatePath("some_other_path") + "\"\n" +
+                "}, {\n" +
+                "  \"path\" : \"" + calculatePath("some_path") + "\"\n" +
+                "} ]> but was not found, found 3 other requests"));
+        }
     }
 
     @Test

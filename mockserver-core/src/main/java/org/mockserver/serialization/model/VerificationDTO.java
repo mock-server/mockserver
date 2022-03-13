@@ -17,6 +17,7 @@ public class VerificationDTO extends ObjectWithJsonToString implements DTO<Verif
     private RequestDefinitionDTO httpRequest;
     private ExpectationId expectationId;
     private VerificationTimesDTO times;
+    private Integer maximumNumberOfRequestToReturnInVerificationFailure;
 
     public VerificationDTO(Verification verification) {
         if (verification != null) {
@@ -27,6 +28,7 @@ public class VerificationDTO extends ObjectWithJsonToString implements DTO<Verif
             }
             expectationId = verification.getExpectationId();
             times = new VerificationTimesDTO(verification.getTimes());
+            maximumNumberOfRequestToReturnInVerificationFailure = verification.getMaximumNumberOfRequestToReturnInVerificationFailure();
         }
     }
 
@@ -37,7 +39,8 @@ public class VerificationDTO extends ObjectWithJsonToString implements DTO<Verif
         return verification()
             .withRequest((httpRequest != null ? httpRequest.buildObject() : null))
             .withExpectationId(expectationId)
-            .withTimes((times != null ? times.buildObject() : once()));
+            .withTimes((times != null ? times.buildObject() : once()))
+            .withMaximumNumberOfRequestToReturnInVerificationFailure(maximumNumberOfRequestToReturnInVerificationFailure);
     }
 
     public RequestDefinitionDTO getHttpRequest() {
@@ -64,6 +67,15 @@ public class VerificationDTO extends ObjectWithJsonToString implements DTO<Verif
 
     public VerificationDTO setTimes(VerificationTimesDTO times) {
         this.times = times;
+        return this;
+    }
+
+    public Integer getMaximumNumberOfRequestToReturnInVerificationFailure() {
+        return maximumNumberOfRequestToReturnInVerificationFailure;
+    }
+
+    public VerificationDTO setMaximumNumberOfRequestToReturnInVerificationFailure(Integer maximumNumberOfRequestToReturnInVerificationFailure) {
+        this.maximumNumberOfRequestToReturnInVerificationFailure = maximumNumberOfRequestToReturnInVerificationFailure;
         return this;
     }
 }

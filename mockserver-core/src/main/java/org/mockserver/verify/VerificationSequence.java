@@ -14,6 +14,7 @@ import java.util.List;
 public class VerificationSequence extends ObjectWithJsonToString {
     private List<RequestDefinition> httpRequests = new ArrayList<>();
     private List<ExpectationId> expectationIds = new ArrayList<>();
+    private Integer maximumNumberOfRequestToReturnInVerificationFailure;
 
     public static VerificationSequence verificationSequence() {
         return new VerificationSequence();
@@ -45,5 +46,14 @@ public class VerificationSequence extends ObjectWithJsonToString {
 
     public List<ExpectationId> getExpectationIds() {
         return expectationIds;
+    }
+
+    public Integer getMaximumNumberOfRequestToReturnInVerificationFailure() {
+        return maximumNumberOfRequestToReturnInVerificationFailure;
+    }
+
+    public VerificationSequence withMaximumNumberOfRequestToReturnInVerificationFailure(Integer maximumNumberOfRequestToReturnInVerificationFailure) {
+        this.maximumNumberOfRequestToReturnInVerificationFailure = maximumNumberOfRequestToReturnInVerificationFailure;
+        return this;
     }
 }

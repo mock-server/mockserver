@@ -364,7 +364,7 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
     }
 
     @Test
-    public void shouldFailVerificationWithLimitedReturnedRequests() {
+    public void shouldFailVerificationWithLimitedReturnedRequestsViaConfiguration() {
         Integer originalMaximumNumberOfRequestToReturnInVerificationFailure = ConfigurationProperties.maximumNumberOfRequestToReturnInVerificationFailure();
         try {
             // given
@@ -403,6 +403,43 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
         } finally {
             ConfigurationProperties.maximumNumberOfRequestToReturnInVerificationFailure(originalMaximumNumberOfRequestToReturnInVerificationFailure);
         }
+    }
+
+    @Test
+    public void shouldFailVerificationWithLimitedReturnedRequestsViaVerification() {
+        // given
+        HttpRequest httpRequest = new HttpRequest().withPath("some_path");
+        HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
+
+        // when
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(otherHttpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerEventLog.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+
+        // then
+        assertThat(verify(
+                verification()
+                    .withRequest(
+                        new HttpRequest().withPath("some_other_path")
+                    )
+                    .withTimes(atLeast(2))
+                    .withMaximumNumberOfRequestToReturnInVerificationFailure(1)
+            ),
+            is("Request not found at least 2 times, expected:<{" + NEW_LINE +
+                "  \"path\" : \"some_other_path\"" + NEW_LINE +
+                "}> but was not found, found 3 other requests"));
     }
 
     @Test
