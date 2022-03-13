@@ -38,6 +38,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
     private String correlationId;
     private Integer port;
     private Level logLevel = Level.INFO;
+    private boolean alwaysLog = false;
     public static final DateFormat LOG_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     private long epochTime = TimeService.currentTimeMillis();
     private String timestamp;
@@ -77,6 +78,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
     public void clear() {
         id = null;
         logLevel = Level.INFO;
+        alwaysLog = false;
         correlationId = null;
         port = null;
         epochTime = -1;
@@ -104,6 +106,15 @@ public class LogEntry implements EventTranslator<LogEntry> {
         if (type == null) {
             type = LogMessageType.valueOf(logLevel.name());
         }
+        return this;
+    }
+
+    public boolean isAlwaysLog() {
+        return alwaysLog;
+    }
+
+    public LogEntry setAlwaysLog(boolean alwaysLog) {
+        this.alwaysLog = alwaysLog;
         return this;
     }
 
@@ -431,6 +442,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
             .setId(id())
             .setType(getType())
             .setLogLevel(getLogLevel())
+            .setAlwaysLog(isAlwaysLog())
             .setEpochTime(getEpochTime())
             .setCorrelationId(getCorrelationId())
             .setPort(getPort())
@@ -452,6 +464,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
             .setId(id())
             .setType(getType())
             .setLogLevel(getLogLevel())
+            .setAlwaysLog(isAlwaysLog())
             .setEpochTime(getEpochTime())
             .setCorrelationId(getCorrelationId())
             .setPort(getPort())
@@ -484,6 +497,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
             deleted == logEntry.deleted &&
             type == logEntry.type &&
             logLevel == logEntry.logLevel &&
+            alwaysLog == logEntry.alwaysLog &&
             Objects.equals(messageFormat, logEntry.messageFormat) &&
             Objects.equals(httpResponse, logEntry.httpResponse) &&
             Objects.equals(httpError, logEntry.httpError) &&
@@ -496,7 +510,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            int result = Objects.hash(epochTime, deleted, type, logLevel, messageFormat, httpResponse, httpError, expectation, consumer);
+            int result = Objects.hash(epochTime, deleted, type, logLevel, alwaysLog, messageFormat, httpResponse, httpError, expectation, consumer);
             result = 31 * result + Arrays.hashCode(arguments);
             result = 31 * result + Arrays.hashCode(httpRequests);
             hashCode = result;

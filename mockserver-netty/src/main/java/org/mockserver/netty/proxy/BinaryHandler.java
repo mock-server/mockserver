@@ -64,7 +64,7 @@ public class BinaryHandler extends SimpleChannelInboundHandler<ByteBuf> {
         final InetSocketAddress remoteAddress = getRemoteAddress(ctx);
         if (remoteAddress != null) {
             boolean synchronous = true;
-            CompletableFuture<BinaryMessage> binaryResponseFuture = httpClient.sendRequest(binaryRequest, isSslEnabledUpstream(ctx.channel()), remoteAddress, configuration.socketConnectionTimeoutInMillis());
+            CompletableFuture<BinaryMessage> binaryResponseFuture = httpClient.sendRequest(binaryRequest, isSslEnabledUpstream(ctx.channel()), remoteAddress, configuration.socketConnectionTimeoutInMillis().intValue());
             scheduler.submit(binaryResponseFuture, () -> {
                 try {
                     BinaryMessage binaryResponse = binaryResponseFuture.get(configuration.maxFutureTimeoutInMillis(), MILLISECONDS);

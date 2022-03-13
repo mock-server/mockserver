@@ -26,7 +26,7 @@ public class ForwardViaHttpsProxyWithJVMTrustManagerMockingIntegrationTest exten
         // save original value
         originalForwardProxyTLSX509CertificatesTrustManager = ConfigurationProperties.forwardProxyTLSX509CertificatesTrustManagerType();
 
-        forwardProxyTLSX509CertificatesTrustManagerType(ForwardProxyTLSX509CertificatesTrustManager.JVM.name());
+        forwardProxyTLSX509CertificatesTrustManagerType(ForwardProxyTLSX509CertificatesTrustManager.JVM);
 
         proxy = new MockServer();
         mockServer = new MockServer(proxyConfiguration(ProxyConfiguration.Type.HTTPS, "127.0.0.1:" + proxy.getLocalPort()));
@@ -41,7 +41,7 @@ public class ForwardViaHttpsProxyWithJVMTrustManagerMockingIntegrationTest exten
         stopQuietly(mockServerClient);
 
         // set back to original value
-        forwardProxyTLSX509CertificatesTrustManagerType(originalForwardProxyTLSX509CertificatesTrustManager.name());
+        forwardProxyTLSX509CertificatesTrustManagerType(originalForwardProxyTLSX509CertificatesTrustManager);
     }
 
     @Override

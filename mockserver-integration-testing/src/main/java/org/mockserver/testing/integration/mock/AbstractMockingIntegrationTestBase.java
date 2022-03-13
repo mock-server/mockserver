@@ -69,11 +69,6 @@ public abstract class AbstractMockingIntegrationTestBase {
     protected static EchoServer secureEchoServer;
 
     @BeforeClass
-    public static void resetConfigProperties() {
-        ConfigurationProperties.resetAllSystemProperties();
-    }
-
-    @BeforeClass
     public static void startEchoServer() {
         if (insecureEchoServer == null) {
             insecureEchoServer = new EchoServer(false);

@@ -93,6 +93,7 @@ public class MockServerLogger {
     public void logEvent(LogEntry logEntry) {
         if (logEntry.getType() == RECEIVED_REQUEST
             || logEntry.getType() == FORWARDED_REQUEST
+            || logEntry.isAlwaysLog()
             || isEnabled(logEntry.getLogLevel())) {
             if (httpStateHandler != null) {
                 httpStateHandler.log(logEntry);
@@ -104,7 +105,7 @@ public class MockServerLogger {
 
     public static void writeToSystemOut(Logger logger, LogEntry logEntry) {
         if (!ConfigurationProperties.disableLogging()) {
-            if (isEnabled(logEntry.getLogLevel()) &&
+            if ((logEntry.isAlwaysLog() || isEnabled(logEntry.getLogLevel())) &&
                 isNotBlank(logEntry.getMessage())) {
                 switch (logEntry.getLogLevel()) {
                     case ERROR:
@@ -137,6 +138,10 @@ public class MockServerLogger {
     }
 
     public static boolean isEnabled(final Level level) {
-        return ConfigurationProperties.logLevel() != null && level.toInt() >= ConfigurationProperties.logLevel().toInt();
+        return isEnabled(level, ConfigurationProperties.logLevel());
+    }
+
+    public static boolean isEnabled(final Level level, final Level configuredLevel) {
+        return configuredLevel != null && level.toInt() >= configuredLevel.toInt();
     }
 }

@@ -749,10 +749,7 @@
                         <exclude>**/*IntegrationTest.java</exclude>
                     </excludes>
                     <systemProperties>
-                        <excludeFromPropertyReset>mockserver.logLevel,mockserver.disableSystemOut,mockserver.nioEventLoopThreadCount</excludeFromPropertyReset>
                         <mockserver.logLevel>ERROR</mockserver.logLevel>
-                        <mockserver.disableSystemOut>false</mockserver.disableSystemOut>
-                        <mockserver.nioEventLoopThreadCount>1</mockserver.nioEventLoopThreadCount>
                     </systemProperties>
                     <argLine>-Duser.language=en -Duser.country=GB</argLine>
                     <disableXmlReport>true</disableXmlReport>
@@ -775,11 +772,7 @@
                         <include>**/*IntegrationTest.java</include>
                     </includes>
                     <systemProperties>
-                        <excludeFromPropertyReset>mockserver.logLevel,mockserver.disableSystemOut,mockserver.nioEventLoopThreadCount,mockserver.webSocketClientEventLoopThreadCount</excludeFromPropertyReset>
                         <mockserver.logLevel>ERROR</mockserver.logLevel>
-                        <mockserver.disableSystemOut>false</mockserver.disableSystemOut>
-                        <mockserver.nioEventLoopThreadCount>20</mockserver.nioEventLoopThreadCount>
-                        <mockserver.webSocketClientEventLoopThreadCount>5</mockserver.webSocketClientEventLoopThreadCount>
                         <project.version>${project.version}</project.version>
                         <project.basedir>${project.basedir}</project.basedir>
                     </systemProperties>

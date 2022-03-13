@@ -12,6 +12,7 @@ import java.util.Set;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
+import static org.mockserver.configuration.ConfigurationProperties.fileExists;
 
 /**
  * @author jamesdbloom
@@ -48,7 +49,7 @@ public class Configuration {
 
     // socket
     private Long maxSocketTimeoutInMillis;
-    private Integer socketConnectionTimeoutInMillis;
+    private Long socketConnectionTimeoutInMillis;
     private Boolean alwaysCloseSocketConnections;
     private String localBoundIP;
 
@@ -157,6 +158,16 @@ public class Configuration {
         return this;
     }
 
+    /**
+     * Override the default logging level of INFO
+     *
+     * @param level the log level, which can be TRACE, DEBUG, INFO, WARN, ERROR, OFF, FINEST, FINE, INFO, WARNING, SEVERE
+     */
+    public Configuration logLevel(String level) {
+        this.logLevel = Level.valueOf(level);
+        return this;
+    }
+
     public Boolean disableSystemOut() {
         if (disableSystemOut == null) {
             return ConfigurationProperties.disableSystemOut();
@@ -183,7 +194,7 @@ public class Configuration {
 
     /**
      * Disable all logging and processing of log events
-     *
+     * <p>
      * The default is false
      *
      * @param disableLogging disable all logging
@@ -481,7 +492,7 @@ public class Configuration {
         return this;
     }
 
-    public Integer socketConnectionTimeoutInMillis() {
+    public Long socketConnectionTimeoutInMillis() {
         if (socketConnectionTimeoutInMillis == null) {
             return ConfigurationProperties.socketConnectionTimeout();
         }
@@ -495,7 +506,7 @@ public class Configuration {
      *
      * @param socketConnectionTimeoutInMillis maximum time allowed in milliseconds
      */
-    public Configuration socketConnectionTimeoutInMillis(Integer socketConnectionTimeoutInMillis) {
+    public Configuration socketConnectionTimeoutInMillis(Long socketConnectionTimeoutInMillis) {
         this.socketConnectionTimeoutInMillis = socketConnectionTimeoutInMillis;
         return this;
     }
@@ -1069,6 +1080,7 @@ public class Configuration {
      * @param controlPlaneTLSMutualAuthenticationCAChain File system path or classpath location of custom mTLS (TLS client authentication) X.509 Certificate Chain for Trusting (i.e. signature verification of) Client X.509 Certificates
      */
     public Configuration controlPlaneTLSMutualAuthenticationCAChain(String controlPlaneTLSMutualAuthenticationCAChain) {
+        fileExists(controlPlaneTLSMutualAuthenticationCAChain);
         this.controlPlaneTLSMutualAuthenticationCAChain = controlPlaneTLSMutualAuthenticationCAChain;
         return this;
     }
@@ -1093,6 +1105,7 @@ public class Configuration {
      * @param controlPlanePrivateKeyPath location of the PKCS#8 PEM file containing the private key
      */
     public Configuration controlPlanePrivateKeyPath(String controlPlanePrivateKeyPath) {
+        fileExists(controlPlanePrivateKeyPath);
         this.controlPlanePrivateKeyPath = controlPlanePrivateKeyPath;
         return this;
     }
@@ -1115,6 +1128,7 @@ public class Configuration {
      * @param controlPlaneX509CertificatePath location of the PEM file containing the X509 certificate
      */
     public Configuration controlPlaneX509CertificatePath(String controlPlaneX509CertificatePath) {
+        fileExists(controlPlaneX509CertificatePath);
         this.controlPlaneX509CertificatePath = controlPlaneX509CertificatePath;
         return this;
     }
@@ -1326,7 +1340,7 @@ public class Configuration {
 
     /**
      * The domain name for auto-generate TLS certificates
-     *
+     * <p>
      * The default is "localhost"
      *
      * @param sslCertificateDomainName domain name for auto-generate TLS certificates
@@ -1345,7 +1359,7 @@ public class Configuration {
 
     /**
      * The Subject Alternative Name (SAN) domain names for auto-generate TLS certificates
-     *
+     * <p>
      * The default is "localhost"
      *
      * @param sslSubjectAlternativeNameDomains Subject Alternative Name (SAN) domain names for auto-generate TLS certificates
@@ -1357,7 +1371,7 @@ public class Configuration {
 
     /**
      * The Subject Alternative Name (SAN) domain names for auto-generate TLS certificates
-     *
+     * <p>
      * The default is "localhost"
      *
      * @param sslSubjectAlternativeNameDomains Subject Alternative Name (SAN) domain names for auto-generate TLS certificates
@@ -1412,6 +1426,7 @@ public class Configuration {
      * @param certificateAuthorityPrivateKey location of the PEM file containing the certificate authority private key
      */
     public Configuration certificateAuthorityPrivateKey(String certificateAuthorityPrivateKey) {
+        fileExists(certificateAuthorityPrivateKey);
         this.certificateAuthorityPrivateKey = certificateAuthorityPrivateKey;
         return this;
     }
@@ -1429,6 +1444,7 @@ public class Configuration {
      * @param certificateAuthorityCertificate location of the PEM file containing the certificate authority X509 certificate
      */
     public Configuration certificateAuthorityCertificate(String certificateAuthorityCertificate) {
+        fileExists(certificateAuthorityCertificate);
         this.certificateAuthorityCertificate = certificateAuthorityCertificate;
         return this;
     }
@@ -1453,6 +1469,7 @@ public class Configuration {
      * @param privateKeyPath location of the PKCS#8 PEM file containing the private key
      */
     public Configuration privateKeyPath(String privateKeyPath) {
+        fileExists(privateKeyPath);
         this.privateKeyPath = privateKeyPath;
         return this;
     }
@@ -1475,6 +1492,7 @@ public class Configuration {
      * @param x509CertificatePath location of the PEM file containing the X509 certificate
      */
     public Configuration x509CertificatePath(String x509CertificatePath) {
+        fileExists(x509CertificatePath);
         this.x509CertificatePath = x509CertificatePath;
         return this;
     }
@@ -1511,6 +1529,7 @@ public class Configuration {
      * @param tlsMutualAuthenticationCertificateChain File system path or classpath location of custom mTLS (TLS client authentication) X.509 Certificate Chain for Trusting (i.e. signature verification of) Client X.509 Certificates
      */
     public Configuration tlsMutualAuthenticationCertificateChain(String tlsMutualAuthenticationCertificateChain) {
+        fileExists(tlsMutualAuthenticationCertificateChain);
         this.tlsMutualAuthenticationCertificateChain = tlsMutualAuthenticationCertificateChain;
         return this;
     }
@@ -1555,6 +1574,7 @@ public class Configuration {
      * @param forwardProxyTLSCustomTrustX509Certificates custom set of trusted X509 certificate authority roots for forwarded or proxied requests in PEM format.
      */
     public Configuration forwardProxyTLSCustomTrustX509Certificates(String forwardProxyTLSCustomTrustX509Certificates) {
+        fileExists(forwardProxyTLSCustomTrustX509Certificates);
         this.forwardProxyTLSCustomTrustX509Certificates = forwardProxyTLSCustomTrustX509Certificates;
         return this;
     }
@@ -1576,6 +1596,7 @@ public class Configuration {
      * @param forwardProxyPrivateKey location of the PEM file containing the private key
      */
     public Configuration forwardProxyPrivateKey(String forwardProxyPrivateKey) {
+        fileExists(forwardProxyPrivateKey);
         this.forwardProxyPrivateKey = forwardProxyPrivateKey;
         return this;
     }
@@ -1595,6 +1616,7 @@ public class Configuration {
      * @param forwardProxyCertificateChain location of the PEM file containing the certificate chain
      */
     public Configuration forwardProxyCertificateChain(String forwardProxyCertificateChain) {
+        fileExists(forwardProxyCertificateChain);
         this.forwardProxyCertificateChain = forwardProxyCertificateChain;
         return this;
     }
@@ -1614,34 +1636,40 @@ public class Configuration {
 
     public void addSslSubjectAlternativeNameIps(String... additionalSubjectAlternativeNameIps) {
         boolean subjectAlternativeIpsModified = false;
+        Set<String> sslSubjectAlternativeNameIps = sslSubjectAlternativeNameIps();
         for (String subjectAlternativeIp : additionalSubjectAlternativeNameIps) {
-            if (sslSubjectAlternativeNameIps().add(subjectAlternativeIp.trim())) {
+            if (sslSubjectAlternativeNameIps.add(subjectAlternativeIp.trim())) {
                 subjectAlternativeIpsModified = true;
             }
         }
         if (subjectAlternativeIpsModified) {
             rebuildServerTLSContext(true);
+            sslSubjectAlternativeNameIps(sslSubjectAlternativeNameIps);
         }
     }
 
     public void clearSslSubjectAlternativeNameIps() {
         sslSubjectAlternativeNameIps.clear();
+        rebuildServerTLSContext(true);
     }
 
     public void addSslSubjectAlternativeNameDomains(String... additionalSubjectAlternativeNameDomains) {
         boolean subjectAlternativeDomainsModified = false;
+        Set<String> sslSubjectAlternativeNameDomains = sslSubjectAlternativeNameDomains();
         for (String subjectAlternativeDomain : additionalSubjectAlternativeNameDomains) {
-            if (sslSubjectAlternativeNameDomains().add(subjectAlternativeDomain.trim())) {
+            if (sslSubjectAlternativeNameDomains.add(subjectAlternativeDomain.trim())) {
                 subjectAlternativeDomainsModified = true;
             }
         }
         if (subjectAlternativeDomainsModified) {
             rebuildServerTLSContext(true);
+            sslSubjectAlternativeNameDomains(sslSubjectAlternativeNameDomains);
         }
     }
 
     public void clearSslSubjectAlternativeNameDomains() {
         sslSubjectAlternativeNameDomains.clear();
+        rebuildServerTLSContext(true);
     }
 
     public int ringBufferSize() {

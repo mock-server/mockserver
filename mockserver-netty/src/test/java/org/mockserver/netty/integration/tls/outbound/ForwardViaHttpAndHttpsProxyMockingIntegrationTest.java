@@ -39,7 +39,7 @@ public class ForwardViaHttpAndHttpsProxyMockingIntegrationTest extends AbstractF
         // save original value
         originalForwardProxyTLSX509CertificatesTrustManager = ConfigurationProperties.forwardProxyTLSX509CertificatesTrustManagerType();
 
-        forwardProxyTLSX509CertificatesTrustManagerType(ForwardProxyTLSX509CertificatesTrustManager.ANY.name());
+        forwardProxyTLSX509CertificatesTrustManagerType(ForwardProxyTLSX509CertificatesTrustManager.ANY);
 
         proxy = new MockServer();
         mockServer = new MockServer(
@@ -66,7 +66,7 @@ public class ForwardViaHttpAndHttpsProxyMockingIntegrationTest extends AbstractF
         stopQuietly(mockServerClient);
 
         // set back to original value
-        forwardProxyTLSX509CertificatesTrustManagerType(originalForwardProxyTLSX509CertificatesTrustManager.name());
+        forwardProxyTLSX509CertificatesTrustManagerType(originalForwardProxyTLSX509CertificatesTrustManager);
     }
 
     @Override

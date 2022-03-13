@@ -34,7 +34,7 @@ public class ForwardViaHttpsProxyWithCustomTrustManagerWithCustomCAMockingIntegr
         // set new certificate authority values
         certificateAuthorityCertificate("org/mockserver/netty/integration/tls/ca.pem");
         certificateAuthorityPrivateKey("org/mockserver/netty/integration/tls/ca-key-pkcs8.pem");
-        forwardProxyTLSX509CertificatesTrustManagerType(ForwardProxyTLSX509CertificatesTrustManager.CUSTOM.name());
+        forwardProxyTLSX509CertificatesTrustManagerType(ForwardProxyTLSX509CertificatesTrustManager.CUSTOM);
         forwardProxyTLSCustomTrustX509Certificates("org/mockserver/netty/integration/tls/ca.pem");
 
         proxy = new MockServer();
@@ -52,7 +52,7 @@ public class ForwardViaHttpsProxyWithCustomTrustManagerWithCustomCAMockingIntegr
         // set back to original value
         certificateAuthorityCertificate(originalCertificateAuthorityCertificate);
         certificateAuthorityPrivateKey(originalCertificateAuthorityPrivateKey);
-        forwardProxyTLSX509CertificatesTrustManagerType(originalForwardProxyTLSX509CertificatesTrustManager.name());
+        forwardProxyTLSX509CertificatesTrustManagerType(originalForwardProxyTLSX509CertificatesTrustManager);
         forwardProxyTLSCustomTrustX509Certificates(originalForwardProxyTLSCustomTrustX509Certificates);
     }
 

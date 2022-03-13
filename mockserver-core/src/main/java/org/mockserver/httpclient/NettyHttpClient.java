@@ -12,7 +12,6 @@ import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
 import org.mockserver.configuration.Configuration;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.BinaryMessage;
@@ -71,7 +70,7 @@ public class NettyHttpClient {
         return sendRequest(httpRequest, remoteAddress, configuration.socketConnectionTimeoutInMillis());
     }
 
-    public CompletableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress, Integer connectionTimeoutMillis) throws SocketConnectionException {
+    public CompletableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress, Long connectionTimeoutMillis) throws SocketConnectionException {
         if (!eventLoopGroup.isShuttingDown()) {
             if (proxyConfigurations != null && !Boolean.TRUE.equals(httpRequest.isSecure()) && proxyConfigurations.containsKey(ProxyConfiguration.Type.HTTP)) {
                 ProxyConfiguration proxyConfiguration = proxyConfigurations.get(ProxyConfiguration.Type.HTTP);
@@ -89,7 +88,7 @@ public class NettyHttpClient {
                 .option(ChannelOption.AUTO_READ, true)
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectionTimeoutMillis)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectionTimeoutMillis != null ? connectionTimeoutMillis.intValue() : null)
                 .attr(SECURE, httpRequest.isSecure() != null && httpRequest.isSecure())
                 .attr(REMOTE_SOCKET, remoteAddress)
                 .attr(RESPONSE_FUTURE, responseFuture)
