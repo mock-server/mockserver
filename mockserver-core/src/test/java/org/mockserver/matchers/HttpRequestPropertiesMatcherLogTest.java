@@ -5,7 +5,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.configuration.Configuration;
-import org.mockserver.log.TimeService;
+import org.mockserver.time.EpochService;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpState;
@@ -48,7 +48,7 @@ public class HttpRequestPropertiesMatcherLogTest {
 
     @BeforeClass
     public static void fixTimeAndLogs() {
-        TimeService.fixedTime = true;
+        EpochService.fixedTime = true;
         UUIDService.fixedUUID = true;
         originalLevel = logLevel();
         logLevel("INFO");
@@ -56,7 +56,7 @@ public class HttpRequestPropertiesMatcherLogTest {
 
     @AfterClass
     public static void resetTimeAndLogs() {
-        TimeService.fixedTime = false;
+        EpochService.fixedTime = false;
         UUIDService.fixedUUID = false;
         logLevel(originalLevel.name());
     }
@@ -85,7 +85,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                     .withQueryStringParameter("type", "logs")
             );
         assertThat(response.getBodyAsString(), is(
-            LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+            LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                 NEW_LINE +
                 "  {" + NEW_LINE +
                 "    \"method\" : \"HEAD\"" + NEW_LINE +
@@ -125,7 +125,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                     .withQueryStringParameter("type", "logs")
             );
         assertThat(response.getBodyAsString(), is(
-            LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+            LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                 NEW_LINE +
                 "  {" + NEW_LINE +
                 "    \"method\" : \"POST\"," + NEW_LINE +
@@ -188,7 +188,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                     .withQueryStringParameter("type", "logs")
             );
         assertThat(response.getBodyAsString(), is(
-            LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+            LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                 NEW_LINE +
                 "  {" + NEW_LINE +
                 "    \"method\" : \"POST\"," + NEW_LINE +
@@ -262,7 +262,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"method\" : \"POST\"," + NEW_LINE +
@@ -375,7 +375,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"method\" : \"POST\"," + NEW_LINE +
@@ -481,7 +481,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                     .withQueryStringParameter("type", "logs")
             );
         assertThat(response.getBodyAsString(), is(
-            LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+            LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                 NEW_LINE +
                 "  {" + NEW_LINE +
                 "    \"keepAlive\" : false" + NEW_LINE +
@@ -514,7 +514,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                 NEW_LINE +
                 NEW_LINE +
                 "------------------------------------" + NEW_LINE +
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                 NEW_LINE +
                 "  { }" + NEW_LINE +
                 NEW_LINE +
@@ -563,7 +563,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"keepAlive\" : false" + NEW_LINE +
@@ -597,7 +597,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  sslMatches matched" + NEW_LINE +
                     NEW_LINE +
                     "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  { }" + NEW_LINE +
                     NEW_LINE +
@@ -650,7 +650,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"keepAlive\" : false" + NEW_LINE +
@@ -694,7 +694,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                     "  sslMatches matched" + NEW_LINE +
                     NEW_LINE +
                     "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  { }" + NEW_LINE +
                     NEW_LINE +
@@ -756,7 +756,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"secure\" : false" + NEW_LINE +
@@ -790,7 +790,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                     NEW_LINE +
                     NEW_LINE +
                     "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  { }" + NEW_LINE +
                     NEW_LINE +
@@ -841,7 +841,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"method\" : \"OPTIONS\"" + NEW_LINE +
@@ -886,7 +886,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"method\" : \"POST\"" + NEW_LINE +
@@ -931,7 +931,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"path\" : \"/dWM/dWM+ZA==\"" + NEW_LINE +
@@ -977,7 +977,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"path\" : \"pathsome\"" + NEW_LINE +
@@ -1023,7 +1023,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"path\" : \"somePath\"" + NEW_LINE +
@@ -1069,7 +1069,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"path\" : \"/someOtherValue\"," + NEW_LINE +
@@ -1133,7 +1133,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"queryStringParameters\" : {" + NEW_LINE +
@@ -1196,7 +1196,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"queryStringParameters\" : {" + NEW_LINE +
@@ -1259,7 +1259,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"body\" : \"name1=value\"" + NEW_LINE +
@@ -1319,7 +1319,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"body\" : \"name=value1\"" + NEW_LINE +
@@ -1379,7 +1379,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"body\" : \"bodysome\"" + NEW_LINE +
@@ -1426,7 +1426,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  { }" + NEW_LINE +
                     NEW_LINE +
@@ -1475,7 +1475,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"body\" : \"<element>\\n   <key>some_key</key>\\n</element>\"" + NEW_LINE +
@@ -1539,7 +1539,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"body\" : \"<element>\\n   <key>some_key</key>\\n</element>\"" + NEW_LINE +
@@ -1632,7 +1632,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"body\" : \"<?xml version=\\\"1.0\\\" encoding=\\\"utf-8\\\"?>" + StringEscapeUtils.escapeJava(NEW_LINE) +
@@ -1757,7 +1757,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"body\" : \"{" + StringEscapeUtils.escapeJava(NEW_LINE) +
@@ -1855,7 +1855,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"body\" : \"{" + StringEscapeUtils.escapeJava(NEW_LINE) +
@@ -2003,7 +2003,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"body\" : \"{" + StringEscapeUtils.escapeJava(NEW_LINE) +
@@ -2104,7 +2104,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"body\" : \"c29tZSBvdGhlciBiaW5hcnkgdmFsdWUgdGhhdCBpcyBtdWNoIG11Y2ggbG9uZ2VyIHNvIHRoYXQgdGhlIGJpbmFyeSBkYXRhIGlzIHdyYXBwZWQ=\"" + NEW_LINE +
@@ -2165,7 +2165,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"headers\" : {" + NEW_LINE +
@@ -2225,7 +2225,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"headers\" : {" + NEW_LINE +
@@ -2285,7 +2285,7 @@ public class HttpRequestPropertiesMatcherLogTest {
                         .withQueryStringParameter("type", "logs")
                 );
             assertThat(response.getBodyAsString(), is(
-                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"cookies\" : {" + NEW_LINE +

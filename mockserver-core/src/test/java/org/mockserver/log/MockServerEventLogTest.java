@@ -12,6 +12,7 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpState;
 import org.mockserver.model.RequestDefinition;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.time.EpochService;
 import org.slf4j.event.Level;
 
 import java.util.List;
@@ -40,7 +41,7 @@ public class MockServerEventLogTest {
 
     @BeforeClass
     public static void fixTime() {
-        TimeService.fixedTime = true;
+        EpochService.fixedTime = true;
     }
 
     @Before
@@ -249,7 +250,7 @@ public class MockServerEventLogTest {
             ));
             assertThat(retrieveRequestResponseMessageLogEntries(null), contains(
                 new LogEntry()
-                    .setEpochTime(TimeService.currentTimeMillis())
+                    .setEpochTime(EpochService.currentTimeMillis())
                     .setLogLevel(INFO)
                     .setType(NO_MATCH_RESPONSE)
                     .setHttpRequest(request("request_one"))
@@ -257,7 +258,7 @@ public class MockServerEventLogTest {
                     .setMessageFormat("no expectation for:{}returning response:{}")
                     .setArguments(request("request_one"), notFoundResponse()),
                 new LogEntry()
-                    .setEpochTime(TimeService.currentTimeMillis())
+                    .setEpochTime(EpochService.currentTimeMillis())
                     .setLogLevel(INFO)
                     .setType(EXPECTATION_RESPONSE)
                     .setHttpRequest(request("request_two"))
@@ -400,7 +401,7 @@ public class MockServerEventLogTest {
             ));
             assertThat(retrieveRequestResponseMessageLogEntries(requestMatcher), contains(
                 new LogEntry()
-                    .setEpochTime(TimeService.currentTimeMillis())
+                    .setEpochTime(EpochService.currentTimeMillis())
                     .setLogLevel(INFO)
                     .setType(NO_MATCH_RESPONSE)
                     .setHttpRequest(request("request_one"))
@@ -817,7 +818,7 @@ public class MockServerEventLogTest {
             ));
             assertThat(retrieveRequestResponseMessageLogEntries(null), contains(
                 new LogEntry()
-                    .setEpochTime(TimeService.currentTimeMillis())
+                    .setEpochTime(EpochService.currentTimeMillis())
                     .setLogLevel(INFO)
                     .setType(EXPECTATION_RESPONSE)
                     .setHttpRequest(request("request_two"))

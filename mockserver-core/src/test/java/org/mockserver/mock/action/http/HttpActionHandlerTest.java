@@ -9,7 +9,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.httpclient.NettyHttpClient;
-import org.mockserver.log.TimeService;
+import org.mockserver.time.EpochService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
@@ -89,7 +89,7 @@ public class HttpActionHandlerTest {
 
     @BeforeClass
     public static void fixTime() {
-        TimeService.fixedTime = true;
+        EpochService.fixedTime = true;
     }
 
     @AfterClass

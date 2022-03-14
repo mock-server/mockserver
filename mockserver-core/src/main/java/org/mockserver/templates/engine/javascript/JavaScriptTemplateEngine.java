@@ -62,21 +62,7 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
                 CompiledScript compiledScript = compilable.compile(script + " function serialise(request) { return JSON.stringify(handle(JSON.parse(request)), null, 2); }");
 
                 Bindings serialiseBindings = engine.createBindings();
-                engine.setBindings(new ScriptBindings(ImmutableMap.<String, Supplier<Object>>builder()
-                    .put("now", new TemplateFunctions(() -> DateTimeFormatter.ISO_INSTANT.format(Instant.now())))
-                    .put("now_epoch", new TemplateFunctions(() -> String.valueOf(Instant.now().getEpochSecond())))
-                    .put("now_iso_8601", new TemplateFunctions(() -> DateTimeFormatter.ISO_INSTANT.format(Instant.now())))
-                    .put("now_rfc_1123", new TemplateFunctions(() -> DateTimeFormatter.RFC_1123_DATE_TIME.format(OffsetDateTime.now())))
-                    .put("uuid", new TemplateFunctions(UUIDService::getUUID))
-                    .put("rand_int", new TemplateFunctions(() -> TemplateFunctions.randomInteger(10)))
-                    .put("rand_int_10", new TemplateFunctions(() -> TemplateFunctions.randomInteger(10)))
-                    .put("rand_int_100", new TemplateFunctions(() -> TemplateFunctions.randomInteger(100)))
-                    .put("rand_bytes", new TemplateFunctions(() -> TemplateFunctions.randomBytes(16)))
-                    .put("rand_bytes_16", new TemplateFunctions(() -> TemplateFunctions.randomBytes(16)))
-                    .put("rand_bytes_32", new TemplateFunctions(() -> TemplateFunctions.randomBytes(32)))
-                    .put("rand_bytes_64", new TemplateFunctions(() -> TemplateFunctions.randomBytes(64)))
-                    .put("rand_bytes_128", new TemplateFunctions(() -> TemplateFunctions.randomBytes(128)))
-                    .build()), ScriptContext.ENGINE_SCOPE);
+                engine.setBindings(new ScriptBindings(TemplateFunctions.BUILT_IN_FUNCTIONS), ScriptContext.ENGINE_SCOPE);
                 compiledScript.eval(serialiseBindings);
 
                 ScriptObjectMirror scriptObjectMirror = (ScriptObjectMirror) serialiseBindings.get("serialise");

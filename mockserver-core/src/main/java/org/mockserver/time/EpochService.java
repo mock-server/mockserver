@@ -1,6 +1,6 @@
-package org.mockserver.log;
+package org.mockserver.time;
 
-public class TimeService {
+public class EpochService {
 
     public static final long FIXED_TIME_FOR_TESTS = System.currentTimeMillis();
     public static boolean fixedTime = false;

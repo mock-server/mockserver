@@ -17,6 +17,7 @@ import org.mockserver.verify.VerificationTimes;
 import org.slf4j.event.Level;
 
 import java.util.Arrays;
+import java.util.UUID;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -1059,7 +1060,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         mockServerClient.verify(secondExpectation.getId(), VerificationTimes.never());
         AssertionError firstAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(secondExpectation.getId(), VerificationTimes.atLeast(1)));
         assertThat(firstAssertionError.getMessage(), startsWith("Request not found at least once"));
-        AssertionError secondAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(UUIDService.neverFixedUUID(), VerificationTimes.atLeast(1)));
+        AssertionError secondAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(UUID.randomUUID().toString(), VerificationTimes.atLeast(1)));
         assertThat(secondAssertionError.getMessage(), startsWith("No expectation found with id "));
     }
 
@@ -1317,7 +1318,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         assertThat(firstAssertionError.getMessage(), startsWith("Request sequence not found"));
         AssertionError secondAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(secondExpectation.getId()));
         assertThat(secondAssertionError.getMessage(), startsWith("Request sequence not found"));
-        AssertionError thirdAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(UUIDService.neverFixedUUID(), UUIDService.neverFixedUUID()));
+        AssertionError thirdAssertionError = assertThrows(AssertionError.class, () -> mockServerClient.verify(UUID.randomUUID().toString(), UUID.randomUUID().toString()));
         assertThat(thirdAssertionError.getMessage(), startsWith("No expectation found with id "));
     }
 

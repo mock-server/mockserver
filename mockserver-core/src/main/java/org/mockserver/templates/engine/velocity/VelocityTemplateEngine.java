@@ -91,19 +91,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
             context.setWriter(writer);
             context.setAttribute(VelocityScriptEngine.VELOCITY_PROPERTIES_KEY, velocityProperties, ScriptContext.ENGINE_SCOPE);
             context.setAttribute("request", new HttpRequestTemplateObject(request), ScriptContext.ENGINE_SCOPE);
-            context.setAttribute("now", new TemplateFunctions(() -> DateTimeFormatter.ISO_INSTANT.format(Instant.now())), ScriptContext.ENGINE_SCOPE);
-            context.setAttribute("now_epoch", new TemplateFunctions(() -> String.valueOf(Instant.now().getEpochSecond())), ScriptContext.ENGINE_SCOPE);
-            context.setAttribute("now_iso_8601", new TemplateFunctions(() -> DateTimeFormatter.ISO_INSTANT.format(Instant.now())), ScriptContext.ENGINE_SCOPE);
-            context.setAttribute("now_rfc_1123", new TemplateFunctions(() -> DateTimeFormatter.RFC_1123_DATE_TIME.format(OffsetDateTime.now())), ScriptContext.ENGINE_SCOPE);
-            context.setAttribute("uuid", new TemplateFunctions(UUIDService::getUUID), ScriptContext.ENGINE_SCOPE);
-            context.setAttribute("rand_int", new TemplateFunctions(() -> TemplateFunctions.randomInteger(10)), ScriptContext.ENGINE_SCOPE);
-            context.setAttribute("rand_int_10", new TemplateFunctions(() -> TemplateFunctions.randomInteger(10)), ScriptContext.ENGINE_SCOPE);
-            context.setAttribute("rand_int_100", new TemplateFunctions(() -> TemplateFunctions.randomInteger(100)), ScriptContext.ENGINE_SCOPE);
-            context.setAttribute("rand_bytes", new TemplateFunctions(() -> TemplateFunctions.randomBytes(16)), ScriptContext.ENGINE_SCOPE);
-            context.setAttribute("rand_bytes_16", new TemplateFunctions(() -> TemplateFunctions.randomBytes(16)), ScriptContext.ENGINE_SCOPE);
-            context.setAttribute("rand_bytes_32", new TemplateFunctions(() -> TemplateFunctions.randomBytes(32)), ScriptContext.ENGINE_SCOPE);
-            context.setAttribute("rand_bytes_64", new TemplateFunctions(() -> TemplateFunctions.randomBytes(64)), ScriptContext.ENGINE_SCOPE);
-            context.setAttribute("rand_bytes_128", new TemplateFunctions(() -> TemplateFunctions.randomBytes(128)), ScriptContext.ENGINE_SCOPE);
+            TemplateFunctions.BUILT_IN_FUNCTIONS.forEach((key, value) -> context.setAttribute(key, value, ScriptContext.ENGINE_SCOPE));
             engine.eval(template, context);
             JsonNode generatedObject = null;
             try {

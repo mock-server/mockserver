@@ -2,11 +2,11 @@ package org.mockserver.templates.engine.velocity;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hamcrest.Matcher;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.log.TimeService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -14,20 +14,24 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.serialization.model.HttpResponseDTO;
+import org.mockserver.time.EpochService;
+import org.mockserver.time.TimeService;
 import org.mockserver.uuid.UUIDService;
 import org.slf4j.event.Level;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.StringEndsWith.endsWith;
-import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.openMocks;
@@ -53,13 +57,13 @@ public class VelocityTemplateEngineTest {
 
     @BeforeClass
     public static void fixTime() {
-        originalFixedTime = TimeService.fixedTime;
-        TimeService.fixedTime = true;
+        originalFixedTime = EpochService.fixedTime;
+        EpochService.fixedTime = true;
     }
 
     @AfterClass
     public static void fixTimeReset() {
-        TimeService.fixedTime = originalFixedTime;
+        EpochService.fixedTime = originalFixedTime;
     }
 
     @Before
@@ -109,9 +113,9 @@ public class VelocityTemplateEngineTest {
                 .setHttpRequest(request)
                 .setMessageFormat("generated output:{}from template:{}for request:{}")
                 .setArguments(OBJECT_MAPPER.readTree("" +
-                        "    {" + NEW_LINE +
-                        "        'statusCode': 200," + NEW_LINE +
-                        "        'body': \"{'method': 'POST', 'path': '/somePath', 'headers': 'mock-server.com'}\"" + NEW_LINE +
+                        "{" + NEW_LINE +
+                        "    'statusCode': 200," + NEW_LINE +
+                        "    'body': \"{'method': 'POST', 'path': '/somePath', 'headers': 'mock-server.com'}\"" + NEW_LINE +
                         "    }" + NEW_LINE),
                     template,
                     request
@@ -155,10 +159,10 @@ public class VelocityTemplateEngineTest {
                 .setHttpRequest(request)
                 .setMessageFormat("generated output:{}from template:{}for request:{}")
                 .setArguments(OBJECT_MAPPER.readTree("" +
-                        "    {" + NEW_LINE +
-                        "        'statusCode': 200," + NEW_LINE +
-                        "        'body': \"{'queryStringParameters': 'queryValueOne,queryValueTwoOne,queryValueTwoTwo', 'pathParameters': 'pathValueOne,pathValueTwoOne,pathValueTwoTwo', 'cookies': 'some_session_id', 'body': 'some_body'}\"" + NEW_LINE +
-                        "    }" + NEW_LINE),
+                        "{" + NEW_LINE +
+                        "    'statusCode': 200," + NEW_LINE +
+                        "    'body': \"{'queryStringParameters': 'queryValueOne,queryValueTwoOne,queryValueTwoTwo', 'pathParameters': 'pathValueOne,pathValueTwoOne,pathValueTwoTwo', 'cookies': 'some_session_id', 'body': 'some_body'}\"" + NEW_LINE +
+                        "}" + NEW_LINE),
                     template,
                     request
                 )
@@ -166,14 +170,16 @@ public class VelocityTemplateEngineTest {
     }
 
     @Test
-    public void shouldHandleHttpRequestsWithVelocityResponseTemplateWithDynamicValuesDateAndUUID() throws InterruptedException {
+    public void shouldHandleHttpRequestsWithVelocityResponseTemplateWithDynamicValuesDateAndUUID() throws JsonProcessingException {
         boolean originalFixedUUID = UUIDService.fixedUUID;
+        boolean originalFixedTime = TimeService.fixedTime;
         try {
             // given
             UUIDService.fixedUUID = true;
+            TimeService.fixedTime = true;
             String template = "{" + NEW_LINE +
                 "    'statusCode': 200," + NEW_LINE +
-                "    'body': \"{'date': '$now', 'date_epoch': '$now_epoch', 'date_iso-8601': '$now_iso_8601', 'date_rfc_1123': '$now_rfc_1123', 'uuids': ['$uuid', '$uuid'] }\"" + NEW_LINE +
+                "    'body': \"{'date': '$now', 'date_epoch': '$now_epoch', 'date_iso_8601': '$now_iso_8601', 'date_rfc_1123': '$now_rfc_1123', 'uuids': ['$uuid', '$uuid'] }\"" + NEW_LINE +
                 "}";
             HttpRequest request = request()
                 .withPath("/somePath")
@@ -184,58 +190,61 @@ public class VelocityTemplateEngineTest {
                 .withBody("some_body");
 
             // when
-            HttpResponse firstActualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+            HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
 
             // then
-            assertThat(firstActualHttpResponse.getBodyAsString(), allOf(startsWith("{'date': '20"), endsWith("', 'uuids': ['" + UUIDService.getUUID() + "', '" + UUIDService.getUUID() + "'] }")));
-
-            // given
-            TimeUnit.SECONDS.sleep(1);
-
-            // when
-            HttpResponse secondActualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
-
-            // then
-            assertThat(secondActualHttpResponse.getBodyAsString(), allOf(startsWith("{'date': '20"), endsWith("', 'uuids': ['" + UUIDService.getUUID() + "', '" + UUIDService.getUUID() + "'] }")));
-            // date should now be different
-            assertThat(secondActualHttpResponse.getBodyAsString(), not(is(firstActualHttpResponse.getBodyAsString())));
+            assertThat(actualHttpResponse, is(
+                response()
+                    .withStatusCode(200)
+                    .withBody("{'date': '" + TimeService.now() + "', 'date_epoch': '" + TimeService.now().getEpochSecond() + "', 'date_iso_8601': '" + DateTimeFormatter.ISO_INSTANT.format(TimeService.now()) + "', 'date_rfc_1123': '" + DateTimeFormatter.RFC_1123_DATE_TIME.format(TimeService.offsetNow()) + "', 'uuids': ['" + UUIDService.getUUID() + "', '" + UUIDService.getUUID() + "'] }")
+            ));
+            verify(mockServerLogger).logEvent(
+                new LogEntry()
+                    .setType(TEMPLATE_GENERATED)
+                    .setLogLevel(INFO)
+                    .setHttpRequest(request)
+                    .setMessageFormat("generated output:{}from template:{}for request:{}")
+                    .setArguments(OBJECT_MAPPER.readTree("" +
+                            "{" + NEW_LINE +
+                            "    'statusCode': 200," + NEW_LINE +
+                            "    'body': \"{'date': '" + TimeService.now() + "', 'date_epoch': '" + TimeService.now().getEpochSecond() + "', 'date_iso_8601': '" + DateTimeFormatter.ISO_INSTANT.format(TimeService.now()) + "', 'date_rfc_1123': '" + DateTimeFormatter.RFC_1123_DATE_TIME.format(TimeService.offsetNow()) + "', 'uuids': ['" + UUIDService.getUUID() + "', '" + UUIDService.getUUID() + "'] }\"" + NEW_LINE +
+                            "}" + NEW_LINE),
+                        template,
+                        request
+                    )
+            );
 
         } finally {
             UUIDService.fixedUUID = originalFixedUUID;
+            TimeService.fixedTime = originalFixedTime;
         }
     }
 
     @Test
-    public void shouldHandleHttpRequestsWithVelocityResponseTemplateWithDynamicValuesRandom() throws InterruptedException {
+    public void shouldHandleHttpRequestsWithVelocityResponseTemplateWithDynamicValuesRandom() {
+        shouldPopulateRandomValue("$rand_int", equalTo(1));
+        shouldPopulateRandomValue("$rand_int_10", allOf(greaterThan(0), lessThan(3)));
+        shouldPopulateRandomValue("$rand_int_100", allOf(greaterThan(0), lessThan(4)));
+        shouldPopulateRandomValue("$rand_bytes", allOf(greaterThan(20), lessThan(50)));
+        shouldPopulateRandomValue("$rand_bytes_16", allOf(greaterThan(20), lessThan(50)));
+        shouldPopulateRandomValue("$rand_bytes_32", allOf(greaterThan(40), lessThan(60)));
+        shouldPopulateRandomValue("$rand_bytes_64", allOf(greaterThan(80), lessThan(120)));
+        shouldPopulateRandomValue("$rand_bytes_128", allOf(greaterThan(160), lessThan(300)));
+    }
+
+    private void shouldPopulateRandomValue(String function, Matcher<Integer> matcher) {
         // given
-        String template = "{" + NEW_LINE +
-            "    'statusCode': 200," + NEW_LINE +
-            "    'body': \"{'rand_int': '$rand_int', 'rand_int_10': '$rand_int_10', 'rand_int_100': '$rand_int_100', 'rand_bytes': ['$rand_bytes','$rand_bytes_16','$rand_bytes_32','$rand_bytes_64','$rand_bytes_128'], 'end': 'end' }\"" + NEW_LINE +
-            "}";
+        String template = "{ 'body': '" + function + "' }";
         HttpRequest request = request()
             .withPath("/somePath")
-            .withQueryStringParameter("nameOne", "valueOne")
-            .withQueryStringParameter("nameTwo", "valueTwoOne", "valueTwoTwo")
-            .withMethod("POST")
-            .withCookie("session", "some_session_id")
             .withBody("some_body");
 
         // when
-        HttpResponse firstActualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
-        assertThat(firstActualHttpResponse.getBodyAsString(), allOf(startsWith("{'rand_int': '"), endsWith("'], 'end': 'end' }")));
-
-        // given
-        TimeUnit.SECONDS.sleep(1);
-
-        // when
-        HttpResponse secondActualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
-
-        // then
-        assertThat(firstActualHttpResponse.getBodyAsString(), allOf(startsWith("{'rand_int': '"), endsWith("'], 'end': 'end' }")));
-        // should now be different
-        assertThat(secondActualHttpResponse.getBodyAsString(), not(is(firstActualHttpResponse.getBodyAsString())));
+        assertThat(actualHttpResponse.getBodyAsString(), not(equalTo("")));
+        assertThat(actualHttpResponse.getBodyAsString().length(), matcher);
     }
 
     @Test
@@ -273,10 +282,10 @@ public class VelocityTemplateEngineTest {
                 .setHttpRequest(request)
                 .setMessageFormat("generated output:{}from template:{}for request:{}")
                 .setArguments(OBJECT_MAPPER.readTree("" +
-                        "    {" + NEW_LINE +
-                        "        'statusCode': 200," + NEW_LINE +
-                        "        'body': \"{'name': 'value'}\"" + NEW_LINE +
-                        "    }" + NEW_LINE),
+                        "{" + NEW_LINE +
+                        "    'statusCode': 200," + NEW_LINE +
+                        "    'body': \"{'name': 'value'}\"" + NEW_LINE +
+                        "}" + NEW_LINE),
                     template,
                     request
                 )

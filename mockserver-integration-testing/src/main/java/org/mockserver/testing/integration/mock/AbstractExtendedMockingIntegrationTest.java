@@ -5,7 +5,7 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockserver.log.TimeService;
+import org.mockserver.time.EpochService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatchType;
@@ -16,7 +16,6 @@ import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.serialization.HttpRequestSerializer;
 import org.mockserver.serialization.LogEntrySerializer;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
-import org.mockserver.uuid.UUIDService;
 import org.mockserver.verify.VerificationTimes;
 import org.slf4j.event.Level;
 
@@ -25,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -79,7 +79,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
 
     @BeforeClass
     public static void fixTime() {
-        TimeService.fixedTime = true;
+        EpochService.fixedTime = true;
     }
 
     @Test
@@ -5741,7 +5741,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         );
 
         // when - wrong id
-        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, () -> mockServerClient.clear(UUIDService.neverFixedUUID(), ClearType.EXPECTATIONS));
+        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, () -> mockServerClient.clear(UUID.randomUUID().toString(), ClearType.EXPECTATIONS));
         assertThat(illegalArgumentException.getMessage(), startsWith("No expectation found with id "));
 
         // then - expectations not cleared
@@ -5848,7 +5848,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         );
 
         // when - wrong id
-        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, () -> mockServerClient.clear(UUIDService.neverFixedUUID(), ClearType.EXPECTATIONS));
+        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, () -> mockServerClient.clear(UUID.randomUUID().toString(), ClearType.EXPECTATIONS));
         assertThat(illegalArgumentException.getMessage(), startsWith("No expectation found with id "));
 
         // then - expectations not cleared

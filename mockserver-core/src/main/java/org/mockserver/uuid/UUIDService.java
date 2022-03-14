@@ -13,14 +13,10 @@ public class UUIDService {
 
     public static String getUUID() {
         if (!fixedUUID) {
-            return neverFixedUUID();
+            return RANDOM_BASED_GENERATOR.generate().toString();
         } else {
             return FIXED_UUID_FOR_TESTS;
         }
-    }
-
-    public static String neverFixedUUID() {
-        return RANDOM_BASED_GENERATOR.generate().toString();
     }
 
 }

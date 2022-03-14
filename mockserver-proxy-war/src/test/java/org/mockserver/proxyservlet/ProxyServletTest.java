@@ -6,7 +6,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.log.TimeService;
+import org.mockserver.time.EpochService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
@@ -64,7 +64,7 @@ public class ProxyServletTest {
 
     @BeforeClass
     public static void fixTime() {
-        TimeService.fixedTime = true;
+        EpochService.fixedTime = true;
     }
 
     @Before
@@ -271,7 +271,7 @@ public class ProxyServletTest {
             assertThat(response.getStatus(), is(200));
             assertThat(
                 new String(response.getContentAsByteArray(), UTF_8),
-                is(endsWith(LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - received request:" + NEW_LINE +
+                is(endsWith(LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - received request:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"path\" : \"request_one\"" + NEW_LINE +

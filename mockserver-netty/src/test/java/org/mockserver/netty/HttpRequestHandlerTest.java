@@ -11,7 +11,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.lifecycle.LifeCycle;
-import org.mockserver.log.TimeService;
+import org.mockserver.time.EpochService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
@@ -73,7 +73,7 @@ public class HttpRequestHandlerTest {
 
     @BeforeClass
     public static void fixTime() {
-        TimeService.fixedTime = true;
+        EpochService.fixedTime = true;
     }
 
     @Before
@@ -274,7 +274,7 @@ public class HttpRequestHandlerTest {
             assertThat(response.getStatusCode(), is(200));
             assertThat(
                 response.getBodyAsString(),
-                is(endsWith(LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
+                is(endsWith(LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"httpRequest\" : {" + NEW_LINE +

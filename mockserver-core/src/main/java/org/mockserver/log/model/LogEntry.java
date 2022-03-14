@@ -3,7 +3,7 @@ package org.mockserver.log.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lmax.disruptor.EventTranslator;
-import org.mockserver.log.TimeService;
+import org.mockserver.time.EpochService;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatchDifference;
 import org.mockserver.matchers.TimeToLive;
@@ -40,7 +40,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
     private Level logLevel = Level.INFO;
     private boolean alwaysLog = false;
     public static final DateFormat LOG_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-    private long epochTime = TimeService.currentTimeMillis();
+    private long epochTime = EpochService.currentTimeMillis();
     private String timestamp;
     private LogMessageType type;
     private RequestDefinition[] httpRequests;

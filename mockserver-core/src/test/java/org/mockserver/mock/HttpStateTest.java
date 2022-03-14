@@ -13,7 +13,7 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.file.FilePath;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.MockServerEventLog;
-import org.mockserver.log.TimeService;
+import org.mockserver.time.EpochService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
@@ -86,7 +86,7 @@ public class HttpStateTest {
 
     @BeforeClass
     public static void fixTime() {
-        TimeService.fixedTime = true;
+        EpochService.fixedTime = true;
     }
 
     @Before
@@ -265,7 +265,7 @@ public class HttpStateTest {
             assertThat(responseWriter.response.getStatusCode(), is(200));
             assertThat(
                 responseWriter.response.getBodyAsString(),
-                is(endsWith(LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
+                is(endsWith(LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
                     NEW_LINE +
                     "  {" + NEW_LINE +
                     "    \"httpRequest\" : {" + NEW_LINE +
@@ -886,12 +886,12 @@ public class HttpStateTest {
                             .withQueryStringParameter("type", "logs")
                     ),
                 is(response().withBody("" +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - cleared logs that match:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - cleared logs that match:" + NEW_LINE +
                         "" + NEW_LINE +
                         "  {}" + NEW_LINE +
                         "" + NEW_LINE +
                         "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"httpRequest\" : {" + NEW_LINE +
@@ -982,7 +982,7 @@ public class HttpStateTest {
                             .withQueryStringParameter("type", "logs")
                     ),
                 is(response().withBody("" +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"httpRequest\" : {" + NEW_LINE +
@@ -1008,20 +1008,20 @@ public class HttpStateTest {
                         "  key_one" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - some random" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - some random" + NEW_LINE +
                         NEW_LINE +
                         "  argument_one" + NEW_LINE +
                         NEW_LINE +
                         " message" + NEW_LINE +
                         "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - cleared logs that match:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - cleared logs that match:" + NEW_LINE +
                         "" + NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"path\" : \"request_four\"" + NEW_LINE +
                         "  }" + NEW_LINE +
                         "" + NEW_LINE +
                         "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"httpRequest\" : {" + NEW_LINE +
@@ -1047,7 +1047,7 @@ public class HttpStateTest {
                         "  key_four" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - cleared expectations that match:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - cleared expectations that match:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"path\" : \"request_four\"" + NEW_LINE +
@@ -1134,7 +1134,7 @@ public class HttpStateTest {
                             .withQueryStringParameter("type", "logs")
                     ),
                 is(response().withBody("" +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - cleared logs that match:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - cleared logs that match:" + NEW_LINE +
                         NEW_LINE +
                         "  {}" + NEW_LINE +
                         NEW_LINE,
@@ -1510,7 +1510,7 @@ public class HttpStateTest {
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"request_one\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\"" + NEW_LINE +
+                "  \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + "\"" + NEW_LINE +
                 "}, {" + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"request_two\"" + NEW_LINE +
@@ -1520,7 +1520,7 @@ public class HttpStateTest {
                 "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
                 "    \"body\" : \"response_two\"" + NEW_LINE +
                 "  }," + NEW_LINE +
-                "  \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\"" + NEW_LINE +
+                "  \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + "\"" + NEW_LINE +
                 "} ]", MediaType.JSON_UTF_8).withStatusCode(200))
         );
     }
@@ -1561,7 +1561,7 @@ public class HttpStateTest {
             is(response().withBody("[" + NEW_LINE +
                 "  {" + NEW_LINE +
                 "    \"logLevel\" : \"INFO\"," + NEW_LINE +
-                "    \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\"," + NEW_LINE +
+                "    \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + "\"," + NEW_LINE +
                 "    \"type\" : \"NO_MATCH_RESPONSE\"," + NEW_LINE +
                 "    \"httpRequest\" : {" + NEW_LINE +
                 "      \"path\" : \"request_one\"" + NEW_LINE +
@@ -1601,7 +1601,7 @@ public class HttpStateTest {
                 "  }," + NEW_LINE +
                 "  {" + NEW_LINE +
                 "    \"logLevel\" : \"INFO\"," + NEW_LINE +
-                "    \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\"," + NEW_LINE +
+                "    \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + "\"," + NEW_LINE +
                 "    \"type\" : \"EXPECTATION_RESPONSE\"," + NEW_LINE +
                 "    \"httpRequest\" : {" + NEW_LINE +
                 "      \"path\" : \"request_two\"" + NEW_LINE +
@@ -1882,7 +1882,7 @@ public class HttpStateTest {
             // then
             assertThat(response,
                 is(response().withBody("" +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - no expectation for:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - no expectation for:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"path\" : \"request_one\"" + NEW_LINE +
@@ -1896,7 +1896,7 @@ public class HttpStateTest {
                         "  }" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - returning error:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - returning error:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"path\" : \"request_two\"" + NEW_LINE +
@@ -1919,7 +1919,7 @@ public class HttpStateTest {
                         "  }" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"path\" : \"request_one\"" + NEW_LINE +
@@ -1947,7 +1947,7 @@ public class HttpStateTest {
                         "  }" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"path\" : \"request_two\"" + NEW_LINE +
@@ -1975,7 +1975,7 @@ public class HttpStateTest {
                         "  }" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - some random" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - some random" + NEW_LINE +
                         NEW_LINE +
                         "  argument_one" + NEW_LINE +
                         NEW_LINE +
@@ -2049,7 +2049,7 @@ public class HttpStateTest {
             // then
             assertThat(response,
                 is(response().withBody("" +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - no expectation for:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - no expectation for:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"path\" : \"request_one\"" + NEW_LINE +
@@ -2063,7 +2063,7 @@ public class HttpStateTest {
                         "  }" + NEW_LINE +
                         NEW_LINE +
                         "------------------------------------" + NEW_LINE +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - request:" + NEW_LINE +
                         NEW_LINE +
                         "  {" + NEW_LINE +
                         "    \"path\" : \"request_one\"" + NEW_LINE +
@@ -2154,7 +2154,7 @@ public class HttpStateTest {
                             .withQueryStringParameter("type", "logs")
                     ),
                 is(response().withBody("" +
-                        LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - resetting all expectations and request logs" + NEW_LINE,
+                        LOG_DATE_FORMAT.format(new Date(EpochService.currentTimeMillis())) + " - resetting all expectations and request logs" + NEW_LINE,
                     MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
             );
             assertThat(
