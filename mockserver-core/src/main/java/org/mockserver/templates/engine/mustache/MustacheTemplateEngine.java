@@ -33,7 +33,7 @@ import static org.mockserver.log.model.LogEntry.LogMessageType.TEMPLATE_GENERATE
 import static org.mockserver.log.model.LogEntryMessages.TEMPLATE_GENERATED_MESSAGE_FORMAT;
 
 /**
- * See: https://github.com/samskivert/jmustache for syntax
+ * See: https://github.com/samskivert/jmustache or http://mustache.github.io/mustache.5.html for syntax
  *
  * @author jamesdbloom
  */

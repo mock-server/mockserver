@@ -1,0 +1,94 @@
+---
+title: Response Templates
+layout: page
+pageOrder: 4
+section: 'Mock Server'
+subsection: true
+sitemap:
+  priority: 0.8
+  changefreq: 'monthly'
+  lastmod: 2019-11-10T08:00:00+01:00
+---
+
+<a id="clustering_mockserver" class="anchor" href="#clustering_mockserver">&nbsp;</a>
+
+<h2>Response Templates</h2>
+
+<p>MockServer supports the following response template formats:</p>
+<ul>
+  <li><strong><a href="#mustache_templates">mustache templates</a></strong>
+    <ul>
+      <li>uses mustache syntax</li>
+      <li>simple and easy to use</li>
+      <li>minimal conditional logic</li>
+      <li>works on JVM versions</li>
+    </ul>
+    <pre class="prettyprint lang-javascript code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(request().withPath("/some/path"))
+    .respond(
+        template(
+            HttpTemplate.TemplateType.MUSTACHE,
+            "{\n" +
+                "     'statusCode': 200,\n" +
+                "     'cookies': {\n" +
+                "          'session': '&lbrace;&lbrace; request.headers.Session-Id.0 &rbrace;&rbrace;'\n" +
+                "     },\n" +
+                "     'headers': {\n" +
+                "          'Client-User-Agent': [ '&lbrace;&lbrace; request.headers.User-Agent.0 &rbrace;&rbrace;' ]\n" +
+                "     },\n" +
+                "     'body': &lbrace;&lbrace; request.body &rbrace;&rbrace;\n" +
+                "}"
+        )
+    );</code></pre>
+  </li>
+  <li><strong><a href="#velocity_templates">velocity templates</a></strong>
+    <ul>
+      <li>uses <a href="https://velocity.apache.org/">Apache Velocity</a></li>
+      <li>supports complex conditional logic and loops</li>
+      <li>more complex to use</li>
+      <li>works on JVM versions</li>
+    </ul>
+    <pre class="prettyprint lang-javascript code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(request().withPath("/some/path"))
+    .respond(
+        template(
+            HttpTemplate.TemplateType.VELOCITY,
+            "{\n" +
+                "     'statusCode': 200,\n" +
+                "     'cookies': { \n" +
+                "          'session': '$!request.headers['Session-Id'][0]'\n" +
+                "     },\n" +
+                "     'headers': {\n" +
+                "          'Client-User-Agent': [ '$!request.headers['User-Agent'][0]' ]\n" +
+                "     },\n" +
+                "     'body': $!request.body\n" +
+                "}"
+        )
+    );</code></pre>
+  </li>
+  <li><strong><a href="#javascript_templates">javascript templates</a></strong>
+    <ul>
+      <li>use Nashorn JavaScript engine</li>
+      <li>supports complex conditional logic and loops</li>
+      <li>more complex to use</li>
+      <li>Nashorn has been deprecated in Java 11 and removed from 15 onwards</li>
+    </ul>
+    <pre class="prettyprint lang-javascript code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(request().withPath("/some/path"))
+    .respond(
+        template(
+            HttpTemplate.TemplateType.JAVASCRIPT,
+            "return {\n" +
+                "     'statusCode': 200,\n" +
+                "     'cookies': {\n" +
+                "          'session' : request.headers['session-id'][0]\n" +
+                "     },\n" +
+                "     'headers': {\n" +
+                "          'Client-User-Agent': request.headers['User-Agent']\n" +
+                "     },\n" +
+                "     'body': request.body\n" +
+                "};"
+        )
+    );</code></pre>
+  </li>
+</ul>

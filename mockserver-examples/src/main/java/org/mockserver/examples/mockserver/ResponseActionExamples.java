@@ -220,28 +220,19 @@ public class ResponseActionExamples {
 
     public void javascriptTemplatedResponse() {
         new MockServerClient("localhost", 1080)
-            .when(
-                request()
-                    .withPath("/some/path")
-            )
+            .when(request().withPath("/some/path"))
             .respond(
                 template(
                     HttpTemplate.TemplateType.JAVASCRIPT,
-                    "return {" + System.getProperty("line.separator") +
-                        "     'statusCode': 200," + System.getProperty("line.separator") +
-                        "     'cookies': {" + System.getProperty("line.separator") +
-                        "          'session' : request.headers['session-id'][0]" + System.getProperty("line.separator") +
-                        "     }," + System.getProperty("line.separator") +
-                        "     'headers': {" + System.getProperty("line.separator") +
-                        "          'Date' : Date()" + System.getProperty("line.separator") +
-                        "     }," + System.getProperty("line.separator") +
-                        "     'body': JSON.stringify(" + System.getProperty("line.separator") +
-                        "               {" + System.getProperty("line.separator") +
-                        "                    method: request.method," + System.getProperty("line.separator") +
-                        "                    path: request.path," + System.getProperty("line.separator") +
-                        "                    body: request.body" + System.getProperty("line.separator") +
-                        "               }" + System.getProperty("line.separator") +
-                        "          )" + System.getProperty("line.separator") +
+                    "return {\n" +
+                        "     'statusCode': 200,\n" +
+                        "     'cookies': {\n" +
+                        "          'session' : request.headers['session-id'][0]\n" +
+                        "     },\n" +
+                        "     'headers': {\n" +
+                        "          'Client-User-Agent': request.headers['User-Agent']\n" +
+                        "     },\n" +
+                        "     'body': request.body\n" +
                         "};"
                 )
             );
@@ -249,16 +240,16 @@ public class ResponseActionExamples {
 
     public void javascriptTemplatedResponseWithDelay() {
         String template = "" +
-            "if (request.method === 'POST' && request.path === '/somePath') {" + System.getProperty("line.separator") +
-            "    return {" + System.getProperty("line.separator") +
-            "        'statusCode': 200," + System.getProperty("line.separator") +
-            "        'body': JSON.stringify({name: 'value'})" + System.getProperty("line.separator") +
-            "    };" + System.getProperty("line.separator") +
-            "} else {" + System.getProperty("line.separator") +
-            "    return {" + System.getProperty("line.separator") +
-            "        'statusCode': 406," + System.getProperty("line.separator") +
-            "        'body': request.body" + System.getProperty("line.separator") +
-            "    };" + System.getProperty("line.separator") +
+            "if (request.method === 'POST' && request.path === '/somePath') {\n" +
+            "    return {\n" +
+            "        'statusCode': 200,\n" +
+            "        'body': JSON.stringify({name: 'value'})\n" +
+            "    };\n" +
+            "} else {\n" +
+            "    return {\n" +
+            "        'statusCode': 406,\n" +
+            "        'body': request.body\n" +
+            "    };\n" +
             "}";
 
         new MockServerClient("localhost", 1080)
@@ -276,22 +267,39 @@ public class ResponseActionExamples {
 
     public void velocityTemplatedResponse() {
         new MockServerClient("localhost", 1080)
-            .when(
-                request()
-                    .withPath("/some/path")
-            )
+            .when(request().withPath("/some/path"))
+            .respond(
+                template(
+                    HttpTemplate.TemplateType.VELOCITY,
+                    "{\n" +
+                        "     'statusCode': 200,\n" +
+                        "     'cookies': { \n" +
+                        "          'session': '$!request.headers['Session-Id'][0]'\n" +
+                        "     },\n" +
+                        "     'headers': {\n" +
+                        "          'Client-User-Agent': [ '$!request.headers['User-Agent'][0]' ]\n" +
+                        "     },\n" +
+                        "     'body': $!request.body\n" +
+                        "}"
+                )
+            );
+    }
+
+    public void mustacheTemplatedResponse() {
+        new MockServerClient("localhost", 1080)
+            .when(request().withPath("/some/path"))
             .respond(
                 template(
                     HttpTemplate.TemplateType.MUSTACHE,
-                    "{" + System.getProperty("line.separator") +
-                        "     \"statusCode\": 200," + System.getProperty("line.separator") +
-                        "     \"cookies\": { " + System.getProperty("line.separator") +
-                        "          \"session\": \"{{ request.headers.Session-Id.0 }}\"" + System.getProperty("line.separator") +
-                        "     }," + System.getProperty("line.separator") +
-                        "     \"headers\": {" + System.getProperty("line.separator") +
-                        "          \"Client-User-Agent\": [ \"{{ request.headers.User-Agent.0 }}\" ]" + System.getProperty("line.separator") +
-                        "     }," + System.getProperty("line.separator") +
-                        "     \"body\": {{ request.body }}" + System.getProperty("line.separator") +
+                    "{\n" +
+                        "     'statusCode': 200,\n" +
+                        "     'cookies': {\n" +
+                        "          'session': '{{ request.headers.Session-Id.0 }}'\n" +
+                        "     },\n" +
+                        "     'headers': {\n" +
+                        "          'Client-User-Agent': [ '{{ request.headers.User-Agent.0 }}' ]\n" +
+                        "     },\n" +
+                        "     'body': {{ request.body }}\n" +
                         "}"
                 )
             );
