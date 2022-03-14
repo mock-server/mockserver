@@ -20,7 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - exposed remote address (i.e. client address) to method and class callbacks, logs and dashboard
 - exposed client certificate chain to method and class callbacks, logs and dashboard
 - added simpler mustache style response templates (in addition to existing javascript and velocity support)
-- added numerous response template functions for date, uuid, random, xPath and jsonPath 
+- added response template variables and functions for date, uuid, random, xPath and jsonPath for mustache
+- added response template variables for date, uuid and random for velocity
+- added response template variables for date, uuid and random for javascript
 - added path parameters to response template model 
 
 ### Changed
