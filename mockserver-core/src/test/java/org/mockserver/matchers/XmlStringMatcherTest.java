@@ -29,6 +29,21 @@ public class XmlStringMatcherTest {
     }
 
     @Test
+    public void shouldMatchMatchingXMLIgnoringOrder() {
+        String matched = "" +
+            "<element>" +
+            "   <key>some_key</key>" +
+            "   <value>some_value</value>" +
+            "</element>";
+        assertTrue(new XmlStringMatcher(new MockServerLogger(), "<element><value>some_value</value><key>some_key</key></element>").matches(matched));
+        assertTrue(new XmlStringMatcher(new MockServerLogger(), "" +
+            "<element>" +
+            "   <value>some_value</value>" +
+            "   <key>some_key</key>" +
+            "</element>").matches(matched));
+    }
+
+    @Test
     public void shouldMatchMatchingXMLWithIsNumberPlaceholder() {
         String matched = "" +
             "<message>" + NEW_LINE +

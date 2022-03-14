@@ -8,8 +8,10 @@ import org.mockserver.model.NottableString;
 import org.slf4j.event.Level;
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.builder.Input;
+import org.xmlunit.diff.DefaultNodeMatcher;
 import org.xmlunit.diff.Diff;
 import org.xmlunit.diff.DifferenceEvaluators;
+import org.xmlunit.diff.ElementSelectors;
 import org.xmlunit.placeholder.PlaceholderDifferenceEvaluator;
 
 import static org.mockserver.model.NottableString.string;
@@ -36,6 +38,7 @@ public class XmlStringMatcher extends BodyMatcher<String> {
                 .ignoreWhitespace()
                 .normalizeWhitespace()
                 .checkForSimilar()
+                .withNodeMatcher(new DefaultNodeMatcher(ElementSelectors.byName))
                 .withDifferenceEvaluator(DifferenceEvaluators.chain(new PlaceholderDifferenceEvaluator(), DifferenceEvaluators.Default));
         } catch (Exception e) {
             mockServerLogger.logEvent(
