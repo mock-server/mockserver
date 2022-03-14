@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - changed docker distroless base image for snapshot to distroless image for debugging
 - changed client to launch dashboard in HTTP (not HTTPS) to avoid issues with self-signed certificates
 - simplified the body field for response template model
+- improved XML matching by ignoring element order
 
 ### Fixed
 - worked around JDK error 'flip()Ljava/nio/ByteBuffer; does not exist in class java.nio.ByteBuffer'
