@@ -10,7 +10,7 @@ changefreq: 'monthly'
 lastmod: 2019-11-10T08:00:00+01:00
 ---
 
-<a id="clustering_mockserver" class="anchor" href="#clustering_mockserver">&nbsp;</a>
+<a id="response_templates" class="anchor" href="#response_templates">&nbsp;</a>
 
 <h2>Response Templates</h2>
 
@@ -41,6 +41,69 @@ lastmod: 2019-11-10T08:00:00+01:00
         </ul>
     </li>
 </ul>
+
+<a id="response_template_testing" class="anchor" href="#response_template_testing">&nbsp;</a>
+
+<h2>Response Template Testing</h2>
+
+<p>To test response templates locally is it possible to use the <strong>org.mockserver.templates.ResponseTemplateTester</strong> for fast feedback and iteration</p>
+
+<p><a href="#mustache_templates">mustache templates</a> can be tested locally as follows:</p>
+
+<pre class="prettyprint lang-javascript code"><code class="code">// inputs
+String template = "{\n" +
+    "    'statusCode': 200,\n" +
+    "    'body': \"{'method': '&lbrace;&lbrace; request.method &rbrace;&rbrace;', 'path': '&lbrace;&lbrace; request.path &rbrace;&rbrace;', 'headers': '&lbrace;&lbrace; request.headers.host.0 &rbrace;&rbrace;'}\"\n" +
+    "}";
+HttpRequest request = request()
+    .withPath("/somePath")
+    .withMethod("POST")
+    .withHeader(HOST.toString(), "mock-server.com")
+    .withBody("some_body");
+
+// execute
+HttpResponse httpResponse = ResponseTemplateTester.testVelocityTemplate(template, request);
+
+// result
+System.out.println("httpResponse = " + httpResponse);</code></pre>
+
+<p><a href="#velocity_templates">velocity templates</a> can be tested locally as follows:</p>
+
+<pre class="prettyprint lang-javascript code"><code class="code">// inputs
+String template = "{\n" +
+    "    'statusCode': 200,\n" +
+    "    'body': \"{'method': '$request.method', 'path': '$request.path', 'headers': '$request.headers.host[0]'}\"\n" +
+    "}";
+HttpRequest request = request()
+    .withPath("/somePath")
+    .withMethod("POST")
+    .withHeader(HOST.toString(), "mock-server.com")
+    .withBody("some_body");
+
+// execute
+HttpResponse httpResponse = ResponseTemplateTester.testVelocityTemplate(template, request);
+
+// result
+System.out.println("httpResponse = " + httpResponse);</code></pre>
+
+<p><a href="#javascript_templates">javascript templates</a> can be tested locally as follows:</p>
+
+<pre class="prettyprint lang-javascript code"><code class="code">// inputs
+String template = "return {\n" +
+    "    'statusCode': 200,\n" +
+    "    'body': '{\\'method\\': \\'' + request.method + '\\', \\'path\\': \\'' + request.path + '\\', \\'headers\\': \\'' + request.headers.host[0] + '\\'}'\n" +
+    "};";
+HttpRequest request = request()
+    .withPath("/somePath")
+    .withMethod("POST")
+    .withHeader(HOST.toString(), "mock-server.com")
+    .withBody("some_body");
+
+// execute
+HttpResponse httpResponse = ResponseTemplateTester.testVelocityTemplate(template, request);
+
+// result
+System.out.println("httpResponse = " + httpResponse);</code></pre>
 
 <a id="request_model_variables" class="anchor" href="#request_model_variables">&nbsp;</a>
 
