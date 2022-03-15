@@ -41,6 +41,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.TEMPLATE_GENERATED;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.JsonBody.json;
 import static org.slf4j.event.Level.INFO;
 
 /**
@@ -452,6 +453,63 @@ public class MustacheTemplateEngineTest {
     }
 
     @Test
+    public void shouldHandleHttpRequestsWithMustacheResponseTemplateWithXPathNode() throws JsonProcessingException {
+        // given
+        String template = "{" + NEW_LINE +
+            "    'statusCode': 200," + NEW_LINE +
+            "    'body': \"{'titles': ['{{#xPath}}/store/book/title{{/xPath}}', '{{#xPath}}//book[2]/title{{/xPath}}'], 'bikeColor': '{{#xPath}}//bicycle/color{{/xPath}}'}\"" + NEW_LINE +
+            "}";
+        HttpRequest request = request()
+            .withPath("/somePath")
+            .withBody("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" + NEW_LINE +
+                "<store>" + NEW_LINE +
+                "  <book>" + NEW_LINE +
+                "    <category>reference</category>" + NEW_LINE +
+                "    <author>Nigel Rees</author>" + NEW_LINE +
+                "    <title>Sayings of the Century</title>" + NEW_LINE +
+                "    <price>18.95</price>" + NEW_LINE +
+                "  </book>" + NEW_LINE +
+                "  <book>" + NEW_LINE +
+                "    <category>fiction</category>" + NEW_LINE +
+                "    <author>Herman Melville</author>" + NEW_LINE +
+                "    <title>Moby Dick</title>" + NEW_LINE +
+                "    <isbn>0-553-21311-3</isbn>" + NEW_LINE +
+                "    <price>8.99</price>" + NEW_LINE +
+                "  </book>" + NEW_LINE +
+                "  <bicycle>" + NEW_LINE +
+                "    <color>red</color>" + NEW_LINE +
+                "    <price>19.95</price>" + NEW_LINE +
+                "  </bicycle>" + NEW_LINE +
+                "  <expensive>10</expensive>" + NEW_LINE +
+                "</store>");
+
+        // when
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+
+        // then
+        assertThat(actualHttpResponse, is(
+            response()
+                .withStatusCode(200)
+                .withBody("{'titles': ['Sayings of the Century', 'Moby Dick'], 'bikeColor': 'red'}")
+        ));
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(TEMPLATE_GENERATED)
+                .setLogLevel(INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("generated output:{}from template:{}for request:{}")
+                .setArguments(OBJECT_MAPPER.readTree("" +
+                        "{" + NEW_LINE +
+                        "    'statusCode': 200," + NEW_LINE +
+                        "    'body': \"{'titles': ['Sayings of the Century', 'Moby Dick'], 'bikeColor': 'red'}\"" + NEW_LINE +
+                        "}" + NEW_LINE),
+                    template,
+                    request
+                )
+        );
+    }
+
+    @Test
     public void shouldHandleHttpRequestsWithMustacheResponseTemplateWithXPathWithJsonBody() throws JsonProcessingException {
         // given
         String template = "{" + NEW_LINE +
@@ -536,11 +594,11 @@ public class MustacheTemplateEngineTest {
         ConfigurationProperties.logLevel("TRACE");
         String template = "{" + NEW_LINE +
             "    'statusCode': 200," + NEW_LINE +
-            "    'body': \"{'key': '{{#jsonPath}}$.store.book[0].title{{/jsonPath}}', 'value': '{{#jsonPath}}$.store.bicycle.color{{/jsonPath}}'}\"" + NEW_LINE +
+            "    'body': \"{'titles': {{#jsonPath}}$.store.book{{/jsonPath}}[{{#jsonPathResult}}{{^-first}}, {{/-first}}'{{title}}'{{/jsonPathResult}}], 'bikeColor': '{{#jsonPath}}$.store.bicycle.color{{/jsonPath}}{{jsonPathResult}}'}\"" + NEW_LINE +
             "}";
         HttpRequest request = request()
             .withPath("/somePath")
-            .withBody("{" + NEW_LINE +
+            .withBody(json("{" + NEW_LINE +
                 "    \"store\": {" + NEW_LINE +
                 "        \"book\": [" + NEW_LINE +
                 "            {" + NEW_LINE +
@@ -563,7 +621,7 @@ public class MustacheTemplateEngineTest {
                 "        }" + NEW_LINE +
                 "    }," + NEW_LINE +
                 "    \"expensive\": 10" + NEW_LINE +
-                "}");
+                "}"));
 
         // when
         HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
@@ -572,7 +630,7 @@ public class MustacheTemplateEngineTest {
         assertThat(actualHttpResponse, is(
             response()
                 .withStatusCode(200)
-                .withBody("{'key': 'Sayings of the Century', 'value': 'red'}")
+                .withBody("{'titles': ['Sayings of the Century', 'Moby Dick'], 'bikeColor': 'red'}")
         ));
         verify(mockServerLogger).logEvent(
             new LogEntry()
@@ -583,7 +641,7 @@ public class MustacheTemplateEngineTest {
                 .setArguments(OBJECT_MAPPER.readTree("" +
                         "{" + NEW_LINE +
                         "    'statusCode': 200," + NEW_LINE +
-                        "    'body': \"{'key': 'Sayings of the Century', 'value': 'red'}\"" + NEW_LINE +
+                        "    'body': \"{'titles': ['Sayings of the Century', 'Moby Dick'], 'bikeColor': 'red'}\"" + NEW_LINE +
                         "}" + NEW_LINE),
                     template,
                     request

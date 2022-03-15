@@ -669,6 +669,101 @@ lastmod: 2019-11-10T08:00:00+01:00
   "body" : "{'headers': ['1:host', '2:content-type']}"
 }</code></pre>
 
+<h4>JsonPath</h4>
+
+<p>It is possible to use JsonPath expressions to extract values from request bodies containing JSON with a <code class="inline code">&lbrace;&lbrace;#jsonPath&rbrace;&rbrace;</code> section, follow by a <code class="inline code">&lbrace;&lbrace;#jsonPathResult&rbrace;&rbrace;</code> section</p>
+
+<p>For details of the full JsonPath syntax please see <a target="_blank" href="https://github.com/json-path/JsonPath">github.com/json-path</a></p>
+
+<p>The following example template demonstrates using <code class="inline code">&lbrace;&lbrace;#jsonPath&rbrace;&rbrace;</code> follow by <code class="inline code">&lbrace;&lbrace;#jsonPathResult&rbrace;&rbrace;</code> to extract a list and single value from a request body:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+    'statusCode': 200,
+    'body': "{'titles': &lbrace;&lbrace;#jsonPath&rbrace;&rbrace;$.store.book&lbrace;&lbrace;/jsonPath&rbrace;&rbrace;[&lbrace;&lbrace;#jsonPathResult&rbrace;&rbrace;&lbrace;&lbrace;^-first&rbrace;&rbrace;, &lbrace;&lbrace;/-first&rbrace;&rbrace;'&lbrace;&lbrace;title&rbrace;&rbrace;'&lbrace;&lbrace;/jsonPathResult&rbrace;&rbrace;], 'bikeColor': '&lbrace;&lbrace;#jsonPath&rbrace;&rbrace;$.store.bicycle.color&lbrace;&lbrace;/jsonPath&rbrace;&rbrace;&lbrace;&lbrace;jsonPathResult&rbrace;&rbrace;'}"
+}</code></pre>
+
+<p>In this example the first JsonPath expression <code class="inline code">$.store.book</code> returns a list of objects which is iterated over in the section <code class="inline code">&lbrace;&lbrace;#jsonPathResult&rbrace;&rbrace;</code>.</p>
+<p>The second JsonPath expression <code class="inline code">$.store.bicycle.color</code> returns a single value which is returned using the variable tag <code class="inline code">&lbrace;&lbrace;jsonPathResult&rbrace;&rbrace;</code>.</p>
+
+<p>Given the following request:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "path" : "/somePath",
+  "body" : {
+    "store" : {
+      "book" : [ {
+        "category" : "reference",
+        "author" : "Nigel Rees",
+        "title" : "Sayings of the Century",
+        "price" : 18.95
+      }, {
+        "category" : "fiction",
+        "author" : "Herman Melville",
+        "title" : "Moby Dick",
+        "isbn" : "0-553-21311-3",
+        "price" : 8.99
+      } ],
+      "bicycle" : {
+        "color" : "red",
+        "price" : 19.95
+      }
+    },
+    "expensive" : 10
+  }
+}</code></pre>
+
+<p>The example produces:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "statusCode" : 200,
+  "body" : "{'titles': ['Sayings of the Century', 'Moby Dick'], 'bikeColor': 'red'}"
+}</code></pre>
+
+<h4>XPath</h4>
+
+<p>It is possible to use XPath expressions to extract values from request bodies containing XML with a <code class="inline code">&lbrace;&lbrace;#xPath&rbrace;&rbrace;</code> section.</p>
+<p>The result of all XPath expressions are converted to a string due to the inherent limitations with XML.</p>
+
+<p>For a quick summary the XPath syntax please see <a target="_blank" href="https://www.w3schools.com/xml/xpath_syntax.asp">w3schools</a>, for details of the full XPath syntax please see <a target="_blank" href="https://www.w3.org/TR/1999/REC-xpath-19991116/#path-abbrev">www.w3.org</a></p>
+
+<p>The following example template demonstrates using <code class="inline code">&lbrace;&lbrace;#xPath&rbrace;&rbrace;</code> to multiple items from a request body:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+    'statusCode': 200,
+    'body': "{'titles': ['&lbrace;&lbrace;#xPath&rbrace;&rbrace;/store/book/title&lbrace;&lbrace;/xPath&rbrace;&rbrace;', '&lbrace;&lbrace;#xPath&rbrace;&rbrace;//book[2]/title&lbrace;&lbrace;/xPath&rbrace;&rbrace;'], 'bikeColor': '&lbrace;&lbrace;#xPath&rbrace;&rbrace;//bicycle/color&lbrace;&lbrace;/xPath&rbrace;&rbrace;'}"
+}</code></pre>
+
+<p>Given a request with the following xml body:</p>
+
+<pre class="prettyprint lang-xml code"><code class="code">&lt;?xml version="1.0" encoding="UTF-8" ?&gt;
+&lt;store&gt;
+  &lt;book&gt;
+    &lt;category&gt;reference&lt;/category&gt;
+    &lt;author&gt;Nigel Rees&lt;/author&gt;
+    &lt;title&gt;Sayings of the Century&lt;/title&gt;
+    &lt;price&gt;18.95&lt;/price&gt;
+  &lt;/book&gt;
+  &lt;book&gt;
+    &lt;category&gt;fiction&lt;/category&gt;
+    &lt;author&gt;Herman Melville&lt;/author&gt;
+    &lt;title&gt;Moby Dick&lt;/title&gt;
+    &lt;isbn&gt;0-553-21311-3&lt;/isbn&gt;
+    &lt;price&gt;8.99&lt;/price&gt;
+  &lt;/book&gt;
+  &lt;bicycle&gt;
+    &lt;color&gt;red&lt;/color&gt;
+    &lt;price&gt;19.95&lt;/price&gt;
+  &lt;/bicycle&gt;
+  &lt;expensive&gt;10&lt;/expensive&gt;
+&lt;/store&gt;</code></pre>
+
+<p>The example produces:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "statusCode" : 200,
+  "body" : "{'titles': ['Sayings of the Century', 'Moby Dick'], 'bikeColor': 'red'}"
+}</code></pre>
+
 <a id="velocity_templates" class="anchor" href="#velocity_templates">&nbsp;</a>
 
 <h2>Velocity Response Templates</h2>

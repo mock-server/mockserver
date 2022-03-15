@@ -2,9 +2,7 @@ package org.mockserver.templates.engine.mustache;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableMap;
 import com.jayway.jsonpath.JsonPath;
-import com.samskivert.mustache.DefaultCollector;
 import com.samskivert.mustache.Mustache;
 import com.samskivert.mustache.Template;
 import org.mockserver.log.model.LogEntry;
@@ -16,17 +14,14 @@ import org.mockserver.templates.engine.TemplateEngine;
 import org.mockserver.templates.engine.TemplateFunctions;
 import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
 import org.mockserver.templates.engine.serializer.HttpTemplateOutputDeserializer;
-import org.mockserver.uuid.UUIDService;
 import org.mockserver.xml.XPathEvaluator;
 import org.slf4j.event.Level;
 
 import javax.xml.xpath.XPathConstants;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
@@ -68,12 +63,11 @@ public class MustacheTemplateEngine implements TemplateEngine {
             Writer writer = new StringWriter();
             Template compiledTemplate = compiler.compile(template);
 
-            Map<String, Object> data = ImmutableMap.<String, Object>builder()
-                .put("request", new HttpRequestTemplateObject(request))
-                .putAll(TemplateFunctions.BUILT_IN_FUNCTIONS)
-                .put("xPath", (Mustache.Lambda) (frag, out) -> evaluatedXPath(frag.execute(), request, out))
-                .put("jsonPath", (Mustache.Lambda) (frag, out) -> evaluateJsonPath(frag.execute(), request, out))
-                .build();
+            Map<String, Object> data = new ConcurrentHashMap<>();
+            data.put("request", new HttpRequestTemplateObject(request));
+            data.putAll(TemplateFunctions.BUILT_IN_FUNCTIONS);
+            data.put("xPath", (Mustache.Lambda) (frag, out) -> evaluatedXPath(frag.execute(), request, out));
+            data.put("jsonPath", (Mustache.Lambda) (frag, out) -> evaluateJsonPath(data, frag.execute(), request, out));
             compiledTemplate.execute(data, writer);
             JsonNode generatedObject = null;
             try {
@@ -106,9 +100,10 @@ public class MustacheTemplateEngine implements TemplateEngine {
         return result;
     }
 
-    private void evaluateJsonPath(String jsonPath, HttpRequest request, Writer out) {
+    private void evaluateJsonPath(Map<String, Object> data, String jsonPath, HttpRequest request, Writer out) {
         try {
-            String jsonPathResult = JsonPath.compile(jsonPath).read(request.getBodyAsJsonOrXmlString()).toString();
+            Object jsonPathResult = JsonPath.compile(jsonPath).read(request.getBodyAsJsonOrXmlString());
+            data.put("jsonPathResult", jsonPathResult);
             if (MockServerLogger.isEnabled(Level.TRACE)) {
                 mockServerLogger.logEvent(
                     new LogEntry()
@@ -118,7 +113,7 @@ public class MustacheTemplateEngine implements TemplateEngine {
                         .setArguments(jsonPath, request.getBodyAsJsonOrXmlString(), jsonPathResult)
                 );
             }
-            out.write(jsonPathResult);
+            out.write("");
         } catch (Throwable throwable) {
             mockServerLogger.logEvent(
                 new LogEntry()

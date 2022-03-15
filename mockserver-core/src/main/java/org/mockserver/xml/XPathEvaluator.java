@@ -1,17 +1,14 @@
 package org.mockserver.xml;
 
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
-import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -24,7 +21,7 @@ public class XPathEvaluator extends ObjectWithReflectiveEqualsHashCodeToString {
     public XPathEvaluator(String expression, Map<String, String> namespacePrefixes) {
         XPath xpath = XPathFactory.newInstance().newXPath();
         if (namespacePrefixes != null) {
-            xpath.setNamespaceContext(new NamespaceContext(){
+            xpath.setNamespaceContext(new NamespaceContext() {
                 public String getNamespaceURI(String prefix) {
                     if (namespacePrefixes.containsKey(prefix)) {
                         return namespacePrefixes.get(prefix);
@@ -54,8 +51,8 @@ public class XPathEvaluator extends ObjectWithReflectiveEqualsHashCodeToString {
     public Object evaluateXPathExpression(String xmlAsString, StringToXmlDocumentParser.ErrorLogger errorLogger, QName returnType) {
         try {
             return xPathExpression.evaluate(stringToXmlDocumentParser.buildDocument(xmlAsString, errorLogger, namespaceAware), returnType);
-        } catch (XPathExpressionException | IOException | ParserConfigurationException | SAXException e) {
-            throw new RuntimeException(e.getMessage(), e);
+        } catch (Throwable throwable) {
+            throw new RuntimeException(throwable.getMessage(), throwable);
         }
     }
 
