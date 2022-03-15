@@ -5,9 +5,9 @@ pageOrder: 4
 section: 'Mock Server'
 subsection: true
 sitemap:
-  priority: 0.8
-  changefreq: 'monthly'
-  lastmod: 2019-11-10T08:00:00+01:00
+priority: 0.8
+changefreq: 'monthly'
+lastmod: 2019-11-10T08:00:00+01:00
 ---
 
 <a id="clustering_mockserver" class="anchor" href="#clustering_mockserver">&nbsp;</a>
@@ -16,14 +16,417 @@ sitemap:
 
 <p>MockServer supports the following response template formats:</p>
 <ul>
-  <li><strong><a href="#mustache_templates">mustache templates</a></strong>
-    <ul>
-      <li>uses mustache syntax</li>
-      <li>simple and easy to use</li>
-      <li>minimal conditional logic</li>
-      <li>works on JVM versions</li>
-    </ul>
-    <pre class="prettyprint lang-javascript code"><code class="code">new MockServerClient("localhost", 1080)
+    <li><strong><a href="#mustache_templates">mustache templates</a></strong>
+        <ul>
+            <li>uses mustache syntax</li>
+            <li>simple and easy to use</li>
+            <li>minimal conditional logic</li>
+            <li>works on all JVM versions</li>
+        </ul>
+    </li>
+    <li><strong><a href="#velocity_templates">velocity templates</a></strong>
+        <ul>
+            <li>uses <a href="https://velocity.apache.org/">Apache Velocity</a></li>
+            <li>supports complex conditional logic and loops</li>
+            <li>more complex to use</li>
+            <li>works on all JVM versions</li>
+        </ul>
+    </li>
+    <li><strong><a href="#javascript_templates">javascript templates</a></strong>
+        <ul>
+            <li>use Nashorn JavaScript engine</li>
+            <li>supports complex conditional logic and loops</li>
+            <li>more complex to use</li>
+            <li>requires Nashorn deprecated in Java 11 and removed from 15 onwards</li>
+        </ul>
+    </li>
+</ul>
+
+<a id="request_model_variables" class="anchor" href="#request_model_variables">&nbsp;</a>
+
+<h2>Request Model Variables</h2>
+
+<p>All templates formats have access to the following request fields</p>
+
+<ul>
+    <li><strong>method</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; request.method &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">$!request.method</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">request.method</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>path</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; request.path &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">$!request.path</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">request.path</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>path parameters</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; request.pathParameters.&lt;key&gt;.&lt;index&gt; &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">$!request.pathParameters[&lt;key&gt;][&lt;index&gt;]</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">request.pathParameters[&lt;key&gt;][&lt;index&gt;]</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>query string parameters</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; request.queryStringParameters.&lt;key&gt;.&lt;index&gt; &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">$!request.queryStringParameters[&lt;key&gt;][&lt;index&gt;]</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">request.queryStringParameters[&lt;key&gt;][&lt;index&gt;]</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>headers</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; request.headers.&lt;key&gt;.&lt;index&gt; &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">$!request.headers[&lt;key&gt;][&lt;index&gt;]</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">request.headers[&lt;key&gt;][&lt;index&gt;]</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>cookies</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; request.cookies.&lt;key&gt; &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">$!request.cookies[&lt;key&gt;]</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">request.cookies[&lt;key&gt;]</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>body</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; request.body &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">$!request.body</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">request.body</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>secure</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; request.secure &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">$!request.secure</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">request.secure</code></td>
+            </tr>
+        </table>
+    </li>
+</ul>
+
+<a id="dynamic_model_variables" class="anchor" href="#dynamic_model_variables">&nbsp;</a>
+
+<h2>Dynamic Model Variables</h2>
+
+<p>All templates formats have access to the following dynamic variable, which return unique values each time they are called</p>
+
+<ul>
+    <li><strong>date & time in ISO-8601 i.e. 2011-12-03T10:15:30Z</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; now_iso_8601 &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">$!now_iso_8601</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">now_iso_8601</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>unix epoch, the number of seconds that have elapsed since January 1, 1970</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; now_epoch &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">$!now_epoch</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">now_epoch</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>date & time in RFC 1123 i.e. Tue, 3 Jun 2008 11:05:30 GMT</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; now_rfc_1123 &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">$!now_rfc_1123</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">now_rfc_1123</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>uuid as string</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; uuid &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">$!uuid</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">uuid</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>random integer between 0 and 9 inclusive</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; rand_int_10 &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">$!rand_int_10</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">rand_int_10</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>random integer between 0 and 99 inclusive</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; rand_int_100 &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">$!rand_int_100</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">rand_int_100</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>random data 16 bytes long</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; rand_bytes_16 &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">$!rand_bytes_16</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">rand_bytes_16</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>random data 32 bytes long</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; rand_bytes_32 &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">$!rand_bytes_32</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">rand_bytes_32</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>random data 64 bytes long</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; rand_bytes_64 &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">$!rand_bytes_64</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">rand_bytes_64</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>random data 128 bytes long</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; rand_bytes_128 &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">$!rand_bytes_128</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="code" style="display: inline; padding: 0.5%;">rand_bytes_128</code></td>
+            </tr>
+        </table>
+    </li>
+</ul>
+
+<a id="mustache_templates" class="anchor" href="#mustache_templates">&nbsp;</a>
+
+<h2>Mustache Response Templates</h2>
+
+<p>The following shows a basic example for a mustache format response template</p>
+
+<pre class="prettyprint lang-javascript code"><code class="code">new ClientAndServer(1080)
     .when(request().withPath("/some/path"))
     .respond(
         template(
@@ -36,19 +439,65 @@ sitemap:
                 "     'headers': {\n" +
                 "          'Client-User-Agent': [ '&lbrace;&lbrace; request.headers.User-Agent.0 &rbrace;&rbrace;' ]\n" +
                 "     },\n" +
-                "     'body': &lbrace;&lbrace; request.body &rbrace;&rbrace;\n" +
+                "     'body': '&lbrace;&lbrace; request.body &rbrace;&rbrace;'\n" +
                 "}"
         )
     );</code></pre>
-  </li>
-  <li><strong><a href="#velocity_templates">velocity templates</a></strong>
-    <ul>
-      <li>uses <a href="https://velocity.apache.org/">Apache Velocity</a></li>
-      <li>supports complex conditional logic and loops</li>
-      <li>more complex to use</li>
-      <li>works on JVM versions</li>
-    </ul>
-    <pre class="prettyprint lang-javascript code"><code class="code">new MockServerClient("localhost", 1080)
+
+<h3>Mustache Syntax</h3>
+
+<h4>Sections</h4>
+
+<p>Sections render blocks of text one or more times, depending on the value of the key in the current context.</p>
+
+<p>A section begins with a pound and ends with a slash. That is, <code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace;#person&rbrace;&rbrace;</code> begins a "person" section while <code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace;/person&rbrace;&rbrace;</code> ends it.</p>
+
+<p>Sections behave as follows</p>
+<ul>
+    <li>Boolean values enable or disable the section.</li>
+    <li>Array, Iterator, or Iterable values repeatedly execute the section with each element used as the context for each iteration. Empty collections result in zero instances of the section being included in the template.</li>
+    <li>An unresolvable or null value is treated as false. This behavior can be changed by using strictSections(). See Default Values for more details.</li>
+    <li>Any other object results in a single execution of the section with that object as a context.</li>
+</ul>
+
+<p>The following section prints the name all headers</p>
+
+<pre class="prettyprint lang-java code"><code class="code">&lbrace;&lbrace;#request.headers&rbrace;&rbrace;
+  &lbrace;&lbrace;name&rbrace;&rbrace;
+&lbrace;&lbrace;/request.headers&rbrace;&rbrace;</code></pre>
+
+<h4>Inverted Sections</h4>
+
+<p>An inverted section begins with a caret (hat) and ends with a slash. That is <code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace;^person&rbrace;&rbrace;</code> begins a "person" inverted section while <code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace;/person&rbrace;&rbrace;</code> ends it.</p>
+
+<p>While sections can be used to render text one or more times based on the value of the key, inverted sections may render text once based on the inverse value of the key. That is, they will be rendered if the key doesn't exist, is false, or is an empty list.</p>
+
+<p>The following section prints the name of each item but prints <code class="code" style="display: inline; padding: 0.5%;">No items :(</code> if items is empty or null</p>
+
+<pre class="prettyprint lang-java code"><code class="code">&lbrace;&lbrace;#items&rbrace;&rbrace;
+  &lbrace;&lbrace;name&rbrace;&rbrace;
+&lbrace;&lbrace;/items&rbrace;&rbrace;
+&lbrace;&lbrace;^items&rbrace;&rbrace;
+  No items :(
+&lbrace;&lbrace;/items&rbrace;&rbrace;</code></pre>
+
+<h4>Special Variables</h4>
+
+<h4>-first and -last</h4>
+
+<p>You can use the special variables <code class="code" style="display: inline; padding: 0.5%;">-first</code> and <code class="code" style="display: inline; padding: 0.5%;">-last</code> to perform special processing for list elements.</p>
+<p><code class="code" style="display: inline; padding: 0.5%;">-first</code> resolves to true when inside a section that is processing the first of a list of elements, it resolves to false at all other times.</p>
+<p><code class="code" style="display: inline; padding: 0.5%;">-last</code> resolves to true when inside a section that is processing the last of a list of elements, it resolves to false at all other times.</p>
+
+<h4>-index</h4>
+
+<p>The <code class="code" style="display: inline; padding: 0.5%;">-index</code> special variable contains 1 for the first iteration through a section, 2 for the second, 3 for the third and so forth. It contains 0 at all other times. Note that it also contains 0 for a section that is populated by a singleton value rather than a list.</p>
+
+<a id="velocity_templates" class="anchor" href="#velocity_templates">&nbsp;</a>
+
+<h2>Velocity Response Templates</h2>
+
+<pre class="prettyprint lang-javascript code"><code class="code">new ClientAndServer(1080)
     .when(request().withPath("/some/path"))
     .respond(
         template(
@@ -61,19 +510,16 @@ sitemap:
                 "     'headers': {\n" +
                 "          'Client-User-Agent': [ '$!request.headers['User-Agent'][0]' ]\n" +
                 "     },\n" +
-                "     'body': $!request.body\n" +
+                "     'body': '$!request.body'\n" +
                 "}"
         )
     );</code></pre>
-  </li>
-  <li><strong><a href="#javascript_templates">javascript templates</a></strong>
-    <ul>
-      <li>use Nashorn JavaScript engine</li>
-      <li>supports complex conditional logic and loops</li>
-      <li>more complex to use</li>
-      <li>Nashorn has been deprecated in Java 11 and removed from 15 onwards</li>
-    </ul>
-    <pre class="prettyprint lang-javascript code"><code class="code">new MockServerClient("localhost", 1080)
+
+<a id="javascript_templates" class="anchor" href="#javascript_templates">&nbsp;</a>
+
+<h2>JavaScript Response Templates</h2>
+
+<pre class="prettyprint lang-javascript code"><code class="code">new ClientAndServer(1080)
     .when(request().withPath("/some/path"))
     .respond(
         template(
@@ -90,5 +536,3 @@ sitemap:
                 "};"
         )
     );</code></pre>
-  </li>
-</ul>

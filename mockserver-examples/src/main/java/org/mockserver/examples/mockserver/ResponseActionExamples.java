@@ -2,6 +2,7 @@ package org.mockserver.examples.mockserver;
 
 import com.google.common.io.ByteStreams;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.integration.ClientAndServer;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.HttpTemplate;
@@ -219,7 +220,7 @@ public class ResponseActionExamples {
     }
 
     public void javascriptTemplatedResponse() {
-        new MockServerClient("localhost", 1080)
+        new ClientAndServer(1080)
             .when(request().withPath("/some/path"))
             .respond(
                 template(
@@ -266,7 +267,7 @@ public class ResponseActionExamples {
     }
 
     public void velocityTemplatedResponse() {
-        new MockServerClient("localhost", 1080)
+        new ClientAndServer(1080)
             .when(request().withPath("/some/path"))
             .respond(
                 template(
@@ -279,14 +280,14 @@ public class ResponseActionExamples {
                         "     'headers': {\n" +
                         "          'Client-User-Agent': [ '$!request.headers['User-Agent'][0]' ]\n" +
                         "     },\n" +
-                        "     'body': $!request.body\n" +
+                        "     'body': '$!request.body'\n" +
                         "}"
                 )
             );
     }
 
     public void mustacheTemplatedResponse() {
-        new MockServerClient("localhost", 1080)
+        new ClientAndServer(1080)
             .when(request().withPath("/some/path"))
             .respond(
                 template(
@@ -299,7 +300,7 @@ public class ResponseActionExamples {
                         "     'headers': {\n" +
                         "          'Client-User-Agent': [ '{{ request.headers.User-Agent.0 }}' ]\n" +
                         "     },\n" +
-                        "     'body': {{ request.body }}\n" +
+                        "     'body': '{{ request.body }}'\n" +
                         "}"
                 )
             );
