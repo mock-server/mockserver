@@ -28,6 +28,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -122,6 +123,168 @@ public class MustacheTemplateEngineTest {
                     request
                 )
         );
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithMustacheResponseTemplateWithLoopOverEntrySet() throws JsonProcessingException {
+        // given
+        String template = "{" + NEW_LINE +
+            "    'statusCode': 200," + NEW_LINE +
+            "    'body': \"{'headers': [{{#request.headers.entrySet}}{{^-first}}, {{/-first}}'{{ key }}={{ value.0 }}'{{/request.headers.entrySet}}]}\"" + NEW_LINE +
+            "}";
+        HttpRequest request = request()
+            .withPath("/somePath")
+            .withMethod("POST")
+            .withHeader(HOST.toString(), "mock-server.com")
+            .withHeader(CONTENT_TYPE.toString(), "plain/text")
+            .withBody("some_body");
+
+        // when
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+
+        // then
+        assertThat(actualHttpResponse, is(
+            response()
+                .withStatusCode(200)
+                .withBody("{'headers': ['host=mock-server.com', 'content-type=plain/text']}")
+        ));
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(TEMPLATE_GENERATED)
+                .setLogLevel(INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("generated output:{}from template:{}for request:{}")
+                .setArguments(OBJECT_MAPPER.readTree("" +
+                        "{" + NEW_LINE +
+                        "    'statusCode': 200," + NEW_LINE +
+                        "    'body': \"{'headers': ['host=mock-server.com', 'content-type=plain/text']}\"" + NEW_LINE +
+                        "}" + NEW_LINE),
+                    template,
+                    request
+                )
+        );
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithMustacheResponseTemplateWithLoopOverValuesUsingThis() throws JsonProcessingException {
+        // given
+        String template = "{" + NEW_LINE +
+            "    'statusCode': 200," + NEW_LINE +
+            "    'body': \"{'headers': [{{#request.headers.values}}{{^-first}}, {{/-first}}'{{ this.0 }}'{{/request.headers.values}}]}\"" + NEW_LINE +
+            "}";
+        HttpRequest request = request()
+            .withPath("/somePath")
+            .withMethod("POST")
+            .withHeader(HOST.toString(), "mock-server.com")
+            .withHeader(CONTENT_TYPE.toString(), "plain/text")
+            .withBody("some_body");
+
+        // when
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+
+        // then
+        assertThat(actualHttpResponse, is(
+            response()
+                .withStatusCode(200)
+                .withBody("{'headers': ['mock-server.com', 'plain/text']}")
+        ));
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(TEMPLATE_GENERATED)
+                .setLogLevel(INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("generated output:{}from template:{}for request:{}")
+                .setArguments(OBJECT_MAPPER.readTree("" +
+                        "{" + NEW_LINE +
+                        "    'statusCode': 200," + NEW_LINE +
+                        "    'body': \"{'headers': ['mock-server.com', 'plain/text']}\"" + NEW_LINE +
+                        "}" + NEW_LINE),
+                    template,
+                    request
+                )
+        );
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithMustacheResponseTemplateWithLoopOverKeysUsingThis() throws JsonProcessingException {
+        // given
+        String template = "{" + NEW_LINE +
+            "    'statusCode': 200," + NEW_LINE +
+            "    'body': \"{'headers': [{{#request.headers.keySet}}{{^-first}}, {{/-first}}'{{ -index }}:{{ this }}'{{/request.headers.keySet}}]}\"" + NEW_LINE +
+            "}";
+        HttpRequest request = request()
+            .withPath("/somePath")
+            .withMethod("POST")
+            .withHeader(HOST.toString(), "mock-server.com")
+            .withHeader(CONTENT_TYPE.toString(), "plain/text")
+            .withBody("some_body");
+
+        // when
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+
+        // then
+        assertThat(actualHttpResponse, is(
+            response()
+                .withStatusCode(200)
+                .withBody("{'headers': ['1:host', '2:content-type']}")
+        ));
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(TEMPLATE_GENERATED)
+                .setLogLevel(INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("generated output:{}from template:{}for request:{}")
+                .setArguments(OBJECT_MAPPER.readTree("" +
+                        "{" + NEW_LINE +
+                        "    'statusCode': 200," + NEW_LINE +
+                        "    'body': \"{'headers': ['1:host', '2:content-type']}\"" + NEW_LINE +
+                        "}" + NEW_LINE),
+                    template,
+                    request
+                )
+        );
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithMustacheResponseTemplateWithIf() {
+        // given
+        String template = "{" + NEW_LINE +
+            "    'statusCode': 200," + NEW_LINE +
+            "    'body': \"{{#request.body}}inside_if_{{ this }}{{/request.body}}\"" + NEW_LINE +
+            "}";
+        HttpRequest nonEmptyBodyRequest = request()
+            .withPath("/somePath")
+            .withMethod("POST")
+            .withHeader(HOST.toString(), "mock-server.com")
+            .withHeader(CONTENT_TYPE.toString(), "plain/text")
+            .withBody("some_body");
+
+        // when
+        HttpResponse nonEmptyBodyActualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, nonEmptyBodyRequest, HttpResponseDTO.class);
+
+        // then
+        assertThat(nonEmptyBodyActualHttpResponse, is(
+            response()
+                .withStatusCode(200)
+                .withBody("inside_if_some_body")
+        ));
+
+        // then
+        HttpRequest emptyBodyRequest = request()
+            .withPath("/somePath")
+            .withMethod("POST")
+            .withHeader(HOST.toString(), "mock-server.com")
+            .withHeader(CONTENT_TYPE.toString(), "plain/text");
+
+        // when
+        HttpResponse emptyBodyActualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, emptyBodyRequest, HttpResponseDTO.class);
+
+        // then
+        assertThat(emptyBodyActualHttpResponse, is(
+            response()
+                .withStatusCode(200)
+                .withBody("")
+        ));
     }
 
     @Test
@@ -612,42 +775,42 @@ public class MustacheTemplateEngineTest {
     }
 
     @Test
-    public void shouldHandleHttpRequestsWithMustacheResponseTemplateInvalidFields() {
+    public void shouldHandleHttpRequestsWithMustacheResponseTemplateInvalidFields() throws JsonProcessingException {
         // given
         String template = "{" + NEW_LINE +
             "    'statusCode': 200," + NEW_LINE +
             "    'body': \"{'method': '{{ request.method.invalid }}', 'path': '{{ request.invalid }}', 'headers': '{{ invalid.headers.host.0 }}'}\"" + NEW_LINE +
             "}";
+        HttpRequest request = request()
+            .withPath("/somePath")
+            .withMethod("POST")
+            .withHeader(HOST.toString(), "mock-server.com")
+            .withBody("some_body".getBytes(StandardCharsets.UTF_8));
 
         // when
-        RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request()
-                .withPath("/somePath")
-                .withHeader(HOST.toString(), "mock-server.com")
-                .withBody("some_body"),
-            HttpRequestDTO.class
-        ));
+        HttpResponse actualHttpResponse = new MustacheTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
 
         // then
-        assertThat(runtimeException.getMessage(), is("Exception:" + NEW_LINE +
-            "" + NEW_LINE +
-            "  No method or field with name 'request.method.invalid' on line 3" + NEW_LINE +
-            "" + NEW_LINE +
-            " transforming template:" + NEW_LINE +
-            "" + NEW_LINE +
-            "  {" + NEW_LINE +
-            "      'statusCode': 200," + NEW_LINE +
-            "      'body': \"{'method': '{{ request.method.invalid }}', 'path': '{{ request.invalid }}', 'headers': '{{ invalid.headers.host.0 }}'}\"" + NEW_LINE +
-            "  }" + NEW_LINE +
-            "" + NEW_LINE +
-            " for request:" + NEW_LINE +
-            "" + NEW_LINE +
-            "  {" + NEW_LINE +
-            "    \"path\" : \"/somePath\"," + NEW_LINE +
-            "    \"headers\" : {" + NEW_LINE +
-            "      \"host\" : [ \"mock-server.com\" ]" + NEW_LINE +
-            "    }," + NEW_LINE +
-            "    \"body\" : \"some_body\"" + NEW_LINE +
-            "  }" + NEW_LINE));
+        assertThat(actualHttpResponse, is(
+            response()
+                .withStatusCode(200)
+                .withBody("{'method': '', 'path': '', 'headers': ''}")
+        ));
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(TEMPLATE_GENERATED)
+                .setLogLevel(INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("generated output:{}from template:{}for request:{}")
+                .setArguments(OBJECT_MAPPER.readTree("" +
+                        "{" + NEW_LINE +
+                        "    'statusCode': 200," + NEW_LINE +
+                        "    'body': \"{'method': '', 'path': '', 'headers': ''}\"" + NEW_LINE +
+                        "}" + NEW_LINE),
+                    template,
+                    request
+                )
+        );
     }
 
     @Test

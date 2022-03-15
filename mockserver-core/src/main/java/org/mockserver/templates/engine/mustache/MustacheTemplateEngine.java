@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.jayway.jsonpath.JsonPath;
+import com.samskivert.mustache.DefaultCollector;
 import com.samskivert.mustache.Mustache;
 import com.samskivert.mustache.Template;
 import org.mockserver.log.model.LogEntry;
@@ -42,6 +43,7 @@ public class MustacheTemplateEngine implements TemplateEngine {
 
     private static ObjectMapper objectMapper;
     private final MockServerLogger mockServerLogger;
+    private final Mustache.Compiler compiler;
     private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer;
 
     public MustacheTemplateEngine(MockServerLogger mockServerLogger) {
@@ -50,6 +52,13 @@ public class MustacheTemplateEngine implements TemplateEngine {
         if (objectMapper == null) {
             objectMapper = ObjectMapperFactory.createObjectMapper();
         }
+        compiler = Mustache
+            .compiler()
+            .emptyStringIsFalse(true)
+            .zeroIsFalse(true)
+            .strictSections(false)
+            .defaultValue("")
+            .withCollector(new ExtendedCollector());
     }
 
     @Override
@@ -57,7 +66,7 @@ public class MustacheTemplateEngine implements TemplateEngine {
         T result;
         try {
             Writer writer = new StringWriter();
-            Template compiledTemplate = Mustache.compiler().compile(template);
+            Template compiledTemplate = compiler.compile(template);
 
             Map<String, Object> data = ImmutableMap.<String, Object>builder()
                 .put("request", new HttpRequestTemplateObject(request))

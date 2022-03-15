@@ -20,23 +20,23 @@ lastmod: 2019-11-10T08:00:00+01:00
         <ul>
             <li>uses mustache syntax</li>
             <li>simple and easy to use</li>
-            <li>minimal conditional logic</li>
+            <li>simple conditional logic</li>
             <li>works on all JVM versions</li>
         </ul>
     </li>
     <li><strong><a href="#velocity_templates">velocity templates</a></strong>
         <ul>
             <li>uses <a href="https://velocity.apache.org/">Apache Velocity</a></li>
-            <li>supports complex conditional logic and loops</li>
             <li>more complex to use</li>
+            <li>supports more complex logic</li>
             <li>works on all JVM versions</li>
         </ul>
     </li>
     <li><strong><a href="#javascript_templates">javascript templates</a></strong>
         <ul>
             <li>use Nashorn JavaScript engine</li>
-            <li>supports complex conditional logic and loops</li>
             <li>more complex to use</li>
+            <li>supports more complex logic</li>
             <li>requires Nashorn deprecated in Java 11 and removed from 15 onwards</li>
         </ul>
     </li>
@@ -53,19 +53,19 @@ lastmod: 2019-11-10T08:00:00+01:00
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; request.method &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; request.method &rbrace;&rbrace;</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">$!request.method</code></td>
+                <td><code class="inline code">$!request.method</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">request.method</code></td>
+                <td><code class="inline code">request.method</code></td>
             </tr>
         </table>
     </li>
@@ -73,99 +73,99 @@ lastmod: 2019-11-10T08:00:00+01:00
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; request.path &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; request.path &rbrace;&rbrace;</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">$!request.path</code></td>
+                <td><code class="inline code">$!request.path</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">request.path</code></td>
+                <td><code class="inline code">request.path</code></td>
             </tr>
         </table>
     </li>
-    <li><strong>path parameters</strong>
+    <li><strong>path parameters</strong>&nbsp;&nbsp;<span>(see below for multi-value map access patterns)</span>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; request.pathParameters.&lt;key&gt;.&lt;index&gt; &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; request.pathParameters.&lt;key&gt;.&lt;index&gt; &rbrace;&rbrace;</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">$!request.pathParameters[&lt;key&gt;][&lt;index&gt;]</code></td>
+                <td><code class="inline code">$!request.pathParameters[&lt;key&gt;][&lt;index&gt;]</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">request.pathParameters[&lt;key&gt;][&lt;index&gt;]</code></td>
+                <td><code class="inline code">request.pathParameters[&lt;key&gt;][&lt;index&gt;]</code></td>
             </tr>
         </table>
     </li>
-    <li><strong>query string parameters</strong>
+    <li><strong>query string parameters</strong>&nbsp;&nbsp;<span>(see below for multi-value map access patterns)</span>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; request.queryStringParameters.&lt;key&gt;.&lt;index&gt; &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; request.queryStringParameters.&lt;key&gt;.&lt;index&gt; &rbrace;&rbrace;</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">$!request.queryStringParameters[&lt;key&gt;][&lt;index&gt;]</code></td>
+                <td><code class="inline code">$!request.queryStringParameters[&lt;key&gt;][&lt;index&gt;]</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">request.queryStringParameters[&lt;key&gt;][&lt;index&gt;]</code></td>
+                <td><code class="inline code">request.queryStringParameters[&lt;key&gt;][&lt;index&gt;]</code></td>
             </tr>
         </table>
     </li>
-    <li><strong>headers</strong>
+    <li><strong>headers</strong>&nbsp;&nbsp;<span>(see below for multi-value map access patterns)</span>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; request.headers.&lt;key&gt;.&lt;index&gt; &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; request.headers.&lt;key&gt;.&lt;index&gt; &rbrace;&rbrace;</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">$!request.headers[&lt;key&gt;][&lt;index&gt;]</code></td>
+                <td><code class="inline code">$!request.headers[&lt;key&gt;][&lt;index&gt;]</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">request.headers[&lt;key&gt;][&lt;index&gt;]</code></td>
+                <td><code class="inline code">request.headers[&lt;key&gt;][&lt;index&gt;]</code></td>
             </tr>
         </table>
     </li>
-    <li><strong>cookies</strong>
+    <li><strong>cookies</strong>&nbsp;&nbsp;<span>(see below for single-value map access patterns)</span>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; request.cookies.&lt;key&gt; &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; request.cookies.&lt;key&gt; &rbrace;&rbrace;</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">$!request.cookies[&lt;key&gt;]</code></td>
+                <td><code class="inline code">$!request.cookies[&lt;key&gt;]</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">request.cookies[&lt;key&gt;]</code></td>
+                <td><code class="inline code">request.cookies[&lt;key&gt;]</code></td>
             </tr>
         </table>
     </li>
@@ -173,19 +173,19 @@ lastmod: 2019-11-10T08:00:00+01:00
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; request.body &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; request.body &rbrace;&rbrace;</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">$!request.body</code></td>
+                <td><code class="inline code">$!request.body</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">request.body</code></td>
+                <td><code class="inline code">request.body</code></td>
             </tr>
         </table>
     </li>
@@ -193,21 +193,127 @@ lastmod: 2019-11-10T08:00:00+01:00
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; request.secure &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; request.secure &rbrace;&rbrace;</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">$!request.secure</code></td>
+                <td><code class="inline code">$!request.secure</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">request.secure</code></td>
+                <td><code class="inline code">request.secure</code></td>
             </tr>
         </table>
+    </li>
+</ul>
+
+<a id="request_multi_value_maps" class="anchor" href="#request_multi_value_maps">&nbsp;</a>
+
+<h2>Request Multi-Value And Single Value Maps</h2>
+
+<p>The <code class="inline_code">request</code> variable contains the follow multi-value maps fields:</p>
+<ul>
+    <li><code class="inline_code">request.headers</code></li>
+    <li><code class="inline_code">request.pathParameters</code></li>
+    <li><code class="inline_code">request.queryStringParameters</code></li>
+</ul>
+<p>The <code class="inline_code">request</code> variable contains the follow single-value maps fields:</p>
+<ul>
+    <li><code class="inline_code">request.cookies</code></li>
+</ul>
+<p>These multi-value or single-value maps can be accessed in the following ways:</p>
+
+<ul>
+    <li><strong>values by key</strong>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.headers.&lt;key&gt;.&lt;index&gt; &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.queryStringParameters.&lt;key&gt;.&lt;index&gt; &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.headers.&lt;key&gt;.&lt;index&gt; &rbrace;&rbrace;</code></td>
+            </tr>
+        </table></div>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.pathParameters[&lt;key&gt;][&lt;index&gt;]</code><br/><code class="inline code">$!request.queryStringParameters[&lt;key&gt;][&lt;index&gt;]</code><br/><code class="inline code">$!request.headers[&lt;key&gt;][&lt;index&gt;]</code><br/></td>
+            </tr>
+        </table></div>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.pathParameters[&lt;key&gt;][&lt;index&gt;]</code><br/><code class="inline code">request.queryStringParameters[&lt;key&gt;][&lt;index&gt;]</code><br/><code class="inline code">request.headers[&lt;key&gt;][&lt;index&gt;]</code><br/></td>
+            </tr>
+        </table></div>
+    </li>
+    <li><strong>entries as set</strong>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px"></td>
+                <td>each entry has a <code class="inline code">key</code> and a <code class="inline code">value</code> field<br/>for multi-value maps the <code class="inline code">value</code> is a list<br/>for single-value maps the <code class="inline code">value</code> is a string</td>
+            </tr>
+        </table></div>
+
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.pathParameters.entrySet &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.queryStringParameters.entrySet &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.headers.entrySet &rbrace;&rbrace;</code><br/></td>
+            </tr>
+        </table></div>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.pathParameters.entrySet</code><br/><code class="inline code">$!request.queryStringParameters.entrySet</code><br/><code class="inline code">$!request.headers.entrySet</code><br/></td>
+            </tr>
+        </table></div>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.pathParameters.entrySet</code><br/><code class="inline code">request.queryStringParameters.entrySet</code><br/><code class="inline code">request.headers.entrySet</code><br/></td>
+            </tr>
+        </table></div>
+    </li>
+    <li><strong>values as list</strong>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.pathParameters.values &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.queryStringParameters.values &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.headers.values &rbrace;&rbrace;</code><br/></td>
+            </tr>
+        </table></div>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.pathParameters.values</code><br/><code class="inline code">$!request.queryStringParameters.values</code><br/><code class="inline code">$!request.headers.values</code><br/></td>
+            </tr>
+        </table></div>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.pathParameters.values</code><br/><code class="inline code">request.queryStringParameters.values</code><br/><code class="inline code">request.headers.values</code><br/></td>
+            </tr>
+        </table></div>
+    </li>
+    <li><strong>keys as set</strong>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.pathParameters.keySet &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.queryStringParameters.keySet &rbrace;&rbrace;</code><br/><code class="inline code">&lbrace;&lbrace; request.headers.keySet &rbrace;&rbrace;</code><br/></td>
+            </tr>
+        </table></div>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.pathParameters.keySet</code><br/><code class="inline code">$!request.queryStringParameters.keySet</code><br/><code class="inline code">$!request.headers.keySet</code><br/></td>
+            </tr>
+        </table></div>
+        <div style="padding: 20px 0"><table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.pathParameters.keySet</code><br/><code class="inline code">request.queryStringParameters.keySet</code><br/><code class="inline code">request.headers.keySet</code><br/></td>
+            </tr>
+        </table></div>
     </li>
 </ul>
 
@@ -215,26 +321,26 @@ lastmod: 2019-11-10T08:00:00+01:00
 
 <h2>Dynamic Model Variables</h2>
 
-<p>All templates formats have access to the following dynamic variable, which return unique values each time they are called</p>
+<p>All templates formats also have access to the following built-in dynamic variables. They return unique values each time they are used.</p>
 
 <ul>
     <li><strong>date & time in ISO-8601 i.e. 2011-12-03T10:15:30Z</strong>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; now_iso_8601 &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; now_iso_8601 &rbrace;&rbrace;</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">$!now_iso_8601</code></td>
+                <td><code class="inline code">$!now_iso_8601</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">now_iso_8601</code></td>
+                <td><code class="inline code">now_iso_8601</code></td>
             </tr>
         </table>
     </li>
@@ -242,19 +348,19 @@ lastmod: 2019-11-10T08:00:00+01:00
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; now_epoch &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; now_epoch &rbrace;&rbrace;</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">$!now_epoch</code></td>
+                <td><code class="inline code">$!now_epoch</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">now_epoch</code></td>
+                <td><code class="inline code">now_epoch</code></td>
             </tr>
         </table>
     </li>
@@ -262,19 +368,19 @@ lastmod: 2019-11-10T08:00:00+01:00
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; now_rfc_1123 &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; now_rfc_1123 &rbrace;&rbrace;</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">$!now_rfc_1123</code></td>
+                <td><code class="inline code">$!now_rfc_1123</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">now_rfc_1123</code></td>
+                <td><code class="inline code">now_rfc_1123</code></td>
             </tr>
         </table>
     </li>
@@ -282,19 +388,19 @@ lastmod: 2019-11-10T08:00:00+01:00
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; uuid &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; uuid &rbrace;&rbrace;</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">$!uuid</code></td>
+                <td><code class="inline code">$!uuid</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">uuid</code></td>
+                <td><code class="inline code">uuid</code></td>
             </tr>
         </table>
     </li>
@@ -302,19 +408,19 @@ lastmod: 2019-11-10T08:00:00+01:00
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; rand_int_10 &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; rand_int_10 &rbrace;&rbrace;</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">$!rand_int_10</code></td>
+                <td><code class="inline code">$!rand_int_10</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">rand_int_10</code></td>
+                <td><code class="inline code">rand_int_10</code></td>
             </tr>
         </table>
     </li>
@@ -322,19 +428,19 @@ lastmod: 2019-11-10T08:00:00+01:00
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; rand_int_100 &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; rand_int_100 &rbrace;&rbrace;</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">$!rand_int_100</code></td>
+                <td><code class="inline code">$!rand_int_100</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">rand_int_100</code></td>
+                <td><code class="inline code">rand_int_100</code></td>
             </tr>
         </table>
     </li>
@@ -342,19 +448,19 @@ lastmod: 2019-11-10T08:00:00+01:00
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; rand_bytes_16 &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; rand_bytes_16 &rbrace;&rbrace;</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">$!rand_bytes_16</code></td>
+                <td><code class="inline code">$!rand_bytes_16</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">rand_bytes_16</code></td>
+                <td><code class="inline code">rand_bytes_16</code></td>
             </tr>
         </table>
     </li>
@@ -362,19 +468,19 @@ lastmod: 2019-11-10T08:00:00+01:00
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; rand_bytes_32 &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; rand_bytes_32 &rbrace;&rbrace;</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">$!rand_bytes_32</code></td>
+                <td><code class="inline code">$!rand_bytes_32</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">rand_bytes_32</code></td>
+                <td><code class="inline code">rand_bytes_32</code></td>
             </tr>
         </table>
     </li>
@@ -382,19 +488,19 @@ lastmod: 2019-11-10T08:00:00+01:00
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; rand_bytes_64 &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; rand_bytes_64 &rbrace;&rbrace;</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">$!rand_bytes_64</code></td>
+                <td><code class="inline code">$!rand_bytes_64</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">rand_bytes_64</code></td>
+                <td><code class="inline code">rand_bytes_64</code></td>
             </tr>
         </table>
     </li>
@@ -402,19 +508,19 @@ lastmod: 2019-11-10T08:00:00+01:00
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px">mustache:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace; rand_bytes_128 &rbrace;&rbrace;</code></td>
+                <td><code class="inline code">&lbrace;&lbrace; rand_bytes_128 &rbrace;&rbrace;</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">velocity:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">$!rand_bytes_128</code></td>
+                <td><code class="inline code">$!rand_bytes_128</code></td>
             </tr>
         </table>
         <table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="code" style="display: inline; padding: 0.5%;">rand_bytes_128</code></td>
+                <td><code class="inline code">rand_bytes_128</code></td>
             </tr>
         </table>
     </li>
@@ -446,52 +552,122 @@ lastmod: 2019-11-10T08:00:00+01:00
 
 <h3>Mustache Syntax</h3>
 
+
+<h4>Variables</h4>
+
+<p>In mustache a variable is referenced using double braces, for example, <code class="inline code">&lbrace;&lbrace; request.method &rbrace;&rbrace;</code> will print the <strong>method</strong> field of the <strong>request</strong>
+    variable.</p>
+<p><code class="inline code">&lbrace;&lbrace; name &rbrace;&rbrace;</code> will try to find the <strong>name</strong> key in the current model context; which can be changed, using sections, as described below.</p>
+<p>If no matching field is found an empty string will be returned.</p>
+
+<p>The following basic template example demonstrates using multiple variables:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  'statusCode': 200,
+  'body': {
+    'method': '&lbrace;&lbrace; request.method &rbrace;&rbrace;',
+    'path': '&lbrace;&lbrace; request.path &rbrace;&rbrace;',
+    'headers': '&lbrace;&lbrace; request.headers.host.0 &rbrace;&rbrace;'
+  }
+}</code></pre>
+
 <h4>Sections</h4>
 
-<p>Sections render blocks of text one or more times, depending on the value of the key in the current context.</p>
-
-<p>A section begins with a pound and ends with a slash. That is, <code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace;#person&rbrace;&rbrace;</code> begins a "person" section while <code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace;/person&rbrace;&rbrace;</code> ends it.</p>
-
-<p>Sections behave as follows</p>
+<p>Sections have the following uses:</p>
 <ul>
-    <li>Boolean values enable or disable the section.</li>
-    <li>Array, Iterator, or Iterable values repeatedly execute the section with each element used as the context for each iteration. Empty collections result in zero instances of the section being included in the template.</li>
-    <li>An unresolvable or null value is treated as false. This behavior can be changed by using strictSections(). See Default Values for more details.</li>
-    <li>Any other object results in a single execution of the section with that object as a context.</li>
+    <li>to change the model context</li>
+    <li>as an if-else-statement</li>
+    <li>to loop over arrays or iterables</li>
 </ul>
 
-<p>The following section prints the name all headers</p>
+<p>A section begins with a tag starting with a pound and ends with a matching tag starting with a slash.</p>
+<p>For example <code class="inline code">&lbrace;&lbrace;#request.cookies&rbrace;&rbrace;</code> starts a <strong>request.cookies</strong> section and <code class="inline code">&lbrace;&lbrace;/request.cookies&rbrace;&rbrace;</code> closes the section.</p>
 
-<pre class="prettyprint lang-java code"><code class="code">&lbrace;&lbrace;#request.headers&rbrace;&rbrace;
-  &lbrace;&lbrace;name&rbrace;&rbrace;
-&lbrace;&lbrace;/request.headers&rbrace;&rbrace;</code></pre>
+<p>How a section behaves depends on the section's model variable as follows</p>
+<ul>
+    <li>boolean values enable or disable the section like an if-statement; with unresolvable variables, null variables or empty strings all being treated as false</li>
+    <li>arrays, iterators, and iterable variables cause the section to loop over each item; with empty collections never executing the section</li>
+    <li>other objects result in a single execution of the section using the section's model variable as the context</li>
+</ul>
+
+<p>The following example template demonstrates using a section to iterate the <strong>entrySet</strong> in the <strong>header</strong> map:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  'statusCode': 200,
+  'body': "{'headers': '&lbrace;&lbrace;#request.headers.entrySet&rbrace;&rbrace;&lbrace;&lbrace; key &rbrace;&rbrace;=&lbrace;&lbrace; value.0 &rbrace;&rbrace; &lbrace;&lbrace;/request.headers.entrySet&rbrace;&rbrace;'}"
+}</code></pre>
+
+<p>And produces the following example output:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "statusCode" : 200,
+  "body" : "{'headers': 'host=mock-server.com content-type=plain/text '}"
+}</code></pre>
 
 <h4>Inverted Sections</h4>
 
-<p>An inverted section begins with a caret (hat) and ends with a slash. That is <code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace;^person&rbrace;&rbrace;</code> begins a "person" inverted section while <code class="code" style="display: inline; padding: 0.5%;">&lbrace;&lbrace;/person&rbrace;&rbrace;</code> ends it.</p>
+<p>An inverted section begins with a tag starting with a caret and ends with a matching tag starting with a slash.</p>
+<p>For example <code class="inline code">&lbrace;&lbrace;^-first&rbrace;&rbrace;</code> starts a <strong>-first</strong> section and <code class="inline code">&lbrace;&lbrace;/-first&rbrace;&rbrace;</code> closes the section.</p>
 
-<p>While sections can be used to render text one or more times based on the value of the key, inverted sections may render text once based on the inverse value of the key. That is, they will be rendered if the key doesn't exist, is false, or is an empty list.</p>
+<p>Inverted sections render once based on the inverse value of the key, they will be rendered if the key doesn't exist, is false, is an empty string, or is an empty list.</p>
 
-<p>The following section prints the name of each item but prints <code class="code" style="display: inline; padding: 0.5%;">No items :(</code> if items is empty or null</p>
+<p>The following example template demonstrates using a section to iterate the <strong>entrySet</strong> in the <strong>header</strong> map using an inverted section and the special variable <strong>-first</strong> to add commas before all headers except the first:</p>
 
-<pre class="prettyprint lang-java code"><code class="code">&lbrace;&lbrace;#items&rbrace;&rbrace;
-  &lbrace;&lbrace;name&rbrace;&rbrace;
-&lbrace;&lbrace;/items&rbrace;&rbrace;
-&lbrace;&lbrace;^items&rbrace;&rbrace;
-  No items :(
-&lbrace;&lbrace;/items&rbrace;&rbrace;</code></pre>
+<pre class="prettyprint lang-java code"><code class="code">{
+  'statusCode': 200,
+  'body': "{'headers': [&lbrace;&lbrace;#request.headers.entrySet&rbrace;&rbrace;&lbrace;&lbrace;^-first&rbrace;&rbrace;, &lbrace;&lbrace;/-first&rbrace;&rbrace;'&lbrace;&lbrace; key &rbrace;&rbrace;=&lbrace;&lbrace; value.0 &rbrace;&rbrace;'&lbrace;&lbrace;/request.headers.entrySet&rbrace;&rbrace;]}"
+}</code></pre>
+
+<p>And produces the following example output:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "statusCode" : 200,
+  "body" : "{'headers': ['host=mock-server.com', 'content-type=plain/text']}"
+}</code></pre>
 
 <h4>Special Variables</h4>
 
+<h4>this</h4>
+
+<p><code class="inline code">this</code> refers to the context object itself such as the current item when iterating over a collection</p>
+
 <h4>-first and -last</h4>
 
-<p>You can use the special variables <code class="code" style="display: inline; padding: 0.5%;">-first</code> and <code class="code" style="display: inline; padding: 0.5%;">-last</code> to perform special processing for list elements.</p>
-<p><code class="code" style="display: inline; padding: 0.5%;">-first</code> resolves to true when inside a section that is processing the first of a list of elements, it resolves to false at all other times.</p>
-<p><code class="code" style="display: inline; padding: 0.5%;">-last</code> resolves to true when inside a section that is processing the last of a list of elements, it resolves to false at all other times.</p>
+<p>You can use the special variables <code class="inline code">-first</code> and <code class="inline code">-last</code> when using collections.</p>
+<p><code class="inline code">-first</code> resolves to true when inside a section on the first iteration, it resolves to false at all other times. It resolves to false for sections with a singleton value rather a collection.</p>
+<p><code class="inline code">-last</code> resolves to true when inside a section on the last iteration, it resolves to false at all other times.</p>
 
 <h4>-index</h4>
 
-<p>The <code class="code" style="display: inline; padding: 0.5%;">-index</code> special variable contains 1 for the first iteration through a section, 2 for the second, 3 for the third and so forth. It contains 0 at all other times. Note that it also contains 0 for a section that is populated by a singleton value rather than a list.</p>
+<p>The <code class="inline code">-index</code> special variable resolves to 1 for the first iteration, 2 for the second so on. It resolves to 0 at all other times including sections with a singleton value rather a collection.</p>
+
+<p>The following example template demonstrates using <strong>this</strong> and <strong>-first</strong> to list header values</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+    'statusCode': 200,
+    'body': "{'headers': [&lbrace;&lbrace;#request.headers.values&rbrace;&rbrace;&lbrace;&lbrace;^-first&rbrace;&rbrace;, &lbrace;&lbrace;/-first&rbrace;&rbrace;'&lbrace;&lbrace; this.0 &rbrace;&rbrace;'&lbrace;&lbrace;/request.headers.values&rbrace;&rbrace;]}"
+}</code></pre>
+
+<p>And produces the following example output:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "statusCode" : 200,
+  "body" : "{'headers': ['mock-server.com', 'plain/text']}"
+}</code></pre>
+
+<p>The following example template demonstrates using <strong>this</strong>, <strong>-first</strong> and <strong>-index</strong> to list header keys</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+    'statusCode': 200,
+    'body': "{'headers': [&lbrace;&lbrace;#request.headers.keySet&rbrace;&rbrace;&lbrace;&lbrace;^-first&rbrace;&rbrace;, &lbrace;&lbrace;/-first&rbrace;&rbrace;'&lbrace;&lbrace; -index &rbrace;&rbrace;:&lbrace;&lbrace; this &rbrace;&rbrace;'&lbrace;&lbrace;/request.headers.keySet&rbrace;&rbrace;]}"
+}</code></pre>
+
+<p>And produces the following example output:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "statusCode" : 200,
+  "body" : "{'headers': ['1:host', '2:content-type']}"
+}</code></pre>
 
 <a id="velocity_templates" class="anchor" href="#velocity_templates">&nbsp;</a>
 
