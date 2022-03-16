@@ -334,7 +334,7 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
         <div style="padding: 20px 0"><table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="inline code">request.pathParameters.entrySet</code><br/><code class="inline code">request.queryStringParameters.entrySet</code><br/><code class="inline code">request.headers.entrySet</code><br/></td>
+                <td>not available</td>
             </tr>
         </table></div>
     </li>
@@ -354,7 +354,13 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
         <div style="padding: 20px 0"><table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="inline code">request.pathParameters.values</code><br/><code class="inline code">request.queryStringParameters.values</code><br/><code class="inline code">request.headers.values</code><br/></td>
+                <td><code class="code" style="width: 80%;">for (pathParameterKey in request.pathParameters) {
+    var values = request.pathParameters[pathParameterKey];
+}</code><br/><code class="code">for (queryStringParameterKey in request.queryStringParameters) {
+    var values = request.queryStringParameters[queryStringParameterKey];
+}</code><br/><code class="code" style="width: 62%;">for (headerKey in request.headers) {
+    var values = request.headers[headerKey];
+}</code><br/></td>
             </tr>
         </table></div>
     </li>
@@ -374,7 +380,13 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
         <div style="padding: 20px 0"><table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td><code class="inline code">request.pathParameters.keySet</code><br/><code class="inline code">request.queryStringParameters.keySet</code><br/><code class="inline code">request.headers.keySet</code><br/></td>
+                <td><code class="code" style="width: 80%;">for (pathParameterKey in request.pathParameters) {
+    // ...
+}</code><br/><code class="code">for (queryStringParameterKey in request.queryStringParameters) {
+    // ...
+}</code><br/><code class="code" style="width: 62%;">for (headerKey in request.headers) {
+    // ...
+}</code><br/></td>
             </tr>
         </table></div>
     </li>
@@ -830,6 +842,8 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
 
 <h2>Velocity Response Templates</h2>
 
+<p>The following shows a basic example for a Velocity format response template</p>
+
 <pre class="prettyprint lang-javascript code"><code class="code">new ClientAndServer(1080)
     .when(request().withPath("/some/path"))
     .respond(
@@ -923,6 +937,8 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
 
 <h2>JavaScript Response Templates</h2>
 
+<p>The following shows a basic example for a JavaScript format response template</p>
+
 <pre class="prettyprint lang-javascript code"><code class="code">new ClientAndServer(1080)
     .when(request().withPath("/some/path"))
     .respond(
@@ -972,4 +988,24 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
         'statusCode': 406,
         'body': request.body
     };
+}</code></pre>
+
+<h4>Loops</h4>
+
+<p>Looping is possible, as follows:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">var headers = '';
+for (header in request.headers) {
+  headers += '\'' + request.headers[header] + '\', ';
+}
+return {
+    'statusCode': 200,
+    'body': '{\'headers\': [' + headers.slice(0, -2) + ']}'
+};</code></pre>
+
+<p>The example produces:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "statusCode" : 200,
+  "body" : "{'headers': ['mock-server.com', 'plain/text']}"
 }</code></pre>

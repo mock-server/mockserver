@@ -2,8 +2,6 @@ package org.mockserver.templates.engine.javascript;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang3.JavaVersion;
-import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matcher;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
@@ -21,27 +19,27 @@ import org.mockserver.serialization.model.HttpResponseDTO;
 import org.mockserver.time.EpochService;
 import org.mockserver.time.TimeService;
 import org.mockserver.uuid.UUIDService;
-import org.mockserver.version.Version;
 import org.slf4j.event.Level;
 
 import javax.script.ScriptEngineManager;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
-import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.StringEndsWith.endsWith;
-import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assume.assumeThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -324,6 +322,51 @@ public class JavaScriptTemplateEngineTest {
     }
 
     @Test
+    public void shouldHandleHttpRequestsWithJavaScriptResponseTemplateWithLoopOverValuesUsingThis() throws JsonProcessingException {
+        // given
+        String template = "var headers = '';" + NEW_LINE +
+            "for (header in request.headers) {" + NEW_LINE +
+            "  headers += '\\'' + request.headers[header] + '\\', ';" + NEW_LINE +
+            "}" + NEW_LINE +
+            "return {" + NEW_LINE +
+            "    'statusCode': 200," + NEW_LINE +
+            "    'body': '{\\'headers\\': [' + headers.slice(0, -2) + ']}'" + NEW_LINE +
+            "};";
+
+        HttpRequest request = request()
+            .withPath("/somePath")
+            .withMethod("POST")
+            .withHeader(HOST.toString(), "mock-server.com")
+            .withHeader(CONTENT_TYPE.toString(), "plain/text")
+            .withBody("some_body");
+
+        // when
+        HttpResponse actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+
+        // then
+        assertThat(actualHttpResponse, is(
+            response()
+                .withStatusCode(200)
+                .withBody("{'headers': ['mock-server.com', 'plain/text']}")
+        ));
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(TEMPLATE_GENERATED)
+                .setLogLevel(INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("generated output:{}from template:{}for request:{}")
+                .setArguments(OBJECT_MAPPER.readTree("" +
+                        "{" + NEW_LINE +
+                        "    'statusCode': 200," + NEW_LINE +
+                        "    'body': \"{'headers': ['mock-server.com', 'plain/text']}\"" + NEW_LINE +
+                        "}" + NEW_LINE),
+                    JavaScriptTemplateEngine.wrapTemplate(template),
+                    request
+                )
+        );
+    }
+
+    @Test
     public void shouldHandleHttpRequestsWithJavaScriptResponseTemplateWithIfElse() throws JsonProcessingException {
         // given
         String template = "" +
@@ -583,82 +626,27 @@ public class JavaScriptTemplateEngineTest {
     }
 
     @Test
-    public void shouldHandleHttpRequestsWithJavaScriptForwardTemplateFirstExample() {
+    public void shouldHandleHttpRequestsWithJavaScriptForwardTemplateWithMethodPathAndHeader() {
         // given
-        String template = "" +
-            "return {" + NEW_LINE +
-            "    'path' : \"/somePath\"," + NEW_LINE +
-            "    'cookies' : [ {" + NEW_LINE +
-            "        'name' : request.cookies['someCookie']," + NEW_LINE +
-            "        'value' : \"someCookie\"" + NEW_LINE +
-            "    }, {" + NEW_LINE +
-            "        'name' : \"someCookie\"," + NEW_LINE +
-            "        'value' : request.cookies['someCookie']" + NEW_LINE +
-            "    } ]," + NEW_LINE +
-            "    'keepAlive' : true," + NEW_LINE +
-            "    'secure' : true," + NEW_LINE +
-            "    'body' : \"some_body\"" + NEW_LINE +
+        String template = "return {" + NEW_LINE +
+            "    'path': '/somePath'," + NEW_LINE +
+            "    'body': '{\\'method\\': \\'' + request.method + '\\', \\'path\\': \\'' + request.path + '\\', \\'headers\\': \\'' + request.headers.host[0] + '\\'}'" + NEW_LINE +
             "};";
+        HttpRequest request = request()
+            .withPath("/somePath")
+            .withMethod("POST")
+            .withHeader(HOST.toString(), "mock-server.com")
+            .withBody("some_body");
 
         // when
-        HttpRequest actualHttpRequest = new JavaScriptTemplateEngine(mockServerLogger).executeTemplate(template, request()
-                .withPath("/somePath")
-                .withCookie("someCookie", "someValue")
-                .withMethod("POST")
-                .withBody("some_body"),
-            HttpRequestDTO.class
-        );
+        HttpRequest actualHttpRequest = new JavaScriptTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpRequestDTO.class);
 
         // then
         if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
             assertThat(actualHttpRequest, is(
                 request()
                     .withPath("/somePath")
-                    .withCookie("someCookie", "someValue")
-                    .withCookie("someValue", "someCookie")
-                    .withKeepAlive(true)
-                    .withSecure(true)
-                    .withBody("some_body")
-            ));
-        } else {
-            assertThat(actualHttpRequest, nullValue());
-        }
-    }
-
-    @Test
-    public void shouldHandleHttpRequestsWithJavaScriptForwardTemplateSecondExample() {
-        // given
-        String template = "" +
-            "return {" + NEW_LINE +
-            "    'path' : \"/somePath\"," + NEW_LINE +
-            "    'queryStringParameters' : [ {" + NEW_LINE +
-            "        'name' : \"queryParameter\"," + NEW_LINE +
-            "        'values' : request.queryStringParameters['queryParameter']" + NEW_LINE +
-            "    } ]," + NEW_LINE +
-            "    'headers' : [ {" + NEW_LINE +
-            "        'name' : \"Host\"," + NEW_LINE +
-            "        'values' : [ \"localhost:1090\" ]" + NEW_LINE +
-            "    } ]," + NEW_LINE +
-            "    'body': \"{'name': 'value'}\"" + NEW_LINE +
-            "};";
-
-
-        // when
-        HttpRequest actualHttpRequest = new JavaScriptTemplateEngine(mockServerLogger).executeTemplate(template, request()
-                .withPath("/someOtherPath")
-                .withQueryStringParameter("queryParameter", "someValue")
-                .withBody("some_body"),
-            HttpRequestDTO.class
-        );
-
-        // then
-        if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
-            assertThat(actualHttpRequest, is(
-                request()
-                    .withHeader("Host", "localhost:1090")
-                    .withPath("/somePath")
-                    .withQueryStringParameter("queryParameter", "someValue")
-                    .withBody("{'name': 'value'}")
+                    .withBody("{'method': 'POST', 'path': '/somePath', 'headers': 'mock-server.com'}")
             ));
         } else {
             assertThat(actualHttpRequest, nullValue());
