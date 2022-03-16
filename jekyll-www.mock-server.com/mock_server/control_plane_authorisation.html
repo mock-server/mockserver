@@ -1,0 +1,44 @@
+---
+title: API Security
+layout: page
+pageOrder: 8
+section: 'General'
+subsection: true
+sitemap:
+  priority: 0.7
+  changefreq: 'monthly'
+  lastmod: 2019-11-10T08:00:00+01:00
+---
+
+<p>Multiple techniques can be used to lock down MockServer deployments, as follows:</p>
+<ul>
+    <li>limit network access to MockServer, i.e. only available on localhost</li>
+    <li>launch MockServer on-demand, i.e. just before tests, and shutdown immediately after</li>
+    <li>disable or restrict cross-site requests using <a href="/mock_server/CORS_support.html">CORS</a></li>
+    <li>authenticate all <a href="/mock_server/HTTPS_TLS.html">TCP connections using mTLS</a></li>
+    <li>authenticate all REST API i.e. control plane requests using mTLS</li>
+    <li>authenticate all REST API i.e. control plane requests using JWT</li>
+</ul>
+
+<a id="control_plane_authentication" class="anchor" href="#control_plane_authentication">&nbsp;</a>
+
+<h2>Control Plane Authentication</h2>
+
+<p>Authentication can be enabled for all control plane requests (i.e. <strong>create expectations</strong>, <strong>clear</strong>, <strong>reset</strong>, <strong>verify</strong>, <strong>retrieve</strong>, <strong>stop</strong>, etc) using either <a href="#control_plane_mtls_authentication">mTLS</a>, <a href="#control_plane_jwt_authentication">JWT</a> or both.</p>
+<p>If both <a href="#control_plane_mtls_authentication">mTLS</a> and <a href="#control_plane_jwt_authentication">JWT</a> are enabled <a href="#control_plane_mtls_authentication">mTLS</a> will be validated first.</p>
+
+<a id="control_plane_mtls_authentication" class="anchor" href="#control_plane_mtls_authentication">&nbsp;</a>
+
+<h3>Control Plane mTLS Authentication</h3>
+
+<p>When mTLS authentication is enabled all control plane requests need to be received over a mTLS connection where the client's X509 certificates can be validated using the <a href="#button_configuration_control_plane_mtls_authentication_ca_chain">controlPlaneTLSMutualAuthenticationCAChain</a></p>
+
+{% include_subpage _includes/control_plane_authentication_mtls_configuration.html %}
+
+<a id="control_plane_jwt_authentication" class="anchor" href="#control_plane_jwt_authentication">&nbsp;</a>
+
+<h3>Control Plane JWT Authentication</h3>
+
+<p>When JWT authentication is enabled all control plane requests need and JWT via a <strong>authorization</strong> header which is validated using the <a href="#button_configuration_control_plane_jwt_authentication_jwk_source">controlPlaneJWTAuthenticationJWKSource</a></p>
+
+{% include_subpage _includes/control_plane_authentication_jwt_configuration.html %}
