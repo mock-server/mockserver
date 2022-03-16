@@ -26,7 +26,7 @@ lastmod: 2019-11-10T08:00:00+01:00
     </li>
     <li><strong><a href="#velocity_templates">velocity templates</a></strong>
         <ul>
-            <li>uses <a href="https://velocity.apache.org/">Apache Velocity</a></li>
+            <li>uses <a target="_blank" href="https://velocity.apache.org/">Apache Velocity</a></li>
             <li>more complex to use</li>
             <li>supports more complex logic</li>
             <li>works on all JVM versions</li>
@@ -615,7 +615,6 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
 
 <h3>Mustache Syntax</h3>
 
-
 <h4>Variables</h4>
 
 <p>In mustache a variable is referenced using double braces, for example, <code class="inline code">&lbrace;&lbrace; request.method &rbrace;&rbrace;</code> will print the <strong>method</strong> field of the <strong>request</strong>
@@ -849,6 +848,77 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
         )
     );</code></pre>
 
+<h3>Velocity Syntax</h3>
+
+<p>For full Velocity syntax see: <a target="_blank" href="https://velocity.apache.org/engine/1.7/user-guide.html#velocity-template-language-vtl-an-introduction">Velocity User Guide</a> the following section provide a basic summary and examples of Velocity syntax.</p>
+
+<h4>Variables</h4>
+
+<p>In velocity a variable is referenced using a dollar, for example, <code class="inline code">$request.method</code> will print the <strong>method</strong> field of the <strong>request</strong> variable.</p>
+<p><code class="inline code">$name</code> will try to find the <strong>name</strong> variable in the current model.</p>
+<p>If no matching variable is found for the variable expression the expression is printed, unless a quiet expression notation is used as follows <code class="inline code">$!name</code></p>
+
+<p>The following basic template example demonstrates using multiple variables:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  'statusCode': 200,
+  'body': {
+    'method': '#!request.method',
+    'path': '#!request.path',
+    'headers': '#!request.headers.host.0'
+  }
+}</code></pre>
+
+<p>Methods can also be called on variables, for example, <code class="inline code">$request.getMethod()</code> will call the <strong>getMethod()</strong> method of the <strong>request</strong> variable.</p>
+
+<p>New variables can be defined using a <code class="inline code">#set</code> directive, for example, <code class="inline code">#set ($message="Hello World")</code> will create a new variables call <strong>message</strong>.</p>
+
+<h4>Conditionals</h4>
+
+<p>Conditional expressions are possible using <code class="inline code">#if</code>, <code class="inline code">#elseif</code> and <code class="inline code">#else</code> directives, as folows:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">#if($request.method == 'POST' && $request.path == '/somePath')
+    {
+        'statusCode': 200,
+        'body': "{'name': 'value'}"
+    }
+#else
+    {
+        'statusCode': 406,
+        'body': "$!request.body"
+    }
+#end</code></pre>
+
+<h4>Loops</h4>
+
+<p>Loops are possible using the <code class="inline code">#foreach</code> directives, as follows:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+    'statusCode': 200,
+    'body': "{'headers': [#foreach( $value in $request.headers.values() )'$value[0]'#if( $foreach.hasNext ), #end#end]}"
+}</code></pre>
+
+<p>The example produces:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">{
+  "statusCode" : 200,
+  "body" : "{'headers': ['mock-server.com', 'plain/text']}"
+}</code></pre>
+
+<h4>Mathematical</h4>
+
+<p>In addition to the <a href="#dynamic_model_variables">dynamic model variables</a> it is possible to perform basic mathematical operations, as follows:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">#set($percent = $number / 100)
+#set($remainder = $dividend % $divisor)</code></pre>
+
+<p>A range operator is also supported which can be useful in conjunction with <code class="inline code">#set</code> and <code class="inline code">#foreach</code></p>
+
+<pre class="prettyprint lang-java code"><code class="code">#set($array = [0..10])
+#foreach($item in $arr)
+    $item
+#end</code></pre>
+
 <a id="javascript_templates" class="anchor" href="#javascript_templates">&nbsp;</a>
 
 <h2>JavaScript Response Templates</h2>
@@ -870,3 +940,36 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
                 "};"
         )
     );</code></pre>
+
+<h3>JavaScript Syntax</h3>
+
+<p>All JavaScript response templates should return the response as an object as shown in the example above.</p>
+
+<p>JavaScript response templates support ECMAScript 6 (ES6) syntax, for a summary of ES6 see <a target="_blank" href="https://www.w3schools.com/js/js_es6.asp">w3schools</a>.</p>
+
+<h4>Variables</h4>
+
+<p>In javascript a variable is referenced directly, for example, <code class="inline code">request.method</code> will return the <strong>method</strong> field of the <strong>request</strong> variable.</p>
+
+<p>The following basic template example demonstrates using multiple variables:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">return {
+    'statusCode': 200,
+    'body': '{\'method\': \'' + request.method + '\', \'path\': \'' + request.path + '\', \'headers\': \'' + request.headers.host[0] + '\'}'
+};</code></pre>
+
+<h4>Conditionals</h4>
+
+<p>Conditional expressions are possible, as follows:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">if (request.method === 'POST' && request.path === '/somePath') {
+    return {
+        'statusCode': 200,
+        'body': JSON.stringify({name: 'value'})
+    };
+} else {
+    return {
+        'statusCode': 406,
+        'body': request.body
+    };
+}</code></pre>

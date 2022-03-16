@@ -41,6 +41,7 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
     private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer;
 
     public JavaScriptTemplateEngine(MockServerLogger mockServerLogger) {
+        System.setProperty("nashorn.args", "--language=es6");
         if (engine == null) {
             engine = new ScriptEngineManager().getEngineByName("nashorn");
         }

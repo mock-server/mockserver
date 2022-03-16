@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added response template variables for date, uuid and random for velocity
 - added response template variables for date, uuid and random for javascript
 - added path parameters to response template model 
+- added support for EMCAScript 6 in JavaScript response templates
 
 ### Changed
 - included Bouncy Castle now used by default to resolve issues with modules in Java 16+ and backwards compatibility for Java 8

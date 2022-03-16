@@ -91,6 +91,51 @@ public class JavaScriptTemplateEngineTest {
     }
 
     @Test
+    public void shouldHandleHttpRequestsWithJavaScriptResponseTemplateWithECMA6() throws JsonProcessingException {
+        // given
+        String template = "var customer = { name: \"Foo\" }" + NEW_LINE +
+            "var card = { amount: 7, product: \"Bar\", unitprice: 42 }" + NEW_LINE +
+            "return {" + NEW_LINE +
+            "    'statusCode': 200," + NEW_LINE +
+            "    'body': `Hello ${customer.name}, want to buy ${card.amount} ${card.product} for a total of ${card.amount * card.unitprice} bucks?`" + NEW_LINE +
+            "};";
+        HttpRequest request = request()
+            .withPath("/somePath")
+            .withMethod("POST")
+            .withHeader(HOST.toString(), "mock-server.com")
+            .withBody("some_body");
+
+        // when
+        HttpResponse actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+
+        if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
+            // then
+            assertThat(actualHttpResponse, is(
+                response()
+                    .withStatusCode(200)
+                    .withBody("Hello Foo, want to buy 7 Bar for a total of 294 bucks?")
+            ));
+            verify(mockServerLogger).logEvent(
+                new LogEntry()
+                    .setType(TEMPLATE_GENERATED)
+                    .setLogLevel(INFO)
+                    .setHttpRequest(request)
+                    .setMessageFormat("generated output:{}from template:{}for request:{}")
+                    .setArguments(OBJECT_MAPPER.readTree("" +
+                            "{" + NEW_LINE +
+                            "    'statusCode': 200," + NEW_LINE +
+                            "    'body': \"Hello Foo, want to buy 7 Bar for a total of 294 bucks?\"" + NEW_LINE +
+                            "}" + NEW_LINE),
+                        JavaScriptTemplateEngine.wrapTemplate(template),
+                        request
+                    )
+            );
+        } else {
+            assertThat(actualHttpResponse, nullValue());
+        }
+    }
+
+    @Test
     public void shouldHandleHttpRequestsWithJavaScriptResponseTemplateWithMethodPathAndHeader() throws JsonProcessingException {
         // given
         String template = "return {" + NEW_LINE +

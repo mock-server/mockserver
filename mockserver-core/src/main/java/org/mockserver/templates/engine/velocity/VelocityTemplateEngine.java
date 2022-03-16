@@ -57,7 +57,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
         velocityProperties.put("directive.parse.max_depth", "10");
         velocityProperties.put("context.scope_control.template", "false");
         velocityProperties.put("context.scope_control.evaluate", "false");
-        velocityProperties.put("context.scope_control.foreach", "false");
+        velocityProperties.put("context.scope_control.foreach", "true");
         velocityProperties.put("context.scope_control.macro", "false");
         velocityProperties.put("context.scope_control.define", "false");
         velocityProperties.put("runtime.strict_mode.enable", "false");

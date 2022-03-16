@@ -19,6 +19,7 @@ import org.mockserver.time.TimeService;
 import org.mockserver.uuid.UUIDService;
 import org.slf4j.event.Level;
 
+import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +28,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -248,6 +250,48 @@ public class VelocityTemplateEngineTest {
     }
 
     @Test
+    public void shouldHandleHttpRequestsWithVelocityResponseTemplateWithLoopOverValuesUsingThis() throws JsonProcessingException {
+        // given
+        String template = "{" + NEW_LINE +
+            "    'statusCode': 200," + NEW_LINE +
+            "    'body': \"{'headers': [#foreach( $value in $request.headers.values() )'$value[0]'#if( $foreach.hasNext ), #end#end]}\"" + NEW_LINE +
+            "}";
+
+
+        HttpRequest request = request()
+            .withPath("/somePath")
+            .withMethod("POST")
+            .withHeader(HOST.toString(), "mock-server.com")
+            .withHeader(CONTENT_TYPE.toString(), "plain/text")
+            .withBody("some_body");
+
+        // when
+        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+
+        // then
+        assertThat(actualHttpResponse, is(
+            response()
+                .withStatusCode(200)
+                .withBody("{'headers': ['mock-server.com', 'plain/text']}")
+        ));
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(TEMPLATE_GENERATED)
+                .setLogLevel(INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("generated output:{}from template:{}for request:{}")
+                .setArguments(OBJECT_MAPPER.readTree("" +
+                        "{" + NEW_LINE +
+                        "    'statusCode': 200," + NEW_LINE +
+                        "    'body': \"{'headers': ['mock-server.com', 'plain/text']}\"" + NEW_LINE +
+                        "}" + NEW_LINE),
+                    template,
+                    request
+                )
+        );
+    }
+
+    @Test
     public void shouldHandleHttpRequestsWithVelocityResponseTemplateWithIfElse() throws JsonProcessingException {
         // given
         String template = "#if ( $request.method == 'POST' && $request.path == '/somePath' )" + NEW_LINE +
@@ -331,6 +375,45 @@ public class VelocityTemplateEngineTest {
                         "{" + NEW_LINE +
                         "    'path' : \"/somePath\"," + NEW_LINE +
                         "    'body': \"{'queryStringParameters': 'queryValueOne,queryValueTwoOne,queryValueTwoTwo', 'pathParameters': 'pathValueOne,pathValueTwoOne,pathValueTwoTwo', 'cookies': 'some_session_id', 'body': 'some_body'}\"" + NEW_LINE +
+                        "}" + NEW_LINE),
+                    template,
+                    request
+                )
+        );
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithVelocityResponseTemplateInvalidFields() throws JsonProcessingException {
+        // given
+        String template = "{" + NEW_LINE +
+            "    'statusCode': 200," + NEW_LINE +
+            "    'body': \"{'method': '$!request.method.invalid', 'path': '$request.invalid', 'headers': '$!request.headers.host[0]'}\"" + NEW_LINE +
+            "}";
+        HttpRequest request = request()
+            .withPath("/somePath")
+            .withMethod("POST")
+            .withHeader(HOST.toString(), "mock-server.com")
+            .withBody("some_body".getBytes(StandardCharsets.UTF_8));
+
+        // when
+        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+
+        // then
+        assertThat(actualHttpResponse, is(
+            response()
+                .withStatusCode(200)
+                .withBody("{'method': '', 'path': '$request.invalid', 'headers': 'mock-server.com'}")
+        ));
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(TEMPLATE_GENERATED)
+                .setLogLevel(INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("generated output:{}from template:{}for request:{}")
+                .setArguments(OBJECT_MAPPER.readTree("" +
+                        "{" + NEW_LINE +
+                        "    'statusCode': 200," + NEW_LINE +
+                        "    'body': \"{'method': '', 'path': '$request.invalid', 'headers': 'mock-server.com'}\"" + NEW_LINE +
                         "}" + NEW_LINE),
                     template,
                     request
