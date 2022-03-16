@@ -745,27 +745,27 @@ public class ConfigurationTest {
     }
 
     @Test
-    public void shouldSetAndGetCorsAllowHeaders() {
-        String original = ConfigurationProperties.corsAllowHeaders();
+    public void shouldSetAndGetCorsAllowOrigin() {
+        String original = ConfigurationProperties.corsAllowOrigin();
         try {
             // then - default value
-            assertThat(configuration.corsAllowHeaders(), equalTo("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"));
+            assertThat(configuration.corsAllowOrigin(), equalTo(""));
 
             // when - system property setter
-            ConfigurationProperties.corsAllowHeaders("Allow, Content-Encoding");
+            ConfigurationProperties.corsAllowOrigin("*");
 
             // then - system property getter
-            assertThat(ConfigurationProperties.corsAllowHeaders(), equalTo("Allow, Content-Encoding"));
-            assertThat(System.getProperty("mockserver.corsAllowHeaders"), equalTo("Allow, Content-Encoding"));
-            assertThat(configuration.corsAllowHeaders(), equalTo("Allow, Content-Encoding"));
+            assertThat(ConfigurationProperties.corsAllowOrigin(), equalTo("*"));
+            assertThat(System.getProperty("mockserver.corsAllowOrigin"), equalTo("*"));
+            assertThat(configuration.corsAllowOrigin(), equalTo("*"));
 
             // when - setter
-            configuration.corsAllowHeaders("Allow, Content-Encoding, Content-Length");
+            configuration.corsAllowOrigin("www.mock-server.com");
 
             // then - getter
-            assertThat(configuration.corsAllowHeaders(), equalTo("Allow, Content-Encoding, Content-Length"));
+            assertThat(configuration.corsAllowOrigin(), equalTo("www.mock-server.com"));
         } finally {
-            ConfigurationProperties.corsAllowHeaders(original);
+            ConfigurationProperties.corsAllowOrigin(original);
         }
     }
 
@@ -774,7 +774,7 @@ public class ConfigurationTest {
         String original = ConfigurationProperties.corsAllowMethods();
         try {
             // then - default value
-            assertThat(configuration.corsAllowMethods(), equalTo("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE"));
+            assertThat(configuration.corsAllowMethods(), equalTo(""));
 
             // when - system property setter
             ConfigurationProperties.corsAllowMethods("CONNECT, DELETE");
@@ -795,26 +795,51 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldSetAndGetCorsAllowHeaders() {
+        String original = ConfigurationProperties.corsAllowHeaders();
+        try {
+            // then - default value
+            assertThat(configuration.corsAllowHeaders(), equalTo(""));
+
+            // when - system property setter
+            ConfigurationProperties.corsAllowHeaders("Allow, Content-Encoding");
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.corsAllowHeaders(), equalTo("Allow, Content-Encoding"));
+            assertThat(System.getProperty("mockserver.corsAllowHeaders"), equalTo("Allow, Content-Encoding"));
+            assertThat(configuration.corsAllowHeaders(), equalTo("Allow, Content-Encoding"));
+
+            // when - setter
+            configuration.corsAllowHeaders("Allow, Content-Encoding, Content-Length");
+
+            // then - getter
+            assertThat(configuration.corsAllowHeaders(), equalTo("Allow, Content-Encoding, Content-Length"));
+        } finally {
+            ConfigurationProperties.corsAllowHeaders(original);
+        }
+    }
+
+    @Test
     public void shouldSetAndGetCorsAllowCredentials() {
         boolean original = ConfigurationProperties.corsAllowCredentials();
         try {
             // then - default value
-            assertThat(configuration.corsAllowCredentials(), equalTo(true));
+            assertThat(configuration.corsAllowCredentials(), equalTo(false));
 
             // when - system property setter
-            ConfigurationProperties.corsAllowCredentials(false);
+            ConfigurationProperties.corsAllowCredentials(true);
 
             // then - system property getter
-            assertThat(ConfigurationProperties.corsAllowCredentials(), equalTo(false));
-            assertThat(System.getProperty("mockserver.corsAllowCredentials"), equalTo("false"));
-            assertThat(configuration.corsAllowCredentials(), equalTo(false));
+            assertThat(ConfigurationProperties.corsAllowCredentials(), equalTo(true));
+            assertThat(System.getProperty("mockserver.corsAllowCredentials"), equalTo("true"));
+            assertThat(configuration.corsAllowCredentials(), equalTo(true));
             ConfigurationProperties.corsAllowCredentials(original);
 
             // when - setter
-            configuration.corsAllowCredentials(false);
+            configuration.corsAllowCredentials(true);
 
             // then - getter
-            assertThat(configuration.corsAllowCredentials(), equalTo(false));
+            assertThat(configuration.corsAllowCredentials(), equalTo(true));
         } finally {
             ConfigurationProperties.corsAllowCredentials(original);
         }
@@ -825,7 +850,7 @@ public class ConfigurationTest {
         int original = ConfigurationProperties.corsMaxAgeInSeconds();
         try {
             // then - default value
-            assertThat(configuration.corsMaxAgeInSeconds(), equalTo(300));
+            assertThat(configuration.corsMaxAgeInSeconds(), equalTo(0));
 
             // when - system property setter
             ConfigurationProperties.corsMaxAgeInSeconds(10);

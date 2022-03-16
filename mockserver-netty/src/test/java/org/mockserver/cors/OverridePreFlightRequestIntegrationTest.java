@@ -6,6 +6,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.logging.MockServerLogger;
@@ -38,6 +39,12 @@ public class OverridePreFlightRequestIntegrationTest {
 
     private static final NettyHttpClient httpClient = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false);
 
+    private static boolean originalEnableCORSForAllResponses;
+    private static String originalCorsAllowMethods;
+    private static String originalCorsAllowHeaders;
+    private static boolean originalCorsAllowCredentials;
+    private static int originalCorsMaxAgeInSeconds;
+
     @BeforeClass
     public static void startServer() {
         clientAndServer = startClientAndServer();
@@ -46,6 +53,29 @@ public class OverridePreFlightRequestIntegrationTest {
     @AfterClass
     public static void stopEventLoopGroup() {
         clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
+    }
+
+    @BeforeClass
+    public static void configurationCORS() {
+        originalEnableCORSForAllResponses = ConfigurationProperties.enableCORSForAllResponses();
+        originalCorsAllowMethods = ConfigurationProperties.corsAllowMethods();
+        originalCorsAllowHeaders = ConfigurationProperties.corsAllowHeaders();
+        originalCorsAllowCredentials = ConfigurationProperties.corsAllowCredentials();
+        originalCorsMaxAgeInSeconds = ConfigurationProperties.corsMaxAgeInSeconds();
+        ConfigurationProperties.enableCORSForAllResponses(true);
+        ConfigurationProperties.corsAllowMethods("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE");
+        ConfigurationProperties.corsAllowHeaders("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization");
+        ConfigurationProperties.corsAllowCredentials(true);
+        ConfigurationProperties.corsMaxAgeInSeconds(300);
+    }
+
+    @AfterClass
+    public static void resetCORSConfiguration() {
+        ConfigurationProperties.enableCORSForAllResponses(originalEnableCORSForAllResponses);
+        ConfigurationProperties.corsAllowMethods(originalCorsAllowMethods);
+        ConfigurationProperties.corsAllowHeaders(originalCorsAllowHeaders);
+        ConfigurationProperties.corsAllowCredentials(originalCorsAllowCredentials);
+        ConfigurationProperties.corsMaxAgeInSeconds(originalCorsMaxAgeInSeconds);
     }
 
     @AfterClass

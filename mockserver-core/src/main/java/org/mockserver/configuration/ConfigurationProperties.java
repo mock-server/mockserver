@@ -79,8 +79,9 @@ public class ConfigurationProperties {
     // CORS
     private static final String MOCKSERVER_ENABLE_CORS_FOR_API = "mockserver.enableCORSForAPI";
     private static final String MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES = "mockserver.enableCORSForAllResponses";
-    private static final String MOCKSERVER_CORS_ALLOW_HEADERS = "mockserver.corsAllowHeaders";
+    private static final String MOCKSERVER_CORS_ALLOW_ORIGIN = "mockserver.corsAllowOrigin";
     private static final String MOCKSERVER_CORS_ALLOW_METHODS = "mockserver.corsAllowMethods";
+    private static final String MOCKSERVER_CORS_ALLOW_HEADERS = "mockserver.corsAllowHeaders";
     private static final String MOCKSERVER_CORS_ALLOW_CREDENTIALS = "mockserver.corsAllowCredentials";
     private static final String MOCKSERVER_CORS_MAX_AGE_IN_SECONDS = "mockserver.corsMaxAgeInSeconds";
 
@@ -663,23 +664,22 @@ public class ConfigurationProperties {
         setProperty(MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES, "" + enable);
     }
 
-    public static String corsAllowHeaders() {
-        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_CORS_ALLOW_HEADERS, "MOCKSERVER_CORS_ALLOW_HEADERS", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization");
+    public static String corsAllowOrigin() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_CORS_ALLOW_ORIGIN, "MOCKSERVER_CORS_ALLOW_ORIGIN", "");
     }
 
     /**
-     * <p>The default value used for CORS in the access-control-allow-headers and access-control-expose-headers headers.</p>
-     * <p>In addition to this default value any headers specified in the request header access-control-request-headers also get added to access-control-allow-headers and access-control-expose-headers headers in a CORS response.</p>
-     * <p>The default is "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"</p>
+     * <p>the value used for CORS in the access-control-allow-origin header.</p>
+     * <p>The default is ""</p>
      *
-     * @param corsAllowHeaders the default value used for CORS in the access-control-allow-headers and access-control-expose-headers headers
+     * @param corsAllowOrigin the value used for CORS in the access-control-allow-methods header
      */
-    public static void corsAllowHeaders(String corsAllowHeaders) {
-        setProperty(MOCKSERVER_CORS_ALLOW_HEADERS, corsAllowHeaders);
+    public static void corsAllowOrigin(String corsAllowOrigin) {
+        setProperty(MOCKSERVER_CORS_ALLOW_ORIGIN, corsAllowOrigin);
     }
 
     public static String corsAllowMethods() {
-        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_CORS_ALLOW_METHODS, "MOCKSERVER_CORS_ALLOW_METHODS", "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE");
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_CORS_ALLOW_METHODS, "MOCKSERVER_CORS_ALLOW_METHODS", "");
     }
 
     /**
@@ -692,8 +692,23 @@ public class ConfigurationProperties {
         setProperty(MOCKSERVER_CORS_ALLOW_METHODS, corsAllowMethods);
     }
 
+    public static String corsAllowHeaders() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_CORS_ALLOW_HEADERS, "MOCKSERVER_CORS_ALLOW_HEADERS", "");
+    }
+
+    /**
+     * <p>the value used for CORS in the access-control-allow-headers and access-control-expose-headers headers.</p>
+     * <p>In addition to this default value any headers specified in the request header access-control-request-headers also get added to access-control-allow-headers and access-control-expose-headers headers in a CORS response.</p>
+     * <p>The default is "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"</p>
+     *
+     * @param corsAllowHeaders the value used for CORS in the access-control-allow-headers and access-control-expose-headers headers
+     */
+    public static void corsAllowHeaders(String corsAllowHeaders) {
+        setProperty(MOCKSERVER_CORS_ALLOW_HEADERS, corsAllowHeaders);
+    }
+
     public static boolean corsAllowCredentials() {
-        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_CORS_ALLOW_CREDENTIALS, "MOCKSERVER_CORS_ALLOW_CREDENTIALS", "true"));
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_CORS_ALLOW_CREDENTIALS, "MOCKSERVER_CORS_ALLOW_CREDENTIALS", "false"));
     }
 
     /**
@@ -708,7 +723,7 @@ public class ConfigurationProperties {
     }
 
     public static int corsMaxAgeInSeconds() {
-        return readIntegerProperty(MOCKSERVER_CORS_MAX_AGE_IN_SECONDS, "MOCKSERVER_CORS_MAX_AGE_IN_SECONDS", 300);
+        return readIntegerProperty(MOCKSERVER_CORS_MAX_AGE_IN_SECONDS, "MOCKSERVER_CORS_MAX_AGE_IN_SECONDS", 0);
     }
 
     /**

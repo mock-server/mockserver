@@ -62,8 +62,9 @@ public class Configuration {
     // CORS
     private Boolean enableCORSForAPI;
     private Boolean enableCORSForAllResponses;
-    private String corsAllowHeaders;
+    private String corsAllowOrigin;
     private String corsAllowMethods;
+    private String corsAllowHeaders;
     private Boolean corsAllowCredentials;
     private Integer corsMaxAgeInSeconds;
 
@@ -663,22 +664,21 @@ public class Configuration {
         return this;
     }
 
-    public String corsAllowHeaders() {
-        if (corsAllowHeaders == null) {
-            return ConfigurationProperties.corsAllowHeaders();
+    public String corsAllowOrigin() {
+        if (corsAllowOrigin == null) {
+            return ConfigurationProperties.corsAllowOrigin();
         }
-        return corsAllowHeaders;
+        return corsAllowOrigin;
     }
 
     /**
-     * <p>The default value used for CORS in the access-control-allow-headers and access-control-expose-headers headers.</p>
-     * <p>In addition to this default value any headers specified in the request header access-control-request-headers also get added to access-control-allow-headers and access-control-expose-headers headers in a CORS response.</p>
-     * <p>The default is "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"</p>
+     * <p>the value used for CORS in the access-control-allow-origin header.</p>
+     * <p>The default is ""</p>
      *
-     * @param corsAllowHeaders the default value used for CORS in the access-control-allow-headers and access-control-expose-headers headers
+     * @param corsAllowOrigin the value used for CORS in the access-control-allow-methods header
      */
-    public Configuration corsAllowHeaders(String corsAllowHeaders) {
-        this.corsAllowHeaders = corsAllowHeaders;
+    public Configuration corsAllowOrigin(String corsAllowOrigin) {
+        this.corsAllowOrigin = corsAllowOrigin;
         return this;
     }
 
@@ -690,13 +690,32 @@ public class Configuration {
     }
 
     /**
-     * <p>The default value used for CORS in the access-control-allow-methods header.</p>
-     * <p>The default is "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE"</p>
+     * <p>the value used for CORS in the access-control-allow-methods header.</p>
+     * <p>The default is ""</p>
      *
-     * @param corsAllowMethods the default value used for CORS in the access-control-allow-methods header
+     * @param corsAllowMethods the value used for CORS in the access-control-allow-methods header
      */
     public Configuration corsAllowMethods(String corsAllowMethods) {
         this.corsAllowMethods = corsAllowMethods;
+        return this;
+    }
+
+    public String corsAllowHeaders() {
+        if (corsAllowHeaders == null) {
+            return ConfigurationProperties.corsAllowHeaders();
+        }
+        return corsAllowHeaders;
+    }
+
+    /**
+     * <p>the value used for CORS in the access-control-allow-headers and access-control-expose-headers headers.</p>
+     * <p>In addition to this default value any headers specified in the request header access-control-request-headers also get added to access-control-allow-headers and access-control-expose-headers headers in a CORS response.</p>
+     * <p>The default is ""</p>
+     *
+     * @param corsAllowHeaders the value used for CORS in the access-control-allow-headers and access-control-expose-headers headers
+     */
+    public Configuration corsAllowHeaders(String corsAllowHeaders) {
+        this.corsAllowHeaders = corsAllowHeaders;
         return this;
     }
 
@@ -710,7 +729,7 @@ public class Configuration {
     /**
      * The value used for CORS in the access-control-allow-credentials header.
      * <p>
-     * The default is true
+     * The default is false
      *
      * @param corsAllowCredentials the value used for CORS in the access-control-allow-credentials header
      */
@@ -729,7 +748,7 @@ public class Configuration {
     /**
      * The value used for CORS in the access-control-max-age header.
      * <p>
-     * The default is 300
+     * The default is 0
      *
      * @param corsMaxAgeInSeconds the value used for CORS in the access-control-max-age header.
      */

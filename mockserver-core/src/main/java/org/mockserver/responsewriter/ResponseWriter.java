@@ -2,7 +2,6 @@ package org.mockserver.responsewriter;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.mockserver.configuration.Configuration;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.cors.CORSHeaders;
 import org.mockserver.model.ConnectionOptions;
 import org.mockserver.model.HttpRequest;

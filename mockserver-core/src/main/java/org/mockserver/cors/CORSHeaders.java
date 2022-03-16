@@ -17,14 +17,16 @@ public class CORSHeaders {
     private static final String ANY_ORIGIN = "*";
     private static final String NULL_ORIGIN = "null";
 
+    private final String corsAllowOrigin;
     private final String corsAllowHeaders;
     private final String corsAllowMethods;
     private final boolean corsAllowCredentials;
     private final String corsMaxAge;
 
-    public CORSHeaders(String corsAllowHeaders, String corsAllowMethods, boolean corsAllowCredentials, int corsMaxAge) {
+    public CORSHeaders(String corsAllowOrigin, String corsAllowHeaders, String corsAllowMethods, boolean corsAllowCredentials, int corsMaxAge) {
         this(
             configuration()
+                .corsAllowOrigin(corsAllowOrigin)
                 .corsAllowHeaders(corsAllowHeaders)
                 .corsAllowMethods(corsAllowMethods)
                 .corsAllowCredentials(corsAllowCredentials)
@@ -33,6 +35,7 @@ public class CORSHeaders {
     }
 
     public CORSHeaders(Configuration configuration) {
+        this.corsAllowOrigin = configuration.corsAllowOrigin();
         this.corsAllowHeaders = configuration.corsAllowHeaders();
         this.corsAllowMethods = configuration.corsAllowMethods();
         this.corsAllowCredentials = configuration.corsAllowCredentials();
@@ -58,7 +61,8 @@ public class CORSHeaders {
             setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN.toString(), origin);
             setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS.toString(), "true");
         } else {
-            setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN.toString(), ANY_ORIGIN);
+            setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN.toString(), corsAllowOrigin);
+            setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS.toString(), "" + corsAllowCredentials);
         }
         setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS.toString(), corsAllowMethods);
         String allowHeaders = corsAllowHeaders;

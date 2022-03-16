@@ -10,15 +10,36 @@ sitemap:
   lastmod: 2019-11-10T08:00:00+01:00
 ---
 
-<p>MockServer and the proxy has support for CORS.  By default CORS support is enabled for the REST API and disabled for all other requests (such as when expectations are matched).</p>
+<p>MockServer and the proxy has support for CORS.  By default, CORS support is not enabled for the Control Plane API and or for mocked response, such as, when expectations are matched, or proxied requests.</p>
 
-<p>When CORS support is enabled the following headers are added:</p>
+<p>When CORS support is enabled the following headers are be added by default:</p>
+
+<pre class="prettyprint code"><code class="code">Access-Control-Allow-Origin: ""
+Access-Control-Allow-Methods: ""
+Access-Control-Allow-Headers: ""
+Access-Control-Expose-Headers: ""
+Access-Control-Allow-Credentials: "false"
+Access-Control-Max-Age: "0"</code></pre>
+
+<p style="color: darkred"><strong>NOTE:</strong> the default configuration will prevent all cross-site requests</p>
+
+<p>To avoid security risk from cross-site requests CORS headers should be configured to the minimum required values for your use case, using the CORS <a href="#cors_configuration">configuration properties</a>, as below.</p>
+
+<p>A more permission approach that enables most use cases would configure the CORS headers, as follows:</p>
 
 <pre class="prettyprint code"><code class="code">Access-Control-Allow-Origin: "*"
 Access-Control-Allow-Methods: "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE"
-Access-Control-Allow-Headers: "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"
-Access-Control-Expose-Headers: "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"
+Access-Control-Allow-Headers: "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"
+Access-Control-Expose-Headers: "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"
 Access-Control-Max-Age: "300"</code></pre>
+
+<p>For example to enable a more permission approach for cross-site requests use <strong>ConfigurationProperties</strong> class as follows:</p>
+
+<pre class="prettyprint code"><code class="code">ConfigurationProperties.enableCORSForAllResponses(true);
+ConfigurationProperties.corsAllowOrigin("*");
+ConfigurationProperties.corsAllowMethods("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE");
+ConfigurationProperties.corsAllowHeaders("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization");
+ConfigurationProperties.corsMaxAgeInSeconds(300);</code></pre>
 
 {% include_subpage _includes/cors_configuration.html %}
 
@@ -26,48 +47,67 @@ Access-Control-Max-Age: "300"</code></pre>
 
 <h2>Examples:</h2>
 
-<p>CORS support can be enabled for all enabled for all requests-responses by enabling the <strong>enableCORSForAllResponses</strong> property.</p>
-
-<button id="button_enabled_cors_for_all_response" class="accordion">enabled CORS for all requests-responses</button>
+<button id="button_enabled_permissive_cors_for_all_response" class="accordion">enabled permissive CORS for all responses</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.enableCORSForAllResponses(true)</code></pre>
+        <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.enableCORSForAllResponses(true);
+ConfigurationProperties.corsAllowMethods("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE");
+ConfigurationProperties.corsAllowHeaders("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization");
+ConfigurationProperties.corsAllowCredentials(true);
+ConfigurationProperties.corsMaxAgeInSeconds(300);</code></pre>
     </div>
     <button class="accordion inner">Command Line</button>
     <div class="panel">
-        <pre class="prettyprint lang-bash code"><code class="code">java -Dmockserver.enableCORSForAllResponses=true -jar "~/Downloads/mockserver-netty-5.12.0-shaded.jar" -serverPort 1080</code></pre>
+        <pre class="prettyprint lang-bash code"><code class="code">java -Dmockserver.enableCORSForAllResponses=true \
+-Dmockserver.corsAllowMethods="CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE" \
+-Dmockserver.corsAllowHeaders="Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization" \
+-Dmockserver.corsAllowCredentials="true" \
+-Dmockserver.corsMaxAgeInSeconds="300" \
+-jar "~/Downloads/mockserver-netty-5.12.0-shaded.jar" -serverPort 1080</code></pre>
     </div>
     <button class="accordion inner">JavaScript: mockserver-node</button>
     <div class="panel">
         <pre class="prettyprint lang-javascript code"><code class="code">var mockserver = require('mockserver-node');
 mockserver.start_mockserver({
     serverPort: 1080,
-    systemProperties: "-Dmockserver.enableCORSForAllResponses=true"
-});
-}</code></pre>
+    systemProperties: "-Dmockserver.enableCORSForAllResponses=true " +
+        "-Dmockserver.corsAllowMethods=\"CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE\" " +
+        "-Dmockserver.corsAllowHeaders=\"Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization\" " +
+        "-Dmockserver.corsAllowCredentials=\"true\" " +
+        "-Dmockserver.corsMaxAgeInSeconds=\"300\""
+});</code></pre>
     </div>
 </div>
-
-<p>CORS support is enabled by default for the REST API.  CORS support can be disabled the REST API by disabling the <strong>enableCORSForAPI</strong> property.</p>
-
-<button id="button_disabled_cors_for_rest_api" class="accordion">disabled CORS for REST API</button>
+<button id="button_enabled_permissive_cors_for_control_plane_api" class="accordion">enabled permissive CORS for control plane API</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.enableCORSForAPI(false)</code></pre>
+        <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.enableCORSForAPI(true);
+ConfigurationProperties.corsAllowMethods("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE");
+ConfigurationProperties.corsAllowHeaders("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization");
+ConfigurationProperties.corsAllowCredentials(true);
+ConfigurationProperties.corsMaxAgeInSeconds(300);</code></pre>
     </div>
     <button class="accordion inner">Command Line</button>
     <div class="panel">
-        <pre class="prettyprint lang-bash code"><code class="code">java -Dmockserver.enableCORSForAPI=false -jar "~/Downloads/mockserver-netty-5.12.0-shaded.jar" -serverPort 1080</code></pre>
+        <pre class="prettyprint lang-bash code"><code class="code">java -Dmockserver.enableCORSForAPI=true \
+-Dmockserver.corsAllowMethods="CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE" \
+-Dmockserver.corsAllowHeaders="Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization" \
+-Dmockserver.corsAllowCredentials="true" \
+-Dmockserver.corsMaxAgeInSeconds="300" \
+-jar "~/Downloads/mockserver-netty-5.12.0-shaded.jar" -serverPort 1080</code></pre>
     </div>
     <button class="accordion inner">JavaScript: mockserver-node</button>
     <div class="panel">
         <pre class="prettyprint lang-javascript code"><code class="code">var mockserver = require('mockserver-node');
 mockserver.start_mockserver({
     serverPort: 1080,
-    systemProperties: "-Dmockserver.enableCORSForAPI=false"
-});
-}</code></pre>
+    systemProperties: "-Dmockserver.enableCORSForAPI=true " +
+        "-Dmockserver.corsAllowMethods=\"CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE\" " +
+        "-Dmockserver.corsAllowHeaders=\"Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization\" " +
+        "-Dmockserver.corsAllowCredentials=\"true\" " +
+        "-Dmockserver.corsMaxAgeInSeconds=\"300\""
+});</code></pre>
     </div>
 </div>

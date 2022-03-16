@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - changed client to launch dashboard in HTTP (not HTTPS) to avoid issues with self-signed certificates
 - simplified the body field for response template model
 - improved XML matching by ignoring element order
+- improved security by change CORS defaults to more secure values that prevent cross-site requests by default
 
 ### Fixed
 - worked around JDK error 'flip()Ljava/nio/ByteBuffer; does not exist in class java.nio.ByteBuffer'

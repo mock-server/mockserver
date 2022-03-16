@@ -15,7 +15,7 @@
     <p>Property File:</p>
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.enableCORSForAPI=...</code></pre>
     <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.enableCORSForAPI="false"</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.enableCORSForAPI="true"</code></pre>
 </div>
 
 <button id="button_configuration_enable_cors_for_all_responses" class="accordion title"><strong>Enable CORS For All Responses</strong></button>
@@ -34,27 +34,27 @@
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.enableCORSForAllResponses="true"</code></pre>
 </div>
 
-<button id="button_configuration_cors_allow_headers" class="accordion title"><strong>CORS Allow Headers Value</strong></button>
+<button id="button_configuration_cors_allow_origin" class="accordion title"><strong>CORS Allow Origin Value</strong></button>
 <div class="panel title">
-    <p>Default value used for CORS in the <span class="constant">access-control-allow-headers</span> and <span class="constant">access-control-expose-headers</span> headers.</p>
-    <p>In addition to this default value any headers specified in the request header <span class="constant">access-control-request-headers</span> also get added to <span class="constant">access-control-allow-headers</span> and <span class="constant">access-control-expose-headers</span> headers in a CORS response.</p>
-    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization</span></p>
+    <p>The value used for CORS in the <span class="constant">access-control-allow-origin</span> header.</p>
+    <p><strong>Note:</strong> To ensure <span class="constant">access-control-allow-credentials</span> works correct, when <a href="#button_configuration_cors_allow_credentials">corsAllowCredentials</a> is <strong>true</strong> the CORS header <span class="constant">access-control-allow-origin</span> will set its value using the <span class="constant">origin</span> header on requests instead of <a href="#button_configuration_cors_allow_origin">corsAllowCredentials</a> property.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span></p>
     <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.corsAllowHeaders(String corsAllowHeaders)</code></pre>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.corsAllowOrigin(String corsAllowOrigin)</code></pre>
     <p>System Property:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.corsAllowHeaders=...</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.corsAllowOrigin=...</code></pre>
     <p>Environment Variable:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CORS_ALLOW_HEADERS=...</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CORS_ALLOW_ORIGIN=...</code></pre>
     <p>Property File:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">mockserver.corsAllowHeaders=...</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.corsAllowOrigin=...</code></pre>
     <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.corsAllowHeaders="Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.corsAllowOrigin="*"</code></pre>
 </div>
 
 <button id="button_configuration_cors_allow_methods" class="accordion title"><strong>CORS Allow Methods Value</strong></button>
 <div class="panel title">
     <p>The value used for CORS in the <span class="constant">access-control-allow-methods</span> header.</p>
-    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE</span></p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.corsAllowMethods(String corsAllowMethods)</code></pre>
     <p>System Property:</p>
@@ -67,10 +67,28 @@
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.corsAllowMethods="CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE"</code></pre>
 </div>
 
+<button id="button_configuration_cors_allow_headers" class="accordion title"><strong>CORS Allow Headers Value</strong></button>
+<div class="panel title">
+    <p>Default value used for CORS in the <span class="constant">access-control-allow-headers</span> and <span class="constant">access-control-expose-headers</span> headers.</p>
+    <p>In addition to this default value any headers specified in the request header <span class="constant">access-control-request-headers</span> also get added to <span class="constant">access-control-allow-headers</span> and <span class="constant">access-control-expose-headers</span> headers in a CORS response.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.corsAllowHeaders(String corsAllowHeaders)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.corsAllowHeaders=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CORS_ALLOW_HEADERS=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.corsAllowHeaders=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.corsAllowHeaders="Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"</code></pre>
+</div>
+
 <button id="button_configuration_cors_allow_credentials" class="accordion title"><strong>CORS Allow Credentials Value</strong></button>
 <div class="panel title">
     <p>The value used for CORS in the <span class="constant">access-control-allow-credentials</span> header.</p>
-    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">true</span></p>
+    <p><strong>Note:</strong> To ensure <span class="constant">access-control-allow-credentials</span> works correct, when <a href="#button_configuration_cors_allow_credentials">corsAllowCredentials</a> is <strong>true</strong> the CORS header <span class="constant">access-control-allow-origin</span> will set its value using the <span class="constant">origin</span> header on requests instead of <a href="#button_configuration_cors_allow_origin">corsAllowCredentials</a> property.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.corsAllowCredentials(boolean allow)</code></pre>
     <p>System Property:</p>
@@ -80,13 +98,13 @@
     <p>Property File:</p>
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.corsAllowCredentials=...</code></pre>
     <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.corsAllowCredentials=false</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.corsAllowCredentials="true"</code></pre>
 </div>
 
 <button id="button_configuration_cors_max_age" class="accordion title"><strong>CORS Max Age Value</strong></button>
 <div class="panel title">
     <p>The value used for CORS in the <span class="constant">access-control-max-age</span> header.</p>
-    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">300</span></p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">0</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.corsMaxAgeInSeconds(int maxAgeInSeconds)</code></pre>
     <p>System Property:</p>
@@ -96,5 +114,5 @@
     <p>Property File:</p>
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.corsMaxAgeInSeconds=...</code></pre>
     <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.corsMaxAgeInSeconds=100</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.corsMaxAgeInSeconds=300</code></pre>
 </div>

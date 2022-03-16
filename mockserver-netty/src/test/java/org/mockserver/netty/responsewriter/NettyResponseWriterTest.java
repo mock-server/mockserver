@@ -103,12 +103,13 @@ public class NettyResponseWriterTest {
             // then
             verify(mockChannelHandlerContext).writeAndFlush(
                 response
+                    .withHeader("access-control-allow-origin", "")
+                    .withHeader("access-control-allow-methods", "")
+                    .withHeader("access-control-allow-headers", "")
+                    .withHeader("access-control-expose-headers", "")
+                    .withHeader("access-control-max-age", "0")
+                    .withHeader("access-control-allow-credentials", "false")
                     .withHeader("connection", "close")
-                    .withHeader("access-control-allow-origin", "*")
-                    .withHeader("access-control-allow-methods", "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE")
-                    .withHeader("access-control-allow-headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization")
-                    .withHeader("access-control-expose-headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization")
-                    .withHeader("access-control-max-age", "300")
             );
             verify(mockChannelFuture).addListener(any(GenericFutureListener.class));
         } finally {
