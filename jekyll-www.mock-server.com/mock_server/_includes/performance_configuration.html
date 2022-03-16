@@ -50,23 +50,6 @@
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.actionHandlerThreadCount="5"</code></pre>
 </div>
 
-<button id="button_configuration_web_socket_event_loop_thread_count" class="accordion title"><strong>Number of Web Socket Client Event Loop Threads</strong></button>
-<div class="panel title">
-    <p>Number of threads for each expectation with a method / closure callback (i.e. web socket client) in the <strong>org.mockserver.client.MockServerClient</strong></p>
-    <p>This setting only effects the Java client and how requests each method / closure callbacks it can handle, the default is 5 which should be suitable except in extreme cases.</p>
-    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">5</span></p>
-    <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.webSocketClientEventLoopThreadCount(int count)</code></pre>
-    <p>System Property:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.webSocketClientEventLoopThreadCount=...</code></pre>
-    <p>Environment Variable:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_WEB_SOCKET_CLIENT_EVENT_LOOP_THREAD_COUNT=...</code></pre>
-    <p>Property File:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">mockserver.webSocketClientEventLoopThreadCount=...</code></pre>
-    <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.webSocketClientEventLoopThreadCount="5"</code></pre>
-</div>
-
 <button id="button_configuration_client_nio_event_loop_thread_count" class="accordion title"><strong>Number of Client Event Loop Threads</strong></button>
 <div class="panel title">
     <p>Number of threads for client event loop when calling downstream</p>
@@ -82,6 +65,23 @@
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.clientNioEventLoopThreadCount=...</code></pre>
     <p>Example:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.clientNioEventLoopThreadCount="5"</code></pre>
+</div>
+
+<button id="button_configuration_web_socket_event_loop_thread_count" class="accordion title"><strong>Number of Client Web Socket Event Loop Threads</strong></button>
+<div class="panel title">
+    <p>Number of threads for each expectation with a method / closure callback (i.e. web socket client) in the <strong>org.mockserver.client.MockServerClient</strong></p>
+    <p>This setting only effects the Java client and how requests each method / closure callbacks it can handle, the default is 5 which should be suitable except in extreme cases.</p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">5</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.webSocketClientEventLoopThreadCount(int count)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.webSocketClientEventLoopThreadCount=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_WEB_SOCKET_CLIENT_EVENT_LOOP_THREAD_COUNT=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.webSocketClientEventLoopThreadCount=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.webSocketClientEventLoopThreadCount="5"</code></pre>
 </div>
 
 <button id="button_configuration_max_socket_timeout" class="accordion title"><strong>Maximum Future Timeout In Millis</strong></button>

@@ -42,8 +42,8 @@ public class Configuration {
     // scalability
     private Integer nioEventLoopThreadCount;
     private Integer actionHandlerThreadCount;
-    private Integer webSocketClientEventLoopThreadCount;
     private Integer clientNioEventLoopThreadCount;
+    private Integer webSocketClientEventLoopThreadCount;
     private Long maxFutureTimeoutInMillis;
     private Boolean matchersFailFast;
 
@@ -398,25 +398,6 @@ public class Configuration {
         return this;
     }
 
-    public Integer webSocketClientEventLoopThreadCount() {
-        if (webSocketClientEventLoopThreadCount == null) {
-            return ConfigurationProperties.webSocketClientEventLoopThreadCount();
-        }
-        return webSocketClientEventLoopThreadCount;
-    }
-
-    /**
-     * <p>Client Netty worker thread pool size for handling requests and response.  These threads handle deserializing and serialising HTTP requests and responses and some other fast logic.</p>
-     *
-     * <p>Default is 5 threads</p>
-     *
-     * @param webSocketClientEventLoopThreadCount Client Netty worker thread pool size
-     */
-    public Configuration webSocketClientEventLoopThreadCount(Integer webSocketClientEventLoopThreadCount) {
-        this.webSocketClientEventLoopThreadCount = webSocketClientEventLoopThreadCount;
-        return this;
-    }
-
     public Integer clientNioEventLoopThreadCount() {
         if (clientNioEventLoopThreadCount == null) {
             return ConfigurationProperties.clientNioEventLoopThreadCount();
@@ -433,6 +414,25 @@ public class Configuration {
      */
     public Configuration clientNioEventLoopThreadCount(Integer clientNioEventLoopThreadCount) {
         this.clientNioEventLoopThreadCount = clientNioEventLoopThreadCount;
+        return this;
+    }
+
+    public Integer webSocketClientEventLoopThreadCount() {
+        if (webSocketClientEventLoopThreadCount == null) {
+            return ConfigurationProperties.webSocketClientEventLoopThreadCount();
+        }
+        return webSocketClientEventLoopThreadCount;
+    }
+
+    /**
+     * <p>Client Netty worker thread pool size for handling requests and response.  These threads handle deserializing and serialising HTTP requests and responses and some other fast logic.</p>
+     *
+     * <p>Default is 5 threads</p>
+     *
+     * @param webSocketClientEventLoopThreadCount Client Netty worker thread pool size
+     */
+    public Configuration webSocketClientEventLoopThreadCount(Integer webSocketClientEventLoopThreadCount) {
+        this.webSocketClientEventLoopThreadCount = webSocketClientEventLoopThreadCount;
         return this;
     }
 

@@ -9,6 +9,7 @@ import org.mockserver.authentication.AuthenticationException;
 import org.mockserver.client.MockServerEventBus.EventType;
 import org.mockserver.closurecallback.websocketregistry.LocalCallbackRegistry;
 import org.mockserver.configuration.ClientConfiguration;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.httpclient.SocketConnectionException;
 import org.mockserver.log.model.LogEntry;
@@ -98,6 +99,16 @@ public class MockServerClient implements Stoppable {
      *
      * @param portFuture the port for the MockServer to communicate with
      */
+    public MockServerClient(Configuration configuration, CompletableFuture<Integer> portFuture) {
+        this(clientConfiguration(configuration), portFuture);
+    }
+
+    /**
+     * Start the client communicating to a MockServer on localhost at the port
+     * specified with the Future
+     *
+     * @param portFuture the port for the MockServer to communicate with
+     */
     public MockServerClient(ClientConfiguration configuration, CompletableFuture<Integer> portFuture) {
         if (configuration == null) {
             configuration = clientConfiguration();
@@ -122,6 +133,19 @@ public class MockServerClient implements Stoppable {
      */
     public MockServerClient(String host, int port) {
         this(host, port, "");
+    }
+
+    /**
+     * Start the client communicating to a MockServer at the specified host and port
+     * for example:
+     * <p>
+     * MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
+     *
+     * @param host the host for the MockServer to communicate with
+     * @param port the port for the MockServer to communicate with
+     */
+    public MockServerClient(Configuration configuration, String host, int port) {
+        this(configuration, host, port, "");
     }
 
     /**
@@ -161,6 +185,20 @@ public class MockServerClient implements Stoppable {
         this.configuration = clientConfiguration();
         this.eventLoopGroup = eventLoopGroup();
         LocalCallbackRegistry.setMaxWebSocketExpectations(configuration.maxWebSocketExpectations());
+    }
+
+    /**
+     * Start the client communicating to a MockServer at the specified host and port
+     * and contextPath for example:
+     * <p>
+     * MockServerClient mockServerClient = new MockServerClient("localhost", 1080, "/mockserver");
+     *
+     * @param host        the host for the MockServer to communicate with
+     * @param port        the port for the MockServer to communicate with
+     * @param contextPath the context path that the MockServer war is deployed to
+     */
+    public MockServerClient(Configuration configuration, String host, int port, String contextPath) {
+        this(clientConfiguration(configuration), host, port, contextPath);
     }
 
     /**

@@ -23,6 +23,29 @@ lastmod: 2019-11-10T08:00:00+01:00
 <p>Some properties need to be set before MockServer starts because they are only read at start-up, for example, <a href="#button_configuration_nio_event_loop_thread_count">nioEventLoopThreadCount</a>.</p>
 <p>Other values are read continuously and so can be changed at any time, for example, <a href="#button_configuration_log_level">logLevel</a>.</p>
 
+<a id="programmatic_properties" class="anchor" href="#programmatic_properties">&nbsp;</a>
+
+<h2>Programmatic Properties</h2>
+
+<p>There are two ways to set properties programmatically, as follows:</p>
+<ul>
+    <li><strong>org.mockserver.configuration.ConfigurationProperties</strong>
+        <ul>
+            <li>is JVM global</li>
+            <li>exposes static methods</li>
+            <li>stores property values in system properties</li>
+        </ul>
+    </li>
+    <li><strong>org.mockserver.configuration.Configuration</strong>
+        <ul>
+            <li>is unique to each MockServer instance</li>
+            <li>can be passed to <strong>ClientAndServer</strong>, <strong>MockServer</strong> and <strong>MockServerClient</strong> classes</li>
+            <li>only supports instance methods</li>
+            <li>defaults to <strong>ConfigurationProperties</strong> for unset values</li>
+        </ul>
+    </li>
+</ul>
+
 <a id="property_file" class="anchor" href="#property_file">&nbsp;</a>
 
 <h2>Property File</h2>
@@ -32,7 +55,9 @@ lastmod: 2019-11-10T08:00:00+01:00
 
 <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.propertyFile=/config/mockserver.properties</code></pre>
 
-<p>An example properties file can be found in <a target="_blank" href="https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver.example.properties">github</a>, as follows:</p>
+<p>A full example / template properties file can be found in <a target="_blank" href="https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver.example.properties">github</a></p>
+
+<p>An limited properties file example is, as follows:</p>
 <pre class="prettyprint code"><code class="code">###############################
 # MockServer & Proxy Settings #
 ###############################
