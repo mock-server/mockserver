@@ -73,10 +73,10 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
                 try {
                     generatedObject = objectMapper.readTree(String.valueOf(stringifiedResponse));
                 } catch (Throwable throwable) {
-                    if (MockServerLogger.isEnabled(Level.TRACE)) {
+                    if (MockServerLogger.isEnabled(Level.INFO)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
-                                .setLogLevel(Level.TRACE)
+                                .setLogLevel(Level.INFO)
                                 .setHttpRequest(request)
                                 .setMessageFormat("exception deserialising generated content:{}into json node for request:{}")
                                 .setArguments(stringifiedResponse, request)

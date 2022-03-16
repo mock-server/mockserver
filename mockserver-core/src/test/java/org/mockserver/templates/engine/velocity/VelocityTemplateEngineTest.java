@@ -41,6 +41,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.TEMPLATE_GENERATED;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.JsonBody.json;
 import static org.slf4j.event.Level.INFO;
 
 /**
@@ -250,7 +251,7 @@ public class VelocityTemplateEngineTest {
     }
 
     @Test
-    public void shouldHandleHttpRequestsWithVelocityResponseTemplateWithLoopOverValuesUsingThis() throws JsonProcessingException {
+    public void shouldHandleHttpRequestsWithVelocityResponseTemplateWithLoopOverValues() throws JsonProcessingException {
         // given
         String template = "{" + NEW_LINE +
             "    'statusCode': 200," + NEW_LINE +
@@ -329,6 +330,105 @@ public class VelocityTemplateEngineTest {
                         "{" + NEW_LINE +
                         "    'statusCode': 200," + NEW_LINE +
                         "    'body': \"{'name': 'value'}\"" + NEW_LINE +
+                        "}" + NEW_LINE),
+                    template,
+                    request
+                )
+        );
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithVelocityResponseTemplateWithXPath() throws JsonProcessingException {
+        // given
+        String template = "#set($xmlBody = $xml.parse($!request.body))" + NEW_LINE +
+            "{" + NEW_LINE +
+            "    'statusCode': 200," + NEW_LINE +
+            "    'body': \"{'key': '$xml.find('/element/key/text()')', 'value': '$xml.find('/element/value/text()')'}\"" + NEW_LINE +
+            "}";
+        HttpRequest request = request()
+            .withPath("/somePath")
+            .withBody("<element><key>some_key</key><value>some_value</value></element>");
+
+        // when
+        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+
+        // then
+        assertThat(actualHttpResponse, is(
+            response()
+                .withStatusCode(200)
+                .withBody("{'key': 'some_key', 'value': 'some_value'}")
+        ));
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(TEMPLATE_GENERATED)
+                .setLogLevel(INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("generated output:{}from template:{}for request:{}")
+                .setArguments(OBJECT_MAPPER.readTree("" +
+                        "{" + NEW_LINE +
+                        "    'statusCode': 200," + NEW_LINE +
+                        "    'body': \"{'key': 'some_key', 'value': 'some_value'}\"" + NEW_LINE +
+                        "}" + NEW_LINE),
+                    template,
+                    request
+                )
+        );
+    }
+
+    @Test
+    public void shouldHandleHttpRequestsWithVelocityResponseTemplateWithJsonParsing() throws JsonProcessingException {
+        // given
+        String template = "#set($jsonBody = $json.parse($!request.body))" + NEW_LINE +
+            "{" + NEW_LINE +
+            "    'statusCode': 200," + NEW_LINE +
+            "    'body': \"{'titles': [#foreach( $book in $jsonBody.store.book )'$book.title'#if( $foreach.hasNext ), #end#end], 'bikeColor': '$jsonBody.store.bicycle.color'}\"" + NEW_LINE +
+            "}";
+        HttpRequest request = request()
+            .withPath("/somePath")
+            .withBody(json("{" + NEW_LINE +
+                "    \"store\": {" + NEW_LINE +
+                "        \"book\": [" + NEW_LINE +
+                "            {" + NEW_LINE +
+                "                \"category\": \"reference\"," + NEW_LINE +
+                "                \"author\": \"Nigel Rees\"," + NEW_LINE +
+                "                \"title\": \"Sayings of the Century\"," + NEW_LINE +
+                "                \"price\": 18.95" + NEW_LINE +
+                "            }," + NEW_LINE +
+                "            {" + NEW_LINE +
+                "                \"category\": \"fiction\"," + NEW_LINE +
+                "                \"author\": \"Herman Melville\"," + NEW_LINE +
+                "                \"title\": \"Moby Dick\"," + NEW_LINE +
+                "                \"isbn\": \"0-553-21311-3\"," + NEW_LINE +
+                "                \"price\": 8.99" + NEW_LINE +
+                "            }" + NEW_LINE +
+                "        ]," + NEW_LINE +
+                "        \"bicycle\": {" + NEW_LINE +
+                "            \"color\": \"red\"," + NEW_LINE +
+                "            \"price\": 19.95" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"expensive\": 10" + NEW_LINE +
+                "}"));
+
+        // when
+        HttpResponse actualHttpResponse = new VelocityTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+
+        // then
+        assertThat(actualHttpResponse, is(
+            response()
+                .withStatusCode(200)
+                .withBody("{'titles': ['Sayings of the Century', 'Moby Dick'], 'bikeColor': 'red'}")
+        ));
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(TEMPLATE_GENERATED)
+                .setLogLevel(INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("generated output:{}from template:{}for request:{}")
+                .setArguments(OBJECT_MAPPER.readTree("" +
+                        "{" + NEW_LINE +
+                        "    'statusCode': 200," + NEW_LINE +
+                        "    'body': \"{'titles': ['Sayings of the Century', 'Moby Dick'], 'bikeColor': 'red'}\"" + NEW_LINE +
                         "}" + NEW_LINE),
                     template,
                     request
@@ -448,7 +548,7 @@ public class VelocityTemplateEngineTest {
         // then
         assertThat(runtimeException.getMessage(), is("Exception:" + NEW_LINE +
             "" + NEW_LINE +
-            "  org.apache.velocity.exception.ParseErrorException: Encountered \"{\" at <unknown>[line 1, column 5]" + NEW_LINE +
+            "  Encountered \"{\" at VelocityResponseTemplate[line 1, column 5]" + NEW_LINE +
             "  Was expecting one of:" + NEW_LINE +
             "      \"(\" ..." + NEW_LINE +
             "      <WHITESPACE> ..." + NEW_LINE +

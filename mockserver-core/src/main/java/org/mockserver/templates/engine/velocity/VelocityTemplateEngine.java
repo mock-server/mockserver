@@ -2,9 +2,18 @@ package org.mockserver.templates.engine.velocity;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableSet;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.Velocity;
+import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeConstants;
 import org.apache.velocity.script.VelocityScriptEngine;
 import org.apache.velocity.script.VelocityScriptEngineFactory;
+import org.apache.velocity.tools.ToolContext;
+import org.apache.velocity.tools.ToolManager;
+import org.apache.velocity.tools.ToolboxFactory;
+import org.apache.velocity.tools.config.*;
+import org.mockserver.file.FilePath;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -40,38 +49,73 @@ import static org.mockserver.log.model.LogEntryMessages.TEMPLATE_GENERATED_MESSA
 @SuppressWarnings("FieldMayBeFinal")
 public class VelocityTemplateEngine implements TemplateEngine {
 
-    private static final Properties velocityProperties;
-    private static final ScriptEngineManager manager;
-    private static final ScriptEngine engine;
+    private static final VelocityEngine velocityEngine;
+    private static final ToolContext toolContext;
     private static ObjectMapper objectMapper;
     private final MockServerLogger mockServerLogger;
     private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer;
 
     static {
         // See: https://velocity.apache.org/engine/2.0/configuration.html
-        velocityProperties = new Properties();
-        velocityProperties.put("runtime.log.log_invalid_references", "true");
-        velocityProperties.put("runtime.string_interning", "true");
-        velocityProperties.put("directive.foreach.max_loops", "-1");
-        velocityProperties.put("directive.if.empty_check", "true");
-        velocityProperties.put("directive.parse.max_depth", "10");
+        Properties velocityProperties = new Properties();
+        velocityProperties.put(RuntimeConstants.RUNTIME_LOG_REFERENCE_LOG_INVALID, "true");
+        velocityProperties.put(RuntimeConstants.RUNTIME_STRING_INTERNING, "true");
+        velocityProperties.put(RuntimeConstants.MAX_NUMBER_LOOPS, "-1");
+        velocityProperties.put(RuntimeConstants.CHECK_EMPTY_OBJECTS, "true");
+        velocityProperties.put(RuntimeConstants.PARSE_DIRECTIVE_MAXDEPTH, "10");
+        velocityProperties.put(RuntimeConstants.RUNTIME_REFERENCES_STRICT, "false");
         velocityProperties.put("context.scope_control.template", "false");
         velocityProperties.put("context.scope_control.evaluate", "false");
         velocityProperties.put("context.scope_control.foreach", "true");
         velocityProperties.put("context.scope_control.macro", "false");
         velocityProperties.put("context.scope_control.define", "false");
-        velocityProperties.put("runtime.strict_mode.enable", "false");
-        velocityProperties.put("runtime.interpolate_string_literals", "true");
-        velocityProperties.put("resource.default_encoding", "UTF-8");
         velocityProperties.put("directive.set.null.allowed", "true");
-        velocityProperties.put("parser.pool.class", "org.apache.velocity.runtime.ParserPoolImpl");
-        velocityProperties.put("parser.pool.size", "50");
-        velocityProperties.put("parser.space_gobbling", "lines");
-        velocityProperties.put("parser.allow_hyphen_in_identifiers", "true");
+        velocityProperties.put(RuntimeConstants.INTERPOLATE_STRINGLITERALS, "true");
+        velocityProperties.put(RuntimeConstants.INPUT_ENCODING, "UTF-8");
+        velocityProperties.put(RuntimeConstants.PARSER_POOL_CLASS, "org.apache.velocity.runtime.ParserPoolImpl");
+        velocityProperties.put(RuntimeConstants.PARSER_POOL_SIZE, "50");
+        velocityProperties.put(RuntimeConstants.SPACE_GOBBLING, "lines");
+        velocityProperties.put(RuntimeConstants.PARSER_HYPHEN_ALLOWED, "true");
         velocityProperties.put(RuntimeConstants.CUSTOM_DIRECTIVES, Ifnull.class.getName());
-        manager = new ScriptEngineManager();
-        manager.registerEngineName("velocity", new VelocityScriptEngineFactory());
-        engine = manager.getEngineByName("velocity");
+        velocityEngine = new VelocityEngine();
+        velocityEngine.init(velocityProperties);
+
+        ToolManager manager = new ToolManager();
+
+        ToolboxConfiguration applicationToolboxConfiguration = new ToolboxConfiguration();
+        applicationToolboxConfiguration.setScope("application");
+        ToolConfiguration collectionTool = new ToolConfiguration();
+        collectionTool.setClass(org.apache.velocity.tools.generic.CollectionTool.class.getName());
+        applicationToolboxConfiguration.addTool(collectionTool);
+        ToolConfiguration comparisonDateTool = new ToolConfiguration();
+        comparisonDateTool.setClass(org.apache.velocity.tools.generic.ComparisonDateTool.class.getName());
+        applicationToolboxConfiguration.addTool(comparisonDateTool);
+        ToolConfiguration displayTool = new ToolConfiguration();
+        displayTool.setClass(org.apache.velocity.tools.generic.DisplayTool.class.getName());
+        applicationToolboxConfiguration.addTool(displayTool);
+        ToolConfiguration escapeTool = new ToolConfiguration();
+        escapeTool.setClass(org.apache.velocity.tools.generic.EscapeTool.class.getName());
+        applicationToolboxConfiguration.addTool(escapeTool);
+        ToolConfiguration mathTool = new ToolConfiguration();
+        mathTool.setClass(org.apache.velocity.tools.generic.MathTool.class.getName());
+        applicationToolboxConfiguration.addTool(mathTool);
+        ToolConfiguration numberTool = new ToolConfiguration();
+        numberTool.setClass(org.apache.velocity.tools.generic.NumberTool.class.getName());
+        applicationToolboxConfiguration.addTool(numberTool);
+        ToolboxConfiguration requestToolboxConfiguration = new ToolboxConfiguration();
+        requestToolboxConfiguration.setScope("request");
+        ToolConfiguration jsonTool = new ToolConfiguration();
+        jsonTool.setClass(org.apache.velocity.tools.generic.JsonTool.class.getName());
+        requestToolboxConfiguration.addTool(jsonTool);
+        ToolConfiguration xmlTool = new ToolConfiguration();
+        xmlTool.setClass(org.apache.velocity.tools.generic.XmlTool.class.getName());
+        requestToolboxConfiguration.addTool(xmlTool);
+        XmlFactoryConfiguration xmlFactoryConfiguration = new XmlFactoryConfiguration();
+        xmlFactoryConfiguration.addToolbox(applicationToolboxConfiguration);
+        xmlFactoryConfiguration.addToolbox(requestToolboxConfiguration);
+        manager.configure(xmlFactoryConfiguration);
+        manager.setVelocityEngine(velocityEngine);
+        toolContext = manager.createContext();
     }
 
     public VelocityTemplateEngine(MockServerLogger mockServerLogger) {
@@ -87,20 +131,18 @@ public class VelocityTemplateEngine implements TemplateEngine {
         T result;
         try {
             Writer writer = new StringWriter();
-            ScriptContext context = new SimpleScriptContext();
-            context.setWriter(writer);
-            context.setAttribute(VelocityScriptEngine.VELOCITY_PROPERTIES_KEY, velocityProperties, ScriptContext.ENGINE_SCOPE);
-            context.setAttribute("request", new HttpRequestTemplateObject(request), ScriptContext.ENGINE_SCOPE);
-            TemplateFunctions.BUILT_IN_FUNCTIONS.forEach((key, value) -> context.setAttribute(key, value, ScriptContext.ENGINE_SCOPE));
-            engine.eval(template, context);
+            VelocityContext context = new VelocityContext(toolContext);
+            context.put("request", new HttpRequestTemplateObject(request));
+            TemplateFunctions.BUILT_IN_FUNCTIONS.forEach(context::put);
+            velocityEngine.evaluate(context, writer, "VelocityResponseTemplate", template);
             JsonNode generatedObject = null;
             try {
                 generatedObject = objectMapper.readTree(writer.toString());
             } catch (Throwable throwable) {
-                if (MockServerLogger.isEnabled(Level.TRACE)) {
+                if (MockServerLogger.isEnabled(Level.INFO)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setLogLevel(Level.TRACE)
+                            .setLogLevel(Level.INFO)
                             .setHttpRequest(request)
                             .setMessageFormat("exception deserialising generated content:{}into json node for request:{}")
                             .setArguments(writer.toString(), request)

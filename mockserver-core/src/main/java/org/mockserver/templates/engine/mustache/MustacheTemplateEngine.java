@@ -73,10 +73,10 @@ public class MustacheTemplateEngine implements TemplateEngine {
             try {
                 generatedObject = objectMapper.readTree(writer.toString());
             } catch (Throwable throwable) {
-                if (MockServerLogger.isEnabled(Level.TRACE)) {
+                if (MockServerLogger.isEnabled(Level.INFO)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setLogLevel(Level.TRACE)
+                            .setLogLevel(Level.INFO)
                             .setHttpRequest(request)
                             .setMessageFormat("exception deserialising generated content:{}into json node for request:{}")
                             .setArguments(writer.toString(), request)

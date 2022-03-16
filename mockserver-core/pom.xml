@@ -112,6 +112,11 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>org.apache.velocity.tools</groupId>
+            <artifactId>velocity-tools-generic</artifactId>
+            <version>3.1</version>
+        </dependency>
+        <dependency>
             <groupId>com.samskivert</groupId>
             <artifactId>jmustache</artifactId>
         </dependency>

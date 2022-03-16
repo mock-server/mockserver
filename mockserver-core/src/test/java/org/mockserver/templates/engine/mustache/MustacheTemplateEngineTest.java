@@ -591,7 +591,6 @@ public class MustacheTemplateEngineTest {
     @Test
     public void shouldHandleHttpRequestsWithMustacheResponseTemplateWithJsonPath() throws JsonProcessingException {
         // given
-        ConfigurationProperties.logLevel("TRACE");
         String template = "{" + NEW_LINE +
             "    'statusCode': 200," + NEW_LINE +
             "    'body': \"{'titles': {{#jsonPath}}$.store.book{{/jsonPath}}[{{#jsonPathResult}}{{^-first}}, {{/-first}}'{{title}}'{{/jsonPathResult}}], 'bikeColor': '{{#jsonPath}}$.store.bicycle.color{{/jsonPath}}{{jsonPathResult}}'}\"" + NEW_LINE +
@@ -652,7 +651,6 @@ public class MustacheTemplateEngineTest {
     @Test
     public void shouldHandleHttpRequestsWithMustacheResponseTemplateWithJsonPathWithXmlBody() throws JsonProcessingException {
         // given
-        ConfigurationProperties.logLevel("TRACE");
         String template = "{" + NEW_LINE +
             "    'statusCode': 200," + NEW_LINE +
             "    'body': \"{'key': '{{#jsonPath}}$.store.book[0].title{{/jsonPath}}', 'value': '{{#jsonPath}}$.store.bicycle.color{{/jsonPath}}'}\"" + NEW_LINE +
@@ -712,7 +710,6 @@ public class MustacheTemplateEngineTest {
     @Test
     public void shouldHandleHttpRequestsWithMustacheResponseTemplateWithJsonPathWithStringBody() throws JsonProcessingException {
         // given
-        ConfigurationProperties.logLevel("TRACE");
         String template = "{" + NEW_LINE +
             "    'statusCode': 200," + NEW_LINE +
             "    'body': \"{'key': '{{#jsonPath}}$.store.book[0].title{{/jsonPath}}', 'value': '{{#jsonPath}}$.store.bicycle.color{{/jsonPath}}'}\"" + NEW_LINE +
