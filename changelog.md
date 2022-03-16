@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added response template variables and functions for date, uuid, random, xPath and jsonPath for mustache
 - added response template variables for date, uuid and random for velocity
 - added response template variables for date, uuid and random for javascript
-- added path parameters to response template model 
+- added path parameters, remote address and client certificate chain to response template model
 - added support for EMCAScript 6 in JavaScript response templates for Java versions between 9 and 15
 
 ### Changed

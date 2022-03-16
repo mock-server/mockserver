@@ -59,7 +59,7 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
         try {
             if (engine != null) {
                 Compilable compilable = (Compilable) engine;
-                // HttpResponse handle(HttpRequest httpRequest) - ES5
+                // HttpResponse handle(HttpRequest httpRequest) - ES6
                 CompiledScript compiledScript = compilable.compile(script + " function serialise(request) { return JSON.stringify(handle(JSON.parse(request)), null, 2); }");
 
                 Bindings serialiseBindings = engine.createBindings();

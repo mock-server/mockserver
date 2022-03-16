@@ -21,8 +21,10 @@ public class HttpRequestTemplateObject extends RequestDefinition {
     private final Map<String, String> cookies = new HashMap<>();
     private final Map<String, List<String>> headers = new HashMap<>();
     private BodyDTO body = null;
-    private Boolean keepAlive = null;
     private Boolean secure = null;
+    private List<X509Certificate> clientCertificateChain = null;
+    private String remoteAddress = null;
+    private Boolean keepAlive = null;
 
     public HttpRequestTemplateObject(HttpRequest httpRequest) {
         if (httpRequest != null) {
@@ -41,8 +43,10 @@ public class HttpRequestTemplateObject extends RequestDefinition {
                 cookies.put(cookie.getName().getValue(), cookie.getValue().getValue());
             }
             body = BodyDTO.createDTO(httpRequest.getBody());
-            keepAlive = httpRequest.isKeepAlive();
             secure = httpRequest.isSecure();
+            clientCertificateChain = httpRequest.getClientCertificateChain();
+            remoteAddress = httpRequest.getRemoteAddress();
+            keepAlive = httpRequest.isKeepAlive();
             setNot(httpRequest.getNot());
         }
     }
@@ -80,12 +84,20 @@ public class HttpRequestTemplateObject extends RequestDefinition {
         return BodyDTO.toString(body);
     }
 
-    public Boolean getKeepAlive() {
-        return keepAlive;
-    }
-
     public Boolean getSecure() {
         return secure;
+    }
+
+    public List<X509Certificate> getClientCertificateChain() {
+        return clientCertificateChain;
+    }
+
+    public String getRemoteAddress() {
+        return remoteAddress;
+    }
+
+    public Boolean getKeepAlive() {
+        return keepAlive;
     }
 
     public HttpRequestTemplateObject shallowClone() {
@@ -114,14 +126,15 @@ public class HttpRequestTemplateObject extends RequestDefinition {
             Objects.equals(cookies, that.cookies) &&
             Objects.equals(headers, that.headers) &&
             Objects.equals(body, that.body) &&
-            Objects.equals(keepAlive, that.keepAlive) &&
-            Objects.equals(secure, that.secure);
+            Objects.equals(secure, that.secure) &&
+            Objects.equals(remoteAddress, that.remoteAddress) &&
+            Objects.equals(keepAlive, that.keepAlive);
     }
 
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(super.hashCode(), method, path, pathParameters, queryStringParameters, cookies, headers, body, keepAlive, secure);
+            hashCode = Objects.hash(super.hashCode(), method, path, pathParameters, queryStringParameters, cookies, headers, body, secure, remoteAddress, keepAlive);
         }
         return hashCode;
     }

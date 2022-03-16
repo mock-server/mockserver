@@ -50,7 +50,7 @@ lastmod: 2019-11-10T08:00:00+01:00
 
 <p><a href="#mustache_templates">mustache templates</a> can be tested locally as follows:</p>
 
-<pre class="prettyprint lang-javascript code"><code class="code">// inputs
+<pre class="prettyprint code"><code class="code">// inputs
 String template = "{\n" +
     "    'statusCode': 200,\n" +
     "    'body': \"{'method': '&lbrace;&lbrace; request.method &rbrace;&rbrace;', 'path': '&lbrace;&lbrace; request.path &rbrace;&rbrace;', 'headers': '&lbrace;&lbrace; request.headers.host.0 &rbrace;&rbrace;'}\"\n" +
@@ -69,7 +69,7 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
 
 <p><a href="#velocity_templates">velocity templates</a> can be tested locally as follows:</p>
 
-<pre class="prettyprint lang-javascript code"><code class="code">// inputs
+<pre class="prettyprint code"><code class="code">// inputs
 String template = "{\n" +
     "    'statusCode': 200,\n" +
     "    'body': \"{'method': '$request.method', 'path': '$request.path', 'headers': '$request.headers.host[0]'}\"\n" +
@@ -88,7 +88,7 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
 
 <p><a href="#javascript_templates">javascript templates</a> can be tested locally as follows:</p>
 
-<pre class="prettyprint lang-javascript code"><code class="code">// inputs
+<pre class="prettyprint code"><code class="code">// inputs
 String template = "return {\n" +
     "    'statusCode': 200,\n" +
     "    'body': '{\\'method\\': \\'' + request.method + '\\', \\'path\\': \\'' + request.path + '\\', \\'headers\\': \\'' + request.headers.host[0] + '\\'}'\n" +
@@ -272,6 +272,76 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
             </tr>
         </table>
     </li>
+    <li><strong>client certificate chain</strong>
+        <p>During TLS connections MockServer requests clients to optionally present certificates i.e. optional mTLS.<br/>If the client presents certificates this field is populated with a list of the clients certificates.<br/>Each item in the list contains the following fields:</p>
+        <ul>
+            <li><strong>issuerDistinguishedName</strong> as a <code class="inline_code">string</code></li>
+            <li><strong>subjectDistinguishedName</strong> as a <code class="inline_code">string</code></li>
+            <li><strong>serialNumber</strong> as a <code class="inline_code">string</code></li>
+            <li><strong>signatureAlgorithmName</strong> as a <code class="inline_code">string</code></li>
+            <li><strong>certificate</strong> as a <code class="inline_code">java.security.cert.X509Certificate</code></li>
+        </ul>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.clientCertificateChain &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.clientCertificateChain</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.clientCertificateChain</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>remote address</strong>
+        <p>The address of the TCP connection to MockServer; typically the client's address, unless there is a NAT device or load balancer between the client and MockServer.</p>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.remoteAddress &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.remoteAddress</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.remoteAddress</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>keep alive</strong>
+        <p>True is the client requested HTTP keep alive.</p>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.keepAlive &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.keepAlive</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.keepAlive</code></td>
+            </tr>
+        </table>
+    </li>
 </ul>
 
 <a id="request_multi_value_maps" class="anchor" href="#request_multi_value_maps">&nbsp;</a>
@@ -334,7 +404,7 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
         <div style="padding: 20px 0"><table>
             <tr>
                 <td style="padding-left: 20px; width: 100px;">javascript:</td>
-                <td>not available</td>
+                <td><strong>not available</strong></td>
             </tr>
         </table></div>
     </li>
@@ -607,7 +677,7 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
 
 <p>The following shows a basic example for a mustache format response template</p>
 
-<pre class="prettyprint lang-javascript code"><code class="code">new ClientAndServer(1080)
+<pre class="prettyprint code"><code class="code">new ClientAndServer(1080)
     .when(request().withPath("/some/path"))
     .respond(
         template(
@@ -796,7 +866,7 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
 <h4>XPath</h4>
 
 <p>It is possible to use XPath expressions to extract values from request bodies containing XML with a <code class="inline code">&lbrace;&lbrace;#xPath&rbrace;&rbrace;</code> section.</p>
-<p>The result of all XPath expressions are converted to a string due to the inherent limitations with XML.</p>
+<p>The <code class="inline code">&lbrace;&lbrace;#xPath&rbrace;&rbrace;</code> section only supports outputting the result of the XPath expression as a string, if an XML fragment is matched the string content of all the elements is printed.</p>
 
 <p>For a quick summary the XPath syntax please see <a target="_blank" href="https://www.w3schools.com/xml/xpath_syntax.asp">w3schools</a>, for details of the full XPath syntax please see <a target="_blank" href="https://www.w3.org/TR/1999/REC-xpath-19991116/#path-abbrev">www.w3.org</a></p>
 
@@ -844,7 +914,7 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
 
 <p>The following shows a basic example for a Velocity format response template</p>
 
-<pre class="prettyprint lang-javascript code"><code class="code">new ClientAndServer(1080)
+<pre class="prettyprint code"><code class="code">new ClientAndServer(1080)
     .when(request().withPath("/some/path"))
     .respond(
         template(
@@ -937,9 +1007,9 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
 
 <h2>JavaScript Response Templates</h2>
 
-<p>The following shows a basic example for a JavaScript format response template</p>
+<p>The following shows a basic example for a Javaacript format response template</p>
 
-<pre class="prettyprint lang-javascript code"><code class="code">new ClientAndServer(1080)
+<pre class="prettyprint code"><code class="code">new ClientAndServer(1080)
     .when(request().withPath("/some/path"))
     .respond(
         template(
@@ -959,9 +1029,23 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
 
 <h3>JavaScript Syntax</h3>
 
-<p>All JavaScript response templates should return the response as an object as shown in the example above.</p>
+<p>All javascript response templates should return the response as an object as shown in the example above.</p>
 
-<p>JavaScript response templates support ECMAScript 6 (ES6) syntax, for a summary of ES6 see <a target="_blank" href="https://www.w3schools.com/js/js_es6.asp">w3schools</a>.</p>
+<p>Javascript response templates support ES6 syntax for Java 9 to 14, for a summary of ES6 syntax see <a target="_blank" href="https://www.w3schools.com/js/js_es6.asp">w3schools</a>.</p>
+
+<p>Javascript response templates support ES5 syntax for Java 8, for a summary of ES5 syntax see <a target="_blank" href="https://www.w3schools.com/js/js_es5.asp">w3schools</a>.</p>
+
+<h4>Java Version Support</h4>
+
+<p>Javascript templates rely on Nashorn which has the following limitations for Java versions:</p>
+<ul>
+    <li>Java 8 - ES5 only</li>
+    <li>Java 9 or 10 - ES5 & ES6</li>
+    <li>Java 11 to 14 - ES5 & ES6 but prints deprecated warning</li>
+    <li>Java 15+ - not supported</li>
+</ul>
+
+<p>From Java 15 Nashorn is no longer part of the JDK but it is available as a separate library that requires Java 11+.  Once MockServer minimum Java version is 11 then this separate library will be used.</p>
 
 <h4>Variables</h4>
 
@@ -971,7 +1055,7 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
 
 <pre class="prettyprint lang-java code"><code class="code">return {
     'statusCode': 200,
-    'body': '{\'method\': \'' + request.method + '\', \'path\': \'' + request.path + '\', \'headers\': \'' + request.headers.host[0] + '\'}'
+    'body': '{\'method\': \'' + request.method + '\', \'path\': \'' + request.path + '\', \'header\': \'' + request.headers.host[0] + '\'}'
 };</code></pre>
 
 <h4>Conditionals</h4>
