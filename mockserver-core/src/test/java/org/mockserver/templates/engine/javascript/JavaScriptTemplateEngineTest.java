@@ -2,11 +2,14 @@ package org.mockserver.templates.engine.javascript;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.JavaVersion;
+import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matcher;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.java.JDKVersion;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -18,6 +21,7 @@ import org.mockserver.serialization.model.HttpResponseDTO;
 import org.mockserver.time.EpochService;
 import org.mockserver.time.TimeService;
 import org.mockserver.uuid.UUIDService;
+import org.mockserver.version.Version;
 import org.slf4j.event.Level;
 
 import javax.script.ScriptEngineManager;
@@ -27,6 +31,8 @@ import java.util.List;
 import java.util.concurrent.*;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -35,6 +41,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.StringEndsWith.endsWith;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assume.assumeThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -105,33 +112,35 @@ public class JavaScriptTemplateEngineTest {
             .withHeader(HOST.toString(), "mock-server.com")
             .withBody("some_body");
 
-        // when
-        HttpResponse actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
+        if (JDKVersion.getVersion() > 8) {
+            // when
+            HttpResponse actualHttpResponse = new JavaScriptTemplateEngine(mockServerLogger).executeTemplate(template, request, HttpResponseDTO.class);
 
-        if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
-            // then
-            assertThat(actualHttpResponse, is(
-                response()
-                    .withStatusCode(200)
-                    .withBody("Hello Foo, want to buy 7 Bar for a total of 294 bucks?")
-            ));
-            verify(mockServerLogger).logEvent(
-                new LogEntry()
-                    .setType(TEMPLATE_GENERATED)
-                    .setLogLevel(INFO)
-                    .setHttpRequest(request)
-                    .setMessageFormat("generated output:{}from template:{}for request:{}")
-                    .setArguments(OBJECT_MAPPER.readTree("" +
-                            "{" + NEW_LINE +
-                            "    'statusCode': 200," + NEW_LINE +
-                            "    'body': \"Hello Foo, want to buy 7 Bar for a total of 294 bucks?\"" + NEW_LINE +
-                            "}" + NEW_LINE),
-                        JavaScriptTemplateEngine.wrapTemplate(template),
-                        request
-                    )
-            );
-        } else {
-            assertThat(actualHttpResponse, nullValue());
+            if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
+                // then
+                assertThat(actualHttpResponse, is(
+                    response()
+                        .withStatusCode(200)
+                        .withBody("Hello Foo, want to buy 7 Bar for a total of 294 bucks?")
+                ));
+                verify(mockServerLogger).logEvent(
+                    new LogEntry()
+                        .setType(TEMPLATE_GENERATED)
+                        .setLogLevel(INFO)
+                        .setHttpRequest(request)
+                        .setMessageFormat("generated output:{}from template:{}for request:{}")
+                        .setArguments(OBJECT_MAPPER.readTree("" +
+                                "{" + NEW_LINE +
+                                "    'statusCode': 200," + NEW_LINE +
+                                "    'body': \"Hello Foo, want to buy 7 Bar for a total of 294 bucks?\"" + NEW_LINE +
+                                "}" + NEW_LINE),
+                            JavaScriptTemplateEngine.wrapTemplate(template),
+                            request
+                        )
+                );
+            } else {
+                assertThat(actualHttpResponse, nullValue());
+            }
         }
     }
 
