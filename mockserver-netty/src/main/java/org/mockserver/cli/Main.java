@@ -7,6 +7,7 @@ import org.mockserver.configuration.IntegerStringListParser;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.netty.MockServer;
+import org.mockserver.version.Version;
 
 import java.io.PrintStream;
 import java.util.*;
@@ -23,6 +24,8 @@ import static org.slf4j.event.Level.*;
  */
 public class Main {
     static final String USAGE = "" +
+        "   version: " + Version.getVersion() + NEW_LINE +
+        "    " + NEW_LINE +
         "   java -jar <path to mockserver-jetty-shaded.jar> -serverPort <port> [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>] [-logLevel <level>] " + NEW_LINE +
         "                                                                                                                                                                 " + NEW_LINE +
         "     valid options are:                                                                                                                                          " + NEW_LINE +
