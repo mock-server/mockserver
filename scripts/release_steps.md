@@ -9,7 +9,7 @@ Release Steps
     3. ./scripts/local_deploy_snapshot.sh
 4. update mockserver-node
     1. rm -rf package-lock.json node_modules
-    2. find and replace MockServer version
+    2. find and replace MockServer version both 5.13.0 and 5.13.x
     3. npm i
     4. grunt
     5. git push origin master
@@ -19,7 +19,7 @@ Release Steps
     9. npm publish --access=public --otp=****
 5. update mockserver-client-node
     1. rm -rf package-lock.json node_modules
-    2. find and replace MockServer version
+    2. find and replace MockServer version both 5.13.0 and 5.13.x
     3. npm i
     4. grunt
     5. git push origin master
