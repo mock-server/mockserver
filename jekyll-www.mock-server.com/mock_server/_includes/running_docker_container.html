@@ -117,7 +117,7 @@ For example to add all jar files in the current directory, map <strong>$(pwd)</s
 <pre class="prettyprint lang-java code"><code class="code">version: "2.4"
 services:
   mockServer:
-    image: mockserver/mockserver:mockserver-5.13.0
+    image: mockserver/mockserver:5.13.0
     command: -logLevel DEBUG -serverPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com
     ports:
       - 1080:1090</code></pre>
@@ -127,7 +127,7 @@ services:
 <pre class="prettyprint lang-java code"><code class="code">version: "2.4"
 services:
   mockServer:
-    image: mockserver/mockserver:mockserver-5.13.0
+    image: mockserver/mockserver:5.13.0
     ports:
       - 1080:1090
     environment:
@@ -139,7 +139,7 @@ services:
 <pre class="prettyprint lang-java code"><code class="code">version: "2.4"
 services:
   mockServer:
-    image: mockserver/mockserver:mockserver-5.13.0
+    image: mockserver/mockserver:5.13.0
     ports:
       - 1080:1080
     environment:
