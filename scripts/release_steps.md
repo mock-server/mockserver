@@ -57,10 +57,11 @@ Release Steps
     1. update changelog
     2. rm -rf jekyll-www.mock-server.com/_site
     3. ./mvnw clean
-    4. find and replace maven / npm version references
+    4. find and replace maven / npm version references include 5.13.x, 5.13.0 and 5.13.1-SNAPSHOT (to new SNAPSHOT verion) 
     5. find and replace swagger version references (i.e. in website code example documentation)
-    6. update README
-    7. commit to github
+    6. find and replace SNAPSHOT version references
+    7. update README
+    8. commit to github
 10. add javaDoc
     1. git checkout mockserver-x.x.x
     2. export JAVA_HOME=`/usr/libexec/java_home -v 1.8` or export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home
@@ -73,7 +74,7 @@ Release Steps
     2. login to https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi
     3. create new version
     4. publish version
-    5. update references to 5.x.x (i.e. 5.12.x) to correct version
+    5. update references to 5.x.x (i.e. 5.13.x) to correct version
 12. update www.mock-server.com
     1. find and replace MockServer version
     2. upload to S3

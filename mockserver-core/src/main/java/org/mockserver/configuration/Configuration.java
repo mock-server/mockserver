@@ -785,7 +785,7 @@ public class Configuration {
 
     /**
      * <p>The path to the json file used to initialize expectations in MockServer at startup, if set MockServer will load this file and initialise expectations for each item in the file when is starts.</p>
-     * <p>The expected format of the file is a JSON array of expectations, as per the <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.12.x#/Expectations" target="_blank">REST API format</a></p>
+     * <p>The expected format of the file is a JSON array of expectations, as per the <a target="_blank" href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.13.x#/Expectations" target="_blank">REST API format</a></p>
      *
      * @param initializationJsonPath path to the json file used to initialize expectations in MockServer at startup
      */

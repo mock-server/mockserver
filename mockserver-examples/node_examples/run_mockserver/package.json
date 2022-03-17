@@ -6,7 +6,7 @@
   "author": "James D Bloom",
   "license": "Apache-2.0",
   "dependencies": {
-    "mockserver-client": "5.12.0",
-    "mockserver-node": "5.12.0"
+    "mockserver-client": "5.13.0",
+    "mockserver-node": "5.13.0"
   }
 }

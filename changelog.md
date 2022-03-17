@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.13.0] - 2022-03-17
+
 ### Added
 - added support for configuring log level via properties file
 - allow proactively initialisation of TLS so dynamic TLS CA key pair is created at start up
