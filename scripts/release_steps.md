@@ -104,9 +104,10 @@ Release Steps
 14. update homebrew
     1. brew doctor
     2. delete https://github.com/jamesdbloom/homebrew-core
-    3. git -C "$(brew --repo homebrew/core)" checkout master
-    4. git -C "$(brew --repo homebrew/core)" branch -D mockserver-x.x.x
-    5. git -C "$(brew --repo homebrew/core)" reset --hard HEAD
-    6. brew update
-    7. brew bump-formula-pr --strict mockserver --url=https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/x.x.x/mockserver-netty-x.x.x-brew-tar.tar
-    8. **Note:** use personal access token as password (due to lack of 2FA)
+    3. rename forked repos if they exist i.e. https://github.com/jamesdbloom/homebrew-core-1 to https://github.com/jamesdbloom/homebrew-core
+    4. git -C "$(brew --repo homebrew/core)" checkout master
+    5. git -C "$(brew --repo homebrew/core)" branch -D bump-mockserver-x.x.x
+    6. git -C "$(brew --repo homebrew/core)" reset --hard HEAD
+    7. brew update
+    8. HOMEBREW_GITHUB_API_TOKEN=<token value> **Note:** use personal access token as password (due to lack of 2FA)
+    9. brew bump-formula-pr --strict mockserver --url=https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/x.x.x/mockserver-netty-x.x.x-brew-tar.tar
