@@ -42,17 +42,20 @@ Release Steps
         1. curl -v https://oss.sonatype.org/service/local/artifact/maven/redirect\?r\=releases\&g\=org.mock-server\&a\=mockserver-netty\&c\=shaded\&e\=jar\&v\=RELEASE
     2. update Dockerfile (no longer required)
     3. docker build --no-cache -t mockserver/mockserver:mockserver-x.x.x ./docker
-    4. docker build --no-cache -t jamesdbloom/mockserver:mockserver-x.x.x ./docker
-    5. docker login
-    6. docker push mockserver/mockserver:mockserver-x.x.x
-    7. docker push jamesdbloom/mockserver:mockserver-x.x.x
+    4. docker build --no-cache -t mockserver/mockserver:x.x.x ./docker
+    5. docker build --no-cache -t jamesdbloom/mockserver:mockserver-x.x.x ./docker
+    6. docker login
+    7. docker push mockserver/mockserver:mockserver-x.x.x
+    8. docker push mockserver/mockserver:x.x.x
+    9. docker push jamesdbloom/mockserver:mockserver-x.x.x
 8. update helm chart
     1. find and replace previous MockServer release version to new release
     2. cd helm
     3. helm package ./mockserver/
     4. cd ~/git/mockserver/mockserver/helm/charts
-    5. helm repo index .
-    6. upload new chart and index.yaml to S3 https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq
+    5. cp /Users/jamesbloom/git/mockserver/mockserver/helm/mockserver-x.x.x.tgz .
+    6. helm repo index .
+    7. upload new chart and index.yaml to S3 https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq
 9. update repo
     1. update changelog
     2. rm -rf jekyll-www.mock-server.com/_site
