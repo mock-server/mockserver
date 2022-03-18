@@ -18,7 +18,7 @@ public class ServletResponseWriter extends ResponseWriter {
     private MockServerHttpResponseToHttpServletResponseEncoder mockServerResponseToHttpServletResponseEncoder;
 
     public ServletResponseWriter(Configuration configuration, MockServerLogger mockServerLogger, HttpServletResponse httpServletResponse) {
-        super(configuration);
+        super(configuration, mockServerLogger);
         this.httpServletResponse = httpServletResponse;
         this.mockServerResponseToHttpServletResponseEncoder = new MockServerHttpResponseToHttpServletResponseEncoder(mockServerLogger);
     }

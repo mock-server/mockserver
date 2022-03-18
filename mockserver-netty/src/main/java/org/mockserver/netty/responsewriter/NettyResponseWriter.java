@@ -22,13 +22,11 @@ import static org.slf4j.event.Level.WARN;
  */
 public class NettyResponseWriter extends ResponseWriter {
 
-    private final MockServerLogger mockServerLogger;
     private final ChannelHandlerContext ctx;
     private final Scheduler scheduler;
 
     public NettyResponseWriter(Configuration configuration, MockServerLogger mockServerLogger, ChannelHandlerContext ctx, Scheduler scheduler) {
-        super(configuration);
-        this.mockServerLogger = mockServerLogger;
+        super(configuration, mockServerLogger);
         this.ctx = ctx;
         this.scheduler = scheduler;
     }

@@ -100,7 +100,7 @@ public class HttpStateTest {
         public HttpResponse response;
 
         protected FakeResponseWriter() {
-            super(configuration());
+            super(configuration(), new MockServerLogger());
         }
 
         @Override
