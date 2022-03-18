@@ -1,12 +1,22 @@
 package org.mockserver.logging;
 
-import java.util.logging.ConsoleHandler;
+import java.util.logging.*;
 
-public class StandardOutConsoleHandler extends ConsoleHandler {
+public class StandardOutConsoleHandler extends StreamHandler {
 
     public StandardOutConsoleHandler() {
-        super();
         setOutputStream(System.out);
+    }
+
+    @Override
+    public void publish(LogRecord record) {
+        super.publish(record);
+        flush();
+    }
+
+    @Override
+    public void close() {
+        flush();
     }
 
 }

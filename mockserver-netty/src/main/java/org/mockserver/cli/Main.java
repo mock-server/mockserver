@@ -56,10 +56,11 @@ public class Main {
         "                                     Logger levels: FINEST, FINE, INFO, WARNING,                                                                                 " + NEW_LINE +
         "                                     SEVERE or OFF. If not specified default is INFO                                                                             " + NEW_LINE +
         "                                                                                                                                                                 " + NEW_LINE +
-        "   i.e. java -jar ./mockserver-jetty-shaded.jar -serverPort 1080 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com -logLevel WARN          " + NEW_LINE +
+        "   i.e. java -jar ./mockserver-jetty-shaded.jar -serverPort 1080 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com -logLevel WARN                         " + NEW_LINE +
         "                                                                                                                                                                 " + NEW_LINE;
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(Main.class);
     private static final IntegerStringListParser INTEGER_STRING_LIST_PARSER = new IntegerStringListParser();
+    static PrintStream systemErr = System.err;
     static PrintStream systemOut = System.out;
     static boolean usageShown = false;
 
@@ -158,7 +159,7 @@ public class Main {
                     );
                 }
             } else {
-                showUsage();
+                showUsage("\"" + serverPort.name() + "\" not specified");
             }
 
         } catch (Throwable throwable) {
@@ -169,10 +170,10 @@ public class Main {
                     .setMessageFormat("exception while starting:{}")
                     .setThrowable(throwable)
             );
+            showUsage(null);
             if (ConfigurationProperties.disableSystemOut()) {
-                new RuntimeException("exception while starting: " + throwable.getMessage()).printStackTrace();
+                new RuntimeException("exception while starting: " + throwable.getMessage()).printStackTrace(System.err);
             }
-            showUsage();
         }
     }
 
@@ -187,7 +188,7 @@ public class Main {
             if (argumentsIterator.hasNext()) {
                 String argumentValue = argumentsIterator.next();
                 if (!Arguments.names().containsIgnoreCase(argumentName)) {
-                    showUsage();
+                    showUsage("invalid argument \"" + argumentName + "\" found");
                     break;
                 } else {
                     String errorMessage = "";
@@ -247,10 +248,15 @@ public class Main {
         systemOut.println("   " + Strings.padEnd("", maxLengthMessage, '=') + NEW_LINE);
     }
 
-    private static void showUsage() {
+    private static void showUsage(String errorMessage) {
         if (!usageShown) {
             usageShown = true;
             systemOut.print(USAGE);
+            systemOut.flush();
+        }
+        if (isNotBlank(errorMessage)) {
+            systemErr.print("\nERROR:  " + errorMessage + "\n\n");
+            systemErr.flush();
         }
     }
 
