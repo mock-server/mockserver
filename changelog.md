@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- simplified JSON format accepted for headers and other multi-value maps by allowing single values to be used value list
 
 ### Changed
 - improved error messages from main method

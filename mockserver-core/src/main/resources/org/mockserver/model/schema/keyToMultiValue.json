@@ -37,6 +37,9 @@
         "^(?!keyMatchStyle)\\S+$": {
           "oneOf": [
             {
+              "type": "string"
+            },
+            {
               "type": "array",
               "additionalProperties": false,
               "items": {
