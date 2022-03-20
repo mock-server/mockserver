@@ -63,7 +63,7 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
         }
 
         if (MockServerLogger.isEnabled(TRACE)) {
-            pipeline.addLast(new LoggingHandler("EchoServer <-->"));
+            pipeline.addLast(new LoggingHandler(EchoServer.class.getName() + " <-->"));
         }
 
         pipeline.addLast(new HttpServerCodec());

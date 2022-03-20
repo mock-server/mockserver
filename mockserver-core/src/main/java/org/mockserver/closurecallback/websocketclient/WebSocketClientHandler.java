@@ -95,7 +95,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
                 }
                 // add extra logging
                 if (MockServerLogger.isEnabled(TRACE)) {
-                    ch.pipeline().addFirst(new LoggingHandler("WebSocketClient first -->"));
+                    ch.pipeline().addFirst(new LoggingHandler(WebSocketClient.class.getName() + "-first"));
                 }
             } else if (httpResponse.status().equals(HttpResponseStatus.NOT_IMPLEMENTED)) {
                 String message = readRequestBody(httpResponse);

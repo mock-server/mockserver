@@ -91,7 +91,7 @@ public class WebSocketClient<T extends HttpMessage> {
                         ch.pipeline().addLast(new WebSocketClientHandler(mockServerLogger, clientId, serverAddress, contextPath, WebSocketClient.this, isSecure));
                         // add logging
                         if (MockServerLogger.isEnabled(TRACE)) {
-                            ch.pipeline().addLast(new LoggingHandler("WebSocketClient last -->"));
+                            ch.pipeline().addLast(new LoggingHandler(WebSocketClient.class.getName() + "-last"));
                         }
                     }
                 })

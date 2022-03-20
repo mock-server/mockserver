@@ -48,8 +48,7 @@ import static org.mockserver.exception.ExceptionHandling.*;
 import static org.mockserver.logging.MockServerLogger.isEnabled;
 import static org.mockserver.mock.action.http.HttpActionHandler.REMOTE_SOCKET;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.netty.HttpRequestHandler.LOCAL_HOST_HEADERS;
-import static org.mockserver.netty.HttpRequestHandler.PROXYING;
+import static org.mockserver.netty.HttpRequestHandler.*;
 import static org.mockserver.netty.proxy.relay.RelayConnectHandler.*;
 import static org.slf4j.event.Level.TRACE;
 import static org.slf4j.event.Level.WARN;
@@ -65,8 +64,8 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     private static final Map<PortBinding, Set<String>> localAddressesCache = new ConcurrentHashMap<>();
 
     protected final MockServerLogger mockServerLogger;
-    private final LoggingHandler loggingHandlerFirst = new LoggingHandler(PortUnificationHandler.class.getSimpleName() + "-first");
-    private final LoggingHandler loggingHandlerLast = new LoggingHandler(PortUnificationHandler.class.getSimpleName() + "-last");
+    private final LoggingHandler loggingHandlerFirst = new LoggingHandler(PortUnificationHandler.class.getName() + "-first");
+    private final LoggingHandler loggingHandlerLast = new LoggingHandler(PortUnificationHandler.class.getName() + "-last");
     private final HttpContentLengthRemover httpContentLengthRemover = new HttpContentLengthRemover();
     private final Configuration configuration;
     private final LifeCycle server;
@@ -271,8 +270,6 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         if (message.startsWith(PROXIED_SECURE)) {
             String[] hostParts = StringUtils.substringAfter(message, PROXIED_SECURE).split(":");
             int port = hostParts.length > 1 ? Integer.parseInt(hostParts[1]) : 443;
-            ctx.channel().attr(PROXYING).set(Boolean.TRUE);
-            ctx.channel().attr(REMOTE_SOCKET).set(new InetSocketAddress(hostParts[0], port));
             enableSslUpstreamAndDownstream(ctx.channel());
             ctx.channel().attr(PROXYING).set(Boolean.TRUE);
             ctx.channel().attr(REMOTE_SOCKET).set(new InetSocketAddress(hostParts[0], port));

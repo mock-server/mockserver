@@ -79,7 +79,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                     }
 
                                     if (MockServerLogger.isEnabled(Level.TRACE)) {
-                                        pipelineToMockServer.addLast(new LoggingHandler("downstream                -->"));
+                                        pipelineToMockServer.addLast(new LoggingHandler(RelayConnectHandler.class.getName() + "-downstream -->"));
                                     }
 
                                     pipelineToMockServer.addLast(new HttpClientCodec(configuration.maxInitialLineLength(), configuration.maxHeaderSize(), configuration.maxChunkSize()));
@@ -98,7 +98,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                     }
 
                                     if (MockServerLogger.isEnabled(Level.TRACE)) {
-                                        pipelineToProxyClient.addLast(new LoggingHandler("upstream <-- "));
+                                        pipelineToProxyClient.addLast(new LoggingHandler(RelayConnectHandler.class.getName() + "-upstream <-- "));
                                     }
 
                                     pipelineToProxyClient.addLast(new HttpServerCodec(configuration.maxInitialLineLength(), configuration.maxHeaderSize(), configuration.maxChunkSize()));
