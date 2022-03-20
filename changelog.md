@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - improved error messages from main method
 
 ### Fixed
+- allow callback which is nested inside initializer class for maven plugin initializer
 
 ## [5.13.0] - 2022-03-17
 
