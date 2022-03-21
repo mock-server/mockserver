@@ -118,16 +118,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
 
         final InetSocketAddress remoteSocket = getDownstreamSocket(proxyClientCtx);
         bootstrap.connect(remoteSocket).addListener((ChannelFutureListener) future -> {
-            if (future.isSuccess()) {
-                if (MockServerLogger.isEnabled(DEBUG)) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setLogLevel(DEBUG)
-                            .setMessageFormat("connected to{}")
-                            .setArguments(remoteSocket)
-                    );
-                }
-            } else {
+            if (!future.isSuccess()) {
                 failure("Connection failed to " + remoteSocket, future.cause(), proxyClientCtx, failureResponse(request));
             }
         });
