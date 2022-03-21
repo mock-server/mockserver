@@ -263,7 +263,7 @@ public class DashboardWebSocketHandler extends ChannelInboundHandlerAdapter impl
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception will serialising UI data " + jpe.getMessage())
+                            .setMessageFormat("exception with serialising UI data " + jpe.getMessage())
                             .setThrowable(jpe)
                     );
                 }
