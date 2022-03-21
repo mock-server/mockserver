@@ -185,7 +185,12 @@ public class LoggingHandler extends ChannelDuplexHandler {
     protected String format(ChannelHandlerContext ctx, String message) {
         String chStr = ctx.channel().toString() + ' ' + message;
         if (logger.isTraceEnabled()) {
-            chStr += NEW_LINE + "channel: " + ctx.channel().id() + NEW_LINE + "current: " + ctx.name() + NEW_LINE + "pipeline: " + ctx.pipeline().names() + NEW_LINE;
+            chStr += NEW_LINE +
+                "channel: " + ctx.channel().id() + NEW_LINE +
+                "localAddress: " + ctx.channel().localAddress() + NEW_LINE +
+                "remoteAddress: " + ctx.channel().remoteAddress() + NEW_LINE +
+                "current: " + ctx.name() + NEW_LINE +
+                "pipeline: " + ctx.pipeline().names() + NEW_LINE;
         }
         return chStr;
     }
