@@ -16,6 +16,7 @@ import org.mockserver.serialization.ExpectationSerializer;
 
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -44,12 +45,16 @@ public class ExpectationInitializerLoader {
     }
 
     public static List<String> expandedInitializationJsonPaths(String initializationJsonPath) {
-        List<String> expandedInitializationJsonPaths = EXPANDED_INITIALIZATION_JSON_PATHS.get(initializationJsonPath);
-        if (expandedInitializationJsonPaths == null) {
-            expandedInitializationJsonPaths = FilePath.expandFilePathGlobs(initializationJsonPath);
-            EXPANDED_INITIALIZATION_JSON_PATHS.put(initializationJsonPath, expandedInitializationJsonPaths);
+        if (isNotBlank(initializationJsonPath)) {
+            List<String> expandedInitializationJsonPaths = EXPANDED_INITIALIZATION_JSON_PATHS.get(initializationJsonPath);
+            if (expandedInitializationJsonPaths == null) {
+                expandedInitializationJsonPaths = FilePath.expandFilePathGlobs(initializationJsonPath);
+                EXPANDED_INITIALIZATION_JSON_PATHS.put(initializationJsonPath, expandedInitializationJsonPaths);
+            }
+            return expandedInitializationJsonPaths;
+        } else {
+            return Collections.emptyList();
         }
-        return expandedInitializationJsonPaths;
     }
 
     private void addExpectationsFromInitializer() {
