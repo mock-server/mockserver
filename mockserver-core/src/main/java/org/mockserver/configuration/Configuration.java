@@ -156,6 +156,7 @@ public class Configuration {
      */
     public Configuration logLevel(Level level) {
         this.logLevel = level;
+        ConfigurationProperties.logLevel(this.logLevel.name());
         return this;
     }
 
@@ -166,6 +167,7 @@ public class Configuration {
      */
     public Configuration logLevel(String level) {
         this.logLevel = Level.valueOf(level);
+        ConfigurationProperties.logLevel(this.logLevel.name());
         return this;
     }
 
