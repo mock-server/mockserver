@@ -6,9 +6,12 @@ import org.junit.Test;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.collection.IsMapContaining.hasEntry;
 import static org.hamcrest.core.Is.is;
 
 public class MediaTypeTest {
@@ -161,6 +164,17 @@ public class MediaTypeTest {
         assertThat(MediaType.parse("application/soap+xml;charset=UTF-8;action=\"somerandomstuff\""), is(new MediaType("application", "soap+xml", ImmutableMap.of(
             "action", "somerandomstuff"
         )).withCharset(StandardCharsets.UTF_8)));
+    }
+
+    @Test
+    public void shouldSupportAdditionParametersWithEqualsInTheValue() {
+        MediaType parse = MediaType.parse("multipart/form-data; boundary=\"===1597684222645===\"; charset=utf-8");
+        assertThat(parse.toString(), is("multipart/form-data; boundary====1597684222645===; charset=utf-8"));
+        Map<String, String> parameters = parse.getParameters();
+        assertThat(parameters, allOf(
+            hasEntry("boundary", "===1597684222645==="),
+            hasEntry("charset", "utf-8")
+        ));
     }
 
     @Test

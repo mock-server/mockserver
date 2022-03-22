@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - allow callback which is nested inside initializer class for maven plugin initializer
 - fixed HttpClassCallback static builder signature
+- improved parsing of media type parameters to handle parameter values with equal symbol
+- fixed serialising certificate chain to dashboard UI
 
 ## [5.13.0] - 2022-03-17
 

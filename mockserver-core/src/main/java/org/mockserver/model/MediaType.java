@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.*;
@@ -81,7 +82,6 @@ public class MediaType extends ObjectWithJsonToString {
     public static final MediaType JPEG = new MediaType("image", "jpeg");
     public static final MediaType PNG = new MediaType("image", "png");
 
-    @SuppressWarnings("UnstableApiUsage")
     public static MediaType parse(String mediaTypeHeader) {
         if (isNotBlank(mediaTypeHeader)) {
             int typeSeparator = mediaTypeHeader.indexOf(TYPE_SEPARATOR);
@@ -101,10 +101,20 @@ public class MediaType extends ObjectWithJsonToString {
                 }
             }
             String parameters = mediaTypeHeader.substring(typeEndIndex).trim().toLowerCase().replaceAll("\"", "");
-            Map<String, String> parameterMap = null;
+            Map<String, String> parameterMap = new ConcurrentHashMap<>();
             if (isNotBlank(parameters)) {
                 try {
-                    parameterMap = Splitter.on(';').trimResults().omitEmptyStrings().withKeyValueSeparator('=').split(parameters);
+                    for (String parameter : Splitter.on(';').split(parameters)) {
+                        String parameterTrimmed = parameter.trim();
+                        String key = substringBefore(parameterTrimmed, "=").trim();
+                        String value = substringAfter(parameterTrimmed, "=").trim();
+                        if (isNotBlank(key) && isNotBlank(value)) {
+                            parameterMap.put(
+                                key,
+                                value
+                            );
+                        }
+                    }
                     if (parameterMap.size() > 1) {
                         // sort if multiple entries to ensure equals and hashcode is consistent
                         parameterMap = parameterMap.entrySet()
