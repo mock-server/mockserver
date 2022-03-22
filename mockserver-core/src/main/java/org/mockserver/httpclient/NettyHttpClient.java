@@ -12,6 +12,7 @@ import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
 import org.mockserver.configuration.Configuration;
+import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.BinaryMessage;
@@ -42,6 +43,7 @@ public class NettyHttpClient {
     static final AttributeKey<Boolean> SECURE = AttributeKey.valueOf("SECURE");
     static final AttributeKey<InetSocketAddress> REMOTE_SOCKET = AttributeKey.valueOf("REMOTE_SOCKET");
     static final AttributeKey<CompletableFuture<Message>> RESPONSE_FUTURE = AttributeKey.valueOf("RESPONSE_FUTURE");
+    private static final HopByHopHeaderFilter hopByHopHeaderFilter = new HopByHopHeaderFilter();
     private final Configuration configuration;
     private final MockServerLogger mockServerLogger;
     private final EventLoopGroup eventLoopGroup;
@@ -107,7 +109,11 @@ public class NettyHttpClient {
                 .whenComplete((message, throwable) -> {
                     if (throwable == null) {
                         if (message != null) {
-                            httpResponseFuture.complete((HttpResponse) message);
+                            if (forwardProxyClient) {
+                                httpResponseFuture.complete(hopByHopHeaderFilter.onResponse((HttpResponse) message));
+                            } else {
+                                httpResponseFuture.complete((HttpResponse) message);
+                            }
                         } else {
                             httpResponseFuture.complete(response());
                         }

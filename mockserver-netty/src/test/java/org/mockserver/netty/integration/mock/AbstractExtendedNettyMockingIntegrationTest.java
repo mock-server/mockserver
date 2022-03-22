@@ -97,7 +97,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     )
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // - in https
         assertEquals(
@@ -116,7 +116,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     )
                     .withHeaders(header("headerNameRequest", "headerValueRequest"))
                     .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -153,7 +153,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("some/path" +
                         "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc" +
                         "&variableTwo=variableTwoValue|variableTwoValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -164,7 +164,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("some/path" +
                         "?variableOne=variableOneValab" +
                         "&variableTwo=variableTwoValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -174,7 +174,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 request()
                     .withPath(calculatePath("some/path" +
                         "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             notFoundResponse(),
@@ -182,7 +182,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 request()
                     .withPath(calculatePath("some/path" +
                         "?variableOne=variableOneValaax|variableOneValbb|variableOneValcc")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             notFoundResponse(),
@@ -190,7 +190,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 request()
                     .withPath(calculatePath("some/path" +
                         "?variableOne=variableOneValaa|variableOneValbbx|variableOneValcc")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             notFoundResponse(),
@@ -198,7 +198,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 request()
                     .withPath(calculatePath("some/path" +
                         "?variableOne=variableOneValaa|variableOneValbb|variableOneValccx")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             notFoundResponse(),
@@ -207,7 +207,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("some/path" +
                         "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc" +
                         "&variableTwo=variableTwoOtherValue|variableTwoValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             notFoundResponse(),
@@ -216,7 +216,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("some/path" +
                         "?variableOne=variableOneValaa|variableOneValbb|variableOneValcc" +
                         "&variableTwo=variableTwoValue|variableTwoOtherValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             notFoundResponse(),
@@ -225,7 +225,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("some/path" +
                         "?variableOne=variableOneValaax|variableOneValbb|variableOneValcc" +
                         "&variableTwo=variableTwoValue|variableTwoOtherValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -262,7 +262,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("some/path" +
                         "/;variableOne=variableOneValaa;variableOne=variableOneValbb;variableOne=variableOneValcc" +
                         "/;variableTwo=variableTwoValue,variableTwoValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -273,7 +273,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("some/path" +
                         "/;variableOne=variableOneValab" +
                         "/;variableTwo=variableTwoValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             notFoundResponse(),
@@ -282,7 +282,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("some/path" +
                         "/;variableOne=variableOneValaa;variableOne=variableOneValbb;variableOne=variableOneValcc" +
                         "/;variableTwo=variableTwoOtherValue,variableTwoValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             notFoundResponse(),
@@ -291,7 +291,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("some/path" +
                         "/;variableOne=variableOneValaa;variableOne=variableOneValbb;variableOne=variableOneValcc" +
                         "/;variableTwo=variableTwoValue,variableTwoOtherValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             notFoundResponse(),
@@ -300,7 +300,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("some/path" +
                         "/;variableOne=variableOneValaax;variableOne=variableOneValbb;variableOne=variableOneValcc" +
                         "/;variableTwo=variableTwoValue,variableTwoOtherValue")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -362,7 +362,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                             header("x-test", "test_headers_and_body")
                         )
                         .withBody("an_example_body_http"),
-                        HEADERS_TO_IGNORE
+                    HEADERS_TO_IGNORE
                 )
             );
 
@@ -384,7 +384,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                             header("x-test", "test_headers_and_body")
                         )
                         .withBody("an_example_body_http"),
-                        HEADERS_TO_IGNORE
+                    HEADERS_TO_IGNORE
                 )
             );
         });
@@ -447,7 +447,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE
+                HEADERS_TO_IGNORE
             )
         );
 
@@ -469,7 +469,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE
+                HEADERS_TO_IGNORE
             )
         );
     }
@@ -521,7 +521,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                                 header("x-test", "test_headers_and_body")
                             )
                             .withBody("an_example_body_http"),
-                            HEADERS_TO_IGNORE
+                        HEADERS_TO_IGNORE
                     )
                 );
                 objectCallbackCounter++;
@@ -573,7 +573,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                             header("x-test", "test_headers_and_body")
                         )
                         .withBody("an_example_body_http"),
-                        HEADERS_TO_IGNORE
+                    HEADERS_TO_IGNORE
                 )
             );
             objectCallbackCounter++;
@@ -606,7 +606,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 makeRequest(
                     request()
                         .withPath(calculatePath("object_callback")),
-                        HEADERS_TO_IGNORE
+                    HEADERS_TO_IGNORE
                 )
             );
 
@@ -652,7 +652,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             makeRequest(
                 request()
                     .withPath(calculatePath("object_callback")),
-                    HEADERS_TO_IGNORE
+                HEADERS_TO_IGNORE
             )
         );
 
@@ -703,7 +703,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         .withPath(calculatePath("object_callback"))
                         .withMethod("POST")
                         .withBody(veryLargeString),
-                        HEADERS_TO_IGNORE
+                    HEADERS_TO_IGNORE
                 )
             );
         });
@@ -739,7 +739,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("object_callback"))
                     .withMethod("POST")
                     .withBody(veryLargeString),
-                    HEADERS_TO_IGNORE
+                HEADERS_TO_IGNORE
             )
         );
     }
@@ -787,7 +787,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                             header("x-test", "test_headers_and_body")
                         )
                         .withBody("an_example_body_http"),
-                        HEADERS_TO_IGNORE
+                    HEADERS_TO_IGNORE
                 )
             );
             // - in https
@@ -808,7 +808,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                             header("x-test", "test_headers_and_body_https")
                         )
                         .withBody("an_example_body_https"),
-                        HEADERS_TO_IGNORE)
+                    HEADERS_TO_IGNORE)
             );
         });
     }
@@ -847,7 +847,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE
+                HEADERS_TO_IGNORE
             )
         );
         // - in https
@@ -868,7 +868,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         header("x-test", "test_headers_and_body_https")
                     )
                     .withBody("an_example_body_https"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -919,7 +919,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE
+                HEADERS_TO_IGNORE
             )
         );
     }
@@ -943,14 +943,17 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         }
                         return request()
                             .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
-                            .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
+                            .withHeader("x-test", httpRequest.getFirstHeader("x-test") + "_overridden")
                             .withBody("some_overridden_body")
                             .withSecure(httpRequest.isSecure());
                     },
-                    (httpRequest, httpResponse) -> httpResponse
-                        .withHeader("x-response-test", "x-response-test")
-                        .removeHeader(CONTENT_LENGTH.toString())
-                        .withBody("some_overidden_response_body")
+                    (httpRequest, httpResponse) -> {
+                        assertThat(httpRequest.getBodyAsString(), equalTo("some_overridden_body"));
+                        assertThat(httpResponse.getFirstHeader(CONTENT_LENGTH.toString()), equalTo(""));
+                        return httpResponse
+                            .withHeader("x-response-test", "x-response-test")
+                            .withBody("some_overidden_response_body");
+                    }
                 );
 
             // then
@@ -961,7 +964,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withReasonPhrase(OK_200.reasonPhrase())
                     .withHeaders(
                         header("x-response-test", "x-response-test"),
-                        header("x-test", "test_headers_and_body")
+                        header("x-test", "test_headers_and_body_overridden")
                     )
                     .withBody("some_overidden_response_body"),
                 makeRequest(
@@ -972,9 +975,11 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                             header("x-test", "test_headers_and_body")
                         )
                         .withBody("an_example_body_http"),
-                        HEADERS_TO_IGNORE
+                    HEADERS_TO_IGNORE
                 )
             );
+            assertThat(insecureEchoServer.getLastRequest().getBodyAsString(), equalTo("some_overridden_body"));
+
             // - in https
             assertEquals(
                 response()
@@ -982,7 +987,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withReasonPhrase(OK_200.reasonPhrase())
                     .withHeaders(
                         header("x-response-test", "x-response-test"),
-                        header("x-test", "test_headers_and_body_https")
+                        header("x-test", "test_headers_and_body_https_overridden")
                     )
                     .withBody("some_overidden_response_body"),
                 makeRequest(
@@ -994,8 +999,9 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                             header("x-test", "test_headers_and_body_https")
                         )
                         .withBody("an_example_body_https"),
-                        HEADERS_TO_IGNORE)
+                    HEADERS_TO_IGNORE)
             );
+            assertThat(secureEchoServer.getLastRequest().getBodyAsString(), equalTo("some_overridden_body"));
         });
     }
 
@@ -1008,17 +1014,26 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("echo"))
             )
             .forward(
-                httpRequest ->
-                    request()
+                httpRequest -> {
+                    assertThat(httpRequest.getRemoteAddress(), equalTo("127.0.0.1"));
+                    if (httpRequest.isSecure()) {
+                        assertThat(httpRequest.getClientCertificateChain().size(), equalTo(2));
+                        assertThat(httpRequest.getClientCertificateChain().get(0).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=localhost"));
+                        assertThat(httpRequest.getClientCertificateChain().get(1).getSubjectDistinguishedName(), equalTo("C=UK, ST=England, L=London, O=MockServer, CN=www.mockserver.com"));
+                    }
+                    return request()
                         .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
                         .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
                         .withBody("some_overridden_body")
-                        .withSecure(httpRequest.isSecure()),
-                (httpRequest, httpResponse) ->
-                    httpResponse
+                        .withSecure(httpRequest.isSecure());
+                },
+                (httpRequest, httpResponse) -> {
+                    assertThat(httpRequest.getBodyAsString(), equalTo("some_overridden_body"));
+                    assertThat(httpResponse.getFirstHeader(CONTENT_LENGTH.toString()), equalTo(""));
+                    return httpResponse
                         .withHeader("x-response-test", "x-response-test")
-                        .removeHeader(CONTENT_LENGTH.toString())
-                        .withBody("some_overidden_response_body")
+                        .withBody("some_overidden_response_body");
+                }
             );
 
         // then
@@ -1040,9 +1055,11 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE
+                HEADERS_TO_IGNORE
             )
         );
+        assertThat(insecureEchoServer.getLastRequest().getBodyAsString(), equalTo("some_overridden_body"));
+
         // - in https
         assertEquals(
             response()
@@ -1062,8 +1079,9 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         header("x-test", "test_headers_and_body_https")
                     )
                     .withBody("an_example_body_https"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
+        assertThat(secureEchoServer.getLastRequest().getBodyAsString(), equalTo("some_overridden_body"));
     }
 
     @Test
@@ -1114,7 +1132,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                             header("x-test", "test_headers_and_body")
                         )
                         .withBody("an_example_body_http"),
-                        HEADERS_TO_IGNORE
+                    HEADERS_TO_IGNORE
                 )
             );
             // - in https
@@ -1135,7 +1153,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                             header("x-test", "test_headers_and_body_https")
                         )
                         .withBody("an_example_body_https"),
-                        HEADERS_TO_IGNORE)
+                    HEADERS_TO_IGNORE)
             );
         });
     }
@@ -1179,7 +1197,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE
+                HEADERS_TO_IGNORE
             )
         );
         // - in https
@@ -1200,7 +1218,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         header("x-test", "test_headers_and_body_https")
                     )
                     .withBody("an_example_body_https"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1222,7 +1240,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 request()
                     .withPath(calculatePath("mockserver/status"))
                     .withMethod("PUT"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         MILLISECONDS.sleep(100);
 
@@ -1243,7 +1261,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withBody("{" + NEW_LINE +
                         "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
                         "}"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -1257,7 +1275,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 request()
                     .withPath(calculatePath("mockserver/status"))
                     .withMethod("PUT"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // - in https
         assertEquals(
@@ -1276,7 +1294,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withBody("{" + NEW_LINE +
                         "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
                         "}"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(
             response()
@@ -1294,7 +1312,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withBody("{" + NEW_LINE +
                         "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
                         "}"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1314,7 +1332,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withBody("{" + NEW_LINE +
                         "  \"ports\" : [ " + newPort + " ]" + NEW_LINE +
                         "}"),
-                    HEADERS_TO_IGNORE);
+                HEADERS_TO_IGNORE);
 
             // then
             assertThat(response.getStatusCode(), is(400));
@@ -1405,7 +1423,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             makeRequest(
                 request()
                     .withPath(calculatePath("")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // - in https
         assertEquals(
@@ -1418,7 +1436,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 request()
                     .withSecure(true)
                     .withPath(calculatePath("")),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1456,7 +1474,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withMethod("GET")
                     .withPath(calculatePath("/api/0/applications/([0-9a-zA-Z-]+)/experiments"))
                     .withHeader("Content-Type", "application/json"),
-                    HEADERS_TO_IGNORE
+                HEADERS_TO_IGNORE
             )
         );
         // - in https
@@ -1470,7 +1488,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withSecure(true)
                     .withPath(calculatePath("/api/0/applications/([0-9a-zA-Z-]+)/experiments"))
                     .withHeader("Content-Type", "application/json"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1500,7 +1518,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withMethod("POST")
                     .withPath(calculatePath("some_path"))
                     .withHeader("largeHeader", largeHeaderValue),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         // - in https
         assertEquals(
@@ -1514,7 +1532,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withMethod("POST")
                     .withPath(calculatePath("some_path"))
                     .withHeader("largeHeader", largeHeaderValue),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
     }
 
@@ -1926,7 +1944,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         header("X-Test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(0).getBody().getValue(), "an_example_body_http");
         assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(0).getPath().getValue(), calculatePath("callback"));
@@ -1949,7 +1967,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         header("X-Test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_https"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");
         assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(1).getPath().getValue(), calculatePath("callback"));
@@ -1996,7 +2014,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         header("X-Test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(0).getBody().getValue(), "an_example_body_http");
         assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(0).getPath().getValue(), calculatePath("callback"));
@@ -2019,7 +2037,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         header("X-Test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_https"),
-                    HEADERS_TO_IGNORE)
+                HEADERS_TO_IGNORE)
         );
         assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");
         assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(1).getPath().getValue(), calculatePath("callback"));
@@ -2068,7 +2086,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE
+                HEADERS_TO_IGNORE
             );
             long timeAfterRequest = System.currentTimeMillis();
 
@@ -2130,7 +2148,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     header("x-test", "test_headers_and_body")
                 )
                 .withBody("an_example_body_http"),
-                HEADERS_TO_IGNORE
+            HEADERS_TO_IGNORE
         );
         long timeAfterRequest = System.currentTimeMillis();
 
@@ -2177,7 +2195,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                    HEADERS_TO_IGNORE
+                HEADERS_TO_IGNORE
             );
             long timeAfterRequest = System.currentTimeMillis();
 
@@ -2224,7 +2242,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     header("x-test", "test_headers_and_body")
                 )
                 .withBody("an_example_body_http"),
-                HEADERS_TO_IGNORE
+            HEADERS_TO_IGNORE
         );
         long timeAfterRequest = System.currentTimeMillis();
 

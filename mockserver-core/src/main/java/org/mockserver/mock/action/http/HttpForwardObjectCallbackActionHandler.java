@@ -69,7 +69,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                 actionHandler.executeAfterForwardActionResponse(responseFuture, (httpResponse, exception) -> {
                     if (httpResponse != null) {
                         try {
-                            HttpResponse callbackResponse = expectationForwardAndResponseCallback.handle(request, httpResponse);
+                            HttpResponse callbackResponse = expectationForwardAndResponseCallback.handle(callbackRequest, httpResponse);
                             actionHandler.writeForwardActionResponse(callbackResponse, responseWriter, request, httpObjectCallback);
                         } catch (Throwable throwable) {
                             if (MockServerLogger.isEnabled(WARN)) {
@@ -110,18 +110,18 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
         final String webSocketCorrelationId = UUIDService.getUUID();
         webSocketClientRegistry.registerForwardCallbackHandler(webSocketCorrelationId, new WebSocketRequestCallback() {
             @Override
-            public void handle(final HttpRequest request) {
+            public void handle(final HttpRequest callbackRequest) {
                 if (MockServerLogger.isEnabled(TRACE)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setLogLevel(TRACE)
                             .setHttpRequest(request)
                             .setMessageFormat("received request over websocket{}from client " + clientId + " for correlationId " + webSocketCorrelationId)
-                            .setArguments(request)
+                            .setArguments(callbackRequest)
                     );
                 }
                 final HttpForwardActionResult responseFuture = sendRequest(
-                    request.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME),
+                    callbackRequest.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME),
                     null,
                     null
                 );
@@ -131,7 +131,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                             .setLogLevel(TRACE)
                             .setHttpRequest(request)
                             .setMessageFormat("received response for request{}from client " + clientId)
-                            .setArguments(request)
+                            .setArguments(callbackRequest)
                     );
                 }
                 webSocketClientRegistry.unregisterForwardCallbackHandler(webSocketCorrelationId);
@@ -139,9 +139,9 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                     expectationPostProcessor.run();
                 }
                 if (isTrue(httpObjectCallback.getResponseCallback())) {
-                    handleResponseViaWebSocket(request, responseFuture, actionHandler, webSocketCorrelationId, clientId, expectationPostProcessor, responseWriter, httpObjectCallback, synchronous);
+                    handleResponseViaWebSocket(callbackRequest, responseFuture, actionHandler, webSocketCorrelationId, clientId, expectationPostProcessor, responseWriter, httpObjectCallback, synchronous);
                 } else {
-                    actionHandler.writeForwardActionResponse(responseFuture, responseWriter, request, httpObjectCallback, synchronous);
+                    actionHandler.writeForwardActionResponse(responseFuture, responseWriter, callbackRequest, httpObjectCallback, synchronous);
                 }
             }
 

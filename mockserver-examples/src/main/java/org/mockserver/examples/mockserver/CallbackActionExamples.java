@@ -233,10 +233,9 @@ public class CallbackActionExamples {
                 },
                 new ExpectationForwardAndResponseCallback() {
                     @Override
-                    public HttpResponse handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
+                    public HttpResponse handle(HttpRequest httpRequest, HttpResponse httpResponse) {
                         return httpResponse
                             .withHeader("x-response-test", "x-response-test")
-                            .removeHeader(CONTENT_LENGTH.toString())
                             .withBody("some_overridden_response_body");
                     }
                 }
@@ -263,7 +262,6 @@ public class CallbackActionExamples {
                 (httpRequest, httpResponse) ->
                     httpResponse
                         .withHeader("x-response-test", "x-response-test")
-                        .removeHeader(CONTENT_LENGTH.toString())
                         .withBody("some_overridden_response_body")
             );
     }
