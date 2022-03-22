@@ -172,7 +172,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         ChannelPipeline pipeline = ctx.pipeline();
         for (ChannelHandler channelHandler : channelHandlers) {
             if (isSslEnabledUpstream(ctx.channel())) {
-                pipeline.addAfter(SslHandler.class.getName(), null, channelHandler);
+                pipeline.addAfter("SslHandler#0", null, channelHandler);
             } else {
                 pipeline.addFirst(channelHandler);
             }

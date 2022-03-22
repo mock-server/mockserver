@@ -68,7 +68,7 @@ public class SniHandler extends AbstractSniHandler<SslContext> {
         try {
             sslHandler = sslContext.getNow().newHandler(ctx.alloc());
             ctx.channel().attr(UPSTREAM_SSL_ENGINE).set(sslHandler.engine());
-            ctx.pipeline().replace(this, SslHandler.class.getName(), sslHandler);
+            ctx.pipeline().replace(this, "SslHandler#0", sslHandler);
             sslHandler = null;
         } finally {
             // Since the SslHandler was not inserted into the pipeline the ownership of the SSLEngine was not

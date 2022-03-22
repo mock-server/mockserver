@@ -66,7 +66,7 @@ public class Socks5ProxyHandler extends SocksProxyHandler<Socks5Message> {
             .findFirst()
             .map(authMethod -> {
                 if (isSslEnabledUpstream(ctx.channel())) {
-                    ctx.pipeline().addAfter(SslHandler.class.getName(), null, nextRequestDecoder);
+                    ctx.pipeline().addAfter("SslHandler#0", null, nextRequestDecoder);
                 } else {
                     ctx.pipeline().addFirst(nextRequestDecoder);
                 }
