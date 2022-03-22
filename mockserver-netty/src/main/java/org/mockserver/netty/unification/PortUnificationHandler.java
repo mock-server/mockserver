@@ -48,7 +48,8 @@ import static org.mockserver.exception.ExceptionHandling.*;
 import static org.mockserver.logging.MockServerLogger.isEnabled;
 import static org.mockserver.mock.action.http.HttpActionHandler.REMOTE_SOCKET;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.netty.HttpRequestHandler.*;
+import static org.mockserver.netty.HttpRequestHandler.LOCAL_HOST_HEADERS;
+import static org.mockserver.netty.HttpRequestHandler.PROXYING;
 import static org.mockserver.netty.proxy.relay.RelayConnectHandler.*;
 import static org.slf4j.event.Level.TRACE;
 import static org.slf4j.event.Level.WARN;
@@ -64,8 +65,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     private static final Map<PortBinding, Set<String>> localAddressesCache = new ConcurrentHashMap<>();
 
     protected final MockServerLogger mockServerLogger;
-    private final LoggingHandler loggingHandlerFirst = new LoggingHandler(PortUnificationHandler.class.getName() + "-first");
-    private final LoggingHandler loggingHandlerLast = new LoggingHandler(PortUnificationHandler.class.getName() + "-last");
+    private final LoggingHandler loggingHandler = new LoggingHandler(PortUnificationHandler.class.getName() + "-first");
     private final HttpContentLengthRemover httpContentLengthRemover = new HttpContentLengthRemover();
     private final Configuration configuration;
     private final LifeCycle server;
@@ -145,10 +145,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         }
 
         if (isEnabled(TRACE)) {
-            loggingHandlerFirst.addLoggingHandler(ctx);
-        }
-        if (isEnabled(TRACE)) {
-            ctx.pipeline().addLast(loggingHandlerLast);
+            loggingHandler.addLoggingHandler(ctx);
         }
     }
 
