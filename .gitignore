@@ -108,6 +108,7 @@ mockserverInitialization.json
 /*.pem
 _test*.java
 dependency-reduced-pom.xml
+go_client
 
 # soft links #
 ##############
