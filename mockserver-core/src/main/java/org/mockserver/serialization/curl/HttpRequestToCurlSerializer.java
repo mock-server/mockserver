@@ -80,7 +80,7 @@ public class HttpRequestToCurlSerializer {
     }
 
     private String getUri(HttpRequest request) {
-        String uri = new MockServerHttpRequestToFullHttpRequest(mockServerLogger).getURI(request);
+        String uri = new MockServerHttpRequestToFullHttpRequest(mockServerLogger, null).getURI(request, null);
         if (isBlank(uri)) {
             uri = "/";
         } else if (!startsWith(uri, "/")) {

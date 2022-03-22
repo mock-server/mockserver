@@ -1,6 +1,7 @@
-package org.mockserver.integration;
+package org.mockserver.clientandserver;
 
 import org.junit.Test;
+import org.mockserver.integration.ClientAndServer;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
