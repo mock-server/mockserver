@@ -410,6 +410,9 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      * @param values the parameter values which can be a varags of strings or regular expressions
      */
     public HttpRequest withPathParameter(String name, String... values) {
+        if (values.length == 0) {
+            values = new String[]{".*"};
+        }
         getOrCreatePathParameters().withEntry(name, values);
         this.hashCode = 0;
         return this;
@@ -423,6 +426,9 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      * @param values the parameter values which can be a varags of JSON schemas
      */
     public HttpRequest withSchemaPathParameter(String name, String... values) {
+        if (values.length == 0) {
+            values = new String[]{".*"};
+        }
         getOrCreatePathParameters().withEntry(string(name), Arrays.stream(values).map(NottableSchemaString::schemaString).toArray(NottableString[]::new));
         this.hashCode = 0;
         return this;
@@ -438,6 +444,9 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      * @param values the parameter values which can be a varags of NottableStrings
      */
     public HttpRequest withPathParameter(NottableString name, NottableString... values) {
+        if (values.length == 0) {
+            values = new NottableString[]{string(".*")};
+        }
         getOrCreatePathParameters().withEntry(name, values);
         this.hashCode = 0;
         return this;
@@ -568,6 +577,9 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      * @param values the parameter values which can be a varags of JSON schemas
      */
     public HttpRequest withSchemaQueryStringParameter(String name, String... values) {
+        if (values.length == 0) {
+            values = new String[]{".*"};
+        }
         getOrCreateQueryStringParameters().withEntry(string(name), Arrays.stream(values).map(NottableSchemaString::schemaString).toArray(NottableString[]::new));
         this.hashCode = 0;
         return this;
@@ -583,6 +595,9 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      * @param values the parameter values which can be a varags of NottableStrings
      */
     public HttpRequest withQueryStringParameter(NottableString name, NottableString... values) {
+        if (values.length == 0) {
+            values = new NottableString[]{string(".*")};
+        }
         getOrCreateQueryStringParameters().withEntry(name, values);
         this.hashCode = 0;
         return this;
@@ -836,6 +851,9 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      * @param values the header values which can be a varags of strings or regular expressions
      */
     public HttpRequest withHeader(String name, String... values) {
+        if (values.length == 0) {
+            values = new String[]{".*"};
+        }
         getOrCreateHeaders().withEntry(header(name, values));
         this.hashCode = 0;
         return this;
@@ -849,6 +867,9 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      * @param values the header values which can be a varags of JSON schemas
      */
     public HttpRequest withSchemaHeader(String name, String... values) {
+        if (values.length == 0) {
+            values = new String[]{".*"};
+        }
         getOrCreateHeaders().withEntry(header(string(name), Arrays.stream(values).map(NottableSchemaString::schemaString).toArray(NottableString[]::new)));
         this.hashCode = 0;
         return this;
@@ -864,6 +885,9 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
      * @param values the header values which can be a varags of NottableStrings
      */
     public HttpRequest withHeader(NottableString name, NottableString... values) {
+        if (values.length == 0) {
+            values = new NottableString[]{string(".*")};
+        }
         getOrCreateHeaders().withEntry(header(name, values));
         this.hashCode = 0;
         return this;

@@ -15,6 +15,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.SET_COOKIE;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpStatusCode.NOT_FOUND_404;
 import static org.mockserver.model.HttpStatusCode.OK_200;
+import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
@@ -250,6 +251,9 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      * @param values the header values
      */
     public HttpResponse withHeader(String name, String... values) {
+        if (values.length == 0) {
+            values = new String[]{".*"};
+        }
         getOrCreateHeaders().withEntry(name, values);
         this.hashCode = 0;
         return this;
@@ -264,6 +268,9 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      * @param values the header values which can be a varags of NottableStrings
      */
     public HttpResponse withHeader(NottableString name, NottableString... values) {
+        if (values.length == 0) {
+            values = new NottableString[]{string(".*")};
+        }
         getOrCreateHeaders().withEntry(header(name, values));
         this.hashCode = 0;
         return this;
@@ -295,6 +302,9 @@ public class HttpResponse extends Action<HttpResponse> implements HttpMessage<Ht
      * @param values the header values
      */
     public HttpResponse replaceHeader(String name, String... values) {
+        if (values.length == 0) {
+            values = new String[]{".*"};
+        }
         getOrCreateHeaders().replaceEntry(name, values);
         this.hashCode = 0;
         return this;

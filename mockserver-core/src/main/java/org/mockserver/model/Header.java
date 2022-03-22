@@ -52,10 +52,16 @@ public class Header extends KeyToMultiValue {
     }
 
     public static Header schemaHeader(String name, String... values) {
+        if (values.length == 0) {
+            values = new String[]{".*"};
+        }
         return new Header(string(name), Arrays.stream(values).map(NottableSchemaString::schemaString).toArray(NottableString[]::new));
     }
 
     public static Header optionalHeader(String name, String... values) {
+        if (values.length == 0) {
+            values = new String[]{".*"};
+        }
         return new Header(optional(name), Arrays.stream(values).map(NottableString::string).toArray(NottableString[]::new));
     }
 }
