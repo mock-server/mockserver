@@ -12,7 +12,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - improved error messages from main method
-- added IllegalArgumentExceptions for headers and parameters specified without any values
 
 ### Fixed
 - allow callback which is nested inside initializer class for maven plugin initializer
@@ -23,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - removed content-length and other hop by hop response headers for forward actions
 - fixed handling of headers and parameters specified without any values
 - fixed logLevel in MockServer instance Configuration, so it now sets the SystemProperty read by the logging configuration
+- fixed parallel execution of MockServerExtension to prevent port bind errors   
 
 ## [5.13.0] - 2022-03-17
 

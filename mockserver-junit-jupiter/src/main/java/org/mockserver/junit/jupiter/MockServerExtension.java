@@ -49,16 +49,18 @@ public class MockServerExtension implements ParameterResolver, BeforeAllCallback
     }
 
     ClientAndServer instantiateClient(List<Integer> ports) {
-        if (perTestSuite) {
-            if (perTestSuiteClientAndServer == null) {
-                perTestSuiteClientAndServer = ClientAndServer.startClientAndServer(ports);
-                Runtime.getRuntime().addShutdownHook(new Scheduler.SchedulerThreadFactory("MockServer Test Extension ShutdownHook").newThread(() -> perTestSuiteClientAndServer.stop()));
+        synchronized (MockServerExtension.class) {
+            if (perTestSuite) {
+                if (perTestSuiteClientAndServer == null) {
+                    perTestSuiteClientAndServer = ClientAndServer.startClientAndServer(ports);
+                    Runtime.getRuntime().addShutdownHook(new Scheduler.SchedulerThreadFactory("MockServer Test Extension ShutdownHook").newThread(() -> perTestSuiteClientAndServer.stop()));
+                }
+                return perTestSuiteClientAndServer;
+            } else if (customClientAndServer != null) {
+                return customClientAndServer;
+            } else {
+                return ClientAndServer.startClientAndServer(ports);
             }
-            return perTestSuiteClientAndServer;
-        } else if (customClientAndServer != null) {
-            return customClientAndServer;
-        } else {
-            return ClientAndServer.startClientAndServer(ports);
         }
     }
 
