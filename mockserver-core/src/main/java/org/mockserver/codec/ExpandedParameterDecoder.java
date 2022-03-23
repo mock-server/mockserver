@@ -42,7 +42,8 @@ public class ExpandedParameterDecoder {
         Map<String, List<String>> parameterMap = new HashMap<>();
         if (isNotBlank(parameterString)) {
             try {
-                parameterMap.putAll(new QueryStringDecoder(parameterString, HttpConstants.DEFAULT_CHARSET, parameterString.contains("/") || hasPath, 1024, !configuration.useSemicolonAsQueryParameterSeparator()).parameters());
+                hasPath = parameterString.startsWith("/") || parameterString.contains("?") || hasPath;
+                parameterMap.putAll(new QueryStringDecoder(parameterString, HttpConstants.DEFAULT_CHARSET, hasPath, Integer.MAX_VALUE, !configuration.useSemicolonAsQueryParameterSeparator()).parameters());
             } catch (IllegalArgumentException iae) {
                 mockServerLogger.logEvent(
                     new LogEntry()
@@ -62,7 +63,8 @@ public class ExpandedParameterDecoder {
         Map<String, List<String>> parameterMap = new HashMap<>();
         if (isNotBlank(parameterString)) {
             try {
-                parameterMap.putAll(new QueryStringDecoder(parameterString, HttpConstants.DEFAULT_CHARSET, parameterString.contains("/") || hasPath, 1024, true).parameters());
+                hasPath = parameterString.startsWith("/") || parameterString.contains("?") || hasPath;
+                parameterMap.putAll(new QueryStringDecoder(parameterString, HttpConstants.DEFAULT_CHARSET, parameterString.contains("/") || hasPath, Integer.MAX_VALUE, true).parameters());
             } catch (IllegalArgumentException iae) {
                 mockServerLogger.logEvent(
                     new LogEntry()

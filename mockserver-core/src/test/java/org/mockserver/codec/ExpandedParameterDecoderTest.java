@@ -98,10 +98,12 @@ public class ExpandedParameterDecoderTest {
     public void shouldParseBodyParameters() {
         shouldParseParameters(
             "one=5",
-            param("one", "5"));
+            param("one", "5")
+        );
         shouldParseParameters(
             "one=3&one=4&one=5",
-            param("one", "3", "4", "5"));
+            param("one", "3", "4", "5")
+        );
         shouldParseParameters(
             "one=3&one=4&one=5&two=1&two=2&three=1",
             param("one", "3", "4", "5"),
@@ -113,17 +115,34 @@ public class ExpandedParameterDecoderTest {
         );
     }
 
+    @Test
+    public void shouldParseBodyParametersWithSlash() {
+        shouldParseParameters(
+            "code=48e5392a3ea21fa73a4bc0a63823b2a13071e82907ec1f03fffb56269efcd7f6&" +
+                "code_verifier=NzpeXIxUAwJyX7LJIDGTLx_07UWOLBYYPE-3f9WjyGY&" +
+                "redirect_uri=com.calendly.app://oauth&" +
+                "client_id=75b439951f843108a4e89e67179a7a529ae81f61b0aa66ade49ef3c038373c78&" +
+                "grant_type=authorization_code",
+            param("code", "48e5392a3ea21fa73a4bc0a63823b2a13071e82907ec1f03fffb56269efcd7f6"),
+            param("code_verifier", "NzpeXIxUAwJyX7LJIDGTLx_07UWOLBYYPE-3f9WjyGY"),
+            param("redirect_uri", "com.calendly.app://oauth"),
+            param("client_id", "75b439951f843108a4e89e67179a7a529ae81f61b0aa66ade49ef3c038373c78"),
+            param("grant_type", "authorization_code")
+        );
+    }
+
     // MATRIX
 
     @Test
     public void shouldSplitMatrixParameters() {
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.MATRIX_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("2;parameterName=3"),
-                string("3;parameterName=4;parameterName=5")
-            )),
+                ParameterStyle.MATRIX_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("2;parameterName=3"),
+                    string("3;parameterName=4;parameterName=5")
+                )
+            ),
             containsInAnyOrder(
                 string("2"),
                 string("3"),
@@ -133,12 +152,13 @@ public class ExpandedParameterDecoderTest {
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.MATRIX_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("2;parameterName=3", true),
-                string("3;parameterName=4;parameterName=5")
-            )),
+                ParameterStyle.MATRIX_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("2;parameterName=3", true),
+                    string("3;parameterName=4;parameterName=5")
+                )
+            ),
             containsInAnyOrder(
                 string("2", true),
                 string("3", true),
@@ -148,12 +168,13 @@ public class ExpandedParameterDecoderTest {
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.MATRIX_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("?2;parameterName=3"),
-                string("3;parameterName=4;parameterName=5")
-            )),
+                ParameterStyle.MATRIX_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("?2;parameterName=3"),
+                    string("3;parameterName=4;parameterName=5")
+                )
+            ),
             containsInAnyOrder(
                 string("?2"),
                 string("?3"),
@@ -163,12 +184,13 @@ public class ExpandedParameterDecoderTest {
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.MATRIX_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("?!2;parameterName=3"),
-                string("3;parameterName=4;parameterName=5")
-            )),
+                ParameterStyle.MATRIX_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("?!2;parameterName=3"),
+                    string("3;parameterName=4;parameterName=5")
+                )
+            ),
             containsInAnyOrder(
                 string("?!2"),
                 string("?!3"),
@@ -182,48 +204,52 @@ public class ExpandedParameterDecoderTest {
     @Test
     public void shouldNotSplitMatrixParameters() {
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.MATRIX,
-            "parameterName",
-            Arrays.asList(
-                string("2;parameterName=3"),
-                string("3;parameterName=4;parameterName=5")
-            )),
+                ParameterStyle.MATRIX,
+                "parameterName",
+                Arrays.asList(
+                    string("2;parameterName=3"),
+                    string("3;parameterName=4;parameterName=5")
+                )
+            ),
             containsInAnyOrder(
                 string("2;parameterName=3"),
                 string("3;parameterName=4;parameterName=5")
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.MATRIX,
-            "parameterName",
-            Arrays.asList(
-                string("2;parameterName=3", true),
-                string("3;parameterName=4;parameterName=5")
-            )),
+                ParameterStyle.MATRIX,
+                "parameterName",
+                Arrays.asList(
+                    string("2;parameterName=3", true),
+                    string("3;parameterName=4;parameterName=5")
+                )
+            ),
             containsInAnyOrder(
                 string("2;parameterName=3", true),
                 string("3;parameterName=4;parameterName=5")
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.MATRIX,
-            "parameterName",
-            Arrays.asList(
-                string("?2;parameterName=3"),
-                string("3;parameterName=4;parameterName=5")
-            )),
+                ParameterStyle.MATRIX,
+                "parameterName",
+                Arrays.asList(
+                    string("?2;parameterName=3"),
+                    string("3;parameterName=4;parameterName=5")
+                )
+            ),
             containsInAnyOrder(
                 string("?2;parameterName=3"),
                 string("3;parameterName=4;parameterName=5")
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.MATRIX,
-            "parameterName",
-            Arrays.asList(
-                string("?!2;parameterName=3"),
-                string("3;parameterName=4;parameterName=5")
-            )),
+                ParameterStyle.MATRIX,
+                "parameterName",
+                Arrays.asList(
+                    string("?!2;parameterName=3"),
+                    string("3;parameterName=4;parameterName=5")
+                )
+            ),
             containsInAnyOrder(
                 string("?!2;parameterName=3"),
                 string("3;parameterName=4;parameterName=5")
@@ -236,12 +262,13 @@ public class ExpandedParameterDecoderTest {
     @Test
     public void shouldSplitLabelParameters() {
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.LABEL_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("2.3"),
-                string("3.4.5")
-            )),
+                ParameterStyle.LABEL_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("2.3"),
+                    string("3.4.5")
+                )
+            ),
             containsInAnyOrder(
                 string("2"),
                 string("3"),
@@ -251,12 +278,13 @@ public class ExpandedParameterDecoderTest {
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.LABEL_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("2.3", true),
-                string("3.4.5")
-            )),
+                ParameterStyle.LABEL_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("2.3", true),
+                    string("3.4.5")
+                )
+            ),
             containsInAnyOrder(
                 string("2", true),
                 string("3", true),
@@ -266,12 +294,13 @@ public class ExpandedParameterDecoderTest {
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.LABEL_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("?2.3"),
-                string("3.4.5")
-            )),
+                ParameterStyle.LABEL_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("?2.3"),
+                    string("3.4.5")
+                )
+            ),
             containsInAnyOrder(
                 string("?2"),
                 string("?3"),
@@ -281,12 +310,13 @@ public class ExpandedParameterDecoderTest {
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.LABEL_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("?!2.3"),
-                string("3.4.5")
-            )),
+                ParameterStyle.LABEL_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("?!2.3"),
+                    string("3.4.5")
+                )
+            ),
             containsInAnyOrder(
                 string("?!2"),
                 string("?!3"),
@@ -300,48 +330,52 @@ public class ExpandedParameterDecoderTest {
     @Test
     public void shouldNotSplitLabelParameters() {
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.LABEL,
-            "parameterName",
-            Arrays.asList(
-                string("2.3"),
-                string("3.4.5")
-            )),
+                ParameterStyle.LABEL,
+                "parameterName",
+                Arrays.asList(
+                    string("2.3"),
+                    string("3.4.5")
+                )
+            ),
             containsInAnyOrder(
                 string("2.3"),
                 string("3.4.5")
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.LABEL,
-            "parameterName",
-            Arrays.asList(
-                string("2.3", true),
-                string("3.4.5")
-            )),
+                ParameterStyle.LABEL,
+                "parameterName",
+                Arrays.asList(
+                    string("2.3", true),
+                    string("3.4.5")
+                )
+            ),
             containsInAnyOrder(
                 string("2.3", true),
                 string("3.4.5")
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.LABEL,
-            "parameterName",
-            Arrays.asList(
-                string("?2.3"),
-                string("3.4.5")
-            )),
+                ParameterStyle.LABEL,
+                "parameterName",
+                Arrays.asList(
+                    string("?2.3"),
+                    string("3.4.5")
+                )
+            ),
             containsInAnyOrder(
                 string("?2.3"),
                 string("3.4.5")
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.LABEL,
-            "parameterName",
-            Arrays.asList(
-                string("?!2.3"),
-                string("3.4.5")
-            )),
+                ParameterStyle.LABEL,
+                "parameterName",
+                Arrays.asList(
+                    string("?!2.3"),
+                    string("3.4.5")
+                )
+            ),
             containsInAnyOrder(
                 string("?!2.3"),
                 string("3.4.5")
@@ -354,12 +388,13 @@ public class ExpandedParameterDecoderTest {
     @Test
     public void shouldSplitFormParameters() {
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.FORM,
-            "parameterName",
-            Arrays.asList(
-                string("2,3"),
-                string("3,4,5")
-            )),
+                ParameterStyle.FORM,
+                "parameterName",
+                Arrays.asList(
+                    string("2,3"),
+                    string("3,4,5")
+                )
+            ),
             containsInAnyOrder(
                 string("2"),
                 string("3"),
@@ -369,12 +404,13 @@ public class ExpandedParameterDecoderTest {
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.FORM,
-            "parameterName",
-            Arrays.asList(
-                string("2,3", true),
-                string("3,4,5")
-            )),
+                ParameterStyle.FORM,
+                "parameterName",
+                Arrays.asList(
+                    string("2,3", true),
+                    string("3,4,5")
+                )
+            ),
             containsInAnyOrder(
                 string("2", true),
                 string("3", true),
@@ -384,12 +420,13 @@ public class ExpandedParameterDecoderTest {
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.FORM,
-            "parameterName",
-            Arrays.asList(
-                string("?2,3"),
-                string("3,4,5")
-            )),
+                ParameterStyle.FORM,
+                "parameterName",
+                Arrays.asList(
+                    string("?2,3"),
+                    string("3,4,5")
+                )
+            ),
             containsInAnyOrder(
                 string("?2"),
                 string("?3"),
@@ -399,12 +436,13 @@ public class ExpandedParameterDecoderTest {
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.FORM,
-            "parameterName",
-            Arrays.asList(
-                string("?!2,3"),
-                string("3,4,5")
-            )),
+                ParameterStyle.FORM,
+                "parameterName",
+                Arrays.asList(
+                    string("?!2,3"),
+                    string("3,4,5")
+                )
+            ),
             containsInAnyOrder(
                 string("?!2"),
                 string("?!3"),
@@ -418,48 +456,52 @@ public class ExpandedParameterDecoderTest {
     @Test
     public void shouldNotSplitFormParameters() {
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.FORM_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("2,3"),
-                string("3,4,5")
-            )),
+                ParameterStyle.FORM_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("2,3"),
+                    string("3,4,5")
+                )
+            ),
             containsInAnyOrder(
                 string("2,3"),
                 string("3,4,5")
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.FORM_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("2,3", true),
-                string("3,4,5")
-            )),
+                ParameterStyle.FORM_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("2,3", true),
+                    string("3,4,5")
+                )
+            ),
             containsInAnyOrder(
                 string("2,3", true),
                 string("3,4,5")
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.FORM_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("?2,3"),
-                string("3,4,5")
-            )),
+                ParameterStyle.FORM_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("?2,3"),
+                    string("3,4,5")
+                )
+            ),
             containsInAnyOrder(
                 string("?2,3"),
                 string("3,4,5")
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.FORM_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("?2,3", true),
-                string("3,4,5")
-            )),
+                ParameterStyle.FORM_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("?2,3", true),
+                    string("3,4,5")
+                )
+            ),
             containsInAnyOrder(
                 string("?2,3", true),
                 string("3,4,5")
@@ -472,12 +514,13 @@ public class ExpandedParameterDecoderTest {
     @Test
     public void shouldSplitPipeDelimitedParameters() {
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.PIPE_DELIMITED,
-            "parameterName",
-            Arrays.asList(
-                string("2|3"),
-                string("3|4|5")
-            )),
+                ParameterStyle.PIPE_DELIMITED,
+                "parameterName",
+                Arrays.asList(
+                    string("2|3"),
+                    string("3|4|5")
+                )
+            ),
             containsInAnyOrder(
                 string("2"),
                 string("3"),
@@ -487,12 +530,13 @@ public class ExpandedParameterDecoderTest {
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.PIPE_DELIMITED,
-            "parameterName",
-            Arrays.asList(
-                string("2|3", true),
-                string("3|4|5")
-            )),
+                ParameterStyle.PIPE_DELIMITED,
+                "parameterName",
+                Arrays.asList(
+                    string("2|3", true),
+                    string("3|4|5")
+                )
+            ),
             containsInAnyOrder(
                 string("2", true),
                 string("3", true),
@@ -502,12 +546,13 @@ public class ExpandedParameterDecoderTest {
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.PIPE_DELIMITED,
-            "parameterName",
-            Arrays.asList(
-                string("?2|3"),
-                string("3|4|5")
-            )),
+                ParameterStyle.PIPE_DELIMITED,
+                "parameterName",
+                Arrays.asList(
+                    string("?2|3"),
+                    string("3|4|5")
+                )
+            ),
             containsInAnyOrder(
                 string("?2"),
                 string("?3"),
@@ -517,12 +562,13 @@ public class ExpandedParameterDecoderTest {
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.PIPE_DELIMITED,
-            "parameterName",
-            Arrays.asList(
-                string("?!2|3"),
-                string("3|4|5")
-            )),
+                ParameterStyle.PIPE_DELIMITED,
+                "parameterName",
+                Arrays.asList(
+                    string("?!2|3"),
+                    string("3|4|5")
+                )
+            ),
             containsInAnyOrder(
                 string("?!2"),
                 string("?!3"),
@@ -536,48 +582,52 @@ public class ExpandedParameterDecoderTest {
     @Test
     public void shouldNotSplitPipeDelimitedParameters() {
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.PIPE_DELIMITED_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("2|3"),
-                string("3|4|5")
-            )),
+                ParameterStyle.PIPE_DELIMITED_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("2|3"),
+                    string("3|4|5")
+                )
+            ),
             containsInAnyOrder(
                 string("2|3"),
                 string("3|4|5")
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.PIPE_DELIMITED_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("!2|3"),
-                string("3|4|5")
-            )),
+                ParameterStyle.PIPE_DELIMITED_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("!2|3"),
+                    string("3|4|5")
+                )
+            ),
             containsInAnyOrder(
                 string("!2|3"),
                 string("3|4|5")
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.PIPE_DELIMITED_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("?2,3"),
-                string("3|4|5")
-            )),
+                ParameterStyle.PIPE_DELIMITED_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("?2,3"),
+                    string("3|4|5")
+                )
+            ),
             containsInAnyOrder(
                 string("?2,3"),
                 string("3|4|5")
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.PIPE_DELIMITED_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("?!2|3"),
-                string("3|4|5")
-            )),
+                ParameterStyle.PIPE_DELIMITED_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("?!2|3"),
+                    string("3|4|5")
+                )
+            ),
             containsInAnyOrder(
                 string("?!2|3"),
                 string("3|4|5")
@@ -590,12 +640,13 @@ public class ExpandedParameterDecoderTest {
     @Test
     public void shouldSplitSpaceDelimitedWithPercentCharParameters() {
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.SPACE_DELIMITED,
-            "parameterName",
-            Arrays.asList(
-                string("2%203"),
-                string("3%204%205")
-            )),
+                ParameterStyle.SPACE_DELIMITED,
+                "parameterName",
+                Arrays.asList(
+                    string("2%203"),
+                    string("3%204%205")
+                )
+            ),
             containsInAnyOrder(
                 string("2"),
                 string("3"),
@@ -605,12 +656,13 @@ public class ExpandedParameterDecoderTest {
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.SPACE_DELIMITED,
-            "parameterName",
-            Arrays.asList(
-                string("2%203", true),
-                string("3%204%205")
-            )),
+                ParameterStyle.SPACE_DELIMITED,
+                "parameterName",
+                Arrays.asList(
+                    string("2%203", true),
+                    string("3%204%205")
+                )
+            ),
             containsInAnyOrder(
                 string("2", true),
                 string("3", true),
@@ -620,12 +672,13 @@ public class ExpandedParameterDecoderTest {
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.SPACE_DELIMITED,
-            "parameterName",
-            Arrays.asList(
-                string("?2%203"),
-                string("3%204%205")
-            )),
+                ParameterStyle.SPACE_DELIMITED,
+                "parameterName",
+                Arrays.asList(
+                    string("?2%203"),
+                    string("3%204%205")
+                )
+            ),
             containsInAnyOrder(
                 string("?2"),
                 string("?3"),
@@ -635,12 +688,13 @@ public class ExpandedParameterDecoderTest {
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.SPACE_DELIMITED,
-            "parameterName",
-            Arrays.asList(
-                string("?!2%203"),
-                string("3%204%205")
-            )),
+                ParameterStyle.SPACE_DELIMITED,
+                "parameterName",
+                Arrays.asList(
+                    string("?!2%203"),
+                    string("3%204%205")
+                )
+            ),
             containsInAnyOrder(
                 string("?!2"),
                 string("?!3"),
@@ -654,48 +708,52 @@ public class ExpandedParameterDecoderTest {
     @Test
     public void shouldNotSplitSpaceDelimitedWithPercentCharParameters() {
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.SPACE_DELIMITED_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("2%203"),
-                string("3%204%205")
-            )),
+                ParameterStyle.SPACE_DELIMITED_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("2%203"),
+                    string("3%204%205")
+                )
+            ),
             containsInAnyOrder(
                 string("2%203"),
                 string("3%204%205")
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.SPACE_DELIMITED_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("!2%203"),
-                string("3%204%205")
-            )),
+                ParameterStyle.SPACE_DELIMITED_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("!2%203"),
+                    string("3%204%205")
+                )
+            ),
             containsInAnyOrder(
                 string("!2%203"),
                 string("3%204%205")
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.SPACE_DELIMITED_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("?2,3"),
-                string("3%204%205")
-            )),
+                ParameterStyle.SPACE_DELIMITED_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("?2,3"),
+                    string("3%204%205")
+                )
+            ),
             containsInAnyOrder(
                 string("?2,3"),
                 string("3%204%205")
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.SPACE_DELIMITED_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("?!2%203"),
-                string("3%204%205")
-            )),
+                ParameterStyle.SPACE_DELIMITED_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("?!2%203"),
+                    string("3%204%205")
+                )
+            ),
             containsInAnyOrder(
                 string("?!2%203"),
                 string("3%204%205")
@@ -706,12 +764,13 @@ public class ExpandedParameterDecoderTest {
     @Test
     public void shouldSplitSpaceDelimitedWithSpaceCharParameters() {
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.SPACE_DELIMITED,
-            "parameterName",
-            Arrays.asList(
-                string("2 3"),
-                string("3 4 5")
-            )),
+                ParameterStyle.SPACE_DELIMITED,
+                "parameterName",
+                Arrays.asList(
+                    string("2 3"),
+                    string("3 4 5")
+                )
+            ),
             containsInAnyOrder(
                 string("2"),
                 string("3"),
@@ -721,12 +780,13 @@ public class ExpandedParameterDecoderTest {
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.SPACE_DELIMITED,
-            "parameterName",
-            Arrays.asList(
-                string("2 3", true),
-                string("3 4 5")
-            )),
+                ParameterStyle.SPACE_DELIMITED,
+                "parameterName",
+                Arrays.asList(
+                    string("2 3", true),
+                    string("3 4 5")
+                )
+            ),
             containsInAnyOrder(
                 string("2", true),
                 string("3", true),
@@ -736,12 +796,13 @@ public class ExpandedParameterDecoderTest {
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.SPACE_DELIMITED,
-            "parameterName",
-            Arrays.asList(
-                string("?2 3"),
-                string("3 4 5")
-            )),
+                ParameterStyle.SPACE_DELIMITED,
+                "parameterName",
+                Arrays.asList(
+                    string("?2 3"),
+                    string("3 4 5")
+                )
+            ),
             containsInAnyOrder(
                 string("?2"),
                 string("?3"),
@@ -751,12 +812,13 @@ public class ExpandedParameterDecoderTest {
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.SPACE_DELIMITED,
-            "parameterName",
-            Arrays.asList(
-                string("?!2 3"),
-                string("3 4 5")
-            )),
+                ParameterStyle.SPACE_DELIMITED,
+                "parameterName",
+                Arrays.asList(
+                    string("?!2 3"),
+                    string("3 4 5")
+                )
+            ),
             containsInAnyOrder(
                 string("?!2"),
                 string("?!3"),
@@ -770,48 +832,52 @@ public class ExpandedParameterDecoderTest {
     @Test
     public void shouldNotSplitSpaceDelimitedWithSpaceCharParameters() {
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.SPACE_DELIMITED_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("2 3"),
-                string("3 4 5")
-            )),
+                ParameterStyle.SPACE_DELIMITED_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("2 3"),
+                    string("3 4 5")
+                )
+            ),
             containsInAnyOrder(
                 string("2 3"),
                 string("3 4 5")
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.SPACE_DELIMITED_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("!2 3"),
-                string("3 4 5")
-            )),
+                ParameterStyle.SPACE_DELIMITED_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("!2 3"),
+                    string("3 4 5")
+                )
+            ),
             containsInAnyOrder(
                 string("!2 3"),
                 string("3 4 5")
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.SPACE_DELIMITED_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("?2,3"),
-                string("3 4 5")
-            )),
+                ParameterStyle.SPACE_DELIMITED_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("?2,3"),
+                    string("3 4 5")
+                )
+            ),
             containsInAnyOrder(
                 string("?2,3"),
                 string("3 4 5")
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.SPACE_DELIMITED_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("?!2 3"),
-                string("3 4 5")
-            )),
+                ParameterStyle.SPACE_DELIMITED_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("?!2 3"),
+                    string("3 4 5")
+                )
+            ),
             containsInAnyOrder(
                 string("?!2 3"),
                 string("3 4 5")
@@ -822,12 +888,13 @@ public class ExpandedParameterDecoderTest {
     @Test
     public void shouldSplitSpaceDelimitedWithPlusCharParameters() {
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.SPACE_DELIMITED,
-            "parameterName",
-            Arrays.asList(
-                string("2+3"),
-                string("3+4+5")
-            )),
+                ParameterStyle.SPACE_DELIMITED,
+                "parameterName",
+                Arrays.asList(
+                    string("2+3"),
+                    string("3+4+5")
+                )
+            ),
             containsInAnyOrder(
                 string("2"),
                 string("3"),
@@ -837,12 +904,13 @@ public class ExpandedParameterDecoderTest {
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.SPACE_DELIMITED,
-            "parameterName",
-            Arrays.asList(
-                string("2+3", true),
-                string("3+4+5")
-            )),
+                ParameterStyle.SPACE_DELIMITED,
+                "parameterName",
+                Arrays.asList(
+                    string("2+3", true),
+                    string("3+4+5")
+                )
+            ),
             containsInAnyOrder(
                 string("2", true),
                 string("3", true),
@@ -852,12 +920,13 @@ public class ExpandedParameterDecoderTest {
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.SPACE_DELIMITED,
-            "parameterName",
-            Arrays.asList(
-                string("?2+3"),
-                string("3+4+5")
-            )),
+                ParameterStyle.SPACE_DELIMITED,
+                "parameterName",
+                Arrays.asList(
+                    string("?2+3"),
+                    string("3+4+5")
+                )
+            ),
             containsInAnyOrder(
                 string("?2"),
                 string("?3"),
@@ -867,12 +936,13 @@ public class ExpandedParameterDecoderTest {
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.SPACE_DELIMITED,
-            "parameterName",
-            Arrays.asList(
-                string("?!2+3"),
-                string("3+4+5")
-            )),
+                ParameterStyle.SPACE_DELIMITED,
+                "parameterName",
+                Arrays.asList(
+                    string("?!2+3"),
+                    string("3+4+5")
+                )
+            ),
             containsInAnyOrder(
                 string("?!2"),
                 string("?!3"),
@@ -886,48 +956,52 @@ public class ExpandedParameterDecoderTest {
     @Test
     public void shouldNotSplitSpaceDelimitedWithPlusCharParameters() {
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.PIPE_DELIMITED_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("2+3"),
-                string("3+4+5")
-            )),
+                ParameterStyle.PIPE_DELIMITED_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("2+3"),
+                    string("3+4+5")
+                )
+            ),
             containsInAnyOrder(
                 string("2+3"),
                 string("3+4+5")
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.PIPE_DELIMITED_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("!2+3"),
-                string("3+4+5")
-            )),
+                ParameterStyle.PIPE_DELIMITED_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("!2+3"),
+                    string("3+4+5")
+                )
+            ),
             containsInAnyOrder(
                 string("!2+3"),
                 string("3+4+5")
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.PIPE_DELIMITED_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("?2,3"),
-                string("3+4+5")
-            )),
+                ParameterStyle.PIPE_DELIMITED_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("?2,3"),
+                    string("3+4+5")
+                )
+            ),
             containsInAnyOrder(
                 string("?2,3"),
                 string("3+4+5")
             )
         );
         assertThat(new ExpandedParameterDecoder(configuration, mockServerLogger).splitOnDelimiter(
-            ParameterStyle.PIPE_DELIMITED_EXPLODED,
-            "parameterName",
-            Arrays.asList(
-                string("?!2+3"),
-                string("3+4+5")
-            )),
+                ParameterStyle.PIPE_DELIMITED_EXPLODED,
+                "parameterName",
+                Arrays.asList(
+                    string("?!2+3"),
+                    string("3+4+5")
+                )
+            ),
             containsInAnyOrder(
                 string("?!2+3"),
                 string("3+4+5")
