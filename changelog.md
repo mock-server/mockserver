@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fixed logLevel in MockServer instance Configuration, so it now sets the SystemProperty read by the logging configuration
 - fixed parallel execution of MockServerExtension to prevent port bind errors
 - fixed error parsing body parameters containing '/'
+- removed external references to schema specification to remove required network connectivity
 
 ## [5.13.0] - 2022-03-17
 

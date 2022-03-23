@@ -33,7 +33,8 @@ public class JsonSchemaExpectationValidator extends JsonSchemaValidator {
             "connectionOptions",
             "keyToMultiValue",
             "keyToValue",
-            "socketAddress"
+            "socketAddress",
+            "draft-07"
         );
     }
 

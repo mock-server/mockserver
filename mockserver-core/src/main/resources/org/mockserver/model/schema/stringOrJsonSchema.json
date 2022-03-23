@@ -18,7 +18,7 @@
           "type": "string"
         },
         "schema": {
-          "$ref": "http://json-schema.org/draft-07/schema"
+          "$ref": "#/definitions/draft-07"
         },
         "parameterStyle": {
           "type": "string",

@@ -22,6 +22,7 @@ import org.slf4j.event.Level;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -120,10 +121,16 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
             JsonNode definitions = jsonSchema.get("definitions");
             if (definitions instanceof ObjectNode) {
                 for (String definitionName : referenceFiles) {
+                    JsonNode definition = objectMapper.readTree(FileReader.readFileFromClassPathOrPath(routePath + definitionName + ".json"));
                     ((ObjectNode) definitions).set(
                         definitionName,
-                        objectMapper.readTree(FileReader.readFileFromClassPathOrPath(routePath + definitionName + ".json"))
+                        definition
                     );
+                    if (definition != null && definition.get("definitions") != null) {
+                        StreamSupport
+                            .stream(Spliterators.spliteratorUnknownSize(definition.get("definitions").fields(), Spliterator.ORDERED), false)
+                            .forEach(stringJsonNodeEntry -> ((ObjectNode) definitions).set(stringJsonNodeEntry.getKey(), stringJsonNodeEntry.getValue()));
+                    }
                 }
             }
             combinedSchema = ObjectMapperFactory
@@ -177,13 +184,16 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                 .map(validationMessage -> {
                     String validationMessageText = String.valueOf(validationMessage);
                     if ((validationMessageText.startsWith("$.httpRequest") && validationMessageText.contains(".body: should be valid to any of the schemas")) || validationMessageText.contains("$.body: should be valid to any of the schemas")) {
-                        return StringUtils.substringBefore(validationMessageText, ":") + ": should match one of its valid types: " + FileReader.readFileFromClassPathOrPath("org/mockserver/model/schema/body.json").replaceAll(NEW_LINE, NEW_LINE + "   ");
+                        return StringUtils.substringBefore(validationMessageText, ":") + ": should match one of its valid types: " + FileReader.readFileFromClassPathOrPath("org/mockserver/model/schema/body.json")
+                            .replaceAll("#/definitions/draft-07", "http://json-schema.org/draft-07/schema")
+                            .replaceAll(NEW_LINE, NEW_LINE + "   ");
                     }
                     if (validationMessageText.contains(".specUrlOrPayload: is missing but it is required")) {
                         return StringUtils.substringBefore(validationMessageText, ":") + ": is missing, but is required, if specifying OpenAPI request matcher";
                     }
                     if (validationMessageText.startsWith("$.httpResponse.body: should be valid to any of the schemas")) {
-                        return "$.httpResponse.body: should match one of its valid types: " + FileReader.readFileFromClassPathOrPath("org/mockserver/model/schema/bodyWithContentType.json").replaceAll(NEW_LINE, NEW_LINE + "   ");
+                        return "$.httpResponse.body: should match one of its valid types: " + FileReader.readFileFromClassPathOrPath("org/mockserver/model/schema/bodyWithContentType.json")
+                            .replaceAll(NEW_LINE, NEW_LINE + "   ");
                     }
                     if (validationMessageText.contains(".httpRequest") || RequestDefinition.class.equals(type)) {
                         if (validationMessageText.contains(".secure: is not defined in the schema and the schema does not allow additional properties") ||

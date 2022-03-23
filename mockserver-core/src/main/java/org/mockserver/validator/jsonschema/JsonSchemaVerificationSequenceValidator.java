@@ -22,7 +22,8 @@ public class JsonSchemaVerificationSequenceValidator extends JsonSchemaValidator
             "body",
             "keyToMultiValue",
             "keyToValue",
-            "socketAddress"
+            "socketAddress",
+            "draft-07"
         );
     }
 
