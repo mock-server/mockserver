@@ -16,7 +16,7 @@ import java.util.Map;
 
 public class JWKGenerator {
 
-    private final ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
+    private final ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true, false);
 
     public String generateJWK(AsymmetricKeyPair asymmetricKeyPair) {
         try {

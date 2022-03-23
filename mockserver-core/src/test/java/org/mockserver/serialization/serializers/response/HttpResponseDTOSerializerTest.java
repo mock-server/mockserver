@@ -22,7 +22,7 @@ public class HttpResponseDTOSerializerTest {
 
     @Test
     public void shouldReturnFormattedResponseWithNoFieldsSet() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper(true).writeValueAsString(
+        assertThat(ObjectMapperFactory.createObjectMapper(true, false).writeValueAsString(
             new HttpResponseDTO(
                 response()
             )
@@ -32,7 +32,7 @@ public class HttpResponseDTOSerializerTest {
 
     @Test
     public void shouldReturnFormattedResponseWithAllFieldsSet() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper(true).writeValueAsString(
+        assertThat(ObjectMapperFactory.createObjectMapper(true, false).writeValueAsString(
             new HttpResponseDTO(
                 response()
                     .withStatusCode(302)
@@ -84,7 +84,7 @@ public class HttpResponseDTOSerializerTest {
 
     @Test
     public void shouldReturnFormattedResponseWithJsonBodyInToString() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper(true).writeValueAsString(
+        assertThat(ObjectMapperFactory.createObjectMapper(true, false).writeValueAsString(
             new HttpResponseDTO(
                 response()
                     .withStatusCode(302)
@@ -109,7 +109,7 @@ public class HttpResponseDTOSerializerTest {
 
     @Test
     public void shouldReturnFormattedResponseWithDefaultStatusCode() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper(true).writeValueAsString(
+        assertThat(ObjectMapperFactory.createObjectMapper(true, false).writeValueAsString(
             new HttpResponseDTO(
                 response()
                     .withStatusCode(200)

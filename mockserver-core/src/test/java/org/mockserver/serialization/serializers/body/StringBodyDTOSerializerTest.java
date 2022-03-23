@@ -9,6 +9,9 @@ import org.mockserver.model.StringBody;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsEqual.equalTo;
+import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.Not.not;
 
 public class StringBodyDTOSerializerTest {
@@ -17,13 +20,29 @@ public class StringBodyDTOSerializerTest {
     public void shouldSerializeStringBodyDTO() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(new StringBody("string_body"))),
                 is("\"string_body\""));
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(new StringBody("string_body", null, false, (MediaType) null))),
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(new StringBody("string_body", null, false, null))),
             is("\"string_body\""));
     }
 
     @Test
+    public void shouldSerializeStringBodyDTOAsObjectPrettyPrintedWithoutDefaultFields() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper(true, false).writeValueAsString(new StringBodyDTO(new StringBody("string_body"))),
+            is("\"string_body\""));
+    }
+
+    @Test
+    public void shouldSerializeStringBodyDTOAsObjectPrettyPrintedWithDefaultFields() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper(true, true).writeValueAsString(new StringBodyDTO(new StringBody("string_body"))),
+            is("{" + NEW_LINE +
+                "  \"type\" : \"STRING\"," + NEW_LINE +
+                "  \"string\" : \"string_body\"," + NEW_LINE +
+                "  \"rawBytes\" : \"c3RyaW5nX2JvZHk=\"" + NEW_LINE +
+                "}"));
+    }
+
+    @Test
     public void shouldSerializeStringBodyDTOWithSubString() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(new StringBody("string_body", null, true, (MediaType) null))),
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(new StringBody("string_body", null, true, null))),
             is("{\"type\":\"STRING\",\"string\":\"string_body\",\"rawBytes\":\"c3RyaW5nX2JvZHk=\",\"subString\":true}"));
     }
 

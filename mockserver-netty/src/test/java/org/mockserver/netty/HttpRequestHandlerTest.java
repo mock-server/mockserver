@@ -69,6 +69,7 @@ public class HttpRequestHandlerTest {
     private HttpRequestHandler mockServerHandler;
     private final HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
     private final ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
+    private final ExpectationSerializer expectationSerializerWithDefaultFields = new ExpectationSerializer(new MockServerLogger(), true);
     private final PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
 
     @BeforeClass
@@ -247,7 +248,7 @@ public class HttpRequestHandlerTest {
         // then
         HttpResponse httpResponse = embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(200));
-        assertThat(httpResponse.getBodyAsString(), is(expectationSerializer.serialize(Collections.singletonList(
+        assertThat(httpResponse.getBodyAsString(), is(expectationSerializerWithDefaultFields.serialize(Collections.singletonList(
             new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited(), 0).withId("key_one").thenRespond(response("response_one"))
         ))));
     }

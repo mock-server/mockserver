@@ -5,11 +5,13 @@ import org.junit.Test;
 import org.mockserver.model.MediaType;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.model.StringBody;
+import org.mockserver.serialization.model.StringBodyDTO;
 
 import java.nio.charset.StandardCharsets;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.Not.not;
 
 public class StringBodySerializerTest {
@@ -18,13 +20,28 @@ public class StringBodySerializerTest {
     public void shouldSerializeStringBody() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBody("string_body")),
                 is("\"string_body\""));
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBody("string_body", null, false, (MediaType) null)),
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBody("string_body", null, false, null)),
             is("\"string_body\""));
     }
 
     @Test
-    public void shouldSerializeStringBodyDTOWithSubString() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBody("string_body", null, true, (MediaType) null)),
+    public void shouldSerializeStringBodyAsObjectPrettyPrintedWithoutDefaultFields() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper(true, false).writeValueAsString(new StringBody("string_body")),
+            is("\"string_body\""));
+    }
+
+    @Test
+    public void shouldSerializeStringBodyAsObjectPrettyPrintedWithDefaultFields() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper(true, true).writeValueAsString(new StringBody("string_body")),
+            is("{" + NEW_LINE +
+                "  \"type\" : \"STRING\"," + NEW_LINE +
+                "  \"string\" : \"string_body\"" + NEW_LINE +
+                "}"));
+    }
+
+    @Test
+    public void shouldSerializeStringBodyWithSubString() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBody("string_body", null, true, null)),
             is("{\"type\":\"STRING\",\"string\":\"string_body\",\"subString\":true}"));
     }
 

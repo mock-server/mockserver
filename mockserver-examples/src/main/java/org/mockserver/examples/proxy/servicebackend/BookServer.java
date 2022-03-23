@@ -34,7 +34,7 @@ public class BookServer {
 
     private static ServerBootstrap serverBootstrap;
     private final Map<String, Book> booksDB = createBookData();
-    private final ObjectWriter objectWriter = org.mockserver.serialization.ObjectMapperFactory.createObjectMapper(true);
+    private final ObjectWriter objectWriter = org.mockserver.serialization.ObjectMapperFactory.createObjectMapper(true, false);
     private final int httpPort;
     private final boolean secure;
     private final NettySslContextFactory nettySslContextFactory;

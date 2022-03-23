@@ -522,7 +522,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
     public String toString() {
         try {
             return ObjectMapperFactory
-                .createObjectMapper(true)
+                .createObjectMapper(true, false)
                 .writeValueAsString(this);
         } catch (Exception e) {
             return super.toString();

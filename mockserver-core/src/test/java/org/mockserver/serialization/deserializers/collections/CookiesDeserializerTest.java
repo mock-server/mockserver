@@ -20,7 +20,7 @@ import static org.mockserver.model.NottableString.string;
  */
 public class CookiesDeserializerTest {
 
-    private final ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
+    private final ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true, false);
     private final ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
     @Test

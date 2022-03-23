@@ -12,6 +12,9 @@ import java.nio.charset.StandardCharsets;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsEqual.equalTo;
+import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.model.JsonBody.json;
 
 public class JsonBodyDTOSerializerTest {
 
@@ -19,6 +22,28 @@ public class JsonBodyDTOSerializerTest {
     public void shouldSerializeJsonBodyDTO() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new JsonBodyDTO(new JsonBody("{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}"))),
             is("{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}"));
+    }
+
+    @Test
+    public void shouldSerializeJsonBodyDTOAsObjectPrettyPrintedWithoutDefaultFields() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper(true, false).writeValueAsString(new JsonBodyDTO(json(new JsonBodySerializerTest.TestObject()))),
+            equalTo("{" + NEW_LINE +
+                "  \"fieldOne\" : \"valueOne\"," + NEW_LINE +
+                "  \"fieldTwo\" : \"valueTwo\"" + NEW_LINE +
+                "}"));
+    }
+
+    @Test
+    public void shouldSerializeJsonBodyDTOAsObjectPrettyPrintedWithDefaultFields() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper(true, true).writeValueAsString(new JsonBodyDTO(json(new JsonBodySerializerTest.TestObject()))),
+            equalTo("{" + NEW_LINE +
+                "  \"type\" : \"JSON\"," + NEW_LINE +
+                "  \"json\" : {" + NEW_LINE +
+                "    \"fieldOne\" : \"valueOne\"," + NEW_LINE +
+                "    \"fieldTwo\" : \"valueTwo\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"rawBytes\" : \"eyJmaWVsZE9uZSI6InZhbHVlT25lIiwiZmllbGRUd28iOiJ2YWx1ZVR3byJ9\"" + NEW_LINE +
+                "}"));
     }
 
     @Test
@@ -35,7 +60,7 @@ public class JsonBodyDTOSerializerTest {
 
     @Test
     public void shouldSerializeJsonBodyWithNoneDefaultMatchTypeAndCharset() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new JsonBodyDTO(new JsonBody("{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}", null, (StandardCharsets.UTF_16 != null ? MediaType.create("application", "json").withCharset(StandardCharsets.UTF_16) : null), MatchType.STRICT))),
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new JsonBodyDTO(new JsonBody("{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}", null, MediaType.create("application", "json").withCharset(StandardCharsets.UTF_16), MatchType.STRICT))),
             is("{\"contentType\":\"application/json; charset=utf-16\",\"type\":\"JSON\",\"json\":{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"},\"rawBytes\":\"/v8AewBmAGkAZQBsAGQATwBuAGUAOgAgACIAdgBhAGwAdQBlAE8AbgBlACIALAAgACIAZgBpAGUAbABkAFQAdwBvACIAOgAgACIAdgBhAGwAdQBlAFQAdwBvACIAfQ==\",\"matchType\":\"STRICT\"}"));
     }
 

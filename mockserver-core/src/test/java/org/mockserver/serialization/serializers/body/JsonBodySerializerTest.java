@@ -11,6 +11,8 @@ import java.nio.charset.StandardCharsets;
 import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsEqual.equalTo;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.Not.not;
 
@@ -39,22 +41,41 @@ public class JsonBodySerializerTest {
 
     @Test
     public void shouldSerializeJsonBodyAsObject() throws JsonProcessingException {
-        String actual = ObjectMapperFactory.createObjectMapper().writeValueAsString(json(new TestObject()));
-        String expectedCase1 = "{\"type\":\"JSON\",\"json\":{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}}";
-        String expectedCase2 = "{\"type\":\"JSON\",\"json\":{\"fieldTwo\":\"valueTwo\",\"fieldOne\":\"valueOne\"}}";
-        assertTrue(actual.equals(expectedCase1) || actual.equals(expectedCase2));
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(json(new TestObject())),
+            equalTo("{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}"));
+    }
+
+    @Test
+    public void shouldSerializeJsonBodyAsObjectPrettyPrintedWithoutDefaultFields() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper(true, false).writeValueAsString(json(new TestObject())),
+            equalTo("{" + NEW_LINE +
+                "  \"fieldOne\" : \"valueOne\"," + NEW_LINE +
+                "  \"fieldTwo\" : \"valueTwo\"" + NEW_LINE +
+                "}"));
+    }
+
+    @Test
+    public void shouldSerializeJsonBodyAsObjectPrettyPrintedWithDefaultFields() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper(true, true).writeValueAsString(json(new TestObject())),
+            equalTo("{" + NEW_LINE +
+                "  \"type\" : \"JSON\"," + NEW_LINE +
+                "  \"json\" : {" + NEW_LINE +
+                "    \"fieldOne\" : \"valueOne\"," + NEW_LINE +
+                "    \"fieldTwo\" : \"valueTwo\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}"));
     }
 
     @Test
     public void shouldSerializeJsonBody() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(json("{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}")),
-            is("{\"type\":\"JSON\",\"json\":{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}}"));
+            is("{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}"));
     }
 
     @Test
     public void shouldSerializeJsonBodyWithDefaultMatchType() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(json("{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}", MatchType.ONLY_MATCHING_FIELDS)),
-            is("{\"type\":\"JSON\",\"json\":{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}}"));
+            is("{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}"));
     }
 
     @Test

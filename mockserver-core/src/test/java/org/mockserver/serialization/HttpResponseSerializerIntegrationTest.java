@@ -36,7 +36,7 @@ import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_S
 @SuppressWarnings("deprecation")
 public class HttpResponseSerializerIntegrationTest {
 
-    private static final ObjectWriter OBJECT_WRITER = ObjectMapperFactory.createObjectMapper(true);
+    private static final ObjectWriter OBJECT_WRITER = ObjectMapperFactory.createObjectMapper(true, false);
     @Rule
     public final ExpectedException thrown = ExpectedException.none();
 
@@ -485,7 +485,7 @@ public class HttpResponseSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldSerializeStringBody() throws JsonProcessingException {
+    public void shouldSerializeStringBodyWithoutDefaultFields() throws JsonProcessingException {
         // when
         String jsonHttpResponse = OBJECT_WRITER.writeValueAsString(
             new HttpResponse()
@@ -499,9 +499,42 @@ public class HttpResponseSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldSerializeJsonBody() throws JsonProcessingException {
+    public void shouldSerializeStringBodyWithDefaultFields() throws JsonProcessingException {
+        // when
+        String jsonHttpResponse = ObjectMapperFactory.createObjectMapper(true, true).writeValueAsString(
+            new HttpResponse()
+                .withBody(exact("somebody"))
+        );
+
+        // then
+        assertEquals("{" + NEW_LINE +
+            "  \"body\" : {" + NEW_LINE +
+            "    \"type\" : \"STRING\"," + NEW_LINE +
+            "    \"string\" : \"somebody\"" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonHttpResponse);
+    }
+
+    @Test
+    public void shouldSerializeJsonBodyWithoutDefaultFields() throws JsonProcessingException {
         // when
         String jsonHttpResponse = OBJECT_WRITER.writeValueAsString(
+            new HttpResponse()
+                .withBody(json("{ \"key\": \"value\" }"))
+        );
+
+        // then
+        assertEquals("{" + NEW_LINE +
+            "  \"body\" : {" + NEW_LINE +
+            "    \"key\" : \"value\"" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonHttpResponse);
+    }
+
+    @Test
+    public void shouldSerializeJsonBodyWithDefaultFields() throws JsonProcessingException {
+        // when
+        String jsonHttpResponse = ObjectMapperFactory.createObjectMapper(true, true).writeValueAsString(
             new HttpResponse()
                 .withBody(json("{ \"key\": \"value\" }"))
         );

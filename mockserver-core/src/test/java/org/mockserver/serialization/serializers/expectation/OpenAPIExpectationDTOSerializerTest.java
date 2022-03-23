@@ -16,7 +16,7 @@ import static org.mockserver.mock.OpenAPIExpectation.openAPIExpectation;
 
 public class OpenAPIExpectationDTOSerializerTest {
 
-    private final ObjectWriter objectMapper = ObjectMapperFactory.createObjectMapper(true);
+    private final ObjectWriter objectMapper = ObjectMapperFactory.createObjectMapper(true, false);
 
     @Test
     public void shouldReturnJsonWithNoFieldsSet() throws JsonProcessingException {

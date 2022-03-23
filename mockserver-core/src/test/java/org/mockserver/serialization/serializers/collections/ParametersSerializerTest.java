@@ -23,7 +23,7 @@ import static org.mockserver.model.Parameter.param;
  */
 public class ParametersSerializerTest {
 
-    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
+    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true, false);
 
     @Test
     public void shouldSerializeCompleteObject() throws IOException {

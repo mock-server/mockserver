@@ -52,6 +52,7 @@ public class ProxyServletTest {
 
     private final HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
     private final ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
+    private final ExpectationSerializer expectationSerializerWithDefaultFields = new ExpectationSerializer(new MockServerLogger(), true);
     private final PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
 
     private HttpState httpStateHandler;
@@ -238,7 +239,7 @@ public class ProxyServletTest {
         proxyServlet.service(expectationRetrieveExpectationsRequest, response);
 
         // then
-        assertResponse(response, 200, expectationSerializer.serialize(Collections.singletonList(
+        assertResponse(response, 200, expectationSerializerWithDefaultFields.serialize(Collections.singletonList(
             new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited(), 0).withId("key_one").thenRespond(response("response_one"))
         )));
     }

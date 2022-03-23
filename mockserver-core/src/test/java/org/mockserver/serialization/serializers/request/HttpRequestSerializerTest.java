@@ -17,7 +17,7 @@ import static org.mockserver.model.XPathBody.xpath;
 
 public class HttpRequestSerializerTest {
 
-    private final ObjectWriter objectMapper = ObjectMapperFactory.createObjectMapper(true);
+    private final ObjectWriter objectMapper = ObjectMapperFactory.createObjectMapper(true, false);
 
     @Test
     public void shouldReturnJsontWithNoFieldsSet() throws JsonProcessingException {
@@ -86,10 +86,7 @@ public class HttpRequestSerializerTest {
                 "    \"name\" : \"[A-Z]{0,10}\"" + NEW_LINE +
                 "  }," + NEW_LINE +
                 "  \"body\" : {" + NEW_LINE +
-                "    \"type\" : \"JSON\"," + NEW_LINE +
-                "    \"json\" : {" + NEW_LINE +
-                "      \"key\" : \"some_value\"" + NEW_LINE +
-                "    }" + NEW_LINE +
+                "    \"key\" : \"some_value\"" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}"));
     }

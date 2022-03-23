@@ -17,7 +17,7 @@ public class VerificationTimesSerializerTest {
     @Test
     public void shouldSerializeBetween() throws JsonProcessingException {
         assertThat(ObjectMapperFactory
-                .createObjectMapper(true)
+                .createObjectMapper(true, false)
                 .writeValueAsString(
                     between(1, 2)
                 ),
@@ -30,7 +30,7 @@ public class VerificationTimesSerializerTest {
     @Test
     public void shouldSerializeNever() throws JsonProcessingException {
         assertThat(ObjectMapperFactory
-                .createObjectMapper(true)
+                .createObjectMapper(true, false)
                 .writeValueAsString(
                     never()
                 ),
@@ -43,7 +43,7 @@ public class VerificationTimesSerializerTest {
     @Test
     public void shouldSerializeOnce() throws JsonProcessingException {
         assertThat(ObjectMapperFactory
-                .createObjectMapper(true)
+                .createObjectMapper(true, false)
                 .writeValueAsString(
                     once()
                 ),
@@ -56,7 +56,7 @@ public class VerificationTimesSerializerTest {
     @Test
     public void shouldSerializeExact() throws JsonProcessingException {
         assertThat(ObjectMapperFactory
-                .createObjectMapper(true)
+                .createObjectMapper(true, false)
                 .writeValueAsString(
                     exactly(2)
                 ),
@@ -69,7 +69,7 @@ public class VerificationTimesSerializerTest {
     @Test
     public void shouldSerializeAtLeast() throws JsonProcessingException {
         assertThat(ObjectMapperFactory
-                .createObjectMapper(true)
+                .createObjectMapper(true, false)
                 .writeValueAsString(
                     atLeast(2)
                 ),
@@ -81,7 +81,7 @@ public class VerificationTimesSerializerTest {
     @Test
     public void shouldSerializeAtMost() throws JsonProcessingException {
         assertThat(ObjectMapperFactory
-                .createObjectMapper(true)
+                .createObjectMapper(true, false)
                 .writeValueAsString(
                     atMost(2)
                 ),

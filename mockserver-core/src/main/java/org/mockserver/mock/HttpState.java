@@ -6,7 +6,6 @@ import org.mockserver.authentication.AuthenticationHandler;
 import org.mockserver.closurecallback.websocketregistry.LocalCallbackRegistry;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.Configuration;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -74,6 +73,7 @@ public class HttpState {
     private RequestDefinitionSerializer requestDefinitionSerializer;
     private LogEventRequestAndResponseSerializer httpRequestResponseSerializer;
     private ExpectationSerializer expectationSerializer;
+    private ExpectationSerializer expectationSerializerThatSerializesBodyDefault;
     private OpenAPIExpectationSerializer openAPIExpectationSerializer;
     private ExpectationToJavaSerializer expectationToJavaSerializer;
     private VerificationSerializer verificationSerializer;
@@ -448,7 +448,7 @@ public class HttpState {
                                         requestDefinition,
                                         requests -> {
                                             response.withBody(
-                                                getExpectationSerializer().serialize(requests),
+                                                getExpectationSerializerThatSerializesBodyDefault().serialize(requests),
                                                 MediaType.JSON_UTF_8
                                             );
                                             mockServerLogger.logEvent(logEntry);
@@ -798,6 +798,13 @@ public class HttpState {
             this.expectationSerializer = new ExpectationSerializer(mockServerLogger);
         }
         return expectationSerializer;
+    }
+
+    private ExpectationSerializer getExpectationSerializerThatSerializesBodyDefault() {
+        if (this.expectationSerializerThatSerializesBodyDefault == null) {
+            this.expectationSerializerThatSerializesBodyDefault = new ExpectationSerializer(mockServerLogger, true);
+        }
+        return expectationSerializerThatSerializesBodyDefault;
     }
 
     private OpenAPIExpectationSerializer getOpenAPIExpectationSerializer() {

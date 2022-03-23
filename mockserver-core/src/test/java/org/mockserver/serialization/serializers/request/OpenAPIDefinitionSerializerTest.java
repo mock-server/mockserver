@@ -14,7 +14,7 @@ import static org.mockserver.model.OpenAPIDefinition.openAPI;
 
 public class OpenAPIDefinitionSerializerTest {
 
-    private final ObjectWriter objectMapper = ObjectMapperFactory.createObjectMapper(true);
+    private final ObjectWriter objectMapper = ObjectMapperFactory.createObjectMapper(true, false);
 
     @Test
     public void shouldReturnJsonWithNoFieldsSet() throws JsonProcessingException {

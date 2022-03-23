@@ -12,8 +12,11 @@ import java.io.IOException;
  */
 public class StringBodySerializer extends StdSerializer<StringBody> {
 
-    public StringBodySerializer() {
+    private final boolean serialiseDefaultValues;
+
+    public StringBodySerializer(boolean serialiseDefaultValues) {
         super(StringBody.class);
+        this.serialiseDefaultValues = serialiseDefaultValues;
     }
 
     @Override
@@ -22,7 +25,7 @@ public class StringBodySerializer extends StdSerializer<StringBody> {
         boolean optionalFieldSetAndNotDefault = stringBody.getOptional() != null && stringBody.getOptional();
         boolean subStringFieldNotDefault = stringBody.isSubString();
         boolean contentTypeFieldSet = stringBody.getContentType() != null;
-        if (notFieldSetAndNotDefault || optionalFieldSetAndNotDefault || contentTypeFieldSet || subStringFieldNotDefault) {
+        if (serialiseDefaultValues || notFieldSetAndNotDefault || optionalFieldSetAndNotDefault || contentTypeFieldSet || subStringFieldNotDefault) {
             jgen.writeStartObject();
             if (notFieldSetAndNotDefault) {
                 jgen.writeBooleanField("not", true);

@@ -40,7 +40,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
     private static final String EXPECTATION_REQUEST_NOT_OPERATOR_IS_ENABLED = COMMA + NEW_LINE + "expectation's request 'not' operator is enabled";
     private static final String EXPECTATION_REQUEST_MATCHER_NOT_OPERATOR_IS_ENABLED = COMMA + NEW_LINE + "expectation's request matcher 'not' operator is enabled";
     private static final PathParametersDecoder pathParametersParser = new PathParametersDecoder();
-    private static final ObjectWriter TO_STRING_OBJECT_WRITER = ObjectMapperFactory.createObjectMapper(true);
+    private static final ObjectWriter TO_STRING_OBJECT_WRITER = ObjectMapperFactory.createObjectMapper(true, false);
     private final ExpandedParameterDecoder expandedParameterDecoder;
     private int hashCode;
     private HttpRequest httpRequest;

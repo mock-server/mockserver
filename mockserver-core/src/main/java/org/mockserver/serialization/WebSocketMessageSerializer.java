@@ -19,7 +19,7 @@ import java.util.Map;
 @SuppressWarnings({"rawtypes", "unchecked", "FieldMayBeFinal"})
 public class WebSocketMessageSerializer {
 
-    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
+    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true, false);
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private Map<Class, Serializer> serializers;
 

@@ -60,6 +60,24 @@
                 <artifactId>spring-core</artifactId>
                 <version>${spring.version}</version>
             </dependency>
+            <dependency>
+                <!-- Conflicting versions in okhttp and okio (both from okhttp) -->
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-stdlib</artifactId>
+                <version>1.4.10</version>
+            </dependency>
+            <dependency>
+                <!-- Conflicting versions in okhttp and okio (both from okhttp) -->
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-stdlib-common</artifactId>
+                <version>1.4.10</version>
+            </dependency>
+            <dependency>
+                <!-- Conflicting versions in json-unit and okhttp -->
+                <groupId>org.jetbrains</groupId>
+                <artifactId>annotations</artifactId>
+                <version>23.0.0</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -153,6 +171,13 @@
             <groupId>com.google.http-client</groupId>
             <artifactId>google-http-client-jackson2</artifactId>
             <version>${google-http-client.version}</version>
+        </dependency>
+
+        <!-- OK HTTP Client -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.9.3</version>
         </dependency>
 
         <!-- html -->

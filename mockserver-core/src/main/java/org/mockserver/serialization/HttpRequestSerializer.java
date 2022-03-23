@@ -10,7 +10,6 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.serialization.model.HttpRequestPrettyPrintedDTO;
-import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator;
 import org.slf4j.event.Level;
 
@@ -30,7 +29,7 @@ import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_S
 @SuppressWarnings("FieldMayBeFinal")
 public class HttpRequestSerializer implements Serializer<HttpRequest> {
     private final MockServerLogger mockServerLogger;
-    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
+    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true, false);
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
     private JsonSchemaHttpRequestValidator httpRequestValidator;

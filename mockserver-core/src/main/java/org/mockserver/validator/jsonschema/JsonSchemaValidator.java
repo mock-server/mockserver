@@ -127,7 +127,7 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                 }
             }
             combinedSchema = ObjectMapperFactory
-                .createObjectMapper(true)
+                .createObjectMapper(true, false)
                 .writeValueAsString(jsonSchema);
         } catch (Throwable throwable) {
             mockServerLogger.logEvent(

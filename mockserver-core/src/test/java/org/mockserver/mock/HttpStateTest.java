@@ -75,6 +75,7 @@ public class HttpStateTest {
     private final RequestDefinitionSerializer requestDefinitionSerializer = new RequestDefinitionSerializer(new MockServerLogger());
     private final ExpectationIdSerializer expectationIdSerializer = new ExpectationIdSerializer(new MockServerLogger());
     private final ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
+    private final ExpectationSerializer expectationSerializerWithDefaultFields = new ExpectationSerializer(new MockServerLogger(), true);
     private final OpenAPIExpectationSerializer openAPIExpectationSerializer = new OpenAPIExpectationSerializer(new MockServerLogger());
     private final ExpectationToJavaSerializer expectationToJavaSerializer = new ExpectationToJavaSerializer();
     private final PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
@@ -237,7 +238,7 @@ public class HttpStateTest {
         // then
         assertThat(handle, is(true));
         assertThat(responseWriter.response.getStatusCode(), is(200));
-        assertThat(responseWriter.response.getBodyAsString(), is(expectationSerializer.serialize(Collections.singletonList(
+        assertThat(responseWriter.response.getBodyAsString(), is(expectationSerializerWithDefaultFields.serialize(Collections.singletonList(
             new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited(), 0).withId("key_one").thenRespond(response("response_one"))
         ))));
     }
@@ -1684,7 +1685,7 @@ public class HttpStateTest {
 
         // then
         assertThat(response,
-            is(response().withBody(expectationSerializer.serialize(Arrays.asList(
+            is(response().withBody(expectationSerializerWithDefaultFields.serialize(Arrays.asList(
                 new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited(), 0).withId("key_one").thenRespond(response("response_one")),
                 new Expectation(request("request_two"), Times.once(), TimeToLive.unlimited(), 0).withId("key_two").thenRespond(response("response_two"))
             )), MediaType.JSON_UTF_8).withStatusCode(200))

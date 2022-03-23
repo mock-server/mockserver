@@ -29,7 +29,7 @@ import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_S
 @SuppressWarnings("FieldMayBeFinal")
 public class OpenAPIExpectationSerializer implements Serializer<OpenAPIExpectation> {
     private final MockServerLogger mockServerLogger;
-    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
+    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true, false);
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
     private JsonSchemaOpenAPIExpectationValidator expectationValidator;

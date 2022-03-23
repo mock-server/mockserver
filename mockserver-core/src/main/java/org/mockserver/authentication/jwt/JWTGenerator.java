@@ -18,7 +18,7 @@ import java.util.UUID;
 
 public class JWTGenerator {
 
-    private final ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
+    private final ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true, false);
 
     private final JWKGenerator jwkGenerator;
     private final AsymmetricKeyPair asymmetricKeyPair;

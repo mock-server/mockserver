@@ -15,7 +15,7 @@ import static org.mockserver.matchers.Times.*;
  */
 public class TimesSerializerTest {
 
-    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
+    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true, false);
 
     @Test
     public void shouldSerializeOnceTimes() throws JsonProcessingException {

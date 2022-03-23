@@ -31,16 +31,22 @@ import static org.slf4j.event.Level.INFO;
 @SuppressWarnings("FieldMayBeFinal")
 public class ExpectationSerializer implements Serializer<Expectation> {
     private final MockServerLogger mockServerLogger;
-    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
-    private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+    private ObjectWriter objectWriter;
+    private ObjectMapper objectMapper;
     private JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
     private JsonSchemaExpectationValidator expectationValidator;
     private OpenAPIExpectationSerializer openAPIExpectationSerializer;
     private static boolean printedECMA262Warning = false;
 
     public ExpectationSerializer(MockServerLogger mockServerLogger) {
+        this(mockServerLogger, false);
+    }
+
+    public ExpectationSerializer(MockServerLogger mockServerLogger, boolean serialiseDefaultValues) {
         this.mockServerLogger = mockServerLogger;
         this.openAPIExpectationSerializer = new OpenAPIExpectationSerializer(mockServerLogger);
+        this.objectWriter = ObjectMapperFactory.createObjectMapper(true, serialiseDefaultValues);
+        this.objectMapper = ObjectMapperFactory.createObjectMapper();
     }
 
     private JsonSchemaExpectationValidator getValidator() {

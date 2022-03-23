@@ -43,7 +43,7 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
         if (configuration.persistExpectations()) {
             this.mockServerLogger = mockServerLogger;
             this.requestMatchers = requestMatchers;
-            this.objectWriter = createObjectMapper(true, new TimeToLiveSerializer());
+            this.objectWriter = createObjectMapper(true, false, new TimeToLiveSerializer());
             this.filePath = Paths.get(configuration.persistedExpectationsPath());
             try {
                 Files.createFile(filePath);

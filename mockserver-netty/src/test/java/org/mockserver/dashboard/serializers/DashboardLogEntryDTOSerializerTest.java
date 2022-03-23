@@ -28,7 +28,7 @@ import static org.mockserver.model.HttpResponse.response;
 public class DashboardLogEntryDTOSerializerTest {
 
     final ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true,
-        new DashboardLogEntryDTOSerializer(),
+            false, new DashboardLogEntryDTOSerializer(),
         new DashboardLogEntryDTOGroupSerializer(),
         new DescriptionSerializer(),
         new ThrowableSerializer()

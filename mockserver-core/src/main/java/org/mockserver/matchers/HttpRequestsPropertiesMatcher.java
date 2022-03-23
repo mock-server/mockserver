@@ -42,7 +42,7 @@ import static org.slf4j.event.Level.TRACE;
 
 public class HttpRequestsPropertiesMatcher extends AbstractHttpRequestMatcher {
 
-    private static final ObjectWriter TO_STRING_OBJECT_WRITER = ObjectMapperFactory.createObjectMapper(true);
+    private static final ObjectWriter TO_STRING_OBJECT_WRITER = ObjectMapperFactory.createObjectMapper(true, false);
     private int hashCode;
     private OpenAPIDefinition openAPIDefinition;
     private List<HttpRequestPropertiesMatcher> httpRequestPropertiesMatchers;

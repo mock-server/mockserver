@@ -76,7 +76,7 @@ public class MTLSAuthenticationHandler implements AuthenticationHandler {
 
     private String getClientCertificateInformation(String serialNumber, String issuerDistinguishedName, String subjectDistinguishedName) {
         try {
-            return ObjectMapperFactory.createObjectMapper(true).writeValueAsString(ImmutableMap.of(
+            return ObjectMapperFactory.createObjectMapper(true, false).writeValueAsString(ImmutableMap.of(
                 "serialNumber", serialNumber,
                 "issuerDistinguishedName", issuerDistinguishedName,
                 "subjectDistinguishedName", subjectDistinguishedName

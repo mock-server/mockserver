@@ -27,7 +27,7 @@ import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_S
 @SuppressWarnings("FieldMayBeFinal")
 public class ExpectationIdSerializer implements Serializer<ExpectationId> {
     private final MockServerLogger mockServerLogger;
-    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true);
+    private ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true, false);
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
     private JsonSchemaExpectationIdValidator expectationIdValidator;

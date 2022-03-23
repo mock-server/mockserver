@@ -23,7 +23,7 @@ import static org.mockserver.model.OpenAPIDefinition.openAPI;
 public class DescriptionProcessorTest {
 
     final ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper(true,
-        new DashboardLogEntryDTOSerializer(),
+            false, new DashboardLogEntryDTOSerializer(),
         new DescriptionSerializer(),
         new ThrowableSerializer()
     );
