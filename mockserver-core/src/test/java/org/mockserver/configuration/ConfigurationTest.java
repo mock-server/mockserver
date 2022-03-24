@@ -443,7 +443,7 @@ public class ConfigurationTest {
         long original = ConfigurationProperties.maxFutureTimeout();
         try {
             // then - default value
-            assertThat(configuration.maxFutureTimeoutInMillis(), equalTo(60000L));
+            assertThat(configuration.maxFutureTimeoutInMillis(), equalTo(90000L));
 
             // when - system property setter
             ConfigurationProperties.maxFutureTimeout(10L);
