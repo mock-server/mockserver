@@ -15,7 +15,7 @@ RUN apk add --update openssl ca-certificates bash wget
 # REPOSITORY is releases or snapshots
 ARG REPOSITORY=snapshots
 # VERSION is LATEST or RELEASE or x.x.x
-ARG VERSION=LATEST
+ARG VERSION=5.13.1-SNAPSHOT
 # see: https://oss.sonatype.org/nexus-restlet1x-plugin/default/docs/path__artifact_maven_redirect.html
 ARG REPOSITORY_URL=https://oss.sonatype.org/service/local/artifact/maven/redirect?r=${REPOSITORY}&g=org.mock-server&a=mockserver-netty&c=shaded&e=jar&v=${VERSION}
 RUN wget --max-redirect=10 -O mockserver-netty-shaded.jar "$REPOSITORY_URL"
