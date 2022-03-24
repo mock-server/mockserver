@@ -357,6 +357,12 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+            <!-- used by swagger-parser force version due to CVEs -->
+            <dependency>
+                <groupId>org.mozilla</groupId>
+                <artifactId>rhino</artifactId>
+                <version>1.7.14</version>
+            </dependency>
 
             <!-- xml -->
             <dependency>
