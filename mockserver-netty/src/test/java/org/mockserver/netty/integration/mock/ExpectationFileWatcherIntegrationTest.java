@@ -165,7 +165,7 @@ public class ExpectationFileWatcherIntegrationTest {
      * 3 - remove expectations via file watcher
      */
     @Test
-    public void shouldDetectModifiedInitialiserJsonOnDeletion() throws Exception {
+    public void shouldDetectModifiedInitialiserJsonOnCompleteDeletion() throws Exception {
         String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
         ConfigurationProperties.watchInitializationJson(true);
         String persistedExpectationsPath = ConfigurationProperties.persistedExpectationsPath();
@@ -281,6 +281,153 @@ public class ExpectationFileWatcherIntegrationTest {
                 encourageFileSystemToNoticeChange(mockserverInitialization);
                 assertThat("Found: " + Arrays.asList(mockServerClient.retrieveActiveExpectations(null)), mockServerClient.retrieveActiveExpectations(null).length, equalTo(0));
                 assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", readFileContents(persistedExpectations), is(secondUpdatedWatchedFileContents));
+            }, 50, 1500, MILLISECONDS);
+        } finally {
+            ConfigurationProperties.initializationJsonPath(initializationJsonPath);
+            ConfigurationProperties.watchInitializationJson(false);
+            ConfigurationProperties.persistedExpectationsPath(persistedExpectationsPath);
+            ConfigurationProperties.persistExpectations(false);
+            stopQuietly(mockServer);
+        }
+    }
+
+    /**
+     * 1 - starts with expectations added via API
+     * 2 - add additional expectation via file watcher and updates source for existing
+     * 3 - remove expectations via file watcher
+     */
+    @Test
+    public void shouldDetectModifiedInitialiserJsonOnPartialDeletion() throws Exception {
+        String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
+        ConfigurationProperties.watchInitializationJson(true);
+        String persistedExpectationsPath = ConfigurationProperties.persistedExpectationsPath();
+        ConfigurationProperties.persistExpectations(true);
+        MockServer mockServer = null;
+        try {
+            // given - configuration
+            File mockserverInitialization = File.createTempFile("mockserverInitialization", ".json");
+            ConfigurationProperties.initializationJsonPath(mockserverInitialization.getAbsolutePath());
+            ConfigurationProperties.watchInitializationJson(true);
+            File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
+            ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
+
+            // and - mockserver
+            mockServer = new MockServer();
+            MockServerClient mockServerClient = new MockServerClient("localhost", mockServer.getLocalPort());
+
+            // and - matching existing expectations
+            Expectation[] expectations = {
+                new Expectation(
+                    request()
+                        .withPath("/simpleFirst")
+                )
+                    .withId("one")
+                    .thenRespond(
+                    response()
+                        .withBody("some first response")
+                ),
+                new Expectation(
+                    request()
+                        .withPath("/simpleSecond")
+                )
+                    .withId("two")
+                    .thenRespond(
+                    response()
+                        .withBody("some second response")
+                )
+            };
+            httpClient
+                .sendRequest(
+                    request()
+                        .withMethod("PUT")
+                        .withHeader(HOST.toString(), "localhost:" + mockServer.getLocalPort())
+                        .withPath("/mockserver/expectation")
+                        .withBody(new ExpectationSerializer(mockServerLogger).serialize(expectations))
+                )
+                .get(10, TimeUnit.SECONDS);
+            Retries.tryWaitForSuccess(() ->
+                    assertThat("Found: " + Arrays.asList(mockServerClient.retrieveActiveExpectations(null)), mockServerClient.retrieveActiveExpectations(null).length, equalTo(2)),
+                10, 1000, MILLISECONDS
+            );
+
+            // when - update file
+            String firstUpdatedWatchedFileContents = "[ {" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some first response\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleSecond\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some second response\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"id\" : \"two\"," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleThird\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some third response\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"id\" : \"three\"," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "} ]";
+            write(mockserverInitialization.toPath(), firstUpdatedWatchedFileContents.getBytes(StandardCharsets.UTF_8));
+
+            // then
+            Retries.tryWaitForSuccess(() -> {
+                    encourageFileSystemToNoticeChange(mockserverInitialization);
+                    assertThat("Found: " + Arrays.asList(mockServerClient.retrieveActiveExpectations(null)), mockServerClient.retrieveActiveExpectations(null).length, equalTo(3));
+                },
+                50, 1500, MILLISECONDS
+            );
+
+            // when - updated again
+            String secondUpdatedWatchedFileContents = "[ {" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleSecond\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some second response\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"id\" : \"two\"," + NEW_LINE +
+                "  \"priority\" : 0," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "} ]";
+            write(mockserverInitialization.toPath(), secondUpdatedWatchedFileContents.getBytes(StandardCharsets.UTF_8));
+
+            // then
+            Retries.tryWaitForSuccess(() -> {
+                encourageFileSystemToNoticeChange(mockserverInitialization);
+                assertThat("Found: " + Arrays.asList(mockServerClient.retrieveActiveExpectations(null)), mockServerClient.retrieveActiveExpectations(null).length, equalTo(1));
+                assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", readFileContents(persistedExpectations), equalTo(secondUpdatedWatchedFileContents));
             }, 50, 1500, MILLISECONDS);
         } finally {
             ConfigurationProperties.initializationJsonPath(initializationJsonPath);

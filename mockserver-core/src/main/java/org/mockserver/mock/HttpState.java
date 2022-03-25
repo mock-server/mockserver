@@ -121,11 +121,13 @@ public class HttpState {
         if (configuration.persistExpectations()) {
             this.expectationFileSystemPersistence = new ExpectationFileSystemPersistence(configuration, mockServerLogger, requestMatchers);
         }
-        if (configuration.watchInitializationJson()) {
-            this.expectationFileWatcher = new ExpectationFileWatcher(configuration, mockServerLogger, requestMatchers);
+        if (isNotBlank(configuration.initializationJsonPath()) || isNotBlank(configuration.initializationClass())) {
+            ExpectationInitializerLoader expectationInitializerLoader = new ExpectationInitializerLoader(configuration, mockServerLogger, requestMatchers);
+            if (isNotBlank(configuration.initializationJsonPath()) && configuration.watchInitializationJson()) {
+                this.expectationFileWatcher = new ExpectationFileWatcher(configuration, mockServerLogger, requestMatchers, expectationInitializerLoader);
+            }
         }
         this.memoryMonitoring = new MemoryMonitoring(configuration, this.mockServerLog, this.requestMatchers);
-        new ExpectationInitializerLoader(configuration, mockServerLogger, requestMatchers);
     }
 
     public void setControlPlaneAuthenticationHandler(AuthenticationHandler controlPlaneAuthenticationHandler) {

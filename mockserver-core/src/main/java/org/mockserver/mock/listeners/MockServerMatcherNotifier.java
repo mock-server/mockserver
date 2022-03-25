@@ -48,7 +48,6 @@ public class MockServerMatcherNotifier extends ObjectWithReflectiveEqualsHashCod
         public static final Cause API = new Cause("", Type.API);
 
         public enum Type {
-            FILE_WATCHER,
             FILE_INITIALISER,
             CLASS_INITIALISER,
             API

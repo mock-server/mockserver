@@ -1,24 +1,18 @@
 package org.mockserver.persistence;
 
 import org.mockserver.configuration.Configuration;
-import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mock.Expectation;
 import org.mockserver.mock.RequestMatchers;
-import org.mockserver.mock.listeners.MockServerMatcherNotifier;
+import org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause;
 import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.server.initialize.ExpectationInitializerLoader;
 import org.slf4j.event.Level;
 
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.slf4j.event.Level.*;
 
 /**
@@ -27,17 +21,19 @@ import static org.slf4j.event.Level.*;
 public class ExpectationFileWatcher {
 
     private final Configuration configuration;
+    private final ExpectationInitializerLoader expectationInitializerLoader;
     private final MockServerLogger mockServerLogger;
     private final RequestMatchers requestMatchers;
     private final ExpectationSerializer expectationSerializer;
     private List<FileWatcher> fileWatchers;
 
-    public ExpectationFileWatcher(Configuration configuration, MockServerLogger mockServerLogger, RequestMatchers requestMatchers) {
+    public ExpectationFileWatcher(Configuration configuration, MockServerLogger mockServerLogger, RequestMatchers requestMatchers, ExpectationInitializerLoader expectationInitializerLoader) {
         this.configuration = configuration;
         if (configuration.watchInitializationJson()) {
             this.expectationSerializer = new ExpectationSerializer(mockServerLogger);
             this.mockServerLogger = mockServerLogger;
             this.requestMatchers = requestMatchers;
+            this.expectationInitializerLoader = expectationInitializerLoader;
             List<String> initializationJsonPaths = ExpectationInitializerLoader.expandedInitializationJsonPaths(configuration.initializationJsonPath());
             try {
                 fileWatchers = initializationJsonPaths
@@ -98,43 +94,12 @@ public class ExpectationFileWatcher {
             this.expectationSerializer = null;
             this.mockServerLogger = null;
             this.requestMatchers = null;
+            this.expectationInitializerLoader = null;
         }
     }
 
     private synchronized void addExpectationsFromInitializer() {
-        ExpectationInitializerLoader
-            .expandedInitializationJsonPaths(configuration.initializationJsonPath())
-            .forEach(initializationJsonPath -> {
-                Expectation[] expectations = new Expectation[0];
-                if (isNotBlank(initializationJsonPath)) {
-                    try {
-                        String jsonExpectations = FileReader.readFileFromClassPathOrPath(initializationJsonPath);
-                        if (isNotBlank(jsonExpectations)) {
-                            expectations = expectationSerializer.deserializeArray(jsonExpectations, true);
-                        }
-                    } catch (Throwable throwable) {
-                        if (MockServerLogger.isEnabled(WARN)) {
-                            mockServerLogger.logEvent(
-                                new LogEntry()
-                                    .setType(SERVER_CONFIGURATION)
-                                    .setLogLevel(WARN)
-                                    .setMessageFormat("exception while loading JSON initialization file with file watcher, ignoring file:{}")
-                                    .setArguments(initializationJsonPath)
-                                    .setThrowable(throwable)
-                            );
-                        }
-                    }
-                }
-                if (MockServerLogger.isEnabled(TRACE)) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setLogLevel(TRACE)
-                            .setMessageFormat("updating expectations:{}from file:{}")
-                            .setArguments(Arrays.asList(expectations), initializationJsonPath)
-                    );
-                }
-                requestMatchers.update(expectations, new MockServerMatcherNotifier.Cause(initializationJsonPath, MockServerMatcherNotifier.Cause.Type.FILE_WATCHER));
-            });
+        expectationInitializerLoader.retrieveExpectationsFromFile("", "exception while loading JSON initialization file with file watcher, ignoring file:{}", "updating expectations:{}from file:{}", Cause.Type.FILE_INITIALISER);
     }
 
     public void stop() {

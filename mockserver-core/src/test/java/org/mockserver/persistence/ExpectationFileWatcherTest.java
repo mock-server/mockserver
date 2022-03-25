@@ -12,6 +12,7 @@ import org.mockserver.mock.RequestMatchers;
 import org.mockserver.mock.listeners.MockServerMatcherNotifier;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.ExpectationSerializer;
+import org.mockserver.server.initialize.ExpectationInitializerLoader;
 import org.mockserver.test.Retries;
 import org.mockserver.uuid.UUIDService;
 
@@ -81,7 +82,7 @@ public class ExpectationFileWatcherTest {
             CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
             requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
             // and - file watcher
-            expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers);
+            expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers, new ExpectationInitializerLoader(configuration(), mockServerLogger, requestMatchers));
             assertThat(mockserverInitialization.exists(), equalTo(false));
 
             // when
@@ -191,7 +192,7 @@ public class ExpectationFileWatcherTest {
             CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
             requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
             // and - file watcher
-            expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers);
+            expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers, new ExpectationInitializerLoader(configuration(), mockServerLogger, requestMatchers));
 
             // when
             String watchedFileContents = "[ {" + NEW_LINE +
@@ -304,7 +305,7 @@ public class ExpectationFileWatcherTest {
             AtomicInteger expectationsUpdatedCount = new AtomicInteger();
             requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdatedCount.incrementAndGet());
             // and - file watcher
-            expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers);
+            expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers, new ExpectationInitializerLoader(configuration(), mockServerLogger, requestMatchers));
 
             // when
             Expectation[] expections = {
@@ -435,7 +436,7 @@ public class ExpectationFileWatcherTest {
     }
 
     @Test
-    public void shouldDetectModifiedInitialiserJsonOnDeletion() throws Exception {
+    public void shouldDetectModifiedInitialiserJsonOnPartialDeletion() throws Exception {
         String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
         ConfigurationProperties.watchInitializationJson(true);
         ExpectationFileWatcher expectationFileWatcher = null;
@@ -518,12 +519,173 @@ public class ExpectationFileWatcherTest {
                     response()
                         .withBody("some third response")
                 )
-            }, new MockServerMatcherNotifier.Cause(mockserverInitialization.getAbsolutePath(), MockServerMatcherNotifier.Cause.Type.FILE_WATCHER));
+            }, new MockServerMatcherNotifier.Cause(mockserverInitialization.getAbsolutePath(), MockServerMatcherNotifier.Cause.Type.FILE_INITIALISER));
             // and - expectation update notification
             CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
             requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
             // and - file watcher
-            expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers);
+            expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers, new ExpectationInitializerLoader(configuration(), mockServerLogger, requestMatchers));
+
+            // when
+            watchedFileContents = "[ {" + NEW_LINE +
+                "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some first response\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"id\" : \"three\"," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleThird\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some third response\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "} ]";
+            Files.write(mockserverInitialization.toPath(), watchedFileContents.getBytes(StandardCharsets.UTF_8));
+            long updatedFileTime = System.currentTimeMillis();
+
+            expectationsUpdated.get(30, SECONDS);
+            System.out.println("update processed in: " + (System.currentTimeMillis() - updatedFileTime) + "ms");
+
+            // then
+            List<Expectation> expectations = requestMatchers.retrieveActiveExpectations(null);
+            assertThat(
+                expectations,
+                contains(
+                    new Expectation(
+                        request()
+                            .withPath("/simpleFirst")
+                    )
+                        .withId("one")
+                        .thenRespond(
+                            response()
+                                .withBody("some first response")
+                        ),
+                    new Expectation(
+                        request()
+                            .withPath("/simpleThird")
+                    )
+                        .withId("four")
+                        .thenRespond(
+                            response()
+                                .withBody("some third response")
+                        )
+                )
+            );
+        } finally {
+            ConfigurationProperties.initializationJsonPath(initializationJsonPath);
+            ConfigurationProperties.watchInitializationJson(false);
+            if (expectationFileWatcher != null) {
+                expectationFileWatcher.stop();
+            }
+        }
+    }
+
+    @Test
+    public void shouldDetectModifiedInitialiserJsonOnCompleteDeletion() throws Exception {
+        String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
+        ConfigurationProperties.watchInitializationJson(true);
+        ExpectationFileWatcher expectationFileWatcher = null;
+        try {
+            // given - configuration
+            File mockserverInitialization = File.createTempFile("mockserverInitialization", ".json");
+            ConfigurationProperties.initializationJsonPath(mockserverInitialization.getAbsolutePath());
+            // and - existing file contents
+            String watchedFileContents = "[ {" + NEW_LINE +
+                "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some first response\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"id\" : \"two\"," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleSecond\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some second response\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"id\" : \"three\"," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleThird\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some third response\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "} ]";
+            Files.write(mockserverInitialization.toPath(), watchedFileContents.getBytes(StandardCharsets.UTF_8));
+            // and - matching existing expectations
+            requestMatchers.update(new Expectation[]{
+                new Expectation(
+                    request()
+                        .withPath("/simpleFirst")
+                )
+                    .withId("one")
+                    .thenRespond(
+                    response()
+                        .withBody("some first response")
+                )
+                ,
+                new Expectation(
+                    request()
+                        .withPath("/simpleSecond")
+                )
+                    .withId("two")
+                    .thenRespond(
+                    response()
+                        .withBody("some second response")
+                ),
+                new Expectation(
+                    request()
+                        .withPath("/simpleThird")
+                )
+                    .withId("three")
+                    .thenRespond(
+                    response()
+                        .withBody("some third response")
+                )
+            }, new MockServerMatcherNotifier.Cause(mockserverInitialization.getAbsolutePath(), MockServerMatcherNotifier.Cause.Type.FILE_INITIALISER));
+            // and - expectation update notification
+            CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
+            requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
+            // and - file watcher
+            expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers, new ExpectationInitializerLoader(configuration(), mockServerLogger, requestMatchers));
 
             // when
             watchedFileContents = "[ ]";
@@ -603,12 +765,15 @@ public class ExpectationFileWatcherTest {
                 "} ]";
             Files.write(mockserverInitialization.toPath(), watchedFileContents.getBytes(StandardCharsets.UTF_8));
             // and - expectation update notification
-            CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
-            requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
+            CompletableFuture<String> expectationsInitialised = new CompletableFuture<>();
+            requestMatchers.registerListener((requestMatchers, cause) -> expectationsInitialised.complete("updated"));
             // and - file watcher
-            expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers);
+            expectationFileWatcher = new ExpectationFileWatcher(configuration(), mockServerLogger, requestMatchers, new ExpectationInitializerLoader(configuration(), mockServerLogger, requestMatchers));
+            expectationsInitialised.get(30, SECONDS);
 
             // when
+            CompletableFuture<String> expectationsUpdated = new CompletableFuture<>();
+            requestMatchers.registerListener((requestMatchers, cause) -> expectationsUpdated.complete("updated"));
             watchedFileContents = "[ {" + NEW_LINE +
                 "  \"id\" : \"one\"," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +

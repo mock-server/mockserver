@@ -15,9 +15,8 @@ import org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause;
 import org.mockserver.serialization.ExpectationSerializer;
 
 import java.lang.reflect.Constructor;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -113,27 +112,42 @@ public class ExpectationInitializerLoader {
         return expectations;
     }
 
-    @SuppressWarnings("FuseStreamOperations")
     private Expectation[] retrieveExpectationsFromJson() {
+        return retrieveExpectationsFromFile("loading JSON initialization file:{}", "exception while loading JSON initialization file, ignoring file:{}", "loaded expectations:{}from file:{}", Cause.Type.FILE_INITIALISER).toArray(new Expectation[0]);
+    }
+
+    public List<Expectation> retrieveExpectationsFromFile(String initialLogMessage, String expectationLogMessage, String completedLogMessage, Cause.Type causeType) {
         List<String> initializationJsonPaths = ExpectationInitializerLoader.expandedInitializationJsonPaths(configuration.initializationJsonPath());
-        List<Expectation> collect = initializationJsonPaths
+        return initializationJsonPaths
             .stream()
             .flatMap(initializationJsonPath -> {
                 Expectation[] expectations = new Expectation[0];
                 if (isNotBlank(initializationJsonPath)) {
-                    if (MockServerLogger.isEnabled(INFO)) {
+                    if (isNotBlank(initialLogMessage) && MockServerLogger.isEnabled(INFO)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setType(SERVER_CONFIGURATION)
                                 .setLogLevel(INFO)
-                                .setMessageFormat("loading JSON initialization file:{}")
+                                .setMessageFormat(initialLogMessage)
                                 .setArguments(initializationJsonPath)
                         );
                     }
+                    List<String> expectationIds = new ArrayList<>();
                     try {
                         String jsonExpectations = FileReader.readFileFromClassPathOrPath(initializationJsonPath);
                         if (isNotBlank(jsonExpectations)) {
-                            expectations = expectationSerializer.deserializeArray(jsonExpectations, true);
+                            expectations = expectationSerializer.deserializeArray(jsonExpectations, true, (expectationString, deserialisedExpectations) -> {
+                                for (int i = 0; i < deserialisedExpectations.size(); i++) {
+                                    int counter = 0;
+                                    String expectationId;
+                                    do {
+                                        expectationId = UUID.nameUUIDFromBytes(String.valueOf(Objects.hash(initializationJsonPath, expectationString, i, counter++)).getBytes(StandardCharsets.UTF_8)).toString();
+                                    } while (expectationIds.contains(expectationId) && counter < 50);
+                                    expectationIds.add(expectationId);
+                                    deserialisedExpectations.get(i).withIdIfNull(expectationId);
+                                }
+                                return deserialisedExpectations;
+                            });
                         }
                     } catch (Throwable throwable) {
                         if (MockServerLogger.isEnabled(WARN)) {
@@ -141,28 +155,25 @@ public class ExpectationInitializerLoader {
                                 new LogEntry()
                                     .setType(SERVER_CONFIGURATION)
                                     .setLogLevel(WARN)
-                                    .setMessageFormat("exception while loading JSON initialization file, ignoring file:{}")
+                                    .setMessageFormat(expectationLogMessage)
                                     .setArguments(initializationJsonPath)
                                     .setThrowable(throwable)
                             );
                         }
                     }
                 }
-                if (expectations.length > 0) {
-                    if (MockServerLogger.isEnabled(TRACE)) {
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setLogLevel(TRACE)
-                                .setMessageFormat("loaded expectations:{}from file:{}")
-                                .setArguments(Arrays.asList(expectations), initializationJsonPath)
-                        );
-                    }
-                    requestMatchers.update(expectations, new MockServerMatcherNotifier.Cause(initializationJsonPath, Cause.Type.FILE_INITIALISER));
+                if (MockServerLogger.isEnabled(TRACE)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(TRACE)
+                            .setMessageFormat(completedLogMessage)
+                            .setArguments(Arrays.asList(expectations), initializationJsonPath)
+                    );
                 }
+                requestMatchers.update(expectations, new Cause(initializationJsonPath, causeType));
                 return Arrays.stream(expectations);
             })
             .collect(Collectors.toList());
-        return collect.toArray(new Expectation[0]);
     }
 
     @VisibleForTesting

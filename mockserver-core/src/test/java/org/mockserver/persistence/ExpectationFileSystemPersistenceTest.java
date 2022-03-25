@@ -524,7 +524,7 @@ public class ExpectationFileSystemPersistenceTest {
                     response()
                         .withBody("some fourth response")
                 )
-            }, new MockServerMatcherNotifier.Cause(persistedExpectations.getAbsolutePath(), MockServerMatcherNotifier.Cause.Type.FILE_WATCHER));
+            }, new MockServerMatcherNotifier.Cause(persistedExpectations.getAbsolutePath(), MockServerMatcherNotifier.Cause.Type.FILE_INITIALISER));
             MILLISECONDS.sleep(1500);
 
             // then

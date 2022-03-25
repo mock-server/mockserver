@@ -269,6 +269,14 @@ public class Expectation extends ObjectWithJsonToString {
         return this;
     }
 
+    public Expectation withIdIfNull(String id) {
+        if (this.id == null) {
+            this.id = id;
+            this.sortableExpectationId = null;
+        }
+        return this;
+    }
+
     public String getId() {
         if (id == null) {
             withId(UUIDService.getUUID());
