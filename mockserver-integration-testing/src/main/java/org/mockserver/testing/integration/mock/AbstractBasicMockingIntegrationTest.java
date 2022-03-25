@@ -7,12 +7,12 @@ import org.junit.Test;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.file.FileReader;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
+import org.mockserver.test.Retries;
 import org.mockserver.uuid.UUIDService;
 import org.mockserver.verify.VerificationTimes;
 import org.slf4j.event.Level;
@@ -31,7 +31,6 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.assertThrows;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.once;
 import static org.mockserver.mock.Expectation.when;
@@ -1499,57 +1498,63 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
 
     @Test
     public void shouldRetrieveRecordedRequestsAndResponse() {
-        // when
-        ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
-        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(response().withBody("some_body"));
-        assertEquals(
-            response("some_body"),
-            makeRequest(
-                request().withPath(calculatePath("some_path_one")),
-                HEADERS_TO_IGNORE
-            )
-        );
-        assertEquals(
-            notFoundResponse(),
-            makeRequest(
-                request().withPath(calculatePath("not_found")),
-                HEADERS_TO_IGNORE
-            )
-        );
-        assertEquals(
-            response("some_body"),
-            makeRequest(
-                request().withPath(calculatePath("some_path_three")),
-                HEADERS_TO_IGNORE
-            )
-        );
+        ConfigurationProperties.temporaryLogLevel("INFO", () -> {
+            // when
+            ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
+            mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(response().withBody("some_body"));
+            assertEquals(
+                response("some_body"),
+                makeRequest(
+                    request().withPath(calculatePath("some_path_one")),
+                    HEADERS_TO_IGNORE
+                )
+            );
+            assertEquals(
+                notFoundResponse(),
+                makeRequest(
+                    request().withPath(calculatePath("not_found")),
+                    HEADERS_TO_IGNORE
+                )
+            );
+            assertEquals(
+                response("some_body"),
+                makeRequest(
+                    request().withPath(calculatePath("some_path_three")),
+                    HEADERS_TO_IGNORE
+                )
+            );
 
-        // then
-        LogEventRequestAndResponse[] logEventRequestAndResponsesOne = mockServerClient.retrieveRecordedRequestsAndResponses(request().withPath(calculatePath("some_path.*")));
-        verifyRequestsMatches(
-            logEventRequestAndResponsesOne,
-            request(calculatePath("some_path_one")),
-            request(calculatePath("some_path_three"))
-        );
-        expectationSerializer.deserializeArray(mockServerClient.retrieveRecordedRequestsAndResponses(request().withPath(calculatePath("some_path.*")), Format.JSON), false);
+            // then
+            Retries.tryWaitForSuccess(() -> {
+                    LogEventRequestAndResponse[] logEventRequestAndResponsesOne = mockServerClient.retrieveRecordedRequestsAndResponses(request().withPath(calculatePath("some_path.*")));
+                    verifyRequestsMatches(
+                        logEventRequestAndResponsesOne,
+                        request(calculatePath("some_path_one")),
+                        request(calculatePath("some_path_three"))
+                    );
+                    expectationSerializer.deserializeArray(mockServerClient.retrieveRecordedRequestsAndResponses(request().withPath(calculatePath("some_path.*")), Format.JSON), false);
 
-        LogEventRequestAndResponse[] logEventRequestAndResponsesTwo = mockServerClient.retrieveRecordedRequestsAndResponses(request());
-        verifyRequestsMatches(
-            logEventRequestAndResponsesTwo,
-            request(calculatePath("some_path_one")),
-            request(calculatePath("not_found")),
-            request(calculatePath("some_path_three"))
-        );
-        expectationSerializer.deserializeArray(mockServerClient.retrieveRecordedRequestsAndResponses(request(), Format.JSON), false);
+                    LogEventRequestAndResponse[] logEventRequestAndResponsesTwo = mockServerClient.retrieveRecordedRequestsAndResponses(request());
+                    verifyRequestsMatches(
+                        logEventRequestAndResponsesTwo,
+                        request(calculatePath("some_path_one")),
+                        request(calculatePath("not_found")),
+                        request(calculatePath("some_path_three"))
+                    );
+                    expectationSerializer.deserializeArray(mockServerClient.retrieveRecordedRequestsAndResponses(request(), Format.JSON), false);
 
-        LogEventRequestAndResponse[] logEventRequestAndResponsesThree = mockServerClient.retrieveRecordedRequestsAndResponses(null);
-        verifyRequestsMatches(
-            logEventRequestAndResponsesThree,
-            request(calculatePath("some_path_one")),
-            request(calculatePath("not_found")),
-            request(calculatePath("some_path_three"))
-        );
-        expectationSerializer.deserializeArray(mockServerClient.retrieveRecordedRequestsAndResponses(null, Format.JSON), false);
+                    LogEventRequestAndResponse[] logEventRequestAndResponsesThree = mockServerClient.retrieveRecordedRequestsAndResponses(null);
+                    verifyRequestsMatches(
+                        logEventRequestAndResponsesThree,
+                        request(calculatePath("some_path_one")),
+                        request(calculatePath("not_found")),
+                        request(calculatePath("some_path_three"))
+                    );
+                    expectationSerializer.deserializeArray(mockServerClient.retrieveRecordedRequestsAndResponses(null, Format.JSON), false);
+                },
+                10, 1000, MILLISECONDS
+            );
+        });
     }
 
     @Test
@@ -1980,7 +1985,9 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             }
         } finally {
             UUIDService.fixedUUID = false;
-            ConfigurationProperties.logLevel(originalLevel.name());
+            if (originalLevel != null) {
+                ConfigurationProperties.logLevel(originalLevel.name());
+            }
         }
     }
 

@@ -258,6 +258,18 @@ public class ConfigurationProperties {
         configureLogger();
     }
 
+    public static void temporaryLogLevel(String level, Runnable runnable) {
+        Level originalLogLevel = logLevel();
+        try {
+            logLevel(level);
+            runnable.run();
+        } finally {
+            if (originalLogLevel != null) {
+                logLevel(originalLogLevel.name());
+            }
+        }
+    }
+
     public static boolean disableSystemOut() {
         return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_DISABLE_SYSTEM_OUT, "MOCKSERVER_DISABLE_SYSTEM_OUT", "" + false));
     }
