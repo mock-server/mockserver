@@ -18,14 +18,14 @@ info:
     name: Apache 2.0
 tags:
   - name: expectation
-    description: Create expectations (only supported by MockServer)
+    description: Create or update expectations - updates if the id matches an existing expecations (only supported by MockServer)
   - name: verify
     description: Verify requests (both MockServer & MockServer Proxy)
   - name: control
     description: Manage state or process (both MockServer & MockServer Proxy)
 
 paths:
-  /expectation:
+  /mockserver/expectation:
     put:
       tags:
         - expectation
@@ -52,7 +52,7 @@ paths:
               $ref: "#/components/schemas/Expectations"
         description: expectation(s) to create
         required: true
-  /openapi:
+  /mockserver/openapi:
     put:
       tags:
         - expectation
@@ -79,7 +79,7 @@ paths:
               $ref: "#/components/schemas/OpenAPIExpectations"
         description: expectation(s) to create
         required: true
-  /clear:
+  /mockserver/clear:
     put:
       tags:
         - control
@@ -97,7 +97,7 @@ paths:
                 - $ref: "#/components/schemas/RequestDefinition"
                 - $ref: "#/components/schemas/ExpectationId"
         description: request used to match expectations and recored requests to clear
-  /reset:
+  /mockserver/reset:
     put:
       tags:
         - control
@@ -105,7 +105,7 @@ paths:
       responses:
         '200':
           description: expectations and recorded requests cleared
-  /retrieve:
+  /mockserver/retrieve:
     put:
       tags:
         - control
@@ -155,7 +155,7 @@ paths:
               $ref: "#/components/schemas/RequestDefinition"
         description: >-
           request used to match which recorded requests, expectations or log messages to return, an empty body matches all requests, expectations or log messages
-  /verify:
+  /mockserver/verify:
     put:
       tags:
         - verify
@@ -179,7 +179,7 @@ paths:
               $ref: "#/components/schemas/Verification"
         description: request matcher and the number of times to match
         required: true
-  /verifySequence:
+  /mockserver/verifySequence:
     put:
       tags:
         - verify
@@ -203,7 +203,7 @@ paths:
               $ref: "#/components/schemas/VerificationSequence"
         description: the sequence of requests matchers
         required: true
-  /status:
+  /mockserver/status:
     put:
       tags:
         - control
@@ -215,7 +215,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ports"
-  /bind:
+  /mockserver/bind:
     put:
       tags:
         - control
@@ -245,7 +245,7 @@ paths:
           list of ports to bind to, where 0 indicates dynamically bind to any
           available port
         required: true
-  /stop:
+  /mockserver/stop:
     put:
       tags:
         - control
