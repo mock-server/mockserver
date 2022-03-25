@@ -166,6 +166,18 @@ public abstract class AbstractMockingIntegrationTestBase {
         }
     }
 
+    protected void verifyRequestsMatches(LogEventRequestAndResponse[] logEventRequestAndResponses, HttpRequest... httpRequestMatchers) {
+        if (logEventRequestAndResponses.length != httpRequestMatchers.length) {
+            throw new AssertionError("Number of request matchers does not match number of requests, expected:<" + httpRequestMatchers.length + "> but was:<" + logEventRequestAndResponses.length + ">");
+        } else {
+            for (int i = 0; i < httpRequestMatchers.length; i++) {
+                if (!new MatcherBuilder(configuration(), MOCK_SERVER_LOGGER).transformsToMatcher(httpRequestMatchers[i]).matches(null, logEventRequestAndResponses[i].getHttpRequest())) {
+                    throw new AssertionError("Request does not match request matcher, expected <" + httpRequestMatchers[i] + "> but was:<" + logEventRequestAndResponses[i] + ">, full list requests is: " + Arrays.toString(httpRequestMatchers));
+                }
+            }
+        }
+    }
+
     protected HttpResponse makeRequest(HttpRequest httpRequest, Collection<String> headersToIgnore) {
         try {
             boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();

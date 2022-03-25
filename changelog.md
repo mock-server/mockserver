@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - improved error messages from main method
 - always serialise default fields for StringBody and JsonBody when retrieving recorded expectations for consistency even when the charset changes
+- allow (and ignore) additional timestamp field for expectation JSON to support record request and responses to be submitted as JSON expectations
 
 ### Fixed
 - allow callback which is nested inside initializer class for maven plugin initializer
