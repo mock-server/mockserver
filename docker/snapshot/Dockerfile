@@ -35,8 +35,8 @@ RUN unzip netty-tcnative-boringssl-static.jar
 
 FROM ${source} as intermediate
 
-# runtime image
-FROM gcr.io/distroless/java:11-debug-nonroot
+# runtime image https://console.cloud.google.com/gcr/images/distroless/global/java17
+FROM gcr.io/distroless/java17:debug-nonroot
 
 # maintainer details
 MAINTAINER James Bloom "jamesdbloom@gmail.com"

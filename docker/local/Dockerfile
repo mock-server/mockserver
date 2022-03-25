@@ -5,7 +5,8 @@
 # http://www.mock-server.com
 #
 
-FROM gcr.io/distroless/java:11
+# runtime image https://console.cloud.google.com/gcr/images/distroless/global/java17
+FROM gcr.io/distroless/java17:nonroot
 
 # maintainer details
 MAINTAINER James Bloom "jamesdbloom@gmail.com"
