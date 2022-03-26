@@ -58,10 +58,10 @@ public class ExpandedParameterDecoder {
     }
 
     public Parameters retrieveQueryParameters(String parameterString, boolean hasPath) {
-        Parameters parameters = new Parameters()
-            .withRawParameterString(parameterString.contains("?") ? StringUtils.substringAfter(parameterString, "?") : parameterString);
-        Map<String, List<String>> parameterMap = new HashMap<>();
         if (isNotBlank(parameterString)) {
+            String rawParameterString = parameterString.contains("?") ? StringUtils.substringAfter(parameterString, "?") : parameterString;
+            Parameters parameters = new Parameters().withRawParameterString(rawParameterString);
+            Map<String, List<String>> parameterMap = new HashMap<>();
             try {
                 hasPath = parameterString.startsWith("/") || parameterString.contains("?") || hasPath;
                 parameterMap.putAll(new QueryStringDecoder(parameterString, HttpConstants.DEFAULT_CHARSET, parameterString.contains("/") || hasPath, Integer.MAX_VALUE, true).parameters());
@@ -74,8 +74,9 @@ public class ExpandedParameterDecoder {
                         .setThrowable(iae)
                 );
             }
+            return parameters.withEntries(parameterMap);
         }
-        return parameters.withEntries(parameterMap);
+        return null;
     }
 
     public void splitParameters(Parameters matcher, Parameters matched) {

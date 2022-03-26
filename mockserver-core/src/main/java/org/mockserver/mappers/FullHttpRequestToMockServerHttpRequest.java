@@ -18,6 +18,7 @@ import org.slf4j.event.Level;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.security.cert.Certificate;
+import java.util.List;
 import java.util.Set;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
@@ -106,27 +107,32 @@ public class FullHttpRequestToMockServerHttpRequest {
     }
 
     private void setHeaders(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {
-        Headers headers = new Headers();
         HttpHeaders httpHeaders = fullHttpResponse.headers();
-        for (String headerName : httpHeaders.names()) {
-            headers.withEntry(headerName, httpHeaders.getAll(headerName));
+        if (!httpHeaders.isEmpty()) {
+            Headers headers = new Headers();
+            for (String headerName : httpHeaders.names()) {
+                headers.withEntry(headerName, httpHeaders.getAll(headerName));
+            }
+            httpRequest.withHeaders(headers);
         }
-        httpRequest.withHeaders(headers);
     }
 
     private void setCookies(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {
-        Cookies cookies = new Cookies();
-        for (String cookieHeader : fullHttpResponse.headers().getAll(COOKIE)) {
-            Set<Cookie> decodedCookies =
-                ServerCookieDecoder.LAX.decode(cookieHeader);
-            for (io.netty.handler.codec.http.cookie.Cookie decodedCookie : decodedCookies) {
-                cookies.withEntry(
-                    decodedCookie.name(),
-                    decodedCookie.value()
-                );
+        List<String> cookieHeaders = fullHttpResponse.headers().getAll(COOKIE);
+        if (!cookieHeaders.isEmpty()) {
+            Cookies cookies = new Cookies();
+            for (String cookieHeader : cookieHeaders) {
+                Set<Cookie> decodedCookies =
+                    ServerCookieDecoder.LAX.decode(cookieHeader);
+                for (io.netty.handler.codec.http.cookie.Cookie decodedCookie : decodedCookies) {
+                    cookies.withEntry(
+                        decodedCookie.name(),
+                        decodedCookie.value()
+                    );
+                }
             }
+            httpRequest.withCookies(cookies);
         }
-        httpRequest.withCookies(cookies);
     }
 
     private void setBody(HttpRequest httpRequest, FullHttpRequest fullHttpRequest) {

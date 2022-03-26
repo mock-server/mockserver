@@ -6,7 +6,10 @@ import org.mockserver.codec.BodyServletDecoderEncoder;
 import org.mockserver.codec.ExpandedParameterDecoder;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.*;
+import org.mockserver.model.Cookie;
+import org.mockserver.model.Cookies;
+import org.mockserver.model.Headers;
+import org.mockserver.model.HttpRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
@@ -55,13 +58,9 @@ public class HttpServletRequestToMockServerHttpRequestDecoder {
     }
 
     private void setQueryString(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
-        Parameters parameters;
         if (isNotBlank(httpServletRequest.getQueryString())) {
-            parameters = formParameterParser.retrieveQueryParameters(httpServletRequest.getQueryString(), false);
-        } else {
-            parameters = new Parameters();
+            httpRequest.withQueryStringParameters(formParameterParser.retrieveQueryParameters(httpServletRequest.getQueryString(), false));
         }
-        httpRequest.withQueryStringParameters(parameters);
     }
 
     private void setBody(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
@@ -69,28 +68,31 @@ public class HttpServletRequestToMockServerHttpRequestDecoder {
     }
 
     private void setHeaders(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
-        Headers headers = new Headers();
         Enumeration<String> headerNames = httpServletRequest.getHeaderNames();
-        while (headerNames.hasMoreElements()) {
-            String headerName = headerNames.nextElement();
-            List<String> mappedHeaderValues = new ArrayList<>();
-            Enumeration<String> headerValues = httpServletRequest.getHeaders(headerName);
-            while (headerValues.hasMoreElements()) {
-                mappedHeaderValues.add(headerValues.nextElement());
+        if (headerNames.hasMoreElements()) {
+            Headers headers = new Headers();
+            while (headerNames.hasMoreElements()) {
+                String headerName = headerNames.nextElement();
+                List<String> mappedHeaderValues = new ArrayList<>();
+                Enumeration<String> headerValues = httpServletRequest.getHeaders(headerName);
+                while (headerValues.hasMoreElements()) {
+                    mappedHeaderValues.add(headerValues.nextElement());
+                }
+                headers.withEntry(headerName, mappedHeaderValues);
             }
-            headers.withEntry(headerName, mappedHeaderValues);
+            httpRequest.withHeaders(headers);
         }
-        httpRequest.withHeaders(headers);
     }
 
     private void setCookies(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
-        Cookies cookies = new Cookies();
-        if (httpServletRequest.getCookies() != null) {
-            for (javax.servlet.http.Cookie cookie : httpServletRequest.getCookies()) {
+        javax.servlet.http.Cookie[] httpServletRequestCookies = httpServletRequest.getCookies();
+        if (httpServletRequestCookies != null && httpServletRequestCookies.length > 0) {
+            Cookies cookies = new Cookies();
+            for (javax.servlet.http.Cookie cookie : httpServletRequestCookies) {
                 cookies.withEntry(new Cookie(cookie.getName(), cookie.getValue()));
             }
+            httpRequest.withCookies(cookies);
         }
-        httpRequest.withCookies(cookies);
     }
 
     private void setSocketAddress(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {

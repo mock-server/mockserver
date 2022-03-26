@@ -1694,7 +1694,7 @@ public class Configuration {
     }
 
     public int ringBufferSize() {
-        return nextPowerOfTwo(Math.min(maxLogEntries(), 1500));
+        return nextPowerOfTwo(maxLogEntries());
     }
 
     private int nextPowerOfTwo(int value) {

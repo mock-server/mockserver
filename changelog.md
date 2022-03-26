@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - always serialise default fields for StringBody and JsonBody when retrieving recorded expectations for consistency even when the charset changes
 - allow (and ignore) additional timestamp field for expectation JSON to support record request and responses to be submitted as JSON expectations
 - upgraded JVM version in docker (and helm) to 17
+- reduced memory footprint from log and simplified calculation of maximum log size
 
 ### Fixed
 - allow callback which is nested inside initializer class for maven plugin initializer

@@ -49,6 +49,7 @@ import static org.mockserver.log.model.LogEntryMessages.RECEIVED_REQUEST_MESSAGE
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.openapi.OpenAPIParser.OPEN_API_LOAD_ERROR;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -128,6 +129,13 @@ public class HttpState {
             }
         }
         this.memoryMonitoring = new MemoryMonitoring(configuration, this.mockServerLog, this.requestMatchers);
+        if (MockServerLogger.isEnabled(TRACE)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(TRACE)
+                    .setMessageFormat("log ring buffer created, with size " + configuration.ringBufferSize())
+            );
+        }
     }
 
     public void setControlPlaneAuthenticationHandler(AuthenticationHandler controlPlaneAuthenticationHandler) {

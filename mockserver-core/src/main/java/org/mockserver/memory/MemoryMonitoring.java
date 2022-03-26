@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.mock.HttpState.getPort;
 
 public class MemoryMonitoring implements MockServerLogListener, MockServerMatcherListener {
@@ -32,40 +33,31 @@ public class MemoryMonitoring implements MockServerLogListener, MockServerMatche
     private static final AtomicInteger currentLogEntriesCount = new AtomicInteger(0);
     private static final AtomicInteger currentExpectationsCount = new AtomicInteger(0);
     private static final List<MemoryPoolMXBean> memoryPoolMXBeans = ManagementFactory.getMemoryPoolMXBeans();
-    private static final int MAX_LOG_ENTRIES_UPPER_LIMIT = 60000;
-    private static final int MAX_EXPECTATIONS_UPPER_LIMIT = 5000;
     private final Configuration configuration;
     private final File csvFile;
 
-    public MemoryMonitoring(Configuration configuration) {
-        this(configuration, null, null);
-    }
-
     public MemoryMonitoring(Configuration configuration, MockServerEventLog mockServerLog, RequestMatchers requestMatchers) {
-        this.configuration = configuration;
-        this.csvFile = new File(configuration.memoryUsageCsvDirectory(), "memoryUsage_" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".csv");
         if (configuration.outputMemoryUsageCsv()) {
+            this.configuration = configuration;
+            this.csvFile = new File(configuration.memoryUsageCsvDirectory(), "memoryUsage_" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".csv");
             if (!csvFile.exists()) {
                 String line = buildStatistics().stream().map(Pair::getKey).collect(Collectors.joining(","));
                 writeLineToCsv(line);
             }
-        }
-        if (mockServerLog != null) {
-            mockServerLog.registerListener(this);
-        }
-        if (requestMatchers != null) {
-            requestMatchers.registerListener(this);
+            if (mockServerLog != null) {
+                mockServerLog.registerListener(this);
+            }
+            if (requestMatchers != null) {
+                requestMatchers.registerListener(this);
+            }
+        } else {
+            this.configuration = null;
+            this.csvFile = null;
         }
     }
 
-
-    private static Summary getJVMMemory(MemoryType heap) {
+    public static Summary getJVMMemory(MemoryType heap) {
         return new Summary(memoryPoolMXBeans.stream().filter(bean -> bean.getType() == heap).collect(Collectors.toList()));
-    }
-
-    public long remainingHeapKB() {
-        Summary heap = getJVMMemory(MemoryType.HEAP);
-        return (heap.getNet().getMax() - heap.getNet().getUsed()) / 1024L;
     }
 
     public void logMemoryMetrics() {
@@ -105,42 +97,24 @@ public class MemoryMonitoring implements MockServerLogListener, MockServerMatche
         return memoryStatistics;
     }
 
-    public int startingMaxLogEntries() {
-        return Math.min((int) (remainingHeapKB() / 30), MAX_LOG_ENTRIES_UPPER_LIMIT);
-    }
-
-    public int adjustedMaxLogEntries() {
-        return Math.min(startingMaxLogEntries() + (currentLogEntriesCount.get() / 2), MAX_LOG_ENTRIES_UPPER_LIMIT);
-    }
-
-    public int startingMaxExpectations() {
-        return Math.min((int) (remainingHeapKB() / 400), MAX_EXPECTATIONS_UPPER_LIMIT);
-    }
-
-    public int adjustedMaxExpectations() {
-        return Math.min(startingMaxExpectations() + (currentExpectationsCount.get() / 2), MAX_EXPECTATIONS_UPPER_LIMIT);
-    }
-
     @Override
     public void updated(MockServerEventLog mockServerLog) {
         currentLogEntriesCount.set(mockServerLog.size());
-        if (shouldUpdate()) {
+        if (shouldLogMetrics()) {
             logMemoryMetrics();
-            mockServerLog.setMaxSize(configuration.maxLogEntries());
         }
     }
 
     @Override
     public void updated(RequestMatchers requestMatchers, MockServerMatcherNotifier.Cause cause) {
         currentExpectationsCount.set(requestMatchers.size());
-        if (shouldUpdate()) {
+        if (shouldLogMetrics()) {
             logMemoryMetrics();
-            requestMatchers.setMaxSize(configuration.maxExpectations());
         }
     }
 
-    private boolean shouldUpdate() {
-        return memoryUpdateFrequency.incrementAndGet() % 500 == 0;
+    private boolean shouldLogMetrics() {
+        return memoryUpdateFrequency.incrementAndGet() % 50 == 0;
     }
 
 }

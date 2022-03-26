@@ -33,13 +33,13 @@ public class LogEntry implements EventTranslator<LogEntry> {
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
     private static final RequestDefinition[] EMPTY_REQUEST_DEFINITIONS = new RequestDefinition[0];
     private static final RequestDefinition[] DEFAULT_REQUESTS_DEFINITIONS = {request()};
+    public static final DateFormat LOG_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     private int hashCode;
     private String id;
     private String correlationId;
     private Integer port;
     private Level logLevel = Level.INFO;
     private boolean alwaysLog = false;
-    public static final DateFormat LOG_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     private long epochTime = EpochService.currentTimeMillis();
     private String timestamp;
     private LogMessageType type;

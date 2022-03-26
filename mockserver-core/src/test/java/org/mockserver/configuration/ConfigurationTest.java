@@ -202,7 +202,7 @@ public class ConfigurationTest {
         int original = ConfigurationProperties.maxExpectations();
         try {
             // then - default value
-            assertThat(configuration.maxExpectations(), equalTo(ConfigurationProperties.memoryMonitoring.adjustedMaxExpectations()));
+            assertThat(configuration.maxExpectations(), equalTo(Math.min((int) (ConfigurationProperties.heapSizeInKB() / 200), 5000)));
 
             // when - system property setter
             ConfigurationProperties.maxExpectations(10);
@@ -227,7 +227,7 @@ public class ConfigurationTest {
         int original = ConfigurationProperties.maxLogEntries();
         try {
             // then - default value
-            assertThat(configuration.maxLogEntries(), equalTo(ConfigurationProperties.memoryMonitoring.adjustedMaxLogEntries()));
+            assertThat(configuration.maxLogEntries(), equalTo(Math.min((int) (ConfigurationProperties.heapSizeInKB() / 75), 60000)));
 
             // when - system property setter
             ConfigurationProperties.maxLogEntries(10);

@@ -29,6 +29,7 @@ import static org.mockserver.metrics.Metrics.Name.*;
 import static org.mockserver.mock.SortableExpectationId.EXPECTATION_SORTABLE_PRIORITY_COMPARATOR;
 import static org.mockserver.mock.SortableExpectationId.NULL;
 import static org.slf4j.event.Level.DEBUG;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -60,6 +61,13 @@ public class RequestMatchers extends MockServerMatcherNotifier {
             httpRequestMatcher -> httpRequestMatcher.getExpectation() != null ? httpRequestMatcher.getExpectation().getId() : ""
         );
         expectationRequestDefinitions = new CircularHashMap<>(configuration.maxExpectations());
+        if (MockServerLogger.isEnabled(TRACE)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(TRACE)
+                    .setMessageFormat("expectation circular priority queue created, with size " + configuration.maxExpectations())
+            );
+        }
     }
 
     public Expectation add(Expectation expectation, Cause cause) {
@@ -197,10 +205,6 @@ public class RequestMatchers extends MockServerMatcherNotifier {
 
     public int size() {
         return httpRequestMatchers.size();
-    }
-
-    public void setMaxSize(int maxSize) {
-        httpRequestMatchers.setMaxSize(maxSize);
     }
 
     public void reset(Cause cause) {

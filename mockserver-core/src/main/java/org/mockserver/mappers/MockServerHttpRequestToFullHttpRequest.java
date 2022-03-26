@@ -94,15 +94,12 @@ public class MockServerHttpRequestToFullHttpRequest {
     }
 
     private void setCookies(HttpRequest httpRequest, FullHttpRequest request) {
-        List<io.netty.handler.codec.http.cookie.Cookie> cookies = new ArrayList<>();
-        for (org.mockserver.model.Cookie cookie : httpRequest.getCookieList()) {
-            cookies.add(new io.netty.handler.codec.http.cookie.DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue()));
-        }
-        if (cookies.size() > 0) {
-            request.headers().set(
-                COOKIE.toString(),
-                io.netty.handler.codec.http.cookie.ClientCookieEncoder.LAX.encode(cookies)
-            );
+        if (!httpRequest.getCookieList().isEmpty()) {
+            List<io.netty.handler.codec.http.cookie.Cookie> cookies = new ArrayList<>();
+            for (org.mockserver.model.Cookie cookie : httpRequest.getCookieList()) {
+                cookies.add(new io.netty.handler.codec.http.cookie.DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue()));
+            }
+            request.headers().set(COOKIE.toString(), io.netty.handler.codec.http.cookie.ClientCookieEncoder.LAX.encode(cookies));
         }
     }
 

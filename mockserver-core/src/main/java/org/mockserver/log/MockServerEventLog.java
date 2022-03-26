@@ -42,6 +42,7 @@ import static org.mockserver.log.model.LogEntryMessages.VERIFICATION_REQUEST_SEQ
 import static org.mockserver.logging.MockServerLogger.writeToSystemOut;
 import static org.mockserver.mock.HttpState.getPort;
 import static org.mockserver.model.HttpRequest.request;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -109,10 +110,6 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         return eventLog.size();
     }
 
-    public void setMaxSize(int maxSize) {
-        eventLog.setMaxSize(maxSize);
-    }
-
     private void startRingBuffer() {
         disruptor = new Disruptor<>(LogEntry::new, configuration.ringBufferSize(), new Scheduler.SchedulerThreadFactory("EventLog"));
 
@@ -139,6 +136,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                 processLogEntry(logEntry);
             } else {
                 logEntry.getConsumer().run();
+                logEntry.clear();
             }
         });
 

@@ -11,11 +11,13 @@ import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.memory.MemoryMonitoring;
+import org.mockserver.memory.Summary;
 import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
 import org.mockserver.socket.tls.KeyAndCertificateFactory;
 import org.slf4j.event.Level;
 
 import java.io.*;
+import java.lang.management.MemoryType;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -27,7 +29,6 @@ import java.util.stream.Collectors;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.mockserver.logging.MockServerLogger.configureLogger;
 import static org.slf4j.event.Level.DEBUG;
@@ -205,8 +206,6 @@ public class ConfigurationProperties {
         return slf4jOrJavaLoggerToSLF4JLevelMapping;
     }
 
-    static final MemoryMonitoring memoryMonitoring = new MemoryMonitoring(configuration());
-
     private static String propertyFile() {
         if (isNotBlank(System.getProperty(MOCKSERVER_PROPERTY_FILE)) && System.getProperty(MOCKSERVER_PROPERTY_FILE).equals("/config/mockserver.properties")) {
             return isBlank(System.getenv("MOCKSERVER_PROPERTY_FILE")) ? System.getProperty(MOCKSERVER_PROPERTY_FILE) : System.getenv("MOCKSERVER_PROPERTY_FILE");
@@ -341,8 +340,13 @@ public class ConfigurationProperties {
 
     // memory usage
 
+    public static long heapSizeInKB() {
+        Summary heap = MemoryMonitoring.getJVMMemory(MemoryType.HEAP);
+        return (heap.getNet().getMax() - heap.getNet().getUsed()) / 1024L;
+    }
+
     public static int maxExpectations() {
-        return readIntegerProperty(MOCKSERVER_MAX_EXPECTATIONS, "MOCKSERVER_MAX_EXPECTATIONS", memoryMonitoring.adjustedMaxExpectations());
+        return readIntegerProperty(MOCKSERVER_MAX_EXPECTATIONS, "MOCKSERVER_MAX_EXPECTATIONS", Math.min((int) (heapSizeInKB() / 200), 5000));
     }
 
     /**
@@ -360,7 +364,7 @@ public class ConfigurationProperties {
     }
 
     public static int maxLogEntries() {
-        return readIntegerProperty(MOCKSERVER_MAX_LOG_ENTRIES, "MOCKSERVER_MAX_LOG_ENTRIES", memoryMonitoring.adjustedMaxLogEntries());
+        return readIntegerProperty(MOCKSERVER_MAX_LOG_ENTRIES, "MOCKSERVER_MAX_LOG_ENTRIES", Math.min((int) (heapSizeInKB() / 75), 60000));
     }
 
     /**
