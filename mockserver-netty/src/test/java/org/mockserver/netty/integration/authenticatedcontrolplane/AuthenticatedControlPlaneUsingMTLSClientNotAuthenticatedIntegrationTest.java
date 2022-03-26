@@ -8,6 +8,7 @@ import org.junit.function.ThrowingRunnable;
 import org.mockserver.cli.Main;
 import org.mockserver.authentication.AuthenticationException;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
@@ -34,7 +35,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThrows;
 import static org.mockserver.configuration.Configuration.configuration;
-import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -64,24 +64,24 @@ public class AuthenticatedControlPlaneUsingMTLSClientNotAuthenticatedIntegration
     @BeforeClass
     public static void startServer() {
         // save original value
-        originalControlPlaneTLSMutualAuthenticationCAChain = controlPlaneTLSMutualAuthenticationCAChain();
-        originalControlPlanePrivateKeyPath = controlPlanePrivateKeyPath();
-        originalControlPlaneX509CertificatePath = controlPlaneX509CertificatePath();
-        originalControlPlaneTLSMutualAuthenticationRequired = controlPlaneTLSMutualAuthenticationRequired();
+        originalControlPlaneTLSMutualAuthenticationCAChain = ConfigurationProperties.controlPlaneTLSMutualAuthenticationCAChain();
+        originalControlPlanePrivateKeyPath = ConfigurationProperties.controlPlanePrivateKeyPath();
+        originalControlPlaneX509CertificatePath = ConfigurationProperties.controlPlaneX509CertificatePath();
+        originalControlPlaneTLSMutualAuthenticationRequired = ConfigurationProperties.controlPlaneTLSMutualAuthenticationRequired();
 
         // set new certificate authority values
-        controlPlaneTLSMutualAuthenticationCAChain("org/mockserver/netty/integration/tls/ca.pem");
-        controlPlanePrivateKeyPath("org/mockserver/netty/integration/tls/leaf-key-pkcs8.pem");
-        controlPlaneX509CertificatePath("org/mockserver/netty/integration/tls/leaf-cert.pem");
-        controlPlaneTLSMutualAuthenticationRequired(true);
+        ConfigurationProperties.controlPlaneTLSMutualAuthenticationCAChain("org/mockserver/netty/integration/tls/ca.pem");
+        ConfigurationProperties.controlPlanePrivateKeyPath("org/mockserver/netty/integration/tls/leaf-key-pkcs8.pem");
+        ConfigurationProperties.controlPlaneX509CertificatePath("org/mockserver/netty/integration/tls/leaf-cert.pem");
+        ConfigurationProperties.controlPlaneTLSMutualAuthenticationRequired(true);
 
         Main.main("-serverPort", "" + severHttpPort);
         mockServerClient = new MockServerClient("localhost", severHttpPort).withSecure(true);
         mockServerClient.hasStarted();
 
-        controlPlaneTLSMutualAuthenticationCAChain("org/mockserver/netty/integration/tls/separateca/ca.pem");
-        controlPlanePrivateKeyPath("org/mockserver/netty/integration/tls/separateca/leaf-key-pkcs8.pem");
-        controlPlaneX509CertificatePath("org/mockserver/netty/integration/tls/separateca/leaf-cert.pem");
+        ConfigurationProperties.controlPlaneTLSMutualAuthenticationCAChain("org/mockserver/netty/integration/tls/separateca/ca.pem");
+        ConfigurationProperties.controlPlanePrivateKeyPath("org/mockserver/netty/integration/tls/separateca/leaf-key-pkcs8.pem");
+        ConfigurationProperties.controlPlaneX509CertificatePath("org/mockserver/netty/integration/tls/separateca/leaf-cert.pem");
 
         mockServerClient = new MockServerClient("localhost", severHttpPort).withSecure(true);
         MockServerLogger mockServerLogger = new MockServerLogger();
@@ -89,9 +89,9 @@ public class AuthenticatedControlPlaneUsingMTLSClientNotAuthenticatedIntegration
         nettySslContextFactory.withClientSslContextBuilderFunction(
             sslContextBuilder -> {
                 try {
-                    RSAPrivateKey key = privateKeyFromPEMFile(controlPlanePrivateKeyPath());
-                    X509Certificate[] keyCertChain = x509ChainFromPEMFile(controlPlaneX509CertificatePath()).toArray(new X509Certificate[0]);
-                    X509Certificate[] trustCertCollection = nettySslContextFactory.trustCertificateChain(controlPlaneTLSMutualAuthenticationCAChain());
+                    RSAPrivateKey key = privateKeyFromPEMFile(ConfigurationProperties.controlPlanePrivateKeyPath());
+                    X509Certificate[] keyCertChain = x509ChainFromPEMFile(ConfigurationProperties.controlPlaneX509CertificatePath()).toArray(new X509Certificate[0]);
+                    X509Certificate[] trustCertCollection = nettySslContextFactory.trustCertificateChain(ConfigurationProperties.controlPlaneTLSMutualAuthenticationCAChain());
                     sslContextBuilder
                         .keyManager(
                             key,
@@ -112,10 +112,10 @@ public class AuthenticatedControlPlaneUsingMTLSClientNotAuthenticatedIntegration
         stopQuietly(mockServerClient);
 
         // set back to original value
-        controlPlaneTLSMutualAuthenticationCAChain(originalControlPlaneTLSMutualAuthenticationCAChain);
-        controlPlanePrivateKeyPath(originalControlPlanePrivateKeyPath);
-        controlPlaneX509CertificatePath(originalControlPlaneX509CertificatePath);
-        controlPlaneTLSMutualAuthenticationRequired(originalControlPlaneTLSMutualAuthenticationRequired);
+        ConfigurationProperties.controlPlaneTLSMutualAuthenticationCAChain(originalControlPlaneTLSMutualAuthenticationCAChain);
+        ConfigurationProperties.controlPlanePrivateKeyPath(originalControlPlanePrivateKeyPath);
+        ConfigurationProperties.controlPlaneX509CertificatePath(originalControlPlaneX509CertificatePath);
+        ConfigurationProperties.controlPlaneTLSMutualAuthenticationRequired(originalControlPlaneTLSMutualAuthenticationRequired);
     }
 
     @Before

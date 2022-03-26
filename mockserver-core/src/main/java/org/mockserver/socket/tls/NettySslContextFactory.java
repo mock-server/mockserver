@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.Configuration.configuration;
@@ -104,14 +103,24 @@ public class NettySslContextFactory {
                             sslContextBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE);
                             break;
                         case JVM:
-                            sslContextBuilder.trustManager(jvmCAX509TrustCertificates());
+                            List<X509Certificate> mockServerX509Certificates = new ArrayList<>();
+                            mockServerX509Certificates.add(keyAndCertificateFactory.x509Certificate());
+                            mockServerX509Certificates.add(keyAndCertificateFactory.certificateAuthorityX509Certificate());
+                            sslContextBuilder.trustManager(jvmCAX509TrustCertificates(mockServerX509Certificates));
                             break;
                         case CUSTOM:
                             sslContextBuilder.trustManager(customCAX509TrustCertificates());
                             break;
                     }
                 } else {
-                    sslContextBuilder.trustManager(trustCertificateChain());
+                    List<X509Certificate> mockServerX509Certificates = new ArrayList<>();
+                    if (isNotBlank(configuration.tlsMutualAuthenticationCertificateChain())) {
+                        mockServerX509Certificates.addAll(x509ChainFromPEMFile(configuration.tlsMutualAuthenticationCertificateChain()));
+                        mockServerX509Certificates.add(keyAndCertificateFactory.certificateAuthorityX509Certificate());
+                    } else {
+                        mockServerX509Certificates.add(keyAndCertificateFactory.certificateAuthorityX509Certificate());
+                    }
+                    sslContextBuilder.trustManager(jvmCAX509TrustCertificates(mockServerX509Certificates));
                 }
                 clientSslContext = instanceClientSslContextBuilderFunction.apply(sslContextBuilder);
                 configuration.rebuildTLSContext(false);
@@ -141,17 +150,14 @@ public class NettySslContextFactory {
         }
     }
 
-    private X509Certificate[] jvmCAX509TrustCertificates() throws NoSuchAlgorithmException, KeyStoreException {
-        ArrayList<X509Certificate> x509Certificates = new ArrayList<>();
-        x509Certificates.add(keyAndCertificateFactory.x509Certificate());
-        x509Certificates.add(keyAndCertificateFactory.certificateAuthorityX509Certificate());
+    private X509Certificate[] jvmCAX509TrustCertificates(List<X509Certificate> additionalX509Certificates) throws NoSuchAlgorithmException, KeyStoreException {
         TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
         trustManagerFactory.init((KeyStore) null);
         return Arrays
             .stream(trustManagerFactory.getTrustManagers())
             .filter(trustManager -> trustManager instanceof X509TrustManager)
             .flatMap(trustManager -> Arrays.stream(((X509TrustManager) trustManager).getAcceptedIssuers()))
-            .collect((Supplier<List<X509Certificate>>) () -> x509Certificates, List::add, List::addAll)
+            .collect(() -> additionalX509Certificates, List::add, List::addAll)
             .toArray(new X509Certificate[0]);
     }
 

@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - allow (and ignore) additional timestamp field for expectation JSON to support record request and responses to be submitted as JSON expectations
 - upgraded JVM version in docker (and helm) to 17
 - reduced memory footprint from log and simplified calculation of maximum log size
+- use JVM trust store in addition to MockServer CA for MockServerClient to allow control plane requests to go via proxies or load balancers that terminate TLS
 
 ### Fixed
 - allow callback which is nested inside initializer class for maven plugin initializer
