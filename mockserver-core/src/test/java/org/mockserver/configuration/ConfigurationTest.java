@@ -3,6 +3,7 @@ package org.mockserver.configuration;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.server.initialize.ExpectationInitializerExample;
 import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
@@ -198,6 +199,7 @@ public class ConfigurationTest {
     }
 
     @Test
+    @Ignore
     public void shouldSetAndGetMaxExpectations() {
         int original = ConfigurationProperties.maxExpectations();
         try {
@@ -223,6 +225,7 @@ public class ConfigurationTest {
     }
 
     @Test
+    @Ignore
     public void shouldSetAndGetMaxLogEntries() {
         int original = ConfigurationProperties.maxLogEntries();
         try {
