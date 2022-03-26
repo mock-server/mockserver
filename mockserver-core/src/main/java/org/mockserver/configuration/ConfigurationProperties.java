@@ -340,13 +340,14 @@ public class ConfigurationProperties {
 
     // memory usage
 
-    public static long heapSizeInKB() {
+    public static long heapAvailableInKB() {
         Summary heap = MemoryMonitoring.getJVMMemory(MemoryType.HEAP);
-        return (heap.getNet().getMax() - heap.getNet().getUsed()) / 1024L;
+        long baseMemory  = 20 * 1024L;
+        return ((heap.getNet().getMax() - heap.getNet().getUsed()) / 1024L) - baseMemory;
     }
 
     public static int maxExpectations() {
-        return readIntegerProperty(MOCKSERVER_MAX_EXPECTATIONS, "MOCKSERVER_MAX_EXPECTATIONS", Math.min((int) (heapSizeInKB() / 200), 5000));
+        return readIntegerProperty(MOCKSERVER_MAX_EXPECTATIONS, "MOCKSERVER_MAX_EXPECTATIONS", Math.min((int) (heapAvailableInKB() / 75), 5000));
     }
 
     /**
@@ -364,7 +365,7 @@ public class ConfigurationProperties {
     }
 
     public static int maxLogEntries() {
-        return readIntegerProperty(MOCKSERVER_MAX_LOG_ENTRIES, "MOCKSERVER_MAX_LOG_ENTRIES", Math.min((int) (heapSizeInKB() / 75), 60000));
+        return readIntegerProperty(MOCKSERVER_MAX_LOG_ENTRIES, "MOCKSERVER_MAX_LOG_ENTRIES", Math.min((int) (heapAvailableInKB() / 80), 60000));
     }
 
     /**
