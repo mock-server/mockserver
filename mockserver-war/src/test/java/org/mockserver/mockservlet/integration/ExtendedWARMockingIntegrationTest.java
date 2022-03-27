@@ -28,6 +28,7 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
     private static Tomcat tomcat;
 
     @BeforeClass
+    @SuppressWarnings("deprecation")
     public static void startServer() throws Exception {
         servletContext = "";
 

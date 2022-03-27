@@ -96,6 +96,7 @@ public class ObjectMapperFactory {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public static ObjectMapper buildObjectMapperWithoutRemovingEmptyValues() {
         ObjectMapper objectMapper = new ObjectMapper();
 

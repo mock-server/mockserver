@@ -1,18 +1,18 @@
 package org.mockserver.springtest;
 
+import org.mockserver.socket.PortFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.mock.env.MockPropertySource;
 import org.springframework.test.context.ContextCustomizer;
 import org.springframework.test.context.MergedContextConfiguration;
 import org.springframework.test.context.support.TestPropertySourceUtils;
-import org.springframework.util.SocketUtils;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
 public class MockServerPropertyCustomizer implements ContextCustomizer {
-    private static final int mockServerPort = SocketUtils.findAvailableTcpPort();
+    private static final int mockServerPort = PortFactory.findFreePort();
 
     private static final Pattern MOCK_SERVER_PORT_PATTERN = Pattern.compile("\\$\\{mockServerPort}");
 

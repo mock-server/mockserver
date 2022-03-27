@@ -113,3 +113,4 @@ go_client
 # soft links #
 ##############
 kube_config.yaml
+/shaded/

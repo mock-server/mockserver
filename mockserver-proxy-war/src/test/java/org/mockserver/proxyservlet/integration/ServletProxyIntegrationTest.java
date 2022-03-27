@@ -33,6 +33,7 @@ public class ServletProxyIntegrationTest extends AbstractProxyIntegrationTest {
     private static MockServerClient mockServerClient;
 
     @BeforeClass
+    @SuppressWarnings("deprecation")
     public static void startServer() throws Exception {
         servletContext = "";
 

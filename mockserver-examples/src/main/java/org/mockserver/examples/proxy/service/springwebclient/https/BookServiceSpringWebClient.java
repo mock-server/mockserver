@@ -3,8 +3,8 @@ package org.mockserver.examples.proxy.service.springwebclient.https;
 import io.netty.handler.ssl.SslContext;
 import org.mockserver.examples.proxy.model.Book;
 import org.mockserver.examples.proxy.service.BookService;
+import org.mockserver.examples.proxy.service.ExampleNettySslContextFactory;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.socket.tls.NettySslContextFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -37,7 +37,7 @@ public class BookServiceSpringWebClient implements BookService {
     }
 
     private WebClient createWebClient() {
-        SslContext sslContext = new NettySslContextFactory(configuration(), new MockServerLogger(getClass())).createClientSslContext(false);
+        SslContext sslContext = new ExampleNettySslContextFactory(configuration(), new MockServerLogger(getClass())).createClientSslContext(false);
         return WebClient.builder()
             .clientConnector(
                 new ReactorClientHttpConnector(

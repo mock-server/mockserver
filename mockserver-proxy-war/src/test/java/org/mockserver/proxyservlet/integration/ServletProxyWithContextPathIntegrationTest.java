@@ -33,6 +33,7 @@ public class ServletProxyWithContextPathIntegrationTest extends AbstractProxyInt
     private static MockServerClient mockServerClient;
 
     @BeforeClass
+    @SuppressWarnings("deprecation")
     public static void startServer() throws Exception {
         servletContext = "proxy";
 

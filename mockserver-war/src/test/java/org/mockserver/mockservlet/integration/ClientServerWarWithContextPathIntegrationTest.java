@@ -29,6 +29,7 @@ public class ClientServerWarWithContextPathIntegrationTest extends AbstractBasic
     private static Tomcat tomcat;
 
     @BeforeClass
+    @SuppressWarnings("deprecation")
     public static void startServer() throws Exception {
         servletContext = "mockserver";
 
