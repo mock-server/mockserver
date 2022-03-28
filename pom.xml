@@ -108,7 +108,6 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>mockserver-netty</artifactId>
-                <classifier>shaded</classifier>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -119,7 +118,6 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>mockserver-client-java</artifactId>
-                <classifier>shaded</classifier>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
