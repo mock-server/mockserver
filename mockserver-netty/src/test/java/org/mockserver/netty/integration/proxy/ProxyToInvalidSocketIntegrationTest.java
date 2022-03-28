@@ -34,13 +34,19 @@ public class ProxyToInvalidSocketIntegrationTest {
 
     private static ClientAndServer clientAndServer;
 
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(ProxyToInvalidSocketIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static EventLoopGroup clientEventLoopGroup;
 
-    private static final NettyHttpClient httpClient = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false);
+    private static NettyHttpClient httpClient;
 
     @BeforeClass
     public static void startServer() {
         clientAndServer = startClientAndServer();
+    }
+
+    @BeforeClass
+    public static void startEventLoopGroup() {
+        clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(ProxyToInvalidSocketIntegrationTest.class.getSimpleName() + "-eventLoop"));
+        httpClient = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false);
     }
 
     @AfterClass

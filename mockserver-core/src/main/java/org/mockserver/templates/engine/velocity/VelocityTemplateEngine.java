@@ -2,18 +2,14 @@ package org.mockserver.templates.engine.velocity;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableSet;
 import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeConstants;
-import org.apache.velocity.script.VelocityScriptEngine;
-import org.apache.velocity.script.VelocityScriptEngineFactory;
 import org.apache.velocity.tools.ToolContext;
 import org.apache.velocity.tools.ToolManager;
-import org.apache.velocity.tools.ToolboxFactory;
-import org.apache.velocity.tools.config.*;
-import org.mockserver.file.FilePath;
+import org.apache.velocity.tools.config.ToolConfiguration;
+import org.apache.velocity.tools.config.ToolboxConfiguration;
+import org.apache.velocity.tools.config.XmlFactoryConfiguration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -24,18 +20,10 @@ import org.mockserver.templates.engine.TemplateFunctions;
 import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
 import org.mockserver.templates.engine.serializer.HttpTemplateOutputDeserializer;
 import org.mockserver.templates.engine.velocity.directives.Ifnull;
-import org.mockserver.uuid.UUIDService;
 import org.slf4j.event.Level;
 
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.SimpleScriptContext;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Properties;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -72,11 +60,14 @@ public class VelocityTemplateEngine implements TemplateEngine {
         velocityProperties.put("directive.set.null.allowed", "true");
         velocityProperties.put(RuntimeConstants.INTERPOLATE_STRINGLITERALS, "true");
         velocityProperties.put(RuntimeConstants.INPUT_ENCODING, "UTF-8");
-        velocityProperties.put(RuntimeConstants.PARSER_POOL_CLASS, "org.apache.velocity.runtime.ParserPoolImpl");
+        velocityProperties.put(RuntimeConstants.PARSER_POOL_CLASS, org.apache.velocity.runtime.ParserPoolImpl.class.getName());
         velocityProperties.put(RuntimeConstants.PARSER_POOL_SIZE, "50");
         velocityProperties.put(RuntimeConstants.SPACE_GOBBLING, "lines");
         velocityProperties.put(RuntimeConstants.PARSER_HYPHEN_ALLOWED, "true");
         velocityProperties.put(RuntimeConstants.CUSTOM_DIRECTIVES, Ifnull.class.getName());
+        velocityProperties.put(RuntimeConstants.RESOURCE_MANAGER_CLASS, org.apache.velocity.runtime.resource.ResourceManagerImpl.class.getName());
+        velocityProperties.put(RuntimeConstants.RESOURCE_MANAGER_CACHE_CLASS, org.apache.velocity.runtime.resource.ResourceCacheImpl.class.getName());
+        velocityProperties.put("resource.loader.file.class", org.apache.velocity.runtime.resource.loader.FileResourceLoader.class.getName());
         velocityEngine = new VelocityEngine();
         velocityEngine.init(velocityProperties);
 

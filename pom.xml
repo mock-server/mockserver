@@ -108,18 +108,11 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>mockserver-netty</artifactId>
-                <classifier>shaded</classifier>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>mockserver-client-java</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>mockserver-client-java</artifactId>
-                <classifier>shaded</classifier>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -668,8 +661,8 @@
                 <version>3.10.1</version>
                 <configuration>
                     <fork>false</fork>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
                     <compilerArgs>
                         <arg>-XDignore.symbol.file</arg>
                         <arg>-Xlint:all</arg>

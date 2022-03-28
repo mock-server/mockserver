@@ -2,6 +2,7 @@ package org.mockserver.netty.integration.mock;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.netty.integration.ShadedJarRunner;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.testing.integration.mock.AbstractBasicMockingIntegrationTest;
@@ -16,7 +17,7 @@ public class ExtendedShadedJarMockingIntegrationTest extends AbstractBasicMockin
     private static final int mockServerPort = PortFactory.findFreePort();
 
     @BeforeClass
-    public static void startServerUsingShadedJar() throws Exception {
+    public static void startServerUsingShadedJar() {
         mockServerClient = ShadedJarRunner.startServerUsingShadedJar(mockServerPort);
     }
 

@@ -35,13 +35,18 @@ import static org.mockserver.verify.VerificationTimes.exactly;
  */
 public class HttpProxyChainedIntegrationTest {
 
-    private static ClientAndServer targetClientAndServer;
+    private static EventLoopGroup clientEventLoopGroup;
 
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(HttpProxyChainedIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static ClientAndServer targetClientAndServer;
 
     @BeforeClass
     public static void startServer() {
         targetClientAndServer = startClientAndServer();
+    }
+
+    @BeforeClass
+    public static void startEventLoopGroup() {
+        clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(HttpProxyChainedIntegrationTest.class.getSimpleName() + "-eventLoop"));
     }
 
     @AfterClass

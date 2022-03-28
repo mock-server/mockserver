@@ -4,6 +4,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.httpclient.NettyHttpClient;
@@ -11,6 +12,7 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.netty.integration.proxy.http.HttpProxyChainedIntegrationTest;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.socket.PortFactory;
 import org.slf4j.event.Level;
@@ -36,7 +38,12 @@ import static org.mockserver.stop.Stop.stopQuietly;
  */
 public class MainTest {
 
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(MainTest.class.getSimpleName() + "-eventLoop"));
+    private static EventLoopGroup clientEventLoopGroup;
+
+    @BeforeClass
+    public static void startEventLoopGroup() {
+        clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(MainTest.class.getSimpleName() + "-eventLoop"));
+    }
 
     @AfterClass
     public static void stopEventLoopGroup() {

@@ -1,6 +1,5 @@
 package org.mockserver.netty.integration.proxy.http;
 
-import com.google.common.collect.ImmutableList;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.http.HttpHost;
@@ -19,38 +18,25 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpStatusCode;
-import org.mockserver.netty.MockServer;
 import org.mockserver.netty.integration.ShadedJarRunner;
-import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.tls.KeyStoreFactory;
 import org.mockserver.streams.IOStreamUtils;
-import org.mockserver.uuid.UUIDService;
 
 import javax.net.ssl.SSLSocket;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.Base64;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.fail;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
 import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.proxyconfiguration.ProxyConfiguration.proxyConfiguration;
 import static org.mockserver.stop.Stop.stopQuietly;
 import static org.mockserver.test.Assert.assertContains;
 import static org.mockserver.testing.tls.SSLSocketFactory.sslSocketFactory;
@@ -92,7 +78,12 @@ public class NettyHttpsProxyShadedJarIntegrationTest {
         secureEchoServer.mockServerEventLog().reset();
     }
 
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(NettyHttpsProxyShadedJarIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static EventLoopGroup clientEventLoopGroup;
+
+    @BeforeClass
+    public static void startEventLoopGroup() {
+        clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(NettyHttpsProxyShadedJarIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    }
 
     @AfterClass
     public static void stopEventLoopGroup() {

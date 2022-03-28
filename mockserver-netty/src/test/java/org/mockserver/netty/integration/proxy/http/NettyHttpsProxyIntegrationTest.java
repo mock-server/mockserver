@@ -91,7 +91,12 @@ public class NettyHttpsProxyIntegrationTest {
         secureEchoServer.mockServerEventLog().reset();
     }
 
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(NettyHttpsProxyIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static EventLoopGroup clientEventLoopGroup;
+
+    @BeforeClass
+    public static void startEventLoopGroup() {
+        clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(NettyHttpsProxyIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    }
 
     @AfterClass
     public static void stopEventLoopGroup() {

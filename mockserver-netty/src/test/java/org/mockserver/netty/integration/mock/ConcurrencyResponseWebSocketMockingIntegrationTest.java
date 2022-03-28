@@ -2,10 +2,7 @@ package org.mockserver.netty.integration.mock;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.log.model.LogEntry;
@@ -39,7 +36,7 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
     private ClientAndServer clientAndServer;
     private NettyHttpClient httpClient;
 
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(ConcurrencyResponseWebSocketMockingIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static EventLoopGroup clientEventLoopGroup;
 
     @Before
     public void setUp() {
@@ -56,6 +53,11 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
                     .withBody(request.getBodyAsString())
             );
         httpClient = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false);
+    }
+
+    @BeforeClass
+    public static void startEventLoopGroup() {
+        clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(ConcurrencyResponseWebSocketMockingIntegrationTest.class.getSimpleName() + "-eventLoop"));
     }
 
     @AfterClass

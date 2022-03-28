@@ -29,7 +29,7 @@ public class ConcurrencyBasicResponseMockingIntegrationTest {
     private ClientAndServer clientAndServer;
     private NettyHttpClient httpClient;
 
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(ConcurrencyResponseWebSocketMockingIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static EventLoopGroup clientEventLoopGroup;
 
     @Before
     public void setUp() {
@@ -41,6 +41,11 @@ public class ConcurrencyBasicResponseMockingIntegrationTest {
             )
             .respond(callback().withCallbackClass(ConcurrencyBasicResponseMockingIntegrationTest.ClassCallback.class));
         httpClient = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false);
+    }
+
+    @BeforeClass
+    public static void startEventLoopGroup() {
+        clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(ConcurrencyResponseWebSocketMockingIntegrationTest.class.getSimpleName() + "-eventLoop"));
     }
 
     @AfterClass

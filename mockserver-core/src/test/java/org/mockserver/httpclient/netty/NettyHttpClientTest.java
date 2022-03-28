@@ -38,8 +38,13 @@ public class NettyHttpClientTest {
     private static EchoServer echoServer;
     @Rule
     public ExpectedException exception = ExpectedException.none();
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(NettyHttpClientTest.class.getSimpleName() + "-eventLoop"));
+    private static EventLoopGroup clientEventLoopGroup;
     private final MockServerLogger mockServerLogger = new MockServerLogger();
+
+    @BeforeClass
+    public static void startEventLoopGroup() {
+        clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(NettyHttpClientTest.class.getSimpleName() + "-eventLoop"));
+    }
 
     @BeforeClass
     public static void startEchoServer() {

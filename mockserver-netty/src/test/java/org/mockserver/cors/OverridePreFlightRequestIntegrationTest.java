@@ -11,6 +11,7 @@ import org.mockserver.httpclient.NettyHttpClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.netty.integration.proxy.http.HttpProxyChainedIntegrationTest;
 import org.mockserver.scheduler.Scheduler;
 
 import java.net.InetSocketAddress;
@@ -35,9 +36,9 @@ public class OverridePreFlightRequestIntegrationTest {
 
     private static ClientAndServer clientAndServer;
 
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(OverridePreFlightRequestIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static EventLoopGroup clientEventLoopGroup;
 
-    private static final NettyHttpClient httpClient = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false);
+    private static NettyHttpClient httpClient;
 
     private static boolean originalEnableCORSForAllResponses;
     private static String originalCorsAllowMethods;
@@ -46,13 +47,19 @@ public class OverridePreFlightRequestIntegrationTest {
     private static int originalCorsMaxAgeInSeconds;
 
     @BeforeClass
-    public static void startServer() {
-        clientAndServer = startClientAndServer();
+    public static void startEventLoopGroup() {
+        clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(OverridePreFlightRequestIntegrationTest.class.getSimpleName() + "-eventLoop"));
+        httpClient = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false);
     }
 
     @AfterClass
     public static void stopEventLoopGroup() {
         clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
+    }
+
+    @BeforeClass
+    public static void startServer() {
+        clientAndServer = startClientAndServer();
     }
 
     @BeforeClass

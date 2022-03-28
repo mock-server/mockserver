@@ -41,14 +41,20 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
     private static ClientAndServer targetClientAndServer;
     private static ClientAndServer loadBalancerClientAndServer;
 
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(HttpProxyViaLoadBalanceIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static EventLoopGroup clientEventLoopGroup;
 
-    private static final NettyHttpClient httpClient = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false);
+    private static NettyHttpClient httpClient;
 
     @BeforeClass
     public static void startServer() {
         targetClientAndServer = startClientAndServer();
         loadBalancerClientAndServer = startClientAndServer();
+    }
+
+    @BeforeClass
+    public static void startEventLoopGroup() {
+        clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(HttpProxyViaLoadBalanceIntegrationTest.class.getSimpleName() + "-eventLoop"));
+        httpClient = new NettyHttpClient(configuration(), new MockServerLogger(), clientEventLoopGroup, null, false);
     }
 
     @AfterClass

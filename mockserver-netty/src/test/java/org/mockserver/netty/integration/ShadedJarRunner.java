@@ -1,13 +1,11 @@
 package org.mockserver.netty.integration;
 
-import com.google.common.base.Joiner;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.file.FileReader;
 import org.mockserver.netty.integration.mock.ExtendedShadedJarMockingIntegrationTest;
 import org.mockserver.version.Version;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -16,6 +14,8 @@ import java.util.List;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class ShadedJarRunner {
+
+    public static final boolean DEBUG = false;
 
     public static MockServerClient startServerUsingShadedJar(int mockServerPort) {
         File jarFile = new File(System.getProperty("project.basedir", ".") + "/target/mockserver-netty-" + System.getProperty("project.version", Version.getVersion()) + "-shaded.jar");
@@ -28,11 +28,13 @@ public class ShadedJarRunner {
         }
         List<String> arguments = new ArrayList<>(Collections.singletonList(getJavaBin()));
         arguments.add("-Dfile.encoding=UTF-8");
+        if (DEBUG) {
+            arguments.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005");
+        }
         arguments.add("-jar");
         arguments.add(jarFile.getAbsolutePath());
         arguments.add("-serverPort");
         arguments.add("" + mockServerPort);
-        String message = Joiner.on(" ").join(arguments);
         ProcessBuilder processBuilder = new ProcessBuilder(arguments);
         processBuilder.inheritIO();
         File stderr = new File(ExtendedShadedJarMockingIntegrationTest.class.getSimpleName() + "_stderr.log");
@@ -43,7 +45,11 @@ public class ShadedJarRunner {
         processBuilder.redirectOutput(ProcessBuilder.Redirect.to(stdout));
         try {
             processBuilder.start();
-        } catch (IOException ioe) {
+            if (DEBUG) {
+                System.out.println("STARTED MOCK SERVER");
+                MILLISECONDS.sleep(5000);
+            }
+        } catch (Exception ioe) {
             printOutputStreams();
             throw new RuntimeException("Exception starting via shaded jar " + jarFile.getAbsolutePath(), ioe);
         }

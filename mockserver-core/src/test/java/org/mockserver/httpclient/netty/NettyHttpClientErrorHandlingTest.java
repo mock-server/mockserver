@@ -3,6 +3,7 @@ package org.mockserver.httpclient.netty;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -37,8 +38,13 @@ public class NettyHttpClientErrorHandlingTest {
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(NettyHttpClientErrorHandlingTest.class.getSimpleName() + "-eventLoop"));
+    private static EventLoopGroup clientEventLoopGroup;
     private final MockServerLogger mockServerLogger = new MockServerLogger();
+
+    @BeforeClass
+    public static void startEventLoopGroup() {
+        clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(NettyHttpClientErrorHandlingTest.class.getSimpleName() + "-eventLoop"));
+    }
 
     @AfterClass
     public static void stopEventLoopGroup() {
