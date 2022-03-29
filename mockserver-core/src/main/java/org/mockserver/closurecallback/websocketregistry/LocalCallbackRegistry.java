@@ -45,6 +45,7 @@ public class LocalCallbackRegistry {
     }
 
     public static void registerCallback(String clientId, ExpectationCallback<?> expectationCallback) {
+        // if not added to local registry then web socket will be used
         if (enabled && expectationCallback != null) {
             if (expectationCallback instanceof ExpectationResponseCallback) {
                 responseCallbackRegistry().put(clientId, (ExpectationResponseCallback) expectationCallback);

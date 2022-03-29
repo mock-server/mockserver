@@ -1,7 +1,13 @@
 package org.mockserver.netty.integration.mock;
 
+import com.google.common.collect.ImmutableMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatcherBuilder;
@@ -15,9 +21,7 @@ import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBas
 import org.mockserver.verify.VerificationTimes;
 
 import javax.net.ssl.SSLSocket;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -27,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -473,6 +478,78 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             )
         );
     }
+
+@Test
+public void shouldHandleLargeRequestBodyForResponseByObjectCallbackViaWebSocket() throws Exception {
+    viaWebSocket(() -> {
+        // given
+        int requestBodySize = 5000;
+
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("object_callback")),
+                exactly(2)
+            )
+            .respond(
+                httpRequest -> response()
+                    .withStatusCode(200)
+                    .withBody(json(ImmutableMap.of("requestBodyLength", httpRequest.getBodyAsString().length()), StandardCharsets.UTF_8))
+                    .withConnectionOptions(connectionOptions().withCloseSocket(true))
+            );
+
+        // then
+        CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+        HttpPost httpPost = new HttpPost("http://localhost:" + mockServerClient.getPort() + calculatePath("object_callback"));
+        httpPost.setEntity(new StringEntity("{\"largeStringValue\":\"" + RandomStringUtils.randomAlphanumeric(requestBodySize) + "\"}", StandardCharsets.UTF_8));
+        httpPost.setHeader(CONTENT_TYPE.toString(), "application/json");
+        CloseableHttpResponse httpResponse = httpClient.execute(httpPost);
+
+        assertThat(httpResponse.getStatusLine().getStatusCode(), equalTo(200));
+        try (InputStreamReader isr = new InputStreamReader(httpResponse.getEntity().getContent()); BufferedReader br = new BufferedReader(isr)) {
+            String responseBody = br.lines().collect(Collectors.joining("\n"));
+            assertThat(responseBody, is("{" + NEW_LINE +
+                "  \"requestBodyLength\" : " + (requestBodySize + ("{" + NEW_LINE +
+                "  \"largeStringValue\" : \"\"" + NEW_LINE +
+                "}").length()) + NEW_LINE +
+                "}"));
+        }
+    });
+}
+
+@Test
+public void shouldHandleLargeRequestBodyForResponseByObjectCallbackViaLocalJVM() throws IOException {
+    // given
+    int requestBodySize = 5000;
+
+    // when
+    mockServerClient
+        .when(
+            request()
+                .withPath(calculatePath("object_callback")),
+            exactly(2)
+        )
+        .respond(
+            httpRequest -> response()
+                .withStatusCode(200)
+                .withBody(json(ImmutableMap.of("requestBodyLength", httpRequest.getBodyAsString().length()), StandardCharsets.UTF_8))
+                .withConnectionOptions(connectionOptions().withCloseSocket(true))
+        );
+
+    // then
+    CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+    HttpPost httpPost = new HttpPost("http://localhost:" + mockServerClient.getPort() + calculatePath("object_callback"));
+    httpPost.setEntity(new StringEntity("{\"largeStringValue\":\"" + RandomStringUtils.randomAlphanumeric(requestBodySize) + "\"}", StandardCharsets.UTF_8));
+    httpPost.setHeader(CONTENT_TYPE.toString(), "application/json");
+    CloseableHttpResponse httpResponse = httpClient.execute(httpPost);
+
+    assertThat(httpResponse.getStatusLine().getStatusCode(), equalTo(200));
+    try (InputStreamReader isr = new InputStreamReader(httpResponse.getEntity().getContent()); BufferedReader br = new BufferedReader(isr)) {
+        String responseBody = br.lines().collect(Collectors.joining("\n"));
+        assertThat(responseBody, is("{\"requestBodyLength\":" + (requestBodySize + "{\"largeStringValue\":\"\"}".length()) + "}"));
+    }
+}
 
     private int objectCallbackCounter = 0;
 
@@ -1342,7 +1419,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             if (server != null) {
                 server.close();
                 // allow time for the socket to be released
-                TimeUnit.MILLISECONDS.sleep(50);
+                MILLISECONDS.sleep(50);
             }
         }
     }
@@ -1617,8 +1694,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
 
             // when
             output.write(("" +
-                "GET " + calculatePath("") + " HTTP/1.1\r\n" +
-                "Content-Length: 0\r\n" +
+                "GET " + calculatePath("") + " HTTP/1.1\r" + NEW_LINE +
+                "Content-Length: 0\r" + NEW_LINE +
                 "\r\n"
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
@@ -1702,23 +1779,23 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
 
             // when
             output.write(("" +
-                "GET " + calculatePath("") + " HTTP/1.1\r\n" +
-                "Content-Length: 0\r\n" +
+                "GET " + calculatePath("") + " HTTP/1.1\r" + NEW_LINE +
+                "Content-Length: 0\r" + NEW_LINE +
                 "\r\n"
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then
             String actual = IOUtils.toString(socket.getInputStream(), StandardCharsets.UTF_8.name());
-            assertThat(actual, is("HTTP/1.1 200 OK\r\n" +
-                "connection: keep-alive\r\n" +
-                "transfer-encoding: chunked\r\n" +
-                "\r\n" +
-                "a\r\n" +
-                "some_long_\r\n" +
-                "4\r\n" +
-                "body\r\n" +
-                "0\r\n" +
+            assertThat(actual, is("HTTP/1.1 200 OK\r" + NEW_LINE +
+                "connection: keep-alive\r" + NEW_LINE +
+                "transfer-encoding: chunked\r" + NEW_LINE +
+                "\r" + NEW_LINE +
+                "a\r" + NEW_LINE +
+                "some_long_\r" + NEW_LINE +
+                "4\r" + NEW_LINE +
+                "body\r" + NEW_LINE +
+                "0\r" + NEW_LINE +
                 "\r\n"
             ));
 
@@ -1731,23 +1808,23 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
 
             // when
             output.write(("" +
-                "GET " + calculatePath("") + " HTTP/1.1\r\n" +
-                "Content-Length: 0\r\n" +
+                "GET " + calculatePath("") + " HTTP/1.1\r" + NEW_LINE +
+                "Content-Length: 0\r" + NEW_LINE +
                 "\r\n"
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then
             String actual = IOUtils.toString(sslSocket.getInputStream(), StandardCharsets.UTF_8.name());
-            assertThat(actual, is("HTTP/1.1 200 OK\r\n" +
-                "connection: keep-alive\r\n" +
-                "transfer-encoding: chunked\r\n" +
-                "\r\n" +
-                "a\r\n" +
-                "some_long_\r\n" +
-                "4\r\n" +
-                "body\r\n" +
-                "0\r\n" +
+            assertThat(actual, is("HTTP/1.1 200 OK\r" + NEW_LINE +
+                "connection: keep-alive\r" + NEW_LINE +
+                "transfer-encoding: chunked\r" + NEW_LINE +
+                "\r" + NEW_LINE +
+                "a\r" + NEW_LINE +
+                "some_long_\r" + NEW_LINE +
+                "4\r" + NEW_LINE +
+                "body\r" + NEW_LINE +
+                "0\r" + NEW_LINE +
                 "\r\n"
             ));
         }
@@ -1776,8 +1853,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
 
             // when
             output.write(("" +
-                "POST " + calculatePath("/some_error") + " HTTP/1.1\r\n" +
-                "Content-Length: 0\r\n" +
+                "POST " + calculatePath("/some_error") + " HTTP/1.1\r" + NEW_LINE +
+                "Content-Length: 0\r" + NEW_LINE +
                 "\r\n"
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
@@ -1829,8 +1906,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
 
             // when
             output.write(("" +
-                "GET " + calculatePath("") + " HTTP/1.1\r\n" +
-                "Content-Length: 0\r\n" +
+                "GET " + calculatePath("") + " HTTP/1.1\r" + NEW_LINE +
+                "Content-Length: 0\r" + NEW_LINE +
                 "\r\n"
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
@@ -1846,8 +1923,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
 
             // when
             output.write(("" +
-                "GET " + calculatePath("") + " HTTP/1.1\r\n" +
-                "Content-Length: 0\r\n" +
+                "GET " + calculatePath("") + " HTTP/1.1\r" + NEW_LINE +
+                "Content-Length: 0\r" + NEW_LINE +
                 "\r\n"
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
@@ -1877,8 +1954,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
 
             // when
             output.write(("" +
-                "GET " + calculatePath("http_error") + " HTTP/1.1\r\n" +
-                "Content-Length: 0\r\n" +
+                "GET " + calculatePath("http_error") + " HTTP/1.1\r" + NEW_LINE +
+                "Content-Length: 0\r" + NEW_LINE +
                 "\r\n"
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();

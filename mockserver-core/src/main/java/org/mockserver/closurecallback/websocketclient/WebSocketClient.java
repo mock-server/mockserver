@@ -35,7 +35,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 import static org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
-import static org.slf4j.event.Level.*;
+import static org.slf4j.event.Level.TRACE;
+import static org.slf4j.event.Level.WARN;
 
 /**
  * @author jamesdbloom
@@ -46,11 +47,11 @@ public class WebSocketClient<T extends HttpMessage> {
     static final AttributeKey<CompletableFuture<String>> REGISTRATION_FUTURE = AttributeKey.valueOf("REGISTRATION_FUTURE");
     private final MockServerLogger mockServerLogger;
     private Channel channel;
-    private WebSocketMessageSerializer webSocketMessageSerializer;
+    private final WebSocketMessageSerializer webSocketMessageSerializer;
     private ExpectationCallback<T> expectationCallback;
     private ExpectationForwardAndResponseCallback expectationForwardResponseCallback;
     private boolean isStopped = false;
-    private EventLoopGroup eventLoopGroup;
+    private final EventLoopGroup eventLoopGroup;
     private final String clientId;
     public static final String CLIENT_REGISTRATION_ID_HEADER = "X-CLIENT-REGISTRATION-ID";
 
