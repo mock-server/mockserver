@@ -12,7 +12,7 @@ metadata:
 spec:
   containers:
     - name: curl
-      image: radial/busyboxplus:curl
+      image: {{ .Values.service.test.image}}
       command: ['curl']
       args: ['-v', '-s', '-X', 'PUT', '{{ template "chart.fullname" . }}:{{ .Values.service.port }}/status']
   restartPolicy: Never
