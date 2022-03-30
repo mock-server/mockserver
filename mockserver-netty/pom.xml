@@ -104,6 +104,7 @@
 
     <build>
         <plugins>
+            <!-- make jar executable -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
